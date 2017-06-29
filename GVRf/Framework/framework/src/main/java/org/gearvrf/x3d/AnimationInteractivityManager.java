@@ -16,9 +16,6 @@
 
 package org.gearvrf.x3d;
 
-import android.graphics.Color;
-
-import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRPointLight;
@@ -29,11 +26,13 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+
 import org.gearvrf.script.GVRJavascriptScriptFile;
 
 import org.gearvrf.GVRDrawFrameListener;
@@ -49,10 +48,6 @@ import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-
-import java.util.GregorianCalendar;
-import java.util.Calendar;
-import java.util.Date;
 
 import java.util.ArrayList;
 import java.util.Vector;
@@ -102,6 +97,10 @@ public class AnimationInteractivityManager {
     private Vector<EventUtility> eventUtilities = null;
     private ArrayList<ScriptObject> scriptObjects = null;
 
+    private AnchorImplementation anchorImplementation = null;
+    private GVRAnimator gvrAnimator = null;
+
+
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
 
     // Append this incremented value to GVRSceneObject names to insure unique
@@ -116,7 +115,9 @@ public class AnimationInteractivityManager {
                                          Vector<Sensor> sensors,
                                          Vector<TimeSensor> timeSensors,
                                          Vector<EventUtility> eventUtilities,
-                                         ArrayList<ScriptObject> scriptObjects
+                                         ArrayList<ScriptObject> scriptObjects,
+                                         Vector<Viewpoint> viewpoints
+
     ) {
         this.x3dObject = x3dObject;
         this.gvrContext = gvrContext;
@@ -127,6 +128,12 @@ public class AnimationInteractivityManager {
         this.timeSensors = timeSensors;
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
+
+        gvrAnimator = new GVRAnimator(this.gvrContext, true);
+        root.attachComponent(gvrAnimator);
+
+        anchorImplementation = new AnchorImplementation(this.gvrContext, this.root, viewpoints);
+
     }
 
     /**
@@ -222,6 +229,19 @@ public class AnimationInteractivityManager {
                         //This sensor already exists inside an Interactive Object
                         interactiveObject.setSensor(routeFromSensor, fromField);
                         routeToTimeSensorFound = true;
+                    }
+                }
+                else if (routeFromScriptObject != null) {
+                    // a rare case where a Script node sends data to a TimeSensor
+                    if (routeFromScriptObject == interactiveObject.getScriptObject()) {
+                        //TODO: complete adding field to this Script Node when sent to TimeSensor
+                        for (ScriptObject.Field field : routeFromScriptObject.getFieldsArrayList()) {
+                            if (toField.equalsIgnoreCase(routeFromScriptObject.getFieldName(field))) {
+                                //routeFromScriptObject.setFromEventUtility(field, routeFromEventUtility, fromField);
+                                interactiveObject.getScriptObject().setToTimeSensor(field, routeToTimeSensor, toField);
+                                routeToTimeSensorFound = true;
+                            }
+                        }
                     }
                 }
             }
@@ -434,6 +454,20 @@ public class AnimationInteractivityManager {
         }  //  end if routeToDefinedItem != null
     }  //  end buildInteractiveObject
 
+
+    /**
+     * BuildInteractiveObjectFromAnchor is a special type of interactive object in that it does not get
+     * built using ROUTE's.
+     *
+     * @param anchorSensor is the Sensor that describes the sensor set to an Anchor
+     * @param anchorDestination is either another Viewpoint, url to a web site or another x3d scene
+     */
+    public void BuildInteractiveObjectFromAnchor(Sensor anchorSensor, String anchorDestination) {
+        InteractiveObject interactiveObject = new InteractiveObject();
+        interactiveObject.setSensor(anchorSensor, anchorDestination);
+        interactiveObjects.add(interactiveObject);
+    }
+
     /**
      * initAnimationsAndInteractivity() called when we parse </scene> in
      * an X3D file.  This method will parse the array list of InteractiveObjects
@@ -465,7 +499,7 @@ public class AnimationInteractivityManager {
                     for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
                         gvrAnimationChannel.setPosKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().cycleInterval
+                                        * interactiveObject.getTimeSensor().getCycleInterval()
                                         * FRAMES_PER_SECOND, interactiveObject.getInterpolator().keyValue[j * 3],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 1],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
@@ -490,7 +524,7 @@ public class AnimationInteractivityManager {
                         Quaternionf quaternionf = new Quaternionf(axisAngle4f);
                         gvrAnimationChannel.setRotKeyQuaternion(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().cycleInterval
+                                        * interactiveObject.getTimeSensor().getCycleInterval()
                                         * FRAMES_PER_SECOND, quaternionf);
                     }
                 }   //  end rotation
@@ -505,7 +539,7 @@ public class AnimationInteractivityManager {
                     for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
                         gvrAnimationChannel.setScaleKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().cycleInterval
+                                        * interactiveObject.getTimeSensor().getCycleInterval()
                                         * FRAMES_PER_SECOND, interactiveObject.getInterpolator().keyValue[j * 3],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 1],
                                 interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
@@ -520,22 +554,23 @@ public class AnimationInteractivityManager {
                     gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
                             gvrAnimatedObject.getName() + KEY_FRAME_ANIMATION + animationCount,
                             gvrAnimatedObject,
-                            interactiveObject.getTimeSensor().cycleInterval * FRAMES_PER_SECOND,
+                            interactiveObject.getTimeSensor().getCycleInterval() * FRAMES_PER_SECOND,
                             FRAMES_PER_SECOND);
                     gvrKeyFrameAnimation.addChannel(gvrAnimationChannel);
-                    if (interactiveObject.getTimeSensor().loop) {
+                    if (interactiveObject.getTimeSensor().getLoop()) {
                         gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.REPEATED);
                         gvrKeyFrameAnimation.setRepeatCount(-1);
                     }
                     gvrKeyFrameAnimation.prepare();
                     animationCount++;
+                    interactiveObject.getTimeSensor().addGVRKeyFrameAnimation( gvrKeyFrameAnimation );
 
                     // Third, determine if this will be animation only, or
                     // interactive triggered in picking
                     if (interactiveObject.getSensor() == null) {
                         // this is an animation without interactivity
-                        //TODO: Switch to GVRJassimpAdapter processScene implementation
-                        gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine());
+                        gvrAnimator.addAnimation(gvrKeyFrameAnimation);
+
                     } else {
                         // this is an interactive object
                         final InteractiveObject interactiveObjectFinal = interactiveObject;
@@ -678,7 +713,8 @@ public class AnimationInteractivityManager {
                     // set up the call-back
                     interactiveObject.getScriptObject().setScriptCalledPerFrame(true);
                     perFrameScripting.setInteractiveObjectVars(interactiveObjectFinal);
-                }
+                } // time sensor != null
+
             }  // end if a Script (that likely includes a sensor)
 
             else if ((interactiveObject.getSensor() != null) &&
@@ -738,8 +774,15 @@ public class AnimationInteractivityManager {
                     });
                 }  // end if sensor == TOUCH
             }  // end if at least sensor, and eventUtility
+            else if (interactiveObject.getSensor() != null) {
+                // Likely this is an Anchor tag since there are no routes with it
+                if ( interactiveObject.getSensor().getType() == Sensor.Type.ANCHOR) {
+                    anchorImplementation.AnchorInteractivity( interactiveObject );
+                }  //  end if Sensor Type is Anchor
+            } // end sensor != null
 
         }  // end for loop traversing through all interactive objects
+        // Initiate all the animations, both keyframe and procedural
         if (perFrameScripting.getRunState()) {
             final GVRDrawFrameListener mOnDrawFrame = new DrawFrame();
             gvrContext.registerDrawFrameListener(mOnDrawFrame);
@@ -783,7 +826,7 @@ public class AnimationInteractivityManager {
                 }
             }
 
-            cycleInterval = this.interactiveObjectFinal.getTimeSensor().cycleInterval;
+            cycleInterval = this.interactiveObjectFinal.getTimeSensor().getCycleInterval();
             if (cycleInterval <= 0) cycleInterval = 1;
 
             BuildInitJavaScript(interactiveObjectFinal);
@@ -883,7 +926,7 @@ public class AnimationInteractivityManager {
                 }  // end if SFBool
                 else if ((fieldType.equalsIgnoreCase("SFFloat")) && (definedItem == null)) {
                     if (timeSensor != null) {
-                        scriptParameters.add( timeSensor.cycleInterval );
+                        scriptParameters.add( timeSensor.getCycleInterval() );
                     }
                     else scriptParameters.add(argument0); // the time passed in from an SFTime node
                 } else if (scriptObject.getFromDefinedItem(field) != null) {
@@ -1370,6 +1413,18 @@ public class AnimationInteractivityManager {
                             else if ( scriptObjectToEventUtility != null) {
                                 scriptObjectToEventUtility.setToggle(sfBool.getValue());
                             }
+                            else if ( scriptObject.getToTimeSensor(fieldNode) != null) {
+                                TimeSensor timeSensor = scriptObject.getToTimeSensor(fieldNode);
+                                if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("loop")){
+                                    timeSensor.setLoop( sfBool.getValue(), gvrContext );
+                                }
+                                if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("enabled")){
+                                    timeSensor.setEnabled( sfBool.getValue(), gvrContext );
+                                }
+                            }
+                            else {
+                                Log.e(TAG, "Error: Not setting SFBool '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFBool
                         else if (fieldType.equalsIgnoreCase("SFFloat")) {
                             SFFloat sfFloat = (SFFloat) returnedJavaScriptValue;
@@ -1408,11 +1463,25 @@ public class AnimationInteractivityManager {
                                     }
                                 }  //  end presumed to be a light
                             }  //  end GVRScriptObject ! null
+                            else {
+                                Log.e(TAG, "Error: Not setting SFFloat '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFFloat
                         else if (fieldType.equalsIgnoreCase("SFTime")) {
                             SFTime sfTime = (SFTime) returnedJavaScriptValue;
-                            //TODO: eventually will be supported
-
+                            if ( scriptObject.getToTimeSensor(fieldNode) != null) {
+                                TimeSensor timeSensor = scriptObject.getToTimeSensor(fieldNode);
+                                if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("startTime")){
+                                    timeSensor.startTime = (float)sfTime.getValue();
+                                }
+                                else if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("stopTime")){
+                                    timeSensor.stopTime = (float)sfTime.getValue();
+                                }
+                                else if ( scriptObject.getFieldName(fieldNode).equalsIgnoreCase("cycleInterval")){
+                                    timeSensor.setCycleInterval( (float)sfTime.getValue() );
+                                }
+                                else Log.e(TAG, "Error: Not setting SFTime '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                           }
                         }  //  end SFTime
                         else if (fieldType.equalsIgnoreCase("SFColor")) {
                             SFColor sfColor = (SFColor) returnedJavaScriptValue;
@@ -1446,6 +1515,9 @@ public class AnimationInteractivityManager {
                                     }
                                 }
                             }  //  SFColor change to a GVRSceneObject (likely a Light)
+                            else {
+                                Log.e(TAG, "Error: Not setting SFColor '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFColor (to a light or Material)
                         else if (fieldType.equalsIgnoreCase("SFVec3f")) {
                             SFVec3f sfVec3f = (SFVec3f) returnedJavaScriptValue;
@@ -1482,14 +1554,14 @@ public class AnimationInteractivityManager {
                                                 Quaternionf q = ConvertDirectionalVectorToQuaternion(v3);
                                                 gvrSpotLightBase.getTransform().setRotation(q.w, q.x, q.y, q.z);
                                             } else if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("location")) {
-                                                gvrSpotLightBase.setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
+                                                gvrSpotLightBase.getTransform().setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             }
                                         } else if (gvrComponent instanceof GVRPointLight) {
                                             GVRPointLight gvrPointLightBase = (GVRPointLight) gvrComponent;
                                             if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("attenuation")) {
                                                 gvrPointLightBase.setAttenuation(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             } else if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("location")) {
-                                                gvrPointLightBase.setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
+                                                gvrPointLightBase.getTransform().setPosition(sfVec3f.getX(), sfVec3f.getY(), sfVec3f.getZ());
                                             }
                                         } else if (gvrComponent instanceof GVRDirectLight) {
                                             GVRDirectLight gvrDirectLightBase = (GVRDirectLight) gvrComponent;
@@ -1503,6 +1575,9 @@ public class AnimationInteractivityManager {
                                     }
                                 }  // end it could be a light
                             }  // end GVRSceneObject with SFVec3f
+                            else {
+                                Log.e(TAG, "Error: Not setting SFVec3f '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFVec3f
                         else if (fieldType.equalsIgnoreCase("SFRotation")) {
                             SFRotation sfRotation = (SFRotation) returnedJavaScriptValue;
@@ -1521,6 +1596,9 @@ public class AnimationInteractivityManager {
                                     }
                                 }  //  definedItem != null
                             }  // end GVRSceneObject with SFRotation
+                            else {
+                                Log.e(TAG, "Error: Not setting SFRotation '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
                         }  //  end SFRotation
                     }  //  end value != null
                 }  //  end OUTPUT-ONLY or INPUT_OUTPUT

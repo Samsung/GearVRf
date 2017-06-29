@@ -28,7 +28,7 @@
     <uses-permission android:name="com.samsung.android.hmt.permission.READ_SETTINGS" />
 
     <uses-sdk
-        android:minSdkVersion="19"
+        android:minSdkVersion="21"
         android:targetSdkVersion="24" />
 
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />

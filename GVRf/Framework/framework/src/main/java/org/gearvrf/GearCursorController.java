@@ -28,10 +28,6 @@ import org.gearvrf.io.GVRInputManager;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-
 /**
  * This class represents the Gear Controller.
  *
@@ -39,7 +35,7 @@ import java.nio.FloatBuffer;
  * the {@link GVRInputManager#addCursorControllerListener(CursorControllerListener)} to get notified
  * when the controller is available to use. To query the device specific information from the
  * Gear Controller make sure to type cast the returned {@link GVRCursorController} to
- * {@link OvrGearController} like below:
+ * {@link GearCursorController} like below:
  *
  * <code>
  * OvrGearController controller = (OvrGearController) gvrCursorController;
@@ -49,17 +45,7 @@ import java.nio.FloatBuffer;
  * {@link GVRCursorController#addControllerEventListener(ControllerEventListener)} to receive
  * notification whenever the controller information is updated.
  */
-final class OvrGearController extends GVRCursorController {
-    private static final String TAG = "OvrGearController";
-
-    private static final int DATA_SIZE = 12;
-    private static final int BYTE_TO_FLOAT = 4;
-    private static final int INDEX_CONNECTED = 0;
-    private static final int INDEX_HANDEDNESS = 1;
-    private static final int INDEX_POSITION = 2;
-    private static final int INDEX_ROTATION = 5;
-    private static final int INDEX_BUTTON = 9;
-    private static final int INDEX_TOUCHPAD = 10;
+final class GearCursorController extends GVRCursorController {
     private static final int OVR_BUTTON_A = 0x00000001;
     private static final int OVR_BUTTON_ENTER = 0x00100000;
     private static final int OVR_BUTTON_BACK = 0x00200000;
@@ -73,28 +59,29 @@ final class OvrGearController extends GVRCursorController {
 
     private GVRSceneObject pivot;
     private GVRContext context;
-    private FloatBuffer readbackBuffer;
     private final Vector3f position;
     private EventHandlerThread thread;
     private boolean initialized;
-    private final long mPtr;
     private boolean isEnabled;
+    private final ControllerReader mControllerReader;
 
-    OvrGearController(GVRContext context) {
+    interface ControllerReader {
+        boolean isConnected();
+        void updateRotation(Quaternionf quat);
+        void updatePosition(Vector3f vec);
+        int getKey();
+        float getHandedness();
+        void updateTouchpad(PointF pt);
+    }
+
+    GearCursorController(GVRContext context, ControllerReader controllerReader) {
         super(GVRControllerType.CONTROLLER);
-        ByteBuffer readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
-        readbackBufferB.order(ByteOrder.nativeOrder());
-        readbackBuffer = readbackBufferB.asFloatBuffer();
-        mPtr = OvrNativeGearController.ctor(readbackBufferB);
         this.context = context;
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
         position = new Vector3f(0.0f, 0.0f, -1.0f);
-    }
-
-    long getPtr() {
-        return mPtr;
+        mControllerReader = controllerReader;
     }
 
     @Override
@@ -161,7 +148,7 @@ final class OvrGearController extends GVRCursorController {
     }
 
     void onDrawFrame() {
-        boolean connected = readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
+        boolean connected = mControllerReader.isConnected();
         if (connected && isEnabled()) {
             if (!initialized) {
                 if (!thread.isAlive()) {
@@ -174,17 +161,11 @@ final class OvrGearController extends GVRCursorController {
 
             ControllerEvent event = ControllerEvent.obtain();
 
-            event.rotation.set(readbackBuffer.get(INDEX_ROTATION + 1),
-                    readbackBuffer.get(INDEX_ROTATION + 2),
-                    readbackBuffer.get(INDEX_ROTATION + 3),
-                    readbackBuffer.get(INDEX_ROTATION));
-            event.position.set(readbackBuffer.get(INDEX_POSITION),
-                    readbackBuffer.get(INDEX_POSITION + 1),
-                    readbackBuffer.get(INDEX_POSITION + 2));
-            event.key = (int) readbackBuffer.get(INDEX_BUTTON);
-            event.handedness = readbackBuffer.get(INDEX_HANDEDNESS);
-            event.pointF.set(readbackBuffer.get(INDEX_TOUCHPAD),
-                    readbackBuffer.get(INDEX_TOUCHPAD + 1));
+            mControllerReader.updateRotation(event.rotation);
+            mControllerReader.updatePosition(event.position);
+            event.key = mControllerReader.getKey();
+            event.handedness = mControllerReader.getHandedness();
+            mControllerReader.updateTouchpad(event.pointF);
 
             thread.sendEvent(event);
         } else {
@@ -261,7 +242,6 @@ final class OvrGearController extends GVRCursorController {
                 thread.quitSafely();
                 initialized = false;
             }
-            OvrNativeGearController.delete(mPtr);
         } finally {
             super.finalize();
         }
@@ -297,23 +277,23 @@ final class OvrGearController extends GVRCursorController {
                 public boolean handleMessage(Message message) {
                     switch (message.what) {
                         case MSG_INITIALIZE:
-                            context.getInputManager().addCursorController(OvrGearController.this);
+                            context.getInputManager().addCursorController(GearCursorController.this);
                             break;
                         case MSG_EVENT:
                             handleControllerEvent((ControllerEvent) message.obj);
                             break;
                         case MSG_UNINITIALIZE:
-                            context.getInputManager().removeCursorController(OvrGearController
+                            context.getInputManager().removeCursorController(GearCursorController
                                     .this);
                             break;
                         case MSG_SET_ENABLE:
-                            OvrGearController.super.setEnable(message.arg1 == ENABLE);
+                            GearCursorController.super.setEnable(message.arg1 == ENABLE);
                             break;
                         case MSG_SET_SCENE:
-                            OvrGearController.super.setScene((GVRScene) message.obj);
+                            GearCursorController.super.setScene((GVRScene) message.obj);
                             break;
                         case MSG_SEND_INVALIDATE:
-                            OvrGearController.super.invalidate();
+                            GearCursorController.super.invalidate();
                             break;
                         default:
                             break;
@@ -349,7 +329,7 @@ final class OvrGearController extends GVRCursorController {
                     .KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
 
-            OvrGearController.super.setPosition(result.x, result.y, result.z);
+            GearCursorController.super.setPosition(result.x, result.y, result.z);
             event.recycle();
         }
 
@@ -444,10 +424,4 @@ final class OvrGearController extends GVRCursorController {
             return recycled;
         }
     }
-}
-
-class OvrNativeGearController {
-    static native long ctor(ByteBuffer buffer);
-
-    static native void delete(long jConfigurationManager);
 }

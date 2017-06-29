@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include "base_texture.h"
+#include "bitmap_transparency.h"
 #include "util/gvr_jni.h"
 #include "util/gvr_java_stack_trace.h"
 #include "android/asset_manager_jni.h"
@@ -35,6 +36,15 @@ extern "C" {
     JNIEXPORT jboolean JNICALL
     Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
             jlong jtexture, jint width, jint height, jbyteArray jdata);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBaseTexture_setTransparency(JNIEnv * env, jobject obj, jlong jtexture, jboolean transparency);
+
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeBaseTexture_hasTransparency(JNIEnv * env, jobject obj, jlong jtexture);
+
+    JNIEXPORT jboolean JNICALL
+    Java_org_gearvrf_NativeBaseTexture_bitmapHasTransparency(JNIEnv * env, jobject obj, jlong jtexture, jobject jbitmap);
 }
 
 JNIEXPORT jlong JNICALL
@@ -60,6 +70,27 @@ Java_org_gearvrf_NativeBaseTexture_update(JNIEnv * env, jobject obj,
     env->ReleaseByteArrayElements(jdata, data, 0);
     return result;
 }
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeBaseTexture_hasTransparency(JNIEnv * env, jobject obj, jlong jtexture) {
+    BaseTexture* texture = reinterpret_cast<BaseTexture*>(jtexture);
+    jboolean result = texture->transparency();
+    return result;
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeBaseTexture_setTransparency(JNIEnv * env, jobject obj, jlong jtexture, jboolean transparency) {
+    BaseTexture* texture = reinterpret_cast<BaseTexture*>(jtexture);
+    texture->set_transparency(transparency);
+    return;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeBaseTexture_bitmapHasTransparency(JNIEnv * env, jobject obj, jlong jtexture, jobject jbitmap) {
+    jboolean result = bitmap_has_transparency(env, jbitmap);
+    return result;
+}
+
 
 extern "C"
 JNIEXPORT jboolean JNICALL

@@ -596,6 +596,9 @@ class AsyncBitmapTexture {
         }
         bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
         bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgb));
+        if(depth == 24) {
+            bitmap.setHasAlpha(false);
+        }
         return bitmap;
     }
 
