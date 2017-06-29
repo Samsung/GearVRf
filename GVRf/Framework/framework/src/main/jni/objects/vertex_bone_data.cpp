@@ -82,6 +82,17 @@ void VertexBoneData::normalizeWeights() {
             }
         }
     }
+    VertexBuffer* vbuf = mesh->getVertexBuffer();
+    const void* vertexData = boneData.data();
+    int numVerts = boneData.size();
+    if ((bones.size() > 0) && (numVerts > 0))
+    {
+        vbuf->setFloatVec("a_bone_weights", static_cast<const float*>(vertexData) + 4,
+                               8 * numVerts, 8);
+        vbuf->setIntVec("a_bone_indices", static_cast<const int*>(vertexData),
+                             8 * numVerts, 8);
+    }
+
 }
 
 } // namespace gvr

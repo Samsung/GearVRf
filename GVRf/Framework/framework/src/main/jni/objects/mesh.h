@@ -93,16 +93,7 @@ namespace gvr {
 
         void setBones(std::vector<Bone*>&& bones)
         {
-            const void* vertexData = vertexBoneData_.boneData.data();
-            int numVerts = vertexBoneData_.boneData.size();
             vertexBoneData_.setBones(std::move(bones));
-            if ((bones.size() > 0) && (numVerts > 0))
-            {
-                mVertices->setFloatVec("a_bone_weights", static_cast<const float*>(vertexData) + 4,
-                                       8 * numVerts, 8);
-                mVertices->setIntVec("a_bone_indices", static_cast<const int*>(vertexData),
-                                     8 * numVerts, 8);
-            }
         }
 
         VertexBoneData &getVertexBoneData()

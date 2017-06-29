@@ -371,6 +371,7 @@ namespace gvr
             if (dest)
             {
                 memcpy(dest, srcData, mElemSize * numElems);
+                markDirty();
                 return true;
             }
         }
