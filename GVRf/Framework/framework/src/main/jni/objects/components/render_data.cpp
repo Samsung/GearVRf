@@ -222,18 +222,23 @@ std::string RenderData::getHashCode()
 
 bool RenderData::updateGPU(Renderer* renderer, Shader* shader)
 {
+    VertexBuffer* vbuf = mesh_->getVertexBuffer();
+
     if (mesh_->hasBones())
     {
-        if (bones_ubo_ == NULL)
+        VertexBoneData& vbd = mesh_->getVertexBoneData();
+        const std::vector<glm::mat4>& bone_matrices = vbd.getBoneMatrices();
+        int numBones = bone_matrices.size();
+
+        if ((bones_ubo_ == NULL) && (numBones > 0))
         {
-            bones_ubo_ = renderer->createUniformBlock("mat4 u_bone_matrix[60];", BONES_UBO_INDEX, "Bones_ubo");
+            bones_ubo_ = renderer->createUniformBlock("mat4 u_bone_matrix", BONES_UBO_INDEX, "Bones_ubo", 60);
+            bones_ubo_->setNumElems(numBones);
         }
-        const std::vector<glm::mat4>& bone_matrices = mesh_->getVertexBoneData().getBoneMatrices();
-        bones_ubo_->setFloatVec("u_bone_matrix", &bone_matrices[0][0][0], bone_matrices.size() * 16);
+        bones_ubo_->setRange(0, bone_matrices.data(), numBones);
         bones_ubo_->updateGPU(renderer);
     }
-
-    mesh_->getVertexBuffer()->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
+    vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
     return true;
 }
 }

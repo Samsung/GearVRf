@@ -83,6 +83,25 @@ public class GVRShaderManager extends GVRHybridObject
     }
 
     /**
+     * Make a string with the shader layout for a uniform block
+     * with a given descriptor. The format of the descriptor is
+     * the same as for a @{link GVRShaderData} - a string of
+     * types and names of each field.
+     * <p>
+     * This function will return a Vulkan shader layout if the
+     * Vulkan renderer is being used. Otherwise, it returns
+     * an OpenGL layout.
+     * @param descriptor string with types and names of each field
+     * @param blockName  name of uniform block
+     * @param useUBO     true to output uniform buffer layout, false for push constants
+     * @return string with shader declaration
+     */
+    static String makeLayout(String descriptor, String blockName, boolean useUBO)
+    {
+        return NativeShaderManager.makeLayout(descriptor, blockName, useUBO);
+    }
+
+    /**
      * Maps the shader template class to the instance of the template.
      * Only one shader template of each class is necessary since
      * shaders are global.
@@ -98,4 +117,5 @@ class NativeShaderManager {
                                 String vertexShader, String fragmentShader);
     static native void bindCalcMatrix(long shaderManager, int nativeShader, Class<? extends GVRShader> javaShaderClass);
     static native int getShader(long shaderManager, String signature);
+    static native String makeLayout(String descriptor, String blockName, boolean useUBO);
 }

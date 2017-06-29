@@ -62,11 +62,13 @@ public class GVRShader
     protected Integer mGLSLVersion = 100;
     protected boolean mHasVariants = false;
     protected boolean mUsesLights = false;
-    protected boolean mUsesTransformBuffer = true;
+    protected boolean mUseTransformBuffer = false;  // true to use Transform UBO in GL
     protected String mUniformDescriptor;
     protected String mVertexDescriptor;
     protected String mTextureDescriptor;
     protected Map<String, String> mShaderSegments;
+    protected static String sBonesDescriptor = "mat4 u_bone_matrix[60]";
+
     protected static String sTransformUBOCode = "layout (std140) uniform Transform_ubo\n{\n"
             + " #ifdef HAS_MULTIVIEW\n"
             + "     mat4 u_view_[2];\n"
@@ -83,40 +85,13 @@ public class GVRShader
             + "     mat4 u_view_i;\n"
             + "     float u_right;\n"
             + "};\n";
-    protected static String sBonesUBOCode = "" +
-            "layout (std140) uniform Bones_ubo\n" +
-            "{\n" +
-            "    mat4 u_bone_matrix[60];\n" +
-            "};\n";
 
-    protected static String sBonesVkUBOCode = "" +
-            "layout (std140, set = 0, binding = 2) uniform Bones_ubo\n" +
-            "{\n" +
-            "    mat4 u_bone_matrix[60];\n" +
-            "};\n";
 
     protected static String sTransformVkUBOCode = "layout (std140, set = 0, binding = 0) uniform Transform_ubo {\n "
             + "     mat4 u_view;\n"
             + "     mat4 u_mvp;\n"
             + "     mat4 u_mv;\n"
             + "     mat4 u_mv_it;\n"
-            + "     mat4 u_model;\n"
-            + "     mat4 u_view_i;\n"
-            + "     float u_right;\n"
-            + "};\n";
-
-    protected static String sTransformVkUniformCode = "layout(std140, push_constant) uniform Transform_ubo { \n"
-            + " #ifdef HAS_MULTIVIEW\n"
-            + "     mat4 u_view_[2];\n"
-            + "     mat4 u_mvp_[2];\n"
-            + "     mat4 u_mv_[2];\n"
-            + "     mat4 u_mv_it_[2];\n"
-            + " #else\n"
-            + "     mat4 u_view;\n"
-            + "     mat4 u_mvp;\n"
-            + "     mat4 u_mv;\n"
-            + "     mat4 u_mv_it;\n"
-            + " #endif\n"
             + "     mat4 u_model;\n"
             + "     mat4 u_view_i;\n"
             + "     float u_right;\n"
@@ -301,7 +276,7 @@ public class GVRShader
             vshader = vshader.replace("@MATERIAL_UNIFORMS", mtlLayout);
             fshader = fshader.replace("@MATERIAL_UNIFORMS", mtlLayout);
         }
-        vshader = replaceBones(vshader);
+        vshader = vshader.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         vertexShaderSource.append(vshader);
         fragmentShaderSource.append(fshader);
         int nativeShader = shaderManager.addShader(signature, mUniformDescriptor, mTextureDescriptor,
@@ -404,24 +379,11 @@ public class GVRShader
      */
     protected String replaceTransforms(String code)
     {
-        if(isVulkanInstance())
+        if (isVulkanInstance())
             return code.replace("@MATRIX_UNIFORMS", sTransformVkUBOCode);
-
+        if (mUseTransformBuffer)
+            return code.replace("@MATRIX_UNIFORMS", sTransformUBOCode);
         return code.replace("@MATRIX_UNIFORMS", sTransformUniformCode);
-        //return code.replace("@MATRIX_UNIFORMS", sTransformUBOCode);
-    }
-    /**
-     * Replaces @BONES_UNIFORMS in shader source with the
-     * proper transform uniform declarations.
-     * @param code shader source code
-     * @return shader source with transform uniform declarations added
-     */
-    protected String replaceBones(String code)
-    {
-        if(isVulkanInstance())
-            return code.replace("@BONES_UNIFORMS", sBonesVkUBOCode);
-
-        return code.replace("@BONES_UNIFORMS", sBonesUBOCode);
     }
 
     /**

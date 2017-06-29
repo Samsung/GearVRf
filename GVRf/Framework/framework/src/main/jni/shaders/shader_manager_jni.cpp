@@ -19,6 +19,7 @@
 
 #include <engine/renderer/renderer.h>
 #include <vulkan/vulkan_shader.h>
+#include <gl/gl_shader.h>
 #include "shader_manager.h"
 #include "shader.h"
 #include "util/gvr_jni.h"
@@ -117,9 +118,10 @@ JNIEXPORT jstring JNICALL
 Java_org_gearvrf_NativeShaderManager_makeLayout(JNIEnv* env, jobject obj,
                                                 jstring jdescriptor, jstring jblockName, jboolean useGPUBuffer)
 {
-    const char* desc = env->GetStringUTFChars(jdescriptor, 0);
+    const char* sdesc = env->GetStringUTFChars(jdescriptor, 0);
     const char* block = env->GetStringUTFChars(jblockName, 0);
     Renderer* renderer = Renderer::getInstance();
+    DataDescriptor desc(sdesc);
     if (renderer->isVulkanInstance())
     {
         const std::string& layout = VulkanShader::makeLayout(desc, block, useGPUBuffer);
@@ -127,7 +129,7 @@ Java_org_gearvrf_NativeShaderManager_makeLayout(JNIEnv* env, jobject obj,
     }
     else
     {
-        const std::string& layout = VulkanShader::makeLayout(desc, block, useGPUBuffer);
+        const std::string& layout = GLShader::makeLayout(desc, block, useGPUBuffer);
         return env->NewStringUTF(layout.c_str());
     }
 }

@@ -377,8 +377,7 @@ public class GVRShaderTemplate extends GVRShader
         combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
         combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
         combinedSource = combinedSource.replace("@MATERIAL_UNIFORMS", material.makeShaderLayout());
-        combinedSource = replaceBones(combinedSource);
-
+        combinedSource = combinedSource.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         if (type.equals("Vertex"))
         {
             String texcoordSource = assignTexcoords(material);

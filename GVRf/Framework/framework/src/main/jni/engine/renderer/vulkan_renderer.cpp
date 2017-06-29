@@ -46,8 +46,12 @@ namespace gvr {
     RenderPass* VulkanRenderer::createRenderPass(){
         return new VulkanRenderPass();
     }
-    UniformBlock* VulkanRenderer::createUniformBlock(const char* desc, int binding, const char* name)
+    UniformBlock* VulkanRenderer::createUniformBlock(const char* desc, int binding, const char* name, int maxelems)
     {
+        if (maxelems <= 1)
+        {
+            return new VulkanUniformBlock(desc, binding, name);
+        }
         return new VulkanUniformBlock(desc, binding, name);
     }
 
