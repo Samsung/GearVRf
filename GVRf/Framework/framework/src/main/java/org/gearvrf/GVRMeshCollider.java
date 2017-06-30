@@ -51,18 +51,35 @@ public class GVRMeshCollider extends GVREyePointee {
         super(gvrContext, NativeMeshCollider.ctorMesh(mesh.getNative()));
         mMesh = mesh;
     }
-    
+
+    /**
+     * Constructor to make mesh collider that supports coordinate picking such as
+     * texture coordinates and Barycentric coordinates.
+     *
+     * @param gvrContext
+     *            The {@link GVRContext} used by the app.
+     *
+     * @param mesh
+     *            The {@link GVRMesh} that the picking ray will test against.
+     *
+     * @param pickCoordinates
+     *            If true, coordinate information will be supplied in {@link org.gearvrf.GVRPicker.GVRPickedObject}.
+     */
+    public GVRMeshCollider(GVRContext gvrContext, GVRMesh mesh, boolean pickCoordinates) {
+        super(gvrContext, NativeMeshCollider.ctorMeshPicking(mesh.getNative(), pickCoordinates));
+    }
+
     /**
      * Constructor to make mesh collider without a mesh.
-     * 
+     *
      * The collider will use the mesh attached to the
      * scene object that owns it. If there is no mesh
      * on that scene object, the collider will never be picked.
-     * 
+     *
      * Your application does not have to wait for the mesh to load
      * before attaching a collider - it will become pickable
      * when the mesh becomes available.
-     * 
+     *
      * @param gvrContext
      *            The {@link GVRContext} used by the app.
      * @param useMeshBounds
@@ -112,6 +129,8 @@ class NativeMeshCollider {
     static native long ctorMesh(long mesh);
 
     static native long ctor(boolean useMeshBounds);
+
+    static native long ctorMeshPicking(long mesh, boolean pickCoordinates);
 
     static native void setMesh(long meshEyePointee, long mesh);
 }

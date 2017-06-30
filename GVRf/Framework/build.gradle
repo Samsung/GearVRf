@@ -1,3 +1,7 @@
+if(file("../../../extra_properties.gradle").exists()) {
+    apply from: '../../../extra_properties.gradle'
+}
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {

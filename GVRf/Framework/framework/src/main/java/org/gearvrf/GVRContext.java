@@ -723,17 +723,6 @@ public abstract class GVRContext implements IEventReceiver {
         mHandler.post(runnable);
     }
 
-    @Override
-    public void finalize() throws Throwable {
-        try {
-            if (null != mHandlerThread) {
-                mHandlerThread.getLooper().quitSafely();
-            }
-        } finally {
-            super.finalize();
-        }
-    }
-
     /**
      * Show a toast-like message for 3 seconds
      *
@@ -819,6 +808,12 @@ public abstract class GVRContext implements IEventReceiver {
         GVRReference reference;
         while (null != (reference = (GVRReference)mReferenceQueue.poll())) {
             reference.close();
+        }
+    }
+
+    void onDestroy() {
+        if (null != mHandlerThread) {
+            mHandlerThread.getLooper().quitSafely();
         }
     }
 

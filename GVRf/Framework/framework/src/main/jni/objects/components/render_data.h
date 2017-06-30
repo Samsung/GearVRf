@@ -148,6 +148,8 @@ public:
         return *dirty_flag_;
     }
 
+    void adjustRenderingOrderForTransparency();
+
     Light* light() const {
         return light_;
     }

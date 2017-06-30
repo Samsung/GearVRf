@@ -1,6 +1,13 @@
 package org.gearvrf;
 import org.joml.Vector3f;
 
+/**
+ *  A billboard is a component that can be attached to a
+ *  scene object to make it always face the camera. Note that
+ *  the up-vector of the sceneobject does not change with the
+ *  camera orientation.
+ */
+
 public class GVRBillboard extends GVRBehavior
 {
     static private long TYPE_BILLBOARD = newComponentType(GVRBillboard.class);
@@ -11,26 +18,36 @@ public class GVRBillboard extends GVRBehavior
     private Vector3f ownerXaxis = new Vector3f(0, 0, 0);
     private Vector3f ownerYaxis = new Vector3f(0, 0, 0);
 
-    /*
-    constructor
+    /**
+     *  Constructor
+     *  @param gvrContext    The current GVRF context
      */
-    public GVRBillboard(GVRContext context )
+    public GVRBillboard(GVRContext gvrContext )
     {
-        super(context);
-        mMainCameraRig = context.getMainScene().getMainCameraRig();
+        super(gvrContext);
+        mMainCameraRig = gvrContext.getMainScene().getMainCameraRig();
     }
 
     static public long getComponentType() { return TYPE_BILLBOARD; }
 
-    public void onDrawFrame(float frameTime)
+    /**
+     * Should not be used from the application.
+     */
+
+     public void onDrawFrame(float frameTime)
     {
         if ( isEnabled() ) {
             faceObjectToCamera();
         }
     }
 
-    /*
-    set the model matrix of the owner object to face the main camera rig
+    /**
+     * Set the model matrix of the owner object to face the main camera rig.
+     * Does two cross products: First, between the world up vector and the camera
+     * to object vector. This gives one of the axis of the local rotation of the
+     * object. A second cross product between the object to camera
+     * vector and this axis gives the up vector of the object. Together,
+     * with the object position, this yields the desired model matrix
      */
 
     private void faceObjectToCamera()

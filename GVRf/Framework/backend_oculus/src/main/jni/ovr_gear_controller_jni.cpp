@@ -20,9 +20,11 @@
 
 #include "util/gvr_jni.h"
 #include "ovr_gear_controller.h"
+#include "ovr_activity.h"
 
 namespace gvr {
-    extern "C" {
+
+extern "C" {
 
     JNIEXPORT jlong JNICALL Java_org_gearvrf_OvrNativeGearController_ctor(JNIEnv *env,
                                                                           jclass clazz, jobject
@@ -44,5 +46,13 @@ namespace gvr {
                                                                            jlong jController) {
         delete reinterpret_cast<GearController *>(jController);
     }
+
+    JNIEXPORT void JNICALL Java_org_gearvrf_OvrNativeGearController_nativeInitializeGearController
+            (JNIEnv* jni, jclass clazz, jlong appPtr, jlong controllerPtr) {
+        GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
+        GearController *gearController = reinterpret_cast<GearController*>(controllerPtr);
+        activity->setGearController(gearController);
     }
+
+}
 }
