@@ -29,30 +29,14 @@
 namespace gvr {
 static const char VERTEX_SHADER[] =
         "#version 300 es\n"
-        "attribute vec4 a_position;\n"
-        "attribute vec2 a_texcoord;\n"
+        "in vec4 a_position;\n"
+        "in vec2 a_texcoord;\n"
         "uniform mat4 u_mvp;\n"
-        "varying vec2 v_tex_coord;\n"
+        "out vec2 v_texcoord;\n"
         "void main() {\n"
-        "  v_tex_coord = a_texcoord.xy;\n"
+        "  v_texcoord = a_texcoord.xy;\n"
         "  gl_Position = u_mvp * a_position;\n"
         "}\n";
-
-static const char FRAGMENT_SHADER[] =
-        "#version 300 es\n"
-        "#extension GL_OES_EGL_image_external : enable\n"
-        "#extension GL_OES_EGL_image_external_essl3 : enable\n"
-                "precision highp float;\n"
-                "uniform samplerExternalOES u_texture;\n"
-                "uniform vec3 u_color;\n"
-                "uniform float u_opacity;\n"
-                "varying vec2 v_tex_coord;\n"
-                "void main()\n"
-                "{\n"
-                "  vec4 color = texture2D(u_texture, v_tex_coord);"
-                "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
-                "}\n";
-
 
 static const char VERTEX_SHADER_MULTIVIEW[] =
         "#version 300 es\n"
@@ -67,7 +51,7 @@ static const char VERTEX_SHADER_MULTIVIEW[] =
         "  gl_Position = u_mvp_[gl_ViewID_OVR] * vec4(a_position,1.0);\n"
         "}\n";
 
-static const char FRAGMENT_SHADER_MULTIVIEW[] =
+static const char FRAGMENT_SHADER[] =
         "#version 300 es\n"
         "#extension GL_OES_EGL_image_external : enable\n"
         "#extension GL_OES_EGL_image_external_essl3 : enable\n"
@@ -100,7 +84,7 @@ void OESShader::programInit() {
             LOGE("GLSL does not support GL_OES_EGL_image_external, try with disabling multiview \n");
         }
 
-        program_ = new GLProgram(VERTEX_SHADER_MULTIVIEW,FRAGMENT_SHADER_MULTIVIEW);
+        program_ = new GLProgram(VERTEX_SHADER_MULTIVIEW,FRAGMENT_SHADER);
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
     } else {
         LOGE("not a multiview");
