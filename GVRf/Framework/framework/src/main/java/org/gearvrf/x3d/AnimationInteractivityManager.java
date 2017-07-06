@@ -300,7 +300,6 @@ public class AnimationInteractivityManager {
                     else if ( (interactiveObject.getScriptObject() == null) && (routeFromScriptObject != null) ) {
                         for (ScriptObject.Field field : routeFromScriptObject.getFieldsArrayList()) {
                             if (fromField.equalsIgnoreCase(routeFromScriptObject.getFieldName(field))) {
-                                //routeFromScriptObject.setToDefinedItem(field, routeToDefinedItem, toField);
                                 routeFromScriptObject.setToEventUtility(field, routeToEventUtility, toField);
                                 routeToEventUtilityFound = true;
                             }
