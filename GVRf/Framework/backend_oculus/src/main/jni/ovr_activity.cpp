@@ -203,7 +203,9 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         const ovrQuatf& orientation = updatedTracking.HeadPose.Pose.Orientation;
         const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
         const glm::quat quat = glm::conjugate(glm::inverse(tmp));
-        cameraRig_->setRotation(quat);
+
+        cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
+        cameraRig_->updateRotation();
     } else if (nullptr != cameraRig_) {
         cameraRig_->updateRotation();
     } else {
