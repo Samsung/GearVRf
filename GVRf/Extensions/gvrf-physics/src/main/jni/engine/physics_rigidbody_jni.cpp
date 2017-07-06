@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "../bullet/bullet_rigidbody.h"
-
-#include "glm/gtc/type_ptr.hpp"
-#include "util/gvr_jni.h"
+#include "physics_world.h"
+#include "physics_rigidbody.h"
+#include "bullet/bullet_rigidbody.h"
+#include "bullet/bullet_world.h"
 
 namespace gvr {
 extern "C" {
@@ -26,6 +26,13 @@ extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DRigidBody_getComponentType(JNIEnv * env, jobject obj);
 
+    JNIEXPORT jint JNICALL
+    Java_org_gearvrf_physics_Native3DRigidBody_getSimulationType(JNIEnv * env, jobject obj,
+             jlong jrigid_body);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_physics_Native3DRigidBody_setSimulationType(JNIEnv * env, jobject obj,
+             jlong jrigid_body, jint jtype);
     JNIEXPORT jfloat JNICALL
     Java_org_gearvrf_physics_Native3DRigidBody_getMass(JNIEnv * env, jobject obj,
             jlong jrigid_body);
@@ -40,66 +47,6 @@ extern "C" {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_Native3DRigidBody_applyTorque(JNIEnv * env, jobject obj,
-            jlong jrigid_body, jfloat x, jfloat y, jfloat z);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_onAttach(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_onDetach(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getCenterX(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getCenterY(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getCenterZ(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_setCenter(JNIEnv * env, jobject obj,
-            jlong jrigid_body, jfloat x, jfloat y, jfloat z);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getRotationW(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getRotationX(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getRotationY(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getRotationZ(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT void   JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_setRotation(JNIEnv * env, jobject obj,
-            jlong jrigid_body, jfloat w, jfloat x, jfloat y, jfloat z);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getScaleX(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getScaleY(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT jfloat JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_getScaleZ(JNIEnv * env, jobject obj,
-            jlong jrigid_body);
-
-    JNIEXPORT void   JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_setScale(JNIEnv * env, jobject obj,
             jlong jrigid_body, jfloat x, jfloat y, jfloat z);
 
     JNIEXPORT void   JNICALL
@@ -198,13 +145,30 @@ Java_org_gearvrf_physics_Native3DRigidBody_ctor(JNIEnv * env, jobject obj) {
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getComponentType(JNIEnv * env, jobject obj) {
-    return BulletRigidBody::getComponentType();
+    return PhysicsRigidBody::getComponentType();
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_physics_Native3DRigidBody_getSimulationType(JNIEnv * env, jobject obj,
+          jlong jrigid_body)
+{
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
+    return rigid_body->getSimulationType();
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_physics_Native3DRigidBody_setSimulationType(JNIEnv * env, jobject obj,
+         jlong jrigid_body, jint jtype)
+{
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
+    PhysicsRigidBody::SimulationType type = (PhysicsRigidBody::SimulationType) (int) (jtype);
+    rigid_body->setSimulationType(type);
 }
 
 JNIEXPORT jfloat JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getMass(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     return rigid_body->getMass();
 }
@@ -212,7 +176,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getMass(JNIEnv * env, jobject obj,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setMass(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat mass) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setMass(mass);
 }
@@ -220,7 +184,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setMass(JNIEnv * env, jobject obj,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_applyCentralForce(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody *rigid_body = reinterpret_cast<BulletRigidBody *>(jrigid_body);
+    PhysicsRigidBody *rigid_body = reinterpret_cast<PhysicsRigidBody *>(jrigid_body);
 
     rigid_body->applyCentralForce(x, y, z);
 }
@@ -228,135 +192,15 @@ Java_org_gearvrf_physics_Native3DRigidBody_applyCentralForce(JNIEnv * env, jobje
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_applyTorque(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody *rigid_body = reinterpret_cast<BulletRigidBody *>(jrigid_body);
+    PhysicsRigidBody *rigid_body = reinterpret_cast<PhysicsRigidBody *>(jrigid_body);
 
     rigid_body->applyTorque(x, y, z);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_onAttach(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    rigid_body->onAttach();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_onDetach(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    rigid_body->onDetach();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getCenterX(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->center_x();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getCenterY(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->center_y();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getCenterZ(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->center_z();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_setCenter(JNIEnv * env, jobject obj,
-        jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    rigid_body->set_center(x, y, z);
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getRotationW(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->rotation_w();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getRotationX(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->rotation_x();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getRotationY(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->rotation_y();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getRotationZ(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->rotation_z();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_setRotation(JNIEnv * env, jobject obj,
-        jlong jrigid_body, jfloat w, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    rigid_body->set_rotation(w, x, y, z);
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getScaleX(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->scale_x();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getScaleY(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->scale_y();
-}
-
-JNIEXPORT jfloat JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_getScaleZ(JNIEnv * env, jobject obj,
-        jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    return rigid_body->scale_z();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_setScale(JNIEnv * env, jobject obj,
-        jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
-
-    rigid_body->set_scale(x, y, z);
 }
 
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setGravity(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setGravity(x, y, z);
 }
@@ -364,7 +208,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setGravity(JNIEnv * env, jobject obj,
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setDamping(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat linear, jfloat angular) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setDamping(linear, angular);
 }
@@ -372,7 +216,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setDamping(JNIEnv * env, jobject obj,
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setLinearVelocity(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setLinearVelocity(x, y, z);
 }
@@ -380,7 +224,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setLinearVelocity(JNIEnv * env, jobje
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setAngularVelocity(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setAngularVelocity(x, y, z);
 }
@@ -388,7 +232,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setAngularVelocity(JNIEnv * env, jobj
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setAngularFactor(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setAngularFactor(x, y, z);
 }
@@ -396,7 +240,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setAngularFactor(JNIEnv * env, jobjec
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setLinearFactor(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat x, jfloat y, jfloat z) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setLinearFactor(x, y, z);
 }
@@ -404,7 +248,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setLinearFactor(JNIEnv * env, jobject
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setFriction(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setFriction(n);
 }
@@ -412,7 +256,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setFriction(JNIEnv * env, jobject obj
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setRestitution(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setRestitution(n);
 }
@@ -420,7 +264,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setRestitution(JNIEnv * env, jobject 
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setSleepingThresholds(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat linear, jfloat angular) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setSleepingThresholds(linear, angular);
 }
@@ -428,7 +272,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setSleepingThresholds(JNIEnv * env, j
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setCcdMotionThreshold(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setCcdMotionThreshold(n);
 }
@@ -436,7 +280,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_setCcdMotionThreshold(JNIEnv * env, j
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setContactProcessingThreshold(JNIEnv * env, jobject obj,
         jlong jrigid_body, jfloat n) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     rigid_body->setContactProcessingThreshold(n);
 }
@@ -444,15 +288,15 @@ Java_org_gearvrf_physics_Native3DRigidBody_setContactProcessingThreshold(JNIEnv 
 JNIEXPORT void   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_setIgnoreCollisionCheck(JNIEnv * env, jobject obj,
         jlong jrigid_body, jobject collisionObj, jboolean ignore) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
-    rigid_body->setIgnoreCollisionCheck(reinterpret_cast<BulletRigidBody*>(jrigid_body), ignore);
+    rigid_body->setIgnoreCollisionCheck(reinterpret_cast<PhysicsRigidBody*>(jrigid_body), ignore);
 }
 
 JNIEXPORT jfloatArray   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getGravity(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     jfloat temp[3];
 
@@ -468,7 +312,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getGravity(JNIEnv * env, jobject obj,
 JNIEXPORT jfloatArray   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getLinearVelocity(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     jfloat temp[3];
 
@@ -484,7 +328,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getLinearVelocity(JNIEnv * env, jobje
 JNIEXPORT jfloatArray   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getAngularVelocity(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     jfloat temp[3];
 
@@ -500,7 +344,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getAngularVelocity(JNIEnv * env, jobj
 JNIEXPORT jfloatArray   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getAngularFactor(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     jfloat temp[3];
 
@@ -516,7 +360,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getAngularFactor(JNIEnv * env, jobjec
 JNIEXPORT jfloatArray   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getLinearFactor(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     jfloat temp[3];
 
@@ -532,7 +376,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getLinearFactor(JNIEnv * env, jobject
 JNIEXPORT jfloatArray   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getDamping(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     jfloat temp[2];
 
@@ -548,7 +392,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getDamping(JNIEnv * env, jobject obj,
 JNIEXPORT jfloat   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getFriction(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     return rigid_body->getFriction();
 }
@@ -556,7 +400,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getFriction(JNIEnv * env, jobject obj
 JNIEXPORT jfloat   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getRestitution(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     return rigid_body->getRestitution();
 }
@@ -564,7 +408,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getRestitution(JNIEnv * env, jobject 
 JNIEXPORT jfloat   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getCcdMotionThreshold(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     return rigid_body->getCcdMotionThreshold();
 }
@@ -572,7 +416,7 @@ Java_org_gearvrf_physics_Native3DRigidBody_getCcdMotionThreshold(JNIEnv * env, j
 JNIEXPORT jfloat   JNICALL
 Java_org_gearvrf_physics_Native3DRigidBody_getContactProcessingThreshold(JNIEnv * env, jobject obj,
         jlong jrigid_body) {
-    BulletRigidBody* rigid_body = reinterpret_cast<BulletRigidBody*>(jrigid_body);
+    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     return rigid_body->getContactProcessingThreshold();
 }

@@ -16,6 +16,8 @@
 #ifndef FRAMEWORK_BULLET_GVR_UTILS_H
 #define FRAMEWORK_BULLET_GVR_UTILS_H
 
+#include "../physics_common.h"
+
 #include "objects/components/sphere_collider.h"
 #include "objects/components/box_collider.h"
 #include "objects/components/mesh_collider.h"
@@ -39,6 +41,14 @@ namespace gvr {
     btTransform convertTransform2btTransform(const Transform *t);
 
     void convertBtTransform2Transform(btTransform bulletTransform, Transform *transform);
+
+    inline btVector3 Common2Bullet(PhysicsVec3 const &pv) {
+        return btVector3(pv.x, pv.y, pv.z);
+    }
+
+    inline btQuaternion Common2Bullet(PhysicsQuat const &quat) {
+        return btQuaternion(quat.x, quat.y, quat.z, quat.w);
+    }
 }
 
 #endif //FRAMEWORK_BULLET_GVR_UTILS_H

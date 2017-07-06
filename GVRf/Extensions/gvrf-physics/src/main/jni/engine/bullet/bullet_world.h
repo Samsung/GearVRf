@@ -20,22 +20,32 @@
 #ifndef BULLET_WORLD_H_
 #define BULLET_WORLD_H_
 
-#include "../physics3d/physics_3dworld.h"
+#include "../physics_common.h"
+#include "../physics_world.h"
 
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
-
-#include "glm/glm.hpp"
 #include <utility>
 #include <map>
 
+class btDynamicsWorld;
+class btCollisionConfiguration;
+class btCollisionDispatcher;
+class btSequentialImpulseConstraintSolver;
+class btBroadphaseInterface;
+
 namespace gvr {
 
-class BulletWorld : public Physics3DWorld {
+class PhysicsConstraint;
+class PhysicsRigidBody;
+
+class BulletWorld : public PhysicsWorld {
  public:
     BulletWorld();
 
     ~BulletWorld();
+
+    void addConstraint(PhysicsConstraint *constraint);
+
+    void removeConstraint(PhysicsConstraint *constraint);
 
     void addRigidBody(PhysicsRigidBody *body);
 
@@ -46,6 +56,14 @@ class BulletWorld : public Physics3DWorld {
     void step(float timeStep);
 
     void listCollisions(std::list <ContactPoint> &contactPoints);
+
+    void setGravity(float x, float y, float z);
+
+    void setGravity(glm::vec3 gravity);
+
+    PhysicsVec3 getGravity() const;
+
+    static std::mutex worldLock;
 
  private:
     void initialize();
@@ -59,10 +77,9 @@ class BulletWorld : public Physics3DWorld {
     btCollisionDispatcher *mDispatcher;
     btSequentialImpulseConstraintSolver *mSolver;
     btBroadphaseInterface *mOverlappingPairCache;
-
-    btNearCallback *gTmpFilter;
-    int gNearCallbackCount = 0;
-    void *gUserData = 0;
+    //void (*gTmpFilter)(); // btNearCallback
+    //int gNearCallbackCount = 0;
+    //void *gUserData = 0;
 };
 
 }

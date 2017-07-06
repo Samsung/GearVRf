@@ -16,22 +16,29 @@
 #ifndef BULLET_RIGIDBODY_H_
 #define BULLET_RIGIDBODY_H_
 
-#include "../physics3d/physics_3drigidbody.h"
+#include "../physics_rigidbody.h"
+#include "bullet_object.h"
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btMotionState.h>
 
 namespace gvr {
+class SceneObject;
 
-class BulletRigidBody : public Physics3DRigidBody, btMotionState {
+class BulletRigidBody : public PhysicsRigidBody,
+                               BulletObject,
+                               btMotionState {
  public:
     BulletRigidBody();
 
-    virtual ~BulletRigidBody();
+    ~BulletRigidBody();
 
     btRigidBody *getRigidBody() const {
         return mRigidBody;
     }
+
+    virtual void setSimulationType(SimulationType type);
+    virtual SimulationType getSimulationType() const;
 
     void setMass(float mass) {
         mConstructionInfo.m_mass = btScalar(mass);
@@ -54,10 +61,6 @@ class BulletRigidBody : public Physics3DRigidBody, btMotionState {
     void applyCentralForce(float x, float y, float z);
 
     void applyTorque(float x, float y, float z);
-
-    void onAttach();
-
-    void onDetach();
 
     float center_x() const;
 
@@ -133,6 +136,8 @@ class BulletRigidBody : public Physics3DRigidBody, btMotionState {
 
     const float getCcdSweptSphereRadius() const;
 
+    virtual void set_owner_object(SceneObject* obj);
+
  private:
     void initialize();
 
@@ -140,11 +145,15 @@ class BulletRigidBody : public Physics3DRigidBody, btMotionState {
 
     void updateColisionShapeLocalScaling();
 
- private:
+    void onAttach(SceneObject* owner);
+
+private:
     btRigidBody *mRigidBody;
     btRigidBody::btRigidBodyConstructionInfo mConstructionInfo;
     btTransform m_centerOfMassOffset;
+    btTransform prevPos;
     btVector3 mScale;
+    SimulationType mSimType;
 };
 
 }
