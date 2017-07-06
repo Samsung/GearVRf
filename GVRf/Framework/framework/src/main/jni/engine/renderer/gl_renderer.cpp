@@ -313,7 +313,7 @@ namespace gvr
 
         if (!render_data->depth_mask())
         {
-            GL(glDepthMask(GL_FALSE));
+            GL(glDepthMask(GL_TRUE));
         }
 
         if (render_data->stencil_test())
