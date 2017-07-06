@@ -20,6 +20,7 @@
 #include "VrApi_Helpers.h"
 #include "VrApi_SystemUtils.h"
 #include <cstring>
+#include <unistd.h>
 #include "engine/renderer/renderer.h"
 
 
@@ -40,6 +41,8 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
 
     onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(I)V");
     updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
+
+    mainThreadId_ = gettid();
 }
 
 GVRActivity::~GVRActivity() {
@@ -124,6 +127,8 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
 
         oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
         configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
+        oculusPerformanceParms_.MainThreadTid = mainThreadId_;
+        oculusPerformanceParms_.RenderThreadTid = gettid();
 
         oculusHeadModelParms_ = vrapi_DefaultHeadModelParms();
         configurationHelper_.getHeadModelConfiguration(env, oculusHeadModelParms_);
