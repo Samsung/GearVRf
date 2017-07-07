@@ -306,6 +306,7 @@ namespace gvr
         {
             GL(glDisable(GL_POLYGON_OFFSET_FILL));
         }
+
         if (!render_data->depth_test())
         {
             GL(glEnable(GL_DEPTH_TEST));
