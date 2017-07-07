@@ -15,15 +15,7 @@
 
 package org.gearvrf.script;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
+import com.naef.jnlua.script.LuaScriptEngineFactory;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
@@ -35,7 +27,16 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IScriptEvents;
 import org.gearvrf.script.javascript.RhinoScriptEngineFactory;
 
-import com.naef.jnlua.script.LuaScriptEngineFactory;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
 
 /**
  * The script manager class handles script engines, script attachment/
@@ -103,7 +104,7 @@ public class GVRScriptManager {
         Thread.currentThread().setContextClassLoader(
                 gvrContext.getActivity().getClassLoader());
 
-        initializeGlobalVariables();
+        mGlobalVariables.put(VAR_NAME_GVRF, new GVRContextProxy(mGvrContext));
         initializeEngines();
     }
 
@@ -128,7 +129,7 @@ public class GVRScriptManager {
         }
     }
 
-    protected void addGlobalBindings(ScriptEngine engine) {
+    protected void addGlobalBindings(final ScriptEngine engine) {
         Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
         if (bindings == null) {
             bindings = engine.createBindings();
@@ -139,6 +140,16 @@ public class GVRScriptManager {
             for (Map.Entry<String, Object> ent : mGlobalVariables.entrySet()) {
                 bindings.put(ent.getKey(), ent.getValue());
             }
+            mBindingsClosers.add(new Runnable() {
+                @Override
+                public void run() {
+                    final Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
+                    if (null != bindings) {
+                        bindings.clear();
+                    }
+                    engine.setBindings(null, ScriptContext.GLOBAL_SCOPE);
+                }
+            });
         }
     }
 
@@ -379,4 +390,14 @@ public class GVRScriptManager {
             }
         }
     }
+    public void destroy() {
+        synchronized (mGlobalVariables) {
+            for (final Runnable r : mBindingsClosers) {
+                r.run();
+            }
+            mBindingsClosers.clear();
+        }
+    }
+
+    private final HashSet<Runnable> mBindingsClosers = new HashSet<>();
 }

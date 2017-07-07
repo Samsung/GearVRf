@@ -51,7 +51,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Future;
 
 /**
  * {@link GVRAssetLoader} provides methods for importing 3D models and textures.
@@ -71,7 +70,7 @@ public final class GVRAssetLoader {
      * The default texture parameter instance for overloading texture methods
      *
      */
-    private final GVRTextureParameters DEFAULT_TEXTURE_PARAMETERS;
+    private final GVRTextureParameters mDefaultTextureParameters;
 
     /**
      * Loads textures and listens for texture load events.
@@ -576,7 +575,7 @@ public final class GVRAssetLoader {
     public GVRAssetLoader(GVRContext context)
     {
         mContext = context;
-        DEFAULT_TEXTURE_PARAMETERS = new GVRTextureParameters(context);
+        mDefaultTextureParameters = new GVRTextureParameters(context);
     }
 
     /**
@@ -643,7 +642,7 @@ public final class GVRAssetLoader {
 
     public GVRTexture loadTexture(GVRAndroidResource resource)
     {
-        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
                 request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
@@ -716,7 +715,7 @@ public final class GVRAssetLoader {
     {
         if (texparams == null)
         {
-            texparams = DEFAULT_TEXTURE_PARAMETERS;
+            texparams = mDefaultTextureParameters;
         }
         GVRTexture texture = new GVRTexture(mContext, texparams);
         TextureRequest request = new TextureRequest(resource, texture, callback);
@@ -768,7 +767,7 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadTexture(GVRAndroidResource resource, TextureCallback callback)
     {
-        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
                 request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
@@ -811,7 +810,7 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
     {
-        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
                 mTextureCache, request, resource, DEFAULT_PRIORITY,
@@ -821,7 +820,7 @@ public final class GVRAssetLoader {
 
     public GVRTexture loadCubemapTexture(GVRAndroidResource resource)
     {
-        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
                 mTextureCache, request, resource, DEFAULT_PRIORITY,
@@ -843,7 +842,7 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
     {
-        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
                 mTextureCache, request, resource, DEFAULT_PRIORITY,
@@ -853,7 +852,7 @@ public final class GVRAssetLoader {
 
     public GVRTexture loadCompressedCubemapTexture(GVRAndroidResource resource)
     {
-        GVRTexture texture = new GVRTexture(mContext, DEFAULT_TEXTURE_PARAMETERS);
+        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
                                                                    mTextureCache, request, resource, DEFAULT_PRIORITY,
@@ -1464,7 +1463,7 @@ public final class GVRAssetLoader {
     }
 
     GVRTextureParameters getDefaultTextureParameters() {
-        return DEFAULT_TEXTURE_PARAMETERS;
+        return mDefaultTextureParameters;
     }
 
      /**

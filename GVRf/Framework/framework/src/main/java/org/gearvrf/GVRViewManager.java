@@ -71,6 +71,11 @@ abstract class GVRViewManager extends GVRContext {
 
     void onDestroy() {
         mInputManager.close();
+        mScriptManager.destroy();
+
+        mFrameListeners.clear();
+        mRunnables.clear();
+        mRunnablesPostRender.clear();
     }
 
     public GVREventManager getEventManager() {
