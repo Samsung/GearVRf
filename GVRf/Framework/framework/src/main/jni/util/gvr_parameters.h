@@ -3,7 +3,7 @@
  ***************************************************************************/
 
 #ifndef GVR_PARAMETERS_H_
-#define GVR_PARAMETERS_H
+#define GVR_PARAMETERS_H_
 
 namespace gvr {
 enum ColorFormat {

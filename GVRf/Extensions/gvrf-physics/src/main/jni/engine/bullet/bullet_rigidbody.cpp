@@ -12,21 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "bullet_world.h"
 #include "bullet_rigidbody.h"
 #include "bullet_gvr_utils.h"
+#include "objects/scene_object.h"
 #include "objects/components/sphere_collider.h"
 #include "util/gvr_log.h"
 
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionShapes/btEmptyShape.h>
 #include <LinearMath/btDefaultMotionState.h>
 #include <LinearMath/btTransform.h>
+#include <math.h>
 
 namespace gvr {
 
 BulletRigidBody::BulletRigidBody()
-        : Physics3DRigidBody(), mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
-          m_centerOfMassOffset(btTransform::getIdentity()), mScale(1.0f, 1.0f, 1.0f) {
+        : mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
+          m_centerOfMassOffset(btTransform::getIdentity()),
+          mScale(1.0f, 1.0f, 1.0f),
+          mSimType(SimulationType::DYNAMIC)
+{
     initialize();
 }
 
@@ -34,28 +40,78 @@ BulletRigidBody::~BulletRigidBody() {
     finalize();
 }
 
-void BulletRigidBody::onAttach() {
-    bool isDynamic = (getMass() != 0.f);
+void BulletRigidBody::setSimulationType(PhysicsRigidBody::SimulationType type)
+{
+    mSimType = type;
+    switch (type)
+    {
+        case SimulationType::DYNAMIC:
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() &
+                                      ~(btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT |
+                                        btCollisionObject::CollisionFlags::CF_STATIC_OBJECT));
+        mRigidBody->setActivationState(ACTIVE_TAG);
+        break;
 
+        case SimulationType::STATIC:
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() |
+                                      btCollisionObject::CollisionFlags::CF_STATIC_OBJECT &
+                                      ~btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
+        mRigidBody->setActivationState(ISLAND_SLEEPING);
+        break;
+
+        case SimulationType::KINEMATIC:
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() |
+                                       btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT &
+                                       ~btCollisionObject::CollisionFlags::CF_STATIC_OBJECT);
+        mRigidBody->setActivationState(ISLAND_SLEEPING);
+        break;
+    }
+}
+
+BulletRigidBody::SimulationType BulletRigidBody::getSimulationType() const
+{
+    return mSimType;
+}
+
+void BulletRigidBody::set_owner_object(SceneObject* obj) {
+    if (obj == owner_object())
+    {
+        return;
+    }
+    Component::set_owner_object(obj);
+    if (obj)
+    {
+        onAttach(obj);
+    }
+}
+
+void BulletRigidBody::onAttach(SceneObject* owner) {
+    bool isDynamic = (getMass() != 0.f);
+    Collider* collider = owner->collider();
+    RenderData* rdata = owner->render_data();
     if (mConstructionInfo.m_collisionShape) {
         delete mConstructionInfo.m_collisionShape;
     }
-
-    mConstructionInfo.m_collisionShape = convertCollider2CollisionShape(
-            owner_object()->collider());
-
-    if (isDynamic) {
-        mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
-                                                                  mConstructionInfo.m_localInertia);
+    mRigidBody->setMotionState(this);
+    mRigidBody->setMassProps(mConstructionInfo.m_mass, mConstructionInfo.m_localInertia);
+    if (collider) {
+        mConstructionInfo.m_collisionShape = convertCollider2CollisionShape(collider);
+        if (isDynamic) {
+            mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
+                                                                      mConstructionInfo.m_localInertia);
+        }
+        mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
+        mRigidBody->setMassProps(getMass(), mConstructionInfo.m_localInertia);
+        mRigidBody->updateInertiaTensor();
+        updateColisionShapeLocalScaling();
+    }
+    else {
+        LOGE("PHYSICS: Cannot attach rigid body without collider");
     }
 
-    mRigidBody->setMotionState(this);
-    mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
-    mRigidBody->setMassProps(mConstructionInfo.m_mass, mConstructionInfo.m_localInertia);
-    updateColisionShapeLocalScaling();
-}
+    getWorldTransform(prevPos);
 
-void BulletRigidBody::onDetach() { }
+}
 
 void BulletRigidBody::initialize() {
     mRigidBody = new btRigidBody(mConstructionInfo);
@@ -63,6 +119,7 @@ void BulletRigidBody::initialize() {
 }
 
 void BulletRigidBody::finalize() {
+
     if (mRigidBody->getCollisionShape()) {
         mConstructionInfo.m_collisionShape = 0;
         delete mRigidBody->getCollisionShape();
@@ -111,13 +168,31 @@ void BulletRigidBody::setCenterOfMass(const Transform *t) {
 }
 
 void BulletRigidBody::getWorldTransform(btTransform &centerOfMassWorldTrans) const {
-    centerOfMassWorldTrans = convertTransform2btTransform(owner_object()->transform())
+    Transform* trans = owner_object()->transform();
+
+    centerOfMassWorldTrans = convertTransform2btTransform(trans)
                              * m_centerOfMassOffset.inverse();
 }
 
 void BulletRigidBody::setWorldTransform(const btTransform &centerOfMassWorldTrans) {
-    convertBtTransform2Transform(centerOfMassWorldTrans * m_centerOfMassOffset,
-                                 owner_object()->transform());
+    Transform* trans = owner_object()->transform();
+    btTransform aux; getWorldTransform(aux);
+
+    if(std::abs(aux.getOrigin().getX() - prevPos.getOrigin().getX()) >= 0.1f ||
+       std::abs(aux.getOrigin().getY() - prevPos.getOrigin().getY()) >= 0.1f ||
+       std::abs(aux.getOrigin().getZ() - prevPos.getOrigin().getZ()) >= 0.1f)
+    {
+        mRigidBody->setWorldTransform(aux);
+        prevPos = aux;
+        //TODO: incomplete solution
+    }
+    else
+    {
+        btTransform physicBody = (centerOfMassWorldTrans  * m_centerOfMassOffset);
+        convertBtTransform2Transform(physicBody, trans);
+        prevPos = physicBody;
+    }
+    //convertBtTransform2Transform(centerOfMassWorldTrans * m_centerOfMassOffset, trans);
 }
 
 void BulletRigidBody::applyCentralForce(float x, float y, float z) {
@@ -185,10 +260,12 @@ void  BulletRigidBody::set_scale(float x, float y, float z) {
 
 void  BulletRigidBody::updateColisionShapeLocalScaling() {
     btVector3 ownerScale;
-    if (owner_object()) {
-        ownerScale.setValue(owner_object()->transform()->scale_x(),
-                            owner_object()->transform()->scale_y(),
-                            owner_object()->transform()->scale_z());
+    SceneObject* owner = owner_object();
+    if (owner) {
+        Transform* trans = owner->transform();
+        ownerScale.setValue(trans->scale_x(),
+                            trans->scale_y(),
+                            trans->scale_z());
     } else {
         ownerScale.setValue(1.0f, 1.0f, 1.0f);
     }
@@ -198,54 +275,67 @@ void  BulletRigidBody::updateColisionShapeLocalScaling() {
 
 
 void BulletRigidBody::setGravity(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setGravity(btVector3(x, y, z));
 }
 
 void BulletRigidBody::setDamping(float linear, float angular) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setDamping(linear, angular);
 }
 
 void BulletRigidBody::setLinearVelocity(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setLinearVelocity(btVector3(x, y, z));
 }
 
 void BulletRigidBody::setAngularVelocity(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setAngularVelocity(btVector3(x, y, z));
 }
 
 void BulletRigidBody::setAngularFactor(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setAngularFactor(btVector3(x, y, z));
 }
 
 void BulletRigidBody::setLinearFactor(float x, float y, float z) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setLinearFactor(btVector3(x, y, z));
 }
 
 void BulletRigidBody::setFriction(float n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setFriction(n);
 }
 
 void BulletRigidBody::setRestitution(float n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setRestitution(n);
 }
 
 void BulletRigidBody::setSleepingThresholds(float linear, float angular) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setSleepingThresholds(linear, angular);
 }
 
 void BulletRigidBody::setCcdMotionThreshold(float n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setCcdMotionThreshold(n);
 }
 
 void BulletRigidBody::setCcdSweptSphereRadius(float n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setCcdSweptSphereRadius(n);
 }
 
 void BulletRigidBody::setContactProcessingThreshold(float n) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setContactProcessingThreshold(n);
 }
 
 void BulletRigidBody::setIgnoreCollisionCheck(PhysicsRigidBody *collisionObj, bool ignore) {
+    std::lock_guard<std::mutex> lock(BulletWorld::worldLock);
     mRigidBody->setIgnoreCollisionCheck(((BulletRigidBody *) collisionObj)->getRigidBody(),
                                         ignore);
 }

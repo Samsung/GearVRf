@@ -24,9 +24,6 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSceneObject.ComponentVisitor;
 import org.gearvrf.ISceneObjectEvents;
 
-import java.util.Collections;
-import java.util.LinkedList;
-
 /**
  * Represents a physics world where all {@link GVRSceneObject} with {@link GVRRigidBody} component
  * attached to are simulated.
@@ -34,6 +31,8 @@ import java.util.LinkedList;
  * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
 public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, ComponentVisitor {
+    protected float mFrameTime;
+    private boolean mIsProcessing;
 
     static {
         System.loadLibrary("gvrf-physics");
@@ -60,11 +59,32 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix) {
         super(gvrContext, NativePhysics3DWorld.ctor());
         mHasFrameCallback = false;
+        mIsProcessing = false;
+        mFrameTime = 0.0f;
         mCollisionMatrix = collisionMatrix;
     }
 
     static public long getComponentType() {
         return NativePhysics3DWorld.getComponentType();
+    }
+
+
+    /**
+     * Add a {@link GVRConstraint} to this physics world.
+     *
+     * @param gvrConstraint The {@link GVRConstraint} to add.
+     */
+    public void addConstraint(GVRConstraint gvrConstraint) {
+        NativePhysics3DWorld.addConstraint(getNative(), gvrConstraint.getNative());
+    }
+
+    /**
+     * Remove a {@link GVRFixedConstraint} from this physics world.
+     *
+     * @param gvrConstraint the {@link GVRFixedConstraint} to remove.
+     */
+    public void removeConstraint(GVRConstraint gvrConstraint) {
+        NativePhysics3DWorld.removeConstraint(getNative(), gvrConstraint.getNative());
     }
 
     /**
@@ -113,9 +133,15 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
 
     @Override
     public void onDrawFrame(float frameTime) {
-        NativePhysics3DWorld.step(getNative(), frameTime);
-
+        mFrameTime += frameTime;
+        if (mIsProcessing) {
+            return;
+        }
+        mIsProcessing = true;
+        NativePhysics3DWorld.step(getNative(), mFrameTime);
         generateCollisionEvents();
+        mFrameTime = 0.0f;
+        mIsProcessing = false;
     }
 
     private void generateCollisionEvents() {
@@ -211,6 +237,14 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
 
     }
 
+    public void setGravity(float x, float y, float z) {
+        NativePhysics3DWorld.setGravity(getNative(), x, y, z);
+    }
+
+    public void getGravity(float[] gravity) {
+        NativePhysics3DWorld.getGravity(getNative(), gravity);
+    }
+
     @Override
     public boolean visit(GVRComponent gvrComponent) {
         if (!gvrComponent.isEnabled()) {
@@ -230,6 +264,10 @@ class NativePhysics3DWorld {
 
     static native long getComponentType();
 
+    static native boolean addConstraint(long jphysics_world, long jconstraint);
+
+    static native boolean removeConstraint(long jphysics_world, long jconstraint);
+
     static native boolean addRigidBody(long jphysics_world, long jrigid_body);
 
     static native boolean addRigidBodyWithMask(long jphysics_world, long jrigid_body, long collisionType, long collidesWith);
@@ -237,6 +275,10 @@ class NativePhysics3DWorld {
     static native void removeRigidBody(long jphysics_world, long jrigid_body);
 
     static native void step(long jphysics_world, float jtime_step);
+
+    static native void getGravity(long jworld, float[] array);
+
+    static native void setGravity(long jworld, float x, float y, float z);
 
     static native GVRCollisionInfo[] listCollisions(long jphysics_world);
 }
