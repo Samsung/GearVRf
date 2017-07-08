@@ -546,7 +546,7 @@ public class GVRPicker extends GVRBehavior {
      */
     static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz,
                                    int faceIndex, float barycentricx, float barycentricy, float barycentricz,
-                                   float texu, float texv)
+                                   float texu, float texv, float normalx, float normaly, float normalz)
     {
         GVRCollider collider = GVRCollider.lookup(colliderPointer);
         if (collider == null)
@@ -555,8 +555,8 @@ public class GVRPicker extends GVRBehavior {
             return null;
         }
         return new GVRPicker.GVRPickedObject(collider, new float[] { hitx, hity, hitz }, distance, faceIndex,
-                new float[] {barycentricx, barycentricy, barycentricz},
-                new float[]{ texu, texv });
+                new float[] {barycentricx, barycentricy, barycentricz}, new float[]{ texu, texv },
+                new float[]{normalx, normaly, normalz});
     }
 
     /**
@@ -599,6 +599,7 @@ public class GVRPicker extends GVRBehavior {
         public final int faceIndex;
         public final float[] barycentricCoords;
         public final float[] textureCoords;
+        public final float[] normalCoords;
 
         /**
          * Creates a new instance of {@link GVRPickedObject}.
@@ -625,7 +626,7 @@ public class GVRPicker extends GVRBehavior {
          * @see GVRCollider
          */
         public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance, int faceIndex,
-                               float[] barycentricCoords, float[] textureCoords) {
+                               float[] barycentricCoords, float[] textureCoords, float[] normalCoords) {
             hitObject = hitCollider.getOwnerObject();
             this.hitDistance = hitDistance;
             this.hitCollider = hitCollider;
@@ -633,6 +634,7 @@ public class GVRPicker extends GVRBehavior {
             this.faceIndex = faceIndex;
             this.barycentricCoords = barycentricCoords;
             this.textureCoords = textureCoords;
+            this.normalCoords = normalCoords;
         }
 
         public GVRPickedObject(GVRSceneObject hitObject, float[] hitLocation) {
@@ -643,6 +645,7 @@ public class GVRPicker extends GVRBehavior {
             this.faceIndex = -1;
             this.barycentricCoords = new float[]{-1.0f, -1.0f, -1.0f};
             this.textureCoords = new float[]{-1.0f, -1.0f};
+            this.normalCoords = new float[]{0.0f, 0.0f, 0.0f};
         }
 
         /**
@@ -742,6 +745,29 @@ public class GVRPicker extends GVRBehavior {
 
         /** The v coordinate of the texture hit location */
         public float getTextureV(){ return textureCoords[1]; }
+
+        /**
+         * The normalized surface normal of the hit location on the mesh (in world coordinates)
+         * All coordinates will be 0.0f if the coordinates haven't been calculated
+         */
+        public float[] getNormalCoords() {
+            return normalCoords;
+        }
+
+        /** The x coordinate of the surface normal */
+        public float getNormalX() {
+            return normalCoords[0];
+        }
+
+        /** The y coordinate of the surface normal */
+        public float getNormalY() {
+            return normalCoords[1];
+        }
+
+        /** The z coordinate of the surface normal*/
+        public float getNormalZ() {
+            return normalCoords[2];
+        }
     }
 
     static final ReentrantLock sFindObjectsLock = new ReentrantLock();
