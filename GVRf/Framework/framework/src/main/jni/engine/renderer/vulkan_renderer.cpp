@@ -173,6 +173,9 @@ namespace gvr {
             }
         }
 
+        // Call Post Effect
+
+        vulkanCore_->postEffectRender();
         vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager);
         vulkanCore_->DrawFrameForRenderData();
     }

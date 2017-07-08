@@ -137,6 +137,8 @@ public:
         return swap_chain_init_;
     }
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
+
+    void postEffectRender();
 private:
     std::vector <VkFence> waitFences;
     std::vector <VkFence> waitSCBFences;
@@ -213,6 +215,21 @@ private:
 
     VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
     VkRenderPass mRenderPassMap[2];
+
+    // Post Effect Required things
+    VkDescriptorSet descriptorSetPE;
+    VkPipelineLayout pipelineLayoutPE;
+    VkPipeline pipelinePE;
+    struct Vertices
+    {
+        VkBuffer buf;
+        VkDeviceMemory mem;
+        VkPipelineVertexInputStateCreateInfo vi;
+        VkVertexInputBindingDescription      vi_bindings[1];
+        VkVertexInputAttributeDescription    vi_attrs[2];
+    };
+    Vertices verticesPE;
+    VulkanShader * pEShader;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H

@@ -22,6 +22,7 @@
 #include "vulkan_material.h"
 #include "vulkan/vk_framebuffer.h"
 #include "vulkan/vk_render_to_texture.h"
+#include "vk_imagebase.h"
 #define CUSTOM_TEXTURE
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999
@@ -77,6 +78,41 @@ std::string vertexShaderData = std::string("") +
                                        "o_texcoord = a_texcoord; \n" +
                                "  gl_Position = u_mvp * vec4(pos.x, pos.y, pos.z,1.0); \n" +
                                "}";
+
+
+
+std::string vs = "#version 400\n"
+                         "#extension GL_ARB_separate_shader_objects : enable\n"
+                         "#extension GL_ARB_shading_language_420pack : enable\n"
+                         "\n"
+                         "precision mediump float;\n"
+                         "layout ( location = 0 ) in vec3 a_position;\n"
+                         "layout ( location = 1 ) in vec2 a_uv;\n"
+                         "layout ( location = 0 ) out vec2 o_uv;\n"
+
+                         "\n"
+                         "void main()\n"
+                         "{\n"
+                         "o_uv = a_uv;\n"
+                         "   gl_Position =  vec4(a_position, 1);\n"
+                         "}";
+
+std::string fs = "#version 400\n"
+                          "#extension GL_ARB_separate_shader_objects : enable\n"
+                          "#extension GL_ARB_shading_language_420pack : enable\n"
+                          "\n"
+                          "\n"
+                          "layout (input_attachment_index=0, set = 0, binding = 0) uniform subpassInput positionsTarget;\n"
+                          "\n"
+                          "layout (location = 0) in vec2 uv;\n"
+                          "\n"
+                          "layout (location = 0) out vec4 FragColor;\n"
+                          "\n"
+                          "void main() {"
+                  "FragColor = subpassLoad(positionsTarget);"
+                  "}";
+
+
 namespace gvr {
     std::vector<uint64_t> samplers;
     VulkanCore *VulkanCore::theInstance = NULL;
@@ -620,7 +656,7 @@ namespace gvr {
             return render_pass;
         }
         VkRenderPass renderPass;
-        VkAttachmentDescription attachmentDescriptions[2] = {};
+        VkAttachmentDescription attachmentDescriptions[3] = {};
         attachmentDescriptions[0].flags = 0;
         attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
         attachmentDescriptions[0].samples = getVKSampleBit(sample_count);
@@ -641,9 +677,20 @@ namespace gvr {
         attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+        // Post Effect Input texture
+        attachmentDescriptions[2].flags = 0;
+        attachmentDescriptions[2].format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
+        attachmentDescriptions[2].samples = getVKSampleBit(sample_count);
+        attachmentDescriptions[2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachmentDescriptions[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachmentDescriptions[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDescriptions[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
         // We have references to the attachment offsets, stating the layout type.
         VkAttachmentReference colorReference = {};
-        colorReference.attachment = 0;
+        colorReference.attachment = 2;
         colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 
@@ -653,22 +700,53 @@ namespace gvr {
 
         // There can be multiple subpasses in a renderpass, but this example has only one.
         // We set the color and depth references at the grahics bind point in the pipeline.
-        VkSubpassDescription subpassDescription = {};
-        subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDescription.flags = 0;
-        subpassDescription.inputAttachmentCount = 0;
-        subpassDescription.pInputAttachments = nullptr;
-        subpassDescription.colorAttachmentCount = 1;
-        subpassDescription.pColorAttachments = &colorReference;
-        subpassDescription.pResolveAttachments = nullptr;
-        subpassDescription.pDepthStencilAttachment = &depthReference;
-        subpassDescription.preserveAttachmentCount = 0;
-        subpassDescription.pPreserveAttachments = nullptr;
+        VkSubpassDescription subpassDescription[2] = {};
+        subpassDescription[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDescription[0].flags = 0;
+        subpassDescription[0].inputAttachmentCount = 0;
+        subpassDescription[0].pInputAttachments = nullptr;
+        subpassDescription[0].colorAttachmentCount = 1;
+        subpassDescription[0].pColorAttachments = &colorReference;
+        subpassDescription[0].pResolveAttachments = nullptr;
+        subpassDescription[0].pDepthStencilAttachment = &depthReference;
+        subpassDescription[0].preserveAttachmentCount = 0;
+        subpassDescription[0].pPreserveAttachments = nullptr;
+
+
+        // Post Effect
+        VkAttachmentReference colorReferencesPass2 = {};
+        colorReferencesPass2.attachment              = 0;
+        colorReferencesPass2.layout                  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference inputReferencesPass2 = {};
+        inputReferencesPass2.attachment              = 1;
+        inputReferencesPass2.layout                  = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        subpassDescription[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDescription[1].flags = 0;
+        subpassDescription[1].inputAttachmentCount = 1;
+        subpassDescription[1].pInputAttachments = &inputReferencesPass2;
+        subpassDescription[1].colorAttachmentCount = 1;
+        subpassDescription[1].pColorAttachments = &colorReferencesPass2;
+        subpassDescription[1].pResolveAttachments = nullptr;
+        subpassDescription[1].pDepthStencilAttachment = &depthReference;
+        subpassDescription[1].preserveAttachmentCount = 0;
+        subpassDescription[1].pPreserveAttachments = nullptr;
+
+        // Specify dependencies
+        VkSubpassDependency dependencies[1] = {};
+        dependencies[0].srcSubpass                      = 0;
+        dependencies[0].dstSubpass                      = 1;
+        dependencies[0].srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dstAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+        dependencies[0].srcStageMask                    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependencies[0].dstStageMask                    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
 
         vkCreateRenderPass(m_device,
-                           gvr::RenderPassCreateInfo(0, (uint32_t) 2, attachmentDescriptions,
-                                                     1, &subpassDescription, (uint32_t) 0,
-                                                     nullptr), nullptr, &renderPass);
+                           gvr::RenderPassCreateInfo(0, (uint32_t) 3, attachmentDescriptions,
+                                                     2, &subpassDescription[0], (uint32_t) 1,
+                                                     &dependencies[0]), nullptr, &renderPass);
         mRenderPassMap[NORMAL_RENDERPASS] = renderPass;
         return renderPass;
     }
@@ -915,6 +993,19 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             attachments.push_back(depthImage->getVkImageView());
         }
 
+        // Post Effect at Position 2
+       // if(postEffectImage == nullptr) {
+            postEffectImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D,
+                                                           VK_FORMAT_R8G8B8A8_UNORM, mWidth,
+                                                           mHeight, 1,
+                                                           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+                                                           VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
+            postEffectImage->createImageView(true);
+
+       // }
+
+        attachments.push_back(postEffectImage->getVkImageView());
+
         if(mRenderpass == 0 ){
             LOGE("renderpass  is not initialized");
         }
@@ -925,6 +1016,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                              uint32_t(1)), nullptr,
                                   &mFramebuffer);
         GVR_VK_CHECK(!ret);
+
+
+
 
     }
 
@@ -1046,6 +1140,26 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
            }
         }
 
+        // Post Effect Render
+        vkCmdNextSubpass(cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
+
+        // Set our pipeline. This holds all major state
+        // the pipeline defines, for example, that the vertex buffer is a triangle list.
+        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelinePE);
+
+        //bind out descriptor set, which handles our uniforms and samplers
+        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayoutPE, 0, 1, &descriptorSetPE, 1, 0);
+
+        // Bind our vertex buffer, with a 0 offset.
+        vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE.buf, 0);
+
+        // Issue a draw command, with our vertices. Full screen quad
+        vkCmdDraw(cmdBuffer, 3*2, 1, 0, 0);
+
+
+
+
         mRenderTexture[imageIndex]->endRendering(Renderer::getInstance());
 
         // By ending the command buffer, it is put out of record mode.
@@ -1120,8 +1234,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             return true;
         }
         VulkanShader* vkShader = reinterpret_cast<VulkanShader*>(shader);
+        bool bones_present = shader->getVertexDescriptor().isSet("a_bone_weights");
 
-        std::vector<VkDescriptorPoolSize> poolSize;      //(2 + numberOfTextures);
+        /*std::vector<VkDescriptorPoolSize> poolSize;      //(2 + numberOfTextures);
 
         VkDescriptorPoolSize pool = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1};
 
@@ -1131,27 +1246,39 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if (uniformDescriptor.getNumEntries())
             poolSize.push_back(pool);
 
-        bool bones_present = shader->getVertexDescriptor().isSet("a_bone_weights");
+
         if(vkData->mesh()->hasBones() && bones_present)
             poolSize.push_back(pool);
 
-        /*
-         * TODO: if has shadow-map add pool for that
-         */
+
+        // TODO: if has shadow-map add pool for that
+
 
         pool = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1};
 
         vkmtl->forEachTexture([this, &poolSize, &pool](const char* texname, Texture* t) mutable{
             poolSize.push_back(pool);
-        });
+        });*/
 
         std::vector<VkWriteDescriptorSet> writes;
+
+        VkDescriptorPoolSize poolSize[3] = {};
+
+        poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        poolSize[0].descriptorCount = 5;
+
+        poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSize[1].descriptorCount = 5;
+
+        poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        poolSize[2].descriptorCount = 5;
+
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptorPoolCreateInfo.pNext = nullptr;
-        descriptorPoolCreateInfo.maxSets = 1;
-        descriptorPoolCreateInfo.poolSizeCount = poolSize.size();
-        descriptorPoolCreateInfo.pPoolSizes = poolSize.data();
+        descriptorPoolCreateInfo.maxSets = 2;
+        descriptorPoolCreateInfo.poolSizeCount = 3;
+        descriptorPoolCreateInfo.pPoolSizes = poolSize;
 
         VkResult err;
         VkDescriptorPool descriptorPool;
@@ -1221,6 +1348,283 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             return;
         }
         //createPipelineCache();
+    }
+
+
+    void VulkanCore::postEffectRender(){
+        const float quad_verts[][9] = {
+                // Quad 1
+                {  -1.0f, -1.0f,  1.0f,      0.0f, 1.0f }, // 1 | ---- 2
+                {   1.0f, -1.0f,  1.0f,      1.0f, 1.0f }, //   |   /
+                {  -1.0f,  1.0f,  1.0f,      0.0f, 0.0f }, // 3 | /
+
+                {  -1.0f,  1.0f,  1.0f,      0.0f, 0.0f }, //       /  2
+                {   1.0f, -1.0f,  1.0f,      1.0f, 1.0f }, //     /  |
+                {   1.0f,  1.0f,  1.0f,      1.0f, 0.0f }, // 1 /____| 3
+        };
+
+        memset(&verticesPE, 0, sizeof(verticesPE));
+
+        // Create our buffer object.
+        VkBufferCreateInfo bufferCreateInfo = {};
+        bufferCreateInfo.sType  = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferCreateInfo.pNext  = nullptr;
+        bufferCreateInfo.size   = sizeof(quad_verts);
+        bufferCreateInfo.usage  = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferCreateInfo.flags  = 0;
+        VkResult err = vkCreateBuffer(m_device, &bufferCreateInfo, nullptr, &verticesPE.buf);
+        GVR_VK_CHECK(!err);
+
+        // Obtain the memory requirements for this buffer.
+        VkMemoryRequirements mem_reqs;
+        vkGetBufferMemoryRequirements(m_device, verticesPE.buf, &mem_reqs);
+        GVR_VK_CHECK(!err);
+
+        // And allocate memory according to those requirements.
+        VkMemoryAllocateInfo memoryAllocateInfo = {};
+        memoryAllocateInfo.sType            = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memoryAllocateInfo.pNext            = nullptr;
+        memoryAllocateInfo.allocationSize   = 0;
+        memoryAllocateInfo.memoryTypeIndex  = 0;
+        memoryAllocateInfo.allocationSize   = mem_reqs.size;
+        bool ret = GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &memoryAllocateInfo.memoryTypeIndex);
+        GVR_VK_CHECK(ret);
+
+        ret = vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &verticesPE.mem);
+        GVR_VK_CHECK(!ret);
+
+        // Now we need to map the memory of this new allocation so the CPU can edit it.
+        void *data;
+        err = vkMapMemory(m_device, verticesPE.mem, 0, memoryAllocateInfo.allocationSize, 0, &data);
+        GVR_VK_CHECK(!err);
+
+        // Copy our triangle verticies and colors into the mapped memory area.
+        memcpy(data, quad_verts, sizeof(quad_verts));
+
+        // Unmap the memory back from the CPU.
+        vkUnmapMemory(m_device, verticesPE.mem);
+
+        // Bind our buffer to the memory.
+        err = vkBindBufferMemory(m_device, verticesPE.buf, verticesPE.mem, 0);
+        GVR_VK_CHECK(!err);
+
+        // The vertices need to be defined so that the pipeline understands how the
+        // data is laid out. This is done by providing a VkPipelineVertexInputStateCreateInfo
+        // structure with the correct information.
+        verticesPE.vi.sType                              = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        verticesPE.vi.pNext                              = nullptr;
+        verticesPE.vi.vertexBindingDescriptionCount      = 1;
+        verticesPE.vi.pVertexBindingDescriptions         = verticesPE.vi_bindings;
+        verticesPE.vi.vertexAttributeDescriptionCount    = 2;
+        verticesPE.vi.pVertexAttributeDescriptions       = verticesPE.vi_attrs;
+
+        // We bind the buffer as a whole, using the correct buffer ID.
+        // This defines the stride for each element of the vertex array.
+        verticesPE.vi_bindings[0].binding                = VERTEX_BUFFER_BIND_ID;
+        verticesPE.vi_bindings[0].stride                 = sizeof(quad_verts[0]);
+        verticesPE.vi_bindings[0].inputRate              = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        // Within each element, we define the attributes. At location 0,
+        // the vertex positions, in float3 format, with offset 0 as they are
+        // first in the array structure.
+        verticesPE.vi_attrs[0].binding                   = VERTEX_BUFFER_BIND_ID;
+        verticesPE.vi_attrs[0].location                  = 0;
+        verticesPE.vi_attrs[0].format                    = VK_FORMAT_R32G32B32_SFLOAT; //float3
+        verticesPE.vi_attrs[0].offset                    = 0;
+
+        // The second location is the vertex colors, in RGBA float4 format.
+        // These appear in each element in memory after the float3 vertex
+        // positions, so the offset is set accordingly.
+        verticesPE.vi_attrs[1].binding                   = VERTEX_BUFFER_BIND_ID;
+        verticesPE.vi_attrs[1].location                  = 1;
+        verticesPE.vi_attrs[1].format                    = VK_FORMAT_R32G32_SFLOAT; //float4
+        verticesPE.vi_attrs[1].offset                    = sizeof(float) * 3;
+
+
+        VkDescriptorPoolSize poolSize[3] = {};
+
+        poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        poolSize[0].descriptorCount = 5;
+
+        poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSize[1].descriptorCount = 5;
+
+        poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        poolSize[2].descriptorCount = 5;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+        descriptorPoolCreateInfo.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.pNext          = nullptr;
+        descriptorPoolCreateInfo.maxSets        = 2;
+        descriptorPoolCreateInfo.poolSizeCount  = 3;
+        descriptorPoolCreateInfo.pPoolSizes     = poolSize;
+
+        VkDescriptorPool mDescriptorPool;
+        err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &mDescriptorPool);
+        GVR_VK_CHECK(!err);
+
+
+
+
+        VkDescriptorSetLayoutBinding subpass2Bindings[1] = {};
+        // Our texture sampler - positions
+        subpass2Bindings[0].binding                 = 0;
+        subpass2Bindings[0].descriptorCount         = 1;
+        subpass2Bindings[0].descriptorType          = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        subpass2Bindings[0].stageFlags              = VK_SHADER_STAGE_FRAGMENT_BIT;
+        subpass2Bindings[0].pImmutableSamplers      = nullptr;
+
+        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo ={};
+        descriptorSetLayoutCreateInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptorSetLayoutCreateInfo.pNext         = nullptr;
+        descriptorSetLayoutCreateInfo.bindingCount  = 1;
+        descriptorSetLayoutCreateInfo.pBindings     = &subpass2Bindings[0];
+
+        //VkPipelineLayout mPipelineLayoutSubpass2;
+        VkDescriptorSetLayout mDescriptorLayoutSubpass2;
+        ret = vkCreateDescriptorSetLayout(m_device, &descriptorSetLayoutCreateInfo, nullptr, &mDescriptorLayoutSubpass2);
+        GVR_VK_CHECK(!ret);
+
+
+
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+        descriptorSetAllocateInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.pNext                 = nullptr;
+        descriptorSetAllocateInfo.descriptorPool        = mDescriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount    = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &mDescriptorLayoutSubpass2;
+
+        err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSetPE);
+        GVR_VK_CHECK(!err);
+
+
+
+
+        VkDescriptorImageInfo descriptorImageInfoPass2[1] = {};
+        // Input Attachments do not have samplers
+        descriptorImageInfoPass2[0].sampler             = VK_NULL_HANDLE;
+        descriptorImageInfoPass2[0].imageView           = mRenderTexture[0]->getFBO()->postEffectImage->getVkImageView();
+        descriptorImageInfoPass2[0].imageLayout         = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+
+        VkWriteDescriptorSet writes[1] = {};
+        // position
+        writes[0].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[0].dstBinding        = 0;
+        writes[0].dstSet            = descriptorSetPE;
+        writes[0].descriptorCount   = 1;
+        writes[0].descriptorType    = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        writes[0].pImageInfo        = &descriptorImageInfoPass2[0];
+
+        vkUpdateDescriptorSets(m_device, 1, &writes[0], 0, nullptr);
+
+
+
+        // Our pipeline layout simply points to the empty descriptor layout.
+        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
+        pipelineLayoutCreateInfo.sType              = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutCreateInfo.pNext              = nullptr;
+        pipelineLayoutCreateInfo.setLayoutCount     = 1;
+        pipelineLayoutCreateInfo.pSetLayouts        = &mDescriptorLayoutSubpass2;
+        ret = vkCreatePipelineLayout(m_device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayoutPE);
+        GVR_VK_CHECK(!ret);
+
+
+        // Create Pipeline
+
+
+        // Our vertex input is a single vertex buffer, and its layout is defined
+        // in our m_vertices object already. Use this when creating the pipeline.
+        VkPipelineVertexInputStateCreateInfo vi = {};
+        vi = verticesPE.vi;
+
+        // For this example we do not do blending, so it is disabled.
+        VkPipelineColorBlendAttachmentState att_state[1] = {};
+        //bool disable_color_depth_write = rdata->stencil_test() && (RenderData::Queue::Stencil == rdata->rendering_order());
+        att_state[0].colorWriteMask = false ? 0x0 : (VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+        att_state[0].blendEnable = VK_FALSE;
+
+        if(false) {
+            att_state[0].blendEnable = VK_TRUE;
+            att_state[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            att_state[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
+            att_state[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            att_state[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+            att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        }
+
+        VkViewport viewport = {};
+        viewport.height = (float) m_height;
+        viewport.width = (float) m_width;
+        viewport.minDepth = (float) 0.0f;
+        viewport.maxDepth = (float) 1.0f;
+
+        VkRect2D scissor = {};
+        scissor.extent.width = m_width;
+        scissor.extent.height = m_height;
+        scissor.offset.x = 0;
+        scissor.offset.y = 0;
+
+        pEShader = new VulkanShader(10, "", "", "", "", vs.c_str(), fs.c_str());
+
+#if  0
+        std::vector<uint32_t> result_vert = CompileShader("VulkanVS", VERTEX_SHADER,
+                                                          vertexShaderData);//vs;//
+        std::vector<uint32_t> result_frag = CompileShader("VulkanFS", FRAGMENT_SHADER,
+                                                          data_frag);//fs;//
+#else
+        std::vector<uint32_t> result_vert = pEShader->getVkVertexShader();
+        std::vector<uint32_t> result_frag = pEShader->getVkFragmentShader();
+#endif
+        // We define two shader stages: our vertex and fragment shader.
+        // they are embedded as SPIR-V into a header file for ease of deployment.
+        VkPipelineShaderStageCreateInfo shaderStages[2] = {};
+        InitShaders(shaderStages,result_vert,result_frag);
+        // Out graphics pipeline records all state information, including our renderpass
+        // and pipeline layout. We do not have any dynamic state in this example.
+        VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
+        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+        pipelineCreateInfo.layout = pipelineLayoutPE;
+        pipelineCreateInfo.pVertexInputState = &vi;
+        pipelineCreateInfo.pInputAssemblyState = gvr::PipelineInputAssemblyStateCreateInfo(
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        VkCullModeFlagBits cull_face = (true ==  RenderData::CullBack) ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
+        //ShaderData *curr_material = rdata->material(pass);
+        //float line_width;
+        //curr_material->getFloat("line_width", line_width);
+        pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
+                                                                                           VK_FALSE,
+                                                                                           VK_POLYGON_MODE_FILL,
+                                                                                           cull_face,
+                                                                                           VK_FRONT_FACE_CLOCKWISE,
+                                                                                           VK_FALSE,
+                                                                                           0, 0, 0,
+                                                                                           1.0f);
+        pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,
+                                                                                     &att_state[0]);
+        pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
+                VK_SAMPLE_COUNT_1_BIT, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
+                VK_NULL_HANDLE, VK_NULL_HANDLE);
+        pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
+                                                                                 &scissor);
+        pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(true ? VK_TRUE : VK_FALSE,
+                                                                                         true ? VK_FALSE: VK_TRUE,
+                                                                                         VK_COMPARE_OP_LESS_OR_EQUAL,
+                                                                                         VK_FALSE,
+                                                                                         VK_STENCIL_OP_KEEP,
+                                                                                         VK_STENCIL_OP_KEEP,
+                                                                                         VK_COMPARE_OP_ALWAYS,
+                                                                                         VK_FALSE);
+        pipelineCreateInfo.pStages = &shaderStages[0];
+        pipelineCreateInfo.renderPass =(mRenderTexture[0]->getRenderPass());
+        pipelineCreateInfo.pDynamicState = nullptr;
+        pipelineCreateInfo.stageCount = 2; //vertex and fragment
+        LOGI("Vulkan graphics call before");
+        err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+                                        &pipelinePE);
+
     }
 
     void VulkanCore::CreateSampler(TextureObject *&textureObject) {

@@ -7,11 +7,14 @@ namespace gvr {
 
 class VKFramebuffer {
     vkImageBase *mAttachments[3];
+
     VkRenderPass mRenderpass;
     int mWidth;
     int mHeight;
     VkFramebuffer mFramebuffer;
 public:
+    vkImageBase *postEffectImage;
+
     ~VKFramebuffer() {
         delete mAttachments[COLOR_IMAGE];
         delete mAttachments[DEPTH_IMAGE];
@@ -58,6 +61,7 @@ public:
     const VkFramebuffer &getFramebuffer() {
         return mFramebuffer;
     }
+
 };
 }
 #endif //FRAMEWORK_VK_FRAMEBUFFER_H

@@ -76,6 +76,10 @@ class vkImageBase
         VkDeviceSize getSize(){
             return size;
         }
+
+    // Post Effect
+    static vkImageBase *postEffectImage;
+
     private:
         VkImageViewType imageType;
         VkImage image;
