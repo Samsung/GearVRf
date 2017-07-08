@@ -456,7 +456,7 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
     }
 
     // if the object is not in the frustum, cull out itself but continue testing its children
-    if (DEBUG_RENDERER) {
+        if (DEBUG_RENDERER) {
         if (checkResult == OUTSIDE) {
             LOGD("FRUSTUM: mesh not in frustum, cull out %s\n", name_.c_str());
         } else {
