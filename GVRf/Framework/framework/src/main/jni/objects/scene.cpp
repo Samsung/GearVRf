@@ -21,7 +21,6 @@
 #include "scene.h"
 
 #include "engine/exporter/exporter.h"
-#include "objects/scene_object.h"
 #include "gl/gl_material.h"
 #include "objects/components/shadow_map.h"
 
