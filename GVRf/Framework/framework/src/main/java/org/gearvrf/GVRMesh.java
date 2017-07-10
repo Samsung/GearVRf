@@ -348,7 +348,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * This is primarily useful with the {@link GVRPicker}, which does
      * "ray casting" to detect which scene object you're pointing to. Ray
      * casting is computationally expensive, and you generally want to limit the
-     * number of {@linkplain GVREyePointeeHolder triangles to check.} A simple
+     * number of {@linkplain GVRCollider triangles to check.} A simple
      * {@linkplain GVRContext#createQuad(float, float) quad} is cheap enough,
      * but with complex meshes you will probably want to cut search time by
      * registering the object's bounding box, not the whole mesh.
