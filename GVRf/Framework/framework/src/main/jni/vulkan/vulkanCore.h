@@ -228,7 +228,7 @@ private:
         VkVertexInputBindingDescription      vi_bindings[1];
         VkVertexInputAttributeDescription    vi_attrs[2];
     };
-    Vertices verticesPE;
+    Vertices * verticesPE;
     VulkanShader * pEShader;
 };
 }
