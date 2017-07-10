@@ -709,6 +709,18 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
     }
 
     /**
+     * Set the glDepthMask option
+     *
+     * @param depthMask
+     *            {@code true} if glDepthMask should be enabled,
+     *            {@code false} if not.
+     */
+    public GVRRenderData setDepthMask(boolean depthMask) {
+        NativeRenderData.setDepthMask(getNative(), depthMask);
+        return this;
+    }
+
+    /**
      * @return {@code true} if {@code GL_BLEND} is enabled, {@code false} if
      *         not.
      */
@@ -1011,6 +1023,8 @@ class NativeRenderData {
     static native boolean getDepthTest(long renderData);
 
     static native void setDepthTest(long renderData, boolean depthTest);
+
+    static native void setDepthMask(long renderData, boolean depthMask);
 
     static native boolean getAlphaBlend(long renderData);
 
