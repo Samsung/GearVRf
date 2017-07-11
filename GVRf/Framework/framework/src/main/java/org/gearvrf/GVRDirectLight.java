@@ -273,9 +273,13 @@ public class GVRDirectLight extends GVRLightBase
     public void onDrawFrame(float frameTime)
     {
         if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
+        float[] odir = getVec3("world_direction");
         boolean changed = false;
         Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
 
+        mOldDir.x = odir[0];
+        mOldDir.y = odir[1];
+        mOldDir.z = odir[2];
         mNewDir.x = 0.0f;
         mNewDir.y = 0.0f;
         mNewDir.z = -1.0f;
