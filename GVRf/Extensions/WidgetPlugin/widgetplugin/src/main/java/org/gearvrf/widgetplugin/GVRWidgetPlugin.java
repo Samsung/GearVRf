@@ -43,6 +43,7 @@ import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRMain;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.IScriptEvents;
@@ -507,8 +508,8 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         mMain = main;
     }
 
-    public void setPickedObject(GVRSceneObject obj) {
-        mInputDispatcher.setPickedObject(obj);
+    public void setPickedObject(GVRPicker.GVRPickedObject pickInfo) {
+        mInputDispatcher.setPickedObject(pickInfo);
     }
 
     public void initializeWidget(GVRWidget widget) {
