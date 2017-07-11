@@ -91,7 +91,7 @@ public abstract class GVRInputManager {
         inputManager.registerInputDeviceListener(inputDeviceListener, null);
         controllerIds = new SparseArray<GVRBaseController>();
         cache = new SparseArray<GVRBaseController>();
-        mouseDeviceManager = new GVRMouseDeviceManager();
+        mouseDeviceManager = new GVRMouseDeviceManager(context);
         gamepadDeviceManager = new GVRGamepadDeviceManager();
         for (int deviceId : inputManager.getInputDeviceIds()) {
             addDevice(deviceId);
@@ -151,8 +151,8 @@ public abstract class GVRInputManager {
         inputManager.unregisterInputDeviceListener(inputDeviceListener);
         controllerIds.clear();
         cache.clear();
-        mouseDeviceManager.stop();
-        gamepadDeviceManager.stop();
+        mouseDeviceManager.forceStopThread();
+        gamepadDeviceManager.forceStopThread();
         if (gazeCursorController != null) {
             gazeCursorController.close();
         }
@@ -286,7 +286,6 @@ public abstract class GVRInputManager {
                 int key = cache.keyAt(index);
                 GVRBaseController cachedController = cache.get(key);
                 if (cachedController == controller) {
-                    cache.remove(key);
                     controllerIds.remove(deviceId);
                     if (controller.getControllerType() == GVRControllerType.MOUSE) {
                         mouseDeviceManager.removeCursorController(controller);
@@ -294,9 +293,12 @@ public abstract class GVRInputManager {
                             .getControllerType() == GVRControllerType.GAMEPAD) {
                         gamepadDeviceManager.removeCursorController(controller);
                     } else if (controller.getControllerType() == GVRControllerType.GAZE) {
-                        ((GVRGazeCursorController) controller)
-                                .decrementReferenceCount();
+                        if(!((GVRGazeCursorController) controller).decrementReferenceCount()){
+                            // do not remove the controller yet.
+                            return null;
+                        }
                     }
+                    cache.remove(key);
                     return controller;
                 }
             }

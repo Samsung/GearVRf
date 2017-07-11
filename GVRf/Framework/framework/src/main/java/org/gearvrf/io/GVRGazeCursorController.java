@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVRScene;
 import org.joml.Vector3f;
 
 class GVRGazeCursorController extends GVRBaseController implements
@@ -94,16 +95,39 @@ class GVRGazeCursorController extends GVRBaseController implements
         }
     }
 
-    /*
+    /**
      * The decrement the reference count to let the cursor controller know how
      * many input devices are using this controller.
+     *
+     * @return returns <code>true</code> when the count hits zero, <code>false</code> otherwise.
      */
-    void decrementReferenceCount() {
+    boolean decrementReferenceCount() {
         referenceCount--;
         // no more devices
         if (referenceCount == 0 && isEnabled) {
-           stop();
+            stop();
+            return true;
         }
+
+        return false;
+    }
+
+    @Override
+    protected void setScene(GVRScene scene) {
+        if (!threadStarted) {
+            super.setScene(scene);
+        } else {
+            thread.setScene(scene);
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        if (!threadStarted) {
+            //do nothing
+            return;
+        }
+        thread.sendInvalidate();
     }
 
     @Override
@@ -219,6 +243,9 @@ class GVRGazeCursorController extends GVRBaseController implements
         public static final int SET_KEY_DOWN = 2;
         public static final int SET_KEY_UP = 3;
         public static final int SET_ENABLE = 4;
+        public static final int SET_SCENE = 5;
+        public static final int SEND_INVALIDATE = 6;
+
         public static final int ENABLE = 0;
         public static final int DISABLE = 1;
 
@@ -262,6 +289,12 @@ class GVRGazeCursorController extends GVRBaseController implements
                         case SET_ENABLE:
                             GVRGazeCursorController.super.setEnable(msg.arg1 == ENABLE);
                             break;
+                        case SET_SCENE:
+                            GVRGazeCursorController.super.setScene((GVRScene) msg.obj);
+                            break;
+                        case SEND_INVALIDATE:
+                            GVRGazeCursorController.super.invalidate();
+                            break;
                     }
                     return false;
                 }
@@ -287,6 +320,18 @@ class GVRGazeCursorController extends GVRBaseController implements
         public void setEnabled(boolean enable) {
             gazeEventHandler.removeMessages(SET_ENABLE);
             Message msg = Message.obtain(gazeEventHandler, SET_ENABLE, enable ? ENABLE : DISABLE);
+            msg.sendToTarget();
+        }
+
+        void setScene(GVRScene scene){
+            gazeEventHandler.removeMessages(SET_SCENE);
+            Message msg = Message.obtain(gazeEventHandler, SET_SCENE, scene);
+            msg.sendToTarget();
+        }
+
+        void sendInvalidate(){
+            gazeEventHandler.removeMessages(SEND_INVALIDATE);
+            Message msg = Message.obtain(gazeEventHandler, SEND_INVALIDATE);
             msg.sendToTarget();
         }
 

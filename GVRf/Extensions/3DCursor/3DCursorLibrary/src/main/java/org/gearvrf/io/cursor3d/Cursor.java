@@ -78,7 +78,7 @@ public abstract class Cursor {
 
     private List<CursorEventListener> cursorEventListeners;
     private CursorTheme cursorTheme;
-    private MouseEventListener mouseEventListener;
+
     private boolean busyLoading = false;
     IoDevice ioDevice;
     float scale;
@@ -546,11 +546,6 @@ public abstract class Cursor {
             ioDevice.setEnable(true);
             ioDevice.setPosition(0.0f, 0.0f, -scale);
             ioDevice.addControllerEventListener(getControllerEventListener());
-
-            if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
-                mouseEventListener = new MouseEventListener(ioDevice);
-                ioDevice.addControllerEventListener(mouseEventListener);
-            }
         }
     }
 
@@ -562,11 +557,6 @@ public abstract class Cursor {
             ioDevice.setEnable(false);
             ioDevice.removeControllerEventListener(getControllerEventListener());
             ioDevice.resetSceneObject();
-            if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
-                if (mouseEventListener != null) {
-                    ioDevice.removeControllerEventListener(mouseEventListener);
-                }
-            }
         }
     }
 
@@ -574,68 +564,11 @@ public abstract class Cursor {
         IoDevice targetIoDevice = targetCursor.getIoDevice();
         targetIoDevice.removeControllerEventListener(targetCursor.getControllerEventListener());
         targetIoDevice.resetSceneObject();
-        if (IoDeviceLoader.isMouseIoDevice(targetIoDevice)) {
-            if (targetCursor.mouseEventListener != null) {
-                targetCursor.ioDevice.removeControllerEventListener(targetCursor
-                        .mouseEventListener);
-            }
-        }
         ioDevice = targetIoDevice;
         setupIoDevice(targetIoDevice);
     }
 
-    private enum State {
-        FRONT, BACK, LEFT, RIGHT, FRONT_RIGHT, FRONT_LEFT, BACK_RIGHT, BACK_LEFT
-    }
 
-    private class MouseEventListener implements ControllerEventListener {
-        private IoDevice mouseDevice;
-        private State state;
-
-        MouseEventListener(IoDevice device) {
-            state = State.FRONT;
-            mouseDevice = device;
-        }
-
-        @Override
-        public void onEvent(GVRCursorController gvrCursorController) {
-            if (scene == null) {
-                return;
-            }
-
-            float[] lookAt = scene.getMainCameraRig().getLookAt();
-            float lookAtX = lookAt[0];
-            float lookAtZ = lookAt[2];
-            float angle = (float) Math.toDegrees(Math.atan2(-lookAtX, -lookAtZ));
-            if (angle > -12.5f && angle < 12.5f && state != State.FRONT) {
-                state = State.FRONT;
-                mouseDevice.setPosition(0.0f, 0.0f, -scale);
-            } else if (angle > 77.5f && angle < 102.5 && state != State.LEFT) {
-                state = State.LEFT;
-                mouseDevice.setPosition(-scale, 0.0f, 0.0f);
-            } else if (angle > -102.5f && angle < -77.5 && state != State.RIGHT) {
-                state = State.RIGHT;
-                mouseDevice.setPosition(scale, 0.0f, 0.0f);
-            } else if (((angle < -167.5f && angle > -180f) || (angle > 167.5f && angle < 180.0f))
-                    && state != State.BACK) {
-                state = State.BACK;
-                mouseDevice.setPosition(0.0f, 0.0f, scale);
-            } else if (angle > -57.5f && angle < -32.5f && state != State.FRONT_RIGHT) {
-                state = State.FRONT_RIGHT;
-                mouseDevice.setPosition(scale / SQRT_2, 0.0f, -scale / SQRT_2);
-            } else if (angle > 32.5f && angle < 57.5 && state != State.FRONT_LEFT) {
-                state = State.FRONT_LEFT;
-                mouseDevice.setPosition(-scale / SQRT_2, 0.0f, -scale / SQRT_2);
-            } else if (angle > 122.5 && angle < 147.5 && state != State.BACK_LEFT) {
-                state = State.BACK_LEFT;
-                mouseDevice.setPosition(-scale / SQRT_2, 0.0f, scale / SQRT_2);
-            } else if (angle > -147.5 && angle < -122.5 && state != State.BACK_RIGHT) {
-                state = State.BACK_RIGHT;
-                mouseDevice.setPosition(scale / SQRT_2, 0.0f, scale / SQRT_2);
-            }
-            mouseDevice.getGvrCursorController().getKeyEvents();
-        }
-    }
 
     /**
      * Register for events whenever the {@link Cursor} updates its position or
@@ -716,7 +649,8 @@ public abstract class Cursor {
 
     protected void handleControllerEvent(GVRCursorController controller, boolean sentEvent) {
         lookAt();
-        if (!controller.isEventHandledBySensorManager() && !sentEvent &&
+        if (cursorManager.isDepthOrderEnabled() &&
+                !controller.isEventHandledBySensorManager() && !sentEvent &&
                 (controller.getKeyEvent() != null || controller.getMotionEvents().size() > 0)) {
             CursorEvent cursorEvent = CursorEvent.obtain();
             cursorEvent.setOver(false);
@@ -791,8 +725,11 @@ public abstract class Cursor {
 
         IoDevice oldIoDevice = this.ioDevice;
         setIoDevice(availableIoDevice);
-        cursorManager.markIoDeviceUsed(availableIoDevice);
+        cursorManager.removeCursorFromScene(this);
         cursorManager.markIoDeviceUnused(oldIoDevice);
+        cursorManager.markIoDeviceUsed(availableIoDevice);
+        cursorManager.addCursorToScene(this);
+
     }
 
     private boolean isIoDeviceCompatible(IoDevice ioDevice) {
