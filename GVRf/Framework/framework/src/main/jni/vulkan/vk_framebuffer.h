@@ -13,7 +13,7 @@ class VKFramebuffer {
     int mHeight;
     VkFramebuffer mFramebuffer;
 public:
-    vkImageBase *postEffectImage;
+    vkImageBase **postEffectImage;
 
     ~VKFramebuffer() {
         delete mAttachments[COLOR_IMAGE];

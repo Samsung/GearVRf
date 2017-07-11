@@ -139,6 +139,16 @@ public:
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
 
     void postEffectRender();
+
+
+    void setPostEffectCount(uint count){
+        postEffectCount = count;
+    }
+
+    uint& getPostEffectCount(){
+        return postEffectCount;
+    }
+
 private:
     std::vector <VkFence> waitFences;
     std::vector <VkFence> waitSCBFences;
@@ -230,6 +240,9 @@ private:
     };
     Vertices * verticesPE;
     VulkanShader * pEShader;
+
+    // Post Effect Final
+    uint postEffectCount = 0;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H

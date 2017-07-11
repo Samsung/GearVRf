@@ -147,7 +147,9 @@ namespace gvr {
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
+        vulkanCore_->setPostEffectCount(1);//(camera->post_effect_data().size());
 
+        std::vector<ShaderData *> post_effects = camera->post_effect_data();
         for (auto &rdata : render_data_vector)
         {
             if (!(rstate.render_mask & rdata->render_mask()))

@@ -656,8 +656,10 @@ namespace gvr {
             mRenderPassMap[SHADOW_RENDERPASS] = render_pass;
             return render_pass;
         }
+
         VkRenderPass renderPass;
-        VkAttachmentDescription attachmentDescriptions[3] = {};
+        VkAttachmentDescription * attachmentDescriptions = new VkAttachmentDescription[2 + ((postEffectCount > 1) ? 2 : 1)];//[3] = {};
+        attachmentDescriptions[0] = {};
         attachmentDescriptions[0].flags = 0;
         attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
         attachmentDescriptions[0].samples = getVKSampleBit(sample_count);
@@ -668,6 +670,7 @@ namespace gvr {
         attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
+        attachmentDescriptions[1] = {};
         attachmentDescriptions[1].flags = 0;
         attachmentDescriptions[1].format = VK_FORMAT_D16_UNORM;
         attachmentDescriptions[1].samples = getVKSampleBit(sample_count);
@@ -679,19 +682,22 @@ namespace gvr {
         attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         // Post Effect Input texture
-        attachmentDescriptions[2].flags = 0;
-        attachmentDescriptions[2].format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
-        attachmentDescriptions[2].samples = getVKSampleBit(sample_count);
-        attachmentDescriptions[2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDescriptions[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentDescriptions[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDescriptions[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        for(int i = 0; i < postEffectCount; i++) {
+            attachmentDescriptions[i+2] = {};
+            attachmentDescriptions[i+2].flags = 0;
+            attachmentDescriptions[i+2].format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
+            attachmentDescriptions[i+2].samples = getVKSampleBit(sample_count);
+            attachmentDescriptions[i+2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            attachmentDescriptions[i+2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachmentDescriptions[i+2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachmentDescriptions[i+2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachmentDescriptions[i+2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            attachmentDescriptions[i+2].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
 
         // We have references to the attachment offsets, stating the layout type.
         VkAttachmentReference colorReference = {};
-        colorReference.attachment = 2;
+        colorReference.attachment = (postEffectCount) ? 2 : 0;
         colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 
@@ -701,7 +707,7 @@ namespace gvr {
 
         // There can be multiple subpasses in a renderpass, but this example has only one.
         // We set the color and depth references at the grahics bind point in the pipeline.
-        VkSubpassDescription subpassDescription[2] = {};
+        VkSubpassDescription * subpassDescription = new VkSubpassDescription[postEffectCount ? 1 + postEffectCount : 1];
         subpassDescription[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDescription[0].flags = 0;
         subpassDescription[0].inputAttachmentCount = 0;
@@ -714,41 +720,59 @@ namespace gvr {
         subpassDescription[0].pPreserveAttachments = nullptr;
 
 
+        VkSubpassDependency * dependencies = new VkSubpassDependency[postEffectCount];
+        VkAttachmentReference * colorReferencesPass2 = new VkAttachmentReference[postEffectCount];
+        VkAttachmentReference * inputReferencesPass2 = new VkAttachmentReference[postEffectCount];
+
         // Post Effect
-        VkAttachmentReference colorReferencesPass2 = {};
-        colorReferencesPass2.attachment              = 0;
-        colorReferencesPass2.layout                  = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        for(int i = 0; i < postEffectCount; i++) {
+            colorReferencesPass2[i] = {};
+            colorReferencesPass2[i].attachment = (i % 2 == 0) ? 3 : 2;
+            colorReferencesPass2[i].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference inputReferencesPass2 = {};
-        inputReferencesPass2.attachment              = 2;
-        inputReferencesPass2.layout                  = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            inputReferencesPass2[i] = {};
+            inputReferencesPass2[i].attachment = (i % 2 == 0) ? 2 : 3;
+            inputReferencesPass2[i].layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        subpassDescription[1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDescription[1].flags = 0;
-        subpassDescription[1].inputAttachmentCount = 1;
-        subpassDescription[1].pInputAttachments = &inputReferencesPass2;
-        subpassDescription[1].colorAttachmentCount = 1;
-        subpassDescription[1].pColorAttachments = &colorReferencesPass2;
-        subpassDescription[1].pResolveAttachments = nullptr;
-        subpassDescription[1].pDepthStencilAttachment = &depthReference;
-        subpassDescription[1].preserveAttachmentCount = 0;
-        subpassDescription[1].pPreserveAttachments = nullptr;
+            subpassDescription[i+1] = {};
+            subpassDescription[i+1].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+            subpassDescription[i+1].flags = 0;
+            subpassDescription[i+1].inputAttachmentCount = 1;
+            subpassDescription[i+1].pInputAttachments = &inputReferencesPass2[i];
+            subpassDescription[i+1].colorAttachmentCount = 1;
+            subpassDescription[i+1].pColorAttachments = &colorReferencesPass2[i];
+            subpassDescription[i+1].pResolveAttachments = nullptr;
+            subpassDescription[i+1].pDepthStencilAttachment = &depthReference;
+            subpassDescription[i+1].preserveAttachmentCount = 0;
+            subpassDescription[i+1].pPreserveAttachments = nullptr;
 
-        // Specify dependencies
-        VkSubpassDependency dependencies[1] = {};
-        dependencies[0].srcSubpass                      = 0;
-        dependencies[0].dstSubpass                      = 1;
-        dependencies[0].srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dstAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
-        dependencies[0].srcStageMask                    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependencies[0].dstStageMask                    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            // Specify dependencies
+            dependencies[i] = {};
+            dependencies[i].srcSubpass = (uint32_t) i;
+            dependencies[i].dstSubpass = (uint32_t) (i + 1);
+            dependencies[i].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            dependencies[i].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+            dependencies[i].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dependencies[i].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
+        }
+
+        // For the last render
+        if(postEffectCount){
+            colorReferencesPass2[postEffectCount - 1].attachment = 0;
+        }
 
         vkCreateRenderPass(m_device,
-                           gvr::RenderPassCreateInfo(0, (uint32_t) 3, attachmentDescriptions,
-                                                     2, &subpassDescription[0], (uint32_t) 1,
+                           gvr::RenderPassCreateInfo(0, (uint32_t) 2 + postEffectCount, attachmentDescriptions,
+                                                     1 + postEffectCount, &subpassDescription[0], (uint32_t) postEffectCount,
                                                      &dependencies[0]), nullptr, &renderPass);
         mRenderPassMap[NORMAL_RENDERPASS] = renderPass;
+
+        delete [] colorReferencesPass2;
+        delete [] inputReferencesPass2;
+        delete [] dependencies;
+        delete [] subpassDescription;
+        delete [] attachmentDescriptions;
         return renderPass;
     }
 /*
@@ -994,18 +1018,21 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             attachments.push_back(depthImage->getVkImageView());
         }
 
+        // TODO : Should take post Effect count in a better way
+        VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
         // Post Effect at Position 2
-       // if(postEffectImage == nullptr) {
-            postEffectImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D,
+        uint postEffectCount = vk_renderer->getCore()->getPostEffectCount();
+        postEffectImage = new vkImageBase*[postEffectCount];
+       for(int i = 0; i < postEffectCount; i++){
+            postEffectImage[i] = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D,
                                                            VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                            mHeight, 1,
                                                            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
                                                            VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
-            postEffectImage->createImageView(true);
+            postEffectImage[i]->createImageView(true);
 
-       // }
-
-        attachments.push_back(postEffectImage->getVkImageView());
+            attachments.push_back(postEffectImage[i]->getVkImageView());
+       }
 
         if(mRenderpass == 0 ){
             LOGE("renderpass  is not initialized");
@@ -1017,10 +1044,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                              uint32_t(1)), nullptr,
                                   &mFramebuffer);
         GVR_VK_CHECK(!ret);
-
-
-
-
     }
 
     void VulkanCore::InitSync() {
@@ -1237,7 +1260,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         createTransientCmdBuffer(trnCmdBuf);
         mRenderTexture[swapChainIndx]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[swapChainIndx]);
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
-        GVR_VK_CHECK(!err);
+        //GVR_VK_CHECK(!err);
     }
 
 
@@ -1524,7 +1547,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorImageInfo descriptorImageInfoPass2[1] = {};
         // Input Attachments do not have samplers
         descriptorImageInfoPass2[0].sampler             = VK_NULL_HANDLE;
-        descriptorImageInfoPass2[0].imageView           = mRenderTexture[imageIndex]->getFBO()->postEffectImage->getVkImageView();
+        descriptorImageInfoPass2[0].imageView           = mRenderTexture[imageIndex]->getFBO()->postEffectImage[0]->getVkImageView();
         descriptorImageInfoPass2[0].imageLayout         = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 
@@ -1639,7 +1662,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                                                          VK_COMPARE_OP_ALWAYS,
                                                                                          VK_FALSE);
         pipelineCreateInfo.pStages = &shaderStages[0];
-        pipelineCreateInfo.renderPass =(mRenderTexture[0]->getRenderPass());
+        pipelineCreateInfo.renderPass =(mRenderTexture[imageIndex]->getRenderPass());
         pipelineCreateInfo.pDynamicState = nullptr;
         pipelineCreateInfo.stageCount = 2; //vertex and fragment
         LOGI("Vulkan graphics call before");
