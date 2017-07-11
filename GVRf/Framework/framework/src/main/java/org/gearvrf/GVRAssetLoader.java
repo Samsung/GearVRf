@@ -1272,6 +1272,10 @@ public final class GVRAssetLoader {
      *            The filename is relative to the root of this volume.
      *            The volume will be used to load models referenced by this model.
      *
+     * @param model
+     *            {@link GVRModelSceneObject} that is the root of the hierarchy generated
+     *            by loading the 3D model.
+     *
      * @param settings
      *            Additional import {@link GVRImportSettings settings}
      *
@@ -1280,9 +1284,6 @@ public final class GVRAssetLoader {
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
-     *
-     * @return A {@link GVRModelSceneObject} that is the root of the hierarchy generated
-     * by loading the 3D model.
      */
     public void loadModel(final GVRResourceVolume fileVolume,
                           final GVRSceneObject model,

@@ -45,7 +45,7 @@ public class GVRSwitch extends GVRBehavior
      * Constructor for a behavior.
      *
      * @param gvrContext    The current GVRF context
-     * @param nativePointer Pointer to the native object, returned by the native constructor
+     * @param nativeConstructor Pointer to the native object, returned by the native constructor
      */
     protected GVRSwitch(GVRContext gvrContext, long nativeConstructor)
     {
@@ -73,7 +73,7 @@ public class GVRSwitch extends GVRBehavior
      * 
      * If it is out of range, none of the children will be shown.
      * @param index 0 based index into children of owner.
-     * @see GVRSceneObject.getChildByIndex
+     * @see GVRSceneObject#getChildByIndex(int)
      */
     public void setSwitchIndex(int index)
     {
@@ -88,8 +88,8 @@ public class GVRSwitch extends GVRBehavior
      * will be displayed.
      * 
      * If it is out of range, none of the children will be shown.
-     * @param index 0 based index into children of owner.
-     * @see GVRSceneObject.getChildByIndex
+     * @param childName name of child to select
+     * @see GVRSceneObject#getChildByIndex(int)
      */
     public void selectByName(String childName)
     {

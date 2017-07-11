@@ -80,8 +80,6 @@ public class SFRotation extends AxisAngle4f {
 
     /**
      * angle in radians
-     *
-     * @return
      */
     public void setAngle(float angle) {
         this.angle = angle;
@@ -89,8 +87,6 @@ public class SFRotation extends AxisAngle4f {
 
     /**
      * returns float[4] x, y, z, angle in radians
-     *
-     * @return
      */
     public float[] getValue() {
         float[] axisAngle = new float[4];
@@ -115,8 +111,6 @@ public class SFRotation extends AxisAngle4f {
 
     /**
      * angle in radians
-     *
-     * @return
      */
     public float getAngle() {
         return this.angle;

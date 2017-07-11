@@ -159,65 +159,6 @@ public class GVRAsynchronousResourceLoader {
     }
 
     /**
-     * Load a bitmap texture asynchronously.
-     * 
-     * This is the implementation of
-     * {@link GVRContext#loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource, int)}
-     * - it will usually be more convenient (and more efficient) to call that
-     * directly.
-     * 
-     * @param gvrContext
-     *            The GVRF context
-     * @param textureCache
-     *            Texture cache - may be {@code null}
-     * @param callback
-     *            Asynchronous notifications
-     * @param resource
-     *            Basically, a stream containing a compressed texture. Taking a
-     *            {@link GVRAndroidResource} parameter eliminates six overloads.
-     * @param priority
-     *            A value {@literal >=} {@link GVRContext#LOWEST_PRIORITY} and
-     *            {@literal <=} {@link GVRContext#HIGHEST_PRIORITY}
-     * @throws IllegalArgumentException
-     *             If {@code priority} {@literal <}
-     *             {@link GVRContext#LOWEST_PRIORITY} or {@literal >}
-     *             {@link GVRContext#HIGHEST_PRIORITY}, or any of the other
-     *             parameters are {@code null}.
-     */
-    public static void loadBitmapTexture(final GVRContext context,
-            ResourceCache<GVRImage> textureCache,
-            final BitmapTextureCallback callback,
-            final GVRAndroidResource resource, int priority)
-            throws IllegalArgumentException
-    {
-        validatePriorityCallbackParameters(context, callback, resource,
-                priority);
-        final GVRImage cached = textureCache == null
-                ? null
-                : (GVRImage) textureCache.get(resource);
-        if (cached != null)
-        {
-            Log.v("ASSET", "Texture: %s loaded from cache", cached.getFileName());
-            context.runOnGlThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    callback.loaded(cached, resource);
-                }
-            });
-        }
-        else
-        {
-            BitmapTextureCallback actualCallback = textureCache == null ? callback
-                    : ResourceCache.wrapCallback(textureCache, callback);
-            AsyncBitmapTexture.loadTexture(context,
-                    CancelableCallbackWrapper.wrap(GVRBitmapTexture.class, actualCallback),
-                    resource, priority);
-        }
-    }
-
-    /**
      * Load a (compressed or bitmapped) texture asynchronously.
      * 
      * This is the implementation of

@@ -205,12 +205,12 @@ public abstract class GVRScriptFile {
         return true;
     }
 
-  /**
-   * Access to values modified during invoking of Script file
-   * Enables X3D to get values script modifies..
-   * @return
-   */
-  public Bindings getLocalBindings() {
+    /**
+     * Access to values modified during invoking of Script file
+     * Enables X3D to get values script modifies..
+     * @return
+     */
+    public Bindings getLocalBindings() {
         return localBindings;
     }
 

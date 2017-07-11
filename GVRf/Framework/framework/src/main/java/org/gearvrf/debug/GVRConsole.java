@@ -143,7 +143,7 @@ public class GVRConsole extends GVRShaderData
      * {@link GVRScene} to attach it to.
      * 
      * This overload is useful when you are using
-     * {@link GVRContext#getNextMainScene()} and creating your debug console in
+     * {@link GVRContext#getMainScene()} and creating your debug console in
      * {@link org.gearvrf.GVRMain#onInit(GVRContext)}.
      * 
      * @param gvrContext
@@ -154,7 +154,7 @@ public class GVRConsole extends GVRShaderData
      * @param gvrScene
      *            The {@link GVRScene} to attach the console to; this is useful
      *            when you want to attach the console to the
-     *            {@linkplain GVRContext#getNextMainScene() next main scene.}
+     *            {@linkplain GVRContext#getMainScene() next main scene.}
      */
     public GVRConsole(GVRContext gvrContext, EyeMode startMode,
             GVRScene gvrScene) {
