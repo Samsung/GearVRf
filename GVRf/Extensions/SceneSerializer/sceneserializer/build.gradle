@@ -32,6 +32,7 @@ project.ext.jomlVersion = "1.9.1-SNAPSHOT"
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile "org.joml:joml-android:${jomlVersion}"
+    compile 'com.google.code.gson:gson:2.7'
     compile(name: 'framework-debug', ext: 'aar')
 }
 
