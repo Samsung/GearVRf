@@ -174,7 +174,7 @@ public abstract class GVRInputManager {
         int sources = device.getSources();
 
         if ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
-            return GVRControllerType.CONTROLLER;
+            return GVRControllerType.GAMEPAD;
         }
 
         int vendorId = device.getVendorId();
@@ -254,7 +254,7 @@ public abstract class GVRInputManager {
                     controller = mouseDeviceManager
                             .getCursorController(context, device.getName(), device.getVendorId(),
                                     device.getProductId());
-                } else if (controllerType == GVRControllerType.CONTROLLER) {
+                } else if (controllerType == GVRControllerType.GAMEPAD) {
                     controller = gamepadDeviceManager
                             .getCursorController(context, device.getName(), device.getVendorId(),
                                     device.getProductId());
@@ -291,7 +291,7 @@ public abstract class GVRInputManager {
                     if (controller.getControllerType() == GVRControllerType.MOUSE) {
                         mouseDeviceManager.removeCursorController(controller);
                     } else if (controller
-                            .getControllerType() == GVRControllerType.CONTROLLER) {
+                            .getControllerType() == GVRControllerType.GAMEPAD) {
                         gamepadDeviceManager.removeCursorController(controller);
                     } else if (controller.getControllerType() == GVRControllerType.GAZE) {
                         ((GVRGazeCursorController) controller)

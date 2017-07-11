@@ -73,7 +73,7 @@ class SensorManager {
      * now we keep it here.
      */
     boolean processPick(GVRScene scene, GVRCursorController controller) {
-        if (scene != null) {
+        if (scene != null && !sensors.isEmpty()) {
             boolean markActiveNodes = false;
             if (controller.getActiveState() == ActiveState.ACTIVE_PRESSED) {
                 // active is true, trigger a search for active sensors
@@ -121,8 +121,8 @@ class SensorManager {
          * the children accordingly.
          */
         Vector3f ray = controller.getRay();
-        if (!object.intersectsBoundingVolume(ORIGIN[0], ORIGIN[1],
-                ORIGIN[2], ray.x, ray.y, ray.z)) {
+        Vector3f origin = controller.getOrigin();
+        if (!object.intersectsBoundingVolume(origin.x, origin.y, origin.z, ray.x, ray.y, ray.z)) {
             return;
         }
 
@@ -131,8 +131,7 @@ class SensorManager {
                 & object.hasMesh()) {
 
             boolean result = GVRPicker.pickSceneObjectAgainstBoundingBox(
-                    object, ORIGIN[0], ORIGIN[1], ORIGIN[2], ray.x, ray.y,
-                    ray.z, readbackBufferB);
+                    object, origin.x, origin.y, origin.z, ray.x, ray.y, ray.z, readbackBufferB);
 
             if (result) {
                 objectSensor.addSceneObject(controller, object, readbackBuffer.get(0),

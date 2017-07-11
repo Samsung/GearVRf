@@ -69,10 +69,17 @@ namespace gvr {
         activity->onSurfaceChanged(*jni);
     }
 
-JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jobject jViewManager,
+    JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jobject jViewManager,
                                                                     jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
     activity->onDrawFrame(jViewManager);
+    }
+
+    JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_nativeInitializeGearController
+            (JNIEnv* jni, jclass clazz, jlong appPtr, jlong controllerPtr) {
+        GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
+        GearController *gearController = reinterpret_cast<GearController*>(controllerPtr);
+        activity->setGearController(gearController);
     }
 
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeShowConfirmQuit(JNIEnv * jni, jclass clazz, jlong appPtr) {
