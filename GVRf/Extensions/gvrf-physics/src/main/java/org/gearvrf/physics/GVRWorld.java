@@ -42,10 +42,21 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     private final LongSparseArray<GVRRigidBody> mRigidBodies = new LongSparseArray<GVRRigidBody>();
     private final GVRCollisionMatrix mCollisionMatrix;
 
+    /**
+     * Constructs new instance to simulatethe Physics World of the Scene.
+     *
+     * @param gvrContext The context of the app.
+     */
     public GVRWorld(GVRContext gvrContext) {
         this(gvrContext, null);
     }
 
+    /**
+     * Constructs new instance to simulatethe Physics World of the Scene.
+     *
+     * @param gvrContext The context of the app.
+     * @param collisionMatrix a matrix that represents the collision relations of the bodies on the scene
+     */
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix) {
         super(gvrContext, NativePhysics3DWorld.ctor());
         mHasFrameCallback = false;
