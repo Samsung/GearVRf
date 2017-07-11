@@ -53,7 +53,7 @@ class IoDeviceLoader {
             case MOUSE:
                 return new IoDevice(MOUSE_DEVICE_ID, MOUSE_VENDOR_ID, MOUSE_PRODUCT_ID,
                         MOUSE_NAME, MOUSE_VENDOR_NAME, gvrController);
-            case CONTROLLER:
+            case GAMEPAD:
                 return new IoDevice(GAMEPAD_DEVICE_ID, GAMEPAD_VENDOR_ID, GAMEPAD_PRODUCT_ID,
                         GAMEPAD_NAME, GAMEPAD_VENDOR_NAME, gvrController);
             case GAZE:

@@ -535,11 +535,13 @@ public class CursorManager {
                             @Override
                             public int onDeviceChanged(IoDevice device) {
                                 // we are changing the io device on the settings cursor
+                                removeCursorFromScene(settingsCursor);
                                 IoDevice clickedDevice = getAvailableIoDevice(device);
                                 IoDevice oldIoDevice = settingsCursor.getIoDevice();
                                 settingsCursor.setIoDevice(clickedDevice);
                                 markIoDeviceUsed(clickedDevice);
                                 markIoDeviceUnused(oldIoDevice);
+                                addCursorToScene(settingsCursor);
                                 return device.getCursorControllerId();
                             }
                         });
@@ -678,7 +680,7 @@ public class CursorManager {
         updateCursorsInScene(scene, true);
     }
 
-    private void addCursorToScene(Cursor cursor){
+    void addCursorToScene(Cursor cursor){
         GVRSceneObject object = cursor.getMainSceneObject();
         IoDevice ioDevice = cursor.getIoDevice();
         if(IoDeviceLoader.isMouseIoDevice(ioDevice)){
@@ -688,8 +690,9 @@ public class CursorManager {
         }
     }
 
-    private void removeCursorFromScene(Cursor cursor){
+    void removeCursorFromScene(Cursor cursor){
         GVRSceneObject object = cursor.getMainSceneObject();
+
         IoDevice ioDevice = cursor.getIoDevice();
         if(IoDeviceLoader.isMouseIoDevice(ioDevice)){
             scene.getMainCameraRig().removeChildObject(object);

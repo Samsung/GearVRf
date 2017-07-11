@@ -22,6 +22,7 @@ import android.view.MotionEvent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.SensorEvent.EventGroup;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
@@ -52,7 +53,14 @@ class LaserCursor extends Cursor {
         cursorEvent.setColliding(COLLIDING);
         cursorEvent.setActive(event.isActive());
         cursorEvent.setCursor(this);
-        cursorEvent.setObject(event.getObject());
+        GVRSceneObject object = event.getObject();
+        SelectableGroup selectableGroup = (SelectableGroup) object.getComponent
+                (SelectableGroup.getComponentType());
+
+        if (selectableGroup != null) {
+            object = selectableGroup.getParent();
+        }
+        cursorEvent.setObject(object);
         cursorEvent.setHitPoint(event.getHitX(), event.getHitY(), event.getHitZ());
         cursorEvent.setCursorPosition(getPositionX(), getPositionY(), getPositionZ());
         cursorEvent.setCursorRotation(getRotationW(), getRotationX(), getRotationY(),

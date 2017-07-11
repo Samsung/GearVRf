@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -222,6 +223,10 @@ public abstract class GVRCursorController {
      * {@link GVRBaseSensor}s.
      */
     public void invalidate() {
+        // check if the controller is enabled
+        if (!isEnabled()) {
+            return;
+        }
         update();
     }
 
@@ -573,11 +578,11 @@ public abstract class GVRCursorController {
         return name;
     }
 
-    void setScene(GVRScene scene){
+    protected void setScene(GVRScene scene){
         this.scene = scene;
     }
 
-    boolean eventHandledBySensor = false;
+    private boolean eventHandledBySensor = false;
 
     /**
      * Returns whether events generated as a result of the latest change in the
@@ -596,7 +601,6 @@ public abstract class GVRCursorController {
      * Process the input data.
      */
     private void update() {
-
         // set the newly received key and motion events.
         synchronized (eventLock) {
             processedKeyEvent.addAll(keyEvent);
