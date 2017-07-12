@@ -1,12 +1,14 @@
 package org.gearvrf;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.gearvrf.jassimp.AiWrapperProvider;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A single bone of a mesh.<p>
@@ -111,7 +113,9 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * transform at the current time of the animation.
      */
     public Matrix4f getFinalTransformMatrix() {
-        return new Matrix4f(FloatBuffer.wrap(NativeBone.getFinalTransformMatrix(getNative())));
+        final FloatBuffer fb = ByteBuffer.allocateDirect(4*4*4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        NativeBone.getFinalTransformMatrix(getNative(), fb);
+        return new Matrix4f(fb);
     }
 
     /**
@@ -218,5 +222,5 @@ class NativeBone {
     static native void setOffsetMatrix(long object, float[] offsetMatrix);
     static native float[] getOffsetMatrix(long object);
     static native void setFinalTransformMatrix(long object, float[] offsetMatrix);
-    static native float[] getFinalTransformMatrix(long object);
+    static native void getFinalTransformMatrix(long object, FloatBuffer output);
 }
