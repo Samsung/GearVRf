@@ -258,7 +258,7 @@ class GVRMouseDeviceManager implements GVRDrawFrameListener {
             if (internalObject != null) {
                 internalObject.getTransform().setPosition(x, y, z);
             }
-            super.setPosition(x, y, z);
+            deviceManager.thread.updatePosition();
         }
 
         /**
