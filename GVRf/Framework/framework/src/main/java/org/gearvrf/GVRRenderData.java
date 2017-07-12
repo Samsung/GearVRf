@@ -368,7 +368,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     /**
      * Get a Rendering {@link GVRRenderPass Pass} for this Mesh
      * @param passIndex The index of the RenderPass to get.
-     * @return
      */
     public GVRRenderPass getPass(int passIndex) {
         if (passIndex < mRenderPassList.size()) {
@@ -670,12 +669,13 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * @deprecated Use {@code setCullFace(GVRCullFaceEnum cullFace)} instead.
-     * @see #setCullFace(GVRCullFaceEnum cullFace)
      * Set the {@code GL_CULL_FACE} option
      * 
      * @param cullTest
      *            {@code true} if {@code GL_CULL_FACE} should be enabled,
      *            {@code false} if not.
+     *
+     * @see GVRRenderData#setCullFace
      */
     public GVRRenderData setCullTest(boolean cullTest) {
         if (cullTest) {
@@ -983,7 +983,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Checks if a renderable object can cast shadows.
-     * @returns true if shadows are cast, false if not.
+     * @return true if shadows are cast, false if not.
      * @see #setCastShadows(boolean)
      * @see GVRLightBase#getCastShadow()
      */

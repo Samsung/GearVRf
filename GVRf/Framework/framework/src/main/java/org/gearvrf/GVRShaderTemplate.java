@@ -431,7 +431,6 @@ public class GVRShaderTemplate extends GVRShader
      *            renderable entity with mesh and material
      * @param scene
      *            scene being rendered
-     * @return ID of vertex/fragment shader set
      */
     public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene)
     {
@@ -506,7 +505,6 @@ public class GVRShaderTemplate extends GVRShader
      * @param context       GVRContext
      * @param material      material to use with the shader
      * @param meshDesc      string with vertex descriptor
-     * @return ID of vertex/fragment shader set
      */
     public int bindShader(GVRContext context, GVRShaderData material, String meshDesc)
     {

@@ -60,7 +60,7 @@ public class GVRColorAnimation extends GVRMaterialAnimation {
      * @param duration
      *            The animation duration, in seconds.
      * @param color
-     *            An Android {@link Color} value
+     *            An Android {@link android.graphics.Color} value
      */
     public GVRColorAnimation(GVRMaterial target, float duration, int color) {
         this(target, duration, Colors.toColors(color));
@@ -93,7 +93,7 @@ public class GVRColorAnimation extends GVRMaterialAnimation {
      * @param duration
      *            The animation duration, in seconds.
      * @param color
-     *            An Android {@link Color} value
+     *            An Android {@link android.graphics.Color} value
      */
     public GVRColorAnimation(GVRSceneObject target, float duration, int color) {
         this(target, duration, Colors.toColors(color));

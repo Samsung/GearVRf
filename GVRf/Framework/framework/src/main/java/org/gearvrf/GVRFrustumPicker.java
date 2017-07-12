@@ -60,7 +60,7 @@ import org.joml.Vector4f;
  * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRCollider
  * @see GVRComponent#setEnable(boolean)
- * @see GVRPickedObject
+ * @see org.gearvrf.GVRPicker.GVRPickedObject
  */
 public class GVRFrustumPicker extends GVRPicker {
     protected FrustumIntersection mCuller;
@@ -237,8 +237,8 @@ public class GVRFrustumPicker extends GVRPicker {
      * @param scene
      *            The {@link GVRScene} with all the objects to be tested.
      *
-     * @return A list of {@link GVRPickedObject}, sorted by distance from the
-     *         camera rig. Each {@link GVRPickedObject} contains the scene object
+     * @return A list of {@link org.gearvrf.GVRPicker.GVRPickedObject}, sorted by distance from the
+     *         camera rig. Each {@link org.gearvrf.GVRPicker.GVRPickedObject} contains the scene object
      *         which owns the {@link GVRCollider} along with the hit
      *         location and distance from the camera.
      *

@@ -28,10 +28,9 @@ package org.gearvrf;
  */
 public interface GVRDrawFrameListener {
     /**
-     * Called each time a frame is drawn. Callbacks are called (from
-     * {@link GVRViewManager#onDrawFrame()} in subscription-order, after any
-     * {@linkplain GVRContext#runOnGlThread(Runnable) 'one shot' callbacks} and
-     * before {@link GVRMain#onStep()}.
+     * Called each time a frame is drawn. Callbacks are called in subscription-order, after any
+     * {@linkplain GVRContext#runOnGlThread(Runnable) 'one shot' callbacks} and before
+     * {@link GVRMain#onStep()}.
      * 
      * @param frameTime
      *            Seconds since the previous frame - see
