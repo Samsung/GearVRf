@@ -125,6 +125,11 @@ namespace gvr {
         return true;
     }
 
+    bool VulkanRenderer::renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
+    {
+        rdata->updateGPU(this,shader);
+    }
+
     void VulkanRenderer::renderCamera(Scene *scene, Camera *camera,
                                       ShaderManager *shader_manager,
                                       PostEffectShaderManager *post_effect_shader_manager,
@@ -147,9 +152,12 @@ namespace gvr {
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-        vulkanCore_->setPostEffectCount(1);//(camera->post_effect_data().size());
+        vulkanCore_->setPostEffectCount(camera->post_effect_data().size());
 
         std::vector<ShaderData *> post_effects = camera->post_effect_data();
+        if(post_effects.size() == 0)
+            return;
+
         for (auto &rdata : render_data_vector)
         {
             if (!(rstate.render_mask & rdata->render_mask()))
@@ -176,9 +184,14 @@ namespace gvr {
         }
 
         // Call Post Effect
+        //std::vector<ShaderData*> postEffects = camera->post_effect_data();
+            Shader *shader = rstate.shader_manager->getShader(post_effects[0]->getNativeShader());
+            renderWithPostEffectShader(rstate, shader, post_effect_render_data_vulkan(),
+                                       post_effects[0], 0);
 
-        vulkanCore_->postEffectRender();
-        vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager);
+            vulkanCore_->postEffectRender(post_effect_render_data_vulkan(), shader);
+
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, post_effect_render_data_vulkan(), shader);
         vulkanCore_->DrawFrameForRenderData();
     }
 

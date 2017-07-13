@@ -94,7 +94,7 @@ public:
     bool InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData);
 
 
-    void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*);
+    void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*, RenderData * rdata, Shader* shader);
 
     void DrawFrameForRenderData();
     int getCurrentSwapChainIndx(){
@@ -138,7 +138,7 @@ public:
     }
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
 
-    void postEffectRender();
+    void postEffectRender(RenderData * rdata, Shader* shader);
 
 
     void setPostEffectCount(uint count){
@@ -238,7 +238,7 @@ private:
         VkVertexInputBindingDescription      vi_bindings[1];
         VkVertexInputAttributeDescription    vi_attrs[2];
     };
-    Vertices * verticesPE;
+    Vertices * verticesPE = nullptr;
     VulkanShader * pEShader;
 
     // Post Effect Final

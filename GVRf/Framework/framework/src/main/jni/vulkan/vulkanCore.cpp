@@ -110,6 +110,7 @@ std::string fs = "#version 400\n"
                           "\n"
                           "void main() {"
                   "FragColor = subpassLoad(positionsTarget);\n"
+                    "FragColor.g = 0;\n"
       //  "FragColor = vec4(1.0,0,0,1.0);\n"
                   "}";
 
@@ -1079,7 +1080,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     void VulkanCore::BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector,
-                                                 Camera *camera, ShaderManager* shader_manager) {
+                                                 Camera *camera, ShaderManager* shader_manager, RenderData * rdata, Shader* shader) {
         // For the triangle sample, we pre-record our command buffer, as it is static.
         // We have a buffer per swap chain image, so loop over the creation process.
         VkCommandBuffer &cmdBuffer = *(swapChainCmdBuffer[imageIndex]);
@@ -1194,7 +1195,13 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         // Bind our vertex buffer, with a 0 offset.
         LOGE("Abhijit P4");
         VkDeviceSize offsets[1] = {0};
-        vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE->buf, offsets);
+
+        VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
+        VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(vkRdata->mesh()->getVertexBuffer());
+        const GVR_VK_Vertices* vertices = vbuf->getVKVertices(shader);
+
+        //vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE->buf, offsets);
+        vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertices->buf, offsets);
 
         // Issue a draw command, with our vertices. Full screen quad
         LOGE("Abhijit P5");
@@ -1393,8 +1400,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
 
-    void VulkanCore::postEffectRender(){
-        const float quad_verts[][9] = {
+    void VulkanCore::postEffectRender(RenderData * rdata, Shader* shader){
+/*        const float quad_verts[][9] = {
                 // Quad 1
                 {  -1.0f, -1.0f,  1.0f,      0.0f, 1.0f }, // 1 | ---- 2
                 {   1.0f, -1.0f,  1.0f,      1.0f, 1.0f }, //   |   /
@@ -1405,8 +1412,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 {   1.0f,  1.0f,  1.0f,      1.0f, 0.0f }, // 1 /____| 3
         };
 
+        if(verticesPE == nullptr)
         verticesPE = new Vertices();
         //memset(&verticesPE, 0, sizeof(verticesPE));
+*/
+
+        VkResult ret, err;
+        VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
+        VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(vkRdata->mesh()->getVertexBuffer());
+        const GVR_VK_Vertices* vertices = vbuf->getVKVertices(shader);
+/*
 
         // Create our buffer object.
         VkBufferCreateInfo bufferCreateInfo = {};
@@ -1482,7 +1497,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         verticesPE->vi_attrs[1].location                  = 1;
         verticesPE->vi_attrs[1].format                    = VK_FORMAT_R32G32_SFLOAT; //float4
         verticesPE->vi_attrs[1].offset                    = sizeof(float) * 3;
-
+*/
 
         VkDescriptorPoolSize poolSize[3] = {};
 
@@ -1580,7 +1595,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         // Our vertex input is a single vertex buffer, and its layout is defined
         // in our m_vertices object already. Use this when creating the pipeline.
         VkPipelineVertexInputStateCreateInfo vi = {};
-        vi = verticesPE->vi;
+        vi = vertices->vi;//verticesPE->vi;
 
         // For this example we do not do blending, so it is disabled.
         VkPipelineColorBlendAttachmentState att_state[1] = {};
