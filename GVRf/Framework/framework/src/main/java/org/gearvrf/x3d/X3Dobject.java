@@ -62,6 +62,7 @@ import org.gearvrf.GVRRenderData.GVRRenderingOrder;
 import org.gearvrf.GVRRenderPass.GVRCullFaceEnum;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSpotLight;
+import org.gearvrf.GVRSwitch;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
@@ -515,6 +516,26 @@ public class X3Dobject {
             }
             return mfStrings;
         } // end parseMFString
+
+        private int parseIntegerString(String numberString) {
+            StringReader sr = new StringReader(numberString);
+            StreamTokenizer st = new StreamTokenizer(sr);
+            st.parseNumbers();
+            int tokenType;
+            int returnValue = 0;
+
+            try {
+                if ((tokenType = st.nextToken()) != StreamTokenizer.TT_EOF) {
+                    if (tokenType == StreamTokenizer.TT_NUMBER) {
+                        returnValue = (int) st.nval;
+                    }
+                }
+            }
+            catch (IOException e) {
+                Log.e(TAG, "Error: parseIntegerString - " + e);
+            }
+            return returnValue;
+        } // end parseIntegerString
 
         private void parseNumbersString(String numberString, int componentType,
                                         int componentCount) {
@@ -2475,6 +2496,32 @@ public class X3Dobject {
                 } // end <LOD> Level-of-Detail node
 
 
+                /********** Switch **********/
+                else if (qName.equalsIgnoreCase("Switch")) {
+                    String name = "";
+                    int whichChoice = -1;
+
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        name = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("whichChoice");
+                    if (attributeValue != null) {
+                        whichChoice = parseIntegerString(attributeValue);
+                    }
+                    currentSceneObject = AddGVRSceneObject();
+                    currentSceneObject.setName( name );
+
+                    GVRSwitch gvrSwitch = new GVRSwitch( gvrContext );
+                    gvrSwitch.setSwitchIndex( whichChoice );
+                    currentSceneObject.attachComponent(gvrSwitch);
+
+                    DefinedItem definedItem = new DefinedItem(currentSceneObject.getName());
+                    definedItem.setGVRSceneObject(currentSceneObject);
+                    mDefinedItems.add(definedItem); // Array list of DEFined items in the X3D scene
+                } // end <Switch> node
+
+
                 /********** Anchor **********/
                 else if (qName.equalsIgnoreCase("Anchor")) {
                     String name = "";
@@ -3339,6 +3386,18 @@ public class X3Dobject {
                 ;
             } else if (qName.equalsIgnoreCase("LOD")) {
                 ;
+            } else if (qName.equalsIgnoreCase("Switch")) {
+                // Verify the Switch index is between 0 and (max number of children - 1)
+                // if it is not, then no object should appear per the X3D spec.
+                GVRSwitch gvrSwitch = (GVRSwitch)currentSceneObject.getComponent(GVRSwitch.getComponentType());
+                if ( gvrSwitch != null) {
+                    if ( (gvrSwitch.getSwitchIndex() < 0) || (gvrSwitch.getSwitchIndex() >= currentSceneObject.getChildrenCount()) ) {
+                        // if the switch index is outside the array of possible children (which is legal in X3D)
+                        // then no object should appear, which occurs when GVRSwitch is set higher than possilble # children.
+                        gvrSwitch.setSwitchIndex( currentSceneObject.getChildrenCount() );
+                    }
+                }
+                currentSceneObject = currentSceneObject.getParent();
             } else if (qName.equalsIgnoreCase("Box")) {
                 ;
             } else if (qName.equalsIgnoreCase("Cone")) {
@@ -3424,11 +3483,16 @@ public class X3Dobject {
                     }
                 } // end setting based on new camera rig
 
-                animationInteractivityManager.initAnimationsAndInteractivity();
-                // Need to build a JavaScript function that constructs the
-                // X3D data type objects used with a SCRIPT.
-                // Scripts can also have an initialize() method.
-                animationInteractivityManager.InitializeScript();
+                try {
+                    animationInteractivityManager.initAnimationsAndInteractivity();
+                    // Need to build a JavaScript function that constructs the
+                    // X3D data type objects used with a SCRIPT.
+                    // Scripts can also have an initialize() method.
+                    animationInteractivityManager.InitializeScript();
+                }
+                catch (Exception exception) {
+                    Log.e(TAG, "Error initialing X3D <ROUTE> or <Script> node related to Animation or Interactivity.");
+                }
 
             } // end </scene>
             else if (qName.equalsIgnoreCase("x3d")) {
@@ -3700,8 +3764,7 @@ public class X3Dobject {
                 }
             }
         } catch (Exception exception) {
-            Log.e(TAG, "Parse call: Exception = " + exception);
-            exception.printStackTrace();
+            Log.e(TAG, "X3D/XML Parsing Exception = " + exception);
         }
 
     } // end Parse

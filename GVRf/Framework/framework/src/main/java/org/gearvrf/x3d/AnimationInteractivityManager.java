@@ -1243,7 +1243,7 @@ public class AnimationInteractivityManager {
                         argumentNum += 4;
                     }  // end if SFRotation
 
-                    else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool"))) {
+                    else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool")) || (fieldType.equalsIgnoreCase("SFInt32")) ) {
                         gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
                                 "( params[" + argumentNum + "]);\n";
                         argumentNum += 1;
