@@ -410,10 +410,10 @@ RenderData* Renderer::post_effect_render_data()
 
     RenderData* Renderer::post_effect_render_data_vulkan()
     {
-        if (post_effect_render_data_)
+        /*if (post_effect_render_data_)
         {
             return post_effect_render_data_;
-        }
+        }*/
         float positions[18] = { -1.0f, -1.0f,  1.0f,
                                 1.0f, -1.0f,  1.0f,
                                 -1.0f,  1.0f,  1.0f,
@@ -427,13 +427,13 @@ RenderData* Renderer::post_effect_render_data()
                          1.0f, 1.0f,
                          1.0f, 0.0f};
         Mesh* mesh = new Mesh("float3 a_position float2 a_texcoord");
-        RenderPass* pass = new RenderPass();
+        //RenderPass* pass = new RenderPass();
 
         mesh->setVertices(positions, 18);
         mesh->setFloatVec("a_texcoord", uvs, 12);
         post_effect_render_data_ = createRenderData();
         post_effect_render_data_->set_mesh(mesh);
-        post_effect_render_data_->add_pass(pass);
+        //post_effect_render_data_->add_pass(pass);
         return post_effect_render_data_;
     }
 

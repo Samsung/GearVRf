@@ -85,6 +85,11 @@ struct VulkanRenderPass : public RenderPass
             renderPass->m_descriptorPool= descriptorPool;
 
         }
+        VkDescriptorPool& getDescriptorPool(int pass){
+            VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
+            return renderPass->m_descriptorPool;
+
+        }
         void setDescriptorSet(VkDescriptorSet descriptorSet, int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
             renderPass->m_descriptorSet= descriptorSet;

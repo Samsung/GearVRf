@@ -88,10 +88,12 @@ public:
         return NULL;
     }
     void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*);
+    void InitLayoutRenderDataPostEffect(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*);
 
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
     bool InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData);
+    bool InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData);
 
 
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*, RenderData * rdata, Shader* shader);

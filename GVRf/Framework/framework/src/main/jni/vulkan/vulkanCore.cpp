@@ -102,14 +102,14 @@ std::string fs = "#version 400\n"
                           "#extension GL_ARB_shading_language_420pack : enable\n"
                           "\n"
                           "\n"
-                          "layout (input_attachment_index=0, set = 0, binding = 0) uniform subpassInput positionsTarget;\n"
+                          "layout (input_attachment_index=0, set = 0, binding = 4) uniform subpassInput u_texture;\n"
                           "\n"
                           "layout (location = 0) in vec2 uv;\n"
                           "\n"
                           "layout (location = 0) out vec4 FragColor;\n"
                           "\n"
                           "void main() {"
-                  "FragColor = subpassLoad(positionsTarget);\n"
+                  "FragColor = subpassLoad(u_texture);\n"
                     "FragColor.g = 0;\n"
       //  "FragColor = vec4(1.0,0,0,1.0);\n"
                   "}";
@@ -587,6 +587,7 @@ namespace gvr {
                                           &descriptorLayout);
         GVR_VK_CHECK(!ret);
 
+
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.offset                        = 0;
         pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
@@ -595,6 +596,50 @@ namespace gvr {
         VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
                                      gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 1, &pushConstantRange),
+                                     nullptr, &pipelineLayout);
+        GVR_VK_CHECK(!ret);
+        shader->setShaderDirty(false);
+    }
+
+    void VulkanCore::InitLayoutRenderDataPostEffect(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader) {
+
+        const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
+        DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
+        bool transformUboPresent = shader->usesMatrixUniforms();
+        VulkanShader* vk_shader = reinterpret_cast<VulkanShader*>(shader);
+        if (!shader->isShaderDirty()) {
+            return;
+        }
+
+        if ((textureDescriptor.getNumEntries() == 0) && uniformDescriptor.getNumEntries() == 0 && !transformUboPresent) {
+            return;
+        }
+
+        VkResult ret = VK_SUCCESS;
+        uint32_t index = 0;
+        std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
+
+        vk_shader->makeLayoutPostEffect(vkMtl, uniformAndSamplerBinding,  index, vkdata);
+
+        VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
+
+        ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
+                                                                                       uniformAndSamplerBinding.size(),
+                                                                                       uniformAndSamplerBinding.data()),
+                                          nullptr,
+                                          &descriptorLayout);
+        GVR_VK_CHECK(!ret);
+
+        /*
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.offset                        = 0;
+        pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
+        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_FRAGMENT_BIT;*/
+
+        VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
+        ret = vkCreatePipelineLayout(m_device,
+                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0,
+                                                                   nullptr),
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
         shader->setShaderDirty(false);
@@ -925,8 +970,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             getTopology(rdata->draw_mode()));
     VkCullModeFlagBits cull_face = (rdata->cull_face(pass) ==  RenderData::CullBack) ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
     ShaderData *curr_material = rdata->material(pass);
-    float line_width;
-    curr_material->getFloat("line_width", line_width);
+    float line_width = 1.0;
+    //curr_material->getFloat("line_width", line_width);
     pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
                                                                                        VK_FALSE,
                                                                                        VK_POLYGON_MODE_FILL,
@@ -954,7 +999,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.renderPass =(mRenderTexture[imageIndex]->getRenderPass());
     pipelineCreateInfo.pDynamicState = nullptr;
     pipelineCreateInfo.stageCount = 2; //vertex and fragment
-    VkPipeline pipeline = 0;
+    VkPipeline pipeline;// = 0;
     LOGI("Vulkan graphics call before");
     err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
@@ -1080,7 +1125,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     void VulkanCore::BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector,
-                                                 Camera *camera, ShaderManager* shader_manager, RenderData * rdata, Shader* shader) {
+                                                 Camera *camera, ShaderManager* shader_manager, RenderData * rdataPE, Shader* shader) {
         // For the triangle sample, we pre-record our command buffer, as it is static.
         // We have a buffer per swap chain image, so loop over the creation process.
         VkCommandBuffer &cmdBuffer = *(swapChainCmdBuffer[imageIndex]);
@@ -1179,33 +1224,44 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         // Unmap the memory back from the CPU.
         vkUnmapMemory(m_device, verticesPE->mem);*/
 
-        LOGE("Abhijit P1");
-        vkCmdNextSubpass(cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
+            LOGE("Abhijit P1");
 
-        // Set our pipeline. This holds all major state
-        // the pipeline defines, for example, that the vertex buffer is a triangle list.
-        LOGE("Abhijit P2");
-        vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelinePE);
+            VulkanRenderData *vkRdata = static_cast<VulkanRenderData *>(rdataPE);
+                vkCmdNextSubpass(cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-        //bind out descriptor set, which handles our uniforms and samplers
-        LOGE("Abhijit P3");
-        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                pipelineLayoutPE, 0, 1, &descriptorSetPE, 1, 0);
+                // Set our pipeline. This holds all major state
+                // the pipeline defines, for example, that the vertex buffer is a triangle list.
+                LOGE("Abhijit P2");
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkRdata->getVKPipeline(0));
 
-        // Bind our vertex buffer, with a 0 offset.
-        LOGE("Abhijit P4");
-        VkDeviceSize offsets[1] = {0};
 
-        VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
-        VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(vkRdata->mesh()->getVertexBuffer());
-        const GVR_VK_Vertices* vertices = vbuf->getVKVertices(shader);
 
-        //vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE->buf, offsets);
-        vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertices->buf, offsets);
 
-        // Issue a draw command, with our vertices. Full screen quad
-        LOGE("Abhijit P5");
-        vkCmdDraw(cmdBuffer, 3*2, 1, 0, 0);
+
+                //bind out descriptor set, which handles our uniforms and samplers
+                LOGE("Abhijit P3");
+
+                VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
+
+                VkDescriptorSet descriptorSet1 = vkRdata->getDescriptorSet(0);
+                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet1, 1, 0);
+
+                // Bind our vertex buffer, with a 0 offset.
+                LOGE("Abhijit P4");
+                VkDeviceSize offsets[1] = {0};
+
+
+                VulkanVertexBuffer *vbuf = static_cast<VulkanVertexBuffer *>(vkRdata->mesh()->getVertexBuffer());
+                const GVR_VK_Vertices *vertices = vbuf->getVKVertices(shader);
+
+                //vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE->buf, offsets);
+                vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertices->buf,
+                                       offsets);
+
+                // Issue a draw command, with our vertices. Full screen quad
+                LOGE("Abhijit P5");
+                vkCmdDraw(cmdBuffer, 3 * 2, 1, 0, 0);
+
 
         LOGE("Abhijit P6");
         mRenderTexture[imageIndex]->endRendering(Renderer::getInstance());
@@ -1367,6 +1423,125 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         return true;
     }
 
+    bool VulkanCore::InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData) {
+
+        //const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
+        //DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
+        //bool transformUboPresent = shader->usesMatrixUniforms();
+        //VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(vkData->material(pass));
+
+        //if ((textureDescriptor.getNumEntries() == 0) && uniformDescriptor.getNumEntries() == 0 && !transformUboPresent) {
+            //    vkData->setDescriptorSetNull(true,pass);
+         //   return true;
+        //}
+        //VulkanShader* vkShader = reinterpret_cast<VulkanShader*>(shader);
+        //bool bones_present = shader->getVertexDescriptor().isSet("a_bone_weights");
+
+        /*std::vector<VkDescriptorPoolSize> poolSize;      //(2 + numberOfTextures);
+
+        VkDescriptorPoolSize pool = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1};
+
+        if (transformUboPresent)
+            poolSize.push_back(pool);
+
+        if (uniformDescriptor.getNumEntries())
+            poolSize.push_back(pool);
+
+
+        if(vkData->mesh()->hasBones() && bones_present)
+            poolSize.push_back(pool);
+
+
+        // TODO: if has shadow-map add pool for that
+
+
+        pool = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1};
+
+        vkmtl->forEachTexture([this, &poolSize, &pool](const char* texname, Texture* t) mutable{
+            poolSize.push_back(pool);
+        });*/
+
+        //std::vector<VkWriteDescriptorSet> writes;
+
+        VkDescriptorPoolSize poolSize[3] = {};
+
+        poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        poolSize[0].descriptorCount = 5;
+
+        poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSize[1].descriptorCount = 5;
+
+        poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        poolSize[2].descriptorCount = 5;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.pNext = nullptr;
+        descriptorPoolCreateInfo.maxSets = 2;
+        descriptorPoolCreateInfo.poolSizeCount = 3;
+        descriptorPoolCreateInfo.pPoolSizes = poolSize;
+
+        VkResult err;
+        VkDescriptorPool descriptorPool;
+        err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
+        GVR_VK_CHECK(!err);
+        vkData->setDescriptorPool(descriptorPool,pass);
+
+        VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.pNext = nullptr;
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
+
+        VkDescriptorSet descriptorSet;
+        err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+        GVR_VK_CHECK(!err);
+        vkData->setDescriptorSet(descriptorSet,pass);
+
+        /*if (transformUboPresent) {
+            vkData->getTransformUbo().setDescriptorSet(descriptorSet);
+            writes.push_back(vkData->getTransformUbo().getDescriptorSet());
+        }
+
+        if(vkData->mesh()->hasBones() && bones_present){
+            static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(descriptorSet);
+            writes.push_back(static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->getDescriptorSet());
+        }*/
+
+        // TODO: add shadowmap descriptor
+
+        //vkShader->bindTextures(vkmtl, writes,  descriptorSet, TEXTURE_BIND_START);
+
+        VkDescriptorImageInfo descriptorImageInfoPass2[1] = {};
+        // Input Attachments do not have samplers
+        descriptorImageInfoPass2[0].sampler             = VK_NULL_HANDLE;
+        // TODO PostEffectImage[0] index should be appropriate
+        // Initializing Fbo
+        mRenderTexture[imageIndex]->getRenderPass();
+        descriptorImageInfoPass2[0].imageView           = mRenderTexture[imageIndex]->getFBO()->postEffectImage[0]->getVkImageView();
+        descriptorImageInfoPass2[0].imageLayout         = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+
+        VkWriteDescriptorSet writes[1] = {};
+        // position
+        writes[0].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[0].dstBinding        = 4;
+        writes[0].dstSet            = descriptorSet;// descriptorSetPE;
+        writes[0].descriptorCount   = 1;
+        writes[0].descriptorType    = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        writes[0].pImageInfo        = &descriptorImageInfoPass2[0];
+
+        vkUpdateDescriptorSets(m_device, 1, &writes[0], 0, nullptr);
+
+
+        //vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
+        vkData->setDescriptorSetNull(false,pass);
+        LOGI("Vulkan after update descriptor");
+        return true;
+    }
+
     void VulkanCore::createPipelineCache() {
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
@@ -1421,6 +1596,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
         VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(vkRdata->mesh()->getVertexBuffer());
         const GVR_VK_Vertices* vertices = vbuf->getVKVertices(shader);
+
+        VulkanShader* vk_shader = reinterpret_cast<VulkanShader*>(shader);
 /*
 
         // Create our buffer object.
@@ -1499,7 +1676,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         verticesPE->vi_attrs[1].offset                    = sizeof(float) * 3;
 */
 
-        VkDescriptorPoolSize poolSize[3] = {};
+/*        VkDescriptorPoolSize poolSize[3] = {};
 
         poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         poolSize[0].descriptorCount = 5;
@@ -1521,12 +1698,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &mDescriptorPool);
         GVR_VK_CHECK(!err);
 
+*/
 
 
-
-        VkDescriptorSetLayoutBinding subpass2Bindings[1] = {};
+/*        VkDescriptorSetLayoutBinding subpass2Bindings[1] = {};
         // Our texture sampler - positions
-        subpass2Bindings[0].binding                 = 0;
+        subpass2Bindings[0].binding                 = 4;
         subpass2Bindings[0].descriptorCount         = 1;
         subpass2Bindings[0].descriptorType          = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         subpass2Bindings[0].stageFlags              = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1542,15 +1719,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorSetLayout mDescriptorLayoutSubpass2;
         ret = vkCreateDescriptorSetLayout(m_device, &descriptorSetLayoutCreateInfo, nullptr, &mDescriptorLayoutSubpass2);
         GVR_VK_CHECK(!ret);
-
-
+*/
+/*
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext                 = nullptr;
-        descriptorSetAllocateInfo.descriptorPool        = mDescriptorPool;
+        descriptorSetAllocateInfo.descriptorPool        =   vkRdata->getDescriptorPool(0);//mDescriptorPool;
+        //VkDescriptorPool t = vkRdata->getDescriptorPool(0);//
         descriptorSetAllocateInfo.descriptorSetCount    = 1;
-        descriptorSetAllocateInfo.pSetLayouts = &mDescriptorLayoutSubpass2;
+        //descriptorSetAllocateInfo.pSetLayouts = &mDescriptorLayoutSubpass2;
+        descriptorSetAllocateInfo.pSetLayouts = &vk_shader->getDescriptorLayout();
 
         err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSetPE);
         GVR_VK_CHECK(!err);
@@ -1569,25 +1748,27 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkWriteDescriptorSet writes[1] = {};
         // position
         writes[0].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[0].dstBinding        = 0;
+        writes[0].dstBinding        = 4;
         writes[0].dstSet            = descriptorSetPE;
         writes[0].descriptorCount   = 1;
         writes[0].descriptorType    = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         writes[0].pImageInfo        = &descriptorImageInfoPass2[0];
 
         vkUpdateDescriptorSets(m_device, 1, &writes[0], 0, nullptr);
+*/
 
 
-
-        // Our pipeline layout simply points to the empty descriptor layout.
+/*        // Our pipeline layout simply points to the empty descriptor layout.
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
         pipelineLayoutCreateInfo.sType              = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutCreateInfo.pNext              = nullptr;
         pipelineLayoutCreateInfo.setLayoutCount     = 1;
-        pipelineLayoutCreateInfo.pSetLayouts        = &mDescriptorLayoutSubpass2;
+        pipelineLayoutCreateInfo.pSetLayouts        = &vk_shader->getDescriptorLayout();
         ret = vkCreatePipelineLayout(m_device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayoutPE);
         GVR_VK_CHECK(!ret);
+*/
 
+        pipelineLayoutPE = vk_shader->getPipelineLayout();
 
         // Create Pipeline
 
@@ -1683,6 +1864,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         LOGI("Vulkan graphics call before");
         err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
                                         &pipelinePE);
+
+        delete pEShader;
 
     }
 

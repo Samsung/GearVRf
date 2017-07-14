@@ -127,7 +127,20 @@ namespace gvr {
 
     bool VulkanRenderer::renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
     {
+        // Updates its vertex buffer
         rdata->updateGPU(this,shader);
+
+        // For its layout (uniforms and samplers)
+        VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
+        VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
+
+        vulkanCore_->InitLayoutRenderDataPostEffect(*vkmtl, vkRdata, shader);
+
+        //if(vkRdata->isHashCodeDirty() || vkRdata->isDirty(0xFFFF) || vkRdata->isDescriptorSetNull(pass)) {
+
+            vulkanCore_->InitDescriptorSetForRenderDataPostEffect(this, pass, shader, vkRdata);
+            vkRdata->createPipeline(shader, this, pass);
+       // }
     }
 
     void VulkanRenderer::renderCamera(Scene *scene, Camera *camera,
@@ -185,14 +198,28 @@ namespace gvr {
 
         // Call Post Effect
         //std::vector<ShaderData*> postEffects = camera->post_effect_data();
+        std::vector<RenderData*> renderData;
+        for(int i = 0; i < post_effects.size(); i++){
+            VulkanRenderPass * vulkanRenderPass = new VulkanRenderPass();
+            RenderData * rr = post_effect_render_data_vulkan();
+            rr->add_pass(vulkanRenderPass);
+            renderData.push_back(rr);
+        }
+
             Shader *shader = rstate.shader_manager->getShader(post_effects[0]->getNativeShader());
-            renderWithPostEffectShader(rstate, shader, post_effect_render_data_vulkan(),
+            renderWithPostEffectShader(rstate, shader, renderData[0],
                                        post_effects[0], 0);
 
-            vulkanCore_->postEffectRender(post_effect_render_data_vulkan(), shader);
+            //vulkanCore_->postEffectRender(renderData[0], shader);
 
-        vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, post_effect_render_data_vulkan(), shader);
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, renderData[0], shader);
         vulkanCore_->DrawFrameForRenderData();
+
+
+        // Freeing RenderData of Post Effect
+        for(int i = 0; i < post_effects.size(); i++){
+            delete renderData[0];
+        }
     }
 
 
