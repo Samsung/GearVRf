@@ -104,14 +104,14 @@ class DaydreamViewManager extends GVRViewManager {
             sensoredSceneUpdated = updateSensoredScene();
         }
         if (eye == 0) {
-            captureCenterEye();
-            capture3DScreenShot();
+            captureCenterEye(false);
+            capture3DScreenShot(false);
 
-            renderCamera(mMainScene, cameraRig.getLeftCamera(), mRenderBundle);
-            captureLeftEye();
+            renderCamera(mMainScene, cameraRig.getLeftCamera(), mRenderBundle, false);
+            captureLeftEye(0,false);
         } else {
-            renderCamera(mMainScene, cameraRig.getRightCamera(), mRenderBundle);
-            captureRightEye();
+            renderCamera(mMainScene, cameraRig.getRightCamera(), mRenderBundle, false);
+            captureRightEye(0, false);
         }
         captureFinish();
     }

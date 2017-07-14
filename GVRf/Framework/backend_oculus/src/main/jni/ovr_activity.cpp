@@ -38,7 +38,7 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
     activity_ = env.NewGlobalRef(activity);
     activityClass_ = GetGlobalClassReference(env, activityClassName);
 
-    onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(I)V");
+    onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(IIZ)V");
     updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
 }
 
@@ -220,8 +220,10 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
 
         beginRenderingEye(eye);
+        int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
+        int colorTexture = vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, textureSwapChainIndex);
 
-        oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye);
+        oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye, colorTexture, use_multiview);
 
         endRenderingEye(eye);
     }

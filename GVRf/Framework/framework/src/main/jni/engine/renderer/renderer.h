@@ -79,7 +79,8 @@ struct RenderState {
     Material*               material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
-    bool shadow_map;
+    bool                    shadow_map;
+    bool                    is_multiview;
 };
 
 class Renderer {
@@ -123,27 +124,27 @@ public:
              ShaderManager* shader_manager,
              PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b) = 0;
+             RenderTexture* post_effect_render_texture_b, bool) = 0;
 
      virtual void renderCamera(Scene* scene, Camera* camera, int viewportX,
              int viewportY, int viewportWidth, int viewportHeight,
              ShaderManager* shader_manager,
              PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b)=0;
+             RenderTexture* post_effect_render_texture_b, bool)=0;
 
      virtual void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) = 0;
+            RenderTexture* post_effect_render_texture_b, bool) = 0;
 
      virtual void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) = 0;
+            RenderTexture* post_effect_render_texture_b, bool) = 0;
     virtual void cullFromCamera(Scene *scene, Camera *camera,
                                 ShaderManager* shader_manager);
     virtual void restoreRenderStates(RenderData* render_data) = 0;

@@ -44,7 +44,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
 abstract class GVRViewManager extends GVRContext {
-
+    public enum EYE{ LEFT, RIGHT, MULTIVIEW, CENTER};
     GVRViewManager(GVRActivity activity, GVRMain main) {
         super(activity);
 
@@ -519,12 +519,13 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     protected void renderCamera(GVRScene scene, GVRCamera camera, IRenderBundle
-            renderBundle) {
+            renderBundle, boolean isMultiviewSet) {
+
         renderCamera(scene.getNative(), camera.getNative(),
                 renderBundle.getMaterialShaderManager().getNative(),
                 renderBundle.getPostEffectShaderManager().getNative(),
                 renderBundle.getPostEffectRenderTextureA().getNative(),
-                renderBundle.getPostEffectRenderTextureB().getNative());
+                renderBundle.getPostEffectRenderTextureB().getNative(), isMultiviewSet);
     }
 
     void cullAndRender(GVRRenderTarget renderTarget, GVRScene scene)
@@ -588,7 +589,7 @@ abstract class GVRViewManager extends GVRContext {
         mScreenshot3DCallback = callback;
     }
 
-    protected void readRenderResult() {
+    protected void readRenderResult(int texId, GVRViewManager.EYE eye, boolean isMultiviewSet) {
         if (mReadbackBuffer == null) {
             final VrAppSettings settings = mActivity.getAppSettings();
             final VrAppSettings.EyeBufferParams eyeBufferParams = settings.getEyeBufferParams();
@@ -598,7 +599,7 @@ abstract class GVRViewManager extends GVRContext {
             mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
             mReadbackBuffer.order(ByteOrder.nativeOrder());
         }
-        readRenderResultNative(mReadbackBuffer);
+        readRenderResultNative(mReadbackBuffer, isMultiviewSet ? texId : 0 , eye.ordinal(), isMultiviewSet);
     }
 
     protected void returnScreenshotToCaller(final GVRScreenshotCallback callback, final int width, final int height) {
@@ -658,50 +659,58 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     // capture 3D screenshot
-    protected void capture3DScreenShot() {
+    protected void capture3DScreenShot(boolean isMultiviewSet) {
         if (mScreenshot3DCallback == null) {
             return;
         }
         final Bitmap[] bitmaps = new Bitmap[6];
-        renderSixCamerasAndReadback(mMainScene.getMainCameraRig(), bitmaps);
+        renderSixCamerasAndReadback(mMainScene.getMainCameraRig(), bitmaps, isMultiviewSet);
         returnScreenshot3DToCaller(mScreenshot3DCallback, bitmaps, mReadbackBufferWidth, mReadbackBufferHeight);
 
         mScreenshot3DCallback = null;
     }
 
-    protected void captureRightEye() {
-        captureEye(mScreenshotRightCallback);
+    protected void captureRightEye(int texId, boolean isMultiviewSet) {
+        captureEye(mScreenshotRightCallback, texId, EYE.RIGHT, isMultiviewSet);
         mScreenshotRightCallback = null;
     }
 
-    protected void captureLeftEye() {
-        captureEye(mScreenshotLeftCallback);
+    protected void captureLeftEye(int texId, boolean isMultiviewSet) {
+        captureEye(mScreenshotLeftCallback, texId, EYE.LEFT, isMultiviewSet);
         mScreenshotLeftCallback = null;
     }
 
         // capture screenshot of an eye
-    private void captureEye(GVRScreenshotCallback callback) {
+    private void captureEye(GVRScreenshotCallback callback, int texId, GVRViewManager.EYE eye, boolean isMultiviewSet) {
         if (null == callback) {
             return;
         }
 
-        readRenderResult();
+        readRenderResult(texId, eye, isMultiviewSet);
         returnScreenshotToCaller(callback, mReadbackBufferWidth, mReadbackBufferHeight);
     }
 
     // capture center eye
-    protected void captureCenterEye() {
+    protected void captureCenterEye(boolean isMultiviewSet) {
         if (mScreenshotCenterCallback == null) {
             return;
         }
+        GVRRenderTexture eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
+
+        // if the multiview is set, render on normal FBO instead of multiview buffers
+        if(isMultiviewSet)
+            eyeCaptureRenderTexture.beginRendering();
 
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         final GVRPostEffect postEffect = new GVRPostEffect(this, GVRPostEffect.GVRPostEffectShaderType.HorizontalFlip.ID);
         centerCamera.addPostEffect(postEffect);
-        renderCamera(mMainScene, centerCamera, mRenderBundle);
+        renderCamera(mMainScene, centerCamera, mRenderBundle, false);
         centerCamera.removePostEffect(postEffect);
+        if(isMultiviewSet)
+            eyeCaptureRenderTexture.endRendering();
 
-        readRenderResult();
+        readRenderResult(isMultiviewSet ? eyeCaptureRenderTexture.getId() : 0, EYE.CENTER, false);
+
         final Bitmap bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
         mReadbackBuffer.rewind();
         bitmap.copyPixelsFromBuffer(mReadbackBuffer);
@@ -716,16 +725,24 @@ abstract class GVRViewManager extends GVRContext {
         mScreenshotCenterCallback = null;
     }
 
-    private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index) {
-        renderCamera(mMainScene, centerCamera, mRenderBundle);
-        readRenderResult();
+    private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index, boolean isMultiviewSet) {
 
+        GVRRenderTexture eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
+        if(isMultiviewSet)
+            eyeCaptureRenderTexture.beginRendering();
+
+        renderCamera(mMainScene, centerCamera, mRenderBundle, false);
+
+        if(isMultiviewSet)
+            eyeCaptureRenderTexture.endRendering();
+
+        readRenderResult(0,EYE.CENTER, false);
         bitmaps[index] = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
         mReadbackBuffer.rewind();
         bitmaps[index].copyPixelsFromBuffer(mReadbackBuffer);
     }
 
-    private void renderSixCamerasAndReadback(final GVRCameraRig mainCameraRig, final Bitmap[] bitmaps) {
+    private void renderSixCamerasAndReadback(final GVRCameraRig mainCameraRig, final Bitmap[] bitmaps, boolean isMultiviewSet) {
         // temporarily create a center camera
         GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(this);
         centerCamera.setFovY(90.0f);
@@ -740,24 +757,24 @@ abstract class GVRViewManager extends GVRContext {
         int index = 0;
         // render +x face
         centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
-        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++, isMultiviewSet);
         // render -x face
         centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++, isMultiviewSet );
         // render +y face
         centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
         centerCameraTransform.rotateByAxis(90, 1, 0, 0);
-        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++, isMultiviewSet);
         // render -y face
         centerCameraTransform.rotateByAxis(180, 1, 0, 0);
-        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++, isMultiviewSet);
         // render +z face
         centerCameraTransform.rotateByAxis(90, 1, 0, 0);
         centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++, isMultiviewSet);
         // render -z face
         centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-        renderOneCameraAndAddToList(centerCamera, bitmaps, index++);
+        renderOneCameraAndAddToList(centerCamera, bitmaps, index++, isMultiviewSet);
         centerCameraObject.detachCamera();
         mainCameraRig.getOwnerObject().removeChildObject(centerCameraObject);
     }
@@ -798,12 +815,12 @@ abstract class GVRViewManager extends GVRContext {
 
 
     protected native void renderCamera(long scene, long camera, long shaderManager,
-                                       long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
+                                       long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB, boolean isMultiviewSet);
     protected native void cull(long scene, long camera, long shader_manager);
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
     protected native void cullAndRender(long render_target, long scene, long shader_manager,
                                         long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
-    private native static void readRenderResultNative(Object readbackBuffer);
+    private native static void readRenderResultNative(Object readbackBuffer, int texId, int eye, boolean isMultiviewSet);
 
     private static final String TAG = "GVRViewManager";
 }

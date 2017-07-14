@@ -47,16 +47,16 @@ namespace gvr
         }
         glClear(mask);
     }
-
     void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) {
+            RenderTexture* post_effect_render_texture_b, bool is_multiview) {
 
         resetStats();
         RenderState rstate;
+        rstate.is_multiview = is_multiview;
         rstate.shadow_map = false;
         rstate.material_override = NULL;
         rstate.viewportX = viewportX;
@@ -362,19 +362,19 @@ namespace gvr
             RenderTexture* render_texture, ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) {
+            RenderTexture* post_effect_render_texture_b, bool is_multiview) {
 
         renderCamera(scene, camera, render_texture->getFrameBufferId(), 0, 0,
                 render_texture->width(), render_texture->height(), shader_manager,
                 post_effect_shader_manager, post_effect_render_texture_a,
-                post_effect_render_texture_b);
+                post_effect_render_texture_b, is_multiview);
     }
 
 
     void GLRenderer::renderCamera(Scene *scene, Camera *camera, ShaderManager *shader_manager,
                                   PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
+                                  RenderTexture *post_effect_render_texture_b, bool is_multiview)
     {
         GLint curFBO;
         GLint viewport[4];
@@ -383,7 +383,7 @@ namespace gvr
 
         renderCamera(scene, camera, curFBO, viewport[0], viewport[1], viewport[2], viewport[3],
                      shader_manager, post_effect_shader_manager, post_effect_render_texture_a,
-                     post_effect_render_texture_b
+                     post_effect_render_texture_b, is_multiview
         );
     }
 
@@ -392,12 +392,12 @@ namespace gvr
                                   ShaderManager *shader_manager,
                                   PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
+                                  RenderTexture *post_effect_render_texture_b, bool is_multiview)
     {
 
         renderCamera(scene, camera, 0, viewportX, viewportY, viewportWidth, viewportHeight,
                      shader_manager, post_effect_shader_manager, post_effect_render_texture_a,
-                     post_effect_render_texture_b
+                     post_effect_render_texture_b, is_multiview
         );
     }
     void GLRenderer::set_face_culling(int cull_face)
@@ -560,7 +560,7 @@ namespace gvr
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
 
 
-        if(use_multiview && !rstate.shadow_map){
+        if(rstate.is_multiview  && !rstate.shadow_map){
             rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
             rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
             rstate.uniforms.u_mv_[0] = rstate.uniforms.u_view_[0] * rstate.uniforms.u_model;
@@ -599,7 +599,7 @@ namespace gvr
                     shader = shader_manager->getCubemapShader();
                     break;
                 case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                    if(use_multiview){
+                    if(rstate.is_multiview ){
                         rstate.uniforms.u_view_inv_[0] = glm::inverse(rstate.uniforms.u_view_[0]);
                         rstate.uniforms.u_view_inv_[1] = glm::inverse(rstate.uniforms.u_view_[1]);
                     }

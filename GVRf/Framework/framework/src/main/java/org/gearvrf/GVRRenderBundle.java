@@ -14,6 +14,7 @@
  */
 package org.gearvrf;
 
+import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
 /** A container for various services and pieces of data required for rendering. */
@@ -23,6 +24,7 @@ final class GVRRenderBundle implements IRenderBundle {
     private final GVRPostEffectShaderManager mPostEffectShaderManager;
     private final GVRRenderTexture mPostEffectRenderTextureA;
     private final GVRRenderTexture mPostEffectRenderTextureB;
+    private  GVRRenderTexture mEyeCaptureRenderTexture = null;
 
     GVRRenderBundle(GVRContext gvrContext, final int width, final int height) {
         mGVRContext = gvrContext;
@@ -38,13 +40,16 @@ final class GVRRenderBundle implements IRenderBundle {
                 sampleCount = maxSampleCount;
             }
         }
-
         if (sampleCount <= 1) {
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height);
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height);
+            if(appSettings.isMultiviewSet())
+                mEyeCaptureRenderTexture  = new GVRRenderTexture(mGVRContext, width, height, 1);
+            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, 1);
+            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, 1);
         } else {
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, sampleCount);
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, sampleCount);
+            if(appSettings.isMultiviewSet())
+                mEyeCaptureRenderTexture  = new GVRRenderTexture(mGVRContext, width, height, sampleCount, 1);
+            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, sampleCount, 1);
+            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, sampleCount, 1);
         }
     }
 
@@ -55,7 +60,7 @@ final class GVRRenderBundle implements IRenderBundle {
     public GVRPostEffectShaderManager getPostEffectShaderManager() {
         return mPostEffectShaderManager;
     }
-
+    public GVRRenderTexture getEyeCaptureRenderTexture() { return  mEyeCaptureRenderTexture; }
     public GVRRenderTexture getPostEffectRenderTextureA() {
         return mPostEffectRenderTextureA;
     }
