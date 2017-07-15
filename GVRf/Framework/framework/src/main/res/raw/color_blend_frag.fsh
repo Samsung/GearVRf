@@ -11,4 +11,5 @@ void main()
 {
     vec4 tex = subpassLoad(u_texture);
     outColor = tex;
+    //outColor = vec4(1.0,0,0,1.0);
 }

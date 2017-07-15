@@ -18,6 +18,11 @@ void VkRenderTexture::bind() {
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
     VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+
+    if(vk_renderer->getCore()->getPostEffectCount())
+        clear_values.resize(2 + (vk_renderer->getCore()->getPostEffectCount() > 1 ? 2 : 1));
+    else
+        clear_values.resize(2);
     fbo->addRenderPass(renderPass);
 }
 void VkRenderTexture::endRendering(Renderer* renderer) {
@@ -36,6 +41,13 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     clear_values[1].depthStencil.depth = 1.0f;
     clear_values[1].depthStencil.stencil = 0;
 
+    for(int i = 0; i < vk_renderer->getCore()->getPostEffectCount(); i++){
+        clear_values[2+i].color.float32[0] = mBackColor[0];
+        clear_values[2+i].color.float32[1] = mBackColor[1];
+        clear_values[2+i].color.float32[2] = mBackColor[2];
+        clear_values[2+i].color.float32[3] = mBackColor[3];
+    }
+
     VkRenderPassBeginInfo rp_begin = {};
     rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rp_begin.pNext = nullptr;
@@ -45,8 +57,8 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     rp_begin.renderArea.offset.y = 0;
     rp_begin.renderArea.extent.width = fbo->getWidth();
     rp_begin.renderArea.extent.height = fbo->getHeight();
-    rp_begin.clearValueCount = 2;
-    rp_begin.pClearValues = clear_values;
+    rp_begin.clearValueCount = clear_values.size();
+    rp_begin.pClearValues = clear_values.data();
 
     vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }

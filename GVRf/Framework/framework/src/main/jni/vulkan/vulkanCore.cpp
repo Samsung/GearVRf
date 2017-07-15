@@ -949,7 +949,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 #if  0
     std::vector<uint32_t> result_vert = CompileShader("VulkanVS", VERTEX_SHADER,
                                                           vertexShaderData);//vs;//
-        std::vector<uint32_t> result_frag = CompileShader("VulkanFS", FRAGMENT_SHADER,
+    std::vector<uint32_t> result_frag = CompileShader("VulkanFS", FRAGMENT_SHADER,
                                                           data_frag);//fs;//
 #else
     std::vector<uint32_t> result_vert = shader->getVkVertexShader();
@@ -971,7 +971,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     VkCullModeFlagBits cull_face = (rdata->cull_face(pass) ==  RenderData::CullBack) ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
     ShaderData *curr_material = rdata->material(pass);
     float line_width = 1.0;
-    //curr_material->getFloat("line_width", line_width);
+    curr_material->getFloat("line_width", line_width);
     pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
                                                                                        VK_FALSE,
                                                                                        VK_POLYGON_MODE_FILL,
@@ -1125,7 +1125,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     void VulkanCore::BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector,
-                                                 Camera *camera, ShaderManager* shader_manager, RenderData * rdataPE, Shader* shader) {
+                                                 Camera *camera, ShaderManager* shader_manager, std::vector<RenderData*> rdataPE, std::vector<Shader*> shader) {
         // For the triangle sample, we pre-record our command buffer, as it is static.
         // We have a buffer per swap chain image, so loop over the creation process.
         VkCommandBuffer &cmdBuffer = *(swapChainCmdBuffer[imageIndex]);
@@ -1225,44 +1225,48 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkUnmapMemory(m_device, verticesPE->mem);*/
 
             LOGE("Abhijit P1");
+        // Apply Post Effects
+        for(int i = 0; i < rdataPE.size(); i++) {
+            VulkanRenderData *vkRdata = static_cast<VulkanRenderData *>(rdataPE[i]);
+            vkCmdNextSubpass(cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-            VulkanRenderData *vkRdata = static_cast<VulkanRenderData *>(rdataPE);
-                vkCmdNextSubpass(cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
-
-                // Set our pipeline. This holds all major state
-                // the pipeline defines, for example, that the vertex buffer is a triangle list.
-                LOGE("Abhijit P2");
-                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkRdata->getVKPipeline(0));
-
-
-
-
-
-                //bind out descriptor set, which handles our uniforms and samplers
-                LOGE("Abhijit P3");
-
-                VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
-
-                VkDescriptorSet descriptorSet1 = vkRdata->getDescriptorSet(0);
-                vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet1, 1, 0);
-
-                // Bind our vertex buffer, with a 0 offset.
-                LOGE("Abhijit P4");
-                VkDeviceSize offsets[1] = {0};
+            // Set our pipeline. This holds all major state
+            // the pipeline defines, for example, that the vertex buffer is a triangle list.
+            LOGE("Abhijit P2");
+            vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              vkRdata->getVKPipeline(0));
 
 
-                VulkanVertexBuffer *vbuf = static_cast<VulkanVertexBuffer *>(vkRdata->mesh()->getVertexBuffer());
-                const GVR_VK_Vertices *vertices = vbuf->getVKVertices(shader);
-
-                //vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE->buf, offsets);
-                vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertices->buf,
-                                       offsets);
-
-                // Issue a draw command, with our vertices. Full screen quad
-                LOGE("Abhijit P5");
-                vkCmdDraw(cmdBuffer, 3 * 2, 1, 0, 0);
 
 
+
+            //bind out descriptor set, which handles our uniforms and samplers
+            LOGE("Abhijit P3");
+
+            VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader[i])->getPipelineLayout();
+
+            VkDescriptorSet descriptorSet1 = vkRdata->getDescriptorSet(0);
+            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+                                    1, &descriptorSet1, 1, 0);
+
+            // Bind our vertex buffer, with a 0 offset.
+            LOGE("Abhijit P4");
+            VkDeviceSize offsets[1] = {0};
+
+
+            VulkanVertexBuffer *vbuf = static_cast<VulkanVertexBuffer *>(vkRdata->mesh()->getVertexBuffer());
+            const GVR_VK_Vertices *vertices = vbuf->getVKVertices(shader[i]);
+
+            //vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &verticesPE->buf, offsets);
+            vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertices->buf,
+                                   offsets);
+
+            // Issue a draw command, with our vertices. Full screen quad
+            const Mesh *mesh1 = vkRdata->mesh();
+            LOGE("Abhijit P5 %d", mesh1->getVertexCount());
+            vkCmdDraw(cmdBuffer, mesh1->getVertexCount(), 1, 0, 1);
+
+        }
         LOGE("Abhijit P6");
         mRenderTexture[imageIndex]->endRendering(Renderer::getInstance());
 
