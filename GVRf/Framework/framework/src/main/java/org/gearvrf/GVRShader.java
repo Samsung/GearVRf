@@ -59,7 +59,7 @@ import android.util.Log;
  */
 public class GVRShader
 {
-    protected Integer mGLSLVersion = 100;
+    protected GLSLESVersion mGLSLVersion = GLSLESVersion.V100;
     protected boolean mHasVariants = false;
     protected boolean mUsesLights = false;
     protected boolean mUseTransformBuffer = false;  // true to use Transform UBO in GL
@@ -134,7 +134,7 @@ public class GVRShader
     }
 
     /**
-     * Construct a shader using GLSL version 300
+     * Construct a shader using specified GLSL version
      *
      * @param uniformDescriptor string describing uniform names and types
      *                          e.g. "float4 diffuse_color, float4 specular_color, float specular_exponent"
@@ -144,9 +144,9 @@ public class GVRShader
      *                          e.g. "float3 a_position, float2 a_texcoord"
      *            string describing uniform names and types
      * @param glslVersion
-     *            integer giving GLSL version (e.g. 300)
+     *            GLSL version (e.g. GLSLESVersion.V300)
      */
-    public GVRShader(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, int glslVersion)
+    public GVRShader(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, GLSLESVersion glslVersion)
     {
         mUniformDescriptor = uniformDescriptor;
         mVertexDescriptor = vertexDescriptor;
@@ -263,11 +263,8 @@ public class GVRShader
     {
         StringBuilder vertexShaderSource = new StringBuilder();
         StringBuilder fragmentShaderSource = new StringBuilder();
-        if (mGLSLVersion > 100)
-        {
-            vertexShaderSource.append("#version " + mGLSLVersion.toString() + "\n");
-            fragmentShaderSource.append("#version " + mGLSLVersion.toString() + " \n");
-        }
+        vertexShaderSource.append("#version " + mGLSLVersion.toString() + "\n");
+        fragmentShaderSource.append("#version " + mGLSLVersion.toString() + " \n");
         String vshader = replaceTransforms(getSegment("VertexTemplate"));
         String fshader = replaceTransforms(getSegment("FragmentTemplate"));
         if (material != null)
@@ -448,4 +445,21 @@ public class GVRShader
         }
     }
     public native boolean isVulkanInstance();
+
+    public enum GLSLESVersion {
+        V100("100 es"),
+        V300("300 es"),
+        V310("310 es"),
+        V320("320 es"),
+        VULKAN("400"); // HACK: OK with Vulkan; gl_shader.c will replace with "300 es"
+
+        private GLSLESVersion(String name) {
+            this.name = name;
+        }
+        private final String name;
+
+        public String toString() {
+            return name;
+        }
+    }
 }
