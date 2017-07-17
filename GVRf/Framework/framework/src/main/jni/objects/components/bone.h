@@ -12,7 +12,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "objects/components/component.h"
-#include "objects/components/bone_weight.h"
 
 #include "util/gvr_log.h"
 
@@ -23,7 +22,6 @@ public:
     virtual ~Bone();
 
     void setName(const char *name);
-    void setBoneWeights(std::vector<BoneWeight*> &&boneWeights);
 
     void setOffsetMatrix(glm::mat4 &mat) {
         offsetMatrix_ = mat;
@@ -62,7 +60,6 @@ private:
 private:
     static glm::mat4 identityMatrix_;
     std::string name_;
-    std::vector<BoneWeight*> boneWeights_;
     glm::mat4 offsetMatrix_;
     glm::mat4 *finalTransformMatrixPtr_;
 };

@@ -212,6 +212,13 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
      *            Post-effect to append to this camera's render chain
      */
     public void addPostEffect(GVRShaderData postEffectData) {
+        GVRContext ctx = getGVRContext();
+        GVRShaderId shader = postEffectData.getShaderType();
+        if (postEffectData.getNativeShader() == 0)
+        {
+            int nativeShader = shader.getTemplate(ctx).bindShader(getGVRContext(), postEffectData, null);
+            postEffectData.setNativeShader(nativeShader);
+        }
         mPostEffects.add(postEffectData);
         NativeCamera.addPostEffect(getNative(), postEffectData.getNative());
     }

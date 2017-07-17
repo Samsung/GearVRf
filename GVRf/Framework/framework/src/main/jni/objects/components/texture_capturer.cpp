@@ -8,9 +8,13 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "objects/components/render_data.h"
-#include "objects/components/texture_capturer.h"
+#include "component.h"
+#include "render_data.h"
+#include "texture_capturer.h"
 #include "shaders/shader.h"
+#include "gl/gl_render_texture.h"
+#include "component.inl"
+
 #include "util/gvr_time.h"
 
 #define TOL 1e-8

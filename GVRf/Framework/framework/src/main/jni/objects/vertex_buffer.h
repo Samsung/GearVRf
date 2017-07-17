@@ -4,7 +4,6 @@
 #include <vector>
 #include <mutex>
 #include "data_descriptor.h"
-#include "vertex_bone_data.h"
 #include "hybrid_object.h"
 #include "bounding_volume.h"
 
@@ -133,14 +132,12 @@ namespace gvr {
         bool            forAllVertices(std::function<void (int iter, const float* vertex)> func) const;
         bool            getInfo(const char* attributeName, int& index, int& offset, int& size) const;
         void            getBoundingVolume(BoundingVolume& bv) const;
-        void            setBoneData(VertexBoneData& boneData);
         virtual bool    updateGPU(Renderer*, IndexBuffer*, Shader*) = 0;
         virtual void    bindToShader(Shader* shader, IndexBuffer* ibuf) = 0;
         void            dump() const;
         void            dump(const char* attrName) const;
 
     protected:
-        virtual void    parseDescriptor();
         bool            setVertexCount(int vertexCount);
         const void*     getData(const char* attributeName, int& size) const;
         const void*     getData(int index, int& size) const;

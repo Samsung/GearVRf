@@ -14,8 +14,8 @@
  */
 
 #include "render_target.h"
+#include "component.inl"
 #include "objects/textures/render_texture.h"
-#include <algorithm>
 
 namespace gvr {
 

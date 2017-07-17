@@ -1,7 +1,6 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-
 precision highp float;
 layout(set = 0, binding = 2) uniform sampler2D u_texture;
 
@@ -13,7 +12,7 @@ layout(set = 0, binding = 1) out vec4 outColor;
 void main()
 {
     vec4 tex = texture(u_texture, diffuse_coord);
-    vec3 color = tex.rgb * (1.0 - u_factor) + vec3(u_color.x, u_color.y, u_color.z) * u_factor;
+    vec3 color = tex.rgb * (1.0 - u_factor) + vec3(u_color.xyz) * u_factor;
     float alpha = tex.a;
     outColor = vec4(color, alpha);
 }

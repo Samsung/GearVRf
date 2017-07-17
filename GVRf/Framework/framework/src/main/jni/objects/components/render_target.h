@@ -19,8 +19,8 @@
 
 #include <vector>
 
-#include "objects/components/component.h"
-#include "objects/components/camera.h"
+#include "component.h"
+#include "camera.h"
 #include "engine/renderer/renderer.h"
 
 
