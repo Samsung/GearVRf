@@ -16,8 +16,10 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
@@ -26,6 +28,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRepeatMode;
@@ -33,6 +36,7 @@ import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.script.GVRJavascriptScriptFile;
 
 import org.gearvrf.GVRDrawFrameListener;
@@ -50,6 +54,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.script.Bindings;
@@ -95,7 +100,9 @@ public class AnimationInteractivityManager {
     private Vector<Sensor> sensors = null;
     private Vector<TimeSensor> timeSensors = null;
     private Vector<EventUtility> eventUtilities = null;
+    private Vector<InlineObject> inlineObjects = null;
     private ArrayList<ScriptObject> scriptObjects = null;
+    private InlineObject inlineObject = null;
 
     private AnchorImplementation anchorImplementation = null;
     private GVRAnimator gvrAnimator = null;
@@ -116,7 +123,8 @@ public class AnimationInteractivityManager {
                                          Vector<TimeSensor> timeSensors,
                                          Vector<EventUtility> eventUtilities,
                                          ArrayList<ScriptObject> scriptObjects,
-                                         Vector<Viewpoint> viewpoints
+                                         Vector<Viewpoint> viewpoints,
+                                         Vector<InlineObject> inlineObjects
 
     ) {
         this.x3dObject = x3dObject;
@@ -128,6 +136,7 @@ public class AnimationInteractivityManager {
         this.timeSensors = timeSensors;
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
+        this.inlineObjects = inlineObjects;
 
         gvrAnimator = new GVRAnimator(this.gvrContext, true);
         root.attachComponent(gvrAnimator);
@@ -165,6 +174,7 @@ public class AnimationInteractivityManager {
         DefinedItem routeFromDefinedItem = null; // used passing items into a Script
         ScriptObject routeFromScriptObject = null;
         ScriptObject routeToScriptObject = null;
+        InlineObject routeToInlineObject = null;
 
         // Get pointers to the Sensor, TimeSensor, Interpolator,
         // EventUtility (such as BooleanToggle), ScriptObject
@@ -204,6 +214,12 @@ public class AnimationInteractivityManager {
                 routeToScriptObject = scriptObject;
             } else if (scriptObject.getName().equalsIgnoreCase(fromNode)) {
                 routeFromScriptObject = scriptObject;
+            }
+        }
+
+        for (InlineObject inlineObject : inlineObjects) {
+            if (inlineObject.getName().equalsIgnoreCase(toNode)) {
+                routeToInlineObject = inlineObject;
             }
         }
 
@@ -451,7 +467,24 @@ public class AnimationInteractivityManager {
                 }
                 interactiveObjects.add(interactiveObject);
             }
+            if ( routeToInlineObject != null ) {
+                InteractiveObject interactiveObject = new InteractiveObject();
+                InlineObject inlineObject = routeToInlineObject;
+                interactiveObject.setInlineObject(inlineObject);
+                interactiveObject.setSensor(routeFromSensor, fromField);
+                interactiveObjects.add(interactiveObject);
+            }
         }  //  end if routeToDefinedItem != null
+        if ( routeToInlineObject != null ) {
+            InteractiveObject interactiveObject = new InteractiveObject();
+            InlineObject originalInlineObject = routeToInlineObject;
+            InlineObject inlineObject = new InlineObject();
+            inlineObject.copy(originalInlineObject);
+            inlineObject.setKeyFrames(toField);
+            interactiveObject.setInlineObject(inlineObject);
+            interactiveObject.setSensor(routeFromSensor, fromField);
+            interactiveObjects.add(interactiveObject);
+        }
     }  //  end buildInteractiveObject
 
 
@@ -610,7 +643,8 @@ public class AnimationInteractivityManager {
             //   to a DEFined Object
             else if ((interactiveObject.getSensor() != null) &&
                     (interactiveObject.getEventUtility() != null) &&
-                    (interactiveObject.getDefinedItem() != null)) {
+                    (interactiveObject.getDefinedItem() != null) ||
+                    ((interactiveObject.getSensor() != null) && (interactiveObject.getInlineObject() != null))) {
                 // a sensor, eventUtility (such as BooleanToggle) and defined object found
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
                 final Vector<InteractiveObject> interactiveObjectsFinal = interactiveObjects;
@@ -619,6 +653,7 @@ public class AnimationInteractivityManager {
 
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         boolean stateChanged = false;
+                        boolean activeFBXanimation = false;
 
                         @Override
                         public void onSensorEvent(SensorEvent event) {
@@ -628,17 +663,122 @@ public class AnimationInteractivityManager {
                                 if (!stateChanged) {
                                     stateChanged = true;
                                     EventUtility eventUtility = interactiveObjectFinal.getEventUtility();
-                                    eventUtility.setToggle(!eventUtility.getToggle());
-                                    for (InteractiveObject interactiveObject : interactiveObjectsFinal) {
-                                        if (interactiveObject.getEventUtility() == interactiveObjectFinal.getEventUtility()) {
-                                            GVRSceneObject gvrSceneObject = root
-                                                    .getSceneObjectByName(interactiveObject.getDefinedItem().getName());
-                                            GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
-                                            gvrComponent.setEnable(eventUtility.getToggle());
+                                    if ( eventUtility != null ) {
+                                        eventUtility.setToggle(!eventUtility.getToggle());
+                                        for (InteractiveObject interactiveObject : interactiveObjectsFinal) {
+                                            if (interactiveObject.getEventUtility() == interactiveObjectFinal.getEventUtility()) {
+                                                GVRSceneObject gvrSceneObject = root
+                                                        .getSceneObjectByName(interactiveObject.getDefinedItem().getName());
+                                                GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+                                                gvrComponent.setEnable(eventUtility.getToggle());
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        // this is an fbx or other non-X3D file for animation
+                                        if ( !activeFBXanimation ) {
+                                            InlineObject inlineObject = interactiveObjectFinal.getInlineObject();
+                                            GVRSceneObject inlineSceneObject = inlineObject.getInlineGVRSceneObject();
+                                            GVRAnimator animator = (GVRAnimator) inlineSceneObject.getComponent(GVRAnimator.getComponentType());
+                                            if ( animator != null ) {
+                                                List<GVRAnimation> gvrAnimations = animator.getAnimationList();
+                                                GVRAnimation gvrAnimation = null;
+
+                                                if  ( (inlineObject.getBeginKeyFrame() == InlineObject.UNSET_KEY_FRAME) || (inlineObject.getEndKeyFrame() == InlineObject.UNSET_KEY_FRAME)) {
+                                                    if ( (inlineObject.getBeginKeyFrame() == InlineObject.UNSET_KEY_FRAME) && (inlineObject.getEndKeyFrame() == InlineObject.UNSET_KEY_FRAME)) {
+                                                        // use the original FBX animation.
+                                                        gvrAnimation = gvrAnimations.get(0);
+                                                    }
+                                                    else {
+                                                        Log.e(TAG, "Error: ROUTE specifying the keyFrame range - only 1 may be an integers");
+                                                    }
+                                                }
+                                                else {
+                                                    // FBX animation specified in ROUTE as a set of keyFrames
+                                                    // play only a subset of the animation based on keyframes
+                                                    gvrAnimation = interactiveObjectFinal.getFBXAnimation();
+                                                    // check if we already copied over the animation
+                                                    if (gvrAnimation == null) {
+                                                        GVRAnimation gvrOriginalAnimation = gvrAnimations.get(0);
+                                                        if (gvrOriginalAnimation instanceof GVRKeyFrameAnimation) {
+                                                            GVRKeyFrameAnimation gvrOriginalKeyFrameAnimation = (GVRKeyFrameAnimation) gvrOriginalAnimation;
+                                                            GVRAnimationChannel gvrOriginalAnimationChannel = gvrOriginalKeyFrameAnimation.getChannel(0);
+
+                                                            try {
+                                                                // copy the original animation, then save just the requested frames
+                                                                // and their translation, scale and rotate
+                                                                int beginFrame = inlineObject.getBeginKeyFrame();
+                                                                int endFrame = inlineObject.getEndKeyFrame();
+                                                                double beginTime = gvrOriginalAnimationChannel.getRotKeyTime(beginFrame);
+                                                                double endTime = gvrOriginalAnimationChannel.getRotKeyTime(endFrame);
+
+                                                                int keyFrames = (endFrame - beginFrame) + 1;
+                                                                Quaternionf[] rotation = new Quaternionf[keyFrames];
+                                                                Vector3f[] translation = new Vector3f[keyFrames];
+                                                                Vector3f[] scale = new Vector3f[keyFrames];
+                                                                double[] keyTimes = new double[keyFrames];
+                                                                for (int i = 0; i < keyFrames; i++) {
+                                                                    rotation[i] = gvrOriginalAnimationChannel.getRotKeyQuaternion(beginFrame + i);
+                                                                    translation[i] = gvrOriginalAnimationChannel.getPosKeyVector(beginFrame + i);
+                                                                    scale[i] = gvrOriginalAnimationChannel.getScaleKeyVector(beginFrame + i);
+                                                                    keyTimes[i] = gvrOriginalAnimationChannel.getRotKeyTime(beginFrame + i);
+                                                                }
+                                                                GVRAnimationChannel fbxGVRAnimationChannel = new GVRAnimationChannel(
+                                                                        gvrOriginalAnimationChannel.getNodeName(), keyFrames, keyFrames, keyFrames,
+                                                                        GVRAnimationBehavior.DEFAULT, GVRAnimationBehavior.DEFAULT);
+                                                                // Insert the new key frames animations into an AnimationChannel,
+                                                                // but the first animated frame will be set to frame 0
+                                                                for (int i = 0; i < keyFrames; i++) {
+                                                                    fbxGVRAnimationChannel.setRotKeyQuaternion(i, (float) (keyTimes[i] - keyTimes[0]),
+                                                                            rotation[i]);
+                                                                    fbxGVRAnimationChannel.setPosKeyVector(i, (float) (keyTimes[i] - keyTimes[0]),
+                                                                            translation[i].x, translation[i].y, translation[i].z);
+                                                                    fbxGVRAnimationChannel.setScaleKeyVector(i, (float) (keyTimes[i] - keyTimes[0]),
+                                                                            scale[i].x, scale[i].y, scale[i].z);
+                                                                }
+
+                                                                GVRHybridObject fbxHybridObject = (GVRHybridObject) gvrOriginalAnimation.getTargetObj();
+                                                                if (fbxHybridObject instanceof GVRSceneObject) {
+                                                                    GVRSceneObject fbxObject = (GVRSceneObject) fbxHybridObject;
+                                                                    float duration = (float) (endTime - beginTime);
+                                                                    GVRKeyFrameAnimation gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
+                                                                            gvrOriginalAnimationChannel.getNodeName(), fbxObject,
+                                                                            duration, gvrOriginalKeyFrameAnimation.getTicksPerSecond()
+                                                                    );
+
+
+                                                                    gvrKeyFrameAnimation.addChannel(fbxGVRAnimationChannel);
+                                                                    gvrKeyFrameAnimation.prepare();
+                                                                    interactiveObjectFinal.setFBXAnimation(gvrKeyFrameAnimation);
+                                                                    gvrAnimation = interactiveObjectFinal.getFBXAnimation();
+                                                                }
+                                                            }
+                                                            catch (Exception e) {
+                                                                Log.e(TAG, "Problem with getting subset of FBX frames");
+                                                            }
+                                                        }
+                                                        else {
+                                                            Log.e(TAG, "Original animation NOT (instanceof) a GVRKeyFrameAnimation");
+                                                        }
+                                                    }
+                                                }
+                                                if ( gvrAnimation != null) {
+                                                    activeFBXanimation = true;
+                                                    gvrAnimation.start(gvrContext.getAnimationEngine())
+                                                            .setOnFinish(new GVROnFinish() {
+                                                                @Override
+                                                                public void finished(GVRAnimation animation) {
+                                                                    // enable the animation to be clicked when current animation done.
+                                                                    activeFBXanimation = false;
+                                                                }
+                                                            });
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            } else if (!event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
+                            }
+                            else if (!event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
                                 stateChanged = false;
                             } else if (!event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor
                                     .IS_OVER)) {

@@ -199,4 +199,12 @@ public class GVRAnimator extends GVRBehavior
             anim.reset();
         }
     }
+
+    /**
+     * Return a list of the animations
+     * @return
+     */
+    public List<GVRAnimation> getAnimationList() {
+        return mAnimations;
+    }
 }

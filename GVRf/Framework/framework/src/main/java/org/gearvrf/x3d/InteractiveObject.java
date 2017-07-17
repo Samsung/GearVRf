@@ -17,6 +17,7 @@
 package org.gearvrf.x3d;
 
 
+import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.utility.Log;
 
 import java.util.Vector;
@@ -44,11 +45,16 @@ public class InteractiveObject {
     private String eventUtilityFromField; // often 'toggle_changed'
     private String eventUtilityToField; // usually 'set_boolean'
     private ScriptObject scriptObject = null;
+    private InlineObject inlineObject = null;
 
     private DefinedItem definedItem = null;
     private String definedItemToField; // can be set_translation, set_rotation, set_position, set_orientation, set_scale
     private String definedItemFromField; // used for Scripts, sending data from SceneObj to Script
 
+    // Retains a copy of the GVRAnimation, only used fro FBX objects
+    // This is a GearVR extension to X3D enabling X3D to inline
+    // an FBX file, and set the begin and end frames via ROUTE's toNode
+    private GVRAnimation fbxAnimation = null;
 
     public InteractiveObject() {
     }
@@ -119,6 +125,22 @@ public class InteractiveObject {
 
     public String getDefinedItemFromField() {
         return this.definedItemFromField;
+    }
+
+    public void setInlineObject(InlineObject inlineObject) {
+        this.inlineObject = inlineObject;
+    }
+
+    public InlineObject getInlineObject() {
+        return this.inlineObject;
+    }
+
+    public void setFBXAnimation(GVRAnimation fbxAnimation) {
+        this.fbxAnimation = fbxAnimation;
+    }
+
+    public GVRAnimation getFBXAnimation() {
+        return this.fbxAnimation;
     }
 }
 

@@ -471,4 +471,9 @@ public abstract class GVRAnimation {
      *            The start state is 0; the stop state is 1.
      */
     protected abstract void animate(GVRHybridObject target, float ratio);
+
+    public GVRHybridObject getTargetObj () {
+        return mTarget;
+    }
+
 }
