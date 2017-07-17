@@ -1579,6 +1579,23 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
 
+    void VulkanCore::handlePostEffect(int count){
+
+        // Case when Post Effect is present but the renderpass is not according to Post Effect
+        if(count && mRenderTexture[0]->postEffectFlag == false){
+            for(int i = 0; i < SWAP_CHAIN_COUNT; i++){
+                mRenderTexture[i]->unbind();
+                mRenderTexture[i]->bind();
+            }
+        }
+        else if(count == 0 && mRenderTexture[0]->postEffectFlag == true){
+            for(int i = 0; i < SWAP_CHAIN_COUNT; i++){
+                mRenderTexture[i]->unbind();
+                mRenderTexture[i]->bind();
+            }
+        }
+
+    }
     void VulkanCore::postEffectRender(RenderData * rdata, Shader* shader){
 /*        const float quad_verts[][9] = {
                 // Quad 1

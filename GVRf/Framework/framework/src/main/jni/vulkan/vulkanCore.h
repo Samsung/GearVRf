@@ -151,6 +151,7 @@ public:
         return postEffectCount;
     }
 
+    void handlePostEffect(int count);
 private:
     std::vector <VkFence> waitFences;
     std::vector <VkFence> waitSCBFences;

@@ -14,6 +14,7 @@ class VkRenderTexture : public RenderTexture
     void createRenderPass();
     int mWidth, mHeight;
     std::vector <VkClearValue> clear_values;
+
 public:
     VKFramebuffer* getFBO(){
         return fbo;
@@ -30,6 +31,7 @@ public:
 
     }
     virtual void bind();
+    virtual void unbind();
     virtual void beginRendering(Renderer* renderer);
     virtual void endRendering(Renderer* renderer);
     // Start to read back texture in the background. It can be optionally called before
@@ -50,6 +52,7 @@ public:
         return fbo->getRenderPass();
     }
 
+    bool postEffectFlag = false;
 };
 
 }

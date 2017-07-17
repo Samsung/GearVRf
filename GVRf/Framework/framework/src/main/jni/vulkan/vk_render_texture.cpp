@@ -15,14 +15,25 @@ void VkRenderTexture::bind() {
     }
 
 }
+
+// TODO : Free other memories
+void VkRenderTexture::unbind(){
+    delete fbo;
+    fbo = nullptr;
+}
+
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
     VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
 
-    if(vk_renderer->getCore()->getPostEffectCount())
+    if(vk_renderer->getCore()->getPostEffectCount()) {
         clear_values.resize(2 + (vk_renderer->getCore()->getPostEffectCount() > 1 ? 2 : 1));
-    else
+        postEffectFlag = true;
+    }
+    else {
         clear_values.resize(2);
+        postEffectFlag = false;
+    }
     fbo->addRenderPass(renderPass);
 }
 void VkRenderTexture::endRendering(Renderer* renderer) {
