@@ -260,8 +260,8 @@ public class GVRShader
         StringBuilder fragmentShaderSource = new StringBuilder();
         if (mGLSLVersion > 100)
         {
-            vertexShaderSource.append("#version " + mGLSLVersion.toString() + "\n");
-            fragmentShaderSource.append("#version " + mGLSLVersion.toString() + " \n");
+            vertexShaderSource.append("#version " + mGLSLVersion.toString() + " es\n");
+            fragmentShaderSource.append("#version " + mGLSLVersion.toString() + " es\n");
         }
         String vshader = replaceTransforms(getSegment("VertexTemplate"));
         String fshader = replaceTransforms(getSegment("FragmentTemplate"));

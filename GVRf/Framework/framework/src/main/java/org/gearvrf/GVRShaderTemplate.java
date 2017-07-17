@@ -339,7 +339,7 @@ public class GVRShaderTemplate extends GVRShader
 
         if (mGLSLVersion > 100)
         {
-            shaderSource.append("#version " + mGLSLVersion.toString() + "\n");
+            shaderSource.append("#version " + mGLSLVersion.toString() + " es\n");
         }
         if (definedNames.containsKey("LIGHTSOURCES") &&
             definedNames.get("LIGHTSOURCES") == 0)

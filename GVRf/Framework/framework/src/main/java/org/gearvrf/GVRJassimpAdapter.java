@@ -127,6 +127,21 @@ class GVRJassimpAdapter {
                 normalsBuffer.get(normalsArray, 0, normalsBuffer.capacity());
             }
         }
+        for(int c = 0; c < MAX_VERTEX_COLORS; c++)
+        {
+            FloatBuffer fbuf = aiMesh.getColorBuffer(c);
+            if (fbuf != null)
+            {
+                String name = "a_color";
+
+                if (c > 0)
+                {
+                    name += c;
+                }
+                vertexDescriptor += " float4 " + name;
+            }
+        }
+
         if (doAnimation && aiMesh.hasBones())
         {
             vertexDescriptor += " float4 a_bone_weights int4 a_bone_indices";
