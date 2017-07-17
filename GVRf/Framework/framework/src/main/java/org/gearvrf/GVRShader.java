@@ -255,7 +255,7 @@ public class GVRShader
 
     private int addShader(GVRShaderManager shaderManager, String signature, GVRShaderData material)
     {
-        GVRContext ctx = material.getGVRContext();
+        GVRContext ctx = shaderManager.getGVRContext();
         StringBuilder vertexShaderSource = new StringBuilder();
         StringBuilder fragmentShaderSource = new StringBuilder();
         if (mGLSLVersion > 100)
@@ -305,9 +305,10 @@ public class GVRShader
     {
         String signature = getClass().getSimpleName();
         GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRMaterial mtl = rdata.getMaterial();
         synchronized (shaderManager)
         {
-            int nativeShader = addShader(shaderManager, signature, null);
+            int nativeShader = addShader(shaderManager, signature, mtl);
             if (nativeShader > 0)
             {
                 rdata.setShader(nativeShader);

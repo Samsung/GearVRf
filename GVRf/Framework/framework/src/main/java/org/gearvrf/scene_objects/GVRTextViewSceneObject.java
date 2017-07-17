@@ -24,6 +24,7 @@ import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import java.lang.ref.WeakReference;
 
+import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 
@@ -107,7 +108,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *            {@link CharSequence} to show on the textView
      */
     public GVRTextViewSceneObject(GVRContext gvrContext, float width, float height, CharSequence text) {
-        super(gvrContext, gvrContext.createQuad(width, height));
+        super(gvrContext, GVRMesh.createQuad(gvrContext, "float3 a_position float2 a_texcoord", width, height));
 
         //cap the canvas dimensions
         final float factor = width/height;
