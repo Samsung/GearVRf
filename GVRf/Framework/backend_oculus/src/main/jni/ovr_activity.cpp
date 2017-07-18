@@ -195,6 +195,9 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
             eyeTexture.HeadPose = updatedTracking.HeadPose;
         }
     parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
+    if (CameraRig::CameraRigType::FREEZE == cameraRig_->camera_rig_type()) {
+        parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_FIXED_TO_VIEW;
+    }
 
         if (docked_) {
             const ovrQuatf& orientation = updatedTracking.HeadPose.Pose.Orientation;
