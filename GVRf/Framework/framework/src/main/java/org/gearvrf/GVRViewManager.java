@@ -45,12 +45,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 abstract class GVRViewManager extends GVRContext {
     public enum EYE{ LEFT, RIGHT, MULTIVIEW, CENTER};
-    GVRViewManager(GVRActivity activity, GVRMain main) {
+    GVRViewManager(GVRActivity activity, GVRMain main, boolean useMultiview) {
         super(activity);
 
         mActivity = activity;
         mMain = main;
-
+        mUseMultiview = useMultiview;
         VrAppSettings vrAppSettings = activity.getAppSettings();
         GVRPerspectiveCamera.setDefaultFovY(vrAppSettings.getEyeBufferParams().getFovY());
 
@@ -659,46 +659,46 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     // capture 3D screenshot
-    protected void capture3DScreenShot(boolean isMultiviewSet) {
+    protected void capture3DScreenShot() {
         if (mScreenshot3DCallback == null) {
             return;
         }
         final Bitmap[] bitmaps = new Bitmap[6];
-        renderSixCamerasAndReadback(mMainScene.getMainCameraRig(), bitmaps, isMultiviewSet);
+        renderSixCamerasAndReadback(mMainScene.getMainCameraRig(), bitmaps, mUseMultiview);
         returnScreenshot3DToCaller(mScreenshot3DCallback, bitmaps, mReadbackBufferWidth, mReadbackBufferHeight);
 
         mScreenshot3DCallback = null;
     }
 
-    protected void captureRightEye(int texId, boolean isMultiviewSet) {
-        captureEye(mScreenshotRightCallback, texId, EYE.RIGHT, isMultiviewSet);
+    protected void captureRightEye(int texId) {
+        captureEye(mScreenshotRightCallback, texId, EYE.RIGHT);
         mScreenshotRightCallback = null;
     }
 
-    protected void captureLeftEye(int texId, boolean isMultiviewSet) {
-        captureEye(mScreenshotLeftCallback, texId, EYE.LEFT, isMultiviewSet);
+    protected void captureLeftEye(int texId) {
+        captureEye(mScreenshotLeftCallback, texId, EYE.LEFT);
         mScreenshotLeftCallback = null;
     }
 
         // capture screenshot of an eye
-    private void captureEye(GVRScreenshotCallback callback, int texId, GVRViewManager.EYE eye, boolean isMultiviewSet) {
+    private void captureEye(GVRScreenshotCallback callback, int texId, GVRViewManager.EYE eye) {
         if (null == callback) {
             return;
         }
 
-        readRenderResult(texId, eye, isMultiviewSet);
+        readRenderResult(texId, eye, mUseMultiview);
         returnScreenshotToCaller(callback, mReadbackBufferWidth, mReadbackBufferHeight);
     }
 
     // capture center eye
-    protected void captureCenterEye(boolean isMultiviewSet) {
+    protected void captureCenterEye() {
         if (mScreenshotCenterCallback == null) {
             return;
         }
         GVRRenderTexture eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
 
         // if the multiview is set, render on normal FBO instead of multiview buffers
-        if(isMultiviewSet)
+        if(mUseMultiview)
             eyeCaptureRenderTexture.beginRendering();
 
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
@@ -706,10 +706,10 @@ abstract class GVRViewManager extends GVRContext {
         centerCamera.addPostEffect(postEffect);
         renderCamera(mMainScene, centerCamera, mRenderBundle, false);
         centerCamera.removePostEffect(postEffect);
-        if(isMultiviewSet)
+        if(mUseMultiview)
             eyeCaptureRenderTexture.endRendering();
 
-        readRenderResult(isMultiviewSet ? eyeCaptureRenderTexture.getId() : 0, EYE.CENTER, false);
+        readRenderResult(mUseMultiview ? eyeCaptureRenderTexture.getId() : 0, EYE.CENTER, false);
 
         final Bitmap bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
         mReadbackBuffer.rewind();
@@ -790,7 +790,7 @@ abstract class GVRViewManager extends GVRContext {
     protected final GVRActivity mActivity;
     protected float mFrameTime;
     protected long mPreviousTimeNanos;
-
+    protected boolean mUseMultiview;
     protected FrameHandler mFrameHandler = firstFrame;
 
     protected List<GVRDrawFrameListener> mFrameListeners = new CopyOnWriteArrayList<GVRDrawFrameListener>();

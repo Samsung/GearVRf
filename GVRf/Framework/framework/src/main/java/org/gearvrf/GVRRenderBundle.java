@@ -25,31 +25,26 @@ final class GVRRenderBundle implements IRenderBundle {
     private final GVRRenderTexture mPostEffectRenderTextureA;
     private final GVRRenderTexture mPostEffectRenderTextureB;
     private  GVRRenderTexture mEyeCaptureRenderTexture = null;
-
+    private int  mSampleCount;
     GVRRenderBundle(GVRContext gvrContext, final int width, final int height) {
         mGVRContext = gvrContext;
         mMaterialShaderManager = new GVRMaterialShaderManager(gvrContext);
         mPostEffectShaderManager = new GVRPostEffectShaderManager(gvrContext);
-
         final VrAppSettings appSettings = mGVRContext.getActivity().getAppSettings();
-        int sampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
+        mSampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
                 : appSettings.getEyeBufferParams().getMultiSamples();
-        if (sampleCount > 1) {
+        if (mSampleCount > 1) {
             int maxSampleCount = GVRMSAA.getMaxSampleCount();
-            if (sampleCount > maxSampleCount) {
-                sampleCount = maxSampleCount;
+            if (mSampleCount > maxSampleCount) {
+                mSampleCount = maxSampleCount;
             }
         }
-        if (sampleCount <= 1) {
-            if(appSettings.isMultiviewSet())
-                mEyeCaptureRenderTexture  = new GVRRenderTexture(mGVRContext, width, height, 1);
+        if (mSampleCount <= 1) {
             mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, 1);
             mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, 1);
         } else {
-            if(appSettings.isMultiviewSet())
-                mEyeCaptureRenderTexture  = new GVRRenderTexture(mGVRContext, width, height, sampleCount, 1);
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, sampleCount, 1);
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, sampleCount, 1);
+            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, mSampleCount, 1);
+            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, mSampleCount, 1);
         }
     }
 
@@ -60,7 +55,17 @@ final class GVRRenderBundle implements IRenderBundle {
     public GVRPostEffectShaderManager getPostEffectShaderManager() {
         return mPostEffectShaderManager;
     }
-    public GVRRenderTexture getEyeCaptureRenderTexture() { return  mEyeCaptureRenderTexture; }
+    public GVRRenderTexture getEyeCaptureRenderTexture() {
+        if(mGVRContext.getActivity().getAppSettings().isMultiviewSet() && mEyeCaptureRenderTexture == null){
+            int width = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionWidth();
+            int height = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionHeight();
+            if(mSampleCount <= 1)
+                mEyeCaptureRenderTexture  = new GVRRenderTexture(mGVRContext, width, height, 1);
+            else
+                mEyeCaptureRenderTexture  = new GVRRenderTexture(mGVRContext, width, height, mSampleCount, 1);
+        }
+        return  mEyeCaptureRenderTexture;
+    }
     public GVRRenderTexture getPostEffectRenderTextureA() {
         return mPostEffectRenderTextureA;
     }

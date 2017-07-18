@@ -87,8 +87,8 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      * @param gvrMain
      *            {@link GVRMain} which describes
      */
-    OvrViewManager(GVRActivity gvrActivity, GVRMain gvrMain, OvrXMLParser xmlParser) {
-        super(gvrActivity, gvrMain);
+    OvrViewManager(GVRActivity gvrActivity, GVRMain gvrMain, OvrXMLParser xmlParser, boolean useMultiview) {
+        super(gvrActivity, gvrMain, useMultiview);
 
         // Apply view manager preferences
         GVRPreference prefs = GVRPreference.get();
@@ -213,12 +213,12 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      * Called from the native side
      * @param eye
      */
-    void onDrawEye(int eye, int texId, boolean useMultiview) {
+    void onDrawEye(int eye, int texId) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
 
-            if (useMultiview) {
+            if (mUseMultiview) {
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.enter(); // this eye is drawn first
                     mTracerDrawEyes2.enter();
@@ -227,10 +227,10 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                 GVRCamera camera = mainCameraRig.getCenterCamera();
                 renderCamera(mMainScene, camera, mRenderBundle, true);
 
-                captureCenterEye(useMultiview);
-                capture3DScreenShot(useMultiview);
-                captureRightEye(texId, useMultiview);
-                captureLeftEye(texId, useMultiview);
+                captureCenterEye();
+                capture3DScreenShot();
+                captureRightEye(texId);
+                captureLeftEye(texId);
                 captureFinish();
 
                 if (DEBUG_STATS) {
@@ -248,7 +248,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
                     GVRCamera rightCamera = mainCameraRig.getRightCamera();
                     renderCamera(mMainScene, rightCamera, mRenderBundle, false);
-                    captureRightEye(texId, false);
+                    captureRightEye(texId);
 
                     if (DEBUG_STATS) {
                         mTracerDrawEyes1.leave();
@@ -260,13 +260,13 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                         mTracerDrawEyes2.enter();
                     }
 
-                    captureCenterEye(false);
-                    capture3DScreenShot(false);
+                    captureCenterEye();
+                    capture3DScreenShot();
 
                     GVRCamera leftCamera = mainCameraRig.getLeftCamera();
                     renderCamera(mMainScene, leftCamera, mRenderBundle, false);
 
-                    captureLeftEye(texId, false);
+                    captureLeftEye(texId);
                     captureFinish();
 
                     if (DEBUG_STATS) {
