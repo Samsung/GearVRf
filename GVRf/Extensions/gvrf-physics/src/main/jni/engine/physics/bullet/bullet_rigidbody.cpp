@@ -37,22 +37,24 @@ BulletRigidBody::~BulletRigidBody() {
 void BulletRigidBody::onAttach() {
     bool isDynamic = (getMass() != 0.f);
 
-    if (mConstructionInfo.m_collisionShape) {
+    if (mConstructionInfo.m_collisionShape)
+    {
         delete mConstructionInfo.m_collisionShape;
     }
-
-    mConstructionInfo.m_collisionShape = convertCollider2CollisionShape(
+    btCollisionShape* collisionShape = convertCollider2CollisionShape(
             static_cast<Collider*>(owner_object()->getComponent(COMPONENT_TYPE_COLLIDER)));
-
-    if (isDynamic) {
-        mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
-                                                                  mConstructionInfo.m_localInertia);
+    if (collisionShape)
+    {
+        mConstructionInfo.m_collisionShape = collisionShape;
+        if (isDynamic)
+        {
+            collisionShape->calculateLocalInertia(getMass(), mConstructionInfo.m_localInertia);
+        }
+        mRigidBody->setMotionState(this);
+        mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
+        mRigidBody->setMassProps(mConstructionInfo.m_mass, mConstructionInfo.m_localInertia);
+        updateColisionShapeLocalScaling();
     }
-
-    mRigidBody->setMotionState(this);
-    mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
-    mRigidBody->setMassProps(mConstructionInfo.m_mass, mConstructionInfo.m_localInertia);
-    updateColisionShapeLocalScaling();
 }
 
 void BulletRigidBody::onDetach() { }

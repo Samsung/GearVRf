@@ -59,7 +59,22 @@ btCollisionShape *convertMeshCollider2CollisionShape(MeshCollider *collider) {
     btCollisionShape *shape = NULL;
 
     if (collider != NULL) {
-        shape = createConvexHullShapeFromMesh(collider->mesh());
+        Mesh* mesh = collider->mesh();
+        if (mesh == NULL) {
+            SceneObject* owner = collider->owner_object();
+            if (owner == NULL) {
+                return NULL;
+            }
+            RenderData* rdata = owner->render_data();
+            if (rdata == NULL) {
+                return NULL;
+            }
+            mesh = rdata->mesh();
+            if (mesh == NULL) {
+                return NULL;
+            }
+        }
+        shape = createConvexHullShapeFromMesh(mesh);
     }
 
     return shape;
@@ -74,16 +89,11 @@ btConvexHullShape *createConvexHullShapeFromMesh(Mesh *mesh) {
         unsigned short vertex_index;
 
         initial_hull_shape = new btConvexHullShape();
-
-        for (int i = 0; i < mesh->indices().size(); i++) {
-            vertex_index = mesh->indices()[i];
-
-            btVector3 vertex(mesh->vertices()[vertex_index].x,
-                             mesh->vertices()[vertex_index].y,
-                             mesh->vertices()[vertex_index].z);
-
+        mesh->getVertexBuffer()->forAllVertices("a_position", [initial_hull_shape](int iter, const float* v)
+        {
+            btVector3 vertex(v[0], v[1], v[2]);
             initial_hull_shape->addPoint(vertex);
-        }
+        });
 
         btScalar margin(initial_hull_shape->getMargin());
         hull_shape_optimizer = new btShapeHull(initial_hull_shape);
