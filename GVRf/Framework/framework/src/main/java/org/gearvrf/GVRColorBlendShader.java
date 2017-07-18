@@ -33,7 +33,7 @@ public class GVRColorBlendShader extends GVRShaderTemplate
 {
     public GVRColorBlendShader(GVRContext ctx)
     {
-        super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", 400);
+        super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         Context context = ctx.getContext();
         setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.color_blend_frag));
         setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.color_blend_vert));

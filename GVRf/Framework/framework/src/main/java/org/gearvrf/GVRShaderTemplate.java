@@ -125,9 +125,9 @@ public class GVRShaderTemplate extends GVRShader
      * @param vertexDescriptor  string describing vertex attributes and types
      *                          e.g. "float3 a_position, float2 a_texcoord"
      * @param glslVersion
-     *            integer giving GLSL version (e.g. 300)
+     *            GLSL version (e.g. GLSLESVersion.V300)
      */
-    public GVRShaderTemplate(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, int glslVersion)
+    public GVRShaderTemplate(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, GLSLESVersion glslVersion)
     {
        super(uniformDescriptor, textureDescriptor, vertexDescriptor, glslVersion);
         mHasVariants = true;
@@ -337,10 +337,7 @@ public class GVRShaderTemplate extends GVRShader
         boolean useLights = (lightlist != null) && (lightlist.length > 0);
         String lightShaderSource = "";
 
-        if (mGLSLVersion > 100)
-        {
-            shaderSource.append("#version " + mGLSLVersion.toString() + "\n");
-        }
+        shaderSource.append("#version " + mGLSLVersion.toString() + "\n");
         if (definedNames.containsKey("LIGHTSOURCES") &&
             definedNames.get("LIGHTSOURCES") == 0)
         {

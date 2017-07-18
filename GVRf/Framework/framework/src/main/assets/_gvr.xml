@@ -28,6 +28,7 @@
         framebufferPixelsHigh="DEFAULT"
         framebufferPixelsWide="DEFAULT"
         showLoadingIcon="true"
+        useMultiview="false"
         useProtectedFramebuffer="false"
         useSrgbFramebuffer="false" >
 
