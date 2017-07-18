@@ -32,7 +32,7 @@ public class GVRErrorShader extends GVRShaderTemplate
 
     public GVRErrorShader(GVRContext ctx)
     {
-        super("", "", "float3 a_position",400);
+        super("", "", "float3 a_position",GLSLESVersion.VULKAN);
         setSegment("FragmentTemplate", fragmentShader);
         setSegment("VertexTemplate", TextFile.readTextFile(ctx.getContext(), R.raw.pos_ubo));
     }

@@ -67,7 +67,7 @@ public class GVRLightmapShader extends GVRShaderTemplate
     {
         super("float2 u_lightmap_offset float2 u_lightmap_scale",
               "sampler2D u_main_texture, sampler2D u_lightmap_texture",
-              "float3 a_position float2 a_texcoord", 400);
+              "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         setSegment("FragmentTemplate", fragmentShader);
         setSegment("VertexTemplate", vertexShader);
     }

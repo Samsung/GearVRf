@@ -44,11 +44,12 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRPicker;
-import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.IScriptEvents;
+import org.gearvrf.utility.Threads;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.CountDownLatch;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLContext;
@@ -89,37 +90,36 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
     protected boolean mHideStatusBar = false;
     private int mWasFocusChanged = -1;
     private boolean mIsWaitingForAudio = false;
-    protected int mFBOTextureId = 0;
-    private Object mSync = new Object();
     private EGLContext mEGLContext;
+    private final CountDownLatch mEglContextLatch = new CountDownLatch(1);
     private GVRActivity mActivity;
 
     private IActivityEvents mActivityEventsListener = new GVREventListeners.ActivityEvents() {
         @Override
         public void onPause() {
-            if(mGraphics != null){
-            boolean isContinuous = mGraphics.isContinuousRendering();
-            boolean isContinuousEnforced = AndroidGraphics.enforceContinuousRendering;
+            if (mGraphics != null) {
+                boolean isContinuous = mGraphics.isContinuousRendering();
+                boolean isContinuousEnforced = AndroidGraphics.enforceContinuousRendering;
 
-            // from here we don't want non continuous rendering
-            AndroidGraphics.enforceContinuousRendering = true;
-            mGraphics.setContinuousRendering(true);
-            // calls to setContinuousRendering(false) from other thread (ex:
-            // GLThread)
-            // will be ignored at this point...
-            mGraphics.pause();
+                // from here we don't want non continuous rendering
+                AndroidGraphics.enforceContinuousRendering = true;
+                mGraphics.setContinuousRendering(true);
+                // calls to setContinuousRendering(false) from other thread (ex:
+                // GLThread)
+                // will be ignored at this point...
+                mGraphics.pause();
 
-            mInputDispatcher.getInput().onPause();
+                mInputDispatcher.getInput().onPause();
 
-            if (mActivity.isFinishing()) {
-                mGraphics.clearManagedCaches();
-                mGraphics.destroy();
-            }
+                if (mActivity.isFinishing()) {
+                    mGraphics.clearManagedCaches();
+                    mGraphics.destroy();
+                }
 
-            AndroidGraphics.enforceContinuousRendering = isContinuousEnforced;
-            mGraphics.setContinuousRendering(isContinuous);
+                AndroidGraphics.enforceContinuousRendering = isContinuousEnforced;
+                mGraphics.setContinuousRendering(isContinuous);
 
-            mGraphics.onPauseGLSurfaceView();
+                mGraphics.onPauseGLSurfaceView();
             }
         }
 
@@ -160,7 +160,7 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
                             resultCode, data);
                 }
             }
-        }        
+        }
     };
 
     private IScriptEvents mScriptEventsListener = new GVREventListeners.ScriptEvents() {
@@ -476,10 +476,7 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
             @Override
             public void run() {
                 mEGLContext = ((EGL10) EGLContext.getEGL()).eglGetCurrentContext();
-                syncNotify();
-                while (!isInitialised()) {
-                    syncWait();
-                }
+                mEglContextLatch.countDown();
             }
         });
     }
@@ -496,10 +493,6 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         return mViewHeight;
     }
 
-    protected boolean isInitialised() {
-        return mWidget.isInitialised();
-    }
-
     public int getTextureId() {
         return mWidget.getTexId();
     }
@@ -514,29 +507,25 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
 
     public void initializeWidget(GVRWidget widget) {
         mWidget = widget;
-        mWidget.setSyncObject(mSync);
-        Thread thread = new Thread() {
+
+        Threads.spawn(new Runnable() {
             @Override
             public void run() {
-                synchronized (mSync) {
-                    try {
-                        while (mEGLContext == null) {
-                            mSync.wait();
-                        }
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                doResume(mWidget);
-                            }
-                        });
+                try {
+                    mEglContextLatch.await();
 
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            doResume(mWidget);
+                        }
+                    });
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    mActivity.finish();
                 }
             }
-        };
-
-        thread.start();
+        });
     }
 
     private void doResume(GVRWidget widget) {
@@ -566,22 +555,6 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         if (this.mWasFocusChanged == 1 || this.mWasFocusChanged == -1) {
             // this.audio.resume();
             this.mIsWaitingForAudio = false;
-        }
-    }
-
-    protected void syncNotify() {
-        synchronized (mSync) {
-            mSync.notifyAll();
-        }
-    }
-
-    protected void syncWait() {
-        synchronized (mSync) {
-            try {
-                mSync.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 

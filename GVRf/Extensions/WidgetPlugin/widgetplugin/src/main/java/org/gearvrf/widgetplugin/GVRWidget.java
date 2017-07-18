@@ -17,6 +17,8 @@ package org.gearvrf.widgetplugin;
 
 import com.badlogic.gdx.ApplicationAdapter;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * GVRWidget is a wrapper for LibGDX widget. base class for application widget
  * implementation
@@ -24,54 +26,22 @@ import com.badlogic.gdx.ApplicationAdapter;
 
 public abstract class GVRWidget extends ApplicationAdapter {
 
-    private boolean mIsInitialised = false;
-    private int mTexid = 0;
-    private Object mSync;
-
-    @Override
-    public void create() {
-    }
-
-    @Override
-    public void resize(int width, int height) {
-    }
-
-    @Override
-    public void render() {
-    }
-
-    @Override
-    public void pause() {
-    }
-
-    @Override
-    public void resume() {
-    }
-
-    @Override
-    public void dispose() {
-    }
-
-    public boolean isInitialised() {
-        return mIsInitialised;
-    }
+    private int mTexid;
+    private CountDownLatch mInitializedLatch = new CountDownLatch(1);
 
     @Override
     public void notifyCreation(int id) {
-        mIsInitialised = true;
         mTexid = id;
-        synchronized (mSync) {
-            mSync.notifyAll();
-        }
-
+        mInitializedLatch.countDown();
     }
 
     public int getTexId() {
+        try {
+            mInitializedLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return mTexid;
-    }
-
-    public void setSyncObject(Object obj) {
-        mSync = obj;
     }
 
 }

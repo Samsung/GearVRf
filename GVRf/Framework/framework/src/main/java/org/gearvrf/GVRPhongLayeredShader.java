@@ -45,7 +45,7 @@ public class GVRPhongLayeredShader extends GVRShaderTemplate
                 "sampler2D ambientTexture1; sampler2D diffuseTexture1; sampler2D specularTexture1; sampler2D lightmapTexture1; sampler2D emissiveTexture1",
 
                 "float3 a_position float2 a_texcoord float3 a_normal float2 a_texcoord1 float2 a_texcoord2 float2 a_texcoord3 float4 a_bone_weights int4 a_bone_indices float4 a_tangent float4 a_bitangent",
-                400);
+                GLSLESVersion.VULKAN);
 
         if (fragTemplate == null)
         {

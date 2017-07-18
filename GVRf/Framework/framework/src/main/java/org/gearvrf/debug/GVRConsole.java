@@ -69,7 +69,7 @@ public class GVRConsole extends GVRShaderData
 
         public ConsoleShader(GVRContext ctx)
         {
-            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord",300);
+            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord",GLSLESVersion.V300);
             if (vertexShader == null)
             {
                 vertexShader = TextFile.readTextFile(ctx.getContext(), R.raw.posteffect_quad);

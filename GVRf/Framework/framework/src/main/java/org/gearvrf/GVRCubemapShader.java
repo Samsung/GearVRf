@@ -69,7 +69,7 @@ public class GVRCubemapShader extends GVRShaderTemplate
 {
     public GVRCubemapShader(GVRContext gvrContext)
     {
-        super("float3 u_color float u_opacity", "samplerCube u_texture", "float3 a_position float2 a_texcoord", 400);
+        super("float3 u_color float u_opacity", "samplerCube u_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         Context context = gvrContext.getContext();
         setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.cubemap_frag));
         setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.cubemap_vert));
