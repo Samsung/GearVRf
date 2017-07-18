@@ -29,4 +29,6 @@
     <string name="zoom_out">zoom out</string>
     <string name="inverted_colors">invert color</string>
 
+    <!-- Symbols that are commonly considered word separators in this language -->
+    <string name="word_separators">\u0020.,;:!?\n()[]*&amp;@{}/&lt;&gt;_+=|&quot;</string>
 </resources>

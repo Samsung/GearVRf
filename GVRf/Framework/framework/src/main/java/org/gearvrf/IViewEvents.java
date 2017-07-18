@@ -26,5 +26,4 @@ import org.gearvrf.scene_objects.GVRViewSceneObject;
 public interface IViewEvents extends IEvents {
     void onInitView(GVRViewSceneObject sceneObject, View view);
     void onStartDraw(GVRViewSceneObject sceneObject, View view);
-    void onTouchView(GVRViewSceneObject sceneObject, View view);
 }
