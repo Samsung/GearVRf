@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
  * into attached {@link GVRViewSceneObject}.
  * See {@link GVRView} and {@link GVRViewSceneObject}
  */
+@Deprecated
 public class GVRFrameLayout extends FrameLayout implements GVRView {
     private GVRViewSceneObject mSceneObject = null;
 
@@ -30,21 +31,6 @@ public class GVRFrameLayout extends FrameLayout implements GVRView {
         setBackgroundColor(Color.TRANSPARENT);
 
         context.registerView(this);
-    }
-
-    @Override
-    public void draw(Canvas canvas) {
-        if (mSceneObject == null)
-            return;
-
-        // Canvas attached to GVRViewSceneObject to draw on
-        Canvas attachedCanvas = mSceneObject.lockCanvas();
-        // Clear the canvas
-        attachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        // draw the view to provided canvas
-        super.draw(attachedCanvas);
-
-        mSceneObject.unlockCanvasAndPost(attachedCanvas);
     }
 
     @Override

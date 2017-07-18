@@ -195,6 +195,12 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
     private void startRenderingView() {
         mRootViewGroup = new RootViewGroup(getGVRContext().getActivity(), this);
+
+        if (mView.getParent() != null) {
+            // To keep compatibility with GVRView
+            ((ViewGroup)mView.getParent()).removeView(mView);
+        }
+
         mRootViewGroup.addView(mView);
         mRootViewGroup.startRendering();
 
