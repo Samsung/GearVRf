@@ -92,6 +92,7 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
 
     int VulkanShader::makeLayoutPostEffect(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata)
     {
+        // Has only one sampler input
         index = TEXTURE_BIND_START;
         VkDescriptorSetLayoutBinding layoutBinding;
         layoutBinding.binding = index++;
@@ -100,53 +101,6 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         layoutBinding.pImmutableSamplers = nullptr;
         (samplerBinding).push_back(layoutBinding);
-
-        /*VkDescriptorSetLayoutBinding dummy_binding = vkdata->getTransformUbo().getVulkanDescriptor()->getLayoutBinding() ;
-        if (usesMatrixUniforms()) {
-            VkDescriptorSetLayoutBinding &transform_uniformBinding = vkdata->getTransformUbo().getVulkanDescriptor()->getLayoutBinding();
-            samplerBinding.push_back(transform_uniformBinding);
-        }
-        else {
-            dummy_binding.binding = 0;
-            samplerBinding.push_back(dummy_binding);
-        }
-
-        // Dummy binding for Material UBO, since now a push Constant
-        dummy_binding.binding = 1;
-        samplerBinding.push_back(dummy_binding);
-
-        if(vkdata->mesh()->hasBones()){
-            VkDescriptorSetLayoutBinding &bones_uniformBinding = reinterpret_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
-            samplerBinding.push_back(bones_uniformBinding);
-        }
-        else{
-            dummy_binding.binding = 2;
-            samplerBinding.push_back(dummy_binding);
-        }
-        // Right now, we dont' have support for shadow map, so add dummy binding for it
-        dummy_binding.binding = 3;
-        samplerBinding.push_back(dummy_binding);
-
-        /*
-         * TODO :: if has shadowmap, create binding for it
-         */
-        /*
-
-        vkMtl.forEachTexture([this, &samplerBinding, index](const char* texname, Texture* t) mutable
-                             {
-                                 const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
-                                 if ((entry == NULL) || entry->NotUsed)
-                                 {
-                                     return;
-                                 }
-                                 VkDescriptorSetLayoutBinding layoutBinding;
-                                 layoutBinding.binding = index++;
-                                 layoutBinding.descriptorCount = 1;
-                                 layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-                                 layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                                 layoutBinding.pImmutableSamplers = nullptr;
-                                 (samplerBinding).push_back(layoutBinding);
-                             });*/
 
         return index;
     }

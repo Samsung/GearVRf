@@ -139,7 +139,7 @@ namespace gvr {
         if(vkRdata->isHashCodeDirty() || vkRdata->isDirty(0xFFFF) || vkRdata->isDescriptorSetNull(pass)) {
 
             vulkanCore_->InitDescriptorSetForRenderDataPostEffect(this, pass, shader, vkRdata);
-            vkRdata->set_alpha_blend(0);
+            vkRdata->set_depth_test(0);
             vkRdata->createPipeline(shader, this, pass);
        }
 
@@ -169,11 +169,9 @@ namespace gvr {
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-
-
         std::vector<ShaderData *> post_effects = camera->post_effect_data();
 
-        vulkanCore_->setPostEffectCount(camera->post_effect_data().size());
+        vulkanCore_->setPostEffectCount(post_effects.size());
         vulkanCore_->handlePostEffect(post_effects.size());
 
         for (auto &rdata : render_data_vector)
@@ -202,12 +200,11 @@ namespace gvr {
         }
 
         // Call Post Effect
-        //std::vector<ShaderData*> postEffects = camera->post_effect_data();
         std::vector<RenderData*> renderData;
         std::vector<Shader*> shader;
         for(int i = 0; i < post_effects.size(); i++) {
             VulkanRenderPass *vulkanRenderPass = new VulkanRenderPass();
-            vulkanRenderPass->set_material(post_effects[i]);
+            vulkanRenderPass->set_material((VulkanMaterial *)post_effects[i]);
             RenderData *rr = post_effect_render_data_vulkan();
             rr->add_pass(vulkanRenderPass);
             renderData.push_back(rr);
@@ -221,7 +218,7 @@ namespace gvr {
         vulkanCore_->DrawFrameForRenderData();
 
         // Freeing RenderData of Post Effect
-        for(int i = 0; i < post_effects.size(); i++){
+        for(int i = 0; i < shader.size(); i++){
             delete renderData[i];
         }
     }

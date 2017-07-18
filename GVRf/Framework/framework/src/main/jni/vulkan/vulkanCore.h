@@ -140,9 +140,6 @@ public:
     }
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
 
-    void postEffectRender(RenderData * rdata, Shader* shader);
-
-
     void setPostEffectCount(uint count){
         postEffectCount = count;
     }
@@ -228,21 +225,6 @@ private:
 
     VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
     VkRenderPass mRenderPassMap[2];
-
-    // Post Effect Required things
-    VkDescriptorSet descriptorSetPE;
-    VkPipelineLayout pipelineLayoutPE;
-    VkPipeline pipelinePE;
-    struct Vertices
-    {
-        VkBuffer buf;
-        VkDeviceMemory mem;
-        VkPipelineVertexInputStateCreateInfo vi;
-        VkVertexInputBindingDescription      vi_bindings[1];
-        VkVertexInputAttributeDescription    vi_attrs[2];
-    };
-    Vertices * verticesPE = nullptr;
-    VulkanShader * pEShader;
 
     // Post Effect Final
     uint postEffectCount = 0;
