@@ -201,8 +201,8 @@ public class GVRShaderTemplate extends GVRShader
      *
      * @param definedNames
      *            set with defined names for this shader
-     * @param mesh
-     *            GVRMesh or null if vertex attributes should be ignored
+     * @param vertexDesc
+     *            String with vertex attributes, null to ignore them
      * @param material
      *            material used with this shader (may not be null)
      * @return shader signature string with names actually defined by the material and mesh
@@ -475,22 +475,6 @@ public class GVRShaderTemplate extends GVRShader
         }
     }
 
-    private void writeShader(GVRContext context, String fileName, String sourceCode)
-    {
-        try
-        {
-            File sdCard = Environment.getExternalStorageDirectory();
-            File file = new File(sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
-            OutputStreamWriter stream = new FileWriter(file);
-            stream.append(sourceCode);
-            stream.close();
-        }
-        catch (IOException ex)
-        {
-            Log.e("GVRShaderTemplate", "Cannot write shader file " + fileName);
-        }
-
-    }
 
     /**
      * Select the specific vertex and fragment shader to use with this material.
@@ -527,6 +511,11 @@ public class GVRShaderTemplate extends GVRShader
                                                        textureDescriptor.toString(), mVertexDescriptor,
                                                        vertexShaderSource, fragmentShaderSource);
                 bindCalcMatrixMethod(shaderManager, nativeShader);
+                if (mWriteShadersToDisk)
+                {
+                    writeShader(context, "V-" + signature + ".glsl", vertexShaderSource);
+                    writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
+                }
                 Log.e(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
             return nativeShader;
@@ -766,6 +755,5 @@ public class GVRShaderTemplate extends GVRShader
         return desc;
     }
 
-    protected boolean mWriteShadersToDisk = true;
     protected Set<String> mShaderDefines;
 }

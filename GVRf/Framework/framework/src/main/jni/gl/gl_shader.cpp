@@ -63,6 +63,7 @@ void getTokens(std::unordered_map<std::string, int>& tokens, std::string& line)
         }
     }
 }
+
 bool checkSamplers(std::unordered_map<std::string, int>& tokens){
     std::string samplers [] = { "sampler2D", "sampler2DArray", "samplerCube"};
     for(auto i: samplers)
@@ -71,13 +72,13 @@ bool checkSamplers(std::unordered_map<std::string, int>& tokens){
 
     return false;
 }
+
 void modifyShader(std::string& shader)
 {
     std::istringstream shaderStream(shader);
     std::string line;
     std::getline(shaderStream, line);
-    std::string mod_shader;
-    mod_shader += "#version 300 es \n";
+    std::string mod_shader("#version 300 es\n");
 
     std::unordered_map<std::string, int>::iterator it;
     std::unordered_map<std::string, int>::iterator it1;

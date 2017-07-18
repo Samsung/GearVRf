@@ -14,23 +14,16 @@
  */
 package org.gearvrf;
 
-import static android.opengl.GLES20.GL_EXTENSIONS;
-import static android.opengl.GLES20.glGetString;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.gearvrf.GVRLightBase;
-import org.gearvrf.debug.GVRStatsLine;
-import org.mozilla.javascript.NativeGenerator.GeneratorClosedException;
-
-import android.util.Log;
+import android.os.Environment;
 
 /**
  * Generates a vertex and fragment shader from the sources provided.
@@ -59,6 +52,7 @@ import android.util.Log;
  */
 public class GVRShader
 {
+    protected boolean mWriteShadersToDisk = true;
     protected GLSLESVersion mGLSLVersion = GLSLESVersion.V100;
     protected boolean mHasVariants = false;
     protected boolean mUsesLights = false;
@@ -67,7 +61,7 @@ public class GVRShader
     protected String mVertexDescriptor;
     protected String mTextureDescriptor;
     protected Map<String, String> mShaderSegments;
-    protected static String sBonesDescriptor = "mat4 u_bone_matrix[60]";
+    protected static String sBonesDescriptor = "mat4 u_bone_matrix[" + GVRMesh.MAX_BONES + "]";
 
     protected static String sTransformUBOCode = "layout (std140) uniform Transform_ubo\n{\n"
             + " #ifdef HAS_MULTIVIEW\n"
@@ -261,6 +255,7 @@ public class GVRShader
 
     private int addShader(GVRShaderManager shaderManager, String signature, GVRShaderData material)
     {
+        GVRContext ctx = shaderManager.getGVRContext();
         StringBuilder vertexShaderSource = new StringBuilder();
         StringBuilder fragmentShaderSource = new StringBuilder();
         vertexShaderSource.append("#version " + mGLSLVersion.toString() + "\n");
@@ -276,10 +271,16 @@ public class GVRShader
         vshader = vshader.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         vertexShaderSource.append(vshader);
         fragmentShaderSource.append(fshader);
+        String frag =  fragmentShaderSource.toString();
+        String vert = vertexShaderSource.toString();
         int nativeShader = shaderManager.addShader(signature, mUniformDescriptor, mTextureDescriptor,
-                                               mVertexDescriptor, vertexShaderSource.toString(),
-                                               fragmentShaderSource.toString());
+                mVertexDescriptor, vert, frag);
         bindCalcMatrixMethod(shaderManager, nativeShader);
+        if (mWriteShadersToDisk)
+        {
+            writeShader(ctx, "V-" + signature + ".glsl", vert);
+            writeShader(ctx, "F-" + signature + ".glsl", frag);
+        }
         return nativeShader;
     }
 
@@ -301,9 +302,10 @@ public class GVRShader
     {
         String signature = getClass().getSimpleName();
         GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRMaterial mtl = rdata.getMaterial();
         synchronized (shaderManager)
         {
-            int nativeShader = addShader(shaderManager, signature, null);
+            int nativeShader = addShader(shaderManager, signature, mtl);
             if (nativeShader > 0)
             {
                 rdata.setShader(nativeShader);
@@ -350,7 +352,6 @@ public class GVRShader
      *          shader manager to use
      * @return ID of vertex/fragment shader set or 0 if shader template has variants.
      *
-     * @see GVRContext#getPostEffectShaderManager()
      * @see GVRContext#getMaterialShaderManager()
      */
     public int bindShader(GVRContext context, GVRShaderManager shaderManager)
@@ -444,6 +445,25 @@ public class GVRShader
             NativeShaderManager.bindCalcMatrix(shaderManager.getNative(), nativeShader, getClass());
         }
     }
+
+
+    protected void writeShader(GVRContext context, String fileName, String sourceCode)
+    {
+        try
+        {
+            File sdCard = Environment.getExternalStorageDirectory();
+            File file = new File(sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
+            OutputStreamWriter stream = new FileWriter(file);
+            stream.append(sourceCode);
+            stream.close();
+        }
+        catch (IOException ex)
+        {
+            org.gearvrf.utility.Log.e("GVRShaderTemplate", "Cannot write shader file " + fileName);
+        }
+
+    }
+
     public native boolean isVulkanInstance();
 
     public enum GLSLESVersion {

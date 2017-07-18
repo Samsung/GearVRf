@@ -30,7 +30,6 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      */
     public GVRBone(GVRContext gvrContext) {
         super(gvrContext, NativeBone.ctor());
-        mBoneWeights = new ArrayList<GVRBoneWeight>();
     }
 
     static public long getComponentType() {
@@ -56,27 +55,6 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
         // Name is currently read-only for native code. So it is
         // not updated from native object.
         return mName;
-    }
-
-    /**
-     * Sets the list of bone weights.
-     * 
-     * @param boneWeights the list of weights
-     */
-    public void setBoneWeights(List<GVRBoneWeight> boneWeights) {
-        mBoneWeights.clear();
-        mBoneWeights.addAll(boneWeights);
-        NativeBone.setBoneWeights(getNative(),
-                                  GVRHybridObject.getNativePtrArray(boneWeights));
-    }
-
-    /**
-     * Returns a list of bone weights.
-     *
-     * @return the bone weights
-     */
-    public List<GVRBoneWeight> getBoneWeights() {
-        return mBoneWeights;
     }
 
     public void setOffsetMatrix(float[] offsetMatrix) {
@@ -164,26 +142,8 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
         sb.append(GVRBone.class.getSimpleName());
         sb.append(" [name=" + getName()
                 + ", offsetMatrix=" + getOffsetMatrix()
-                + ", finalTransformMatrix=" + getFinalTransformMatrix()
+//              + ", finalTransformMatrix=" + getFinalTransformMatrix() // crashes debugger
                 + "]");
-        sb.append(System.lineSeparator());
-
-        final int maxWeightsToPrint = 80;
-        int cntPrinted = 0;
-        sb.append(Log.getSpaces(indent + 2));
-        sb.append("Bone weights: [");
-        for (GVRBoneWeight wt : getBoneWeights()) {
-            if (cntPrinted != 0)
-                sb.append(", ");
-            sb.append(wt.toString());
-            if (++cntPrinted >= maxWeightsToPrint) {
-                if (getBoneWeights().size() > maxWeightsToPrint) {
-                    sb.append("...");
-                }
-                break;
-            }
-        }
-        sb.append("]");
         sb.append(System.lineSeparator());
     }
 
@@ -203,11 +163,6 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
     private String mName;
 
     /**
-     * Bone weights.
-     */
-    private final List<GVRBoneWeight> mBoneWeights;
-
-    /**
      * The scene object that represents the transforms of the
      * bone.
      */
@@ -218,7 +173,6 @@ class NativeBone {
     static native long ctor();
     static native long getComponentType();
     static native void setName(long object, String mName);
-    static native void setBoneWeights(long object, long[] nativePtrArray);
     static native void setOffsetMatrix(long object, float[] offsetMatrix);
     static native float[] getOffsetMatrix(long object);
     static native void setFinalTransformMatrix(long object, float[] offsetMatrix);

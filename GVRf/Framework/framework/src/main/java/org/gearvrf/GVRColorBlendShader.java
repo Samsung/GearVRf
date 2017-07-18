@@ -29,7 +29,7 @@ import org.gearvrf.utility.TextFile;
  *     u_factor     blend factor (0 to 1)
  * </code>
  */
-public class GVRColorBlendShader extends GVRShaderTemplate
+public class GVRColorBlendShader extends GVRShader
 {
     public GVRColorBlendShader(GVRContext ctx)
     {

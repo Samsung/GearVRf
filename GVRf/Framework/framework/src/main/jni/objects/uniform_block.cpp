@@ -303,28 +303,27 @@ namespace gvr
     std::string UniformBlock::toString()
     {
         std::ostringstream os;
-        forEachEntry([this, &os](const DataEntry& e) mutable
+        for (int i = 0; i < mNumElems; ++i)
         {
-            os << e.Name << ":" << e.Offset;
-            for (int i = 0; i < e.Size / sizeof(float); i++)
+            forEachEntry([this, &os, i](const DataEntry& e) mutable
             {
-                char *d = ((char*) mUniformData) + e.Offset;
-                os << " ";
-                if (!e.IsSet)
+                os << e.Name << ": " << i * e.Offset;
+                for (int j = 0; j < e.Size / sizeof(float); j++)
                 {
-                    os << "NOT SET";
+                    char* d = ((char*) mUniformData) + e.Offset;
+                    os << " ";
+                    if (e.Name[0] == 'i')
+                    {
+                        os << *(((int*) d) + i);
+                    }
+                    else
+                    {
+                        os << *(((float*) d) + i);
+                    }
                 }
-                else if (e.Name[0] == 'i')
-                {
-                    os << *(((int *) d) + i);
-                }
-                else
-                {
-                    os << *(((float *) d) + i);
-                }
-            }
-            os << ';' << std::endl;
-        });
+                os << ';' << std::endl;
+            });
+        }
         return os.str();
     }
 
@@ -370,8 +369,13 @@ namespace gvr
             char* dest = (char*) getDataAt(elemIndex);
             if (dest)
             {
+                int n = elemIndex + numElems;
                 memcpy(dest, srcData, mElemSize * numElems);
                 markDirty();
+                if (n > mNumElems)
+                {
+                    setNumElems(n);
+                }
                 return true;
             }
         }
@@ -387,6 +391,10 @@ namespace gvr
         {
             const char* src = (const char*) srcBlock.getData();
             memcpy(mUniformData + mElemSize * elemIndex, src, mElemSize);
+            if (elemIndex >= mNumElems)
+            {
+                setNumElems(elemIndex + 1);
+            }
             return true;
         }
         LOGE("UniformBlock::setAt ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);

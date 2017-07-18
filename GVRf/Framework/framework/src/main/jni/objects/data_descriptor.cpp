@@ -187,12 +187,8 @@ namespace gvr
             addName(name, namelen, entry);
             mLayout.push_back(entry);
             LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
-            mTotalSize = entry.Offset + entry.Size;
+            mTotalSize += entry.Size;
         });
-        if (mTotalSize > 0)
-        {
-            mTotalSize = (mTotalSize + 15) & ~0x0F;
-        }
     }
 
     std::string DataDescriptor::makeShaderType(const char* type, int byteSize)
@@ -207,7 +203,7 @@ namespace gvr
             }
             else if (type[0] == 'i')
             {
-                stream << "vec" << (byteSize / 4);
+                stream << "ivec" << (byteSize / 4);
             }
             else
             {

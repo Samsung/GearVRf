@@ -9,6 +9,7 @@ import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,7 +90,6 @@ class GVRJassimpAdapter {
         float[] tangentsArray = null;
         float[] bitangentsArray = null;
         float[] normalsArray = null;
-        List<GVRBone> bones = null;
         boolean doTexturing = !settings.contains(GVRImportSettings.NO_TEXTURING);
         boolean doLighting = !settings.contains(GVRImportSettings.NO_LIGHTING);
         boolean doAnimation = !settings.contains(GVRImportSettings.NO_ANIMATION);
@@ -127,42 +127,23 @@ class GVRJassimpAdapter {
                 normalsBuffer.get(normalsArray, 0, normalsBuffer.capacity());
             }
         }
-
-        if (doTexturing)
+        for(int c = 0; c < MAX_VERTEX_COLORS; c++)
         {
-            // Tangents
-            FloatBuffer tangetsBuffer = aiMesh.getTangentBuffer();
-            if(tangetsBuffer != null)
-            {
-                vertexDescriptor += " float3 a_tangent";
-                tangentsArray = new float[tangetsBuffer.capacity()];
-                tangetsBuffer.get(tangentsArray, 0, tangetsBuffer.capacity());
-            }
-
-            // Bitangents
-            FloatBuffer bitangentsBuffer = aiMesh.getBitangentBuffer();
-            if(bitangentsBuffer != null)
-            {
-                vertexDescriptor += " float3 a_bitangent";
-                bitangentsArray = new float[bitangentsBuffer.capacity()];
-                bitangentsBuffer.get(bitangentsArray, 0, bitangentsBuffer.capacity());
-            }
-        }
-
-        for(int c = 0; c < MAX_VERTEX_COLORS; c++) {
             FloatBuffer fbuf = aiMesh.getColorBuffer(c);
             if (fbuf != null)
             {
-                vertexDescriptor += " float4 a_color";
+                String name = "a_color";
+
                 if (c > 0)
                 {
-                    vertexDescriptor += c;
+                    name += c;
                 }
+                vertexDescriptor += " float4 " + name;
             }
         }
+
         if (doAnimation && aiMesh.hasBones())
         {
-            bones = new ArrayList<GVRBone>();
             vertexDescriptor += " float4 a_bone_weights int4 a_bone_indices";
         }
         GVRMesh mesh = new GVRMesh(ctx, vertexDescriptor);
@@ -192,16 +173,6 @@ class GVRJassimpAdapter {
 
         indexBuffer.setIntVec(indices);
         mesh.setIndexBuffer(indexBuffer);
-
-
-        // Bones
-        if (doAnimation && aiMesh.hasBones())
-        {
-            bones = new ArrayList<GVRBone>();
-             for (AiBone bone : aiMesh.getBones()) {
-                bones.add(createBone(ctx, bone));
-            }
-        }
 
         if (verticesArray != null)
         {
@@ -247,11 +218,91 @@ class GVRJassimpAdapter {
                 }
             }
         }
-        if (bones != null)
+        // Bones
+        if (doAnimation && aiMesh.hasBones())
         {
-            mesh.setBones(bones);
+            processBones(mesh, aiMesh.getBones());
         }
         return mesh;
+    }
+
+    public void processBones(GVRMesh mesh, List<AiBone> aiBones)
+    {
+        final int MAX_WEIGHTS = 4;
+        GVRVertexBuffer vbuf = mesh.getVertexBuffer();
+        int nverts = vbuf.getVertexCount();
+        int n = nverts * MAX_WEIGHTS;
+        float[] weights = new float[n];
+        int[] indices = new int[n];
+        GVRContext ctx = mesh.getGVRContext();
+
+        // Process bones
+        int boneId = -1;
+        Arrays.fill(weights, 0, n - 1,  0.0f);
+        Arrays.fill(indices, 0, n - 1, 0);
+        ArrayList<GVRBone> bones = new ArrayList<GVRBone>();
+
+        /*
+         * Accumulate vertex weights and indices for all the bones
+         * in this mesh. All vertices have four indices and four weights.
+         * If a vertex has less than four infuences, the weight is 0.
+         */
+        for (AiBone aiBone : aiBones)
+        {
+            GVRBone b = createBone(ctx, aiBone);
+            bones.add(b);
+            boneId++;
+            Log.e("BONE", aiBone.getName() + " " + boneId);
+
+            List<AiBoneWeight> boneWeights = aiBone.getBoneWeights();
+            for (AiBoneWeight weight : boneWeights)
+            {
+                int vertexId = weight.getVertexId() * MAX_WEIGHTS;
+                int i, j = 0;
+                for (i = 0; i < MAX_WEIGHTS; ++i)
+                {
+                    j = vertexId + i;
+                    if (weights[j] == 0.0f)
+                    {
+                        indices[j] = boneId;
+                        weights[j] = weight.getWeight();
+                        break;
+                    }
+                }
+                if (i >= MAX_WEIGHTS)
+                {
+                    Log.w(TAG, "Vertex %d (total %d) has too many bones", vertexId, nverts);
+                }
+            }
+        }
+        /*
+         * Normalize the weights for each vertex.
+         * Sum the weights and divide by the sum.
+         */
+        for (int v = 0; v < nverts; ++v)
+        {
+            float t = 0.0f;
+            String is = v + " ";
+            String ws = "";
+            for (int i = 0; i < MAX_WEIGHTS; ++i)
+            {
+                int j = (v * MAX_WEIGHTS) + i;
+                t += weights[j];
+                //is += " " + indices[j];
+                //ws += " " + weights[j];
+            }
+            //Log.v("BONES", is + ws);
+            if (t > 0.000001f)
+            {
+                for (int i = 0; i < MAX_WEIGHTS; ++i)
+                {
+                    weights[(v * MAX_WEIGHTS) + i] /= t;
+                }
+            }
+        }
+        vbuf.setFloatArray("a_bone_weights", weights);
+        vbuf.setIntArray("a_bone_indices", indices);
+        mesh.setBones(bones);
     }
 
     private GVRBone createBone(GVRContext ctx, AiBone aiBone) {
@@ -260,23 +311,7 @@ class GVRJassimpAdapter {
 
         bone.setName(aiBone.getName());
         bone.setOffsetMatrix(mtx);
-
-        List<GVRBoneWeight> weights = new ArrayList<GVRBoneWeight>();
-        for (AiBoneWeight aiBoneWeight : aiBone.getBoneWeights()) {
-            weights.add(createBoneWeight(ctx, aiBoneWeight));
-        }
-        bone.setBoneWeights(weights);
-
         return bone;
-    }
-
-    private GVRBoneWeight createBoneWeight(GVRContext ctx, AiBoneWeight aiBoneWeight) {
-        GVRBoneWeight boneWeight = new GVRBoneWeight(ctx);
-
-        boneWeight.setVertexId(aiBoneWeight.getVertexId());
-        boneWeight.setWeight(aiBoneWeight.getWeight());
-
-        return boneWeight;
     }
 
     public GVRSceneObject createSceneObject(GVRContext ctx, AiNode node) {

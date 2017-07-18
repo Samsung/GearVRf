@@ -77,7 +77,7 @@ public class GVRShaderData extends GVRHybridObject
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
         shader.setMaterialDefaults(this);
-        NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(shaderManager, this));
+        setNativeShader(mShaderId.getNativeShader(shaderManager, this));
     }
 
     protected GVRShaderData(GVRContext gvrContext, GVRShaderId shaderId, long constructor)
@@ -89,7 +89,17 @@ public class GVRShaderData extends GVRHybridObject
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
         shader.setMaterialDefaults(this);
-        NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(shaderManager, this));
+        setNativeShader(mShaderId.getNativeShader(shaderManager, this));
+    }
+
+    void setNativeShader(int shader)
+    {
+        NativeShaderData.setNativeShader(getNative(), shader);
+    }
+
+    int getNativeShader()
+    {
+        return getShaderType().getNativeShader(getGVRContext().getMaterialShaderManager(), this);
     }
 
     /**
