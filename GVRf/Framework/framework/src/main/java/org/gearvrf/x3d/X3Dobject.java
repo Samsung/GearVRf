@@ -17,7 +17,6 @@ package org.gearvrf.x3d;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Typeface;
 
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.io.GVRControllerType;
@@ -924,9 +923,7 @@ public class X3Dobject {
                     }
                     if (useItem != null) {
                         // GVRRenderingData doesn't seem to be shared, but instead has an
-
                         // owner.  Thus share the GVRMesh and GVRMaterial attached to
-
                         // GVRRenderingData.
                         GVRRenderData gvrRenderDataDEFined = useItem.getGVRRenderData();
                         gvrRenderData.setMaterial(gvrRenderDataDEFined.getMaterial());
@@ -1024,16 +1021,12 @@ public class X3Dobject {
                             .getValue("ambientIntensity");
                     if (ambientIntensityAttribute != null) {
                         Log.e(TAG, "ambientIntensity currently not implemented.");
-
-
                         shaderSettings
                                 .setAmbientIntensity(parseSingleFloatString(ambientIntensityAttribute,
                                         true, false));
                     }
                     String shininessAttribute = attributes.getValue("shininess");
                     if (shininessAttribute != null) {
-
-
                         shaderSettings
                                 .setShininess(parseSingleFloatString(shininessAttribute, true,
                                         false));
@@ -1076,7 +1069,6 @@ public class X3Dobject {
                         urlAttribute = urlAttribute.replace("\"", ""); // remove double and
                         // single quotes
                         urlAttribute = urlAttribute.replace("\'", "");
-                    //    urlAttribute = urlAttribute.toLowerCase();
 
                         final String filename = urlAttribute;
                         String repeatSAttribute = attributes.getValue("repeatS");
@@ -1112,6 +1104,7 @@ public class X3Dobject {
 
             /********** TextureTransform **********/
             else if (qName.equalsIgnoreCase("TextureTransform")) {
+                Log.e(TAG, "X3D TextureTransform not currently implemented");
                 attributeValue = attributes.getValue("DEF");
                 if (attributeValue != null) {
                     Log.e(TAG,
@@ -1265,9 +1258,7 @@ public class X3Dobject {
                         for (int i = 0; i < vertices.size(); i++) {
                             Vertex vertex = vertices.get(i);
                             for (int j = 0; j < 3; j++) {
-
                                 vertexList[i * 3 + j] = vertex.getVertexCoord(j);
-
                             }
                         }
                         gvrMesh.setVertices(vertexList);
@@ -1387,8 +1378,6 @@ public class X3Dobject {
                         char[] ifs = gvrMesh.getIndices();
 
                         float[] normalVectorList = new float[ifs.length * 3];
-
-
                         // check if an indexedVertexNormals list is present
                         normalIndices.clear();
                         if (indexedVertexNormals.size() != 0) {
@@ -2397,7 +2386,7 @@ public class X3Dobject {
 
                 /********** Billboard **********/
                 else if (qName.equalsIgnoreCase("Billboard")) {
-                    Log.e(TAG, "Billboard currently not implemented. ");
+                    Log.e(TAG, "X3D Billboard currently not implemented. ");
                     //TODO: Billboard not currently implemented
                     String name = "";
                     float[] axisOfRotation =
@@ -2671,6 +2660,7 @@ public class X3Dobject {
 
                 /********** ElevationGrid **********/
                 else if (qName.equalsIgnoreCase("ElevationGrid")) {
+                    Log.e(TAG, "X3D ElevationGrid not currently implemented. ");
                     String name = "";
                     float creaseAngle = 0;
                     float[] height = null;
