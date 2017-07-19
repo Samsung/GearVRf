@@ -29,6 +29,7 @@ import android.view.View;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
@@ -113,6 +114,7 @@ abstract class BaseView {
         @Override
         public void onSensorEvent(final SensorEvent event) {
             int id = event.getCursorController().getId();
+            GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
 
             if (id != settingsCursorId || !sensorEnabled) {
                 return;
@@ -126,10 +128,10 @@ abstract class BaseView {
                         sendSwipeEvent(keyEvent);
                         continue;
                     }
-                    sendMotionEvent(event.getHitX(), event.getHitY(), keyEvent.getAction());
+                    sendMotionEvent(pickedObject.getHitX(), pickedObject.getHitY(), keyEvent.getAction());
                 }
             } else {
-                sendMotionEvent(event.getHitX(), event.getHitY(), MotionEvent.ACTION_MOVE);
+                sendMotionEvent(pickedObject.getHitX(), pickedObject.getHitY(), MotionEvent.ACTION_MOVE);
             }
         }
     };

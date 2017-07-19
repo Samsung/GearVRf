@@ -587,7 +587,7 @@ public class AnimationInteractivityManager {
                                                 .IS_ACTIVE))) {
                                     if (!isRunning) {
                                         isRunning = true;
-                                        interactiveObjectFinal.getSensor().setHitPoint(event.getHitPoint());
+                                        interactiveObjectFinal.getSensor().setHitPoint(event.getPickedObject().getHitLocation());
                                         gvrKeyFrameAnimationFinal.start(gvrContext.getAnimationEngine())
                                                 .setOnFinish(new GVROnFinish() {
                                                     @Override
