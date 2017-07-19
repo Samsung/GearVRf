@@ -19,7 +19,7 @@ import android.content.Context;
 import org.gearvrf.utility.TextFile;
 
 /**
- * Shader which horizontally flips a texture and blends it with a color.
+ * Shader which vertically flips a texture and blends it with a color.
  * This shader assumes the vertex position is in eye coordinates - it
  * does not use the model, view or projection matrices.
  * It also ignores light sources.

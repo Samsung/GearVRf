@@ -94,10 +94,11 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
-    public void setMain(GVRMain gvrMain, String dataFileName) {
+    public boolean setMain(GVRMain gvrMain, String dataFileName) {
         if (null != mActivityHandler) {
             mActivityHandler.onSetScript();
         }
+        return true;
     }
 
     @Override

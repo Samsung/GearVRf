@@ -90,19 +90,19 @@ extern "C" {
                                 post_effect_render_texture_b);
     }
 
-    JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz, jlong jrender_texture,
-                                                                            jobject jreadback_buffer);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
+                                                           jobject jreadback_buffer);
 } // extern "C"
 
 
-JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * env, jclass clazz, jlong jrender_texture, jobject jreadback_buffer) {
-
-    RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(jrender_texture);
+JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * env, jclass clazz, jobject jreadback_buffer) {
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
 
-    int width = render_texture->width();
-    int height = render_texture->height();
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, readback_buffer);
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, readback_buffer);
 }
 
 }

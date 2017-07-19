@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.condition.Os
-
 apply plugin: 'com.android.library'
 
 repositories {
@@ -18,10 +16,26 @@ android {
 
         ndk {
             moduleName "gvrf-physics"
+            abiFilter "armeabi-v7a"
+        }
+        externalNativeBuild {
+            cmake {
+                //difference in sign extension when reinterpret_cast-ing a pointer between
+                //gcc and clang hence overriding the default toolchain to match the one used
+                //by the other modules
+                arguments.add('-DANDROID_TOOLCHAIN=gcc')
+                if (rootProject.hasProperty("buildGvrfAndDemos")) {
+                    arguments.add('-DCMAKE_BUILD_TYPE=Debug')
+                }
+            }
         }
     }
 
     buildTypes {
+        debug {
+            debuggable = true
+            jniDebuggable = true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
@@ -31,52 +45,22 @@ android {
     sourceSets.main {
         java.srcDirs = ['src/main/java']
         jni.srcDirs = [] // no auto generation of Android.mk
-        jniLibs.srcDir 'src/main/libs/' // pre-compiled libraries
+        jniLibs.srcDir 'src/main/jni/prebuilt' // pre-compiled libraries
     }
 
-    task buildNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
+    externalNativeBuild {
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
         }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
-        }
-
-        if (rootProject.hasProperty("ARM64")) {
-            environment 'ARM64', "true"
-        }
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
     }
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative
-    }
-
-    task cleanNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
-        }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
-        }
-
-        if (rootProject.hasProperty("ARM64")) {
-            environment 'ARM64', "true"
-        }
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
-    }
-    clean.dependsOn 'cleanNative'
 }
 
 dependencies {
-    compile(name: 'framework-debug', ext: 'aar')
+    if(rootProject.hasProperty("buildGvrfAndDemos")) {
+        compile project (':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
 }
 
 clean {}.doLast {

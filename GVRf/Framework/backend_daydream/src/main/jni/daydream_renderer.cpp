@@ -15,10 +15,10 @@
 
 #include "daydream_renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
-#include <assert.h>
 
 namespace {
     static const uint64_t kPredictionTimeWithoutVsyncNanos = 50000000;
+    static const int kDefaultFboResolution = 1024;
 
     // Use the same default clipping distances as the perspective camera
     // TODO: Change this to read the values from the gvr.xml file
@@ -34,21 +34,6 @@ namespace {
         }
         return result;
     }
-
-    static gvr::Mat4f MatrixMul(const gvr::Mat4f &matrix1,
-                                const gvr::Mat4f &matrix2) {
-        gvr::Mat4f result;
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                result.m[i][j] = 0.0f;
-                for (int k = 0; k < 4; ++k) {
-                    result.m[i][j] += matrix1.m[i][k] * matrix2.m[k][j];
-                }
-            }
-        }
-        return result;
-    }
-
 
     static gvr::Rectf ModulateRect(const gvr::Rectf &rect, float width,
                                    float height) {
@@ -78,14 +63,6 @@ namespace {
         }
     }
 
-    static gvr::Sizei HalfPixelCount(const gvr::Sizei &in) {
-        // Scale each dimension by sqrt(2)/2 ~= 7/10ths.
-        gvr::Sizei out;
-        out.width = (7 * in.width) / 10;
-        out.height = (7 * in.height) / 10;
-        return out;
-    }
-
 }  // namespace
 
 DaydreamRenderer::DaydreamRenderer(JNIEnv &env, jclass clazz,
@@ -104,9 +81,9 @@ DaydreamRenderer::~DaydreamRenderer() {
 void DaydreamRenderer::InitializeGl() {
     gvr_api_->InitializeGl();
 
-    // Because we are using 2X MSAA, we can render to half as many pixels and
-    // achieve similar quality.
-    render_size_ = HalfPixelCount(gvr_api_->GetMaximumEffectiveRenderTargetSize());
+    //@todo read gvr.xml and obtain the values from EyeBufferParams
+    render_size_.height = kDefaultFboResolution;
+    render_size_.width = 2*kDefaultFboResolution;
     std::vector <gvr::BufferSpec> specs;
     specs.push_back(gvr_api_->CreateBufferSpec());
     specs.push_back(gvr_api_->CreateBufferSpec());
@@ -116,9 +93,9 @@ void DaydreamRenderer::InitializeGl() {
     specs[0].SetSize(render_size_);
     specs[0].SetSamples(2);
 
-    specs[1].SetSize(render_size_);
     specs[1].SetColorFormat(GVR_COLOR_FORMAT_RGBA_8888);
     specs[1].SetDepthStencilFormat(GVR_DEPTH_STENCIL_FORMAT_DEPTH_24_STENCIL_8);
+    specs[1].SetSize(render_size_);
     specs[1].SetSamples(2);
     swapchain_.reset(new gvr::SwapChain(gvr_api_->CreateSwapChain(specs)));
 
@@ -130,7 +107,6 @@ void DaydreamRenderer::InitializeGl() {
 }
 
 void DaydreamRenderer::DrawFrame(JNIEnv &env) {
-    PrepareFramebuffer();
     // use the scratch list to get the recommended viewports
     scratch_viewport_list_->SetToRecommendedBufferViewports();
 
@@ -177,20 +153,6 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
     CheckGLError("onDrawFrame");
 }
 
-void DaydreamRenderer::PrepareFramebuffer() {
-    // Because we are using 2X MSAA, we can render to half as many pixels and
-    // achieve similar quality.
-    gvr::Sizei recommended_size =
-            HalfPixelCount(gvr_api_->GetMaximumEffectiveRenderTargetSize());
-    if (render_size_.width != recommended_size.width ||
-        render_size_.height != recommended_size.height) {
-        // We need to resize the framebuffer.
-        swapchain_->ResizeBuffer(0, recommended_size);
-        swapchain_->ResizeBuffer(1, recommended_size);
-        render_size_ = recommended_size;
-    }
-}
-
 void DaydreamRenderer::OnPause() {
     gvr_api_->PauseTracking();
 }
@@ -206,8 +168,7 @@ void DaydreamRenderer::OnDestroy(JNIEnv &env) {
 }
 
 void DaydreamRenderer::SetViewport(const gvr::BufferViewport &viewport) {
-    const gvr::Recti pixel_rect =
-            CalculatePixelSpaceRect(render_size_, viewport.GetSourceUv());
+    const gvr::Recti pixel_rect = CalculatePixelSpaceRect(render_size_, viewport.GetSourceUv());
 
     glViewport(pixel_rect.left, pixel_rect.bottom,
                pixel_rect.right - pixel_rect.left,
