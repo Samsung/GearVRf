@@ -1041,7 +1041,7 @@ public class X3Dobject {
                     String ambientIntensityAttribute = attributes
                             .getValue("ambientIntensity");
                     if (ambientIntensityAttribute != null) {
-                        Log.e(TAG, "ambientIntensity currently not implemented.");
+                        Log.e(TAG, "Material ambientIntensity currently not implemented.");
                         shaderSettings
                                 .setAmbientIntensity(parseSingleFloatString(ambientIntensityAttribute,
                                         true, false));
