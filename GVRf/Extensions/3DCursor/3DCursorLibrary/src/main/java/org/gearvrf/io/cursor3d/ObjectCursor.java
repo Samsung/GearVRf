@@ -55,6 +55,10 @@ class ObjectCursor extends Cursor {
                 (SelectableGroup.getComponentType());
 
         if (selectableGroup != null) {
+            //if part of a selectable group and disabled then ignore
+            if (!object.isEnabled()) {
+                return;
+            }
             object = selectableGroup.getParent();
             colliding = isColliding(object);
         } else {
