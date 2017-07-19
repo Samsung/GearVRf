@@ -16,21 +16,13 @@
 package org.gearvrf;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.util.DisplayMetrics;
 
-import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRFPSTracer;
 import org.gearvrf.debug.GVRMethodCallTracer;
 import org.gearvrf.debug.GVRStatsLine;
-import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
-import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
 
 /*
  * This is the most important part of gvrf.
@@ -218,57 +210,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
     }
 
-    private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, byte[][] byteArrays, int index) {
-        renderCamera(mMainScene, centerCamera, mRenderBundle);
-        readRenderResult();
-        byteArrays[index] = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
-    }
-
-    private void renderSixCamerasAndReadback(final GVRCameraRig mainCameraRig, byte[][] byteArrays) {
-        if (byteArrays.length != 6) {
-            throw new IllegalArgumentException("byteArrays length is not 6.");
-        } else {
-            // temporarily create a center camera
-            GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(this);
-            centerCamera.setFovY(90.0f);
-            centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
-            GVRSceneObject centerCameraObject = new GVRSceneObject(this);
-            centerCameraObject.attachCamera(centerCamera);
-            mainCameraRig.getOwnerObject().addChildObject(centerCameraObject);
-            GVRTransform centerCameraTransform = centerCameraObject.getTransform();
-
-            int index = 0;
-            // render +x face
-            centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
-
-            // render -x face
-            centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
-
-            // render +y face
-            centerCameraTransform.rotateByAxis(-90, 0, 1, 0);
-            centerCameraTransform.rotateByAxis(90, 1, 0, 0);
-            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
-
-            // render -y face
-            centerCameraTransform.rotateByAxis(180, 1, 0, 0);
-            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
-
-            // render +z face
-            centerCameraTransform.rotateByAxis(90, 1, 0, 0);
-            centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
-
-            // render -z face
-            centerCameraTransform.rotateByAxis(180, 0, 1, 0);
-            renderOneCameraAndAddToList(centerCamera, byteArrays, index++);
-
-            centerCameraObject.detachCamera();
-            mainCameraRig.getOwnerObject().removeChildObject(centerCameraObject);
-        }
-    }
-
     /**
      * Called from the native side
      * @param eye
@@ -285,13 +226,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
                 GVRCamera rightCamera = mainCameraRig.getRightCamera();
                 renderCamera(mMainScene, rightCamera, mRenderBundle);
-
-                // if mScreenshotRightCallback is not null, capture right eye
-                if (mScreenshotRightCallback != null) {
-                    readRenderResult();
-                    returnScreenshotToCaller(mScreenshotRightCallback, mReadbackBufferWidth, mReadbackBufferHeight);
-                    mScreenshotRightCallback = null;
-                }
+                captureRightEye();
 
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.leave();
@@ -303,43 +238,14 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     mTracerDrawEyes2.enter();
                 }
 
-                // if mScreenshotCenterCallback is not null, capture center eye
-                if (mScreenshotCenterCallback != null) {
-                    GVRPerspectiveCamera centerCamera = mainCameraRig.getCenterCamera();
-
-                    renderCamera(mMainScene, centerCamera, mRenderBundle);
-
-                    readRenderResult();
-                    returnScreenshotToCaller(mScreenshotCenterCallback, mReadbackBufferWidth, mReadbackBufferHeight);
-
-                    mScreenshotCenterCallback = null;
-                }
-
-                // if mScreenshot3DCallback is not null, capture 3D screenshot
-                if (mScreenshot3DCallback != null) {
-                    byte[][] byteArrays = new byte[6][];
-                    renderSixCamerasAndReadback(mainCameraRig, byteArrays);
-                    returnScreenshot3DToCaller(mScreenshot3DCallback, byteArrays, mReadbackBufferWidth,
-                            mReadbackBufferHeight);
-
-                    mScreenshot3DCallback = null;
-                }
+                captureCenterEye();
+                capture3DScreenShot();
 
                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
                 renderCamera(mMainScene, leftCamera, mRenderBundle);
 
-                // if mScreenshotLeftCallback is not null, capture left eye
-                if (mScreenshotLeftCallback != null) {
-                    readRenderResult();
-                    returnScreenshotToCaller(mScreenshotLeftCallback, mReadbackBufferWidth, mReadbackBufferHeight);
-
-                    mScreenshotLeftCallback = null;
-                }
-
-                if (mScreenshotLeftCallback == null && mScreenshotRightCallback == null
-                        && mScreenshotCenterCallback == null && mScreenshot3DCallback == null) {
-                    mReadbackBuffer = null;
-                }
+                captureLeftEye();
+                captureFinish();
 
                 if (DEBUG_STATS) {
                     mTracerDrawEyes2.leave();
