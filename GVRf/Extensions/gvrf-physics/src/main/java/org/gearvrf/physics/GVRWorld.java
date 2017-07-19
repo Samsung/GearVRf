@@ -24,8 +24,8 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSceneObject.ComponentVisitor;
 import org.gearvrf.ISceneObjectEvents;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Represents a physics world where all {@link GVRSceneObject} with {@link GVRRigidBody} component
@@ -34,6 +34,10 @@ import java.util.LinkedList;
  * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
 public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, ComponentVisitor {
+    protected float mFrameTime;
+    private boolean mIsProcessing;
+    private GVRWorldTask gvrWorldTask;
+    private static final long DEFAULT_INTERVAL = 15;
 
     static {
         System.loadLibrary("gvrf-physics");
@@ -43,7 +47,7 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     private final GVRCollisionMatrix mCollisionMatrix;
 
     /**
-     * Constructs new instance to simulatethe Physics World of the Scene.
+     * Constructs new instance to simulate the Physics World of the Scene.
      *
      * @param gvrContext The context of the app.
      */
@@ -52,7 +56,18 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
     }
 
     /**
-     * Constructs new instance to simulatethe Physics World of the Scene.
+     * Constructs new instance to simulate the Physics World of the Scene.
+     *
+     * @param gvrContext The context of the app.
+     * @param interval interval (in milliseconds) at which the collisions will be updated.
+     */
+    public GVRWorld(GVRContext gvrContext, long interval) {
+        this(gvrContext, null, interval);
+    }
+
+    /**
+     * Constructs new instance to simulate the Physics World of the Scene. Defaults to a 15ms
+     * update interval.
      *
      * @param gvrContext The context of the app.
      * @param collisionMatrix a matrix that represents the collision relations of the bodies on the scene
@@ -61,7 +76,30 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
         super(gvrContext, NativePhysics3DWorld.ctor());
         mHasFrameCallback = false;
         mCollisionMatrix = collisionMatrix;
+        gvrWorldTask = new GVRWorldTask(DEFAULT_INTERVAL);
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(gvrWorldTask, 0, DEFAULT_INTERVAL);
     }
+
+    /**
+     * Constructs new instance to simulate the Physics World of the Scene.
+     *
+     * @param gvrContext The context of the app.
+     * @param collisionMatrix a matrix that represents the collision relations of the bodies on the scene
+     * @param interval interval (in milliseconds) at which the collisions will be updated.
+     */
+    public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix, long interval) {
+        super(gvrContext, NativePhysics3DWorld.ctor());
+        mHasFrameCallback = false;
+        mIsProcessing = false;
+        mFrameTime = 0.0f;
+        mCollisionMatrix = collisionMatrix;
+        gvrWorldTask = new GVRWorldTask(interval);
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(gvrWorldTask,0, interval);
+    }
+
+
 
     static public long getComponentType() {
         return NativePhysics3DWorld.getComponentType();
@@ -111,13 +149,6 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
         }
     }
 
-    @Override
-    public void onDrawFrame(float frameTime) {
-        NativePhysics3DWorld.step(getNative(), frameTime);
-
-        generateCollisionEvents();
-    }
-
     private void generateCollisionEvents() {
         GVRCollisionInfo collisionInfos[] = NativePhysics3DWorld.listCollisions(getNative());
 
@@ -149,7 +180,7 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
         if (!mHasFrameCallback) {
             rootSceneObject.getEventReceiver().addListener(this);
         } else if (isEnabled()){
-            startListening();
+            gvrWorldTask.start();
         }
         rootSceneObject.forAllComponents(this, GVRRigidBody.getComponentType());
     }
@@ -159,7 +190,7 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
             rootSceneObject.getEventReceiver().removeListener(this);
         }
         if (isEnabled()) {
-            stopListening();
+            gvrWorldTask.stop();
         }
         rootSceneObject.forAllComponents(this, GVRRigidBody.getComponentType());
     }
@@ -192,7 +223,7 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
         getOwnerObject().getEventReceiver().removeListener(this);
 
         if (isEnabled()) {
-            startListening();
+            gvrWorldTask.start();
         }
     }
 
@@ -208,7 +239,6 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
 
     @Override
     public void onStep() {
-
     }
 
     @Override
@@ -222,6 +252,37 @@ public class GVRWorld extends GVRBehavior implements ISceneObjectEvents, Compone
             removeBody((GVRRigidBody) gvrComponent);
         }
         return true;
+    }
+    private class GVRWorldTask extends TimerTask {
+        private boolean running = false;
+        private final float interval;
+
+        public GVRWorldTask(long milliseconds){
+            interval = milliseconds/1000f;
+        }
+
+        @Override
+        public void run(){
+            if(running){
+                mFrameTime += interval;
+                if (mIsProcessing) {
+                    return;
+                }
+                mIsProcessing = true;
+                NativePhysics3DWorld.step(getNative(), mFrameTime);
+                generateCollisionEvents();
+                mFrameTime = 0.0f;
+                mIsProcessing = false;
+            }
+        }
+
+        public void start(){
+            running = true;
+        }
+
+        public void stop(){
+            running = false;
+        }
     }
 }
 

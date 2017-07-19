@@ -21,6 +21,7 @@
 #ifndef TRANSFORM_H_
 #define TRANSFORM_H_
 
+#include <mutex>
 #include <memory>
 
 #include "glm/glm.hpp"
@@ -46,41 +47,59 @@ public:
     }
 
     float position_x() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return position_.x;
     }
 
     float position_y() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return position_.y;
     }
 
     float position_z() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return position_.z;
     }
 
     void set_position(const glm::vec3& position) {
-        position_ = position;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            position_ = position;
+        }
         invalidate(false);
     }
 
     void set_position(float x, float y, float z) {
-        position_.x = x;
-        position_.y = y;
-        position_.z = z;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            position_.x = x;
+            position_.y = y;
+            position_.z = z;
+        }
         invalidate(false);
     }
 
     void set_position_x(float x) {
-        position_.x = x;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            position_.x = x;
+        }
         invalidate(false);
     }
 
     void set_position_y(float y) {
-        position_.y = y;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            position_.y = y;
+        }
         invalidate(false);
     }
 
     void set_position_z(float z) {
-        position_.z = z;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            position_.z = z;
+        }
         invalidate(false);
     }
 
@@ -89,46 +108,59 @@ public:
     }
 
     float rotation_w() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return rotation_.w;
     }
 
     float rotation_x() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return rotation_.x;
     }
 
     float rotation_y() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return rotation_.y;
     }
 
     float rotation_z() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return rotation_.z;
     }
 
-    // in radians
+// in radians
     float rotation_yaw() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return glm::yaw(rotation_);
     }
 
-    // in radians
+// in radians
     float rotation_pitch() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return glm::pitch(rotation_);
     }
 
-    // in radians
+// in radians
     float rotation_roll() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return glm::roll(rotation_);
     }
 
     void set_rotation(float w, float x, float y, float z) {
-        rotation_.w = w;
-        rotation_.x = x;
-        rotation_.y = y;
-        rotation_.z = z;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            rotation_.w = w;
+            rotation_.x = x;
+            rotation_.y = y;
+            rotation_.z = z;
+        }
         invalidate(true);
     }
 
-    void set_rotation(const glm::quat& roation) {
-        rotation_ = roation;
+    void set_rotation(const glm::quat& rotation) {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            rotation_ = rotation;
+        }
         invalidate(true);
     }
 
@@ -137,45 +169,64 @@ public:
     }
 
     float scale_x() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return scale_.x;
     }
 
     float scale_y() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return scale_.y;
     }
 
     float scale_z() const {
+        std::lock_guard<std::mutex> lock(mutex_);
         return scale_.z;
     }
 
     void set_scale(const glm::vec3& scale) {
-        scale_ = scale;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            scale_ = scale;
+        }
         invalidate(false);
     }
 
     void set_scale(float x, float y, float z) {
-        scale_.x = x;
-        scale_.y = y;
-        scale_.z = z;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            scale_.x = x;
+            scale_.y = y;
+            scale_.z = z;
+        }
         invalidate(false);
     }
 
     void set_scale_x(float x) {
-        scale_.x = x;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            scale_.x = x;
+        }
         invalidate(false);
     }
 
     void set_scale_y(float y) {
-        scale_.y = y;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            scale_.y = y;
+        }
         invalidate(false);
     }
 
     void set_scale_z(float z) {
-        scale_.z = z;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            scale_.z = z;
+        }
         invalidate(false);
     }
 
     bool isModelMatrixValid() {
+        std::lock_guard<std::mutex> lock(mutex_);
         return model_matrix_.isValid();
     }
 
@@ -208,6 +259,8 @@ private:
     glm::vec3 scale_;
 
     Lazy<glm::mat4> model_matrix_;
+
+    mutable std::mutex mutex_;
 };
 
 }

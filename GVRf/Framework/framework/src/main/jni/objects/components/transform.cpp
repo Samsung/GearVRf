@@ -38,7 +38,9 @@ Transform::~Transform() {
 
 void Transform::invalidate()
 {
+    mutex_.lock();
     model_matrix_.invalidate();
+    mutex_.unlock();
 }
 
 void Transform::invalidate(bool rotationUpdated)
@@ -51,6 +53,7 @@ void Transform::invalidate(bool rotationUpdated)
         // scale rotation_ if needed to avoid overflow
         static const float threshold = sqrt(FLT_MAX) / 2.0f;
         static const float scale_factor = 0.5f / sqrt(FLT_MAX);
+        mutex_.lock();
         if (rotation_.w > threshold || rotation_.x > threshold ||
             rotation_.y > threshold || rotation_.z > threshold)
         {
@@ -59,6 +62,7 @@ void Transform::invalidate(bool rotationUpdated)
             rotation_.y *= scale_factor;
             rotation_.z *= scale_factor;
         }
+        mutex_.unlock();
     }
     if (owner)
     {
@@ -68,10 +72,12 @@ void Transform::invalidate(bool rotationUpdated)
 }
 
 glm::mat4 Transform::getModelMatrix(bool forceRecalculate) {
-    if (!model_matrix_.isValid() || forceRecalculate) {
+    if (!isModelMatrixValid() || forceRecalculate) {
+        mutex_.lock();
         glm::mat4 translation_matrix = glm::translate(glm::mat4(), position_);
         glm::mat4 rotation_matrix = glm::mat4_cast(rotation_);
         glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
+        mutex_.unlock();
 
         glm::mat4 trs_matrix = translation_matrix * rotation_matrix
                                * scale_matrix;
@@ -79,19 +85,28 @@ glm::mat4 Transform::getModelMatrix(bool forceRecalculate) {
             Transform *const t = owner_object()->parent()->transform();
             if (nullptr != t) {
                 glm::mat4 model_matrix = t->getModelMatrix() * trs_matrix;
+                mutex_.lock();
                 model_matrix_.validate(model_matrix);
+                mutex_.unlock();
             }
         } else {
+            mutex_.lock();
             model_matrix_.validate(trs_matrix);
+            mutex_.unlock();
         }
     }
-    return model_matrix_.element();
+    mutex_.lock();
+    glm::mat4 elem = model_matrix_.element();
+    mutex_.unlock();
+    return elem;
 }
 
 glm::mat4 Transform::getLocalModelMatrix() {
+    mutex_.lock();
     glm::mat4 translation_matrix = glm::translate(glm::mat4(), position_);
     glm::mat4 rotation_matrix = glm::mat4_cast(rotation_);
     glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
+    mutex_.unlock();
     glm::mat4 trs_matrix = translation_matrix * rotation_matrix
                            * scale_matrix;
     return trs_matrix;
@@ -135,33 +150,41 @@ void Transform::setModelMatrix(glm::mat4 matrix) {
                            matrix[1][0] / new_scale.x, matrix[1][1] / new_scale.y,
                            matrix[1][2] / new_scale.z, matrix[2][0] / new_scale.x,
                            matrix[2][1] / new_scale.y, matrix[2][2] / new_scale.z);
-
+    mutex_.lock();
     position_ = new_position;
     scale_ = new_scale;
     rotation_ = glm::quat_cast(rotation_mat);
-
+    mutex_.unlock();
     invalidate(true);
 }
 
 void Transform::translate(float x, float y, float z) {
+    mutex_.lock();
     position_ += glm::vec3(x, y, z);
+    mutex_.unlock();
     invalidate(false);
 }
 
 // angle in radians
 void Transform::setRotationByAxis(float angle, float x, float y, float z) {
+    mutex_.lock();
     rotation_ = glm::angleAxis(angle, glm::vec3(x, y, z));
+    mutex_.unlock();
     invalidate(true);
 }
 
 void Transform::rotate(float w, float x, float y, float z) {
+    mutex_.lock();
     rotation_ = glm::quat(w, x, y, z) * rotation_;
+    mutex_.unlock();
     invalidate(true);
 }
 
 // angle in radians
 void Transform::rotateByAxis(float angle, float x, float y, float z) {
+    mutex_.lock();
     rotation_ = glm::angleAxis(angle, glm::vec3(x, y, z)) * rotation_;
+    mutex_.unlock();
     invalidate(true);
 }
 
@@ -171,22 +194,26 @@ void Transform::rotateByAxisWithPivot(float angle, float axis_x, float axis_y,
                                       float pivot_z) {
     glm::quat axis_rotation = glm::angleAxis(angle,
                                              glm::vec3(axis_x, axis_y, axis_z));
+    mutex_.lock();
     rotation_ = axis_rotation * rotation_;
     glm::vec3 pivot(pivot_x, pivot_y, pivot_z);
     glm::vec3 relative_position = position_ - pivot;
     relative_position = glm::rotate(axis_rotation, relative_position);
     position_ = relative_position + pivot;
+    mutex_.unlock();
     invalidate(true);
 }
 
 void Transform::rotateWithPivot(float w, float x, float y, float z,
                                 float pivot_x, float pivot_y, float pivot_z) {
     glm::quat rotation(w, x, y, z);
+    mutex_.lock();
     rotation_ = rotation * rotation_;
     glm::vec3 pivot(pivot_x, pivot_y, pivot_z);
     glm::vec3 relative_position = position_ - pivot;
     relative_position = glm::rotate(rotation, relative_position);
     position_ = relative_position + pivot;
+    mutex_.unlock();
     invalidate(true);
 }
 
