@@ -37,7 +37,8 @@ namespace gvr
         int texUnit = 0;
         bool fail = false;
 
-        uniforms().useGPUBuffer(shader->useMaterialGPUBuffer());
+       assert(uniforms().usesGPUBuffer() == shader->useMaterialGPUBuffer());
+
         forEachTexture([fail, &texUnit, glshader, this, &index](const char* texname, Texture* tex) mutable
         {
             int loc = glshader->getTextureLoc(++index);

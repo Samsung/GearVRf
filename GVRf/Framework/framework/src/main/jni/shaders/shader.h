@@ -116,6 +116,10 @@ public:
     {
         return mUseLights;
     }
+    bool hasBones()
+    {
+        return mUseHasBones;
+    }
     bool isShaderDirty(){
         return  shaderDirty;
     }
@@ -150,6 +154,7 @@ protected:
     int mId;
     bool mUseMatrixUniforms;
     bool mUseLights;
+    bool mUseHasBones;
     bool mUseMaterialGPUBuffer;
     jclass mJavaShaderClass;
     JavaVM *mJavaVM;

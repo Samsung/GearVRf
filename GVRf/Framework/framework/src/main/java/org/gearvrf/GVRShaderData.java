@@ -375,11 +375,12 @@ public class GVRShaderData extends GVRHybridObject
      * @return shader layout string
      */
     String makeShaderLayout() { return NativeShaderData.makeShaderLayout(getNative()); }
+    void useGpuBuffer(boolean flag) { NativeShaderData.useGpuBuffer(getNative(), flag);}
 }
 
 class NativeShaderData {
     static native long ctor(String uniformDesc, String textureDesc);
-
+    static native void useGpuBuffer(long shaderData, boolean flag);
     static native int getNativeShader(long shaderData);
 
     static native void setNativeShader(long shaderData, int nativeShader);

@@ -103,7 +103,7 @@ void VkTexture::createSampler(int maxLod) {
                           &sampler);
 
     samplers.push_back(index);
-    samplers.push_back(sampler);
+    samplers.push_back((uint64_t )sampler);
     assert(!err);
 
 }

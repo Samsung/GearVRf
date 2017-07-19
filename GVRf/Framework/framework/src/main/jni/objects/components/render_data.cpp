@@ -18,7 +18,7 @@
 
 #include "util/jni_utils.h"
 #include "objects/scene.h"
-
+#include "shaders/shader.h"
 namespace gvr {
 
 RenderData::~RenderData() {
@@ -224,7 +224,7 @@ bool RenderData::updateGPU(Renderer* renderer, Shader* shader)
 {
     VertexBuffer* vbuf = mesh_->getVertexBuffer();
 
-    if (mesh_->hasBones())
+    if (mesh_->hasBones() && shader->hasBones())
     {
         VertexBoneData& vbd = mesh_->getVertexBoneData();
         std::vector<glm::mat4>& bone_matrices = vbd.getBoneMatrices();

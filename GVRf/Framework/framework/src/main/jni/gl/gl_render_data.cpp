@@ -26,7 +26,7 @@ namespace gvr
         int         vertexCount = mesh_->getVertexCount();
         int         mode = draw_mode();
 
-        if (mesh_->hasBones() && bones_ubo_)
+        if (mesh_->hasBones() && bones_ubo_ && shader->hasBones())
         {
             GLUniformBlock* glbones = static_cast<GLUniformBlock*>(bones_ubo_);
             glbones->bindBuffer(shader, renderer);

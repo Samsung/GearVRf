@@ -28,7 +28,12 @@ namespace gvr
         JNIEXPORT jlong JNICALL
         Java_org_gearvrf_NativeShaderData_ctor(JNIEnv* env, jobject obj, jstring udesc, jstring tdesc);
 
-        JNIEXPORT jint JNICALL
+
+        JNIEXPORT void JNICALL
+         Java_org_gearvrf_NativeShaderData_useGpuBuffer(JNIEnv* env,
+                                                 jobject obj, jlong jshader_data, jboolean  flag);
+
+                                                 JNIEXPORT jint JNICALL
         Java_org_gearvrf_NativeShaderData_getNativeShader(
                 JNIEnv* env, jobject obj, jlong jshader_data);
 
@@ -114,7 +119,12 @@ namespace gvr
         JNIEXPORT jstring JNICALL
         Java_org_gearvrf_NativeShaderData_makeShaderLayout(JNIEnv*, jobject, jlong shader_data);
     };
-
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeShaderData_useGpuBuffer(JNIEnv* env,
+                                               jobject obj, jlong jshader_data, jboolean  flag){
+        ShaderData* shader_data = reinterpret_cast<ShaderData*>(jshader_data);
+        shader_data->useGPUBuffer(flag);
+    }
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeShaderData_ctor(JNIEnv* env, jobject obj, jstring junidesc, jstring jtexdesc)
     {
