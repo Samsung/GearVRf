@@ -464,7 +464,7 @@ public class GVRShader
 
     }
 
-    public native boolean isVulkanInstance();
+    public static native boolean isVulkanInstance();
 
     public enum GLSLESVersion {
         V100("100 es"),

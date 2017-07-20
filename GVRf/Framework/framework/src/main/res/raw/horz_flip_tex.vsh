@@ -8,5 +8,5 @@ layout ( location = 0 ) out vec2 diffuse_coord;
 void main()
 {
   gl_Position = vec4(a_position, 1.0);
-  diffuse_coord = vec2(a_texcoord.x, 1.0 - a_texcoord.y);
+  diffuse_coord = vec2(1.0 - a_texcoord.x, a_texcoord.y);
 }

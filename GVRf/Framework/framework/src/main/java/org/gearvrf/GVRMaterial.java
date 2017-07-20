@@ -126,6 +126,10 @@ public class GVRMaterial extends  GVRShaderData
             public static final GVRShaderId ID = new GVRShaderId(GVRVerticalFlipShader.class);
         }
 
+        public abstract static class HorizontalFlip {
+            public static final GVRShaderId ID = new GVRShaderId(GVRHorizontalFlipShader.class);
+        }
+
         public abstract static class ColorBlend {
             public static final GVRShaderId ID = new GVRShaderId(GVRColorBlendShader.class);
         }
