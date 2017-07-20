@@ -40,6 +40,11 @@ void VkRenderTexture::endRendering(Renderer* renderer) {
     VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
     vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()));
 }
+    void VkRenderTexture::endRenderingPE(Renderer* renderer) {
+        VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
+        vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()));
+    }
+
 void VkRenderTexture::beginRendering(Renderer* renderer){
 
     VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
@@ -73,6 +78,40 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
 
     vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
+
+    void VkRenderTexture::beginRenderingPE(Renderer* renderer){
+
+        VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
+
+        clear_values[0].color.float32[0] = mBackColor[0];
+        clear_values[0].color.float32[1] = mBackColor[1];
+        clear_values[0].color.float32[2] = mBackColor[2];
+        clear_values[0].color.float32[3] = mBackColor[3];
+
+        clear_values[1].depthStencil.depth = 1.0f;
+        clear_values[1].depthStencil.stencil = 0;
+
+        for(int i = 0; i < vk_renderer->getCore()->getPostEffectCount(); i++){
+            clear_values[2+i].color.float32[0] = mBackColor[0];
+            clear_values[2+i].color.float32[1] = mBackColor[1];
+            clear_values[2+i].color.float32[2] = mBackColor[2];
+            clear_values[2+i].color.float32[3] = mBackColor[3];
+        }
+
+        VkRenderPassBeginInfo rp_begin = {};
+        rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        rp_begin.pNext = nullptr;
+        rp_begin.renderPass = fbo->getRenderPass();
+        rp_begin.framebuffer = fbo->getFramebuffer();
+        rp_begin.renderArea.offset.x = 0;
+        rp_begin.renderArea.offset.y = 0;
+        rp_begin.renderArea.extent.width = fbo->getWidth();
+        rp_begin.renderArea.extent.height = fbo->getHeight();
+        rp_begin.clearValueCount = clear_values.size();
+        rp_begin.pClearValues = clear_values.data();
+
+        vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
+    }
 bool VkRenderTexture::readVkRenderResult(uint8_t **readback_buffer, VkCommandBuffer& cmd_buffer,VkFence& fence) {
 
     VkResult err;

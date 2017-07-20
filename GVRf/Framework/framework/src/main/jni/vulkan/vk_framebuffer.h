@@ -44,6 +44,14 @@ public:
         return mAttachments[type]->getVkImage();
     }
 
+    const VkImageView &getImageView(ImageType type) {
+        return mAttachments[type]->getVkImageView();
+    }
+
+    const VkImageLayout& getImageLayout(ImageType type){
+        return mAttachments[type]->getImageLayout();
+    }
+
     VkDeviceMemory getDeviceMemory(ImageType type) {
         return mAttachments[type]->getDeviceMemory();
     }

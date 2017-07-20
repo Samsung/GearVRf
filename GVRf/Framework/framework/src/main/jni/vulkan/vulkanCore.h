@@ -29,6 +29,7 @@
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
 #define SWAP_CHAIN_COUNT 6
+#define POSTEFFECT_CHAIN_COUNT 6
 
 namespace gvr {
 class VulkanUniformBlock;
@@ -97,8 +98,10 @@ public:
 
 
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*, std::vector<RenderData*> rdata, std::vector<Shader*> shader);
+    void BuildCmdBufferForRenderDataPE(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*, std::vector<RenderData*> rdata, std::vector<Shader*> shader);
 
-    void DrawFrameForRenderData();
+    int DrawFrameForRenderData();
+    int DrawFrameForRenderDataPE();
     int getCurrentSwapChainIndx(){
         return imageIndex;
     }
@@ -108,9 +111,14 @@ public:
     VkCommandBuffer* getCurrentCmdBuffer(){
         return swapChainCmdBuffer[imageIndex];
     }
+
+    VkCommandBuffer* getCurrentCmdBufferPE(){
+        return postEffectCmdBuffer[0];
+    }
     int AcquireNextImage();
 
     void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int);
+    void InitPipelineForRenderDataPE(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int);
 
 
     bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
@@ -149,8 +157,10 @@ public:
     }
 
     void handlePostEffect(int count);
+    void RenderToOculus(int index);
 private:
     std::vector <VkFence> waitFences;
+    VkFence postEffectFence;
     std::vector <VkFence> waitSCBFences;
     static VulkanCore *theInstance;
 
@@ -207,6 +217,7 @@ private:
     VkSurfaceKHR m_surface;
 
     std::vector<VkCommandBuffer*> swapChainCmdBuffer;
+    std::vector<VkCommandBuffer*> postEffectCmdBuffer;
 
     uint32_t m_height;
     uint32_t m_width;
@@ -224,6 +235,7 @@ private:
     TextureObject * textureObject;
 
     VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
+    VkRenderTexture* mPostEffectTexture[POSTEFFECT_CHAIN_COUNT];
     VkRenderPass mRenderPassMap[2];
 
     // Post Effect Final

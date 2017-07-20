@@ -2,8 +2,8 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 precision highp float;
-layout(input_attachment_index=0, set = 0, binding = 4) uniform subpassInput u_texture;
-//layout(input_attachment_index=0, set = 0, binding = 4) uniform sampler2D u_texture;
+//layout(input_attachment_index=0, set = 0, binding = 4) uniform subpassInput u_texture;
+layout(set = 0, binding = 4) uniform sampler2D u_texture;
 
 layout (push_constant) uniform Material_ubo{
 
@@ -17,7 +17,8 @@ layout( location = 0) out vec4 outColor;
 
 void main()
 {
-    vec4 tex = subpassLoad(u_texture);
+    //vec4 tex = subpassLoad(u_texture);
+    vec4 tex = texture(u_texture, diffuse_coord);
 
     float r = tex.r * u_ratio_r.r + tex.g * u_ratio_r.g + tex.b * u_ratio_r.b;
                   float g = tex.r * u_ratio_g.r + tex.g * u_ratio_g.g + tex.b * u_ratio_g.b;

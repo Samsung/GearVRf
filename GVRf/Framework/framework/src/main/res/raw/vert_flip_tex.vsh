@@ -5,7 +5,6 @@ layout ( location = 0 ) in vec3 a_position;
 layout ( location = 1 ) in vec2 a_texcoord;
 layout ( location = 0 ) out vec2 diffuse_coord;
 
-@MATRIX_UNIFORMS
 
 void main()
 {

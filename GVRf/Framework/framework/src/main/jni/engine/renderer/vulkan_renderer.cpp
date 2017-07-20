@@ -140,7 +140,7 @@ namespace gvr {
 
             vulkanCore_->InitDescriptorSetForRenderDataPostEffect(this, pass, shader, vkRdata);
             vkRdata->set_depth_test(0);
-            vkRdata->createPipeline(shader, this, pass);
+            vkRdata->createPipelinePE(shader, this, pass);
        }
 
         shader->useShader();
@@ -171,8 +171,11 @@ namespace gvr {
 
         std::vector<ShaderData *> post_effects = camera->post_effect_data();
 
-        vulkanCore_->setPostEffectCount(post_effects.size());
-        vulkanCore_->handlePostEffect(post_effects.size());
+        if(post_effects.size() == 0)
+                return;
+
+        vulkanCore_->setPostEffectCount(0);//post_effects.size());
+        //vulkanCore_->handlePostEffect(post_effects.size());
 
         for (auto &rdata : render_data_vector)
         {
@@ -202,6 +205,11 @@ namespace gvr {
         // Call Post Effect
         std::vector<RenderData*> renderData;
         std::vector<Shader*> shader;
+
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, renderData, shader);
+        vulkanCore_->DrawFrameForRenderData();
+
+
         for(int i = 0; i < post_effects.size(); i++) {
             VulkanRenderPass *vulkanRenderPass = new VulkanRenderPass();
             vulkanRenderPass->set_material((VulkanMaterial *)post_effects[i]);
@@ -212,10 +220,13 @@ namespace gvr {
             shader.push_back(rstate.shader_manager->getShader(post_effects[i]->getNativeShader()));
             renderWithPostEffectShader(rstate, shader[i], renderData[i],
                                        post_effects[i], 0);
+
+            vulkanCore_->BuildCmdBufferForRenderDataPE(render_data_list,camera, shader_manager, renderData, shader);
         }
 
-        vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, renderData, shader);
-        vulkanCore_->DrawFrameForRenderData();
+        int index = vulkanCore_->DrawFrameForRenderDataPE();
+
+        vulkanCore_->RenderToOculus(index);
 
         // Freeing RenderData of Post Effect
         for(int i = 0; i < shader.size(); i++){

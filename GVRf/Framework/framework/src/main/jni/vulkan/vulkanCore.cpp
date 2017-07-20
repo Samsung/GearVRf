@@ -471,6 +471,13 @@ namespace gvr {
             mRenderTexture[i] = new VkRenderTexture(width,height);
             swapChainCmdBuffer[i] = new VkCommandBuffer();
         }
+
+        postEffectCmdBuffer.reserve(POSTEFFECT_CHAIN_COUNT);
+
+        for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
+            mPostEffectTexture[i] = new VkRenderTexture(width,height);
+            postEffectCmdBuffer[i] = new VkCommandBuffer();
+        }
     }
 
     bool VulkanCore::GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
@@ -527,6 +534,18 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
 
         // Create render command buffers, one per swapchain image
+
+
+        for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
+            ret = vkAllocateCommandBuffers(
+                    m_device,
+                    gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPool),
+                    postEffectCmdBuffer[i]
+            );
+            GVR_VK_CHECK(!ret);
+        }
+
+
         for (int i = 0; i < SWAP_CHAIN_COUNT; i++) {
             ret = vkAllocateCommandBuffers(
                     m_device,
@@ -535,6 +554,7 @@ namespace gvr {
             );
             GVR_VK_CHECK(!ret);
         }
+
 #ifdef CUSTOM_TEXTURE
         // Allocating Command Buffer for Texture
         ret = vkAllocateCommandBuffers(
@@ -714,7 +734,7 @@ namespace gvr {
         attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;//VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
         attachmentDescriptions[1] = {};
         attachmentDescriptions[1].flags = 0;
@@ -1009,6 +1029,108 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
 }
 
+    void VulkanCore::InitPipelineForRenderDataPE(const GVR_VK_Vertices* m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int pass) {
+        VkResult err;
+
+
+        // The pipeline contains all major state for rendering.
+
+        // Our vertex input is a single vertex buffer, and its layout is defined
+        // in our m_vertices object already. Use this when creating the pipeline.
+        VkPipelineVertexInputStateCreateInfo vi = {};
+        vi = m_vertices->vi;
+
+        // For this example we do not do blending, so it is disabled.
+        VkPipelineColorBlendAttachmentState att_state[1] = {};
+        bool disable_color_depth_write = rdata->stencil_test() && (RenderData::Queue::Stencil == rdata->rendering_order());
+        att_state[0].colorWriteMask = disable_color_depth_write ? 0x0 : (VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+        att_state[0].blendEnable = VK_FALSE;
+
+        if(rdata->alpha_blend()) {
+            att_state[0].blendEnable = VK_TRUE;
+            att_state[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            att_state[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
+            att_state[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            att_state[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+            att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        }
+
+        VkViewport viewport = {};
+        viewport.height = (float) m_height;
+        viewport.width = (float) m_width;
+        viewport.minDepth = (float) 0.0f;
+        viewport.maxDepth = (float) 1.0f;
+
+        VkRect2D scissor = {};
+        scissor.extent.width = m_width;
+        scissor.extent.height = m_height;
+        scissor.offset.x = 0;
+        scissor.offset.y = 0;
+
+#if  0
+        std::vector<uint32_t> result_vert = CompileShader("VulkanVS", VERTEX_SHADER,
+                                                          vertexShaderData);//vs;//
+    std::vector<uint32_t> result_frag = CompileShader("VulkanFS", FRAGMENT_SHADER,
+                                                          data_frag);//fs;//
+#else
+        std::vector<uint32_t> result_vert = shader->getVkVertexShader();
+        std::vector<uint32_t> result_frag = shader->getVkFragmentShader();
+#endif
+        // We define two shader stages: our vertex and fragment shader.
+        // they are embedded as SPIR-V into a header file for ease of deployment.
+        VkPipelineShaderStageCreateInfo shaderStages[2] = {};
+        InitShaders(shaderStages,result_vert,result_frag);
+        // Out graphics pipeline records all state information, including our renderpass
+        // and pipeline layout. We do not have any dynamic state in this example.
+        VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
+        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+        pipelineCreateInfo.layout = shader->getPipelineLayout();
+        pipelineCreateInfo.pVertexInputState = &vi;
+        pipelineCreateInfo.pInputAssemblyState = gvr::PipelineInputAssemblyStateCreateInfo(
+                VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        VkCullModeFlagBits cull_face = (rdata->cull_face(pass) ==  RenderData::CullBack) ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
+        ShaderData *curr_material = rdata->material(pass);
+        float line_width = 1.0;
+        curr_material->getFloat("line_width", line_width);
+        pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
+                                                                                           VK_FALSE,
+                                                                                           VK_POLYGON_MODE_FILL,
+                                                                                           cull_face,
+                                                                                           VK_FRONT_FACE_CLOCKWISE,
+                                                                                           VK_FALSE,
+                                                                                           0, 0, 0,
+                                                                                           line_width);
+        pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,
+                                                                                     &att_state[0]);
+        pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
+                VK_SAMPLE_COUNT_1_BIT, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
+                VK_NULL_HANDLE, VK_NULL_HANDLE);
+        pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
+                                                                                 &scissor);
+        pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
+                                                                                         disable_color_depth_write ? VK_FALSE: VK_TRUE,
+                                                                                         VK_COMPARE_OP_LESS_OR_EQUAL,
+                                                                                         VK_FALSE,
+                                                                                         VK_STENCIL_OP_KEEP,
+                                                                                         VK_STENCIL_OP_KEEP,
+                                                                                         VK_COMPARE_OP_ALWAYS,
+                                                                                         VK_FALSE);
+        pipelineCreateInfo.pStages = &shaderStages[0];
+        pipelineCreateInfo.renderPass =(mPostEffectTexture[0]->getRenderPass());
+        pipelineCreateInfo.pDynamicState = nullptr;
+        pipelineCreateInfo.stageCount = 2; //vertex and fragment
+        VkPipeline pipeline;// = 0;
+        LOGI("Vulkan graphics call before");
+        err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+                                        &pipeline);
+        GVR_VK_CHECK(!err);
+        rdata->setPipeline(pipeline,pass);
+        LOGI("Vulkan graphics call after");
+
+    }
+
     void VKFramebuffer::createFramebuffer(VkDevice& device){
 
         std::vector<VkImageView> attachments;
@@ -1047,9 +1169,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         std::vector<VkImageView> attachments;
         if(image_type & COLOR_IMAGE && mAttachments[COLOR_IMAGE]== nullptr) {
             vkImageBase *colorImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+                                                      mHeight, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
                                                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-                                                      VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
+                                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, sample_count);
             colorImage->createImageView(true);
             mAttachments[COLOR_IMAGE] = colorImage;
             attachments.push_back(colorImage->getVkImageView());
@@ -1120,6 +1242,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
             GVR_VK_CHECK(!ret);
         }
+
+        ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &postEffectFence);
+        GVR_VK_CHECK(!ret);
 
         LOGI("Vulkan initsync end");
     }
@@ -1255,12 +1380,145 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         GVR_VK_CHECK(!err);
     }
 
+
+    void VulkanCore::BuildCmdBufferForRenderDataPE(std::vector<RenderData *> &render_data_vector,
+                                                 Camera *camera, ShaderManager* shader_manager, std::vector<RenderData*> rdataPE, std::vector<Shader*> shader) {
+        // For the triangle sample, we pre-record our command buffer, as it is static.
+        // We have a buffer per swap chain image, so loop over the creation process.
+        VkCommandBuffer &cmdBuffer = *(postEffectCmdBuffer[0]);
+
+        // vkBeginCommandBuffer should reset the command buffer, but Reset can be called
+        // to make it more explicit.
+        VkResult err;
+        err = vkResetCommandBuffer(cmdBuffer, 0);
+        GVR_VK_CHECK(!err);
+
+        VkCommandBufferInheritanceInfo cmd_buf_hinfo = {};
+        cmd_buf_hinfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+        cmd_buf_hinfo.pNext = nullptr;
+        cmd_buf_hinfo.renderPass = VK_NULL_HANDLE;
+        cmd_buf_hinfo.subpass = 0;
+        cmd_buf_hinfo.framebuffer = VK_NULL_HANDLE;
+        cmd_buf_hinfo.occlusionQueryEnable = VK_FALSE;
+        cmd_buf_hinfo.queryFlags = 0;
+        cmd_buf_hinfo.pipelineStatistics = 0;
+
+        VkCommandBufferBeginInfo cmd_buf_info = {};
+        cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        cmd_buf_info.pNext = nullptr;
+        cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        cmd_buf_info.pInheritanceInfo = &cmd_buf_hinfo;
+
+        // By calling vkBeginCommandBuffer, cmdBuffer is put into the recording state.
+        err = vkBeginCommandBuffer(cmdBuffer, &cmd_buf_info);
+        GVR_VK_CHECK(!err);
+
+        mPostEffectTexture[0]->setBackgroundColor(camera->background_color_r(), camera->background_color_g(),camera->background_color_b(), camera->background_color_a());
+        mPostEffectTexture[0]->bind();
+        mPostEffectTexture[0]->beginRenderingPE(Renderer::getInstance());
+
+        /*
+        for (int j = 0; j < render_data_vector.size(); j++) {
+
+            VulkanRenderData *rdata = reinterpret_cast<VulkanRenderData *>(render_data_vector[j]);
+
+            for(int curr_pass =0 ;curr_pass < rdata->pass_count(); curr_pass++) {
+
+                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  rdata->getVKPipeline(curr_pass) );
+
+                VulkanShader *shader = reinterpret_cast<VulkanShader *>(shader_manager->getShader(
+                        rdata->get_shader(curr_pass)));
+
+                VkDescriptorSet descriptorSet = rdata->getDescriptorSet(curr_pass);
+                //bind out descriptor set, which handles our uniforms and samplers
+                if (!rdata->isDescriptorSetNull(curr_pass)) {
+                    VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(rdata->material(
+                            curr_pass));
+
+                    vkCmdPushConstants(cmdBuffer, shader->getPipelineLayout(),
+                                       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                       0,
+                                       (uint32_t) vkmtl->uniforms().getTotalSize(),
+                                       vkmtl->uniforms().getUniformData());
+
+                    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            shader->getPipelineLayout(), 0, 1,
+                                            &descriptorSet, 0, NULL);
+                }
+
+                // Bind our vertex buffer, with a 0 offset.
+                VkDeviceSize offsets[1] = {0};
+                const Mesh *mesh = rdata->mesh();
+                VulkanVertexBuffer *vbuf = reinterpret_cast< VulkanVertexBuffer *>(mesh->getVertexBuffer());
+                const VulkanIndexBuffer *ibuf = reinterpret_cast<const VulkanIndexBuffer *>(mesh->getIndexBuffer());
+                const GVR_VK_Vertices *vert = (vbuf->getVKVertices(shader));
+
+                vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &(vert->buf), offsets);
+
+                if(ibuf && ibuf->getIndexCount()) {
+                    const GVR_VK_Indices &ind = ibuf->getVKIndices();
+                    VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
+                                                                        : VK_INDEX_TYPE_UINT32;
+                    vkCmdBindIndexBuffer(cmdBuffer, ind.buffer, 0, indexType);
+                    vkCmdDrawIndexed(cmdBuffer, ind.count, 1, 0, 0, 1);
+                }
+                else
+                    vkCmdDraw(cmdBuffer, mesh->getVertexCount(), 1, 0, 1);
+            }
+        }*/
+
+        // Apply Post Effects
+        for(int i = 0; i < rdataPE.size(); i++) {
+            VulkanRenderData *vkRdata = static_cast<VulkanRenderData *>(rdataPE[i]);
+            //vkCmdNextSubpass(cmdBuffer, VK_SUBPASS_CONTENTS_INLINE);
+
+            // Set our pipeline. This holds all major state
+            // the pipeline defines, for example, that the vertex buffer is a triangle list.
+            vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              vkRdata->getVKPipeline(0));
+
+            VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader[i])->getPipelineLayout();
+
+            VkDescriptorSet descriptorSet1 = vkRdata->getDescriptorSet(0);
+            VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(vkRdata->material(
+                    0));
+            vkCmdPushConstants(cmdBuffer, pipelineLayout,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0,
+                               (uint32_t) vkmtl->uniforms().getTotalSize(),
+                               vkmtl->uniforms().getUniformData());
+
+            vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0,
+                                   1, &descriptorSet1, 1, 0);
+
+            // Bind our vertex buffer, with a 0 offset.
+            VkDeviceSize offsets[1] = {0};
+
+
+            VulkanVertexBuffer *vbuf = static_cast<VulkanVertexBuffer *>(vkRdata->mesh()->getVertexBuffer());
+            const GVR_VK_Vertices *vertices = vbuf->getVKVertices(shader[i]);
+            vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertices->buf,
+                                   offsets);
+
+            // Issue a draw command, with our vertices. Full screen quad
+            const Mesh *mesh1 = vkRdata->mesh();
+            vkCmdDraw(cmdBuffer, mesh1->getVertexCount(), 1, 0, 1);
+
+        }
+        mPostEffectTexture[0]->endRenderingPE(Renderer::getInstance());
+
+        // By ending the command buffer, it is put out of record mode.
+        err = vkEndCommandBuffer(cmdBuffer);
+        GVR_VK_CHECK(!err);
+    }
+
     int VulkanCore::AcquireNextImage() {
         imageIndex = (imageIndex + 1) % SWAP_CHAIN_COUNT;
         return imageIndex;
     }
 
-    void VulkanCore::DrawFrameForRenderData() {
+    int VulkanCore::DrawFrameForRenderData() {
 
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
@@ -1296,19 +1554,70 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 }
                 swapChainIndx = (swapChainIndx + 2) % SWAP_CHAIN_COUNT;
             }
-            if (!found) {
-                err = vkWaitForFences(m_device, 1, &waitFences[swapChainIndx], VK_TRUE,
-                                      4294967295U);
-            }
+             if (!found) {
+            err = vkWaitForFences(m_device, 1, &waitFences[swapChainIndx], VK_TRUE,
+                                  4294967295U);
+             }
         }
 
-        VkCommandBuffer trnCmdBuf;
-        createTransientCmdBuffer(trnCmdBuf);
-        mRenderTexture[swapChainIndx]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[swapChainIndx]);
-        vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
+        return swapChainIndx;
         //GVR_VK_CHECK(!err);
     }
 
+    int VulkanCore::DrawFrameForRenderDataPE() {
+
+        VkResult err;
+        // Get the next image to render to, then queue a wait until the image is ready
+        VkFence nullFence = postEffectFence;
+        vkResetFences(m_device, 1, &postEffectFence);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pNext = nullptr;
+        submitInfo.waitSemaphoreCount = 0;
+        submitInfo.pWaitSemaphores = nullptr;
+        submitInfo.pWaitDstStageMask = nullptr;
+        submitInfo.commandBufferCount = 1;
+        //submitInfo.pCommandBuffers = swapChainCmdBuffer[imageIndex];
+        submitInfo.pCommandBuffers = postEffectCmdBuffer[0];
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;
+
+        err = vkQueueSubmit(m_queue, 1, &submitInfo, postEffectFence);
+        GVR_VK_CHECK(!err);
+
+        err = vkGetFenceStatus(m_device, postEffectFence);
+        int swapChainIndx = 0;
+        bool found = false;
+        VkResult status;
+        // check the status of current fence, if not ready take the previous one, we are incrementing with 2 for left and right frames.
+        if (err != VK_SUCCESS) {
+            /*swapChainIndx = (imageIndex + 2) % SWAP_CHAIN_COUNT;
+            while (swapChainIndx != imageIndex) {
+                status = vkGetFenceStatus(m_device, waitFences[swapChainIndx]);
+                if (VK_SUCCESS == status) {
+                    found = true;
+                    break;
+                }
+                swapChainIndx = (swapChainIndx + 2) % SWAP_CHAIN_COUNT;
+            }*/
+           // if (!found) {
+                err = vkWaitForFences(m_device, 1, &postEffectFence, VK_TRUE,
+                                      4294967295U);
+           // }
+        }
+
+        return swapChainIndx;
+        //GVR_VK_CHECK(!err);
+    }
+
+    void VulkanCore::RenderToOculus(int index){
+        VkCommandBuffer trnCmdBuf;
+        createTransientCmdBuffer(trnCmdBuf);
+        //mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[index]);
+        mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[index]);
+        vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
+    }
 
     bool VulkanCore::InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData) {
 
@@ -1447,12 +1756,28 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         VkDescriptorImageInfo descriptorImageInfoPass2[1] = {};
         // Input Attachments do not have samplers
-        descriptorImageInfoPass2[0].sampler             = VK_NULL_HANDLE;
+        VkSampler vksampler;
+
+        err = vkCreateSampler(m_device, gvr::SamplerCreateInfo(VK_FILTER_NEAREST, VK_FILTER_NEAREST,
+                                                               VK_SAMPLER_MIPMAP_MODE_LINEAR,
+                                                               VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                                                               VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                                                               VK_SAMPLER_ADDRESS_MODE_REPEAT, 0.0f,
+                                                               VK_FALSE, 0, VK_FALSE,
+                                                               VK_COMPARE_OP_NEVER,
+                                                               0.0f, 0.0f,
+                                                               VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+                                                               VK_FALSE), NULL,
+                              &vksampler);
+        assert(!err);
+
+        descriptorImageInfoPass2[0].sampler             = vksampler;
         // TODO PostEffectImage[0] index should be appropriate
         // Initializing Fbo
+        //vkImageBase  * image = mRenderTexture[imageIndex]->getFBO()->getImage(COLOR_IMAGE);
         mRenderTexture[imageIndex]->getRenderPass();
-        descriptorImageInfoPass2[0].imageView           = mRenderTexture[imageIndex]->getFBO()->postEffectImage[0]->getVkImageView();
-        descriptorImageInfoPass2[0].imageLayout         = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        descriptorImageInfoPass2[0].imageView           = mRenderTexture[imageIndex]->getFBO()->getImageView(COLOR_IMAGE);//postEffectImage[0]->getVkImageView();
+        descriptorImageInfoPass2[0].imageLayout         = mRenderTexture[imageIndex]->getFBO()->getImageLayout(COLOR_IMAGE);//VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkWriteDescriptorSet writes[1] = {};
         // position
@@ -1460,7 +1785,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         writes[0].dstBinding        = TEXTURE_BIND_START;
         writes[0].dstSet            = descriptorSet;
         writes[0].descriptorCount   = 1;
-        writes[0].descriptorType    = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        writes[0].descriptorType    = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;//VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         writes[0].pImageInfo        = &descriptorImageInfoPass2[0];
 
         vkUpdateDescriptorSets(m_device, 1, &writes[0], 0, nullptr);
