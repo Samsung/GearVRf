@@ -51,7 +51,7 @@ namespace gvr {
             if (mIsDirty)
             {
                 glBindBufferBase(GL_UNIFORM_BUFFER, mBindingPoint, GLBuffer);
-                glBufferSubData(GL_UNIFORM_BUFFER, GLOffset, mElemSize * mNumElems, getData());
+                glBufferSubData(GL_UNIFORM_BUFFER, GLOffset, mTotalSize, getData());
                 mIsDirty = false;
                 if (Shader::LOG_SHADER)
                     LOGV("UniformBlock::updateGPU %s size %d\n", getBlockName(), getTotalSize());

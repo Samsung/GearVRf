@@ -7,12 +7,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 21
+    compileSdkVersion 25
     buildToolsVersion '25.0.2'
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 19
+        minSdkVersion 21
+        targetSdkVersion 21
 
         ndk {
             moduleName "gvrf-physics"
@@ -40,6 +40,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
+        debug {
+            jniDebuggable true
+        }
     }
 
     sourceSets.main {
@@ -56,7 +59,7 @@ android {
 }
 
 dependencies {
-    if(rootProject.hasProperty("buildGvrfAndDemos")) {
+    if (findProject(':framework')) {
         compile project (':framework')
     } else {
         compile(name: 'framework-debug', ext: 'aar')

@@ -45,7 +45,7 @@ public class GVRShaderId {
      * @return uniform descriptor string
      * @see #getTemplate(GVRContext) GVRShader#getUniformDescriptor()
      */
-    String getUniformDescriptor(GVRContext ctx)
+    public String getUniformDescriptor(GVRContext ctx)
     {
         if (mShaderTemplate == null)
         {
@@ -60,7 +60,7 @@ public class GVRShaderId {
      * @return texture descriptor string
      * @see #getTemplate(GVRContext) GVRShader#getTextureDescriptor()
      */
-    String getTextureDescriptor(GVRContext ctx)
+    public String getTextureDescriptor(GVRContext ctx)
     {
         if (mShaderTemplate == null)
         {
@@ -75,7 +75,7 @@ public class GVRShaderId {
      * @param ctx GVRContext shader is associated with
      * @return GVRShader class implementing the shader type
      */
-    GVRShader getTemplate(GVRContext ctx)
+    public GVRShader getTemplate(GVRContext ctx)
     {
         if (mShaderTemplate == null)
         {
@@ -102,7 +102,7 @@ public class GVRShaderId {
      * @param material  material this shader is bound to
      * @return native shader ID, -1 if none
      */
-    int getNativeShader(GVRShaderManager manager, GVRShaderData material)
+    public int getNativeShader(GVRShaderManager manager, GVRShaderData material)
     {
         if (mNativeShader == 0)
         {

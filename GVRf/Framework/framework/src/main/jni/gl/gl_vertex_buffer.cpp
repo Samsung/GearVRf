@@ -58,19 +58,18 @@ namespace gvr {
 
         shader->getVertexDescriptor().forEachEntry([this, programId](const DataDescriptor::DataEntry &e)
         {
-            LOGV("VertexBuffer::bindToShader find %s", e.Name);
-            const DataDescriptor::DataEntry* entry = find(e.Name);
             GLint loc = glGetAttribLocation(programId, e.Name);
 
             if (!e.NotUsed)                             // shader uses this vertex attribute?
             {
+                const DataDescriptor::DataEntry* entry = find(e.Name);
                 if ((entry != nullptr) && entry->IsSet) // mesh uses this vertex attribute?
                 {
                     if (loc >= 0)                       // attribute found in shader?
                     {
                         glEnableVertexAttribArray(loc); // enable this attribute in GL
                         glVertexAttribPointer(loc, entry->Size / sizeof(float),
-                                              (entry->Type[0] == 'i') ? GL_INT : GL_FLOAT, GL_FALSE,
+                                              entry->IsInt ? GL_INT : GL_FLOAT, GL_FALSE,
                                               getTotalSize(), (GLvoid*) entry->Offset);
                         LOGV("VertexBuffer: vertex attrib #%d %s loc %d ofs %d",
                              e.Index, e.Name, loc, entry->Offset);
@@ -104,20 +103,24 @@ namespace gvr {
             glGenVertexArrays(1, &mVArrayID);
             LOGD("VertexBuffer::updateGPU creating vertex array %d", mVArrayID);
         }
-        if (mVBufferID == -1)
-        {
-            glGenBuffers(1, &mVBufferID);
-            LOGV("VertexBuffer::updateGPU created vertex buffer %d with %d vertices", mVBufferID, getVertexCount());
-            mIsDirty = true;
-        }
         if (ibuf)
         {
             ibuf->updateGPU(renderer);
         }
-        if (mIsDirty)
+        if (mVBufferID == -1)
         {
+            glGenBuffers(1, &mVBufferID);
             glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
             glBufferData(GL_ARRAY_BUFFER, getDataSize(), mVertexData, GL_STATIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            LOGV("VertexBuffer::updateGPU created vertex buffer %d with %d vertices", mVBufferID, getVertexCount());
+            mIsDirty = false;
+        }
+        else if (mIsDirty)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
+            glBufferData(GL_ARRAY_BUFFER, getDataSize(), NULL, GL_STATIC_DRAW);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, getDataSize(), mVertexData);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             mIsDirty = false;
             LOGV("VertexBuffer::updateGPU updated vertex buffer %d", mVBufferID);

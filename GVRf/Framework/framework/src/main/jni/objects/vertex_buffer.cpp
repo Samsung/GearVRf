@@ -18,7 +18,6 @@ namespace gvr {
     {
         mVertexData = NULL;
         mBoneFlags == 0;
-        parseDescriptor();
         setVertexCount(vertexCount);
     }
 
@@ -30,51 +29,6 @@ namespace gvr {
             mVertexData = NULL;
         }
         mVertexCount = 0;
-    }
-
- /**
-  * Establishes the layout of the vertex attributes.
-  * Each component has a name, a type, and a size indicating
-  * the number of 32 ints or floats it occupies.
-  * The layout description is a string that contains the type
-  * and name of each vertex attribute.
-  *
-  * For example, a vertex with locations, normals and one set
-  * of 2D texture coordinates might be described as:
-  *  float3 position float3 normal float2 texcoord
-  */
-    void VertexBuffer::parseDescriptor()
-    {
-        int index = 0;
-        mTotalSize = 0;
-        DataDescriptor::forEach([this, index] (const char* name, const char* type, int size) mutable
-        {
-            short byteSize = calcSize(type);
-
-            if (byteSize == 0)
-                return;
-
-            DataEntry entry;
-            entry.Type = makeShaderType(type, byteSize);
-            entry.IsSet = false;
-            entry.Count = 1;
-            entry.NotUsed = false;
-            entry.IsInt = type[0] == 'i';
-            entry.IsMatrix = false;
-            entry.Size = byteSize;
-            entry.Offset = mTotalSize;
-            entry.Index = index++;
-            mTotalSize += byteSize;
-            if (*name == '!')
-            {
-                entry.NotUsed = true;
-                ++name;
-            }
-            addName(name, strlen(name), entry);
-            mLayout.push_back(entry);
-            LOGV("VertexBuffer: %s index=%d offset=%d size=%d %d entries\n",
-                 entry.Name, entry.Index, entry.Offset, entry.Size, mLayout.size());
-        });
     }
 
     void VertexBuffer::getBoundingVolume(BoundingVolume& bv) const
@@ -334,9 +288,9 @@ namespace gvr {
         std::lock_guard<std::mutex> lock(mLock);
         const DataEntry* attr = find(attributeName);
         const int*      dstend;
-        const int*      src;
+        const int*      src = reinterpret_cast<int*>(mVertexData);
         int             attrSize = attr->Size / sizeof(int);
-        int             srcStride = getVertexSize();
+        int             srcStride = getTotalSize() / sizeof(int);
 
         if ((attr == NULL) || !attr->IsSet)
         {
@@ -348,8 +302,7 @@ namespace gvr {
             LOGE("VertexBuffer: cannot set attribute %s", attributeName);
             return false;
         }
-        src += attr->Offset / sizeof(float);
-        srcStride = getTotalSize() / sizeof(float);
+        src += attr->Offset / sizeof(int);
         dstend = dest + destSize;
         if (destStride == 0)
         {
@@ -409,30 +362,6 @@ namespace gvr {
             LOGE("VertexBuffer: ERROR: no vertex buffer allocated\n");
         }
         return true;
-    }
-
-    void VertexBuffer::setBoneData(VertexBoneData& bones)
-    {
-        std::lock_guard<std::mutex> lock(mLock);
-        int sizeBoneIndex, sizeBoneWeight;
-        float* boneIndex = (float*) getData("a_bone_indices", sizeBoneIndex);
-        float* boneWeight = (float*) getData("a_bone_weights", sizeBoneWeight);
-
-        if ((boneIndex == NULL) || (boneWeight == NULL))
-        {
-            LOGE("VertexBuffer: ERROR cannot set bone data unless vertex array has a_bone_indices and a_bone_weights attributes");
-            return;
-        }
-        int boneSlots = BONES_PER_VERTEX;
-        for (int i = 0; i < getVertexCount(); ++i)
-        {
-            VertexBoneData::BoneData& bd = bones.boneData[i];
-            for (int j = 0; j < boneSlots; ++j)
-            {
-                *boneIndex++ = bd.ids[j];
-                *boneWeight++ = bd.weights[j];
-            }
-        }
     }
 
     bool VertexBuffer::forAllVertices(std::function<void(int iter, const float* vertex)> func) const
@@ -502,6 +431,11 @@ namespace gvr {
         int vsize = getVertexSize();
         const DataEntry* attr = find(attrName);
 
+        if (attr == NULL)
+        {
+            LOGE("Attribute %s not found", attrName);
+            return;
+        }
         forAllVertices(attrName, [attr](int iter, const float* vertex)
         {
             std::ostringstream os;
