@@ -242,7 +242,7 @@ namespace gvr {
                 }
             }
         }
-        return 0;
+        return (uniforms().updateGPU(renderer) ? 1: 0);
     }
 
 }

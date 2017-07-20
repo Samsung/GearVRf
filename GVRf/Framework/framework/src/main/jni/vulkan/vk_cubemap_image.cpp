@@ -25,6 +25,7 @@
 #include "util/scope_exit.h"
 
 namespace gvr {
+extern std::map<int, VkFormat> compressed_formats;
     VkCubemapImage::VkCubemapImage(int format) :
             vkImageBase(VK_IMAGE_VIEW_TYPE_CUBE),
             CubemapImage(format)
@@ -125,9 +126,9 @@ namespace gvr {
     }
 
     void VkCubemapImage::updateFromMemory(int texid) {
-#if 0
+        LOGE("calling updatefrommeomry");
         JNIEnv *env = getCurrentEnv(mJava);
-        jobjectArray texArray = static_cast<jobjectArray>(env->NewLocalRef(mTextures));
+        jobjectArray texArray = static_cast<jobjectArray>(mTextures);
         if (texArray == NULL)
         {
             LOGE("CubemapImage::updateFromMemory texture array NULL");
@@ -135,28 +136,64 @@ namespace gvr {
         }
 
         // Clean up upon scope exit
-        SCOPE_EXIT( clearData(env); env->DeleteLocalRef(texArray); );
-        int t = getTarget();
+        SCOPE_EXIT( clearData(env); );
 
-        glBindTexture(t, texid);
-        for (int i = 0; i < 6; i++)
-        {
+        VkImageViewType t = getImageType();
+
+        std::vector<void *> texData;
+        size_t tex_size = 0;
+        std::vector<VkBufferImageCopy> bufferCopyRegions;
+        std::vector<jbyteArray> bitmaps;
+        std::vector<ImageInfo> imageInfos;
+        for (int i = 0; i < 6; i++) {
             jbyteArray byteArray = static_cast<jbyteArray>(env->GetObjectArrayElement(texArray, i));
-            jbyte* pixels = env->GetByteArrayElements(byteArray, 0);
+            void *pixels;
+            int ret;
 
-            if (byteArray == NULL)
-            {
-                LOGE("CubemapImage::updateFromMemory texture %d is NULL", i);
+            if (byteArray == NULL) {
+                LOGE("CubemapImage::updateFromBitmap bitmap %d is NULL", i);
             }
-            else
-            {
-                glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, mFormat, mWidth,
-                                       mHeight, 0, mImageSize, pixels + getDataOffset(i));
-                env->ReleaseByteArrayElements(byteArray, pixels, 0);
+            else {
+                pixels = env->GetByteArrayElements(byteArray, 0);
+                mLevels = static_cast<int>(floor(log2(std::max(mWidth, mHeight))) + 1);
+                {
+                    VkBufferImageCopy bufferCopyRegion = {};
+                    ImageInfo imageInfo = {};
+                    bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                    bufferCopyRegion.imageSubresource.mipLevel = 0;
+                    bufferCopyRegion.imageSubresource.baseArrayLayer = i;
+                    bufferCopyRegion.imageSubresource.layerCount = 1;
+                    bufferCopyRegion.imageExtent.depth = 1;
+
+                    bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(mWidth);
+                    bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(mHeight);
+                    bufferCopyRegion.imageExtent.depth = 1;
+                    bufferCopyRegion.bufferOffset = tex_size;
+                    imageInfo.width = bufferCopyRegion.imageExtent.width;
+                    imageInfo.height = bufferCopyRegion.imageExtent.height;
+                    imageInfo.size = mImageSize;
+                    imageInfo.isCompressed = true;
+                    imageInfo.mipLevel = 0;
+
+                    tex_size += mImageSize;
+
+                    bufferCopyRegions.push_back(bufferCopyRegion);
+                    texData.push_back(pixels);
+                    bitmaps.push_back(byteArray);
+                    imageInfos.push_back(imageInfo);
+                }
             }
-            env->DeleteLocalRef(byteArray);
         }
-#endif
+
+        VkFormat internal_format = compressed_formats[mFormat];
+        updateMipVkImage(tex_size, texData, imageInfos, bufferCopyRegions, t,
+                         internal_format, mLevels);
+        for (int i = 0; i < bitmaps.size(); i++) {
+            env->ReleaseByteArrayElements(bitmaps[i], (jbyte *)texData[i], 0);
+            env->DeleteLocalRef(bitmaps[i]);
+
+        }
+
     }
 
 }

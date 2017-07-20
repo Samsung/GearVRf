@@ -43,7 +43,9 @@ namespace gvr
         {
             return uniforms_;
         }
-
+        void useGPUBuffer(bool flag){
+            uniforms_.useGPUBuffer(flag);
+        }
         virtual const UniformBlock& uniforms() const
         {
             return uniforms_;

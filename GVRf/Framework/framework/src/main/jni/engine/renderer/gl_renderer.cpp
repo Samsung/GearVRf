@@ -719,8 +719,9 @@ namespace gvr
         {
             renderData->updateGPU(this,shader);
             renderMaterialShader(rstate, renderData, shaderData, shader);
+            return true;
         }
-        return true;
+        return  false;
     }
 
     void GLRenderer::updateLights(RenderState& rstate, Shader* shader, int texIndex)
