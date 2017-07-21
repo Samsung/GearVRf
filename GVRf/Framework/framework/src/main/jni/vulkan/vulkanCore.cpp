@@ -546,7 +546,7 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
     }
 
-    void VulkanCore::InitLayoutRenderData(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader) {
+    void VulkanCore::InitLayoutRenderData(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader, bool postEffectFlag) {
 
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
@@ -564,6 +564,18 @@ namespace gvr {
         uint32_t index = 0;
         std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
 
+        if(postEffectFlag){
+            // Has only one sampler input
+            index = TEXTURE_BIND_START;
+            VkDescriptorSetLayoutBinding layoutBinding;
+            layoutBinding.binding = index++;
+            layoutBinding.descriptorCount = 1;
+            layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            layoutBinding.pImmutableSamplers = nullptr;
+            (uniformAndSamplerBinding).push_back(layoutBinding);
+        }
+        else
         vk_shader->makeLayout(vkMtl, uniformAndSamplerBinding,  index, vkdata);
 
         VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
@@ -584,50 +596,6 @@ namespace gvr {
         VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
                                      gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 1, &pushConstantRange),
-                                     nullptr, &pipelineLayout);
-        GVR_VK_CHECK(!ret);
-        shader->setShaderDirty(false);
-    }
-
-    void VulkanCore::InitLayoutRenderDataPostEffect(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader) {
-
-        const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
-        DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
-        bool transformUboPresent = shader->usesMatrixUniforms();
-        VulkanShader* vk_shader = reinterpret_cast<VulkanShader*>(shader);
-        if (!shader->isShaderDirty()) {
-            return;
-        }
-
-        if ((textureDescriptor.getNumEntries() == 0) && uniformDescriptor.getNumEntries() == 0 && !transformUboPresent) {
-            return;
-        }
-
-        VkResult ret = VK_SUCCESS;
-        uint32_t index = 0;
-        std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
-
-        vk_shader->makeLayoutPostEffect(vkMtl, uniformAndSamplerBinding,  index, vkdata);
-
-        VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
-
-        ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
-                                                                                       uniformAndSamplerBinding.size(),
-                                                                                       uniformAndSamplerBinding.data()),
-                                          nullptr,
-                                          &descriptorLayout);
-        GVR_VK_CHECK(!ret);
-
-
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.offset                        = 0;
-        pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
-        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
-        ret = vkCreatePipelineLayout(m_device,
-                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 1,
-                                                                   &pushConstantRange),
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
         shader->setShaderDirty(false);
@@ -1309,6 +1277,31 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
     }
 
+    VkDescriptorPool VulkanCore::GetDescriptorPool(){
+        VkDescriptorPoolSize poolSize[3] = {};
+
+        poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        poolSize[0].descriptorCount = 5;
+
+        poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSize[1].descriptorCount = 5;
+
+        poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        poolSize[2].descriptorCount = 5;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.pNext = nullptr;
+        descriptorPoolCreateInfo.maxSets = 1;
+        descriptorPoolCreateInfo.poolSizeCount = 3;
+        descriptorPoolCreateInfo.pPoolSizes = poolSize;
+
+        VkResult err;
+        VkDescriptorPool descriptorPool;
+        err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
+        GVR_VK_CHECK(!err);
+    }
+
     bool VulkanCore::InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData) {
 
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
@@ -1325,40 +1318,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         std::vector<VkWriteDescriptorSet> writes;
 
-        VkDescriptorPoolSize poolSize[3] = {};
-
-        poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        poolSize[0].descriptorCount = 5;
-
-        poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize[1].descriptorCount = 5;
-
-        poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-        poolSize[2].descriptorCount = 5;
-
-        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
-        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptorPoolCreateInfo.pNext = nullptr;
-        descriptorPoolCreateInfo.maxSets = 2;
-        descriptorPoolCreateInfo.poolSizeCount = 3;
-        descriptorPoolCreateInfo.pPoolSizes = poolSize;
-
-        VkResult err;
-        VkDescriptorPool descriptorPool;
-        err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
-        GVR_VK_CHECK(!err);
-        vkData->setDescriptorPool(descriptorPool,pass);
-
         VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
-        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorPool = GetDescriptorPool();
         descriptorSetAllocateInfo.descriptorSetCount = 1;
         descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
 
         VkDescriptorSet descriptorSet;
-        err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+        VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
         GVR_VK_CHECK(!err);
         vkData->setDescriptorSet(descriptorSet,pass);
 
@@ -1382,38 +1351,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     bool VulkanCore::InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData, int postEffectIndx) {
-
-        VkDescriptorPoolSize poolSize[3] = {};
-
-        poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        poolSize[0].descriptorCount = 5;
-
-        poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize[1].descriptorCount = 5;
-
-        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
-        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptorPoolCreateInfo.pNext = nullptr;
-        descriptorPoolCreateInfo.maxSets = 1;
-        descriptorPoolCreateInfo.poolSizeCount = 2;
-        descriptorPoolCreateInfo.pPoolSizes = poolSize;
-
-        VkResult err;
-        VkDescriptorPool descriptorPool;
-        err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
-        GVR_VK_CHECK(!err);
-        vkData->setDescriptorPool(descriptorPool,pass);
-
         VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
-        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorPool = GetDescriptorPool();
         descriptorSetAllocateInfo.descriptorSetCount = 1;
         descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
 
         VkDescriptorSet descriptorSet;
-        err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+        VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
         GVR_VK_CHECK(!err);
         vkData->setDescriptorSet(descriptorSet,pass);
 

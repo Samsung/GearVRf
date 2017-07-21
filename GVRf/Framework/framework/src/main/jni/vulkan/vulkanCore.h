@@ -88,8 +88,7 @@ public:
             return theInstance;
         return NULL;
     }
-    void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*);
-    void InitLayoutRenderDataPostEffect(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*);
+    void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*, bool postEffectFlag);
 
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
@@ -191,7 +190,7 @@ private:
     void InitShaders(VkPipelineShaderStageCreateInfo shaderStages[],
                      std::vector<uint32_t>& result_vert, std::vector<uint32_t>& result_frag);
     void CreateSampler(TextureObject * &textureObject);
-
+    VkDescriptorPool GetDescriptorPool();
 
     ANativeWindow *m_androidWindow;
 

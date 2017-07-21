@@ -114,7 +114,7 @@ namespace gvr {
         }
         rdata->updateGPU(this,shader);
 
-        vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader);
+        vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, false);
 
         if(vkRdata->isHashCodeDirty() || vkRdata->isDirty(0xFFFF) || vkRdata->isDescriptorSetNull(pass)) {
 
@@ -134,7 +134,7 @@ namespace gvr {
         VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
         VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
 
-        vulkanCore_->InitLayoutRenderDataPostEffect(*vkmtl, vkRdata, shader);
+        vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, true);
 
         if(vkRdata->isHashCodeDirty() || vkRdata->isDirty(0xFFFF) || vkRdata->isDescriptorSetNull(pass)) {
 
