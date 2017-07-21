@@ -15,6 +15,7 @@ class VkRenderTexture : public RenderTexture
     int mWidth, mHeight;
     std::vector <VkClearValue> clear_values;
 
+    VkRenderPassBeginInfo getRenderPassBeginInfo();
 public:
     VKFramebuffer* getFBO(){
         return fbo;
