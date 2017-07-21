@@ -17,8 +17,13 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.script.GVRJavascriptScriptFile;
 import org.gearvrf.utility.Log;
+import org.gearvrf.script.javascript.GVRJavascriptV8File;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.script.Bindings;
 
 import static org.gearvrf.x3d.AnimationInteractivityManager.*;
 
@@ -70,9 +75,16 @@ public class ScriptObject {
 
     private String javaScriptCode = null;
     private GVRJavascriptScriptFile gvrJavascriptScriptFile = null;
+    private GVRJavascriptV8File gvrJavascriptV8File = null;
     private String gearVRinitJavaScript;  // A text function to construct X3D data types
     // some JavaScript functions have a timeStamp and thus pass 2 parameters
     private boolean timeStampParameter = false;
+    // V8 JavaScript engine, need to keep a copy of the bindings
+    HashMap bindingsInitialize = new HashMap();
+    HashMap bindingsRunTime = new HashMap();
+
+    private boolean initializationDone = false;
+    private boolean scriptCalledPerFrame = false;
 
     public ScriptObject() {
     }
@@ -189,13 +201,19 @@ public class ScriptObject {
     }
 
     // Methods related to the JavaScript code
-
+    // GVRJavaScriptScriptFile relates to Mozilla Rhino JavaScript Engine
     public GVRJavascriptScriptFile getGVRJavascriptScriptFile() {
         return this.gvrJavascriptScriptFile;
     }
-
     public void setGVRJavascriptScriptFile(GVRJavascriptScriptFile gvrJavascriptScriptFile) {
         this.gvrJavascriptScriptFile = gvrJavascriptScriptFile;
+    }
+    // GVRJavaScriptV8File relates to V8 JavaScript Engine
+    public GVRJavascriptV8File getGVRJavascriptV8File() {
+        return this.gvrJavascriptV8File;
+    }
+    public void setGVRJavascriptV8File(GVRJavascriptV8File gvrJavascriptV8File) {
+        this.gvrJavascriptV8File = gvrJavascriptV8File;
     }
 
     public String getJavaScriptCode() {
@@ -220,6 +238,22 @@ public class ScriptObject {
 
     public boolean getTimeStampParameter() {
         return this.timeStampParameter;
+    }
+
+    public boolean getInitializationDone() {
+        return this.initializationDone;
+    }
+
+    public void setInitializationDone(boolean initDone) {
+        this.initializationDone = initDone;
+    }
+
+    public boolean getScriptCalledPerFrame() {
+        return this.scriptCalledPerFrame;
+    }
+
+    public void setScriptCalledPerFrame(boolean scriptCalledEachFrame) {
+        this.scriptCalledPerFrame = scriptCalledEachFrame;
     }
 
 }
