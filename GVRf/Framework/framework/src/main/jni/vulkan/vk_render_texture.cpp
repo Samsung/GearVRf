@@ -26,23 +26,16 @@ void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
     VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
 
-    if(vk_renderer->getCore()->getPostEffectCount()) {
-        clear_values.resize(2 + (vk_renderer->getCore()->getPostEffectCount() > 1 ? 2 : 1));
-        postEffectFlag = true;
-    }
-    else {
-        clear_values.resize(2);
-        postEffectFlag = false;
-    }
+    clear_values.resize(2);
     fbo->addRenderPass(renderPass);
 }
 void VkRenderTexture::endRendering(Renderer* renderer) {
     VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
     vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()));
 }
-    void VkRenderTexture::endRenderingPE(Renderer* renderer) {
+    void VkRenderTexture::endRenderingPE(Renderer* renderer, int indx) {
         VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
-        vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()));
+        vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE(indx % 2)));
     }
 
 void VkRenderTexture::beginRendering(Renderer* renderer){
@@ -56,13 +49,6 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
 
     clear_values[1].depthStencil.depth = 1.0f;
     clear_values[1].depthStencil.stencil = 0;
-
-    for(int i = 0; i < vk_renderer->getCore()->getPostEffectCount(); i++){
-        clear_values[2+i].color.float32[0] = mBackColor[0];
-        clear_values[2+i].color.float32[1] = mBackColor[1];
-        clear_values[2+i].color.float32[2] = mBackColor[2];
-        clear_values[2+i].color.float32[3] = mBackColor[3];
-    }
 
     VkRenderPassBeginInfo rp_begin = {};
     rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -79,7 +65,7 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-    void VkRenderTexture::beginRenderingPE(Renderer* renderer){
+    void VkRenderTexture::beginRenderingPE(Renderer* renderer, int indx){
 
         VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
 
@@ -90,13 +76,6 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
 
         clear_values[1].depthStencil.depth = 1.0f;
         clear_values[1].depthStencil.stencil = 0;
-
-        for(int i = 0; i < vk_renderer->getCore()->getPostEffectCount(); i++){
-            clear_values[2+i].color.float32[0] = mBackColor[0];
-            clear_values[2+i].color.float32[1] = mBackColor[1];
-            clear_values[2+i].color.float32[2] = mBackColor[2];
-            clear_values[2+i].color.float32[3] = mBackColor[3];
-        }
 
         VkRenderPassBeginInfo rp_begin = {};
         rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -110,7 +89,7 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
         rp_begin.clearValueCount = clear_values.size();
         rp_begin.pClearValues = clear_values.data();
 
-        vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE(indx%2)), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
     }
 bool VkRenderTexture::readVkRenderResult(uint8_t **readback_buffer, VkCommandBuffer& cmd_buffer,VkFence& fence) {
 

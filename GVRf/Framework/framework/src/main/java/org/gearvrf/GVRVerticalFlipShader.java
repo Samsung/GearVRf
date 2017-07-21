@@ -36,23 +36,16 @@ public class GVRVerticalFlipShader extends GVRShader
 {
     public GVRVerticalFlipShader(GVRContext ctx)
     {
-        super("float3 u_ratio_r; float3 u_ratio_g, float3 u_ratio_b", "sampler2D u_texture", "float3 a_position , float2 a_texcoord ", 400);
-        //super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", 400);
-        //super("", "sampler2D u_texture", "float3 a_position float2 a_texcoord", 400);
+        super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", 400);
         Context context = ctx.getContext();
         setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.vert_flip_tex));
         setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.color_blend_frag));
     }
 
-  /*  protected void setMaterialDefaults(GVRShaderData material)
+    protected void setMaterialDefaults(GVRShaderData material)
     {
         material.setVec3("u_color", 1, 1, 1);
         material.setFloat("u_factor", 0);
     }
-*/
-    protected void setMaterialDefaults(GVRShaderData material) {
-        material.setVec3("u_ratio_r", 0.393f, 0.769f, 0.189f);
-        material.setVec3("u_ratio_g", 0.349f, 0.686f, 0.168f);
-        material.setVec3("u_ratio_b", 0.272f, 0.534f, 0.131f);
-    }
+
 }

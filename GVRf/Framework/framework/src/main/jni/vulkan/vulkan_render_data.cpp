@@ -44,7 +44,7 @@ void VulkanRenderData::bindToShader(Shader* shader, Renderer* renderer)
   */
 }
 
-    void VulkanRenderData::createPipeline(Shader* shader, VulkanRenderer* renderer, int pass){
+    void VulkanRenderData::createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, bool postEffect, int postEffectIndx){
         if(shader == NULL)
             return;
 
@@ -53,25 +53,9 @@ void VulkanRenderData::bindToShader(Shader* shader, Renderer* renderer)
         VulkanShader* vk_shader = static_cast<VulkanShader*>(shader);
 
         // TODO: if viewport, vertices, shader, draw_mode, blending or depth state changes, we need to re-create the pipeline
-            renderer->getCore()->InitPipelineForRenderData(vertices,this, vk_shader, pass);
+            renderer->getCore()->InitPipelineForRenderData(vertices,this, vk_shader, pass, postEffect, postEffectIndx);
             getHashCode();
             setDirty(false);
-
-
-    }
-
-    void VulkanRenderData::createPipelinePE(Shader* shader, VulkanRenderer* renderer, int pass){
-        if(shader == NULL)
-            return;
-
-        VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(mesh_->getVertexBuffer());
-        const GVR_VK_Vertices* vertices = vbuf->getVKVertices(shader);
-        VulkanShader* vk_shader = static_cast<VulkanShader*>(shader);
-
-        // TODO: if viewport, vertices, shader, draw_mode, blending or depth state changes, we need to re-create the pipeline
-        renderer->getCore()->InitPipelineForRenderDataPE(vertices,this, vk_shader, pass);
-        getHashCode();
-        setDirty(false);
 
 
     }

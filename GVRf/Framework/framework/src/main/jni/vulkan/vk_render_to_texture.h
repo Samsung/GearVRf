@@ -33,9 +33,9 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void beginRendering(Renderer* renderer);
-    virtual void beginRenderingPE(Renderer* renderer);
+    virtual void beginRenderingPE(Renderer* renderer, int indx);
     virtual void endRendering(Renderer* renderer);
-    virtual void endRenderingPE(Renderer* renderer);
+    virtual void endRenderingPE(Renderer* renderer, int);
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.
     virtual void startReadBack() {
@@ -53,8 +53,6 @@ public:
 
         return fbo->getRenderPass();
     }
-
-    bool postEffectFlag = false;
 };
 
 }

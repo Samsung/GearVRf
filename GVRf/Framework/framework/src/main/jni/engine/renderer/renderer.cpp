@@ -410,18 +410,23 @@ RenderData* Renderer::post_effect_render_data()
 
     RenderData* Renderer::post_effect_render_data_vulkan()
     {
-        float positions[18] = { -1.0f, -1.0f,  1.0f,
-                                1.0f, -1.0f,  1.0f,
-                                -1.0f,  1.0f,  1.0f,
-                                -1.0f,  1.0f,  1.0f,
-                                1.0f, -1.0f,  1.0f,
-                                1.0f,  1.0f,  1.0f};
+        if (post_effect_render_data_)
+        {
+            return post_effect_render_data_;
+        }
+        float positions[18] = { -1.0f, 1.0f,  1.0f,
+                                -1.0f, -1.0f,  1.0f,
+                                1.0f,  -1.0f,  1.0f,
+                                1.0f,  1.0f,  1.0f,
+                                -1.0f, 1.0f,  1.0f,
+                                1.0f,  -1.0f,  1.0f};
+
         float uvs[12] = { 0.0f, 1.0f,
-                         1.0f, 1.0f,
-                         0.0f, 0.0f,
-                         0.0f, 0.0f,
-                         1.0f, 1.0f,
-                         1.0f, 0.0f};
+                           0.0f, 0.0f,
+                           1.0f, 0.0f,
+                           1.0f, 1.0f,
+                           0.0f, 1.0f,
+                           1.0f, 0.0f};
 
         Mesh* mesh = new Mesh("float3 a_position float2 a_texcoord");
         mesh->setVertices(positions, 18);

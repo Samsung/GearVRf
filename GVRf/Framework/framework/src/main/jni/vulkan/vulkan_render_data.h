@@ -55,8 +55,7 @@ struct VulkanRenderPass : public RenderPass
         "mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; float u_right;", TRANSFORM_UBO_INDEX, "Transform_ubo")
         {
         }
-        void createPipeline(Shader* shader, VulkanRenderer* renderer, int pass);
-        void createPipelinePE(Shader* shader, VulkanRenderer* renderer, int pass);
+        void createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, bool poastEffect, int postEffectIndx);
 
         VulkanUniformBlock& getTransformUbo(){
             return ubo;
