@@ -19,6 +19,7 @@
 namespace {
     static const uint64_t kPredictionTimeWithoutVsyncNanos = 50000000;
     static const int kDefaultFboResolution = 1024;
+    static const gvr::Rectf kDefaultUV = {0.0f, 1.0f, 0.0f, 1.0f};
 
     // Use the same default clipping distances as the perspective camera
     // TODO: Change this to read the values from the gvr.xml file
@@ -83,7 +84,7 @@ void DaydreamRenderer::InitializeGl() {
 
     //@todo read gvr.xml and obtain the values from EyeBufferParams
     render_size_.height = kDefaultFboResolution;
-    render_size_.width = 2*kDefaultFboResolution;
+    render_size_.width = kDefaultFboResolution;
     std::vector <gvr::BufferSpec> specs;
     specs.push_back(gvr_api_->CreateBufferSpec());
     specs.push_back(gvr_api_->CreateBufferSpec());
@@ -117,7 +118,7 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
     fbo_viewport.SetSourceBufferIndex(0);
     fbo_viewport.SetSourceFov(scratch_viewport_.GetSourceFov());
     fbo_viewport.SetReprojection(scratch_viewport_.GetReprojection());
-    fbo_viewport.SetSourceUv(scratch_viewport_.GetSourceUv());
+    fbo_viewport.SetSourceUv(kDefaultUV);
     fbo_viewport.SetTargetEye(GVR_LEFT_EYE);
     viewport_list_->SetBufferViewport(0, fbo_viewport);
 
@@ -125,7 +126,7 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
     fbo_viewport.SetSourceBufferIndex(1);
     fbo_viewport.SetSourceFov(scratch_viewport_.GetSourceFov());
     fbo_viewport.SetReprojection(scratch_viewport_.GetReprojection());
-    fbo_viewport.SetSourceUv(scratch_viewport_.GetSourceUv());
+    fbo_viewport.SetSourceUv(kDefaultUV);
     fbo_viewport.SetTargetEye(GVR_RIGHT_EYE);
     viewport_list_->SetBufferViewport(1, fbo_viewport);
 
