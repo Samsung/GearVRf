@@ -26,6 +26,8 @@ public class GVRRenderTexture extends GVRTexture {
      *            Width of the frame buffer.
      * @param height
      *            Height of the frame buffer.
+     * @param number_views
+     *            number_views of the frame buffer.
      */
     public GVRRenderTexture(GVRContext gvrContext, int width, int height, int number_views) {
         super(gvrContext, NativeRenderTexture.ctor(width, height, number_views));
@@ -33,7 +35,20 @@ public class GVRRenderTexture extends GVRTexture {
         mWidth = width;
         mHeight = height;
     }
+    /**
+     * Constructs a GVRRenderTexture for a frame buffer of the specified size.
+     *
+     * @param gvrContext
+     *            Current gvrContext
+     * @param width
+     *            Width of the frame buffer.
+     * @param height
+     *            Height of the frame buffer.
+     */
 
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height) {
+        this(gvrContext, width, height, 1);
+    }
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size,
      * with MSAA enabled at the specified sample count.

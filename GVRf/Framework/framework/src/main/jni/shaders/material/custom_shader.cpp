@@ -37,7 +37,7 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
                 && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){
             std::string error = "Your shaders are not multiview";
             LOGE("Your shaders are not multiview");
-            throw error;
+            std::terminate();
         }
         if(rstate->is_multiview && !rstate->shadow_map){
             LOGE("Rendering with multiview");

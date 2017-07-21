@@ -227,6 +227,7 @@ void CustomPostEffectShader::render(Camera* camera,
 
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
+    checkGLError(" CustomPostEffectShader::render");
     glBindVertexArray(0);
 }
 

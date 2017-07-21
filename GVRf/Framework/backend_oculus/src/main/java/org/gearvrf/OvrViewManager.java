@@ -224,7 +224,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     mTracerDrawEyes2.enter();
                 }
 
-                GVRCamera camera = mainCameraRig.getCenterCamera();
+                GVRCamera camera = mainCameraRig.getLeftCamera();
                 renderCamera(mMainScene, camera, mRenderBundle, true);
 
                 captureCenterEye();

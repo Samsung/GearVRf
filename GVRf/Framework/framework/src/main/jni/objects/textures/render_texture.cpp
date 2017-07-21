@@ -63,7 +63,6 @@ RenderTexture::RenderTexture(int width, int height, GLenum target) :
     initialize(width, height);
 
     if (target == GL_TEXTURE_2D_ARRAY) {
-        renderTexture_gl_read_buffer = new GLFrameBuffer();
         PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR =
                 (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC) eglGetProcAddress(
                         "glFramebufferTextureMultiviewOVR");
@@ -107,7 +106,6 @@ RenderTexture::RenderTexture(int width, int height, int sample_count, GLenum tar
         renderTexture_gl_frame_buffer_(new GLFrameBuffer()) {
     initialize(width, height);
     if (target_ == GL_TEXTURE_2D_ARRAY) {
-        renderTexture_gl_read_buffer = new GLFrameBuffer();
         PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC glFramebufferTextureMultisampleMultiviewOVR =
                 (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC) eglGetProcAddress(
                         "glFramebufferTextureMultisampleMultiviewOVR");
@@ -255,7 +253,6 @@ RenderTexture::create2DRenderTexture(int jcolor_format, int jdepth_format, bool 
 
 void
 RenderTexture::createArrayRenderTexture(int jcolor_format, int jdepth_format, bool resolve_depth) {
-    renderTexture_gl_read_buffer = new GLFrameBuffer();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     GLenum depth_format;
     glBindTexture(target_, gl_texture_->id());

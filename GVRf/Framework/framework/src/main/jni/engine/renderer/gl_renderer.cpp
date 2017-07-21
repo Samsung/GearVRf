@@ -100,16 +100,17 @@ namespace gvr
 
             GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getFrameBufferId()));
             GL(glViewport(0, 0, texture_render_texture->width(), texture_render_texture->height()));
-
+            // post effect render texture is not multiview
+            rstate.is_multiview = false;
             clearBuffers(*camera);
             for (auto it = render_data_vector.begin(); it != render_data_vector.end(); ++it)
             {
                 GL(renderRenderData(rstate, *it));
             }
-
             GL(glDisable(GL_DEPTH_TEST));
             GL(glDisable(GL_CULL_FACE));
-
+            // oculus FBO can be multiview
+            rstate.is_multiview = is_multiview;
             for (int i = 0; i < post_effects.size() - 1; ++i)
             {
                 if (i % 2 == 0)
@@ -122,7 +123,6 @@ namespace gvr
                 }
                 GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
                 GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
-
                 GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
                 GL(renderPostEffectData(camera, texture_render_texture,
                         post_effects[i], post_effect_shader_manager));
@@ -153,6 +153,7 @@ namespace gvr
         cullFromCamera(scene, camera, shader_manager);
         rstate.shader_manager = shader_manager;
         rstate.scene = scene;
+        rstate.is_multiview = false;
         if (!rstate.shadow_map)
         {
             state_sort();
