@@ -76,13 +76,11 @@ namespace gvr {
     void ShaderData::forEachTexture(std::function< void(const char* texname, Texture* tex) > func) const
     {
         std::lock_guard<std::mutex> lock(mLock);
-        for (auto it = mTextures.begin(); it != mTextures.end(); ++it)
+        for (int i = 0; i < mTextureNames.size(); ++i)
         {
-            if(*it == NULL)
-                continue;
-
-            const std::string& name = mTextureNames[it - mTextures.begin()];
-            func(name.c_str(), *it);
+            Texture* tex = mTextures[i];
+            const std::string& name = mTextureNames[i];
+            func(name.c_str(), tex);
         }
     }
 
@@ -242,7 +240,7 @@ namespace gvr {
                 }
             }
         }
-        return (uniforms().updateGPU(renderer) ? 1: 0);
+        return (uniforms().updateGPU(renderer) ? 1 : 0);
     }
 
 }

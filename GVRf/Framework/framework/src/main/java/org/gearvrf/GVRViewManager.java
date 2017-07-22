@@ -695,7 +695,7 @@ abstract class GVRViewManager extends GVRContext {
         }
 
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
-        final GVRShaderData postEffect = new GVRShaderData(this, GVRMaterial.GVRShaderType.HorizontalFlip.ID);
+        final GVRShaderData postEffect = new GVRShaderData(this, GVRMaterial.GVRShaderType.VerticalFlip.ID);
         centerCamera.addPostEffect(postEffect);
         renderCamera(mMainScene, centerCamera, mRenderBundle);
         centerCamera.removePostEffect(postEffect);
@@ -732,7 +732,7 @@ abstract class GVRViewManager extends GVRContext {
         GVRSceneObject centerCameraObject = new GVRSceneObject(this);
 
         centerCameraObject.attachCamera(centerCamera);
-        centerCamera.addPostEffect(new GVRShaderData(this, GVRMaterial.GVRShaderType.HorizontalFlip.ID));
+        centerCamera.addPostEffect(new GVRShaderData(this, GVRMaterial.GVRShaderType.VerticalFlip.ID));
 
         mainCameraRig.getOwnerObject().addChildObject(centerCameraObject);
         GVRTransform centerCameraTransform = centerCameraObject.getTransform();
