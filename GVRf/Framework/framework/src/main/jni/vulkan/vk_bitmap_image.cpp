@@ -51,6 +51,13 @@ namespace gvr {
             BitmapImage(format)
     { }
 
+    int VkBitmapImage::updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject buffer)
+    {
+        void* pixels = env->GetDirectBufferAddress(buffer);
+        // TODO: update bitmap image from pixels
+        LOGE("VkBitmapImage::updateFromBuffer() not implemented yet");
+    }
+
     int VkBitmapImage::updateFromBitmap(JNIEnv *env, VkImageViewType target, jobject bitmap) {
         AndroidBitmapInfo info;
         void *pixels;
@@ -194,7 +201,11 @@ namespace gvr {
             LOGE("BitmapImage::updateFromBitmap bitmap is null");
             return;
         }
-        updateFromBitmap(env, getImageType(), mBitmap);
+        if(mIsBuffer) {
+            updateFromBuffer(env, getImageType(), mBitmap);
+        } else {
+            updateFromBitmap(env, getImageType(), mBitmap);
+        }
     }
 
     void VkBitmapImage::loadCompressedMipMaps(jbyte *data, int format) {
