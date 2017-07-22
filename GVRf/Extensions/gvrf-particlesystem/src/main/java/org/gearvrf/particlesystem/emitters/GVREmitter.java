@@ -20,6 +20,7 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.particlesystem.Particles;
+import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import java.util.ArrayList;
@@ -39,13 +40,13 @@ import java.util.ArrayList;
  *
  */
 
-public class GVREmitter extends GVRSceneObject implements GVRDrawFrameListener {
+public class GVREmitter extends GVRSceneObject {
 
     private int MAX_EMIT_RATE = 500;
 
     protected int mEmitRate = 300;
     protected boolean mEnableEmitter = true;
-    private GVRContext mGVRContext = null;
+    protected GVRContext mGVRContext = null;
 
 
     //list of active scene objects containing particle meshes,
@@ -84,7 +85,7 @@ public class GVREmitter extends GVRSceneObject implements GVRDrawFrameListener {
     {
         super(gvrContext);
         mGVRContext = gvrContext;
-        mGVRContext.registerDrawFrameListener(this);
+//        mGVRContext.registerDrawFrameListener(this);
         mActiveParticleMeshes = new ArrayList<GVRSceneObject>();
         mParticleMeshSpawnTimes = new ArrayList<Float>();
         mEnvironmentAcceleration = new Vector3f(0.0f,0.0f,0.0f);
@@ -93,49 +94,31 @@ public class GVREmitter extends GVRSceneObject implements GVRDrawFrameListener {
     }
 
     /**
-     *
-     * @param state Enable/Disable this emitter from emitting particles.
-     */
-    public void setEmitter(boolean state)
-    {
-        mEnableEmitter = state;
-        if (state)
-            mGVRContext.registerDrawFrameListener(this);
-        else
-            mGVRContext.unregisterDrawFrameListener(this);
-    }
-
-    /**
      * Iterate over the active meshes and delete the ones whose every particle
      * has exceeded the maximum age limit.
-     *
+     * <p>
      * Particle meshes are generated for upto one second in the future.
      * Therefore the maximum time particle mesh should be allowed to remain
      * in the scene is (maxAge of the particles + one second).
-     *
+     * <p>
      * Avoid using this unless necessary.
      *
      * @param frameTime Seconds since the previous frame
      */
 
+        protected void onDrawFrame(float frameTime) {
+            int numActiveMeshes = mActiveParticleMeshes.size();
+            for (int i = 0; i < numActiveMeshes; i++) {
+                float currMeshSpawnTime = mParticleMeshSpawnTimes.get(i);
 
-    @Override
-    public void onDrawFrame(float frameTime)
-    {
-        int numActiveMeshes = mActiveParticleMeshes.size();
-        for ( int i = 0; i < numActiveMeshes; i ++ )
-        {
-            float currMeshSpawnTime = mParticleMeshSpawnTimes.get(i);
-
-            if ( currTime - currMeshSpawnTime > mMaxAge + 1 )
-            {
-                GVRSceneObject toDelete = mActiveParticleMeshes.get(i);
-                this.removeChildObject(toDelete);
-                mParticleMeshSpawnTimes.remove(i);
-                mActiveParticleMeshes.remove(i);
+                if (currTime - currMeshSpawnTime > mMaxAge + 1) {
+                    GVRSceneObject toDelete = mActiveParticleMeshes.get(i);
+                    GVREmitter.this.removeChildObject(toDelete);
+                    mParticleMeshSpawnTimes.remove(i);
+                    mActiveParticleMeshes.remove(i);
+                }
             }
         }
-    }
 
     /**
      * If the burst mode is on, emit the particles only once.
@@ -355,16 +338,13 @@ public class GVREmitter extends GVRSceneObject implements GVRDrawFrameListener {
         mColor = color;
     }
 
-    /**
-     * Unregister and remove all the child objects with meshes from this emitter
-     */
     public void clearSystem()
     {
-        mGVRContext.unregisterDrawFrameListener(this);
         int nchildren = this.getChildrenCount();
         for( int i = 0; i < nchildren; i ++ )
         {
             this.removeChildObject(this.getChildByIndex(0));
         }
     }
+
 }

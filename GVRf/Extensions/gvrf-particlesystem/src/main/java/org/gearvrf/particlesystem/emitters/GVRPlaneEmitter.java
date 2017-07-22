@@ -23,8 +23,12 @@ package org.gearvrf.particlesystem.emitters;
  */
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.scene_objects.GVRTextViewSceneObject;
+import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
+import java.lang.ref.WeakReference;
 import java.util.Random;
 
 public class GVRPlaneEmitter extends GVREmitter {
@@ -33,10 +37,12 @@ public class GVRPlaneEmitter extends GVREmitter {
     private Random mRandom = new Random();
     private float mWidth = 1.0f;
     private float mHeight = 1.0f;
-    private float mElapsedTime = 0;
+    private final GVRDrawFrameListenerImpl mFrameListener;
 
     public GVRPlaneEmitter(GVRContext gvrContext) {
         super(gvrContext);
+        mFrameListener = new GVRDrawFrameListenerImpl(this);
+        mGVRContext.registerDrawFrameListener(mFrameListener);
     }
 
     private Vector3f getNextPosition() {
@@ -104,34 +110,49 @@ public class GVRPlaneEmitter extends GVREmitter {
         return timeStamps;
     }
 
-    private float totalTime = 0;
 
-    /**
-     * Generate random positions, velocities and spawn times for the next future second.
-     *
-     * @param frameTime Seconds since the previous frame
-     */
 
-    @Override
-    public void onDrawFrame(float frameTime) {
+    private static final class GVRDrawFrameListenerImpl implements GVRDrawFrameListener {
 
-        totalTime += frameTime;
+        private final WeakReference<GVRPlaneEmitter> mRef;
+        private float totalTime = 0;
+        private float mElapsedTime = 0;
+        GVRDrawFrameListenerImpl(final GVRPlaneEmitter emitter) {
+            mRef = new WeakReference<GVRPlaneEmitter>(emitter);
+        }
 
-        tickClock(totalTime);
+        /**
+         * Generate random positions, velocities and spawn times for the next future second.
+         * Also, any shape-specific per-frame operations go here.
+         * @param frameTime Seconds since the previous frame
+         */
 
-        if (mEnableEmitter) {
+        @Override
+        public void onDrawFrame(float frameTime) {
 
-            mElapsedTime += frameTime;
-            if (mElapsedTime > 1.0f) {
-                mElapsedTime = 0;
+            final GVRPlaneEmitter emitter = mRef.get();
+            if (null != emitter)
+            {
+                totalTime += frameTime;
 
-                mParticlePositions = generateParticlePositions();
-                mParticleVelocities = generateParticleVelocities();
-                mParticleGenTimes = generateParticleTimeStamps(totalTime);
+                emitter.tickClock(totalTime);
 
-                emitWithBurstCheck(mParticlePositions, mParticleVelocities, mParticleGenTimes);
+                if (emitter.mEnableEmitter) {
 
-                super.onDrawFrame(frameTime);
+                    mElapsedTime += frameTime;
+                    if (mElapsedTime > 1.0f) {
+                        mElapsedTime = 0;
+
+                        emitter.mParticlePositions = emitter.generateParticlePositions();
+                        emitter.mParticleVelocities = emitter.generateParticleVelocities();
+                        emitter.mParticleGenTimes = emitter.generateParticleTimeStamps(totalTime);
+
+                        emitter.emitWithBurstCheck(emitter.mParticlePositions, emitter.mParticleVelocities,
+                                emitter.mParticleGenTimes);
+
+                        emitter.onDrawFrame(frameTime);
+                    }
+                }
             }
         }
     }
@@ -155,6 +176,16 @@ public class GVRPlaneEmitter extends GVREmitter {
     public void setPlaneHeight( float length )
     {
         mHeight = length;
+    }
+
+
+    /**
+     * Unregister and remove all the child objects with meshes from this emitter
+     */
+    public void clearSystem()
+    {
+        mGVRContext.unregisterDrawFrameListener(mFrameListener);
+        super.clearSystem();
     }
 
 }

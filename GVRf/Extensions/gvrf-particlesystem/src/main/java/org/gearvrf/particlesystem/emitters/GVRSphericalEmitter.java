@@ -16,8 +16,11 @@
 package org.gearvrf.particlesystem.emitters;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
+import java.lang.ref.WeakReference;
 import java.util.Random;
 
 /**
@@ -33,8 +36,12 @@ public class GVRSphericalEmitter extends GVREmitter{
     private float totalTime = 0;
     private float mElapsedTime = 0;
 
+    private GVRDrawFrameListenerImpl mFrameListener;
+
     public GVRSphericalEmitter(GVRContext gvrContext) {
         super(gvrContext);
+        mFrameListener = new GVRDrawFrameListenerImpl(this);
+        mGVRContext.registerDrawFrameListener(mFrameListener);
     }
 
     /**
@@ -128,36 +135,49 @@ public class GVRSphericalEmitter extends GVREmitter{
 
     }
 
-    /**
-     * Generate random positions, velocities and spawn times ( for the next second )
-     *
-     * @param frameTime Seconds since the previous frame
-     */
+    private static final class GVRDrawFrameListenerImpl implements GVRDrawFrameListener {
 
-    @Override
-    public void onDrawFrame(float frameTime) {
-
-        totalTime += frameTime;
-
-        tickClock(totalTime);
-
-
-        if (mEnableEmitter) {
-
-            mElapsedTime += frameTime;
-            if (mElapsedTime > 1.0f) {
-                mElapsedTime = 0;
-
-                mParticlePositions = generateParticlePositions();
-                mParticleVelocities = generateParticleVelocities();
-                mParticleGenTimes = generateParticleTimeStamps(totalTime);
-
-                emitWithBurstCheck(mParticlePositions, mParticleVelocities, mParticleGenTimes);
-
-                super.onDrawFrame(frameTime);
-            }
+        private final WeakReference<GVRSphericalEmitter> mRef;
+        private float totalTime = 0;
+        private float mElapsedTime = 0;
+        GVRDrawFrameListenerImpl(final GVRSphericalEmitter emitter) {
+            mRef = new WeakReference<GVRSphericalEmitter>(emitter);
         }
 
+        /**
+         * Generate random positions, velocities and spawn times for the next future second.
+         *
+         * @param frameTime Seconds since the previous frame
+         */
+
+        @Override
+        public void onDrawFrame(float frameTime) {
+
+            final GVRSphericalEmitter emitter = mRef.get();
+            if (null != emitter)
+            {
+                totalTime += frameTime;
+
+                emitter.tickClock(totalTime);
+
+                if (emitter.mEnableEmitter) {
+
+                    mElapsedTime += frameTime;
+                    if (mElapsedTime > 1.0f) {
+                        mElapsedTime = 0;
+
+                        emitter.mParticlePositions = emitter.generateParticlePositions();
+                        emitter.mParticleVelocities = emitter.generateParticleVelocities();
+                        emitter.mParticleGenTimes = emitter.generateParticleTimeStamps(totalTime);
+
+                        emitter.emitWithBurstCheck(emitter.mParticlePositions, emitter.mParticleVelocities,
+                                emitter.mParticleGenTimes);
+
+                        emitter.onDrawFrame(frameTime);
+                    }
+                }
+            }
+        }
     }
 
     protected void tickClock(float time)
@@ -172,5 +192,15 @@ public class GVRSphericalEmitter extends GVREmitter{
     {
         mRadius = radius;
     }
+
+    /**
+     * Unregister and remove all the child objects with meshes from this emitter
+     */
+    public void clearSystem()
+    {
+        mGVRContext.unregisterDrawFrameListener(mFrameListener);
+        super.clearSystem();
+    }
+
 
 }

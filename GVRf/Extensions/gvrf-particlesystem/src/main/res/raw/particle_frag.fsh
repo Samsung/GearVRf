@@ -8,10 +8,6 @@ varying float deltaTime;
 
 void main() {
 
-    if ( deltaTime < 0.0f || deltaTime > u_particle_age) {
-        discard;
-    }
-
     float opacity = 1.0f;
 
     if ( u_fade == 1.0f )
