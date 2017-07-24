@@ -41,6 +41,8 @@ class ObjectCursor extends Cursor {
     ObjectCursor(GVRContext context, CursorManager cursorManager) {
         super(context, CursorType.OBJECT, cursorManager);
         intersecting = new HashSet<GVRSceneObject>();
+
+        Log.d(TAG, Integer.toHexString(hashCode()) + " constructed");
     }
 
     @Override
