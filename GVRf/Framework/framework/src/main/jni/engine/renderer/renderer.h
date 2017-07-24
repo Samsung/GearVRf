@@ -145,27 +145,23 @@ public:
 
      virtual void renderCamera(Scene* scene, Camera* camera,
              ShaderManager* shader_manager,
-             PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
              RenderTexture* post_effect_render_texture_b) = 0;
 
      virtual void renderCamera(Scene* scene, Camera* camera, int viewportX,
              int viewportY, int viewportWidth, int viewportHeight,
              ShaderManager* shader_manager,
-             PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
              RenderTexture* post_effect_render_texture_b)=0;
 
      virtual void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b) = 0;
 
      virtual void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b) = 0;
     virtual void cullFromCamera(Scene *scene, Camera *camera,
@@ -193,7 +189,7 @@ private:
     Renderer& operator=(Renderer&& render_engine);
     BatchManager* batch_manager;
     static Renderer* instance;
-    
+
 protected:
     Renderer();
     virtual ~Renderer(){
@@ -215,12 +211,12 @@ protected:
     int numberDrawCalls;
     int numberTriangles;
     bool useStencilBuffer_ = false;
+    RenderData* post_effect_render_data_;
 
 public:
     //to be used only on the rendering thread
     const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
     int numLights;
-    RenderData* post_effect_render_data_;
     void setUseStencilBuffer(bool enable) { useStencilBuffer_ = enable; }
 };
 extern Renderer* gRenderer;

@@ -190,7 +190,7 @@ private:
     void InitShaders(VkPipelineShaderStageCreateInfo shaderStages[],
                      std::vector<uint32_t>& result_vert, std::vector<uint32_t>& result_frag);
     void CreateSampler(TextureObject * &textureObject);
-    VkDescriptorPool GetDescriptorPool();
+    void GetDescriptorPool(VkDescriptorPool& descriptorPool);
 
     ANativeWindow *m_androidWindow;
 

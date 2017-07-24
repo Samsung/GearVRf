@@ -90,21 +90,6 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     return index;
 }
 
-    int VulkanShader::makeLayoutPostEffect(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata)
-    {
-        // Has only one sampler input
-        index = TEXTURE_BIND_START;
-        VkDescriptorSetLayoutBinding layoutBinding;
-        layoutBinding.binding = index++;
-        layoutBinding.descriptorCount = 1;
-        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        layoutBinding.pImmutableSamplers = nullptr;
-        (samplerBinding).push_back(layoutBinding);
-
-        return index;
-    }
-
 int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet, int index)
 {
     int texIndex = 0;

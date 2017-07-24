@@ -180,7 +180,6 @@ namespace gvr {
 
     void VulkanRenderer::renderCamera(Scene *scene, Camera *camera,
                                       ShaderManager *shader_manager,
-                                      PostEffectShaderManager *post_effect_shader_manager,
                                       RenderTexture *post_effect_render_texture_a,
                                       RenderTexture *post_effect_render_texture_b) {
 

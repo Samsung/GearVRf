@@ -58,6 +58,7 @@ ShaderData* RenderData::material(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->material();
     }
+    return nullptr;
 }
 
 void RenderData::setCameraDistanceLambda(std::function<float()> func)

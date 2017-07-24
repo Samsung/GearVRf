@@ -892,7 +892,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     pipelineCreateInfo.pDynamicState = nullptr;
     pipelineCreateInfo.stageCount = 2; //vertex and fragment
-    VkPipeline pipeline;// = 0;
+    VkPipeline pipeline = 0;
     LOGI("Vulkan graphics call before");
     err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
@@ -1272,7 +1272,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
     }
 
-    VkDescriptorPool VulkanCore::GetDescriptorPool(){
+    void VulkanCore::GetDescriptorPool(VkDescriptorPool& descriptorPool){
         VkDescriptorPoolSize poolSize[3] = {};
 
         poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
@@ -1292,7 +1292,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         descriptorPoolCreateInfo.pPoolSizes = poolSize;
 
         VkResult err;
-        VkDescriptorPool descriptorPool;
         err = vkCreateDescriptorPool(m_device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
         GVR_VK_CHECK(!err);
     }
@@ -1312,12 +1311,13 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         bool bones_present = shader->getVertexDescriptor().isSet("a_bone_weights");
 
         std::vector<VkWriteDescriptorSet> writes;
-
+        VkDescriptorPool descriptorPool;
+        GetDescriptorPool(descriptorPool);
         VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
-        descriptorSetAllocateInfo.descriptorPool = GetDescriptorPool();
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
         descriptorSetAllocateInfo.descriptorSetCount = 1;
         descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
 
@@ -1346,23 +1346,24 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     bool VulkanCore::InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData, int postEffectIndx) {
+        VkDescriptorPool descriptorPool;
+        GetDescriptorPool(descriptorPool);
         VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
-        descriptorSetAllocateInfo.descriptorPool = GetDescriptorPool();
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
         descriptorSetAllocateInfo.descriptorSetCount = 1;
         descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
 
         VkDescriptorSet descriptorSet;
         VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
         GVR_VK_CHECK(!err);
-        vkData->setDescriptorSet(descriptorSet,pass);
 
+        vkData->setDescriptorSet(descriptorSet,pass);
         VkDescriptorImageInfo descriptorImageInfoPass2[1] = {};
              descriptorImageInfoPass2[0].sampler = VK_NULL_HANDLE;
         mRenderTexture[imageIndex]->getRenderPass();
-
         if(postEffectIndx == 0) {
             descriptorImageInfoPass2[0].imageView = mRenderTexture[imageIndex]->getFBO()->getImageView(
                     COLOR_IMAGE);
@@ -1384,7 +1385,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         writes[0].pImageInfo        = &descriptorImageInfoPass2[0];
 
         vkUpdateDescriptorSets(m_device, 1, &writes[0], 0, nullptr);
-
         vkData->setDescriptorSetNull(false,pass);
         LOGI("Vulkan after update descriptor");
         return true;
