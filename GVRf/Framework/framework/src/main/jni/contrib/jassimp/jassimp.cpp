@@ -3,6 +3,8 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/include/assimp/port/AndroidJNI/AndroidJNIIOSystem.h>
+#include <malloc.h>
+#include <cstdlib>
 
 #ifdef JNI_LOG
 #ifdef ANDROID
@@ -1702,7 +1704,7 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 		if (!pBuffer)
 			return NULL;
 
-		char* extension = 0;
+		const char* extension = 0;
 		if (cFilename != 0) {
 			extension = strrchr(cFilename, '.');
 			if (extension && extension != cFilename) {

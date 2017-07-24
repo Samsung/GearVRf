@@ -25,7 +25,6 @@ android {
         }
         ndk {
             moduleName "gvrf"
-            stl "gnustl_static"
             if (rootProject.hasProperty("ARM64")) {
                 abiFilters = ['arm64-v8a']
             } else {
@@ -36,7 +35,11 @@ android {
 
     externalNativeBuild {
         ndkBuild {
-            path 'src/main/jni/Android.mk'
+            if (rootProject.hasProperty("GVRF_USE_CLANG") && rootProject.property("GVRF_USE_CLANG")) {
+                path 'src/main/clang/Android.mk'
+            } else {
+                path 'src/main/jni/Android.mk'
+            }
         }
     }
 
