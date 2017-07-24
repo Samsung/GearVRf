@@ -1,7 +1,16 @@
 precision highp float;
 in vec2 diffuse_coord;
+
+#ifdef VULKAN
+layout (set = 0, binding = 0)
+#endif
 uniform sampler2D y_texture;
+
+#ifdef VULKAN
+layout (set = 0, binding = 1)
+#endif
 uniform sampler2D uv_texture;
+
 out vec4 fragColor;
 void main (void) {
   float r, g, b, y, u, v;
