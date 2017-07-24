@@ -209,8 +209,7 @@ protected:
 
     virtual void renderPostEffectData(RenderState& rstate,
             Texture* render_texture, ShaderData* post_effect_data);
-    RenderData* post_effect_render_data();
-    RenderData* post_effect_render_data_vulkan();
+    virtual RenderData* post_effect_render_data() = 0;
 
     std::vector<RenderData*> render_data_vector;
     int numberDrawCalls;

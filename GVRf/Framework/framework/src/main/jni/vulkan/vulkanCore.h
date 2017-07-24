@@ -100,7 +100,7 @@ public:
     void BuildCmdBufferForRenderDataPE(Camera*, RenderData* rdata, Shader* shader, int postEffectIndx);
 
     int DrawFrameForRenderData();
-    int DrawFrameForRenderDataPE(int);
+    int DrawFrameForRenderDataPE();
     int getCurrentSwapChainIndx(){
         return imageIndex;
     }
@@ -111,8 +111,8 @@ public:
         return swapChainCmdBuffer[imageIndex];
     }
 
-    VkCommandBuffer* getCurrentCmdBufferPE(int indx){
-        return postEffectCmdBuffer[indx];
+    VkCommandBuffer* getCurrentCmdBufferPE(){
+        return postEffectCmdBuffer;
     }
     int AcquireNextImage();
 
@@ -206,7 +206,7 @@ private:
     VkSurfaceKHR m_surface;
 
     std::vector<VkCommandBuffer*> swapChainCmdBuffer;
-    std::vector<VkCommandBuffer*> postEffectCmdBuffer;
+    VkCommandBuffer * postEffectCmdBuffer;
 
     uint32_t m_height;
     uint32_t m_width;

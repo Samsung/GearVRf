@@ -143,7 +143,7 @@ public:
     void set_mesh(Mesh* mesh);
 
     void add_pass(RenderPass* render_pass);
-    const RenderPass* pass(int pass) const;
+    RenderPass* pass(int pass);
 
     const int pass_count() const {
         return render_pass_list_.size();

@@ -30,7 +30,7 @@ void RenderData::add_pass(RenderPass* render_pass) {
     *dirty_flag_ |= (1 << RENDER_PASS);
 }
 
-const RenderPass* RenderData::pass(int pass) const {
+RenderPass* RenderData::pass(int pass) {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass];
     }

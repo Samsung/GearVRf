@@ -16,12 +16,6 @@ void VkRenderTexture::bind() {
 
 }
 
-// TODO : Free other memories
-void VkRenderTexture::unbind(){
-    delete fbo;
-    fbo = nullptr;
-}
-
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
     VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
@@ -33,9 +27,9 @@ void VkRenderTexture::endRendering(Renderer* renderer) {
     VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
     vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()));
 }
-    void VkRenderTexture::endRenderingPE(Renderer* renderer, int indx) {
+    void VkRenderTexture::endRenderingPE(Renderer* renderer) {
         VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
-        vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE(indx % 2)));
+        vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()));
     }
 
 VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
@@ -70,12 +64,12 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-    void VkRenderTexture::beginRenderingPE(Renderer* renderer, int indx){
+    void VkRenderTexture::beginRenderingPE(Renderer* renderer){
 
         VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
         VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
 
-        vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE(indx%2)), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
     }
 bool VkRenderTexture::readVkRenderResult(uint8_t **readback_buffer, VkCommandBuffer& cmd_buffer,VkFence& fence) {
 

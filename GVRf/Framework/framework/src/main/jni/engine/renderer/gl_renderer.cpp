@@ -750,6 +750,27 @@ namespace gvr
         }
         checkGLError("GLRenderer::updateLights");
     }
+
+    RenderData* GLRenderer::post_effect_render_data()
+    {
+        if (post_effect_render_data_)
+        {
+            return post_effect_render_data_;
+        }
+        float positions[12] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
+        float uvs[8] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
+        unsigned short faces[6] = { 0, 1, 2, 1, 3, 2 };
+        Mesh* mesh = new Mesh("float3 a_position float2 a_texcoord");
+        RenderPass* pass = new RenderPass();
+
+        mesh->setVertices(positions, 12);
+        mesh->setFloatVec("a_texcoord", uvs, 8);
+        mesh->setTriangles(faces, 6);
+        post_effect_render_data_ = createRenderData();
+        post_effect_render_data_->set_mesh(mesh);
+        post_effect_render_data_->add_pass(pass);
+        return post_effect_render_data_;
+    }
 }
 
 

@@ -130,6 +130,7 @@ private:
     void occlusion_cull(RenderState& rstate,
                     std::vector<SceneObject*>& scene_objects);
     void clearBuffers(const Camera& camera) const;
+    RenderData* post_effect_render_data();
 
     GLUniformBlock* transform_ubo_;
 };

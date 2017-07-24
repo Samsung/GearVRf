@@ -77,9 +77,6 @@ class vkImageBase
             return size;
         }
 
-    // Post Effect
-    static vkImageBase *postEffectImage;
-
     private:
         VkImageViewType imageType;
         VkImage image;

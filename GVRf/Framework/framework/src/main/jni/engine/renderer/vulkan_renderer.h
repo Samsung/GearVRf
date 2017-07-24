@@ -143,7 +143,7 @@ private:
         occlusion_cull_init(rstate.scene, scene_objects);
 
     }
-
+    RenderData* post_effect_render_data();
 
 };
 }

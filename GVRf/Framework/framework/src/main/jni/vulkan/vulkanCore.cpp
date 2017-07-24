@@ -439,24 +439,20 @@ namespace gvr {
     }
 
     void VulkanCore::InitPostEffectChain(){
-        if(postEffectCmdBuffer.capacity())
+        if(postEffectCmdBuffer != nullptr)
             return;
-
-        postEffectCmdBuffer.reserve(POSTEFFECT_CHAIN_COUNT);
 
         for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
             mPostEffectTexture[i] = new VkRenderTexture(m_width, m_height);
-            postEffectCmdBuffer[i] = new VkCommandBuffer();
         }
 
-        for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
-            VkResult ret = vkAllocateCommandBuffers(
-                    m_device,
-                    gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPool),
-                    postEffectCmdBuffer[i]
-            );
-            GVR_VK_CHECK(!ret);
-        }
+        postEffectCmdBuffer = new VkCommandBuffer();
+        VkResult ret = vkAllocateCommandBuffers(
+                m_device,
+                gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPool),
+                postEffectCmdBuffer
+        );
+        GVR_VK_CHECK(!ret);
     }
 
     bool VulkanCore::GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
@@ -1103,7 +1099,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     void VulkanCore::BuildCmdBufferForRenderDataPE(Camera *camera, RenderData* rdataPE, Shader* shader, int postEffectIndx) {
         // For the triangle sample, we pre-record our command buffer, as it is static.
         // We have a buffer per swap chain image, so loop over the creation process.
-        VkCommandBuffer &cmdBuffer = *(postEffectCmdBuffer[postEffectIndx%2]);
+        VkCommandBuffer &cmdBuffer = *(postEffectCmdBuffer);
 
         // vkBeginCommandBuffer should reset the command buffer, but Reset can be called
         // to make it more explicit.
@@ -1133,7 +1129,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         mPostEffectTexture[postEffectIndx%2]->setBackgroundColor(camera->background_color_r(), camera->background_color_g(),camera->background_color_b(), camera->background_color_a());
         mPostEffectTexture[postEffectIndx%2]->bind();
-        mPostEffectTexture[postEffectIndx%2]->beginRenderingPE(Renderer::getInstance(), postEffectIndx);
+        mPostEffectTexture[postEffectIndx%2]->beginRenderingPE(Renderer::getInstance());
 
         // Apply Post Effects
             VulkanRenderData *vkRdata = static_cast<VulkanRenderData *>(rdataPE);
@@ -1146,7 +1142,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
 
             VkDescriptorSet descriptorSet1 = vkRdata->getDescriptorSet(0);
-            VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(vkRdata->material(
+            VulkanMaterial *vkmtl = (VulkanMaterial *)static_cast<VulkanMaterial *>(vkRdata->material(
                     0));
             vkCmdPushConstants(cmdBuffer, pipelineLayout,
                                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
@@ -1181,7 +1177,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkCmdDraw(cmdBuffer, mesh->getVertexCount(), 1, 0, 1);
 
 
-        mPostEffectTexture[postEffectIndx%2]->endRenderingPE(Renderer::getInstance(), postEffectIndx);
+        mPostEffectTexture[postEffectIndx%2]->endRenderingPE(Renderer::getInstance());
 
         // By ending the command buffer, it is put out of record mode.
         err = vkEndCommandBuffer(cmdBuffer);
@@ -1239,7 +1235,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         //GVR_VK_CHECK(!err);
     }
 
-    int VulkanCore::DrawFrameForRenderDataPE(int postEffectIndex) {
+    int VulkanCore::DrawFrameForRenderDataPE() {
 
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
@@ -1253,7 +1249,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         submitInfo.pWaitSemaphores = nullptr;
         submitInfo.pWaitDstStageMask = nullptr;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = postEffectCmdBuffer[postEffectIndex % 2];
+        submitInfo.pCommandBuffers = postEffectCmdBuffer;
         submitInfo.signalSemaphoreCount = 0;
         submitInfo.pSignalSemaphores = nullptr;
 
@@ -1262,7 +1258,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         vkWaitForFences(m_device, 1, &postEffectFence, VK_TRUE,
                         4294967295U);
-        return postEffectIndex % 2;
         //GVR_VK_CHECK(!err);
     }
 
