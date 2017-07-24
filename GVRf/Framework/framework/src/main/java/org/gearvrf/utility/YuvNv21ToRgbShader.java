@@ -58,7 +58,7 @@ public class YuvNv21ToRgbShader extends GVRShader
     {
         super("", "sampler2D y_texture, sampler2D uv_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.V300);
         Context context = ctx.getContext();
-        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.yuv_nv21_to_rgb));
-        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.pos_tex_ubo));
+        setSegment("FragmentTemplate", TextFile.readTextFile(context, org.gearvrf.R.raw.yuv_nv21_to_rgb));
+        setSegment("VertexTemplate", TextFile.readTextFile(context, org.gearvrf.R.raw.pos_tex_ubo));
     }
 }
