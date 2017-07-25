@@ -219,7 +219,6 @@ namespace gvr
             GL(glDisable(GL_CULL_FACE));
             for (int i = 0; i < post_effects.size() - 1; ++i)
             {
-                input_texture = target_texture;
                 if (i % 2 == 0)
                 {
                     target_texture = static_cast<GLRenderTexture*>(post_effect_render_texture_b);
@@ -232,6 +231,7 @@ namespace gvr
                 GL(glViewport(0, 0, target_texture->width(), target_texture->height()));
                 GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
                 GL(renderPostEffectData(rstate, input_texture, post_effects[i]));
+                input_texture = target_texture;
             }
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
             GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
