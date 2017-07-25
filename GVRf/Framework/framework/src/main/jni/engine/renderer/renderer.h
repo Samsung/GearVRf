@@ -157,7 +157,7 @@ public:
 private:
     static bool isVulkan_;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
-    virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
+    virtual void frustum_cull(glm::mat4 view_matrix, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
 

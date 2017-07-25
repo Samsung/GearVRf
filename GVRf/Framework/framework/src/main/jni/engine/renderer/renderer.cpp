@@ -61,9 +61,11 @@ Renderer::Renderer():numberDrawCalls(0), numberTriangles(0), batch_manager(nullp
         batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
     }
 }
-void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
+void Renderer::frustum_cull(glm::mat4 view_matrix, SceneObject *object,
         float frustum[6][4], std::vector<SceneObject*>& scene_objects,
         bool need_cull, int planeMask) {
+
+    glm::vec3 camera_position(view_matrix[3]);
 
     // frustumCull() return 3 possible values:
     // 0 when the HBV of the object is completely outside the frustum: cull itself and all its children out
@@ -80,17 +82,50 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
     //when transparent objects are in play
     RenderData* renderData = object->render_data();
     if (nullptr != renderData) {
-        renderData->setCameraDistanceLambda([object, camera_position]() {
+        renderData->setCameraDistanceLambda([object, view_matrix, camera_position]() {
+
             // Transform the bounding volume
             BoundingVolume bounding_volume_ = object->getBoundingVolume();
             glm::vec4 transformed_sphere_center(bounding_volume_.center(), 1.0f);
 
-            // Calculate distance from camera
+            // Calculate distance from camera as a dot product of (the distance between the
+            // camera and object center) and the lookat vector of the camera.
             glm::vec4 position(camera_position, 1.0f);
             glm::vec4 difference = transformed_sphere_center - position;
-            float distance = glm::dot(difference, difference);
+
+            //calculate lookat vector
+            glm::mat4 cam_model_matrix = glm::inverse(view_matrix);
+            float x0 = cam_model_matrix[3][0];
+            float y0 = cam_model_matrix[3][1];
+            float z0 = cam_model_matrix[3][2];
+            float reciprocalW0 = 1 / cam_model_matrix[3][3];
+            x0 *= reciprocalW0;
+            y0 *= reciprocalW0;
+            z0 *= reciprocalW0;
+
+            float x1 = cam_model_matrix[2][0] * -1.0f + cam_model_matrix[3][0];
+            float y1 = cam_model_matrix[2][1] * -1.0f + cam_model_matrix[3][1];
+            float z1 = cam_model_matrix[2][2] * -1.0f + cam_model_matrix[3][2];
+            float reciprocalW1 = 1.0f
+                                 / (cam_model_matrix[2][3] * -1.0f + cam_model_matrix[3][3]);
+            x1 *= reciprocalW1;
+            y1 *= reciprocalW1;
+            z1 *= reciprocalW1;
+
+            float lookAtX = x1 - x0;
+            float lookAtY = y1 - y0;
+            float lookAtZ = z1 - z0;
+            float reciprocalLength = 1.0f
+                                     / sqrtf(lookAtX * lookAtX + lookAtY * lookAtY + lookAtZ * lookAtZ);
+            lookAtX *= reciprocalLength;
+            lookAtY *= reciprocalLength;
+            lookAtZ *= reciprocalLength;
+
+            glm::vec4 lookat = glm::vec4(lookAtX, lookAtY, lookAtZ, 1.0f);
 
             // this distance will be used when sorting transparent objects
+            float distance = glm::dot(difference, lookat);
+
             return distance;
         });
     }
@@ -118,7 +153,7 @@ void Renderer::frustum_cull(glm::vec3 camera_position, SceneObject *object,
 
     const std::vector<SceneObject*> children = object->children();
     for (auto it = children.begin(); it != children.end(); ++it) {
-        frustum_cull(camera_position, *it, frustum, scene_objects, need_cull, planeMask);
+        frustum_cull(view_matrix, *it, frustum, scene_objects, need_cull, planeMask);
     }
 }
 
@@ -193,7 +228,6 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     glm::mat4 view_matrix = camera->getViewMatrix();
     glm::mat4 projection_matrix = camera->getProjectionMatrix();
     glm::mat4 vp_matrix = glm::mat4(projection_matrix * view_matrix);
-    glm::vec3 campos(view_matrix[3]);
 
     scene_objects.reserve(1024);
     scene_objects.clear();
@@ -210,14 +244,13 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
         LOGD("FRUSTUM: start frustum culling for root %s\n", object->name().c_str());
     }
     //    frustum_cull(camera->owner_object()->transform()->position(), object, frustum, scene_objects, scene->get_frustum_culling(), 0);
-    frustum_cull(campos, object, frustum, scene_objects, scene->get_frustum_culling(), 0);
+    frustum_cull(view_matrix, object, frustum, scene_objects, scene->get_frustum_culling(), 0);
     if (DEBUG_RENDERER) {
         LOGD("FRUSTUM: end frustum culling for root %s\n", object->name().c_str());
     }
     // 3. do occlusion culling, if enabled
     occlusion_cull(scene, scene_objects, shader_manager, vp_matrix);
 }
-
 
 void Renderer::renderRenderDataVector(RenderState &rstate) {
 
