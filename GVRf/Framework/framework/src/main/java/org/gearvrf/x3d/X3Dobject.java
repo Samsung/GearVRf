@@ -46,6 +46,7 @@ import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDirectLight;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRIndexBuffer;
 import org.gearvrf.GVRLODGroup;
 import org.gearvrf.GVRMaterial;
@@ -72,6 +73,8 @@ import org.joml.Vector3f;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+
+import java.util.EnumSet;
 
 public class X3Dobject {
     /**
@@ -226,11 +229,15 @@ public class X3Dobject {
         private FloatArray mOutputTexCoords = new FloatArray(64 * 3);
         private GVRContext mContext;
         private DefinedItem mVertexBufferDefine;
+        private boolean mUseNormals;
+        private boolean mUseTexCoords;
 
-        MeshCreator(GVRContext ctx)
+        MeshCreator(GVRContext ctx, EnumSet<GVRImportSettings> settings)
         {
             mContext = ctx;
             mVertexBufferDefine = null;
+            mUseNormals = !settings.contains(GVRImportSettings.NO_LIGHTING);
+            mUseTexCoords = !settings.contains(GVRImportSettings.NO_TEXTURING);
         }
 
         void clear()
@@ -266,7 +273,10 @@ public class X3Dobject {
          */
         void addNormalIndex(int index)
         {
-            mNormalIndices.add(index);
+            if (mUseNormals)
+            {
+                mNormalIndices.add(index);
+            }
         }
 
         /*
@@ -275,7 +285,10 @@ public class X3Dobject {
          */
         void addTexcoordIndex(int index)
         {
-            mTexcoordIndices.add(index);
+            if (mUseTexCoords)
+            {
+                mTexcoordIndices.add(index);
+            }
         }
 
         /*
@@ -301,7 +314,10 @@ public class X3Dobject {
          */
         void addInputNormal(float[] norm)
         {
-            mInputNormals.add(norm);
+            if (mUseNormals)
+            {
+                mInputNormals.add(norm);
+            }
         }
 
         /*
@@ -314,7 +330,10 @@ public class X3Dobject {
          */
         void addInputTexcoord(float[] tc)
         {
-            mInputTexCoords.add(tc);
+            if (mUseTexCoords)
+            {
+                mInputTexCoords.add(tc);
+            }
         }
 
         /*
@@ -402,9 +421,9 @@ public class X3Dobject {
          * and texture coordinates. This function converts the
          * X3D input data into a GVRVertexBuffer and GVRIndexBuffer.
          */
-        GVRVertexBuffer organizeVertices(GVRIndexBuffer ibuf, boolean makeNormals)
+        GVRVertexBuffer organizeVertices(GVRIndexBuffer ibuf)
         {
-            boolean hasTexCoords = mInputTexCoords.getSize() > 0;
+            boolean hasTexCoords = mUseTexCoords & (mInputTexCoords.getSize() > 0);
             boolean hasNormals = mInputNormals.getSize() > 0;
             String descriptor = "float3 a_position";
 
@@ -412,7 +431,7 @@ public class X3Dobject {
             {
                 descriptor += " float2 a_texcoord";
             }
-            if (hasNormals || makeNormals)
+            if (mUseNormals && hasNormals)
             {
                 descriptor += " float3 a_normal";
             }
@@ -423,7 +442,7 @@ public class X3Dobject {
              */
             if (!hasTexCoords && !hasNormals)
             {
-                return copyVertices(descriptor, ibuf, makeNormals);
+                return copyVertices(descriptor, ibuf, mUseNormals);
             }
             /*
              * If the X3D file does not have normal or texcoord indices,
@@ -434,9 +453,8 @@ public class X3Dobject {
             if ((mTexcoordIndices.getSize() == 0) &&
                 (mNormalIndices.getSize() == 0))
             {
-                return copyVertices(descriptor, ibuf, makeNormals);
+                return copyVertices(descriptor, ibuf, mUseNormals);
             }
-
             /*
              * The X3D file has different index tables for positions,
              * normals and texture coordinates. We must regenerate the
@@ -513,7 +531,7 @@ public class X3Dobject {
             {
                 generateNormals(newIndices, newIndices.length, mOutputPositions);
             }
-            if (hasNormals || makeNormals)
+            else if (mUseNormals)
             {
                 vbuffer.setFloatArray("a_normal", mOutputNormals.array(), 3, 0);
             }
@@ -727,7 +745,7 @@ public class X3Dobject {
             this.activityContext = gvrContext.getContext();
             this.root = root;
 
-            meshCreator = new MeshCreator(this.gvrContext);
+            meshCreator = new MeshCreator(this.gvrContext, assetRequest.getImportSettings());
             // Camera rig setup code based on GVRScene::init()
             GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
             leftCamera.setRenderMask(GVRRenderMaskBit.Left);
@@ -3530,7 +3548,7 @@ public class X3Dobject {
                     ;
                 } else if (qName.equalsIgnoreCase("IndexedFaceSet")) {
                     if (reorganizeVerts) {
-                        gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer, true);
+                        gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer);
                         reorganizeVerts = false;
                     }
                     GVRMesh mesh = new GVRMesh(gvrContext, gvrVertexBuffer.getDescriptor());
