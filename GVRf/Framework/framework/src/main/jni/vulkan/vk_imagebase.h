@@ -76,6 +76,7 @@ class vkImageBase
         VkDeviceSize getSize(){
             return size;
         }
+
     private:
         VkImageViewType imageType;
         VkImage image;

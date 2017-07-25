@@ -169,7 +169,6 @@ namespace gvr
     void GLRenderer::renderCamera(Scene *scene, Camera *camera, int framebufferId, int viewportX,
                                   int viewportY, int viewportWidth, int viewportHeight,
                                   ShaderManager *shader_manager,
-                                  PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
                                   RenderTexture *post_effect_render_texture_b)
     {
@@ -460,19 +459,17 @@ namespace gvr
 
     void GLRenderer::renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b) {
 
         renderCamera(scene, camera, render_texture->getFrameBufferId(), 0, 0,
                 render_texture->width(), render_texture->height(), shader_manager,
-                post_effect_shader_manager, post_effect_render_texture_a,
+                post_effect_render_texture_a,
                 post_effect_render_texture_b);
     }
 
 
     void GLRenderer::renderCamera(Scene *scene, Camera *camera, ShaderManager *shader_manager,
-                                  PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
                                   RenderTexture *post_effect_render_texture_b)
     {
@@ -482,7 +479,7 @@ namespace gvr
         glGetIntegerv(GL_VIEWPORT, viewport);
 
         renderCamera(scene, camera, curFBO, viewport[0], viewport[1], viewport[2], viewport[3],
-                     shader_manager, post_effect_shader_manager, post_effect_render_texture_a,
+                     shader_manager, post_effect_render_texture_a,
                      post_effect_render_texture_b
         );
     }
@@ -491,13 +488,12 @@ namespace gvr
     void GLRenderer::renderCamera(Scene *scene, Camera *camera, int viewportX, int viewportY,
                                   int viewportWidth, int viewportHeight,
                                   ShaderManager *shader_manager,
-                                  PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
                                   RenderTexture *post_effect_render_texture_b)
     {
 
         renderCamera(scene, camera, 0, viewportX, viewportY, viewportWidth, viewportHeight,
-                     shader_manager, post_effect_shader_manager, post_effect_render_texture_a,
+                     shader_manager, post_effect_render_texture_a,
                      post_effect_render_texture_b
         );
     }
@@ -754,6 +750,31 @@ namespace gvr
             }
         }
         checkGLError("GLRenderer::updateLights");
+    }
+
+    RenderData* GLRenderer::post_effect_render_data()
+    {
+        if (post_effect_render_data_)
+        {
+            return post_effect_render_data_;
+        }
+        float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
+        float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
+        unsigned short faces[] = { 0, 1, 2, 1, 3, 2 };
+        Mesh* mesh = new Mesh("float3 a_position float2 a_texcoord");
+        RenderPass* pass = new RenderPass();
+
+        const int position_size = sizeof(positions)/ sizeof(positions[0]);
+        const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
+        const int faces_size = sizeof(faces)/ sizeof(faces[0]);
+
+        mesh->setVertices(positions, position_size);
+        mesh->setFloatVec("a_texcoord", uvs, uv_size);
+        mesh->setTriangles(faces, faces_size);
+        post_effect_render_data_ = createRenderData();
+        post_effect_render_data_->set_mesh(mesh);
+        post_effect_render_data_->add_pass(pass);
+        return post_effect_render_data_;
     }
 }
 

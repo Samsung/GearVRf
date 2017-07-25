@@ -55,7 +55,7 @@ struct VulkanRenderPass : public RenderPass
         "mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; float u_right;", TRANSFORM_UBO_INDEX, "Transform_ubo")
         {
         }
-        void createPipeline(Shader* shader, VulkanRenderer* renderer, int pass);
+        void createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, bool poastEffect, int postEffectIndx);
 
         VulkanUniformBlock& getTransformUbo(){
             return ubo;
@@ -83,6 +83,11 @@ struct VulkanRenderPass : public RenderPass
         void setDescriptorPool(VkDescriptorPool descriptorPool, int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
             renderPass->m_descriptorPool= descriptorPool;
+
+        }
+        VkDescriptorPool& getDescriptorPool(int pass){
+            VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
+            return renderPass->m_descriptorPool;
 
         }
         void setDescriptorSet(VkDescriptorSet descriptorSet, int pass){

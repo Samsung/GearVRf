@@ -7,11 +7,13 @@ namespace gvr {
 
 class VKFramebuffer {
     vkImageBase *mAttachments[3];
+
     VkRenderPass mRenderpass;
     int mWidth;
     int mHeight;
     VkFramebuffer mFramebuffer;
 public:
+
     ~VKFramebuffer() {
         delete mAttachments[COLOR_IMAGE];
         delete mAttachments[DEPTH_IMAGE];
@@ -41,6 +43,14 @@ public:
         return mAttachments[type]->getVkImage();
     }
 
+    const VkImageView &getImageView(ImageType type) {
+        return mAttachments[type]->getVkImageView();
+    }
+
+    const VkImageLayout& getImageLayout(ImageType type){
+        return mAttachments[type]->getImageLayout();
+    }
+
     VkDeviceMemory getDeviceMemory(ImageType type) {
         return mAttachments[type]->getDeviceMemory();
     }
@@ -58,6 +68,7 @@ public:
     const VkFramebuffer &getFramebuffer() {
         return mFramebuffer;
     }
+
 };
 }
 #endif //FRAMEWORK_VK_FRAMEBUFFER_H
