@@ -79,7 +79,15 @@ namespace gvr
     {
         BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
         texture->update(env, jbitmap);
+    }
 
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBitmapImage_updateFromBuffer(JNIEnv *env, jobject obj,
+                                                        jlong jtexture, jint width, jint height,
+                                                        jint format, jint type, jobject jbuffer)
+    {
+        BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
+        texture->update(env, width, height, format, type, jbuffer);
     }
 
     JNIEXPORT void JNICALL

@@ -26,8 +26,6 @@ import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRTransform;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
@@ -39,17 +37,7 @@ import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 import org.gearvrf.script.GVRJavascriptScriptFile;
 
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVREventReceiver;
-import org.gearvrf.ISceneEvents;
-import org.gearvrf.ISceneObjectEvents;
-import org.gearvrf.IScriptEvents;
-import org.gearvrf.script.GVRScriptBehavior;
-import org.gearvrf.script.GVRScriptException;
-import org.gearvrf.script.IScriptable;
-
-import java.io.IOException;
-
+import org.gearvrf.script.javascript.GVRJavascriptV8File;
 import org.gearvrf.utility.Log;
 import org.gearvrf.x3d.data_types.SFBool;
 import org.gearvrf.x3d.data_types.SFColor;
@@ -101,6 +89,8 @@ public class AnimationInteractivityManager {
     private static final String INITIALIZE_FUNCTION = "initialize";
     private static final String GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME = "GearVRinitJavaScript";
 
+    public static final boolean V8JavaScriptEngine = true;
+
 
     private X3Dobject x3dObject = null;
     private GVRContext gvrContext = null;
@@ -113,7 +103,6 @@ public class AnimationInteractivityManager {
     private ArrayList<ScriptObject> scriptObjects = null;
 
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
-
 
     // Append this incremented value to GVRSceneObject names to insure unique
     // GVRSceneObjects when new GVRScene objects are generated to support animation
@@ -138,7 +127,6 @@ public class AnimationInteractivityManager {
         this.timeSensors = timeSensors;
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
-
     }
 
     /**
@@ -319,24 +307,36 @@ public class AnimationInteractivityManager {
                         //This sensor already exists as part of an interactive Object
                         interactiveObject.setSensor(routeFromSensor, fromField);
                         routeToScriptObjectFound = true;
-                    } else if ((interactiveObject.getDefinedItem() == null) && (routeFromDefinedItem != null)) {
-                        //This sensor already exists as part of an interactive Object
+                    }  //  end Sensor
+                    else if ((interactiveObject.getDefinedItem() == null) && (routeFromDefinedItem != null)) {
+                        //This defined Item already exists as part of an interactive Object
                         for (ScriptObject.Field field : routeToScriptObject.getFieldsArrayList()) {
                             if (toField.equalsIgnoreCase(routeToScriptObject.getFieldName(field))) {
                                 routeToScriptObject.setFromDefinedItem(field, routeFromDefinedItem, fromField);
                             }
                         }
                         routeToScriptObjectFound = true;
-                    }
+                    }  // end definedItem
                     else if ((interactiveObject.getEventUtility() == null) && (routeFromEventUtility != null)) {
-                        //This sensor already exists as part of an interactive Object
+                        //This event utility already exists as part of an interactive Object
                         for (ScriptObject.Field field : routeToScriptObject.getFieldsArrayList()) {
                             if (toField.equalsIgnoreCase(routeToScriptObject.getFieldName(field))) {
                                 routeToScriptObject.setFromEventUtility(field, routeFromEventUtility, fromField);
                             }
                         }
                         routeToScriptObjectFound = true;
-                    }
+                    } // end eventUtility
+
+                    else if ((interactiveObject.getTimeSensor() == null) && (routeFromTimeSensor != null)) {
+                        //This sensor already exists as part of an interactive Object
+                        for (ScriptObject.Field field : routeToScriptObject.getFieldsArrayList()) {
+                            if (toField.equalsIgnoreCase(routeToScriptObject.getFieldName(field))) {
+                                routeToScriptObject.setFromTimeSensor(field, routeFromTimeSensor, fromField);
+                            }
+                        }
+                        routeToScriptObjectFound = true;
+                    } // end timeSensor
+
                 }
             }
             if (!routeToScriptObjectFound) {
@@ -641,25 +641,22 @@ public class AnimationInteractivityManager {
                                 else if (interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
                                     parameters[0] = stateChanged;
                                 }
-                                if (scriptObject.getTimeStampParameter())
+                                if (scriptObject.getTimeStampParameter()) {
                                     parameters[1] = 0;  // set timeStamp to 0.  This isn't used for isOver/isActive events
+                                }
 
                                 if ((event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER))) {
                                     // OVER an object with a sensor
                                     if (!stateChanged) {
                                         stateChanged = true;
-                                        // Set/Reset INPUT variables & objects through this programmable created method
-                                        interactiveObjectFinal.getScriptObject().getGVRJavascriptScriptFile().invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parameters);
-                                        // Run this SCRIPT's actal JavaScript function
+                                        // Run this SCRIPT's actual JavaScript function
                                         RunScript(interactiveObjectFinal, functionName, parameters);
                                     }
                                 } else if (event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
                                     // CLICKED while over a sensored object
                                     stateChanged = !stateChanged;
                                     if (!isActiveDone) {
-                                        // Set/Reset INPUT variables & objects through this programmable created method
-                                        interactiveObjectFinal.getScriptObject().getGVRJavascriptScriptFile().invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parameters);
-                                        // Run this SCRIPT's actal JavaScript function
+                                        // Run this SCRIPT's actual JavaScript function
                                         RunScript(interactiveObjectFinal, functionName, parameters);
                                     }
                                     isActiveDone = true;
@@ -667,9 +664,7 @@ public class AnimationInteractivityManager {
                                         .IS_OVER)) {
                                     // An "isOver event', but just existed being over the object - i.e. TouchSensor = false
                                     stateChanged = false;
-                                    // Set/Reset INPUT variables & objects through this programmable created method
-                                    interactiveObjectFinal.getScriptObject().getGVRJavascriptScriptFile().invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parameters);
-                                    // Run this SCRIPT's actal JavaScript function
+                                    // Run this SCRIPT's actual JavaScript function
                                     RunScript(interactiveObjectFinal, functionName, parameters);
                                 } else if (!event.isActive() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_ACTIVE)) {
                                     isActiveDone = false;
@@ -681,6 +676,7 @@ public class AnimationInteractivityManager {
                 else if (interactiveObject.getTimeSensor() != null) {
                     // TimeSensor means this Script will be called per-frame
                     // set up the call-back
+                    interactiveObject.getScriptObject().setScriptCalledPerFrame(true);
                     perFrameScripting.setInteractiveObjectVars(interactiveObjectFinal);
                 }
             }  // end if a Script (that likely includes a sensor)
@@ -759,6 +755,7 @@ public class AnimationInteractivityManager {
         String functionName;
         Object[] parameters = null;
         boolean run = false;
+        boolean firstFrameRun_MustInitalize = true;
         float accumulatedTime = 0;
         float cycleInterval = 1;
 
@@ -803,15 +800,39 @@ public class AnimationInteractivityManager {
         }
 
         final void onDrawFrame(float frameTime) {
-            parameters = SetJavaScriptArguments(this.interactiveObjectFinal, 0, false); // false is just a place holder
-            accumulatedTime += frameTime;
-            parameters[0] = accumulatedTime % cycleInterval;
-            if (scriptObject.getTimeStampParameter()) parameters[1] = accumulatedTime;
-            scriptObject.getGVRJavascriptScriptFile().invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parameters);
-            // Run this SCRIPT's actal JavaScript function
-            RunScript(interactiveObjectFinal, functionName, parameters);
-        }
+            if ( interactiveObjectFinal.getScriptObject().getInitializationDone() ) {
+                if ( firstFrameRun_MustInitalize ) {
+                    String paramString = "var params =[";
+                    for (int i = 0; i < parameters.length; i++ ) {
+                        paramString += (parameters[i] + ", ");
+                    }
+                    paramString = paramString.substring(0, (paramString.length()-2)) + "];";
+
+                    GVRJavascriptV8File gvrJavascriptV8File = interactiveObjectFinal.getScriptObject().getGVRJavascriptV8File();
+
+                    final GVRJavascriptV8File gvrJavascriptV8FileFinal = gvrJavascriptV8File;
+                    final Object[] parametersFinal = parameters;
+                    final String paramStringFinal = paramString;
+                    gvrContext.runOnGlThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
+                            firstFrameRun_MustInitalize = false;
+                        }
+                    });
+                }
+                // once we run through the initialization of this script, then we can Run the script
+                parameters = SetJavaScriptArguments(this.interactiveObjectFinal, 0, false); // false is just a place holder
+                accumulatedTime += frameTime;
+                parameters[0] = accumulatedTime % cycleInterval;
+                if (scriptObject.getTimeStampParameter()) parameters[1] = accumulatedTime;
+                // Run this SCRIPT's actal JavaScript function
+                RunScript(interactiveObjectFinal, functionName, parameters);
+            }
+        }  //  end onDrawFrame
     }  //  end private class PerFrameScripting
+
+
 
     private final class DrawFrame implements GVRDrawFrameListener {
         @Override
@@ -1050,9 +1071,35 @@ public class AnimationInteractivityManager {
         return parameters;
     }  //  end  SetJavaScriptArguments
 
+    private void RunInitializeScriptThread (GVRJavascriptV8File gvrJavascriptV8FileFinal, InteractiveObject interactiveObjectFinal, Object[] parametersFinal, String paramStringFinal) {
+        boolean complete = gvrJavascriptV8FileFinal.invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parametersFinal, paramStringFinal);
+        if (complete) {
+            // No errors in the GearVR_Init function, so continue to cal the init function if there are any.
+            // if the objects required for this function were constructed, then
+            //   check if this <SCRIPT> has an initialize() method that is run just once.
+            if (gvrJavascriptV8FileFinal.getScriptText().contains(INITIALIZE_FUNCTION)) {
+                complete = gvrJavascriptV8FileFinal.invokeFunction(INITIALIZE_FUNCTION, parametersFinal, "");
+
+                if (complete) {
+                    // The JavaScript initialize() function ran ok.
+                    // Now set any values (such as X3D data types such as SFColor)
+                    //  stored in 'localBindings'.
+                    //  Then call SetResultsFromScript() to set the GearVR values
+                    Bindings bindings = gvrJavascriptV8FileFinal.getLocalBindings();
+                    SetResultsFromScript(interactiveObjectFinal, bindings);
+                } else {
+                    Log.e(TAG, "Error in SCRIPT node '" +  interactiveObjectFinal.getScriptObject().getName() +
+                            "' running V8 Engine JavaScript function initialize()");
+                }
+            }
+        } else {
+            Log.e(TAG, "Error parsing / running initializing V8 JavaScript function in SCRIPT '" +
+                    interactiveObjectFinal.getScriptObject().getName() + "'");
+        }
+    }  //  end RunInitializeScriptThread
 
     /**
-     * check if Script has an initialize() method
+     * method runs the Script's initialize() method
      */
     public void InitializeScript() {
 
@@ -1064,24 +1111,61 @@ public class AnimationInteractivityManager {
                 parameters[0] = 0;
                 if (interactiveObject.getScriptObject().getTimeStampParameter()) parameters[1] = 0;
 
-                GVRJavascriptScriptFile gvrJavascriptFile = interactiveObject.getScriptObject().getGVRJavascriptScriptFile();
-                // Append the X3D data type constructors to the end of the JavaScript file
-                gvrJavascriptFile.setScriptText(gvrJavascriptFile.getScriptText() +
-                        interactiveObject.getScriptObject().getGearVRinitJavaScript());
+                if ( V8JavaScriptEngine ) {
+                    // Using V8 JavaScript compiler and run-time engine
+                    GVRJavascriptV8File gvrJavascriptV8File = interactiveObject.getScriptObject().getGVRJavascriptV8File();
+                    // Append the X3D data type constructors to the end of the JavaScript file
+                    if ( !interactiveObject.getScriptObject().getInitializationDone()) {
+                        gvrJavascriptV8File.setScriptText(gvrJavascriptV8File.getScriptText() +
+                                interactiveObject.getScriptObject().getGearVRinitJavaScript());
 
-                // Run the newly created method 'GEARVR_INIT_JAVASCRIPT_FUNCTION' that
-                //    constructs the objects required for this JavaScript program.
-                boolean complete = gvrJavascriptFile.invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parameters);
-                if (complete) {
-                    // if the objects required for this function were constructed, then
-                    //   check if this <SCRIPT> has an initialize() method that is run just once.
-                    if (gvrJavascriptFile.getScriptText().contains(INITIALIZE_FUNCTION)) {
-                        RunScript(interactiveObject, INITIALIZE_FUNCTION, parameters);
+                        if ( !interactiveObject.getScriptObject().getScriptCalledPerFrame() ) {
+                            // only initialize if this is not called per frame
+                            // initialization for scripts called per frame must be called
+                            // when we begin the first frame due to V8 engine start-up
+                            String paramString = "var params =[";
+                            for (int i = 0; i < parameters.length; i++ ) {
+                                paramString += (parameters[i] + ", ");
+                            }
+                            paramString = paramString.substring(0, (paramString.length()-2)) + "];";
+
+                            final GVRJavascriptV8File gvrJavascriptV8FileFinal = gvrJavascriptV8File;
+                            final InteractiveObject interactiveObjectFinal = interactiveObject;
+                            final Object[] parametersFinal = parameters;
+                            final String paramStringFinal = paramString;
+                            gvrContext.runOnGlThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
+                                }
+                            });
+                        }  // ! per frame script
                     }
-                } else {
-                    Log.e(TAG, "Error parsing / running initializing JavaScript function in SCRIPT '" +
-                            interactiveObject.getScriptObject().getName() + "'");
-                }
+                    interactiveObject.getScriptObject().setInitializationDone(true);
+
+                } //  end of running initialize functions in V8 JavaScript engine
+                else {
+                    // Using older Mozilla Rhino engine
+                    GVRJavascriptScriptFile gvrJavascriptFile = interactiveObject.getScriptObject().getGVRJavascriptScriptFile();
+
+                    // Append the X3D data type constructors to the end of the JavaScript file
+                    gvrJavascriptFile.setScriptText(gvrJavascriptFile.getScriptText() +
+                            interactiveObject.getScriptObject().getGearVRinitJavaScript());
+
+                    // Run the newly created method 'GEARVR_INIT_JAVASCRIPT_FUNCTION' that
+                    //    constructs the objects required for this JavaScript program.
+                    boolean complete = gvrJavascriptFile.invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parameters);
+                    if (complete) {
+                        // if the objects required for this function were constructed, then
+                        //   check if this <SCRIPT> has an initialize() method that is run just once.
+                        if (gvrJavascriptFile.getScriptText().contains(INITIALIZE_FUNCTION)) {
+                            RunScript(interactiveObject, INITIALIZE_FUNCTION, parameters);
+                        }
+                    } else {
+                        Log.e(TAG, "Error parsing / running initializing Rhino JavaScript function in SCRIPT '" +
+                                interactiveObject.getScriptObject().getName() + "'");
+                    }
+                }  //  end using older Mozilla Rhino engine
             }  // end check for interactiveObject having a Script Object
         }  // end loop thru all interactiveObjects for a ScriptObject
     }  //  end InitializeScript method
@@ -1101,64 +1185,156 @@ public class AnimationInteractivityManager {
         if (scriptObject.getTimeStampParameter()) argumentNum = 2;
 
         // Get the parameters on X3D data types that are included with this JavaScript
-        for (ScriptObject.Field field : scriptObject.getFieldsArrayList()) {
-            String fieldType = scriptObject.getFieldType(field);
+        if ( V8JavaScriptEngine ) {
+            for (ScriptObject.Field field : scriptObject.getFieldsArrayList()) {
+                String fieldType = scriptObject.getFieldType(field);
+                if (scriptObject.getFromDefinedItem(field) != null) {
+                    if ((fieldType.equalsIgnoreCase("SFColor")) || (fieldType.equalsIgnoreCase("SFVec3f"))) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( params[" + argumentNum + "], params[" + (argumentNum + 1) + "], params[" + (argumentNum + 2) + "]);\n";
+                        argumentNum += 3;
+                    }  // end if SFColor of SFVec3f
+                    else if (fieldType.equalsIgnoreCase("SFRotation")) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( params[" + argumentNum + "], params[" + (argumentNum + 1) + "], params[" + (argumentNum + 2)
+                                + "], params[" + (argumentNum + 3) + "]);\n";
+                        argumentNum += 4;
+                    }  // end if SFRotation
 
-            if (scriptObject.getFromDefinedItem(field) != null) {
-                if ((fieldType.equalsIgnoreCase("SFColor")) || (fieldType.equalsIgnoreCase("SFVec3f"))) {
-                    gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
-                            "( arg" + argumentNum + ", arg" + (argumentNum + 1) + ", arg" + (argumentNum + 2) + ");\n";
-                    argumentNum += 3;
-                }  // end if SFColor of SFVec3f
-                else if (fieldType.equalsIgnoreCase("SFRotation")) {
-                    gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
-                            "( arg" + argumentNum + ", arg" + (argumentNum + 1) + ", arg" + (argumentNum + 2)
-                            + ", arg" + (argumentNum + 3) + ");\n";
-                    argumentNum += 4;
-                }  // end if SFRotation
+                    else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool"))) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( params[" + argumentNum + "]);\n";
+                        argumentNum += 1;
+                    }  // end if SFFloat or SFBool
+                }
+                else if (scriptObject.getFromEventUtility(field) != null) {
+                    if (fieldType.equalsIgnoreCase("SFBool")) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( params[" + argumentNum + "]);\n";
+                        argumentNum += 1;
+                    }  // end if SFBool
+                }  //  end scriptObject.getFromEventUtility(field) != null
+                else if (scriptObject.getFromTimeSensor(field) != null) {
+                    if (fieldType.equalsIgnoreCase("SFFloat")) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( params[" + argumentNum + "]);\n";
+                        argumentNum += 1;
+                    }  // end if SFFloat
+                }  //  end scriptObject.getFromTimeSensor(field) != null
+            }  // for loop checking for parameters passed to the JavaScript parser
+        }  //  end if V8 engine
+        else {
+            // Mozilla Rhino engine
+            for (ScriptObject.Field field : scriptObject.getFieldsArrayList()) {
+                String fieldType = scriptObject.getFieldType(field);
 
-                else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool"))) {
-                    gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
-                            "( arg" + argumentNum + ");\n";
-                    argumentNum += 1;
-                }  // end if SFFloat or SFBool
-            }  //  end scriptObject.getFromDefinedItem(field) != null
-            else if ( scriptObject.getFromEventUtility(field) != null ) {
-                if ( fieldType.equalsIgnoreCase("SFBool") ) {
-                    gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
-                            "( arg" + argumentNum + ");\n";
-                    argumentNum += 1;
-                }  // end if SFBool
-            }  //  end scriptObject.getFromEventUtility(field) != null
-            else if ( scriptObject.getFromTimeSensor(field) != null ) {
-                if ( fieldType.equalsIgnoreCase("SFFloat") ) {
-                    gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
-                            "( arg" + argumentNum + ");\n";
-                    argumentNum += 1;
-                }  // end if SFFloat
-            }  //  end scriptObject.getFromTimeSensor(field) != null
+                if (scriptObject.getFromDefinedItem(field) != null) {
+                    if ((fieldType.equalsIgnoreCase("SFColor")) || (fieldType.equalsIgnoreCase("SFVec3f"))) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( arg" + argumentNum + ", arg" + (argumentNum + 1) + ", arg" + (argumentNum + 2) + ");\n";
+                        argumentNum += 3;
+                    }  // end if SFColor of SFVec3f
+                    else if (fieldType.equalsIgnoreCase("SFRotation")) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( arg" + argumentNum + ", arg" + (argumentNum + 1) + ", arg" + (argumentNum + 2)
+                                + ", arg" + (argumentNum + 3) + ");\n";
+                        argumentNum += 4;
+                    }  // end if SFRotation
 
-        }  // for loop checking for parameters passed to the JavaScript parser
+                    else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool"))) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( arg" + argumentNum + ");\n";
+                        argumentNum += 1;
+                    }  // end if SFFloat or SFBool
+                }  //  end scriptObject.getFromDefinedItem(field) != null
+                else if (scriptObject.getFromEventUtility(field) != null) {
+                    if (fieldType.equalsIgnoreCase("SFBool")) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( arg" + argumentNum + ");\n";
+                        argumentNum += 1;
+                    }  // end if SFBool
+                }  //  end scriptObject.getFromEventUtility(field) != null
+                else if (scriptObject.getFromTimeSensor(field) != null) {
+                    if (fieldType.equalsIgnoreCase("SFFloat")) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( arg" + argumentNum + ");\n";
+                        argumentNum += 1;
+                    }  // end if SFFloat
+                }  //  end scriptObject.getFromTimeSensor(field) != null
+
+            }  // for loop checking for parameters passed to the JavaScript parser
+        }  // end if Mozilla Rhino engine
         gearVRinitJavaScript += "}";
         scriptObject.setGearVRinitJavaScript(gearVRinitJavaScript);
     }  //  end  BuildInitJavaScript
 
+    private void RunScriptThread (GVRJavascriptV8File gvrJavascriptV8FileFinal, InteractiveObject interactiveObjectFinal, String functionNameFinal, Object[] parametersFinal, String paramStringFinal) {
+        boolean complete = gvrJavascriptV8FileFinal.invokeFunction(GEARVR_INIT_JAVASCRIPT_FUNCTION_NAME, parametersFinal, paramStringFinal);
+        if ( complete ) {
+            Bindings gvrFunctionBindingValues = gvrJavascriptV8FileFinal.getLocalBindings();
+            //set the bindings from X3D Script field with inputOnly / inputOutput
+            gvrJavascriptV8FileFinal.setInputValues(gvrFunctionBindingValues);
+            // Now run this Script's actual function
+            complete = gvrJavascriptV8FileFinal.invokeFunction(functionNameFinal, parametersFinal, paramStringFinal);
+
+            if (complete) {
+                // The JavaScript (JS) ran ok.  Now get the return
+                // values (saved as X3D data types such as SFColor)
+                //  stored in 'localBindings'.
+                //  Then call SetResultsFromScript() to set the GearVR values
+                Bindings returnedBindingValues = gvrJavascriptV8FileFinal.getLocalBindings();
+                SetResultsFromScript(interactiveObjectFinal, returnedBindingValues);
+            } // second complete check
+            else {
+                Log.e(TAG, "Error in SCRIPT node '" + interactiveObjectFinal.getScriptObject().getName() +
+                        "' running V8 Engine JavaScript function '" + functionNameFinal + "'");
+            }
+        } // first complete check
+    }  //  end RunScriptThread
+
 
     // Run the JavaScript program, Output saved in localBindings
-    private void RunScript(InteractiveObject interactiveObjectFinal, String functionName, Object[] parameters) {
-        GVRJavascriptScriptFile gvrJavascriptFile = interactiveObjectFinal.getScriptObject().getGVRJavascriptScriptFile();
-        boolean complete = gvrJavascriptFile.invokeFunction(functionName, parameters);
-        if (complete) {
-            // The JavaScript (JS) ran ok.  Now get the return
-            // values (saved as X3D data types such as SFColor)
-            //  stored in 'localBindings'.  Then set the GearVR values
-            Bindings localBindings = gvrJavascriptFile.getLocalBindings();
-            SetResultsFromScript(interactiveObjectFinal, localBindings);
-        } else {
-            Log.e(TAG, "Error in SCRIPT node '" +  interactiveObjectFinal.getScriptObject().getName() +
-                    "' running JavaScript function '" + functionName + "'");
+    private void RunScript(InteractiveObject interactiveObject, String functionName, Object[] parameters) {
+        boolean complete = false;
+        if ( V8JavaScriptEngine) {
+            GVRJavascriptV8File gvrJavascriptV8File = interactiveObject.getScriptObject().getGVRJavascriptV8File();
+            String paramString = "var params =[";
+            for (int i = 0; i < parameters.length; i++ ) {
+                paramString += (parameters[i] + ", ");
+            }
+            paramString = paramString.substring(0, (paramString.length()-2)) + "];";
+
+            final GVRJavascriptV8File gvrJavascriptV8FileFinal = gvrJavascriptV8File;
+            final InteractiveObject interactiveObjectFinal = interactiveObject;
+            final String functionNameFinal = functionName;
+            final Object[] parametersFinal = parameters;
+            final String paramStringFinal = paramString;
+            gvrContext.runOnGlThread(new Runnable() {
+                @Override
+                public void run() {
+                    RunScriptThread (gvrJavascriptV8FileFinal, interactiveObjectFinal, functionNameFinal, parametersFinal, paramStringFinal);
+                }
+            });
+        }  // end V8JavaScriptEngine
+        else {
+            // Mozilla Rhino engine
+            GVRJavascriptScriptFile gvrJavascriptFile = interactiveObject.getScriptObject().getGVRJavascriptScriptFile();
+
+            complete = gvrJavascriptFile.invokeFunction(functionName, parameters);
+            if (complete) {
+                // The JavaScript (JS) ran.  Now get the return
+                // values (saved as X3D data types such as SFColor)
+                //  stored in 'localBindings'.
+                //  Then call SetResultsFromScript() to set the GearVR values
+                Bindings localBindings = gvrJavascriptFile.getLocalBindings();
+                SetResultsFromScript(interactiveObject, localBindings);
+
+            } else {
+                Log.e(TAG, "Error in SCRIPT node '" +  interactiveObject.getScriptObject().getName() +
+                        "' running Rhino Engine JavaScript function '" + functionName + "'");
+            }
         }
-    }  // end function ScriptStateChange
+    }  // end function RunScript
 
     // Based on the inputs and javascript code, set the properties of the clsses in the GVR scene graph
     // these include the properties of lights, transforms and materials.

@@ -58,8 +58,13 @@ class LaserCursor extends Cursor {
                 (SelectableGroup.getComponentType());
 
         if (selectableGroup != null) {
+            //if part of a selectable group and disabled then ignore
+            if (!object.isEnabled()) {
+                return;
+            }
             object = selectableGroup.getParent();
         }
+
         cursorEvent.setObject(object);
         cursorEvent.setHitPoint(event.getHitX(), event.getHitY(), event.getHitZ());
         cursorEvent.setCursorPosition(getPositionX(), getPositionY(), getPositionZ());

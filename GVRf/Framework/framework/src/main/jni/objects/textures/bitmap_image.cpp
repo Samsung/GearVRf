@@ -57,7 +57,26 @@ void BitmapImage::update(JNIEnv* env, jobject bitmap)
     if (bitmap != NULL)
     {
         mBitmap = static_cast<jbyteArray>(env->NewGlobalRef(bitmap));
+        mIsBuffer = false;
         LOGV("Texture: BitmapImage::update(bitmap)");
+        signalUpdate();
+    }
+}
+
+void BitmapImage::update(JNIEnv* env, int width, int height, int format, int type, jobject buffer)
+{
+    std::lock_guard<std::mutex> lock(mUpdateLock);
+    env->GetJavaVM(&mJava);
+    clearData(env);
+    if (buffer != NULL)
+    {
+        mWidth = width;
+        mHeight = height;
+        mFormat = format;
+        mType = type;
+        mBitmap = env->NewGlobalRef(buffer);
+        mIsBuffer = true;
+        LOGV("Texture: BitmapImage::update(buffer)");
         signalUpdate();
     }
 }

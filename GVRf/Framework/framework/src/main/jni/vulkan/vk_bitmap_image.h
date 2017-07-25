@@ -37,6 +37,10 @@ namespace gvr {
         void updateFromMemory(int texid);
         void updateFromBitmap(int texid);
         void loadCompressedMipMaps(jbyte *data, int format);
+
+    private:
+        int updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject bitmap);
+
     };
 
 }

@@ -42,11 +42,8 @@ class CursorInputManager {
         ioDeviceListeners = new ArrayList<IoDeviceListener>();
         List<GVRCursorController> gvrCursorControllers = gvrInputManager.getCursorControllers();
         for (GVRCursorController gvrController : gvrCursorControllers) {
-            //TODO: Ignore the controller for now. Not yet implemented
-            if(gvrController.getControllerType() != GVRControllerType.CONTROLLER) {
-                IoDevice ioDevice = IoDeviceLoader.getIoDevice(gvrController);
-                addIoDevice(ioDevice);
-            }
+            IoDevice ioDevice = IoDeviceLoader.getIoDevice(gvrController);
+            addIoDevice(ioDevice);
         }
     }
 
@@ -84,9 +81,7 @@ class CursorInputManager {
     private CursorControllerListener gvrControllerListener = new CursorControllerListener() {
         @Override
         public void onCursorControllerAdded(GVRCursorController gvrCursorController) {
-            //TODO: Ignore the controller for now. Not yet implemented
-            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL ||
-                    gvrCursorController.getControllerType() == GVRControllerType.CONTROLLER) {
+            if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL) {
                 return;
             }
             IoDevice addedIoDevice = IoDeviceLoader.getIoDevice(gvrCursorController);

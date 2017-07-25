@@ -122,7 +122,8 @@ public class MovableBehavior extends SelectableBehavior {
                     .getPositionZ());
             selected = getOwnerObject();
 
-            if (cursor.getCursorType() == CursorType.OBJECT) {
+            if (cursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader
+                    .isControllerIoDevice(cursor.getIoDevice())) {
                 ownerParent = selected.getParent();
                 GVRTransform selectedTransform = selected.getTransform();
                 cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
@@ -138,6 +139,9 @@ public class MovableBehavior extends SelectableBehavior {
     @Override
     void handleDragEvent(CursorEvent event) {
         if (cursor.getCursorType() == CursorType.LASER && cursor == event.getCursor()) {
+            if (IoDeviceLoader.isControllerIoDevice(cursor.getIoDevice())) {
+                return;
+            }
             Cursor cursor = event.getCursor();
             Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor.getPositionY
                     (), cursor.getPositionZ());
@@ -149,12 +153,14 @@ public class MovableBehavior extends SelectableBehavior {
     @Override
     void handleCursorLeave(CursorEvent event) {
         if (event.isActive() && cursor == event.getCursor()) {
-            if (cursor.getCursorType() == CursorType.LASER) {
+            if (cursor.getCursorType() == CursorType.LASER && !IoDeviceLoader
+                    .isControllerIoDevice(cursor.getIoDevice())) {
                 Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor
                         .getPositionY(), cursor.getPositionZ());
                 rotateObjectToFollowCursor(cursorPosition);
                 prevCursorPosition = cursorPosition;
-            } else if (cursor.getCursorType() == CursorType.OBJECT) {
+            } else if (cursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader
+                    .isControllerIoDevice(cursor.getIoDevice())) {
                 handleClickReleased(event);
             }
         }
@@ -168,7 +174,8 @@ public class MovableBehavior extends SelectableBehavior {
                 return;
             }
 
-            if (selected != null && cursor.getCursorType() == CursorType.OBJECT) {
+            if (selected != null && (cursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader
+                    .isControllerIoDevice(cursor.getIoDevice()))) {
                 GVRTransform selectedTransform = selected.getTransform();
                 cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
                 cursorSceneObject.removeChildObject(selected);

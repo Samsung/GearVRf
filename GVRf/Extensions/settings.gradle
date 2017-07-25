@@ -34,7 +34,5 @@ project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/
 include ':gvrf-physics'
 project(':gvrf-physics').projectDir = new File('gvrf-physics')
 
-if (hasProperty("platformsdk_support")) {
-    include ':platformsdk_support'
-    project(':platformsdk_support').projectDir = new File('platformsdk_support')
-}
+include ':platformsdk_support'
+project(':platformsdk_support').projectDir = new File('platformsdk_support')

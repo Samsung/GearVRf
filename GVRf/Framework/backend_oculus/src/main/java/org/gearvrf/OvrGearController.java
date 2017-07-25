@@ -20,6 +20,7 @@ import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Log;
 import android.view.KeyEvent;
 
 import org.gearvrf.io.CursorControllerListener;
@@ -75,7 +76,7 @@ public class OvrGearController extends GVRCursorController {
     private GVRSceneObject pivot;
     private GVRContext context;
     private FloatBuffer readbackBuffer;
-
+    private final Vector3f position;
     private EventHandlerThread thread;
     private boolean initialized = false;
     private final long mPtr;
@@ -91,6 +92,7 @@ public class OvrGearController extends GVRCursorController {
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
+        position = new Vector3f(0.0f, 0.0f, -1.0f);
     }
 
 
@@ -102,6 +104,7 @@ public class OvrGearController extends GVRCursorController {
     public void setSceneObject(GVRSceneObject object) {
         if(pivot.getParent() != context.getMainScene().getRoot()) {
             context.getMainScene().addSceneObject(pivot);
+            object.getTransform().setPosition(position.x, position.y, position.z);
         }
         pivot.addChildObject(object);
     }
@@ -117,9 +120,17 @@ public class OvrGearController extends GVRCursorController {
     }
 
     @Override
+    public void setPosition(float x, float y, float z) {
+        position.set(x, y, z);
+        for (GVRSceneObject child : pivot.getChildren()) {
+            child.getTransform().setPosition(x, y, z);
+        }
+        invalidate();
+    }
+
+    @Override
     public void setEnable(boolean enable) {
         if (!isEnabled && enable) {
-
             if (initialized) {
                 //set the enabled flag on the handler thread
                 isEnabled = true;
@@ -338,7 +349,7 @@ public class OvrGearController extends GVRCursorController {
                     .KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
 
-            setPosition(result.x, result.y, result.z);
+            OvrGearController.super.setPosition(result.x, result.y, result.z);
             event.recycle();
         }
 

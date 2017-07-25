@@ -15,20 +15,19 @@
 
 package org.gearvrf;
 
-import static android.opengl.GLES20.*;
-
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
-import android.opengl.GLUtils;
 
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
 
 import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.RunnableFuture;
+import java.nio.Buffer;
+
+import static android.opengl.GLES20.GL_RGBA;
+import static android.opengl.GLES20.GL_RGB;
+import static android.opengl.GLES20.GL_LUMINANCE;
+
 
 /** Bitmap-based texture. */
 public class GVRBitmapTexture extends GVRImage
@@ -121,6 +120,35 @@ public class GVRBitmapTexture extends GVRImage
     }
 
     /**
+     * Copy a new texture from a {@link Buffer} to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
+     * totally trivial operation: it does involve some memory management and
+     * some GL hardware handshaking. Reusing the texture reduces this overhead
+     * (primarily by delaying garbage collection). Do be aware that updating a
+     * texture will affect any and all {@linkplain GVRMaterial materials}
+     * (and/or post effects that use the texture!
+     *
+     * @param width
+     *            Texture width, in pixels
+     * @param height
+     *            Texture height, in pixels
+     * @param format
+     *            Texture format
+     * @param type
+     *            Texture type
+     * @param pixels
+     *            A NIO Buffer with the texture
+     *
+     */
+    public void setBuffer(final int width, final int height, final int format, final int type, final Buffer pixels)
+    {
+        NativeBitmapImage.updateFromBuffer(getNative(), width, height, format, type, pixels);
+    }
+
+    /**
      * Copy new grayscale data to the GPU texture. This one is also safe even
      * in a non-GL thread. An updateGPU request on a non-GL thread will
      * be forwarded to the GL thread and be executed before main rendering happens.
@@ -161,6 +189,7 @@ class NativeBitmapImage {
     static native String getFileName(long pointer);
     static native void updateFromMemory(long pointer, int width, int height, byte[] data);
     static native void updateFromBitmap(long pointer, Bitmap bitmap);
+    static native void updateFromBuffer(long pointer, int width, int height, int format, int type, Buffer pixels);
     static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[] data, int levels, int[] offsets);
 
 }

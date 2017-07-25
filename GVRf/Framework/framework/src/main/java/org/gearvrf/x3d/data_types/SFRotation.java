@@ -37,6 +37,10 @@ public class SFRotation extends AxisAngle4f {
         set(angle, axis.x, axis.y, axis.z);
     }
 
+    public SFRotation(SFVec3f axis, double angle) {
+        set( (float)angle, axis.x, axis.y, axis.z);
+    }
+
     public SFRotation(SFVec3f fromVector, SFVec3f toVector) {
         fromVector.normalize();
         toVector.normalize();

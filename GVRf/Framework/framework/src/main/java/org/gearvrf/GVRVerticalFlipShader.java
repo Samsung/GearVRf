@@ -47,4 +47,5 @@ public class GVRVerticalFlipShader extends GVRShader
         material.setVec3("u_color", 1, 1, 1);
         material.setFloat("u_factor", 0);
     }
+
 }

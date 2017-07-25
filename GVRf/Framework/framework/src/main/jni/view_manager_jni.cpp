@@ -86,7 +86,7 @@ extern "C" {
                 reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
 
         gRenderer->renderCamera(scene, camera, shader_manager,
-                                post_effect_shader_manager, post_effect_render_texture_a,
+                                post_effect_render_texture_a,
                                 post_effect_render_texture_b);
     }
 

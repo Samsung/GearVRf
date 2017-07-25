@@ -680,23 +680,27 @@ public class CursorManager {
         updateCursorsInScene(scene, true);
     }
 
-    void addCursorToScene(Cursor cursor){
+    void addCursorToScene(Cursor cursor) {
         GVRSceneObject object = cursor.getMainSceneObject();
         IoDevice ioDevice = cursor.getIoDevice();
-        if(IoDeviceLoader.isMouseIoDevice(ioDevice)){
+        if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
             scene.getMainCameraRig().addChildObject(object);
-        }else {
+        } else if (IoDeviceLoader.isControllerIoDevice(ioDevice)) {
+            //do nothing
+        } else {
             scene.addSceneObject(object);
         }
     }
 
-    void removeCursorFromScene(Cursor cursor){
+    void removeCursorFromScene(Cursor cursor) {
         GVRSceneObject object = cursor.getMainSceneObject();
 
         IoDevice ioDevice = cursor.getIoDevice();
-        if(IoDeviceLoader.isMouseIoDevice(ioDevice)){
+        if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
             scene.getMainCameraRig().removeChildObject(object);
-        }else {
+        } else if (IoDeviceLoader.isControllerIoDevice(ioDevice)) {
+            //do nothing
+        } else {
             scene.removeSceneObject(object);
         }
     }

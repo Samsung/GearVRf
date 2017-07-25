@@ -112,7 +112,7 @@ class CursorFactory {
         }
 
         Collections.sort(cursor.getIoDevices());
-        addGearVrBackup(cursor);
+        //addGearVrBackup(cursor);
 
         return cursor;
     }

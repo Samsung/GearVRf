@@ -31,7 +31,7 @@ repositories {
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
 
     buildTypes {
         debug {

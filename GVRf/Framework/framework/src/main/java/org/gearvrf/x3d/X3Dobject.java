@@ -17,7 +17,28 @@ package org.gearvrf.x3d;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.util.Log;
+import org.gearvrf.utility.Log;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.gearvrf.script.GVRJavascriptScriptFile;
+import org.gearvrf.script.javascript.GVRJavascriptV8File;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAssetLoader;
@@ -46,30 +67,11 @@ import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
-import org.gearvrf.script.GVRJavascriptScriptFile;
+
+import org.joml.Vector3f;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
 
 public class X3Dobject {
     /**
@@ -584,7 +586,7 @@ public class X3Dobject {
     // Default is true to use Universal lights shader.
     public final static boolean UNIVERSAL_LIGHTS = true;
 
-    private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)";
+    private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)";
 
     // Strings appended to GVRScene names when there are multiple
     // animations on the same <Transform> or GVRSceneObject
@@ -615,9 +617,7 @@ public class X3Dobject {
     private final static int elevationGridHeight = 10;
     private boolean reorganizeVerts = false;
 
-    private static final float CUBE_WIDTH = 20.0f; // used for cube maps, based on
-    // gvrcubemap [GearVRf-Demos
-    // master]
+    private static final float CUBE_WIDTH = 20.0f; // used for cube maps
     private GVRAssetLoader.AssetRequest assetRequest = null;
     private GVRContext gvrContext = null;
     private Context activityContext = null;
@@ -3596,10 +3596,17 @@ public class X3Dobject {
                 else if (qName.equalsIgnoreCase("Viewpoint")) {
                         ;
                     } else if (qName.equalsIgnoreCase("Script")) {
-                        javaScriptCode = JAVASCRIPT_IMPORT_PACKAGE + '\n' + javaScriptCode;
+                        javaScriptCode = JAVASCRIPT_IMPORT_PACKAGE + '\n' + javaScriptCode + '\n';
                         currentScriptObject.setJavaScriptCode(javaScriptCode);
-                        GVRJavascriptScriptFile gvrJavascriptScriptFile = new GVRJavascriptScriptFile(gvrContext, javaScriptCode);
-                        currentScriptObject.setGVRJavascriptScriptFile(gvrJavascriptScriptFile);
+                        if ( animationInteractivityManager.V8JavaScriptEngine) {
+                            GVRJavascriptV8File gvrJavascriptV8File = new GVRJavascriptV8File(gvrContext, javaScriptCode);
+                            currentScriptObject.setGVRJavascriptV8File( gvrJavascriptV8File );
+                        }
+                        else {
+                            // using Mozila Rhino js engine
+                            GVRJavascriptScriptFile gvrJavascriptScriptFile = new GVRJavascriptScriptFile(gvrContext, javaScriptCode);
+                            currentScriptObject.setGVRJavascriptScriptFile(gvrJavascriptScriptFile);
+                        }
                         scriptObjects.add(currentScriptObject);
 
                         parseJavaScript = false;
@@ -3688,7 +3695,7 @@ public class X3Dobject {
                 String js = "";
                 boolean leadingNonprintChars = true;
                 for (int i = start; i < length; i++) {
-                    if ((ch[i] == '\n') || (ch[i] == ' ') || (ch[i] == '\t')) {
+                    if ((ch[i] == ' ') || (ch[i] == '\t')) {
                         if (!leadingNonprintChars && (ch[i] == ' ')) {
                             js += ch[i];
                         }
@@ -3697,9 +3704,7 @@ public class X3Dobject {
                         leadingNonprintChars = false;
                     }
                 }
-                if (js.length() > 0) {
-                    javaScriptCode += js + '\n';
-                }
+                javaScriptCode += js;
             }
         }  //  end characters method
 
@@ -3726,8 +3731,6 @@ public class X3Dobject {
                             gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
                             inputStream = gvrAndroidResource.getStream();
                             currentSceneObject = inlineObject.getInlineGVRSceneObject();
-                            // float low = currentSceneObject.getLODMinRange();
-                            // float high = currentSceneObject.getLODMaxRange();
                             saxParser.parse(inputStream, userhandler);
                         } catch (FileNotFoundException e) {
                             Log.e(TAG,

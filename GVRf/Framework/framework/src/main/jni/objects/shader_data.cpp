@@ -240,7 +240,7 @@ namespace gvr {
                 }
             }
         }
-        return (uniforms().updateGPU(renderer) ? 1 : 0);
+        return 1;
     }
 
 }

@@ -29,6 +29,7 @@
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
 #define SWAP_CHAIN_COUNT 6
+#define POSTEFFECT_CHAIN_COUNT 2
 
 namespace gvr {
 class VulkanUniformBlock;
@@ -87,16 +88,19 @@ public:
             return theInstance;
         return NULL;
     }
-    void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*);
+    void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*, bool postEffectFlag);
 
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
     bool InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData);
+    bool InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData, int postEffectIndx);
 
 
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*);
+    void BuildCmdBufferForRenderDataPE(Camera*, RenderData* rdata, Shader* shader, int postEffectIndx);
 
-    void DrawFrameForRenderData();
+    int DrawFrameForRenderData();
+    int DrawFrameForRenderDataPE();
     int getCurrentSwapChainIndx(){
         return imageIndex;
     }
@@ -106,10 +110,13 @@ public:
     VkCommandBuffer* getCurrentCmdBuffer(){
         return swapChainCmdBuffer[imageIndex];
     }
+
+    VkCommandBuffer* getCurrentCmdBufferPE(){
+        return postEffectCmdBuffer;
+    }
     int AcquireNextImage();
 
-    void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int);
-
+    void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, bool poastEffect, int postEffectIndx);
 
     bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
                                      uint32_t *typeIndex);
@@ -137,8 +144,11 @@ public:
         return swap_chain_init_;
     }
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
+    void RenderToOculus(int index, int postEffectFlag);
+    void InitPostEffectChain();
 private:
     std::vector <VkFence> waitFences;
+    VkFence postEffectFence;
     std::vector <VkFence> waitSCBFences;
     static VulkanCore *theInstance;
 
@@ -161,6 +171,7 @@ private:
 
     void InitSwapchain(uint32_t width, uint32_t height);
 
+
     void InitCommandbuffers();
 
     void InitTransientCmdPool();
@@ -179,7 +190,7 @@ private:
     void InitShaders(VkPipelineShaderStageCreateInfo shaderStages[],
                      std::vector<uint32_t>& result_vert, std::vector<uint32_t>& result_frag);
     void CreateSampler(TextureObject * &textureObject);
-
+    void GetDescriptorPool(VkDescriptorPool& descriptorPool);
 
     ANativeWindow *m_androidWindow;
 
@@ -195,6 +206,7 @@ private:
     VkSurfaceKHR m_surface;
 
     std::vector<VkCommandBuffer*> swapChainCmdBuffer;
+    VkCommandBuffer * postEffectCmdBuffer;
 
     uint32_t m_height;
     uint32_t m_width;
@@ -212,6 +224,7 @@ private:
     TextureObject * textureObject;
 
     VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
+    VkRenderTexture* mPostEffectTexture[POSTEFFECT_CHAIN_COUNT];
     VkRenderPass mRenderPassMap[2];
 };
 }
