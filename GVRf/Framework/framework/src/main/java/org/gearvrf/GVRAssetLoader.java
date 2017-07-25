@@ -188,11 +188,14 @@ public final class GVRAssetLoader {
                     GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
                     GVRAsynchronousResourceLoader.loadTexture(mContext, mCacheEnabled ? mTextureCache : null,
                                                               request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
-
                 }
                 catch (IOException ex)
                 {
-                    request.loaded(getDefaultTexture(mContext).getImage(), null);
+                    GVRImage whiteTex = getDefaultImage(mContext);
+                    if (whiteTex != null)
+                    {
+                        request.loaded(whiteTex, null);
+                    }
                     onTextureError(mContext, ex.getMessage(), request.TextureFile);
                 }
             }
@@ -306,12 +309,12 @@ public final class GVRAssetLoader {
                 Log.e(TAG, "ASSET: Texture: successfully loaded texture %s %d", texFile, mNumTextures);
                 if (mNumTextures >= 1)
                 {
-                    --mNumTextures;
-                    if (mNumTextures != 0)
+                    if (--mNumTextures != 0)
                     {
                         return;
                     }
-                } else
+                }
+                else
                 {
                     return;
                 }
@@ -361,14 +364,15 @@ public final class GVRAssetLoader {
                                                  "onTextureError", new Object[] { mContext, error, texFile });
             synchronized (mNumTextures)
             {
+                Log.e(TAG, "ASSET: Texture: ERROR cannot load texture %s %d", texFile, mNumTextures);
                 if (mNumTextures >= 1)
                 {
-                    --mNumTextures;
-                    if (mNumTextures != 0)
+                    if (--mNumTextures != 0)
                     {
                         return;
                     }
-                } else
+                }
+                else
                 {
                     return;
                 }
@@ -497,44 +501,37 @@ public final class GVRAssetLoader {
             {
                 mCallback.loaded(image, resource);
             }
-
+            if (mAssetRequest != null)
             {
-                if (mAssetRequest != null)
-                {
-                    mAssetRequest.onTextureLoaded(ctx, Texture, TextureFile);
-                }
-                else
-                {
-                    ctx.getEventManager().sendEvent(ctx, IAssetEvents.class,
-                            "onTextureLoaded", new Object[] { ctx, Texture, TextureFile });
-                }
+                mAssetRequest.onTextureLoaded(ctx, Texture, TextureFile);
             }
-
+            else
+            {
+                ctx.getEventManager().sendEvent(ctx, IAssetEvents.class,
+                        "onTextureLoaded", new Object[] { ctx, Texture, TextureFile });
+            }
         }
 
         @Override
         public void failed(Throwable t, GVRAndroidResource resource)
         {
             GVRContext ctx = Texture.getGVRContext();
-            Texture.failed(t, resource);
             if (mCallback != null)
             {
                 mCallback.failed(t, resource);
             }
+            if (mAssetRequest != null)
+            {
+                mAssetRequest.onTextureError(ctx, t.getMessage(), TextureFile);
 
-            
-                if (mAssetRequest != null)
+                GVRImage whiteTex = getDefaultImage(ctx);
+                if (whiteTex != null)
                 {
-                    mAssetRequest.onTextureError(ctx, t.getMessage(), TextureFile);
-
-                    loaded(getDefaultTexture(ctx).getImage(), null);
+                    Texture.loaded(whiteTex, null);
                 }
-                else
-                {
-                    ctx.getEventManager().sendEvent(ctx, IAssetEvents.class,
-                            "onTextureError", new Object[] { ctx, t.getMessage(), TextureFile });
-                }
-
+            }
+            ctx.getEventManager().sendEvent(ctx, IAssetEvents.class,
+                    "onTextureError", new Object[] { ctx, t.getMessage(), TextureFile });
         }
 
         @Override
@@ -589,14 +586,14 @@ public final class GVRAssetLoader {
         return mEmbeddedCache;
     }
 
-    private static GVRTexture getDefaultTexture(GVRContext ctx)
+    private static GVRImage getDefaultImage(GVRContext ctx)
     {
         if (mDefaultTexture == null)
         {
             GVRAndroidResource r = new GVRAndroidResource(ctx, R.drawable.white_texture);
             mDefaultTexture = ctx.getAssetLoader().loadTexture(r);
         }
-        return mDefaultTexture;
+        return mDefaultTexture.getImage();
     }
 
     /**
