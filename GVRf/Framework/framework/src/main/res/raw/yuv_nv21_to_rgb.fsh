@@ -2,12 +2,12 @@ precision highp float;
 in vec2 diffuse_coord;
 
 #ifdef VULKAN
-layout (set = 0, binding = 0)
+layout (set = 0, binding = 4)
 #endif
 uniform sampler2D y_texture;
 
 #ifdef VULKAN
-layout (set = 0, binding = 1)
+layout (set = 0, binding = 5)
 #endif
 uniform sampler2D uv_texture;
 
