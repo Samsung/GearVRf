@@ -152,10 +152,10 @@ namespace gvr {
                 {
                     VkVertexInputAttributeDescription binding;
                     binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
-                    binding.location = e.Index;
-                    LOGE("location %d attrMapping[i].offset %d , name %s", e.Index, e.Offset, e.Name);
-                    binding.format = getDataType(e.Type); //float3
-                    binding.offset = e.Offset;
+                    binding.location = entry->Index;
+                    LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                    binding.format = getDataType(entry->Type); //float3
+                    binding.offset = entry->Offset;
                     vertices->vi_attrs.push_back(binding);
                     i++;
                 }

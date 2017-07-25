@@ -55,7 +55,7 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     dummy_binding.binding = 1;
     samplerBinding.push_back(dummy_binding);
 
-    if(vkdata->mesh()->hasBones()){
+    if(vkdata->mesh()->hasBones() && hasBones()){
        VkDescriptorSetLayoutBinding &bones_uniformBinding = reinterpret_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
        samplerBinding.push_back(bones_uniformBinding);
    }
@@ -158,7 +158,15 @@ VulkanShader::~VulkanShader() { }
     std::string VulkanShader::makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer)
     {
         std::ostringstream stream;
-        int bindingIndex = strcasestr(blockName,"material") ? 1 : 0;
+        int bindingIndex =0;
+
+        if(strcasestr(blockName,"material"))
+            bindingIndex = MATERIAL_UBO_INDEX;
+        else if(strcasestr(blockName,"Transform"))
+            bindingIndex = TRANSFORM_UBO_INDEX;
+        else if(strcasestr(blockName,"Bones"))
+            bindingIndex = BONES_UBO_INDEX;
+
         if (useGPUBuffer)
         {
             stream << "layout (std140, set = 0, binding = " << bindingIndex <<" ) uniform " << blockName << " {" << std::endl;
@@ -167,20 +175,37 @@ VulkanShader::~VulkanShader() { }
         {
             stream << "layout (std140, push_constant) uniform PushConstants {" << std::endl;
         }
-        desc.forEachEntry([&stream](const DataDescriptor::DataEntry& entry) mutable
+
+        if (useGPUBuffer)
         {
-            if(entry.IsSet)
-            {
-                int nelems = entry.Count;
-                stream << "   " << entry.Type << " " << entry.Name;
-                if (nelems > 1)
-                {
-                    stream << "[" << nelems << "]";
-                }
-                stream << ";" << std::endl;
-            }
-        });
-        stream << "};" << std::endl;
+            desc.forEachEntry([&stream](const DataDescriptor::DataEntry& entry) mutable
+                              {
+                                  int nelems = entry.Count;
+                                  stream << "   " << entry.Type << " " << entry.Name;
+                                  if (nelems > 1)
+                                  {
+                                      stream << "[" << nelems << "]";
+                                  }
+                                  stream << ";" << std::endl;
+                              });
+            stream << "};" << std::endl;
+        }
+        else
+        {
+            desc.forEachEntry([&stream](const DataDescriptor::DataEntry& entry) mutable
+                              {
+                                  if (entry.IsSet)
+                                  {
+                                      int nelems = entry.Count;
+                                      stream << "uniform " << entry.Type << " " << entry.Name;
+                                      if (nelems > 1)
+                                      {
+                                          stream << "[" << nelems << "]";
+                                      }
+                                      stream << ";" << std::endl;
+                                  }
+                              });
+        }
         return stream.str();
     }
 } /* namespace gvr */
