@@ -49,6 +49,7 @@ layout(set = 0, binding = 14) uniform sampler2D emissiveTexture1;
 in vec2 lightmap_coord1;
 #endif
 
+
 layout(set = 0, binding = 5) uniform sampler2D ambientTexture;
 layout(set = 0, binding = 4) uniform sampler2D diffuseTexture;
 layout(set = 0, binding = 6) uniform sampler2D specularTexture;
