@@ -16,25 +16,19 @@
 
 package org.gearvrf.io.cursor3d;
 
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
-import org.gearvrf.SensorEvent.EventGroup;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 import org.gearvrf.utility.Log;
-
-import java.util.List;
 
 /**
  * Class that represents a laser type cursor.
  */
 class LaserCursor extends Cursor {
-    private static final String TAG = LaserCursor.class.getSimpleName();
+    private static final String TAG = "LaserCursor";
     private static final boolean COLLIDING = true;
 
     /**
@@ -44,6 +38,7 @@ class LaserCursor extends Cursor {
      */
     LaserCursor(GVRContext context, CursorManager manager) {
         super(context, CursorType.LASER, manager);
+        Log.d(TAG, Integer.toHexString(hashCode()) + " constructed");
     }
 
     @Override

@@ -48,7 +48,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * to add an external {@link GVRCursorController} to the framework.
  */
 public abstract class GVRCursorController {
-    private static final String TAG = GVRCursorController.class.getSimpleName();
+    private static final String TAG = "GVRCursorController";
     private static int uniqueControllerId = 0;
     private final int controllerId;
     private final GVRControllerType controllerType;
@@ -341,6 +341,7 @@ public abstract class GVRCursorController {
      *                    {@link GVRCursorController}.
      */
     protected void setMotionEvent(MotionEvent motionEvent) {
+        Log.d(TAG, "setting motion event; motionEvent " + (null != motionEvent));
         synchronized (eventLock) {
             this.motionEvent.add(motionEvent);
         }
