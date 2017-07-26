@@ -33,7 +33,7 @@ import static android.opengl.GLES20.GL_POINTS;
  *  the actual particles when rendered using GL_POINTS.
  */
 
-public class Particles extends GVRMesh {
+class Particles {
 
     private  GVRContext mGVRContext;
     private GVRMaterial material;
@@ -49,7 +49,7 @@ public class Particles extends GVRMesh {
     public Particles(GVRContext gvrContext, float age, float particleSize,
                      Vector3f acceleration, float particleSizeRate, boolean fadeWithAge,
                      GVRTexture tex, Vector4f color) {
-        super(gvrContext);
+
         mGVRContext = gvrContext;
         mAge = age;
         mSize = particleSize;
@@ -106,7 +106,7 @@ public class Particles extends GVRMesh {
 
         GVRMaterialShaderManager shaderManager = mGVRContext.getMaterialShaderManager();
         GVRShaderTemplate shaderTemplate = shaderManager.retrieveShaderTemplate(ColorShader.class);
-        shaderTemplate.bindShader(mGVRContext, meshObject.getRenderData(), getGVRContext().getMainScene());
+        shaderTemplate.bindShader(mGVRContext, meshObject.getRenderData(), mGVRContext.getMainScene());
 
         // Set the draw mode to GL_POINTS, disable writing to depth buffer, enable depth testing
         // and set the rendering order to transparent.

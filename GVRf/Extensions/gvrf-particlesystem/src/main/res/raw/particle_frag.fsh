@@ -8,11 +8,11 @@ varying float deltaTime;
 
 void main() {
 
-    float opacity = 1.0f;
+    float opacity = 1.0;
 
-    if ( u_fade == 1.0f )
+    if ( u_fade == 1.0 )
     {
-        opacity = 1.0f - (deltaTime / u_particle_age);
+        opacity = 1.0 - (deltaTime / u_particle_age);
     }
 
     vec4 color = texture2D(tex0, gl_PointCoord);

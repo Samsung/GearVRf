@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.particlesystem.emitters;
+package org.gearvrf.particlesystem;
 
 /**
  * Is a GVREmitter of the plane shape. The particles are emitted from
