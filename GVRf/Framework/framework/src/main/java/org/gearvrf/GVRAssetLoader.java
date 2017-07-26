@@ -424,6 +424,21 @@ public final class GVRAssetLoader {
             {
                 if ((mScene != null))
                 {
+                    if (mReplaceScene)
+                    {
+                        GVRSceneObject mainCam = mModel.getSceneObjectByName("MainCamera");
+                        GVRCameraRig modelCam = (mainCam != null) ? mainCam.getCameraRig() : null;
+
+                        mScene.clear();
+                        if (modelCam != null)
+                        {
+                            GVRCameraRig sceneCam = mScene.getMainCameraRig();
+                            sceneCam.getTransform().setModelMatrix(mainCam.getTransform().getLocalModelMatrix());
+                            sceneCam.setNearClippingDistance(modelCam.getNearClippingDistance());
+                            sceneCam.setFarClippingDistance(modelCam.getFarClippingDistance());
+                            sceneCam.setCameraRigType(modelCam.getCameraRigType());
+                        }
+                    }
                     /*
                      * If the model does not already have a parent,
                      * add it to the scene.
@@ -431,24 +446,6 @@ public final class GVRAssetLoader {
                     if (mModel.getParent() == null)
                     {
                         Log.d(TAG, "ASSET: asset %s added to scene", mFileName);
-                        if (mReplaceScene)
-                        {
-                            GVRSceneObject mainCam = mModel.getSceneObjectByName("MainCamera");
-                            GVRCameraRig modelCam =
-                                    (mainCam != null) ? mainCam.getCameraRig() : null;
-
-                            mScene.clear();
-                            if (modelCam != null)
-                            {
-                                GVRCameraRig sceneCam = mScene.getMainCameraRig();
-                                sceneCam.getTransform().setModelMatrix(
-                                        mainCam.getTransform().getLocalModelMatrix());
-                                sceneCam.setNearClippingDistance(
-                                        modelCam.getNearClippingDistance());
-                                sceneCam.setFarClippingDistance(modelCam.getFarClippingDistance());
-                                sceneCam.setCameraRigType(modelCam.getCameraRigType());
-                            }
-                        }
                         mScene.addSceneObject(mModel);
                     }
                 }
