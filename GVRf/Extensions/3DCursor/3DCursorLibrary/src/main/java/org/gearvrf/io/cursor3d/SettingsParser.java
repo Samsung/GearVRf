@@ -72,7 +72,6 @@ class SettingsParser {
             cursorManager) throws XmlPullParserException, IOException {
 
         Map<String, CursorTheme> themes = cursorManager.getThemeMap();
-        List<Cursor> cursors = cursorManager.getUnusedCursors();
 
         parser.require(XmlPullParser.START_TAG, null, SETTINGS);
         while (parser.next() != XmlPullParser.END_TAG) {
@@ -92,17 +91,16 @@ class SettingsParser {
                 themes.put(theme.getId(), theme);
             } else if (name.equals(CURSOR)) {
                 Log.d(TAG, "Reading the cursor tag");
-                cursors.add(CursorFactory.readCursor(parser, context, cursorManager));
+                cursorManager.addCursor(CursorFactory.readCursor(parser, context, cursorManager));
             }
         }
-        if (cursors.size() == 0) {
+        if (0 == cursorManager.getUnusedCursorsCount()) {
             throw new XmlPullParserException("No cursors specified in settings.xml");
         }
     }
 
     static void saveSettings(Context context, CursorManager cursorManager) throws IOException {
         Map<String, CursorTheme> themes = cursorManager.getThemeMap();
-        List<Cursor> unusedCursors = cursorManager.getUnusedCursors();
         List<Cursor> cursors = cursorManager.getActiveCursors();
         BufferedWriter writer = null;
         try {
@@ -118,7 +116,8 @@ class SettingsParser {
             for (Cursor cursor : cursors) {
                 CursorFactory.writeCursor(cursor, writer);
             }
-            for (Cursor cursor : unusedCursors) {
+            final List<Cursor> unusedCursorsCopy = cursorManager.getInactiveCursors();
+            for (Cursor cursor : unusedCursorsCopy) {
                 CursorFactory.writeCursor(cursor, writer);
             }
             writer.write(XML_END_TAG);
