@@ -220,6 +220,10 @@ public final class GVRAssetLoader {
 
             Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
             Map<String, GVRImage> texCache = GVRAssetLoader.getEmbeddedTextureCache();
+            synchronized (mNumTextures)
+            {
+                ++mNumTextures;
+            }
             try
             {
                 resource = new GVRAndroidResource(request.TextureFile);
@@ -235,11 +239,8 @@ public final class GVRAssetLoader {
                 {
                     Log.d(TAG, "ASSET: loadEmbeddedTexture found %s", resource.getResourceFilename());
                     bmapTex.setImage(image);
+                    request.loaded(image, resource);
                     return bmapTex;
-                }
-                synchronized (mNumTextures)
-                {
-                    ++mNumTextures;
                 }
                 Bitmap bmap;
                 if (aitex.getHeight() == 0)
@@ -1460,7 +1461,7 @@ public final class GVRAssetLoader {
         return new File(outputFilename);
     }
 
-    GVRTextureParameters getDefaultTextureParameters() {
+    public GVRTextureParameters getDefaultTextureParameters() {
         return mDefaultTextureParameters;
     }
 
