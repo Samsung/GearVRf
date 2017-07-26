@@ -175,6 +175,14 @@ public final class GVRAssetLoader {
         }
 
         /**
+         * Disable texture caching
+         */
+        void disableTextureCache()
+        {
+            mCacheEnabled = false;
+        }
+
+        /**
          * Load a texture asynchronously with a callback.
          * @param request callback that indicates which texture to load
          */
@@ -654,7 +662,6 @@ public final class GVRAssetLoader {
         return texture;
     }
 
-
     /**
      * Loads a texture asynchronously.
      *
@@ -668,6 +675,13 @@ public final class GVRAssetLoader {
      * {@code res/raw/resource.png} with {@code res/raw/resource.etc2} without
      * having to change any code.
      *
+     * @param resource
+     *            A stream containing a texture file. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @param texparams
+     *            GVRTextureParameters object containing texture sampler attributes.
      * @param callback
      *            Before loading, GVRF may call
      *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
@@ -678,10 +692,9 @@ public final class GVRAssetLoader {
      *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
      *            loaded()} on the GL thread;
      *
-     *            any errors will call
+     *            Any errors will call
      *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
      *            failed()}, with no promises about threading.
-     *
      *            <p>
      *            This method uses a throttler to avoid overloading the system.
      *            If the throttler has threads available, it will run this
@@ -690,13 +703,6 @@ public final class GVRAssetLoader {
      *            {@link GVRAndroidResource.TextureCallback#stillWanted(GVRAndroidResource)
      *            stillWanted()} at least once (on a background thread) to give
      *            you a chance to abort a 'stale' load.
-     * @param resource
-     *            Basically, a stream containing a texture file. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @param texparams
-     *            GVRTextureParameters object containing texture sampler attributes.
      * @param priority
      *            This request's priority. Please see the notes on asynchronous
      *            priorities in the <a href="package-summary.html#async">package
@@ -1184,7 +1190,7 @@ public final class GVRAssetLoader {
      *            Additional import {@link GVRImportSettings settings}
      *
      * @param cacheEnabled
-     *            If true, cache textures loaded from the model.
+     *            If true, add the model's textures to the texture cache.
      *
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
@@ -1204,7 +1210,6 @@ public final class GVRAssetLoader {
         GVRModelSceneObject model = new GVRModelSceneObject(mContext);
         AssetRequest assetRequest = new AssetRequest(model, new GVRResourceVolume(mContext, filePath), scene, null, false);
         model.setName(assetRequest.getBaseName());
-
         assetRequest.setImportSettings(settings);
         assetRequest.useCache(cacheEnabled);
         if (ext.equals("x3d"))
@@ -1236,7 +1241,7 @@ public final class GVRAssetLoader {
      *            Additional import {@link GVRImportSettings settings}
      *
      * @param cacheEnabled
-     *            If true, cache textures loaded from the model.
+     *            If true, add the model's textures to the texture cache.
      *
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
@@ -1258,6 +1263,10 @@ public final class GVRAssetLoader {
         GVRResourceVolume volume = new GVRResourceVolume(mContext, resource);
         AssetRequest assetRequest = new AssetRequest(model, volume, scene, null, false);
 
+        if (!cacheEnabled)
+        {
+            assetRequest.disableTextureCache();
+        }
         model.setName(assetRequest.getBaseName());
         assetRequest.setImportSettings(settings);
         assetRequest.useCache(cacheEnabled);
@@ -1285,7 +1294,7 @@ public final class GVRAssetLoader {
      *            Additional import {@link GVRImportSettings settings}
      *
      * @param cacheEnabled
-     *            If true, cache textures loaded from the model.
+     *            If true, add the model's textures to the texture cache
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
@@ -1306,7 +1315,6 @@ public final class GVRAssetLoader {
                 model.setName(assetRequest.getBaseName());
                 assetRequest.setImportSettings(settings);
                 assetRequest.useCache(cacheEnabled);
-
                 try
                 {
                     if (ext.equals("x3d"))
@@ -1361,7 +1369,8 @@ public final class GVRAssetLoader {
             request.onModelError(mContext, errmsg, filePath);
             throw new IOException(errmsg);
         }
-        jassimpAdapter.processScene(request, model, assimpScene, volume);
+        boolean startAnimations = request.getImportSettings().contains(GVRImportSettings.START_ANIMATIONS);
+        jassimpAdapter.processScene(request, model, assimpScene, volume, startAnimations);
         request.onModelLoaded(mContext, model, filePath);
         return model;
     }
