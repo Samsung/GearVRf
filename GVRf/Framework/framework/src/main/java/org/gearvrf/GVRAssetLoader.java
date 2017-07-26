@@ -18,6 +18,7 @@ package org.gearvrf;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 
 import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimator;
@@ -181,21 +182,23 @@ public final class GVRAssetLoader {
         {
             synchronized (mNumTextures)
             {
+                GVRAndroidResource resource = null;
                 ++mNumTextures;
                 Log.d(TAG, "ASSET: loadTexture %s %d", request.TextureFile, mNumTextures);
                 try
                 {
-                    GVRAndroidResource resource = mVolume.openResource(request.TextureFile);
+                    resource = mVolume.openResource(request.TextureFile);
                     GVRAsynchronousResourceLoader.loadTexture(mContext, mCacheEnabled ? mTextureCache : null,
                                                               request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
                 }
                 catch (IOException ex)
                 {
+                    GVRAndroidResource r = new GVRAndroidResource(mContext, R.drawable.white_texture);
+                    GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
+                                                              request, r, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+
                     GVRImage whiteTex = getDefaultImage(mContext);
-                    if (whiteTex != null)
-                    {
-                        request.loaded(whiteTex, null);
-                    }
+                    request.loaded(whiteTex, null);
                     onTextureError(mContext, ex.getMessage(), request.TextureFile);
                 }
             }
@@ -220,6 +223,10 @@ public final class GVRAssetLoader {
 
             Log.d(TAG, "ASSET: loadEmbeddedTexture %s %d", request.TextureFile, mNumTextures);
             Map<String, GVRImage> texCache = GVRAssetLoader.getEmbeddedTextureCache();
+            synchronized (mNumTextures)
+            {
+                ++mNumTextures;
+            }
             try
             {
                 resource = new GVRAndroidResource(request.TextureFile);
@@ -235,11 +242,8 @@ public final class GVRAssetLoader {
                 {
                     Log.d(TAG, "ASSET: loadEmbeddedTexture found %s", resource.getResourceFilename());
                     bmapTex.setImage(image);
+                    request.loaded(image, resource);
                     return bmapTex;
-                }
-                synchronized (mNumTextures)
-                {
-                    ++mNumTextures;
                 }
                 Bitmap bmap;
                 if (aitex.getHeight() == 0)
@@ -546,7 +550,7 @@ public final class GVRAssetLoader {
     protected static ResourceCache<GVRImage> mTextureCache = new ResourceCache<GVRImage>();
     protected static HashMap<String, GVRImage> mEmbeddedCache = new HashMap<String, GVRImage>();
 
-    protected static GVRTexture mDefaultTexture = null;
+    protected static GVRBitmapTexture mDefaultImage = null;
 
     /**
      * When the application is restarted we recreate the texture cache
@@ -560,7 +564,7 @@ public final class GVRAssetLoader {
             public void run() {
                 mTextureCache = new ResourceCache<GVRImage>();
                 mEmbeddedCache = new HashMap<String, GVRImage>();
-                mDefaultTexture = null;
+                mDefaultImage = null;
             }
         });
     }
@@ -588,12 +592,16 @@ public final class GVRAssetLoader {
 
     private static GVRImage getDefaultImage(GVRContext ctx)
     {
-        if (mDefaultTexture == null)
+        if (mDefaultImage == null)
         {
-            GVRAndroidResource r = new GVRAndroidResource(ctx, R.drawable.white_texture);
-            mDefaultTexture = ctx.getAssetLoader().loadTexture(r);
+            mDefaultImage = new GVRBitmapTexture(ctx);
+            Bitmap bmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
+
+            Canvas canvas = new Canvas(bmap);
+            canvas.drawRGB(0xff, 0xff, 0xff);
+            mDefaultImage.setBitmap(bmap);
         }
-        return mDefaultTexture.getImage();
+        return mDefaultImage;
     }
 
     /**
@@ -1460,7 +1468,7 @@ public final class GVRAssetLoader {
         return new File(outputFilename);
     }
 
-    GVRTextureParameters getDefaultTextureParameters() {
+    public GVRTextureParameters getDefaultTextureParameters() {
         return mDefaultTextureParameters;
     }
 
