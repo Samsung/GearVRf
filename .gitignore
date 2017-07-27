@@ -46,3 +46,5 @@ buildinfo.h
 buildinfo.cpp
 BuildInfo.java
 OvrBuildInfo.java
+
+gradle.properties
