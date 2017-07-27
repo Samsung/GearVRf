@@ -589,9 +589,10 @@ public class GVRShaderTemplate
         }
         else
         {
+            boolean isMultiviewSet = context.getActivity().getAppSettings().isMultiviewSet();
             variant = new ShaderVariant();
-            variant.VertexShaderSource = generateShaderSource("Vertex", context.getActivity().getAppSettings().isMultiviewSet());
-            variant.FragmentShaderSource = generateShaderSource("Fragment", context.getActivity().getAppSettings().isMultiviewSet());
+            variant.VertexShaderSource = generateShaderSource("Vertex", isMultiviewSet);
+            variant.FragmentShaderSource = generateShaderSource("Fragment", isMultiviewSet);
             mShaderVariants.put(signature, variant);
         }
         GVRShaderManagers shaderManager = context.getPostEffectShaderManager();
