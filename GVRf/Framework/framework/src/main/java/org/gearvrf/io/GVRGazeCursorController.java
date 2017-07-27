@@ -19,7 +19,6 @@ import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -28,33 +27,30 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRScene;
 import org.joml.Vector3f;
 
-class GVRGazeCursorController extends GVRBaseController implements
-        GVRDrawFrameListener {
-    private static final String TAG = GVRGazeCursorController.class
-            .getSimpleName();
+import java.util.concurrent.CountDownLatch;
+
+final class GVRGazeCursorController extends GVRBaseController implements GVRDrawFrameListener {
     private static final int TAP_TIMEOUT = 60;
     private static float TOUCH_SQUARE = 8.0f * 8.0f;
     private static final float DEPTH_SENSITIVITY = 0.1f;
     private final GVRContext context;
-    private int referenceCount = 0;
-    private boolean buttonDownSent = false;
+    private int referenceCount;
+    private boolean buttonDownSent;
     private float actionDownX;
     private float actionDownY;
     private float actionDownZ;
-    boolean isEnabled = false;
+    private boolean isEnabled;
 
     // Used to calculate the absolute position that the controller reports to
     // the user.
     private final Vector3f gazePosition;
-    private Object lock = new Object();
+    private final Object lock = new Object();
     
-
     // Saves the relative position of the cursor with respect to the camera.
     private final Vector3f setPosition;
     private EventHandlerThread thread;
-    private boolean threadStarted;
 
-    public GVRGazeCursorController(GVRContext context,
+    GVRGazeCursorController(GVRContext context,
                                    GVRControllerType controllerType, String name, int vendorId,
                                    int productId) {
         super(controllerType, name, vendorId, productId);
@@ -76,23 +72,16 @@ class GVRGazeCursorController extends GVRBaseController implements
         }
     }
 
-
     private void start(){
-        if (!threadStarted) {
+        if (!thread.isAlive()) {
             thread.start();
-            thread.prepareHandler();
-            threadStarted = true;
+            thread.await();
         }
         context.registerDrawFrameListener(this);
     }
 
     private void stop(){
         context.unregisterDrawFrameListener(this);
-        if (threadStarted) {
-            thread.quitSafely();
-            thread = new EventHandlerThread();
-            threadStarted = false;
-        }
     }
 
     /**
@@ -113,8 +102,8 @@ class GVRGazeCursorController extends GVRBaseController implements
     }
 
     @Override
-    protected void setScene(GVRScene scene) {
-        if (!threadStarted) {
+    protected synchronized void setScene(GVRScene scene) {
+        if (!thread.isAlive()) {
             super.setScene(scene);
         } else {
             thread.setScene(scene);
@@ -122,26 +111,23 @@ class GVRGazeCursorController extends GVRBaseController implements
     }
 
     @Override
-    public void invalidate() {
-        if (!threadStarted) {
-            //do nothing
-            return;
+    public synchronized void invalidate() {
+        if (thread.isAlive()) {
+            thread.sendInvalidate();
         }
-        thread.sendInvalidate();
     }
 
     @Override
-    boolean dispatchKeyEvent(KeyEvent event) {
-        if(!threadStarted){
-            return false;
+    synchronized boolean dispatchKeyEvent(KeyEvent event) {
+        if (thread.isAlive()) {
+            thread.dispatchKeyEvent(event);
         }
-        thread.dispatchKeyEvent(event);
         return true;
     }
 
     @Override
-    boolean dispatchMotionEvent(MotionEvent event) {
-        if(!threadStarted){
+    synchronized boolean dispatchMotionEvent(MotionEvent event) {
+        if(!thread.isAlive()){
             return false;
         }
 
@@ -189,22 +175,18 @@ class GVRGazeCursorController extends GVRBaseController implements
     }
 
     @Override
-    public void setEnable(boolean enable) {
+    public synchronized void setEnable(boolean enable) {
         if (!isEnabled && enable) {
             isEnabled = true;
             if (referenceCount > 0) {
                 start();
-                //set the enabled flag on the handler thread
                 thread.setEnabled(true);
             }
 
         } else if (isEnabled && !enable) {
             isEnabled = false;
             if (referenceCount > 0) {
-                if(threadStarted){
-                    //set the disabled flag on the handler thread
-                    thread.setEnabled(false);
-                }
+                thread.setEnabled(false);
                 stop();
             }
         }
@@ -226,17 +208,16 @@ class GVRGazeCursorController extends GVRBaseController implements
     }
 
     void close() {
-        // unregister the draw frame listener
         if (referenceCount > 0) {
             context.unregisterDrawFrameListener(this);
+            referenceCount = 0;
         }
-        referenceCount = 0;
-        if (threadStarted) {
+        if (thread.isAlive()) {
             thread.quitSafely();
         }
     }
 
-    private class EventHandlerThread extends HandlerThread {
+    private final class EventHandlerThread extends HandlerThread {
         private static final String THREAD_NAME = "GVRGazeEventHandlerThread";
         public static final int SET_POSITION = 0;
         public static final int SET_KEY_EVENT = 1;
@@ -249,19 +230,19 @@ class GVRGazeCursorController extends GVRBaseController implements
         public static final int ENABLE = 0;
         public static final int DISABLE = 1;
 
-        private final KeyEvent BUTTON_GAZE_DOWN = new KeyEvent(
-                KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
-        private final KeyEvent BUTTON_GAZE_UP = new KeyEvent(KeyEvent.ACTION_UP,
-                KeyEvent.KEYCODE_BUTTON_1);
+        private final KeyEvent BUTTON_GAZE_DOWN = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
+        private final KeyEvent BUTTON_GAZE_UP = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_1);
         private Handler gazeEventHandler;
         private final Vector3f position;
+        private CountDownLatch mRunning = new CountDownLatch(1);
 
         public EventHandlerThread() {
             super(THREAD_NAME);
             position = new Vector3f();
         }
 
-        public void prepareHandler() {
+        @Override
+        protected void onLooperPrepared() {
             gazeEventHandler = new Handler(getLooper(), new Callback() {
                 @Override
                 public boolean handleMessage(Message msg) {
@@ -299,6 +280,7 @@ class GVRGazeCursorController extends GVRBaseController implements
                     return false;
                 }
             });
+            mRunning.countDown();
         }
 
         public void setPosition(float x, float y, float z) {
@@ -335,8 +317,18 @@ class GVRGazeCursorController extends GVRBaseController implements
             msg.sendToTarget();
         }
 
-        public Handler getGazeEventHandler() {
+        Handler getGazeEventHandler() {
             return gazeEventHandler;
+        }
+
+        void await() {
+            try {
+                mRunning.await();
+            } catch (final InterruptedException e) {
+                throw new RuntimeException("Cannot be interrupted!");
+            } finally {
+                mRunning = null;
+            }
         }
     }
 }
