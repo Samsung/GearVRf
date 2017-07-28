@@ -85,7 +85,6 @@ public class GVREmitter extends GVRSceneObject {
     {
         super(gvrContext);
         mGVRContext = gvrContext;
-//        mGVRContext.registerDrawFrameListener(this);
         mActiveParticleMeshes = new ArrayList<GVRSceneObject>();
         mParticleMeshSpawnTimes = new ArrayList<Float>();
         mEnvironmentAcceleration = new Vector3f(0.0f,0.0f,0.0f);
