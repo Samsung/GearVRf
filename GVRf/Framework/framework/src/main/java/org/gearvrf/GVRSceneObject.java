@@ -236,7 +236,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public GVRSceneObject(GVRContext gvrContext, GVRAndroidResource mesh,
             GVRAndroidResource texture) {
-        this(gvrContext, gvrContext.loadFutureMesh(mesh), gvrContext
+        this(gvrContext, gvrContext.getAssetLoader().loadFutureMesh(mesh), gvrContext
                 .getAssetLoader().loadTexture(texture));
     }
 
