@@ -324,8 +324,10 @@ public class GVRRenderData extends GVRComponent implements PrettyPrint {
         }
 
         // has transparency now, but was opaque before
-        if(renderingOrder < GVRRenderingOrder.TRANSPARENT) {
-            setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
+        if( mainTexture != null || diffuseTexture != null ) {
+            if (renderingOrder < GVRRenderingOrder.TRANSPARENT) {
+                setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
+            }
         }
     }
 
