@@ -56,7 +56,7 @@ class MeshCursorAsset extends CursorAsset {
 
         if (mesh != null) {
             try {
-                futureMesh = context.loadFutureMesh(new GVRAndroidResource(context, mesh));
+                futureMesh = context.getAssetLoader().loadFutureMesh(new GVRAndroidResource(context, mesh));
             } catch (IOException e) {
                 throw new IllegalArgumentException("Error loading mesh");
             }
