@@ -47,15 +47,7 @@ android {
 
     sourceSets.main {
         java.srcDirs = ['src/main/java']
-        //jni.srcDirs = [] // no auto generation of Android.mk
-        //jniLibs.srcDir 'src/main/jni/prebuilt' // pre-compiled libraries
     }
-
-   // externalNativeBuild {
-   //     cmake {
-//            path 'src/main/jni/CMakeLists.txt'
-  //      }
- //   }
 }
 
 dependencies {
