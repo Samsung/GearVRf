@@ -75,7 +75,7 @@ public:
                 render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
                 rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
                 offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
-                depth_test_(true), alpha_blend_(true), alpha_to_coverage_(false),
+                depth_test_(true), depth_mask_(true), alpha_blend_(true), alpha_to_coverage_(false),
                 sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
                 source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
                 draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
@@ -105,6 +105,7 @@ public:
         offset_factor_ = rdata.offset_factor_;
         offset_units_ = rdata.offset_units_;
         depth_test_ = rdata.depth_test_;
+        depth_mask_ = rdata.depth_mask_;
         alpha_blend_ = rdata.alpha_blend_;
         source_alpha_blend_func_ = rdata.source_alpha_blend_func_;
         dest_alpha_blend_func_ = rdata.dest_alpha_blend_func_;
@@ -264,8 +265,17 @@ public:
         return depth_test_;
     }
 
+    bool depth_mask() const {
+        return depth_mask_;
+    }
+
     void set_depth_test(bool depth_test) {
         depth_test_ = depth_test;
+        hash_code_dirty_ = true;
+    }
+
+    void set_depth_mask(bool depth_mask) {
+        depth_mask_ = depth_mask;
         hash_code_dirty_ = true;
     }
 
@@ -400,6 +410,7 @@ protected:
     float offset_factor_;
     float offset_units_;
     bool depth_test_;
+    bool depth_mask_;
     bool alpha_blend_;
     bool alpha_to_coverage_;
     bool cast_shadows_;
