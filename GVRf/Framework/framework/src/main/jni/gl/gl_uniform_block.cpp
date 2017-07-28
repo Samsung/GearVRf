@@ -16,10 +16,16 @@
 #include "gl/gl_shader.h"
 
 namespace gvr {
-    GLUniformBlock::GLUniformBlock(const char* descriptor, int bindingPoint, const char* blockName) :
-            UniformBlock(descriptor, bindingPoint, blockName),
-            GLOffset(0),
-            GLBuffer(0)
+    GLUniformBlock::GLUniformBlock(const char* descriptor, int bindingPoint, const char* blockName)
+      : UniformBlock(descriptor, bindingPoint, blockName),
+        GLOffset(0),
+        GLBuffer(0)
+    { }
+
+    GLUniformBlock::GLUniformBlock(const char* descriptor, int bindingPoint, const char* blockName, int maxelems)
+      : UniformBlock(descriptor, bindingPoint, blockName, maxelems),
+        GLOffset(0),
+        GLBuffer(0)
     { }
 
     GLUniformBlock::~GLUniformBlock()
@@ -39,13 +45,13 @@ namespace gvr {
             {
                 glGenBuffers(1, &GLBuffer);
                 glBindBuffer(GL_UNIFORM_BUFFER, GLBuffer);
-                glBufferData(GL_UNIFORM_BUFFER, getTotalSize(), NULL, GL_DYNAMIC_DRAW);
+                glBufferData(GL_UNIFORM_BUFFER, mElemSize * mMaxElems, NULL, GL_DYNAMIC_DRAW);
                 mIsDirty = true;
             }
             if (mIsDirty)
             {
                 glBindBufferBase(GL_UNIFORM_BUFFER, mBindingPoint, GLBuffer);
-                glBufferSubData(GL_UNIFORM_BUFFER, GLOffset, getTotalSize(), getData());
+                glBufferSubData(GL_UNIFORM_BUFFER, GLOffset, mElemSize * mMaxElems, getData());
                 mIsDirty = false;
                 if (Shader::LOG_SHADER)
                     LOGV("UniformBlock::updateGPU %s size %d\n", getBlockName(), getTotalSize());
@@ -106,7 +112,8 @@ namespace gvr {
                         case 1: glUniform1fv(loc, e.Count, (const float*) data); break;
                         case 2: glUniform2fv(loc, e.Count, (const float*) data); break;
                         case 3: glUniform3fv(loc, e.Count, (const float*) data); break;
-                        case 4: glUniform4fv(loc, e.Count, (const float*) data); break;
+                        case 4: glUniform4fv(loc, e.Count, (const float*) data);
+                            break;
                         default: LOGE("UniformBlock: ERROR invalid float vector size %d", elemsize); break;
                     }
                 }
@@ -119,7 +126,7 @@ namespace gvr {
             GLuint blockIndex = glGetUniformBlockIndex(glshader->getProgramId(), getBlockName());
             glBindBuffer(GL_UNIFORM_BUFFER, GLBuffer);
 
-            if (blockIndex < 0)
+            if (GL_INVALID_INDEX == blockIndex)
             {
                 LOGE("UniformBlock: ERROR: cannot find block named %s\n", getBlockName());
                 return false;

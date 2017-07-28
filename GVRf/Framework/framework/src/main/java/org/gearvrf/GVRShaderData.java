@@ -77,7 +77,7 @@ public class GVRShaderData extends GVRHybridObject
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
         shader.setMaterialDefaults(this);
-        NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(shaderManager, this));
+        setNativeShader(mShaderId.getNativeShader(shaderManager, this));
     }
 
     protected GVRShaderData(GVRContext gvrContext, GVRShaderId shaderId, long constructor)
@@ -89,7 +89,17 @@ public class GVRShaderData extends GVRHybridObject
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
         shader.setMaterialDefaults(this);
-        NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(shaderManager, this));
+        setNativeShader(mShaderId.getNativeShader(shaderManager, this));
+    }
+
+    void setNativeShader(int shader)
+    {
+        NativeShaderData.setNativeShader(getNative(), shader);
+    }
+
+    int getNativeShader()
+    {
+        return getShaderType().getNativeShader(getGVRContext().getMaterialShaderManager(), this);
     }
 
     /**
@@ -365,11 +375,12 @@ public class GVRShaderData extends GVRHybridObject
      * @return shader layout string
      */
     String makeShaderLayout() { return NativeShaderData.makeShaderLayout(getNative()); }
+    void useGpuBuffer(boolean flag) { NativeShaderData.useGpuBuffer(getNative(), flag);}
 }
 
 class NativeShaderData {
     static native long ctor(String uniformDesc, String textureDesc);
-
+    static native void useGpuBuffer(long shaderData, boolean flag);
     static native int getNativeShader(long shaderData);
 
     static native void setNativeShader(long shaderData, int nativeShader);

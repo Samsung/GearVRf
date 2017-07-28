@@ -10,5 +10,5 @@ layout(location = 0) out vec2 diffuse_coord;
 void main()
 {
     diffuse_coord = a_texcoord.xy;
-    gl_Position = vec3(a_position, 1.0);
+    gl_Position = vec4(a_position, 1.0);
 }

@@ -263,102 +263,244 @@ public class GVRRigidBody extends GVRComponent {
         Native3DRigidBody.setScale(getNative(), x, y, z);
     }
 
+    /**
+     * Apply a central impulse vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void applyCentralForce(float x, float y, float z) {
         Native3DRigidBody.applyCentralForce(getNative(), x, y, z);
     }
 
+    /**
+     * Apply a torque vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void applyTorque(float x, float y, float z) {
         Native3DRigidBody.applyTorque(getNative(), x, y, z);
     }
 
+    /**
+     * Sets a particular acceleration vector [X, Y, Z] on this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void setGravity(float x, float y, float z) {
         Native3DRigidBody.setGravity(getNative(), x, y, z);
     }
 
+    /**
+     * Sets linear and angular damping on this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param linear factor on how much the rigid body resists translation.
+     * @param angular factor on how much the rigid body resists rotation.
+     */
     public void setDamping(float linear, float angular) {
         Native3DRigidBody.setDamping(getNative(), linear, angular);
     }
 
+    /**
+     * Sets a linear velocity [X, Y, Z] on this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void setLinearVelocity(float x, float y, float z) {
         Native3DRigidBody.setLinearVelocity(getNative(), x, y, z);
     }
 
+    /**
+     * Sets an angular velocity [X, Y, Z] on this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void setAngularVelocity(float x, float y, float z) {
         Native3DRigidBody.setAngularVelocity(getNative(), x, y, z);
     }
 
+    /**
+     * Sets an angular factor [X, Y, Z] that influences torque on this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void setAngularFactor(float x, float y, float z) {
         Native3DRigidBody.setAngularFactor(getNative(), x, y, z);
     }
 
+    /**
+     * Sets an linear factor [X, Y, Z] that influences forces acting on this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param x factor on the 'X' axis.
+     * @param y factor on the 'Y' axis.
+     * @param z factor on the 'Z' axis.
+     */
     public void setLinearFactor(float x, float y, float z) {
         Native3DRigidBody.setLinearFactor(getNative(), x, y, z);
     }
 
+    /**
+     * Sets SleepingTresholds that, when reached, influence the deactivation of this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param linear factor for the linearVelocity
+     * @param angular factor for the angularVelocity
+     */
     public void setSleepingThresholds(float linear, float angular) {
         Native3DRigidBody.setSleepingThresholds(getNative(), linear, angular);
     }
 
+    /**
+     * Set a {@linkplain GVRRigidBody rigid body} to be ignored (true) or not (false)
+     *
+     * @param collisionObject rigidbody object on the collision check
+     * @param ignore boolean to indicate if the specified object will be ignored or not
+     */
     public void setIgnoreCollisionCheck(GVRRigidBody collisionObject, boolean ignore) {
         Native3DRigidBody.setIgnoreCollisionCheck(getNative(), collisionObject.getNative(), ignore);
     }
 
+    /**
+     * Returns the gravity acceleration float array [x,y,z] on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The gravity acceleration vector as a float array
+     */
     public float[] getGravity() {
         return Native3DRigidBody.getGravity(getNative());
     }
 
+    /**
+     * Returns the linear velocity float array [x,y,z] on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The linear velocity vector as a float array
+     */
     public float[] getLinearVelocity() {
         return Native3DRigidBody.getLinearVelocity(getNative());
     }
 
+    /**
+     * Returns the angular velocity float array [x,y,z] on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The angular velocity vector as a float array
+     */
     public float[] getAngularVelocity() {
         return Native3DRigidBody.getAngularVelocity(getNative());
     }
 
+    /**
+     * Returns the angular factor float array [x,y,z] on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The angular factor vector as a float array
+     */
     public float[] getAngularFactor() {
         return Native3DRigidBody.getAngularFactor(getNative());
     }
 
+    /**
+     * Returns the linear factor float array [x,y,z] on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The linear factor vector as a float array
+     */
     public float[] getLinearFactor() {
         return Native3DRigidBody.getLinearFactor(getNative());
     }
 
+    /**
+     * Returns the damping factors [angular,linear] on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The damping factors as a float array
+     */
     public float[] getDamping() {
         return Native3DRigidBody.getDamping(getNative());
     }
 
+    /**
+     * Returns the friction factor on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The friction factor scalar as a float
+     */
     public float getFriction() {
         return Native3DRigidBody.getFriction(getNative());
     }
 
+    /**
+     * Set the friction factor of this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param n the friction factor
+     */
     public void setFriction(float n) {
         Native3DRigidBody.setFriction(getNative(), n);
     }
 
+    /**
+     * Returns the restitution factor on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The restitution factor scalar as a float
+     */
     public float getRestitution() {
         return Native3DRigidBody.getRestitution(getNative());
     }
 
+    /**
+     * Set the restitution factor of this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param n the restitution factor
+     */
     public void setRestitution(float n) {
         Native3DRigidBody.setRestitution(getNative(), n);
     }
 
+    /**
+     * Returns the continous collision detection motion threshold factor on this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The continous collision detection motion threshold factor scalar as a float
+     */
     public float getCcdMotionThreshold() {
         return Native3DRigidBody.getCcdMotionThreshold(getNative());
     }
 
+    /**
+     * Set the continous collision detection motion threshold factor of this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param n the continous collision detection motion threshold factor
+     */
     public void setCcdMotionThreshold(float n) {
         Native3DRigidBody.setCcdMotionThreshold(getNative(), n);
     }
 
+    /**
+     * Returns the contact processing threshold factor for this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The contact processing threshold factor scalar as a float
+     */
     public float getContactProcessingThreshold() {
         return Native3DRigidBody.getContactProcessingThreshold(getNative());
     }
 
+    /**
+     * Set the  contact processing threshold factor of this {@linkplain GVRRigidBody rigid body}
+     *
+     * @param n the contact processing threshold factor
+     */
     public void setContactProcessingThreshold(float n) {
         Native3DRigidBody.setContactProcessingThreshold(getNative(), n);
     }
 
+    /**
+     * Returns the collision group of this {@linkplain GVRRigidBody rigid body}.
+     *
+     * @return The collision group id as an int
+     */
     public int getCollisionGroup() {
         return mCollisionGroup;
     }

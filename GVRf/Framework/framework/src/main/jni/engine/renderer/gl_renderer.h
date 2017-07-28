@@ -90,22 +90,22 @@ public:
     void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
 
     // Specific to GL
-     void renderCamera(Scene* scene, Camera* camera, int framebufferId,
+    void renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
 
-     void renderCamera(Scene* scene, Camera* camera,
+    void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b);
 
-     void set_face_culling(int cull_face);
+    void set_face_culling(int cull_face);
     virtual RenderPass* createRenderPass();
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc);
     virtual RenderData* createRenderData();
-    virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name);
+    virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
     virtual Image* createImage(int type, int format);
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers);

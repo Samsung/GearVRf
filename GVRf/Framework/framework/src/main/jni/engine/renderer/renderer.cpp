@@ -26,11 +26,14 @@
 bool do_batching = false;
 
 namespace gvr {
+
 Renderer* gRenderer = nullptr;
 bool use_multiview= false;
+
 void Renderer::initializeStats() {
     // TODO: this function will be filled in once we add draw time stats
 }
+
 Renderer::Renderer() : numberDrawCalls(0),
                        numberTriangles(0),
                        numLights(0),

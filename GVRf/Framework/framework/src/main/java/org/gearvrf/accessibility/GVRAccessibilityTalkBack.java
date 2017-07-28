@@ -49,7 +49,7 @@ public class GVRAccessibilityTalkBack {
     }
 
     /**
-     * @param Context Android context.
+     * @param context Android context.
      */
     public GVRAccessibilityTalkBack(Context context) {
         mContext = context;
@@ -125,8 +125,6 @@ public class GVRAccessibilityTalkBack {
 
     /**
      * By default locale is English US.
-     * 
-     * @return
      */
     public Locale getDefaultLocale() {
         return Locale.US;

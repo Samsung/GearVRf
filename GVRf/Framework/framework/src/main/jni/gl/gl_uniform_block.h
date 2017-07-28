@@ -20,7 +20,8 @@
 
 #include "objects/uniform_block.h"
 
-namespace gvr {
+namespace gvr
+{
 
 /**
  * Manages a Uniform Block containing data parameters to pass to
@@ -29,35 +30,37 @@ namespace gvr {
  * The UniformBlock may be updated by the application. If it has changed,
  * GearVRf resends the entire data block to OpenGL.
  */
-class GLUniformBlock : public UniformBlock
-{
-public:
-    GLUniformBlock(const char* descriptor, int bindingPoint, const char* blockName);
-    virtual ~GLUniformBlock();
+    class GLUniformBlock : public UniformBlock
+    {
+    public:
+        GLUniformBlock(const char *descriptor, int bindingPoint, const char *blockName);
+        GLUniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxelems);
 
-    /**
-     * Copy the data from CPU into the OpenGL uniform buffer.
-     */
-    virtual bool updateGPU(Renderer*);
+        virtual ~GLUniformBlock();
 
-    /*
-     * Bind the uniform buffer to the OpenGL shader
-     */
-    virtual bool bindBuffer(Shader*, Renderer*);
+        /**
+         * Copy the data from CPU into the OpenGL uniform buffer.
+         */
+        virtual bool updateGPU(Renderer *);
 
-    virtual std::string makeShaderLayout();
+        /*
+         * Bind the uniform buffer to the OpenGL shader
+         */
+        virtual bool bindBuffer(Shader *, Renderer *);
 
-    /**
-     * Dump the contents of the shader uniforms to the log.
-     * @param programID OpenGL program ID for shader
-     * @param blockIndex OpenGL binding point
-     */
-    static void dump(GLuint programID, int blockIndex);
+        virtual std::string makeShaderLayout();
 
-protected:
-    GLuint      GLBuffer;
-    GLuint      GLOffset;
-};
+        /**
+         * Dump the contents of the shader uniforms to the log.
+         * @param programID OpenGL program ID for shader
+         * @param blockIndex OpenGL binding point
+         */
+        static void dump(GLuint programID, int blockIndex);
+
+    protected:
+        GLuint GLBuffer;
+        GLuint GLOffset;
+    };
 
 }
 #endif

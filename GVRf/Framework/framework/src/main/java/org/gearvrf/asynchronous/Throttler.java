@@ -331,6 +331,7 @@ class Throttler implements Scheduler {
                     catch (IOException ex)
                     {
                         callback.failed(ex, request);
+                        return;
                     }
                     pending = new PendingRequest<OUTPUT, INTER>(gvrContext,
                             request, callback, priority, outClass);

@@ -143,9 +143,11 @@ public class GVRBaseSensor {
         GVREventManager eventManager = gvrContext.getEventManager();
         if (events.isEmpty() == false) {
             if(events.size() > 1 && depthOrderEnabled) {
-                depthComparator.updateDepthCache(events);
-                Collections.sort(events, depthComparator);
-                depthComparator.clearDepthCache();
+                synchronized (depthComparator) {
+                    depthComparator.updateDepthCache(events);
+                    Collections.sort(events, depthComparator);
+                    depthComparator.clearDepthCache();
+                }
             }
             final IEventReceiver ownerCopy = owner;
             for (int i = 0; i < events.size(); i++) {
@@ -311,8 +313,9 @@ public class GVRBaseSensor {
 
         @Override
         public int compare(SensorEvent lhs, SensorEvent rhs) {
-            float lhsDepth = depthCache.get(lhs);
-            float rhsDepth = depthCache.get(rhs);
+
+            Float lhsDepth = depthCache.get(lhs);
+            Float rhsDepth = depthCache.get(rhs);
             if(lhsDepth < rhsDepth) {
                 return -1;
             } else if(lhsDepth > rhsDepth) {

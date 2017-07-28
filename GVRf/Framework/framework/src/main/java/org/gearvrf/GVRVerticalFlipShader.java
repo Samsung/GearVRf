@@ -19,7 +19,7 @@ import android.content.Context;
 import org.gearvrf.utility.TextFile;
 
 /**
- * Shader which horizontally flips a texture and blends it with a color.
+ * Shader which vertically flips a texture and blends it with a color.
  * This shader assumes the vertex position is in eye coordinates - it
  * does not use the model, view or projection matrices.
  * It also ignores light sources.
@@ -36,7 +36,7 @@ public class GVRVerticalFlipShader extends GVRShader
 {
     public GVRVerticalFlipShader(GVRContext ctx)
     {
-        super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", 400);
+        super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         Context context = ctx.getContext();
         setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.vert_flip_tex));
         setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.color_blend_frag));

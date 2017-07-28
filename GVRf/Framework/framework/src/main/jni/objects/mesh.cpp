@@ -24,7 +24,7 @@ namespace gvr
     : mVertices(nullptr),
       mIndices(nullptr),
       have_bounding_volume_(false),
-      vertexBoneData_(this)
+      vertexBoneData_()
     {
         mVertices = Renderer::getInstance()->createVertexBuffer(descriptor, 0);
     }
@@ -32,7 +32,7 @@ namespace gvr
     Mesh::Mesh(VertexBuffer& vbuf)
     : mVertices(&vbuf), mIndices(nullptr),
       have_bounding_volume_(false),
-      vertexBoneData_(this)
+      vertexBoneData_()
     {
     }
 

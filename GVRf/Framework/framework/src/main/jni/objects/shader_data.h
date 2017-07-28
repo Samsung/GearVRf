@@ -86,7 +86,7 @@ public:
     u_int32_t getNumTextures() const { return mTextures.size(); }
     virtual UniformBlock&   uniforms() = 0;
     virtual const UniformBlock& uniforms() const = 0;
-
+    virtual void useGPUBuffer(bool flag) = 0;
 private:
     ShaderData(const ShaderData&);
     ShaderData(ShaderData&&);

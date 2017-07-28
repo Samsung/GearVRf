@@ -42,8 +42,6 @@ diffuse.xyz *= diffuse.w;
 #endif
 #ifdef HAS_emissiveTexture
 	emission = texture(emissiveTexture, emissive_coord.xy);
-#else
-	emission = vec4(0.0, 0.0, 0.0, 0.0);
 #endif
 #ifdef HAS_normalTexture
 	viewspaceNormal = texture(normalTexture, normal_coord.xy).xyz * 2.0 - 1.0;

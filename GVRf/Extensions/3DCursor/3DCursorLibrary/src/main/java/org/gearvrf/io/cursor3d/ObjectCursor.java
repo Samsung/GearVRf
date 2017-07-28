@@ -41,6 +41,8 @@ class ObjectCursor extends Cursor {
     ObjectCursor(GVRContext context, CursorManager cursorManager) {
         super(context, CursorType.OBJECT, cursorManager);
         intersecting = new HashSet<GVRSceneObject>();
+
+        Log.d(TAG, Integer.toHexString(hashCode()) + " constructed");
     }
 
     @Override
@@ -55,6 +57,10 @@ class ObjectCursor extends Cursor {
                 (SelectableGroup.getComponentType());
 
         if (selectableGroup != null) {
+            //if part of a selectable group and disabled then ignore
+            if (!object.isEnabled()) {
+                return;
+            }
             object = selectableGroup.getParent();
             colliding = isColliding(object);
         } else {

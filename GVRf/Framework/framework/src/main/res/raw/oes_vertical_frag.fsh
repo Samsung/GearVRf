@@ -1,4 +1,5 @@
-#extension GL_OES_EGL_image_external : require
+#extension GL_OES_EGL_image_external : enable
+#extension GL_OES_EGL_image_external_essl3 : enable
 precision highp float;
 uniform samplerExternalOES u_texture;
 

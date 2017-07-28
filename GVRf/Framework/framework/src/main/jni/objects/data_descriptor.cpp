@@ -94,9 +94,9 @@ namespace gvr
             {
                 ++p;                    // indicates unused field
             }
-            while (std::isalnum(*p) || (*p == '_'))
+            while (std::isalnum(*p) || (*p == '_') || (*p == '[') || (*p == ']'))
             {
-                ++p;                    // names are alphanumeric, _ allowed
+                ++p;                    // names are alphanumeric, _ allowed, [] for arrays
             }
             name_size = p - name_start;
             if (name_size == 0)
@@ -110,22 +110,15 @@ namespace gvr
         }
     }
 
-    const char* DataDescriptor::addName(const char* name, DataEntry& entry)
+    const char* DataDescriptor::addName(const char* name, int len, DataEntry& entry)
     {
-        int len = strlen(name);
-        int n = mLayout.size();
-
         if (len > 62)
         {
             len = 62;
-            strncpy(entry.Name, name, len);
-            entry.Name[62] = 0;
             LOGE("DataDescriptor: %s too long, truncated to %s", name, entry.Name);
         }
-        else
-        {
-            strcpy(entry.Name, name);
-        }
+        strncpy(entry.Name, name, len);
+        entry.Name[len] = 0;
         entry.NameLength = (char) len;
         return entry.Name;
     }
@@ -153,27 +146,30 @@ namespace gvr
             int array_size = 1;
             const char* p = name;
             const char* bracket = strchr(name, '[');
+            size_t namelen = strlen(name);
 
             if (name == NULL)
             {
                 LOGE("UniformBlock: SYNTAX ERROR: expecting uniform name\n");
                 return;
             }
-            if (bracket)
+            if (bracket)                // parse array size in brackets
             {
+                namelen = bracket - name;
+                array_size = 0;
                 p += (bracket - name) + 1;
                 while (std::isdigit(*p))
                 {
-                    array_size = array_size * 10 + (*p - '0');
+                    int v = *p - '0';
+                    array_size = array_size * 10 + v;
                     ++p;
                 }
-                ++p;
             }
             DataEntry entry;
             short byteSize = calcSize(type);
 
-            entry.Type = makeShaderType(type, byteSize, array_size);
-            byteSize *= array_size;
+            entry.Type = makeShaderType(type, byteSize);
+            byteSize *= array_size;     // multiply by number of array elements
             entry.IsSet = false;
             entry.Count = array_size;
             entry.NotUsed = false;
@@ -183,23 +179,19 @@ namespace gvr
             entry.Offset = mTotalSize;
             entry.Size = byteSize;
 
-            if (*name == '!')
+            if (*name == '!')           // ! indicates entry not used by shader
             {
                 entry.NotUsed = true;
                 ++name;
             }
-            addName(name, entry);
+            addName(name, namelen, entry);
             mLayout.push_back(entry);
             LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
-            mTotalSize = entry.Offset + entry.Size;
+            mTotalSize += entry.Size;
         });
-        if (mTotalSize > 0)
-        {
-            mTotalSize = (mTotalSize + 15) & ~0x0F;
-        }
     }
 
-    std::string DataDescriptor::makeShaderType(const char* type, int byteSize, int arraySize)
+    std::string DataDescriptor::makeShaderType(const char* type, int byteSize)
     {
         std::ostringstream stream;
 
@@ -211,7 +203,7 @@ namespace gvr
             }
             else if (type[0] == 'i')
             {
-                stream << "vec" << (byteSize / 4);
+                stream << "ivec" << (byteSize / 4);
             }
             else
             {
@@ -221,10 +213,6 @@ namespace gvr
         else
         {
             stream << type;
-        }
-        if (arraySize > 1)
-        {
-            stream << "[" << arraySize << "]";
         }
         return stream.str();
     }

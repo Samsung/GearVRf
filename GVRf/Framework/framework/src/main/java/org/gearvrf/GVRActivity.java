@@ -219,6 +219,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mDockEventReceiver.stop();
         }
 
+        if (!mConfigurationManager.isDockListenerRequired()) {
+            handleOnUndock();
+        }
+
         if (null != mActivityNative) {
             mActivityNative.onDestroy();
             mActivityNative = null;
@@ -252,7 +256,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         this.mGVRMain = gvrMain;
         if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             onConfigure(dataFileName);
-            mDelegate.setMain(gvrMain, dataFileName);
+            if (!mDelegate.setMain(gvrMain, dataFileName)) {
+                Log.w(TAG, "delegate's setMain failed");
+                return;
+            }
 
             boolean isMonoscopicMode = mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
             if (!isMonoscopicMode) {
@@ -549,11 +556,11 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                /* The full screen should be updated
-                otherwise just the children's bounds may be refreshed. */
-                mRenderableViewGroup.setClipChildren(false);
-
-                mRenderableViewGroup.addView(view);
+                if (null != mRenderableViewGroup) {
+                    /* The full screen should be updated otherwise just the children's bounds may be refreshed. */
+                    mRenderableViewGroup.setClipChildren(false);
+                    mRenderableViewGroup.addView(view);
+                }
             }
         });
     }
@@ -567,7 +574,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mRenderableViewGroup.removeView(view);
+                if (null != mRenderableViewGroup) {
+                    mRenderableViewGroup.removeView(view);
+                }
             }
         });
     }
@@ -678,7 +687,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         boolean onKeyUp(int keyCode, KeyEvent event);
         boolean onKeyLongPress(int keyCode, KeyEvent event);
 
-        void setMain(GVRMain gvrMain, String dataFileName);
+        boolean setMain(GVRMain gvrMain, String dataFileName);
         void setViewManager(GVRViewManager viewManager);
         void onInitAppSettings(VrAppSettings appSettings);
 

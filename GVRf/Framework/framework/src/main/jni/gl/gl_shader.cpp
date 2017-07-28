@@ -63,6 +63,7 @@ void getTokens(std::unordered_map<std::string, int>& tokens, std::string& line)
         }
     }
 }
+
 bool checkSamplers(std::unordered_map<std::string, int>& tokens){
     std::string samplers [] = { "sampler2D", "sampler2DArray", "samplerCube"};
     for(auto i: samplers)
@@ -71,13 +72,13 @@ bool checkSamplers(std::unordered_map<std::string, int>& tokens){
 
     return false;
 }
+
 void modifyShader(std::string& shader)
 {
     std::istringstream shaderStream(shader);
     std::string line;
     std::getline(shaderStream, line);
-    std::string mod_shader;
-    mod_shader += "#version 300 es \n";
+    std::string mod_shader("#version 300 es\n");
 
     std::unordered_map<std::string, int>::iterator it;
     std::unordered_map<std::string, int>::iterator it1;
@@ -283,10 +284,16 @@ std::string GLShader::makeLayout(const DataDescriptor& desc, const char* blockNa
     std::ostringstream stream;
     if (useGPUBuffer)
     {
-        stream << "\nlayout (std140) uniform " << blockName << " {" << std::endl;
+        stream << "\nlayout (std140) uniform " << blockName << std::endl << "{" << std::endl;
         desc.forEachEntry([&stream](const DataDescriptor::DataEntry& entry) mutable
         {
-            stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
+            int nelems = entry.Count;
+            stream << "   " << entry.Type << " " << entry.Name;
+            if (nelems > 1)
+            {
+                stream << "[" << nelems << "]";
+            }
+            stream << ";" << std::endl;
         });
         stream << "};" << std::endl;
     }
@@ -296,7 +303,13 @@ std::string GLShader::makeLayout(const DataDescriptor& desc, const char* blockNa
         {
             if (entry.IsSet)
             {
-                stream << "uniform " << entry.Type << " " << entry.Name << ";" << std::endl;
+                int nelems = entry.Count;
+                stream << "uniform " << entry.Type << " " << entry.Name;
+                if (nelems > 1)
+                {
+                    stream << "[" << nelems << "]";
+                }
+                stream << ";" << std::endl;
             }
         });
     }

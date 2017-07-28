@@ -39,6 +39,7 @@ Shader::Shader(int id,
       mFragmentShader(fragment_shader),
       mUseMatrixUniforms(false),
       mUseLights(false),
+      mUseHasBones(false),
       mUseMaterialGPUBuffer(false),
       mJavaShaderClass(0), mJavaVM(nullptr), mCalcMatrixMethod(0)
 {
@@ -50,6 +51,10 @@ Shader::Shader(int id,
         mUseMaterialGPUBuffer = true;
     if (strstr(signature, "$LIGHTSOURCES"))
         mUseLights = true;
+
+    if(strstr(vertex_shader, "Bones_ubo"))
+        mUseHasBones = true;
+
     LOGD("SHADER: %s\n    %s\n    %s\n    %s", signature, uniformDescriptor, textureDescriptor, vertexDescriptor);
 }
 

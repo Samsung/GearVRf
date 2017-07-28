@@ -435,6 +435,10 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
         sb.append(getDescriptor() + " " + n.toString() + " vertices");
         sb.append(System.lineSeparator());
     }
+
+    public void dump(String attrName) {
+        NativeVertexBuffer.dump(getNative(), attrName);
+    }
 }
 
 class NativeVertexBuffer {
@@ -463,4 +467,6 @@ class NativeVertexBuffer {
     static native int  getAttributeSize(long vbuf, String name);
 
     static native int getBoundingVolume(long vbuf, FloatBuffer bv);
+
+    static native void dump(long vbuf, String attrName);
 }

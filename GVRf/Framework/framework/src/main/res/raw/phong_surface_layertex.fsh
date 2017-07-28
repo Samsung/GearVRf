@@ -2,62 +2,61 @@
 @MATERIAL_UNIFORMS
 
 #ifdef HAS_ambientTexture
-in vec2 ambient_coord;
+layout(location = 5) in vec2 ambient_coord;
 #endif
 
 #ifdef HAS_opacityTexture
-in vec2 opacity_coord;
+layout(location = 9) in vec2 opacity_coord;
 #endif
 
 #ifdef HAS_specularTexture
-in vec2 specular_coord;
+layout(location = 6) in vec2 specular_coord;
 #endif
 
 #ifdef HAS_emissiveTexture
-in vec2 emissive_coord;
+layout(location = 7) in vec2 emissive_coord;
 #endif
 
 #ifdef HAS_normalTexture
-in vec2 normal_coord;
+layout(location = 10) in vec2 normal_coord;
 #endif
 
 #ifdef HAS_lightMapTexture
-in vec2 lightmap_coord;
+layout(location = 8) in vec2 lightmap_coord;
 #endif
 
 #ifdef HAS_ambientTexture1
-in vec2 ambient_coord1;
-uniform sampler2D ambientTexture1;
+layout(location = 11) in vec2 ambient_coord1;
+layout(set = 0, binding = 11) uniform sampler2D ambientTexture1;
 #endif
 
 #ifdef HAS_diffuseTexture1
-in vec2 diffuse_coord1;
-uniform sampler2D diffuseTexture1;
+layout(location = 12) in vec2 diffuse_coord1;
+layout(set = 0, binding = 12) uniform sampler2D diffuseTexture1;
 #endif
 
 #ifdef HAS_specularTexture1
-in vec2 specular_coord1;
-uniform sampler2D specularTexture1;
+layout(location = 13) in vec2 specular_coord1;
+layout(set = 0, binding = 13) uniform sampler2D specularTexture1;
 #endif
 
 #ifdef HAS_emissiveTexture1
-in vec2 emissive_coord1;
-uniform sampler2D emissiveTexture1;
+layout(location = 14) in vec2 emissive_coord1;
+layout(set = 0, binding = 14) uniform sampler2D emissiveTexture1;
 #endif
 
 #ifdef HAS_lightMapTexture1
 in vec2 lightmap_coord1;
 #endif
 
-uniform sampler2D ambientTexture;
-uniform sampler2D diffuseTexture;
-uniform sampler2D specularTexture;
-uniform sampler2D opacityTexture;
-uniform sampler2D lightmapTexture;
-uniform sampler2D emissiveTexture;
-uniform sampler2D normalTexture;
-uniform vec2 u_lightmap_offset;
-uniform vec2 u_lightmap_scale;
+
+layout(set = 0, binding = 5) uniform sampler2D ambientTexture;
+layout(set = 0, binding = 4) uniform sampler2D diffuseTexture;
+layout(set = 0, binding = 6) uniform sampler2D specularTexture;
+layout(set = 0, binding = 7) uniform sampler2D opacityTexture;
+layout(set = 0, binding = 8) uniform sampler2D lightmapTexture;
+layout(set = 0, binding = 10) uniform sampler2D emissiveTexture;
+layout(set = 0, binding = 9) uniform sampler2D normalTexture;
 
 struct Surface
 {

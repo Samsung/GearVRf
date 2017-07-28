@@ -24,7 +24,7 @@ public class GVRAccessibilityPostEffectShader  extends GVRShaderTemplate {
     static String vertexSource;
 
     public GVRAccessibilityPostEffectShader(GVRContext context) {
-        super("", "sampler2D u_texture", "float3 a_position float2 a_texcoord",300);
+        super("", "sampler2D u_texture", "float3 a_position float2 a_texcoord",GLSLESVersion.V300);
         if (vertexSource == null)
         {
             vertexSource = TextFile.readTextFile(context.getContext(), R.raw.inverted_colors_vertex);

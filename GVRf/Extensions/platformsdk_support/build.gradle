@@ -4,37 +4,40 @@ apply plugin: 'com.android.library'
 
 repositories {
     flatDir {
-        dirs 'src/main/libs', '../../Framework/framework/build/outputs/aar/'
+        dirs 'src/main/libs', '../../gearvrf-libs/'
     }
 }
 
 android {
     compileSdkVersion 21
-    buildToolsVersion '23.0.3'
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 19
-    }
 
-    task buildNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
+        ndk {
+            moduleName "gvrf-platformsdk"
+            abiFilter "armeabi-v7a"
         }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
+        externalNativeBuild {
+            cmake {
+                //difference in sign extension when reinterpret_cast-ing a pointer between
+                //gcc and clang hence overriding the default toolchain to match the one used
+                //by the other modules
+                arguments.add('-DANDROID_TOOLCHAIN=gcc')
+                arguments.add('-DOVR_PLATFORM_SDK=' + rootProject.property("OVR_PLATFORM_SDK"))
+                if (rootProject.hasProperty("buildGvrfAndDemos")) {
+                    arguments.add('-DCMAKE_BUILD_TYPE=Debug')
+                }
+            }
         }
-
-        environment 'OVR_PLATFORM_SDK', rootProject.property("OVR_PLATFORM_SDK")
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors()//, 'NDK_DEBUG=1'
     }
 
     buildTypes {
         debug {
+            debuggable = true
+            jniDebuggable = true
         }
         release {
             minifyEnabled false
@@ -48,53 +51,45 @@ android {
         // pre-compiled libraries
         jniLibs {
             srcDir 'src/main/libs'
+            srcDir rootProject.property("OVR_PLATFORM_SDK") + '/Android/libs/'
         }
     }
 
-    task cleanNative(type: Exec) {
-        def ndkbuild = ""
-        if (rootProject.hasProperty("ANDROID_NDK_HOME")) {
-            ndkbuild = rootProject.property("ANDROID_NDK_HOME")
-            ndkbuild += '/'
+    externalNativeBuild {
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
         }
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ndkbuild += 'ndk-build.cmd'
-        } else {
-            ndkbuild += 'ndk-build'
-        }
-
-        environment 'OVR_PLATFORM_SDK', rootProject.property("OVR_PLATFORM_SDK")
-        commandLine ndkbuild, '-C', file('src/main').absolutePath, '-j', Runtime.runtime.availableProcessors(), 'clean'
-    }
-
-    clean.dependsOn 'cleanNative'
-
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative
     }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
-    compile(name: 'framework-debug', ext: 'aar')
+    if(rootProject.hasProperty("buildGvrfAndDemos")) {
+        compile project (':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
 }
 
-assembleDebug {}.doLast {
-    task copyAARFiles(type: Copy) {
-        if (rootProject.hasProperty("LIBS_DIRECTORY")) {
-            println "copying aar files to the libs_directory"
-            def libsdirPath = projectDir.absolutePath + '/../../../' +
-                    rootProject.property("LIBS_DIRECTORY")
-            def libsDir = new File(libsdirPath);
-            if (libsDir.exists()) {
-                from 'build/outputs/aar'
-                into libsDir
-                include '**/*.aar'
-            } else {
-                println "Cannot copy aar files, libs directory does not exist!"
-            }
-        }
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
     }
-    tasks.copyAARFiles.execute()
+}
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
 }

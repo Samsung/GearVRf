@@ -17,7 +17,7 @@
 /**
  * You need to understand key points of this package to create a GVRF application.
  * 
- * The {@link Activity} that your {@code AndroidManifest.xml} file declares 
+ * The {@link android.app.Activity} that your {@code AndroidManifest.xml} file declares
  * handles the {@code "android.intent.action.MAIN"} ({@link 
  * android.content.Intent#ACTION_MAIN}) <em>must</em> descend from {@link 
  * org.gearvrf.GVRActivity}, not directly from {@code Activity}.

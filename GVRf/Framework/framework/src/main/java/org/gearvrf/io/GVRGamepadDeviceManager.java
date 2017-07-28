@@ -16,6 +16,7 @@
 package org.gearvrf.io;
 
 import android.opengl.Matrix;
+import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.InputDevice;
@@ -23,6 +24,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 
@@ -82,14 +84,9 @@ class GVRGamepadDeviceManager {
 
     GVRBaseController getCursorController(GVRContext context, String name,
                                           int vendorId, int productId) {
-        if (threadStarted == false) {
-            Log.d(TAG, "Starting " + THREAD_NAME);
-            thread.start();
-            threadStarted = true;
-        }
-
+        startThread();
         GVRGamepadController controller = new GVRGamepadController(context,
-                GVRControllerType.CONTROLLER, name, vendorId, productId, thread);
+                GVRControllerType.GAMEPAD, name, vendorId, productId, this);
         int id = controller.getId();
         controllers.append(id, controller);
         return controller;
@@ -100,11 +97,9 @@ class GVRGamepadDeviceManager {
         controllers.remove(id);
 
         // stop the thread if no more devices are online
-        if (controllers.size() == 0 && threadStarted) {
+        if (controllers.size() == 0) {
             Log.d(TAG, "Stopping " + THREAD_NAME);
-            thread.interrupt();
-            thread = new EventHandlerThread(THREAD_NAME);
-            threadStarted = false;
+            forceStopThread();
         }
     }
 
@@ -119,18 +114,65 @@ class GVRGamepadDeviceManager {
         // Change this value to increase or decrease the controller cursor speed
         private static final float SPEED = 30f;
 
-        private EventHandlerThread thread;
+        private GVRGamepadDeviceManager deviceManager;
         private GVRSceneObject internalObject;
         private GVRContext context;
+        private boolean isEnabled = false;
 
         public GVRGamepadController(GVRContext context,
                                     GVRControllerType controllerType, String name, int vendorId,
-                                    int productId, EventHandlerThread thread) {
+                                    int productId, GVRGamepadDeviceManager deviceManager) {
             super(controllerType, name, vendorId, productId);
             this.context = context;
             internalObject = new GVRSceneObject(context);
             internalObject.getTransform().setPosition(0.0f, 0.0f, -1.0f);
-            this.thread = thread;
+            this.deviceManager = deviceManager;
+            isEnabled = isEnabled();
+        }
+
+        @Override
+        public void setEnable(boolean enable) {
+            if (!isEnabled && enable) {
+                isEnabled = true;
+                deviceManager.startThread();
+                //set the enabled flag on the handler thread
+                deviceManager.thread.setEnable(getId(), true);
+            } else if (isEnabled && !enable) {
+                isEnabled = false;
+                //set the disabled flag on the handler thread
+                deviceManager.thread.setEnable(getId(), false);
+                deviceManager.stopThread();
+            }
+        }
+
+        @Override
+        protected void setScene(GVRScene scene) {
+            if (!deviceManager.threadStarted) {
+                super.setScene(scene);
+            } else {
+                deviceManager.thread.setScene(getId(), scene);
+            }
+        }
+
+        @Override
+        public void invalidate() {
+            if (!deviceManager.threadStarted) {
+                //do nothing
+                return;
+            }
+            deviceManager.thread.sendInvalidate(getId());
+        }
+
+        void callParentSetEnable(boolean enable){
+            super.setEnable(enable);
+        }
+
+        void callParentSetScene(GVRScene scene) {
+            super.setScene(scene);
+        }
+
+        void callParentInvalidate() {
+            super.invalidate();
         }
 
         @Override
@@ -145,12 +187,12 @@ class GVRGamepadDeviceManager {
 
         @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
-            return thread.submitKeyEvent(getId(), event);
+            return deviceManager.thread.submitKeyEvent(getId(), event);
         }
 
         @Override
         public boolean dispatchMotionEvent(MotionEvent event) {
-            return thread.submitMotionEvent(getId(), event);
+            return deviceManager.thread.submitMotionEvent(getId(), event);
         }
 
         private void processControllerEvent(float x, float y, float z) {
@@ -229,7 +271,11 @@ class GVRGamepadDeviceManager {
         @Override
         public void setPosition(float x, float y, float z) {
             internalObject.getTransform().setPosition(x, y, z);
-            super.setPosition(x, y, z);
+            if (!deviceManager.threadStarted) {
+                //do nothing
+                return;
+            }
+            deviceManager.thread.sendInvalidate(getId());
         }
     }
 
@@ -248,15 +294,23 @@ class GVRGamepadDeviceManager {
         private boolean pedalDown = false;
         private SparseArray<EventDataHolder> holders;
 
+        public static final int ENABLE = 0;
+        public static final int DISABLE = 1;
+
         private class EventDataHolder {
             private MotionEvent event;
             private KeyEvent keyEvent;
+            private GVRScene scene;
+            private int enabled = -1;
+            private boolean callInvalidate= false;
             private int id;
+
 
             public EventDataHolder(int id, MotionEvent event,
                                    KeyEvent keyEvent) {
                 this.id = id;
                 this.event = event;
+                scene = null;
                 this.keyEvent = keyEvent;
             }
 
@@ -264,13 +318,14 @@ class GVRGamepadDeviceManager {
                 this.id = id;
             }
 
-            public void setEvent(MotionEvent event) {
+            public void setMotionEvent(MotionEvent event) {
                 this.event = event;
             }
 
             public void setKeyEvent(KeyEvent keyEvent) {
                 this.keyEvent = keyEvent;
             }
+
         }
 
         EventHandlerThread(String name) {
@@ -286,29 +341,49 @@ class GVRGamepadDeviceManager {
                         if (holders.size() == 0) {
                             lock.wait();
                         }
+
                         for (int i = 0; i < holders.size(); i++) {
                             int key = holders.keyAt(i);
                             EventDataHolder holder = holders.valueAt(i);
-                            MotionEvent event = null;
-                            KeyEvent keyEvent = null;
-                            int id = key;
-                            if (holder != null) {
-                                event = holder.event;
-                                keyEvent = holder.keyEvent;
-                                id = holder.id;
+
+                            if (holder == null) {
+                                continue;
                             }
+                            int id = key;
+
                             GVRGamepadController controller = controllers.get(id);
+                            MotionEvent event = holder.event;
+                            KeyEvent keyEvent = holder.keyEvent;
+                            int enabled = holder.enabled;
 
                             if (event != null) {
                                 dispatchMotionEvent(controller, event);
                             }
-
                             if (keyEvent != null) {
                                 dispatchKeyEvent(controller, keyEvent);
                             }
 
-                            controller.processControllerEvent(this.x, this.y,
-                                    this.ry);
+                            if (enabled != -1) {
+                                controller.callParentSetEnable(holder.enabled == ENABLE);
+                                holder.enabled = -1;
+                            }
+
+                            if (holder.scene != null) {
+                                controller.callParentSetScene(holder.scene);
+                                holder.scene = null;
+                            }
+
+                            if (holder.callInvalidate) {
+                                controller.callParentInvalidate();
+                                holder.callInvalidate = false;
+                            }
+
+                            if (holder.event == null) {
+                                // reset holder when there is no motion event
+                                holders.remove(controller.getId());
+                            }
+
+                            controller.processControllerEvent(this.x, this.y, this.ry);
                         }
                     }
                     Thread.sleep(DELAY_MILLISECONDS);
@@ -372,11 +447,6 @@ class GVRGamepadDeviceManager {
                         break;
                 }
             }
-            EventDataHolder holder = holders.get(controller.getId());
-            if (holder != null && holder.event == null) {
-                // reset holder when there is no motion event
-                holders.remove(controller.getId());
-            }
         }
 
         boolean submitMotionEvent(int id, MotionEvent event) {
@@ -386,7 +456,7 @@ class GVRGamepadDeviceManager {
                 synchronized (lock) {
                     EventDataHolder holder = holders.get(id);
                     if (holder == null) {
-                        holder = new EventDataHolder(id, clone, null);
+                        holder = new EventDataHolder(id,  clone, null);
                         holders.put(id, holder);
                     } else {
                         // if there is already an event recycle it
@@ -394,7 +464,7 @@ class GVRGamepadDeviceManager {
                             holder.event.recycle();
                         }
                         holder.setId(id);
-                        holder.setEvent(clone);
+                        holder.setMotionEvent(clone);
                     }
                     lock.notify();
                 }
@@ -413,7 +483,6 @@ class GVRGamepadDeviceManager {
                         holder = new EventDataHolder(id, null, event);
                         holders.put(id, holder);
                     } else {
-                        holder.setId(id);
                         holder.setKeyEvent(event);
                     }
                     lock.notify();
@@ -496,6 +565,48 @@ class GVRGamepadDeviceManager {
             }
         }
 
+        void setEnable(int id, boolean enable) {
+            synchronized (lock) {
+                EventDataHolder holder = holders.get(id);
+                if (holder == null) {
+                    holder = new EventDataHolder(id, null, null);
+                    holder.enabled = enable ? ENABLE : DISABLE;
+                    holders.put(id, holder);
+                } else {
+                    holder.enabled = enable ? ENABLE : DISABLE;
+                }
+                lock.notify();
+            }
+        }
+
+        void setScene(int id, GVRScene scene){
+            synchronized (lock) {
+                EventDataHolder holder = holders.get(id);
+                if (holder == null) {
+                    holder = new EventDataHolder(id, null, null);
+                    holder.scene = scene;
+                    holders.put(id, holder);
+                } else {
+                    holder.scene = scene;
+                }
+                lock.notify();
+            }
+        }
+
+        void sendInvalidate(int id) {
+            synchronized (lock) {
+                EventDataHolder holder = holders.get(id);
+                if (holder == null) {
+                    holder = new EventDataHolder(id, null, null);
+                    holder.callInvalidate = true;
+                    holders.put(id, holder);
+                } else {
+                    holder.callInvalidate = true;
+                }
+                lock.notify();
+            }
+        }
+
         private float getCenteredAxis(MotionEvent event, InputDevice device,
                                       int axis) {
             final InputDevice.MotionRange range = device.getMotionRange(axis,
@@ -511,9 +622,37 @@ class GVRGamepadDeviceManager {
         }
     }
 
-    void stop() {
-        if (threadStarted) {
-            thread.interrupt();
+    void startThread(){
+        if(!threadStarted){
+            thread.start();
+            threadStarted = true;
         }
     }
+
+    void stopThread() {
+        boolean foundEnabled = false;
+
+        for(int i = 0 ;i< controllers.size(); i++){
+            GVRCursorController controller = controllers.valueAt(i);
+            if(controller.isEnabled()){
+                foundEnabled = true;
+                break;
+            }
+        }
+
+        if (!foundEnabled && threadStarted) {
+            thread.interrupt();
+            thread = new EventHandlerThread(THREAD_NAME);
+            threadStarted = false;
+        }
+    }
+
+    void forceStopThread(){
+        if (threadStarted) {
+            thread.interrupt();
+            thread = new EventHandlerThread(THREAD_NAME);
+            threadStarted = false;
+        }
+    }
+
 }

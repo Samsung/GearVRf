@@ -125,9 +125,9 @@ public class GVRShaderTemplate extends GVRShader
      * @param vertexDescriptor  string describing vertex attributes and types
      *                          e.g. "float3 a_position, float2 a_texcoord"
      * @param glslVersion
-     *            integer giving GLSL version (e.g. 300)
+     *            GLSL version (e.g. GLSLESVersion.V300)
      */
-    public GVRShaderTemplate(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, int glslVersion)
+    public GVRShaderTemplate(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, GLSLESVersion glslVersion)
     {
        super(uniformDescriptor, textureDescriptor, vertexDescriptor, glslVersion);
         mHasVariants = true;
@@ -201,8 +201,8 @@ public class GVRShaderTemplate extends GVRShader
      *
      * @param definedNames
      *            set with defined names for this shader
-     * @param mesh
-     *            GVRMesh or null if vertex attributes should be ignored
+     * @param vertexDesc
+     *            String with vertex attributes, null to ignore them
      * @param material
      *            material used with this shader (may not be null)
      * @return shader signature string with names actually defined by the material and mesh
@@ -337,10 +337,7 @@ public class GVRShaderTemplate extends GVRShader
         boolean useLights = (lightlist != null) && (lightlist.length > 0);
         String lightShaderSource = "";
 
-        if (mGLSLVersion > 100)
-        {
-            shaderSource.append("#version " + mGLSLVersion.toString() + "\n");
-        }
+        shaderSource.append("#version " + mGLSLVersion.toString() + "\n");
         if (definedNames.containsKey("LIGHTSOURCES") &&
             definedNames.get("LIGHTSOURCES") == 0)
         {
@@ -377,8 +374,12 @@ public class GVRShaderTemplate extends GVRShader
         combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
         combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
         combinedSource = combinedSource.replace("@MATERIAL_UNIFORMS", material.makeShaderLayout());
-        combinedSource = replaceBones(combinedSource);
+        if(material != null && combinedSource.contains("Material_ubo"))
+            material.useGpuBuffer(true);
+        else
+            material.useGpuBuffer(false);
 
+        combinedSource = combinedSource.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         if (type.equals("Vertex"))
         {
             String texcoordSource = assignTexcoords(material);
@@ -432,7 +433,6 @@ public class GVRShaderTemplate extends GVRShader
      *            renderable entity with mesh and material
      * @param scene
      *            scene being rendered
-     * @return ID of vertex/fragment shader set
      */
     public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene)
     {
@@ -480,22 +480,6 @@ public class GVRShaderTemplate extends GVRShader
         }
     }
 
-    private void writeShader(GVRContext context, String fileName, String sourceCode)
-    {
-        try
-        {
-            File sdCard = Environment.getExternalStorageDirectory();
-            File file = new File(sdCard.getAbsolutePath() + "/GearVRF/" + fileName);
-            OutputStreamWriter stream = new FileWriter(file);
-            stream.append(sourceCode);
-            stream.close();
-        }
-        catch (IOException ex)
-        {
-            Log.e("GVRShaderTemplate", "Cannot write shader file " + fileName);
-        }
-
-    }
 
     /**
      * Select the specific vertex and fragment shader to use with this material.
@@ -507,7 +491,6 @@ public class GVRShaderTemplate extends GVRShader
      * @param context       GVRContext
      * @param material      material to use with the shader
      * @param meshDesc      string with vertex descriptor
-     * @return ID of vertex/fragment shader set
      */
     public int bindShader(GVRContext context, GVRShaderData material, String meshDesc)
     {
@@ -533,6 +516,11 @@ public class GVRShaderTemplate extends GVRShader
                                                        textureDescriptor.toString(), mVertexDescriptor,
                                                        vertexShaderSource, fragmentShaderSource);
                 bindCalcMatrixMethod(shaderManager, nativeShader);
+                if (mWriteShadersToDisk)
+                {
+                    writeShader(context, "V-" + signature + ".glsl", vertexShaderSource);
+                    writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
+                }
                 Log.e(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
             return nativeShader;
@@ -772,6 +760,5 @@ public class GVRShaderTemplate extends GVRShader
         return desc;
     }
 
-    protected boolean mWriteShadersToDisk = true;
     protected Set<String> mShaderDefines;
 }

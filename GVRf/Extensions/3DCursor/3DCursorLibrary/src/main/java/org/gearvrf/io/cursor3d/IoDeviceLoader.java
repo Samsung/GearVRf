@@ -38,6 +38,12 @@ class IoDeviceLoader {
     public static final String SAMSUNG_VENDOR_NAME = "Samsung";
     public static final String GEARVR_NAME = "Gear VR";
 
+    private static final int CONTROLLER_VENDOR_ID = 2;
+    private static final int CONTROLLER_PRODUCT_ID = 2;
+    private static final String CONTROLLER_DEVICE_ID = "controller";
+    private static final String CONTROLLER_VENDOR_NAME = null;
+    private static final String CONTROLLER_NAME = "Controller";
+
     static boolean isMouseIoDevice(IoDevice ioDevice) {
         return (ioDevice.getVendorId() == MOUSE_VENDOR_ID && ioDevice.getProductId() ==
                 MOUSE_PRODUCT_ID && ioDevice.getDeviceId().equals(MOUSE_DEVICE_ID));
@@ -48,17 +54,26 @@ class IoDeviceLoader {
                 GEARVR_PRODUCT_ID && ioDevice.getDeviceId().equals(GEARVR_DEVICE_ID));
     }
 
+    static boolean isControllerIoDevice(IoDevice ioDevice) {
+        return (ioDevice.getVendorId() == CONTROLLER_VENDOR_ID && ioDevice.getProductId() ==
+                CONTROLLER_PRODUCT_ID && ioDevice.getDeviceId().equals(CONTROLLER_DEVICE_ID));
+    }
+
     static IoDevice getIoDevice(GVRCursorController gvrController) {
         switch (gvrController.getControllerType()) {
             case MOUSE:
                 return new IoDevice(MOUSE_DEVICE_ID, MOUSE_VENDOR_ID, MOUSE_PRODUCT_ID,
                         MOUSE_NAME, MOUSE_VENDOR_NAME, gvrController);
-            case CONTROLLER:
+            case GAMEPAD:
                 return new IoDevice(GAMEPAD_DEVICE_ID, GAMEPAD_VENDOR_ID, GAMEPAD_PRODUCT_ID,
                         GAMEPAD_NAME, GAMEPAD_VENDOR_NAME, gvrController);
             case GAZE:
                 return new IoDevice(GEARVR_DEVICE_ID, SAMSUNG_VENDOR_ID, GEARVR_PRODUCT_ID,
                         GEARVR_NAME, SAMSUNG_VENDOR_NAME, gvrController);
+            case CONTROLLER:
+                return new IoDevice(CONTROLLER_DEVICE_ID, CONTROLLER_VENDOR_ID,
+                        CONTROLLER_PRODUCT_ID, CONTROLLER_NAME, CONTROLLER_VENDOR_NAME,
+                        gvrController);
             default:
                 throw new IllegalArgumentException("Cannot get path for " + gvrController
                         .getControllerType());

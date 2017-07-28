@@ -69,7 +69,7 @@ public class GVRConsole extends GVRShaderData
 
         public ConsoleShader(GVRContext ctx)
         {
-            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord",300);
+            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord",GLSLESVersion.V300);
             if (vertexShader == null)
             {
                 vertexShader = TextFile.readTextFile(ctx.getContext(), R.raw.posteffect_quad);
@@ -143,7 +143,7 @@ public class GVRConsole extends GVRShaderData
      * {@link GVRScene} to attach it to.
      * 
      * This overload is useful when you are using
-     * {@link GVRContext#getNextMainScene()} and creating your debug console in
+     * {@link GVRContext#getMainScene()} and creating your debug console in
      * {@link org.gearvrf.GVRMain#onInit(GVRContext)}.
      * 
      * @param gvrContext
@@ -154,7 +154,7 @@ public class GVRConsole extends GVRShaderData
      * @param gvrScene
      *            The {@link GVRScene} to attach the console to; this is useful
      *            when you want to attach the console to the
-     *            {@linkplain GVRContext#getNextMainScene() next main scene.}
+     *            {@linkplain GVRContext#getMainScene() next main scene.}
      */
     public GVRConsole(GVRContext gvrContext, EyeMode startMode,
             GVRScene gvrScene) {

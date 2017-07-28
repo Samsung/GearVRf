@@ -15,13 +15,13 @@
 
 package org.gearvrf;
 
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
-import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * to add an external {@link GVRCursorController} to the framework.
  */
 public abstract class GVRCursorController {
-    private static final String TAG = GVRCursorController.class.getSimpleName();
+    private static final String TAG = "GVRCursorController";
     private static int uniqueControllerId = 0;
     private final int controllerId;
     private final GVRControllerType controllerType;
@@ -56,7 +56,7 @@ public abstract class GVRCursorController {
     private ActiveState activeState = ActiveState.NONE;
     private boolean active;
     private float nearDepth, farDepth = -Float.MAX_VALUE;
-    private final Vector3f position, ray;
+    private final Vector3f position, ray, origin;
     private boolean enable = true;
     private List<KeyEvent> keyEvent;
     private List<KeyEvent> processedKeyEvent;
@@ -117,6 +117,7 @@ public abstract class GVRCursorController {
         uniqueControllerId++;
         position = new Vector3f();
         ray = new Vector3f();
+        origin = new Vector3f();
         keyEvent = new ArrayList<KeyEvent>();
         processedKeyEvent = new ArrayList<KeyEvent>();
         motionEvent = new ArrayList<MotionEvent>();
@@ -222,6 +223,10 @@ public abstract class GVRCursorController {
      * {@link GVRBaseSensor}s.
      */
     public void invalidate() {
+        // check if the controller is enabled
+        if (!isEnabled()) {
+            return;
+        }
         update();
     }
 
@@ -233,7 +238,7 @@ public abstract class GVRCursorController {
      * {@link GVRControllerType#EXTERNAL}. {@link GVRControllerType#EXTERNAL}
      * allows the input device to define its own input behavior. If the device
      * wishes to implement {@link GVRControllerType#MOUSE} or
-     * {@link GVRControllerType#CONTROLLER} make sure that the behavior is
+     * {@link GVRControllerType#GAMEPAD} make sure that the behavior is
      * consistent with that defined in GVRMouseDeviceManager and
      * GVRGamepadDeviceManager.
      *
@@ -336,6 +341,7 @@ public abstract class GVRCursorController {
      *                    {@link GVRCursorController}.
      */
     protected void setMotionEvent(MotionEvent motionEvent) {
+        Log.d(TAG, "setting motion event; motionEvent " + (null != motionEvent));
         synchronized (eventLock) {
             this.motionEvent.add(motionEvent);
         }
@@ -573,11 +579,11 @@ public abstract class GVRCursorController {
         return name;
     }
 
-    void setScene(GVRScene scene){
+    protected void setScene(GVRScene scene){
         this.scene = scene;
     }
 
-    boolean eventHandledBySensor = false;
+    private boolean eventHandledBySensor = false;
 
     /**
      * Returns whether events generated as a result of the latest change in the
@@ -596,7 +602,6 @@ public abstract class GVRCursorController {
      * Process the input data.
      */
     private void update() {
-
         // set the newly received key and motion events.
         synchronized (eventLock) {
             processedKeyEvent.addAll(keyEvent);
@@ -628,6 +633,14 @@ public abstract class GVRCursorController {
             }
             processedMotionEvent.clear();
         }
+    }
+
+    void setOrigin(float x, float y, float z){
+        origin.set(x,y,z);
+    }
+
+    Vector3f getOrigin(){
+        return origin;
     }
 
     Vector3f getRay() {

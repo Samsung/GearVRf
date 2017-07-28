@@ -37,6 +37,7 @@ namespace gvr {
         virtual ~BitmapImage();
         void update(JNIEnv* env, int width, int height, jbyteArray data);
         void update(JNIEnv* env, jobject bitmap);
+        void update(JNIEnv* env, int width, int height, int format, int type, jobject bitmap);
         void update(JNIEnv *env, int width, int height, int imageSize,
                     jbyteArray bytes, int levels, const int* dataOffsets);
     protected:
@@ -53,6 +54,7 @@ namespace gvr {
         JavaVM* mJava;
         jbyteArray mData;
         jobject mBitmap;
+        bool mIsBuffer;
         bool mIsCompressed;
     };
 

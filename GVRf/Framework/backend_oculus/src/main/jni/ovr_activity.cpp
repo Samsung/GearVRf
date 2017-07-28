@@ -20,6 +20,7 @@
 #include "VrApi_Helpers.h"
 #include "VrApi_SystemUtils.h"
 #include <cstring>
+#include <unistd.h>
 #include "engine/renderer/renderer.h"
 
 
@@ -38,8 +39,10 @@ namespace gvr {
         activity_ = env.NewGlobalRef(activity);
         activityClass_ = GetGlobalClassReference(env, activityClassName);
 
-    onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(I)V");
+        onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(I)V");
         updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
+
+        mainThreadId_ = gettid();
     }
 
     GVRActivity::~GVRActivity() {
@@ -118,9 +121,14 @@ namespace gvr {
             parms.Flags |=ResetWindowFullscreen;
 
             oculusMobile_ = vrapi_EnterVrMode(&parms);
+            if (gearController != nullptr) {
+                gearController->setOvrMobile(oculusMobile_);
+            }
 
             oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
             configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
+            oculusPerformanceParms_.MainThreadTid = mainThreadId_;
+            oculusPerformanceParms_.RenderThreadTid = gettid();
 
             oculusHeadModelParms_ = vrapi_DefaultHeadModelParms();
             configurationHelper_.getHeadModelConfiguration(env, oculusHeadModelParms_);
@@ -192,6 +200,9 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
             eyeTexture.HeadPose = updatedTracking.HeadPose;
         }
     parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
+    if (CameraRig::CameraRigType::FREEZE == cameraRig_->camera_rig_type()) {
+        parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_FIXED_TO_VIEW;
+    }
 
         if (docked_) {
             const ovrQuatf& orientation = updatedTracking.HeadPose.Pose.Orientation;
@@ -232,6 +243,13 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         }
 
         FrameBufferObject::unbind();
+
+        // check if the controller is available
+        if (gearController != nullptr && gearController->findConnectedGearController()) {
+            // collect the controller input if available
+            gearController->onFrame(predictedDisplayTime);
+        }
+
         vrapi_SubmitFrame(oculusMobile_, &parms);
     }
 

@@ -39,12 +39,13 @@ import org.gearvrf.utility.Log;
  * attributes in the OpenGL vertex shader.
  */
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
+    static public final int MAX_BONES = 60;
+    static public final int BONES_PER_VERTEX = 4;
     private static final String TAG = GVRMesh.class.getSimpleName();
 
     protected GVRVertexBuffer mVertices;
     protected GVRIndexBuffer mIndices;
     protected List<GVRBone> mBones = new ArrayList<GVRBone>();
-    protected GVRVertexBoneData mVertexBoneData;
 
     public GVRMesh(GVRContext gvrContext) {
         this(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal ");
@@ -55,8 +56,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         super(vbuffer.getGVRContext(), NativeMesh.ctorBuffers(vbuffer.getNative(), (ibuffer != null) ? ibuffer.getNative() : 0L));
         mVertices = vbuffer;
         mIndices = ibuffer;
-        setBones(new ArrayList<GVRBone>());
-        mVertexBoneData = new GVRVertexBoneData(vbuffer.getGVRContext(), this);
     }
 
     public GVRMesh(GVRContext gvrContext, String vertexDescriptor) {
@@ -389,17 +388,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
     /**
      * Constructs a {@link GVRMesh mesh} that contains this mesh.
-     *
      * <p>
-     * In previous versions of GearVRF this was used with the {@link GVRPicker},
-     * and the {@link GVREyePointeeHolder} which required you to pass a
-     * mesh to collide against. Ray casting is computationally expensive,
-     * and you generally want to limit the number of triangles to check.
-     * A simple {@linkplain GVRContext#createQuad(float, float) quad} is cheap enough,
-     * but with complex meshes you will probably want to cut search time by
-     * registering the object's bounding box, not the whole mesh.
-     * <p>
-     * In newer releaes,  {@link GVRMeshCollider} automatically computea the mesh bounds
      * of the scene object it is attached to, making this function less needed.
      * @return A {@link GVRMesh} of the bounding box.
      */
@@ -500,41 +489,13 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      *
      * @param bones a list of bones
      */
-    public void setBones(List<GVRBone> bones) {
+    public void setBones(List<GVRBone> bones)
+    {
         mBones.clear();
         mBones.addAll(bones);
-
-        NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(mBones));
-
-        // Process bones
-        int boneId = -1;
-        for (GVRBone bone : mBones) {
-            boneId++;
-
-            List<GVRBoneWeight> boneWeights = bone.getBoneWeights();
-            for (GVRBoneWeight weight : boneWeights) {
-                int vid = weight.getVertexId();
-                int boneSlot = getVertexBoneData().getFreeBoneSlot(vid);
-                if (boneSlot >= 0) {
-                    getVertexBoneData().setVertexBoneWeight(vid, boneSlot, boneId, weight.getWeight());
-                } else {
-                    Log.w(TAG, "Vertex %d (total %d) has too many bones", vid, getVertices().length / 3);
-                }
-            }
-        }
-        if (getVertexBoneData() != null) {
-            getVertexBoneData().normalizeWeights();
-        }
+        NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(bones));
     }
 
-    /**
-     * Gets the vertex bone data.
-     *
-     * @return the vertex bone data.
-     */
-    public GVRVertexBoneData getVertexBoneData() {
-        return mVertexBoneData;
-    }
 
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {

@@ -11,36 +11,32 @@
 
 namespace gvr {
 extern "C" {
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBone_ctor(JNIEnv * env, jobject obj);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeBone_ctor(JNIEnv * env, jobject obj);
 
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeBone_getComponentType(JNIEnv * env, jobject clz);
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeBone_getComponentType(JNIEnv * env, jobject clz);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBone_setName(JNIEnv * env, jobject clz, jlong ptr,
-        jstring name);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBone_setName(JNIEnv * env, jobject clz, jlong ptr,
+            jstring name);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBone_setBoneWeights(JNIEnv * env, jobject clz, jlong ptr,
-        jlongArray jArrayBoneWeights);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBone_setOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr,
+            jfloatArray jOffsetMatrix);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBone_setOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr,
-        jfloatArray jOffsetMatrix);
+    JNIEXPORT jfloatArray JNICALL
+    Java_org_gearvrf_NativeBone_getOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr);
 
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeBone_getOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBone_setFinalTransformMatrix(JNIEnv * env, jobject clz, jlong ptr,
+            jfloatArray jOffsetMatrix);
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBone_setFinalTransformMatrix(JNIEnv * env, jobject clz, jlong ptr,
-        jfloatArray jOffsetMatrix);
-
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeBone_getFinalTransformMatrix(JNIEnv * env, jobject clz, jlong ptr);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBone_getFinalTransformMatrix(JNIEnv * env, jobject clz, jlong ptr, jobject jFloatBuffer);
 
 } // extern "C"
-;
+
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeBone_ctor(JNIEnv * env, jobject clz) {
@@ -66,23 +62,6 @@ Java_org_gearvrf_NativeBone_setName(JNIEnv * env, jobject clz, jlong ptr,
     env->ReleaseStringUTFChars(name, charName);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeBone_setBoneWeights(JNIEnv * env, jobject clz, jlong ptr,
-        jlongArray jArrayBoneWeights) {
-    Bone* bone = reinterpret_cast<Bone*>(ptr);
-    int arrlen;
-    if (!jArrayBoneWeights || !(arrlen = env->GetArrayLength(jArrayBoneWeights))) {
-        bone->setBoneWeights(std::vector<BoneWeight*>());
-        return;
-    }
-
-    jlong* ptr_arr = env->GetLongArrayElements(jArrayBoneWeights, JNI_FALSE);
-    std::vector<BoneWeight*> ptr_vec(arrlen);
-    for (int i = 0; i < arrlen; ++i)
-        ptr_vec[i] = reinterpret_cast<BoneWeight*>(ptr_arr[i]);
-    bone->setBoneWeights(std::move(ptr_vec));
-    env->ReleaseLongArrayElements(jArrayBoneWeights, ptr_arr, JNI_ABORT);
-}
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeBone_setOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr,
@@ -106,10 +85,6 @@ Java_org_gearvrf_NativeBone_getOffsetMatrix(JNIEnv * env, jobject clz, jlong ptr
         matrix = bone->getOffsetMatrix();
     }
     jsize size = sizeof(matrix) / sizeof(jfloat);
-    if (size != 16) {
-        LOGE("sizeof(matrix) / sizeof(jfloat) != 16");
-        throw "sizeof(matrix) / sizeof(jfloat) != 16";
-    }
     jfloatArray jmatrix = env->NewFloatArray(size);
     env->SetFloatArrayRegion(jmatrix, 0, size, glm::value_ptr(matrix));
 
@@ -130,23 +105,12 @@ Java_org_gearvrf_NativeBone_setFinalTransformMatrix(JNIEnv * env, jobject clz, j
     env->ReleaseFloatArrayElements(jTransform, mat_arr, JNI_ABORT);
 }
 
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeBone_getFinalTransformMatrix(JNIEnv * env, jobject clz, jlong ptr) {
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeBone_getFinalTransformMatrix(JNIEnv * env, jobject clz, jlong ptr, jobject buffer) {
     Bone* bone = reinterpret_cast<Bone*>(ptr);
-    glm::mat4 matrix;
-
-    if (bone) {
-        matrix = bone->getFinalTransformMatrix();
-    }
-    jsize size = sizeof(matrix) / sizeof(jfloat);
-    if (size != 16) {
-        LOGE("sizeof(matrix) / sizeof(jfloat) != 16");
-        throw "sizeof(matrix) / sizeof(jfloat) != 16";
-    }
-    jfloatArray jmatrix = env->NewFloatArray(size);
-    env->SetFloatArrayRegion(jmatrix, 0, size, glm::value_ptr(matrix));
-
-    return jmatrix;
+    glm::mat4 matrix = bone->getFinalTransformMatrix();
+    float *ptrBuffer = static_cast<float*>(env->GetDirectBufferAddress(buffer));
+    std::memcpy(ptrBuffer, glm::value_ptr(matrix), sizeof matrix);
 }
 
 } // namespace gvr

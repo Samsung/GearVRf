@@ -18,7 +18,6 @@ package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPerspectiveCamera;
@@ -42,7 +41,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +62,7 @@ import java.util.Map;
  * The {@link CursorManager} is also responsible for setting properties of the {@link
  * Cursor} objects - look at the various methods defined by this class.
  */
-public class CursorManager {
+public final class CursorManager {
     // Result of XML parsing in a package of all settings that need displaying.
     private static final String TAG = CursorManager.class.getSimpleName();
     private static final float DEFAULT_CURSOR_SCALE = 15.0f;
@@ -74,15 +72,11 @@ public class CursorManager {
     private GVRScene scene;
     private CursorInputManager inputManager;
 
-    private boolean attachedToHead;
-    private boolean developerOptions;
-    // would drag along the edge of the screen with a visual cue,
-    private boolean resetOnBothButton;
     private CursorSensor cursorSensor;
     private List<CursorActivationListener> activationListeners;
     // List of all the cursors available to the user.
     private List<Cursor> cursors;
-    private List<Cursor> unusedCursors;
+    private final ArrayList<Cursor> mUnusedCursors = new ArrayList<>();
     private List<IoDevice> usedIoDevices;
     private List<IoDevice> unusedIoDevices;
 
@@ -156,7 +150,6 @@ public class CursorManager {
         globalSettings = GlobalSettings.getInstance();
         themes = new HashMap<String, CursorTheme>();
         cursors = new ArrayList<Cursor>();
-        unusedCursors = new LinkedList<Cursor>();
         usedIoDevices = new ArrayList<IoDevice>();
         unusedIoDevices = new ArrayList<IoDevice>();
         selectableBehaviors = new ArrayList<SelectableBehavior>();
@@ -174,12 +167,14 @@ public class CursorManager {
             throw new RuntimeException("Error in Opening settings.xml file");
         }
 
-        for (Cursor cursor : unusedCursors) {
-            CursorTheme theme = themes.get(cursor.clearSavedThemeId());
-            if (theme == null) {
-                throw new IllegalArgumentException("Illegal themeId used for cursor");
+        synchronized (mUnusedCursors) {
+            for (Cursor cursor : mUnusedCursors) {
+                CursorTheme theme = themes.get(cursor.clearSavedThemeId());
+                if (theme == null) {
+                    throw new IllegalArgumentException("Illegal themeId used for cursor");
+                }
+                cursor.setCursorTheme(theme);
             }
-            cursor.setCursorTheme(theme);
         }
 
         if (ioDevices != null) {
@@ -281,10 +276,6 @@ public class CursorManager {
         return themes;
     }
 
-    List<Cursor> getUnusedCursors() {
-        return unusedCursors;
-    }
-
     /**
      * This returns a list of {@link IoDevice}s that are connected and currently controlling a
      * {@link Cursor}. This list will not include any {@link IoDevice} that is not connected or
@@ -293,6 +284,18 @@ public class CursorManager {
      */
     public List<IoDevice> getUsedIoDevices() {
         return new ArrayList<IoDevice>(usedIoDevices);
+    }
+
+    void addCursor(Cursor cursor) {
+        synchronized (mUnusedCursors) {
+            mUnusedCursors.add(cursor);
+        }
+    }
+
+    int getUnusedCursorsCount() {
+        synchronized (mUnusedCursors) {
+            return mUnusedCursors.size();
+        }
     }
 
     private class FrustumChecker implements GVRDrawFrameListener {
@@ -414,11 +417,13 @@ public class CursorManager {
 
     void markCursorUnused(Cursor cursor) {
         Log.d(TAG, "Marking cursor:" + cursor.getName() + " unused");
-        scene.removeSceneObject(cursor.getMainSceneObject());
+        removeCursorFromScene(cursor);
         synchronized (cursors) {
             cursors.remove(cursor);
         }
-        unusedCursors.add(cursor);
+        synchronized (mUnusedCursors) {
+            mUnusedCursors.add(cursor);
+        }
         for (CursorActivationListener listener : activationListeners) {
             listener.onDeactivated(cursor);
         }
@@ -489,9 +494,9 @@ public class CursorManager {
         IoDevice device = cursor.getIoDevice();
         settingsIoDeviceFarDepth = device.getFarDepth();
         settingsIoDeviceNearDepth = device.getNearDepth();
-        scene.removeSceneObject(cursor.getMainSceneObject());
+        removeCursorFromScene(cursor);
         settingsCursor.transferIoDevice(cursor);
-        scene.addSceneObject(settingsCursor.getMainSceneObject());
+        addCursorToScene(settingsCursor);
     }
 
     /**
@@ -503,14 +508,13 @@ public class CursorManager {
      */
     public void disableSettingsCursor() {
         if(menuCursor != null) {
-            scene.removeSceneObject(settingsCursor.getMainSceneObject());
+            removeCursorFromScene(settingsCursor);
             menuCursor.transferIoDevice(settingsCursor);
             settingsCursor.ioDevice = null; // clear IoDevice of the settings cursor.
-            scene.addSceneObject(menuCursor.getMainSceneObject());
             IoDevice device = menuCursor.ioDevice;
             device.setFarDepth(settingsIoDeviceFarDepth);
             device.setNearDepth(settingsIoDeviceNearDepth);
-            scene.addSceneObject(menuCursor.getMainSceneObject());
+            addCursorToScene(menuCursor);
             menuCursor = null;
         }
     }
@@ -536,11 +540,13 @@ public class CursorManager {
                             @Override
                             public int onDeviceChanged(IoDevice device) {
                                 // we are changing the io device on the settings cursor
+                                removeCursorFromScene(settingsCursor);
                                 IoDevice clickedDevice = getAvailableIoDevice(device);
                                 IoDevice oldIoDevice = settingsCursor.getIoDevice();
                                 settingsCursor.setIoDevice(clickedDevice);
                                 markIoDeviceUsed(clickedDevice);
                                 markIoDeviceUnused(oldIoDevice);
+                                addCursorToScene(settingsCursor);
                                 return device.getCursorControllerId();
                             }
                         });
@@ -588,9 +594,9 @@ public class CursorManager {
      * @return the list of inactive {@link Cursor}s
      */
     public List<Cursor> getInactiveCursors() {
-        List<Cursor> cursors = new ArrayList<Cursor>();
-        cursors.addAll(unusedCursors);
-        return cursors;
+        synchronized (mUnusedCursors) {
+            return new ArrayList<>(mUnusedCursors);
+        }
     }
 
     /**
@@ -679,6 +685,31 @@ public class CursorManager {
         updateCursorsInScene(scene, true);
     }
 
+    void addCursorToScene(Cursor cursor) {
+        GVRSceneObject object = cursor.getMainSceneObject();
+        IoDevice ioDevice = cursor.getIoDevice();
+        if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
+            scene.getMainCameraRig().addChildObject(object);
+        } else if (IoDeviceLoader.isControllerIoDevice(ioDevice)) {
+            //do nothing
+        } else {
+            scene.addSceneObject(object);
+        }
+    }
+
+    void removeCursorFromScene(Cursor cursor) {
+        GVRSceneObject object = cursor.getMainSceneObject();
+
+        IoDevice ioDevice = cursor.getIoDevice();
+        if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
+            scene.getMainCameraRig().removeChildObject(object);
+        } else if (IoDeviceLoader.isControllerIoDevice(ioDevice)) {
+            //do nothing
+        } else {
+            scene.removeSceneObject(object);
+        }
+    }
+
     /**
      * Add or remove the active cursors from the provided scene.
      *
@@ -688,11 +719,10 @@ public class CursorManager {
     private void updateCursorsInScene(GVRScene scene, boolean add) {
         for (Cursor cursor : cursors) {
             if (cursor.isActive()) {
-                GVRSceneObject object = cursor.getMainSceneObject();
                 if (add) {
-                    scene.addSceneObject(object);
+                    addCursorToScene(cursor);
                 } else {
-                    scene.removeSceneObject(object);
+                    removeCursorFromScene(cursor);
                 }
             }
         }
@@ -861,44 +891,57 @@ public class CursorManager {
         Log.d(TAG, "Assigning cursors to availableIoDevices");
         while (continueLoop) {
             continueLoop = false;
-            for (Iterator<Cursor> cursorIterator = unusedCursors.iterator(); cursorIterator
-                    .hasNext(); ) {
-                IoDevice compatibleIoDevice = null;
-                Cursor unUsedCursor = cursorIterator.next();
-                if (!unUsedCursor.isEnabled()) {
-                    continue;
-                }
 
-                if (checkSavedIoDevice) {
-                    if (unUsedCursor.getSavedIoDevice() != null) {
-                        compatibleIoDevice = unUsedCursor.getSavedIoDevice();
-                        unUsedCursor.clearSavedIoDevice();
+            ArrayList<Cursor> usedCursors = null;
+            synchronized (mUnusedCursors) {
+                for (Iterator<Cursor> cursorIterator = mUnusedCursors.iterator(); cursorIterator.hasNext(); ) {
+                    IoDevice compatibleIoDevice = null;
+                    Cursor unUsedCursor = cursorIterator.next();
+                    if (!unUsedCursor.isEnabled()) {
+                        continue;
                     }
-                } else {
-                    compatibleIoDevice = unUsedCursor.getIoDeviceForPriority(priority);
-                }
 
-                if (compatibleIoDevice != null) {
-                    continueLoop = true;
+                    if (checkSavedIoDevice) {
+                        if (unUsedCursor.getSavedIoDevice() != null) {
+                            compatibleIoDevice = unUsedCursor.getSavedIoDevice();
+                            unUsedCursor.clearSavedIoDevice();
+                        }
+                    } else {
+                        compatibleIoDevice = unUsedCursor.getIoDeviceForPriority(priority);
+                    }
 
-                    for (Iterator<IoDevice> ioDeviceIterator = unusedIoDevices
-                            .iterator(); ioDeviceIterator.hasNext(); ) {
-                        IoDevice availableIoDevice = ioDeviceIterator.next();
+                    if (compatibleIoDevice != null) {
+                        continueLoop = true;
 
-                        Log.d(TAG, "Trying to attach available ioDevice:" +
-                                IoDeviceFactory.getXmlString(availableIoDevice) + " to cursor:" +
-                                unUsedCursor.getId() + " cursor priority:" + priority + " Io:" +
-                                IoDeviceFactory.getXmlString(compatibleIoDevice));
-                        if (availableIoDevice.equals(compatibleIoDevice)) {
-                            Log.d(TAG, "Found match attaching cursor to Io device");
-                            ioDeviceIterator.remove();
-                            cursorIterator.remove();
-                            addNewCursor(unUsedCursor, availableIoDevice);
-                            break;
+                        for (Iterator<IoDevice> ioDeviceIterator = unusedIoDevices
+                                .iterator(); ioDeviceIterator.hasNext(); ) {
+                            IoDevice availableIoDevice = ioDeviceIterator.next();
+
+                            Log.d(TAG, "Trying to attach available ioDevice:" +
+                                    IoDeviceFactory.getXmlString(availableIoDevice) + " to cursor:" +
+                                    unUsedCursor.getId() + " cursor priority:" + priority + " Io:" +
+                                    IoDeviceFactory.getXmlString(compatibleIoDevice));
+                            if (availableIoDevice.equals(compatibleIoDevice)) {
+                                Log.d(TAG, "Found match attaching cursor to Io device");
+                                ioDeviceIterator.remove();
+
+                                if (null == usedCursors) {
+                                    usedCursors = new ArrayList<>(mUnusedCursors.size());
+                                }
+                                usedCursors.add(unUsedCursor);
+
+                                addNewCursor(unUsedCursor, availableIoDevice);
+                                break;
+                            }
                         }
                     }
                 }
             }
+
+            if (null != usedCursors) {
+                mUnusedCursors.removeAll(usedCursors);
+            }
+
             if (checkSavedIoDevice) {
                 continueLoop = true;
                 checkSavedIoDevice = false;
@@ -911,7 +954,7 @@ public class CursorManager {
     private void addNewCursor(Cursor cursor, IoDevice ioDevice) {
         cursor.setIoDevice(ioDevice);
         if (scene != null) {
-            scene.addSceneObject(cursor.getMainSceneObject());
+            addCursorToScene(cursor);
             cursor.setScene(scene);
         }
 
@@ -950,12 +993,16 @@ public class CursorManager {
                     Cursor cursor = cursorIterator.next();
 
                     if (cursor.getIoDevice().equals(removedIoDevice)) {
+                        if (scene != null) {
+                            removeCursorFromScene(cursor);
+                        }
+
                         cursor.resetIoDevice(removedIoDevice);
                         cursorIterator.remove();
-                        unusedCursors.add(cursor);
-                        if (scene != null) {
-                            scene.removeSceneObject(cursor.getMainSceneObject());
+                        synchronized (mUnusedCursors) {
+                            mUnusedCursors.add(cursor);
                         }
+
                         for (CursorActivationListener listener : activationListeners) {
                             listener.onDeactivated(cursor);
                         }

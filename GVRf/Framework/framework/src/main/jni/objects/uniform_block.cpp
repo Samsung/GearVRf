@@ -25,11 +25,15 @@ namespace gvr
             mBlockName(blockName),
             mOwnData(false),
             mUseBuffer(true),
+            mNumElems(0),
+            mMaxElems(1),
             mBindingPoint(bindingPoint),
             mUniformData(NULL)
     {
         if (mTotalSize > 0)
         {
+            mElemSize = mTotalSize;
+            mNumElems = 1;
             mTotalSize = (mTotalSize + 15) & ~0x0F;
             mUniformData = new char[mTotalSize];
             memset(mUniformData, 0, mTotalSize);
@@ -41,7 +45,6 @@ namespace gvr
             LOGE("UniformBlock: ERROR: no uniform block allocated\n");
         }
     }
-
 
     bool UniformBlock::setInt(const char* name, int val)
     {
@@ -300,29 +303,114 @@ namespace gvr
     std::string UniformBlock::toString()
     {
         std::ostringstream os;
-        forEachEntry([this, &os](const DataEntry& e) mutable
+        for (int i = 0; i < mNumElems; ++i)
         {
-            os << e.Name << ":" << e.Offset;
-            for (int i = 0; i < e.Size / sizeof(float); i++)
+            forEachEntry([this, &os, i](const DataEntry& e) mutable
             {
-                char *d = ((char*) mUniformData) + e.Offset;
-                os << " ";
-                if (!e.IsSet)
+                os << e.Name << ": " << i * e.Offset;
+                for (int j = 0; j < e.Size / sizeof(float); j++)
                 {
-                    os << "NOT SET";
+                    char* d = ((char*) mUniformData) + e.Offset;
+                    os << " ";
+                    if (e.Name[0] == 'i')
+                    {
+                        os << *(((int*) d) + i);
+                    }
+                    else
+                    {
+                        os << *(((float*) d) + i);
+                    }
                 }
-                else if (e.Name[0] == 'i')
-                {
-                    os << *(((int *) d) + i);
-                }
-                else
-                {
-                    os << *(((float *) d) + i);
-                }
-            }
-            os << ';' << std::endl;
-        });
+                os << ';' << std::endl;
+            });
+        }
         return os.str();
+    }
+
+    UniformBlock::UniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxElems)
+    :   DataDescriptor(descriptor),
+        mBlockName(blockName),
+        mOwnData(false),
+        mUseBuffer(true),
+        mBindingPoint(bindingPoint),
+        mUniformData(NULL)
+    {
+        mElemSize = mTotalSize;
+        mMaxElems = maxElems;
+        if (blockName)
+        {
+            mBlockName = blockName;
+        }
+        if ((mElemSize > 0) && (maxElems > 0))
+        {
+            mMaxElems = mNumElems = maxElems;
+            mTotalSize = mElemSize * maxElems;
+            mUniformData = new char[mTotalSize];
+            mOwnData = true;
+        }
+    }
+
+    bool UniformBlock::setNumElems(int numElems)
+    {
+        if ((numElems < 0) || (numElems > mMaxElems))
+        {
+            return false;
+        }
+        mNumElems = numElems;
+        mTotalSize = mNumElems * mElemSize;
+        return true;
+    }
+
+
+    bool UniformBlock::setRange(int elemIndex, const void* srcData, int numElems)
+    {
+        if ((elemIndex + numElems) <= mMaxElems)
+        {
+            char* dest = (char*) getDataAt(elemIndex);
+            if (dest)
+            {
+                int n = elemIndex + numElems;
+                memcpy(dest, srcData, mElemSize * numElems);
+                markDirty();
+                if (n > mNumElems)
+                {
+                    setNumElems(n);
+                }
+                return true;
+            }
+        }
+        LOGE("UniformBlock::setRange ERROR %d out of range, maximum is %d", elemIndex + numElems, mMaxElems);
+        return false;
+    }
+
+    bool UniformBlock::setAt(int elemIndex, UniformBlock& srcBlock)
+    {
+        if ((elemIndex >= 0) &&
+            (elemIndex < mMaxElems) &&
+            (srcBlock.getTotalSize() == mElemSize))
+        {
+            const char* src = (const char*) srcBlock.getData();
+            memcpy(mUniformData + mElemSize * elemIndex, src, mElemSize);
+            if (elemIndex >= mNumElems)
+            {
+                setNumElems(elemIndex + 1);
+            }
+            return true;
+        }
+        LOGE("UniformBlock::setAt ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);
+        return false;
+    }
+
+    const char* UniformBlock::getDataAt(int elemIndex)
+    {
+        if (mUniformData &&
+            (elemIndex >= 0) &&
+            (elemIndex < mMaxElems))
+        {
+            return mUniformData + (mElemSize * elemIndex);
+        }
+        LOGE("UniformBlock::getDataAt ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);
+        return NULL;
     }
 }
 

@@ -52,7 +52,7 @@ import org.joml.Vector4f;
  * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRCollider
  * @see GVRComponent#setEnable(boolean)
- * @see GVRPickedObject
+ * @see org.gearvrf.GVRPicker.GVRPickedObject
  * @see GVRPicker
  */
 public class GVRObjectPicker extends GVRPicker

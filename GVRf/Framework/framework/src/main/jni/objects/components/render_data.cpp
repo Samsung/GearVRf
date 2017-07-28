@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp>
 
 #include "util/jni_utils.h"
-#include "objects/hybrid_object.h"
 #include "objects/scene.h"
-#include "objects/components/render_data.h"
-#include "gl/gl_material.h"
-
+#include "shaders/shader.h"
 namespace gvr {
 
 RenderData::~RenderData() {
@@ -223,18 +223,27 @@ std::string RenderData::getHashCode()
 
 bool RenderData::updateGPU(Renderer* renderer, Shader* shader)
 {
-    if (mesh_->hasBones())
-    {
-        if (bones_ubo_ == NULL)
-        {
-            bones_ubo_ = renderer->createUniformBlock("mat4 u_bone_matrix[60];", BONES_UBO_INDEX, "Bones_ubo");
-        }
-        const std::vector<glm::mat4>& bone_matrices = mesh_->getVertexBoneData().getBoneMatrices();
-        bones_ubo_->setFloatVec("u_bone_matrix", &bone_matrices[0][0][0], bone_matrices.size() * 16);
-        bones_ubo_->updateGPU(renderer);
-    }
+    VertexBuffer* vbuf = mesh_->getVertexBuffer();
 
-    mesh_->getVertexBuffer()->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
+    if (mesh_->hasBones() && shader->hasBones())
+    {
+        VertexBoneData& vbd = mesh_->getVertexBoneData();
+        std::vector<glm::mat4>& bone_matrices = vbd.getBoneMatrices();
+        int numBones = bone_matrices.size();
+
+        if (numBones > 0)
+        {
+            if (bones_ubo_ == NULL)
+            {
+                bones_ubo_ = renderer->createUniformBlock("mat4 u_bone_matrix", BONES_UBO_INDEX,
+                                                          "Bones_ubo", MAX_BONES);
+                bones_ubo_->setNumElems(numBones);
+            }
+            bones_ubo_->setRange(0, bone_matrices.data(), numBones);
+            bones_ubo_->updateGPU(renderer);
+        }
+    }
+    vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
     return true;
 }
 }

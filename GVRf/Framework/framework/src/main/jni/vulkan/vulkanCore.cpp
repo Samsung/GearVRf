@@ -587,7 +587,7 @@ namespace gvr {
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.offset                        = 0;
         pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
-        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
@@ -646,8 +646,8 @@ namespace gvr {
 
     VkRenderPass VulkanCore::createVkRenderPass(RenderPassType render_pass_type, int sample_count){
 
-        if(mRenderPassMap[SHADOW_RENDERPASS])
-            return mRenderPassMap[SHADOW_RENDERPASS];
+        if(mRenderPassMap[render_pass_type])
+            return mRenderPassMap[render_pass_type];
 
         if(render_pass_type == SHADOW_RENDERPASS){
             VkRenderPass render_pass = getShadowRenderPass(m_device);
@@ -928,7 +928,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         for(int i =0; i<samplers.size(); i = i+2){
             if(samplers[i] == index)
-                return samplers[i+1];
+                return (VkSampler) samplers[i + 1];
         }
         LOGE("sampler not found");
         return  0;
@@ -1058,7 +1058,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                            curr_pass));
 
                    vkCmdPushConstants(cmdBuffer, shader->getPipelineLayout(),
-                                      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                       0,
                                       (uint32_t) vkmtl->uniforms().getTotalSize(),
                                       vkmtl->uniforms().getUniformData());

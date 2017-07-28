@@ -21,7 +21,7 @@
 #include "engine/renderer/renderer.h"
 #include "engine/renderer/vulkan_renderer.h"
 #include "vk_bitmap_image.h"
-
+namespace gvr {
 std::map<int, VkFormat> compressed_formats = {
         {0x93B0,                        VK_FORMAT_ASTC_4x4_UNORM_BLOCK},
         {0x93B1,                        VK_FORMAT_ASTC_5x4_UNORM_BLOCK},
@@ -45,11 +45,17 @@ std::map<int, VkFormat> compressed_formats = {
         {GL_COMPRESSED_RGBA8_ETC2_EAC,  VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK},
 };
 
-namespace gvr {
     VkBitmapImage::VkBitmapImage(int format) :
             vkImageBase(VK_IMAGE_VIEW_TYPE_2D),
             BitmapImage(format)
     { }
+
+    int VkBitmapImage::updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject buffer)
+    {
+        void* pixels = env->GetDirectBufferAddress(buffer);
+        // TODO: update bitmap image from pixels
+        LOGE("VkBitmapImage::updateFromBuffer() not implemented yet");
+    }
 
     int VkBitmapImage::updateFromBitmap(JNIEnv *env, VkImageViewType target, jobject bitmap) {
         AndroidBitmapInfo info;
@@ -194,7 +200,11 @@ namespace gvr {
             LOGE("BitmapImage::updateFromBitmap bitmap is null");
             return;
         }
-        updateFromBitmap(env, getImageType(), mBitmap);
+        if(mIsBuffer) {
+            updateFromBuffer(env, getImageType(), mBitmap);
+        } else {
+            updateFromBitmap(env, getImageType(), mBitmap);
+        }
     }
 
     void VkBitmapImage::loadCompressedMipMaps(jbyte *data, int format) {

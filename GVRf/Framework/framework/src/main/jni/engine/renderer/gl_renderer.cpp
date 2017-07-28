@@ -64,9 +64,13 @@ namespace gvr
     }
 
     UniformBlock *GLRenderer::createUniformBlock(const char* desc, int binding,
-                                                 const char* name)
+                                                 const char* name, int maxelems)
     {
-        return new GLUniformBlock(desc, binding, name);
+        if (maxelems <= 1)
+        {
+            return new GLUniformBlock(desc, binding, name);
+        }
+        return new GLUniformBlock(desc, binding, name, maxelems);
     }
 
     Image *GLRenderer::createImage(int type, int format)
@@ -158,7 +162,7 @@ namespace gvr
         else
             desc = " mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; float u_right;";
         transform_ubo_ = reinterpret_cast<GLUniformBlock*>
-                            (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo"));
+                            (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
         transform_ubo_->useGPUBuffer(false);
     }
 
@@ -711,8 +715,9 @@ namespace gvr
         {
             renderData->updateGPU(this,shader);
             renderMaterialShader(rstate, renderData, shaderData, shader);
+            return true;
         }
-        return true;
+        return  false;
     }
 
     void GLRenderer::updateLights(RenderState& rstate, Shader* shader, int texIndex)
