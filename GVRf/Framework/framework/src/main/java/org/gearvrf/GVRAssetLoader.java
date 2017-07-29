@@ -615,21 +615,14 @@ public final class GVRAssetLoader {
     /**
      * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
      * with the user provided texture parameters.
-     *
-     * <p>
-     * Note that this method may take hundreds of milliseconds to return: unless
-     * the texture is quite tiny, you probably don't want to call this directly
-     * from your {@link GVRMain#onStep() onStep()} callback as that is called
-     * once per frame, and a long call will cause you to miss frames. For large
-     * images, you should use
-     * {@link #loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback)}.
+     * The bitmap is loaded asynchronously.
      * <p>
      * This method automatically scales large images to fit the GPU's
      * restrictions and to avoid {@linkplain OutOfMemoryError out of memory
      * errors.}
      *
      * @param resource
-     *            Basically, a stream containing a bitmap texture. The
+     *            A stream containing a bitmap texture. The
      *            {@link GVRAndroidResource} class has six constructors to
      *            handle a wide variety of Android resource types. Taking a
      *            {@code GVRAndroidResource} here eliminates six overloads.
@@ -652,7 +645,19 @@ public final class GVRAssetLoader {
                                                   request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
         return texture;
     }
-
+    /**
+     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * with the default texture parameters.
+     * The bitmap is loaded asynchronously.
+     * @param resource
+     *            A stream containing a bitmap texture. The
+     *            {@link GVRAndroidResource} class has six constructors to
+     *            handle a wide variety of Android resource types. Taking a
+     *            {@code GVRAndroidResource} here eliminates six overloads.
+     * @return The file as a texture, or {@code null} if the file can not be
+     *         decoded into a Bitmap.
+     * @see GVRAssetLoader#getDefaultTextureParameters
+     */
     public GVRTexture loadTexture(GVRAndroidResource resource)
     {
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
@@ -663,8 +668,9 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads a texture asynchronously.
-     *
+     * Loads a texture from a resource with a specified priority and quality.
+     * <p>
+     * The bitmap is loaded asynchronously.
      * This method can detect whether the resource file holds a compressed
      * texture (GVRF currently supports ASTC, ETC2, and KTX formats:
      * applications can add new formats by implementing
@@ -761,7 +767,6 @@ public final class GVRAssetLoader {
      *            any errors will call
      *            {@link GVRAndroidResource.TextureCallback#failed(Throwable, GVRAndroidResource)
      *            failed()}, with no promises about threading.
-     *
      *            <p>
      *            This method uses a throttler to avoid overloading the system.
      *            If the throttler has threads available, it will run this
@@ -787,7 +792,7 @@ public final class GVRAssetLoader {
 
     /**
      * Loads a cubemap texture asynchronously with default priority and quality.
-     *
+     * <p>
      * This method can only load uncompressed cubemaps. To load a compressed
      * cubemap you can use {@link #loadCompressedCubemapTexture(GVRAndroidResource)}.
      *
@@ -876,7 +881,7 @@ public final class GVRAssetLoader {
 
     /**
      * Loads a compressed cubemap texture asynchronously with default priority and quality.
-     *
+     * <p>
      * This method can only load compressed cubemaps. To load an un-compressed
      * cubemap you can use {@link #loadCubemapTexture(GVRAndroidResource)}.
      *
@@ -908,11 +913,11 @@ public final class GVRAssetLoader {
 
     /**
      * Loads atlas information file placed in the assets folder.
-     *
+     * <p>
      * Atlas information file contains in UV space the information of offset and
      * scale for each mesh mapped in some atlas texture.
      * The content of the file is at json format like:
-     *
+     * <p>
      * [ {name: SUN, offset.x: 0.9, offset.y: 0.9, scale.x: 0.5, scale.y: 0.5},
      * {name: EARTH, offset.x: 0.5, offset.y: 0.9, scale.x: 0.5, scale.y: 0.5} ]
      *
@@ -1003,7 +1008,9 @@ public final class GVRAssetLoader {
      * IAssetEvents are emitted to the event listener attached to the context.
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
-     *
+     * <p>
+     * If you are loading large models, you can call {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)}
+     * to load the model asychronously to avoid blocking the main thread.
      * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
@@ -1023,10 +1030,12 @@ public final class GVRAssetLoader {
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
      * and adds it to the specified scene.
-     * IAssetEvents are emitted to event listeners attached to the context.
+     * IAssetEvents are emitted to event listener attached to the context.
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
-     *
+     * <p>
+     * If you are loading large models, you can call {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)}
+     * to load the model asychronously to avoid blocking the main thread.
      * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
@@ -1060,10 +1069,13 @@ public final class GVRAssetLoader {
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
      * replaces the current scene with it.
-     * IAssetEvents are emitted to event listeners attached to the context.
+     * <p>
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
-     *
+     * IAssetEvents are emitted to the event listener attached to the context.
+     * <p>
+     * If you are loading large models, you can call {@link #loadScene(GVRSceneObject, GVRResourceVolume, GVRScene, IAssetEvents)}
+     * to load the model asychronously to avoid blocking the main thread.     *
      * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
@@ -1096,9 +1108,10 @@ public final class GVRAssetLoader {
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
      * replaces the current scene with it.
+     * <p>
      * This function loads the model and its textures asynchronously in the background
      * and will return before the model is loaded.
-     * IAssetEvents are emitted to event listeners attached to the context.
+     * IAssetEvents are emitted to event listener attached to the context.
      *
      * @param model
      *          Scene object to become the root of the loaded model.
@@ -1112,6 +1125,7 @@ public final class GVRAssetLoader {
      *            Scene to be replaced with the model.
      * @param handler
      *            IAssetEvents handler to process asset loading events
+     * @see #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)
      */
     public void loadScene(final GVRSceneObject model, final GVRResourceVolume volume, final GVRScene scene, final IAssetEvents handler)
     {
@@ -1141,15 +1155,14 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
+     * Loads a hierarchy of scene objects {@link GVRSceneObject} asymchronously from a 3D model
      * on the volume provided and adds it to the specified scene.
-     * IAssetEvents are emitted to event listeners attached to the context.
-     * This function loads the model and its textures asynchronously in the background
+     * <p>
      * and will return before the model is loaded.
      * IAssetEvents are emitted to event listeners attached to the context.
      * The resource volume may reference res/raw in which case all textures
      * and other referenced assets must also come from res/raw. The asset loader
-     * cannot loadtextures from the drawable directory.
+     * cannot load textures from the drawable directory.
      *
      * @param model
      *            A GVRSceneObject to become the root of the loaded model.
@@ -1162,7 +1175,8 @@ public final class GVRAssetLoader {
      *            If present, this asset loader will wait until all of the textures have been
      *            loaded and then it will add the model to the scene.
      *
-     *
+     * @see #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
+     * @see #loadScene(GVRSceneObject, GVRResourceVolume, GVRScene, IAssetEvents)
      */
     public void loadModel(final GVRSceneObject model, final GVRResourceVolume volume, final GVRScene scene)
     {
@@ -1193,17 +1207,20 @@ public final class GVRAssetLoader {
 
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
-     * The model is not added to the current scene.
-     * IAssetEvents are emitted to the event handler supplied first and then to
-     * the event listener attached to the context.
+     * <p>
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
-     *
+     * IAssetEvents are emitted to the event handler supplied first and then to
+     * the event listener attached to the context.
+     * <p>
+     * If you are loading large models, you can call {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)}
+     * to load the model asychronously to avoid blocking the main thread.
      * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
      *            Otherwise the file is assumed to be relative to the "assets" directory.
+     *            Texture paths are relative to the directory the asset is loaded from.
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
@@ -1211,7 +1228,8 @@ public final class GVRAssetLoader {
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
      * @throws IOException
-     *
+     * @see #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)
+     * @see #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
      */
     public GVRModelSceneObject loadModel(String filePath, IAssetEvents handler) throws IOException
     {
@@ -1232,17 +1250,21 @@ public final class GVRAssetLoader {
 
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
-     * The model is not added to the current scene.
-     * IAssetEvents are emitted to the event handler supplied first and then to
-     * the event listener attached to the context.
+     * <p>
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
+     * IAssetEvents are emitted to the event handler supplied first and then to
+     * the event listener attached to the context.
+     * <p>
+     * If you are loading large models, you can call {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)}
+     * to load the model asychronously to avoid blocking the main thread.
      *
      * @param filePath
      *            A filename, relative to the root of the volume.
      *            If the filename starts with "sd:" the file is assumed to reside on the SD Card.
      *            If the filename starts with "http:" or "https:" it is assumed to be a URL.
      *            Otherwise the file is assumed to be relative to the "assets" directory.
+     *            Texture paths are relative to the directory the asset is loaded from.
      *
      * @param settings
      *            Additional import {@link GVRImportSettings settings}
@@ -1257,7 +1279,8 @@ public final class GVRAssetLoader {
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
      * @throws IOException
-     *
+     * @see #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)
+     * @see #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
      */
     public GVRModelSceneObject loadModel(String filePath,
                                          EnumSet<GVRImportSettings> settings,
@@ -1280,20 +1303,22 @@ public final class GVRAssetLoader {
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model
      * inside an Android resource.
-     * cannot load textures from the drawable directory.
-     * The model is not added to the current scene.
-     * IAssetEvents are emitted to the event handler supplied first and then to
-     * the event listener attached to the context.
+     * <p>
      * This function blocks the current thread while loading the model
      * but loads the textures asynchronously in the background.
-     * The resource may be from res/raw in which case all textures
-     * and other referenced assets must also come from res/raw. The asset loader
-     * cannot load textures referenced from within 3D models from the drawable directory.
-     *
+     * IAssetEvents are emitted to the event handler supplied first and then to
+     * the event listener attached to the context.
+     * <p>
+     * If you are loading large models, you can call {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)}
+     * to load the model asychronously to avoid blocking the main thread.
      * @param resource
      *            GVRAndroidResource describing the asset. If it is a resource ID,
      *            the file it references must have a valid extension because the
      *            extension is used to determine what type of 3D file it is.
+     *            The resource may be from res/raw in which case all textures
+     *            and other referenced assets must also come from res/raw.
+     *            This function cannot load textures from the drawable directory - they must
+     *            be in res/raw.
      *
      * @param settings
      *            Additional import {@link GVRImportSettings settings}
@@ -1303,12 +1328,13 @@ public final class GVRAssetLoader {
      *
      * @param scene
      *            If present, this asset loader will wait until all of the textures have been
-     *            loaded and then adds the model to the scene.
+     *            loaded and then add the model to the scene.
      *
      * @return A {@link GVRModelSceneObject} that contains the meshes with textures and bones
      * and animations.
      * @throws IOException
-     *
+     * @see #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)
+     * @see #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
      */
     public GVRModelSceneObject loadModel(GVRAndroidResource resource,
                                          EnumSet<GVRImportSettings> settings,
@@ -1336,8 +1362,14 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads a scene object {@link GVRSceneObject} from
+     * Loads a scene object {@link GVRSceneObject} asynchronously from
      * a 3D model and raises asset events to a handler.
+     * <p>
+     * This function is a good choice for loading assets because
+     * it does not block the thread from which it is initiated.
+     * Instead, it runs the load request on a background thread
+     * and issues events to the handler provided.
+     * </p>
      *
      * @param fileVolume
      *            GVRResourceVolume with the path to the model to load.
@@ -1356,6 +1388,7 @@ public final class GVRAssetLoader {
      *
      * @param handler
      *            IAssetEvents handler to process asset loading events
+     * @see IAssetEvents #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
      */
     public void loadModel(final GVRResourceVolume fileVolume,
                           final GVRSceneObject model,
@@ -1422,7 +1455,13 @@ public final class GVRAssetLoader {
      * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)} is
      * better because it moves most of the work to a background thread, doing as
      * little as possible on the GL thread.
-     *
+     * <p>
+     * If you want to load a 3D model which has multiple meshes, the best choices are
+     * {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)} which loads a
+     * 3D model under the scene object you provide and adds it to the given scene or
+     * {@link #loadScene(GVRSceneObject, GVRResourceVolume, GVRScene, IAssetEvents)}
+     * which replaces the current scene with the 3D model.
+     * </p>
      * @param androidResource
      *            Basically, a stream containing a 3D model. The
      *            {@link GVRAndroidResource} class has six constructors to
@@ -1434,30 +1473,20 @@ public final class GVRAssetLoader {
      * @return The file as a GL mesh or null if mesh cannot be loaded.
      *
      * @since 3.3
+     * @see #loadScene(GVRSceneObject, GVRResourceVolume, GVRScene, IAssetEvents)
+     * @see #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)
+     * @see #findMesh(GVRSceneObject)
      */
     public GVRMesh loadMesh(GVRAndroidResource androidResource,
                             EnumSet<GVRImportSettings> settings)
     {
-        class MeshFinder implements GVRSceneObject.ComponentVisitor
-        {
-            private GVRMesh meshFound = null;
-            public GVRMesh getMesh() { return meshFound; }
-            public boolean visit(GVRComponent comp)
-            {
-                GVRRenderData rdata = (GVRRenderData) comp;
-                meshFound = rdata.getMesh();
-                return (meshFound == null);
-            }
-        };
-        MeshFinder findMesh = new MeshFinder();
         GVRMesh mesh = mMeshCache.get(androidResource);
         if (mesh == null)
         {
             try
             {
                 GVRSceneObject model = loadModel(androidResource, settings, true, null);
-                model.forAllComponents(findMesh, GVRRenderData.getComponentType());
-                mesh = findMesh.getMesh();
+                mesh = findMesh(model);
                 if (mesh != null)
                 {
                     mMeshCache.put(androidResource, mesh);
@@ -1479,23 +1508,51 @@ public final class GVRAssetLoader {
     }
 
     /**
+     * Finds the first mesh in the given model.
+     * @param model root of a model loaded by the asset loader.
+     * @return GVRMesh found or null if model does not contain meshes
+     * @see #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
+     */
+    public GVRMesh findMesh(GVRSceneObject model)
+    {
+        class MeshFinder implements GVRSceneObject.ComponentVisitor
+        {
+            private GVRMesh meshFound = null;
+            public GVRMesh getMesh() { return meshFound; }
+            public boolean visit(GVRComponent comp)
+            {
+                GVRRenderData rdata = (GVRRenderData) comp;
+                meshFound = rdata.getMesh();
+                return (meshFound == null);
+            }
+        };
+        MeshFinder findMesh = new MeshFinder();
+        model.forAllComponents(findMesh, GVRRenderData.getComponentType());
+        return findMesh.getMesh();
+    }
+
+    /**
      * Loads a mesh file, asynchronously, at an explicit priority.
      * <p>
-     * This method is generally going to be your best choices for loading
-     * a single mesh from a 3D asset file.
+     * This method is generally going to be the most convenient for
+     * asynchronously loading a single mesh from a 3D asset file.
      * It uses {@link #loadModel(GVRAndroidResource, EnumSet, boolean, GVRScene)}
      * internally to load the asset and then inspects the file to find the first mesh.
      * <p>
-     * Mesh loading can take
+     * To asynchronously load an entire 3D model, you should use {@link #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)}.
+     * It does not require a callback. Instead you pass it an existing scene object and it loads the model
+     * under tha node.
+     * <p>
+     * Model and mesh loading can take
      * hundreds - and even thousands - of milliseconds, and so should not be
      * done on the GL thread in either {@link GVRMain#onInit(GVRContext)
-     * onInit()} or {@link GVRMain#onStep() onStep()}.
+     * onInit()} or {@link GVRMain#onStep() onStep()} unless you use the asychronous functions.
      * <p>
-     * The asynchronous methods improve throughput in three ways. First, by
+     * This function improves throughput in three ways. First, by
      * doing all the work on a background thread, then delivering the loaded
      * mesh to the GL thread on a {@link GVRContext#runOnGlThread(Runnable)
-     * runOnGlThread()} callback. Second, they use a throttler to avoid
-     * overloading the system and/or running out of memory. Third, they do
+     * runOnGlThread()} callback. Second, it uses a throttler to avoid
+     * overloading the system and/or running out of memory. Third, it does
      * 'request consolidation' - if you issue any requests for a particular file
      * while there is still a pending request, the file will only be read once,
      * and each callback will get the same {@link GVRMesh}.
@@ -1546,6 +1603,8 @@ public final class GVRAssetLoader {
      *             reloaded ... but the original descriptor will have been
      *             closed.
      * @since 3.3
+     * @see #loadModel(GVRSceneObject, GVRResourceVolume, GVRScene)
+     * @see #loadScene(GVRSceneObject, GVRResourceVolume, GVRScene, IAssetEvents)
      */
     public void loadMesh(GVRAndroidResource.MeshCallback callback,
                          GVRAndroidResource resource,
@@ -1553,95 +1612,6 @@ public final class GVRAssetLoader {
             throws IllegalArgumentException
     {
         GVRAsynchronousResourceLoader.loadMesh(mContext, callback, resource, priority);
-    }
-
-    /**
-     * Simple, high-level method to load a mesh asynchronously, for use with
-     * {@link GVRRenderData#setMesh(Future)}.
-     *
-     * This method uses a default priority; use
-     * {@link #loadFutureMesh(GVRAndroidResource, int)} to specify a priority;
-     * use one of the lower-level
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
-     * methods to get more control over loading.
-     *
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @return A {@link Future} that you can pass to
-     *         {@link GVRRenderData#setMesh(Future)}
-     *
-     * @since 3.3
-     *
-     * @throws IllegalArgumentException
-     *             If you 'abuse' request consolidation by passing the same
-     *             {@link GVRAndroidResource} descriptor to multiple load calls.
-     *             <p>
-     *             It's fairly common for multiple scene objects to use the same
-     *             texture or the same mesh. Thus, if you try to load, say,
-     *             {@code R.raw.whatever} while you already have a pending
-     *             request for {@code R.raw.whatever}, it will only be loaded
-     *             once; the same resource will be used to satisfy both (all)
-     *             requests. This "consolidation" uses
-     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
-     *             {@code ==} (aka "reference equality"): The problem with using
-     *             the same resource descriptor is that if requests can't be
-     *             consolidated (because the later one(s) came in after the
-     *             earlier one(s) had already completed) the resource will be
-     *             reloaded ... but the original descriptor will have been
-     *             closed.
-     */
-    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource)
-    {
-        return loadFutureMesh(resource, DEFAULT_PRIORITY);
-    }
-
-    /**
-     * Simple, high-level method to load a mesh asynchronously, for use with
-     * {@link GVRRenderData#setMesh(Future)}.
-     *
-     * This method trades control for convenience; use one of the lower-level
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
-     * methods if, say, you want to do something more than just
-     * {@link GVRRenderData#setMesh(GVRMesh)} when the mesh loads.
-     *
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @param priority
-     *            This request's priority. Please see the notes on asynchronous
-     *            priorities in the <a href="package-summary.html#async">package
-     *            description</a>.
-     * @return A {@link Future} that you can pass to
-     *         {@link GVRRenderData#setMesh(Future)}
-     *
-     * @since 3.3
-     *
-     * @throws IllegalArgumentException
-     *             If you 'abuse' request consolidation by passing the same
-     *             {@link GVRAndroidResource} descriptor to multiple load calls.
-     *             <p>
-     *             It's fairly common for multiple scene objects to use the same
-     *             texture or the same mesh. Thus, if you try to load, say,
-     *             {@code R.raw.whatever} while you already have a pending
-     *             request for {@code R.raw.whatever}, it will only be loaded
-     *             once; the same resource will be used to satisfy both (all)
-     *             requests. This "consolidation" uses
-     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
-     *             {@code ==} (aka "reference equality"): The problem with using
-     *             the same resource descriptor is that if requests can't be
-     *             consolidated (because the later one(s) came in after the
-     *             earlier one(s) had already completed) the resource will be
-     *             reloaded ... but the original descriptor will have been
-     *             closed.
-     */
-    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource, int priority)
-    {
-        return GVRAsynchronousResourceLoader.loadFutureMesh(mContext, resource, priority);
     }
 
     /**
