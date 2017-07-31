@@ -9,6 +9,7 @@ import com.google.gson.JsonParser;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
@@ -259,7 +260,9 @@ public class SceneSerializer {
             while (iterator.hasNext()) {
                 currentSod = iterator.next();
                 try {
-                    context.getAssetLoader().loadModel("sd:"+currentSod.getSrc());
+                    context.getAssetLoader().loadModel(
+                            "sd:" + currentSod.getSrc(), GVRImportSettings.getRecommendedSettings(),
+                            true, null);
                     break;
                 } catch (IOException e) {
                     Log.e(TAG, "Could not load model:%s from sdcard:%s", currentSod.getSrc(),

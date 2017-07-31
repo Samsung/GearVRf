@@ -38,11 +38,6 @@ public class GVRAccessiblityObject extends GVRSceneObject {
 
     }
 
-    public GVRAccessiblityObject(GVRContext gvrContext, Future<GVRMesh> futureMesh, GVRTexture texture) {
-        super(gvrContext, futureMesh, texture);
-
-    }
-
     public GVRAccessiblityObject(GVRContext gvrContext, GVRAndroidResource mesh, GVRAndroidResource texture) {
         super(gvrContext, mesh, texture);
 

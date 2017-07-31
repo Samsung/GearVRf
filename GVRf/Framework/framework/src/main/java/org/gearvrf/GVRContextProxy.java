@@ -47,29 +47,6 @@ public final class GVRContextProxy extends GVRContext {
         return mContext.get().getEventReceiver();
     }
 
-    public GVRMesh loadMesh(GVRAndroidResource androidResource) {
-        return mContext.get().loadMesh(androidResource);
-    }
-
-    public GVRMesh loadMesh(GVRAndroidResource androidResource, EnumSet<GVRImportSettings> settings) {
-        return mContext.get().loadMesh(androidResource, settings);
-    }
-
-    public void loadMesh(GVRAndroidResource.MeshCallback callback, GVRAndroidResource androidResource) throws IllegalArgumentException {
-        mContext.get().loadMesh(callback, androidResource);
-    }
-
-    public void loadMesh(GVRAndroidResource.MeshCallback callback, GVRAndroidResource resource, int priority) throws IllegalArgumentException {
-        mContext.get().loadMesh(callback, resource, priority);
-    }
-
-    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource) {
-        return mContext.get().loadFutureMesh(resource);
-    }
-
-    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource, int priority) {
-        return mContext.get().loadFutureMesh(resource, priority);
-    }
 
     public GVRMesh createQuad(float width, float height) {
         return mContext.get().createQuad(width, height);
@@ -81,10 +58,6 @@ public final class GVRContextProxy extends GVRContext {
 
     public boolean isCurrentThreadGLThread() {
         return mContext.get().isCurrentThreadGLThread();
-    }
-
-    public List<GVRAtlasInformation> loadTextureAtlasInformation(GVRAndroidResource resource) throws IOException {
-        return mContext.get().loadTextureAtlasInformation(resource);
     }
 
     public GVRScene getMainScene() {
