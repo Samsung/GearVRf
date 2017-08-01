@@ -559,12 +559,12 @@ public final class GVRAssetLoader {
         }
     }
 
-    protected GVRContext mContext;
     protected static ResourceCache<GVRTexture> mTextureCache = new ResourceCache<GVRTexture>();
     protected static HashMap<String, GVRTexture> mEmbeddedCache = new HashMap<String, GVRTexture>();
-    protected static ResourceCache<GVRMesh> mMeshCache = new ResourceCache<GVRMesh>();
-
     protected static GVRTexture mDefaultTexture = null;
+
+    protected GVRContext mContext;
+    protected ResourceCache<GVRMesh> mMeshCache = new ResourceCache<>();
 
     /**
      * When the application is restarted we recreate the texture cache
@@ -1131,27 +1131,6 @@ public final class GVRAssetLoader {
         return atlasInformation;
     }
 
-    /** @since 1.6.2 */
-    GVRAssimpImporter readFileFromResources(GVRContext gvrContext, GVRAndroidResource resource,
-                                            EnumSet<GVRImportSettings> settings) throws IOException {
-        byte[] bytes;
-        InputStream stream = resource.getStream();
-        try {
-            bytes = new byte[stream.available()];
-            stream.read(bytes);
-        } finally {
-            resource.closeStream();
-        }
-        String resourceFilename = resource.getResourceFilename();
-        if (resourceFilename == null) {
-            resourceFilename = ""; // Passing null causes JNI exception.
-        }
-        long nativeValue = NativeImporter.readFromByteArray(bytes,
-                resourceFilename, GVRImportSettings.getAssimpImportFlags(settings));
-        return new GVRAssimpImporter(gvrContext, nativeValue);
-    }
-
-
     // IO Handler for Jassimp
     static class ResourceVolumeIO implements JassimpFileIO {
         private GVRResourceVolume volume;
@@ -1711,7 +1690,7 @@ public final class GVRAssetLoader {
      *
      * Note that this method can be quite slow; we recommend never calling it
      * from the GL thread. The asynchronous version
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)} is
+     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)} is
      * better because it moves most of the work to a background thread, doing as
      * little as possible on the GL thread.
      *
@@ -2117,14 +2096,6 @@ public final class GVRAssetLoader {
         return mDefaultTextureParameters;
     }
 
-     /**
-     * State-less, should be fine having one instance
-     */
     private final static String TAG = "GVRAssetLoader";
-
-}
-
-class NativeImporter {
-    static native long readFromByteArray(byte[] bytes, String filename, int settings);
 }
 
