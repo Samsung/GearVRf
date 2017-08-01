@@ -28,14 +28,13 @@ import java.util.List;
 
 class CursorInputManager {
     private static final String TAG = CursorInputManager.class.getSimpleName();
-    private static CursorInputManager inputManager;
     private GVRInputManager gvrInputManager;
     private List<IoDeviceListener> ioDeviceListeners;
     private List<IoDevice> availableIoDevices;
     private List<IoDevice> unavailableIoDevices;
     private static final Object lock = new Object();
 
-    private CursorInputManager(GVRContext context) {
+    CursorInputManager(GVRContext context) {
         gvrInputManager = context.getInputManager();
         availableIoDevices = new ArrayList<IoDevice>();
         unavailableIoDevices = new ArrayList<IoDevice>();
@@ -45,15 +44,6 @@ class CursorInputManager {
             IoDevice ioDevice = IoDeviceLoader.getIoDevice(gvrController);
             addIoDevice(ioDevice);
         }
-    }
-
-    //TODO fix the odd singleton pattern
-    static CursorInputManager getInstance(GVRContext context) {
-        if (inputManager == null) {
-            inputManager = new CursorInputManager(context);
-            return inputManager;
-        }
-        return inputManager;
     }
 
     List<IoDevice> getAvailableIoDevices() {
