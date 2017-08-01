@@ -224,6 +224,27 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     }
 
     /**
+     * Constructs a cube scene object with the sides matching the dimentions.
+     *
+     * The cube's triangles and normals are facing either in or out and the same
+     * texture will be applied to each side of the cube.
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     * @param dimensions
+     *            Vector3f containing X, Y, Z dimensions
+     */
+    public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut, Vector3f dimensions) {
+        super(gvrContext);
+
+        createSimpleCube(gvrContext, facingOut, new GVRMaterial(gvrContext), dimensions);
+    }
+
+
+    /**
      * Constructs a cube scene object with each side of length 1.
      * <p>
      * The cube's triangles and normals are facing either in or out and the same
