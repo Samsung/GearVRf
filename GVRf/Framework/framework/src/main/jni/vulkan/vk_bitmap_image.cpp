@@ -179,10 +179,8 @@ std::map<int, VkFormat> compressed_formats = {
             else
                 internal_format = VK_FORMAT_R8_UNORM;
 
-   //         mVkImage.updateMipVkImage(mImageSize, texData, imageInfos, bufferCopyRegions, target,
-   //                                   internal_format, mLevels);
-            updateVkImage(mImageSize, texData, imageInfos, bufferCopyRegions, target,
-                          internal_format);
+            updateMipVkImage(mImageSize, texData, imageInfos, bufferCopyRegions, target,
+                             internal_format, mLevels);
         }
         else {
 
