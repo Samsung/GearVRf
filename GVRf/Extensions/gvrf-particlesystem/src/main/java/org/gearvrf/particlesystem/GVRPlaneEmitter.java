@@ -15,13 +15,6 @@
 
 package org.gearvrf.particlesystem;
 
-/**
- * Is a GVREmitter of the plane shape. The particles are emitted from
- * a planar area in the X-Z plane of a certain width and height in a positive y-direction with a
- * random position and velocity. The direction of emmission can be changed by
- * rotating the emitter in the application.
- */
-
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
@@ -30,6 +23,13 @@ import org.joml.Vector3f;
 
 import java.lang.ref.WeakReference;
 import java.util.Random;
+
+/**
+ * Is a GVREmitter of the plane shape. The particles are emitted from
+ * a planar area in the X-Z plane of a certain width and height in a positive y-direction with a
+ * random position and velocity. The direction of emmission can be changed by
+ * rotating the emitter in the application.
+ */
 
 public class GVRPlaneEmitter extends GVREmitter {
 
@@ -150,7 +150,7 @@ public class GVRPlaneEmitter extends GVREmitter {
                         emitter.emitWithBurstCheck(emitter.mParticlePositions, emitter.mParticleVelocities,
                                 emitter.mParticleGenTimes);
 
-                        emitter.onDrawFrame(frameTime);
+                        emitter.onDrawFrame();
                     }
                 }
             }
@@ -178,9 +178,8 @@ public class GVRPlaneEmitter extends GVREmitter {
         mHeight = length;
     }
 
-
     /**
-     * Unregister and remove all the child objects with meshes from this emitter
+     * @inheritDoc
      */
     public void clearSystem()
     {

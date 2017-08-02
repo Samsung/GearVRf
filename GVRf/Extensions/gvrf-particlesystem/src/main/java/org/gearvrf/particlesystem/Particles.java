@@ -105,7 +105,7 @@ class Particles {
         meshObject.getRenderData().setMaterial(material);
 
         GVRMaterialShaderManager shaderManager = mGVRContext.getMaterialShaderManager();
-        GVRShaderTemplate shaderTemplate = shaderManager.retrieveShaderTemplate(ColorShader.class);
+        GVRShaderTemplate shaderTemplate = shaderManager.retrieveShaderTemplate(ParticleShader.class);
         shaderTemplate.bindShader(mGVRContext, meshObject.getRenderData(), mGVRContext.getMainScene());
 
         // Set the draw mode to GL_POINTS, disable writing to depth buffer, enable depth testing

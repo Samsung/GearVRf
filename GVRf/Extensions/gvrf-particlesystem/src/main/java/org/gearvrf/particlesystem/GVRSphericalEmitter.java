@@ -173,7 +173,7 @@ public class GVRSphericalEmitter extends GVREmitter{
                         emitter.emitWithBurstCheck(emitter.mParticlePositions, emitter.mParticleVelocities,
                                 emitter.mParticleGenTimes);
 
-                        emitter.onDrawFrame(frameTime);
+                        emitter.onDrawFrame();
                     }
                 }
             }
@@ -194,13 +194,11 @@ public class GVRSphericalEmitter extends GVREmitter{
     }
 
     /**
-     * Unregister and remove all the child objects with meshes from this emitter
+     * @inheritDoc
      */
     public void clearSystem()
     {
         mGVRContext.unregisterDrawFrameListener(mFrameListener);
         super.clearSystem();
     }
-
-
 }

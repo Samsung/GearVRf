@@ -13,19 +13,18 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.particlesystem;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.utility.TextFile;
 
-public class ColorShader extends GVRShaderTemplate
+public class ParticleShader extends GVRShaderTemplate
 {
     private static String fragTemplate;
     private static String vtxTemplate;
 
-    public  ColorShader(GVRContext context)
+    public ParticleShader(GVRContext context)
     {
         super("float4 u_color; float u_particle_age; float3 u_acceleration; float u_size_change_rate; " +
                 "float u_time, float u_particle_size; float u_fade");
