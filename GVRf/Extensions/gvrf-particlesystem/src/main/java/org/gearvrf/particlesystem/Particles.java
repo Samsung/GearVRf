@@ -87,7 +87,7 @@ class Particles {
         mParticleMesh.setNormals(velocities);
         mParticleMesh.setTexCoords(particleTimeStamps);
 
-        particleID = new GVRShaderId(ColorShader.class);
+        particleID = new GVRShaderId(ParticleShader.class);
         material = new GVRMaterial(mGVRContext, particleID);
 
         material.setVec4("u_color", mColorMultiplier.x, mColorMultiplier.y,

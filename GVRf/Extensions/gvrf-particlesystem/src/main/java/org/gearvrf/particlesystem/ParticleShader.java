@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 package org.gearvrf.particlesystem;
 
 import org.gearvrf.GVRContext;
@@ -22,14 +21,14 @@ import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.utility.TextFile;
 
-public class ColorShader extends GVRShader
+public class ParticleShader extends GVRShader
 {
     private static String fragTemplate;
     private static String vtxTemplate;
 
-    public  ColorShader(GVRContext context)
+    public ParticleShader(GVRContext context)
     {
-        super("float4 u_color; float u_particle_age; float3 u_acceleration; float u_size_change_rate; " +
+        super("float4 u_color; float3 u_acceleration; float u_particle_age; float u_size_change_rate; " +
                 "float u_time, float u_particle_size; float u_fade", "sampler2D u_texture",
                 "float3 a_position float2 a_texcoord float3 a_normal", GVRShader.GLSLESVersion.VULKAN);
 
@@ -44,7 +43,7 @@ public class ColorShader extends GVRShader
     {
         material.setVec4("u_color", 1, 1, 1, 1);
         material.setFloat("u_particle_age", 1);
-        material.setVec4("u_acceleration", 0,0,0,1);
+        material.setVec3("u_acceleration", 0,0,0);
         material.setFloat("u_size_change_rate", 1);
         material.setFloat("u_time",0);
         material.setFloat("u_particle_size", 10);

@@ -15,14 +15,15 @@
 
 package org.gearvrf.particlesystem;
 
+import android.util.Pair;
+
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.particlesystem.Particles;
-import org.gearvrf.utility.Log;
+import org.gearvrf.GVRTransform;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+
 import java.util.ArrayList;
 
 
@@ -40,7 +41,7 @@ import java.util.ArrayList;
  *
  */
 
-public class GVREmitter extends GVRSceneObject {
+class GVREmitter extends GVRSceneObject {
 
     private int MAX_EMIT_RATE = 500;
 
@@ -51,8 +52,7 @@ public class GVREmitter extends GVRSceneObject {
 
     //list of active scene objects containing particle meshes,
     // and their corresponding spawn times.
-    protected ArrayList<GVRSceneObject> mActiveParticleMeshes = null;
-    protected ArrayList<Float> mParticleMeshSpawnTimes;
+    protected ArrayList<Pair<GVRSceneObject, Float>> meshInfo = null;
 
 
     //particle properties
@@ -85,8 +85,7 @@ public class GVREmitter extends GVRSceneObject {
     {
         super(gvrContext);
         mGVRContext = gvrContext;
-        mActiveParticleMeshes = new ArrayList<GVRSceneObject>();
-        mParticleMeshSpawnTimes = new ArrayList<Float>();
+        meshInfo = new ArrayList<Pair<GVRSceneObject, Float>>();
         mEnvironmentAcceleration = new Vector3f(0.0f,0.0f,0.0f);
         mColor = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
         setParticleVolume(100,100,100);
@@ -100,24 +99,20 @@ public class GVREmitter extends GVRSceneObject {
      * Therefore the maximum time particle mesh should be allowed to remain
      * in the scene is (maxAge of the particles + one second).
      * <p>
-     * Avoid using this unless necessary.
-     *
-     * @param frameTime Seconds since the previous frame
      */
 
-        protected void onDrawFrame(float frameTime) {
-            int numActiveMeshes = mActiveParticleMeshes.size();
-            for (int i = 0; i < numActiveMeshes; i++) {
-                float currMeshSpawnTime = mParticleMeshSpawnTimes.get(i);
-
-                if (currTime - currMeshSpawnTime > mMaxAge + 1) {
-                    GVRSceneObject toDelete = mActiveParticleMeshes.get(i);
-                    GVREmitter.this.removeChildObject(toDelete);
-                    mParticleMeshSpawnTimes.remove(i);
-                    mActiveParticleMeshes.remove(i);
-                }
+    protected void onDrawFrame() {
+        int numActiveMeshes = meshInfo.size();
+        for (int i = 0; i < numActiveMeshes; i++)
+        {
+            float currMeshSpawnTime = meshInfo.get(i).second;
+            if (currTime - currMeshSpawnTime > mMaxAge + 1) {
+                GVRSceneObject toDelete = meshInfo.get(i).first;
+                GVREmitter.this.removeChildObject(toDelete);
+                meshInfo.remove(i);
             }
         }
+    }
 
     /**
      * If the burst mode is on, emit the particles only once.
@@ -183,8 +178,7 @@ public class GVREmitter extends GVRSceneObject {
                 allParticleVelocities, allSpawnTimes);
 
         this.addChildObject(particleObject);
-        mActiveParticleMeshes.add(particleObject);
-        mParticleMeshSpawnTimes.add(currTime);
+        meshInfo.add(Pair.create(particleObject, currTime));
     }
 
 
@@ -201,35 +195,46 @@ public class GVREmitter extends GVRSceneObject {
      * @param depth volume depth (along z-axis)
      */
 
-    public void setParticleVolume(float width, float height, float depth)
+    public void setParticleVolume(final float width, final float height, final float depth)
     {
-        Vector3f center = new Vector3f(this.getTransform().getPositionX(),
-                this.getTransform().getPositionY(), this.getTransform().getPositionZ());
+        final GVRTransform thisTransform = this.getTransform();
+        if (null != mGVRContext) {
+            mGVRContext.runOnGlThread(new Runnable() {
+                @Override
+                public void run() {Vector3f center = new Vector3f(thisTransform.getPositionX(),
+                        thisTransform.getPositionY(), thisTransform.getPositionZ());
 
-        particleBoundingVolume = new float[]{center.x - width/2, center.y - height/2, center.z - depth/2,
-                                       center.x - width/2, center.y - height/2, center.z + depth/2,
-                                       center.x + width/2, center.y - height/2, center.z + depth/2,
-                                       center.x + width/2, center.y - height/2, center.z - depth/2,
+                    particleBoundingVolume = new float[]{center.x - width/2, center.y - height/2, center.z - depth/2,
+                            center.x - width/2, center.y - height/2, center.z + depth/2,
+                            center.x + width/2, center.y - height/2, center.z + depth/2,
+                            center.x + width/2, center.y - height/2, center.z - depth/2,
 
-                                       center.x - width/2, center.y + height/2, center.z - depth/2,
-                                       center.x - width/2, center.y + height/2, center.z + depth/2,
-                                       center.x + width/2, center.y + height/2, center.z + depth/2,
-                                       center.x - width/2, center.y + height/2, center.z - depth/2};
+                            center.x - width/2, center.y + height/2, center.z - depth/2,
+                            center.x - width/2, center.y + height/2, center.z + depth/2,
+                            center.x + width/2, center.y + height/2, center.z + depth/2,
+                            center.x - width/2, center.y + height/2, center.z - depth/2};
 
-        BVSpawnTimes = new float[]{100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0};
+                    BVSpawnTimes = new float[]{100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0};
 
-        BVVelocities = new float[24];
-        for ( int i = 0; i < 24; i ++ )
-            BVVelocities[i] = 0;
+                    BVVelocities = new float[24];
+                    for ( int i = 0; i < 24; i ++ )
+                        BVVelocities[i] = 0;
+
+                }
+            });
+        }
+
+
     }
 
     protected void tickClock(float time)
     {
         currTime = time;
 
-        for (GVRSceneObject partObj: mActiveParticleMeshes)
+        for (int i = 0; i < meshInfo.size(); i ++)
         {
-            partObj.getRenderData().getMaterial().setFloat("u_time", time);
+            GVRSceneObject obj = meshInfo.get(i).first;
+            obj.getRenderData().getMaterial().setFloat("u_time", time);
         }
     }
 
@@ -277,10 +282,18 @@ public class GVREmitter extends GVRSceneObject {
      * @param minV Minimum velocity that a particle can have
      * @param maxV Maximum velocity that a particle can have
      */
-    public void setVelocityRange( float minV, float maxV )
+    public void setVelocityRange( final float minV, final float maxV )
     {
-        minVelocity = minV;
-        maxVelocity = maxV;
+        if (null != mGVRContext) {
+            mGVRContext.runOnGlThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    minVelocity = minV;
+                    maxVelocity = maxV;
+                }
+            });
+        }
     }
 
     /**
@@ -337,6 +350,9 @@ public class GVREmitter extends GVRSceneObject {
         mColor = color;
     }
 
+    /**
+     * Unregister and remove all the child objects with meshes from this emitter
+     */
     public void clearSystem()
     {
         int nchildren = this.getChildrenCount();
