@@ -71,7 +71,7 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
     return 0;
 }
 
-int GLBitmapImage::updateFromBuffer(JNIEnv *env, int target, jobject pixels)
+void GLBitmapImage::updateFromBuffer(JNIEnv *env, int target, jobject pixels)
 {
     void* directPtr = env->GetDirectBufferAddress(pixels);
     glTexSubImage2D(target, 0, 0, 0, mWidth, mHeight, mFormat, mType, directPtr);
@@ -141,7 +141,7 @@ void GLBitmapImage::updateFromBitmap(int texid)
     }
     if (mIsBuffer)
     {
-        mFormat = updateFromBuffer(env, mGLTarget, mBitmap);
+        updateFromBuffer(env, mGLTarget, mBitmap);
     } else {
         mFormat = updateFromBitmap(env, mGLTarget, mBitmap);
     }
