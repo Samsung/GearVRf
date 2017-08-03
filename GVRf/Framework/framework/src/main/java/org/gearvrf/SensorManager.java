@@ -18,7 +18,6 @@ package org.gearvrf;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -128,15 +127,17 @@ class SensorManager {
 
         // Well at least we are not comparing against all scene objects.
         if (objectSensor != null && objectSensor.isEnabled() && object.isEnabled()
-                & object.hasMesh()) {
+                && object.hasMesh()) {
+            GVRPicker.GVRPickedObject pickedObject;
+            if(object.getCollider() != null)
+                pickedObject = GVRPicker.pickSceneObject(object, origin.x, origin.y, origin.z, ray.x, ray.y, ray.z);
+            else {
+                GVRPicker.pickSceneObjectAgainstBoundingBox(object, origin.x, origin.y, origin.z, ray.x, ray.y, ray.z, readbackBufferB);
+                pickedObject = new GVRPicker.GVRPickedObject(object, new float[]{readbackBuffer.get(0), readbackBuffer.get(1), readbackBuffer.get(2)});
+            }
 
-            boolean result = GVRPicker.pickSceneObjectAgainstBoundingBox(
-                    object, origin.x, origin.y, origin.z, ray.x, ray.y, ray.z, readbackBufferB);
-
-            if (result) {
-                objectSensor.addSceneObject(controller, object, readbackBuffer.get(0),
-                        readbackBuffer.get(1), readbackBuffer.get(2)
-                );
+            if (pickedObject != null) {
+                objectSensor.addPickedObject(controller, pickedObject);
 
                 // if we are doing an active search and we find one.
                 if (markActiveNodes) {

@@ -33,7 +33,7 @@ public class SensorEvent {
     private static final String TAG = SensorEvent.class.getSimpleName();
     private boolean isActive;
     private boolean isOver;
-    private GVRSceneObject object;
+    private GVRPicker.GVRPickedObject pickedObject;
     private GVRCursorController controller;
     private EventGroup eventGroup;
 
@@ -102,10 +102,9 @@ public class SensorEvent {
     private static int recyclerUsed;
     private static SensorEvent recyclerTop;
     private SensorEvent next;
-    private Vector3f hitPoint;
 
     SensorEvent(){
-        hitPoint = new Vector3f();
+
     }
 
     /**
@@ -130,30 +129,19 @@ public class SensorEvent {
     }
 
     /**
-     * Set the coordinates of the intersection between the input ray and the
-     * affected object with the {@link GVRBaseSensor}.
-     *
-     * @param hitX X co-ordinate of the hit point
-     * @param hitY Y co-ordinate of the hit point
-     * @param hitZ Z co-ordinate of the hit point
-     */
-    void setHitPoint(float hitX, float hitY, float hitZ) {
-        hitPoint.set(hitX, hitY, hitZ);
-    }
-
-    /**
-     * The {@link GVRSceneObject} that triggered this {@link SensorEvent}.
+     * Set the picking information for the {@link GVRSceneObject} that
+     * triggered this {@link SensorEvent}.
      * 
-     * @param object
-     *            The affected object.
+     * @param pickedObject
+     *            The picking information of the affected {@link GVRSceneObject}.
      */
-    void setObject(GVRSceneObject object) {
-        this.object = object;
+    void setPickedObject(GVRPicker.GVRPickedObject pickedObject) {
+        this.pickedObject = pickedObject;
     }
 
     /**
      * This flag denotes that the {@link GVRCursorController} "is over" the
-     * affected object.
+     * affected pickedObject.
      * 
      * @param isOver
      *            The value of the "is over" flag.
@@ -163,18 +151,18 @@ public class SensorEvent {
     }
 
     /**
-     * Use this call to retrieve the affected object.
+     * Use this call to retrieve the picking information of the
+     * affected {@link GVRSceneObject}.
      * 
-     * @return The affected {@link GVRSceneObject} that caused this
-     *         {@link SensorEvent} to be triggered.
+     * @return The {@link GVRPicker.GVRPickedObject} corresponding to the {@link GVRSceneObject}
+     *         that caused this {@link SensorEvent} to be triggered.
      */
-    public GVRSceneObject getObject() {
-        return object;
+    public GVRPicker.GVRPickedObject getPickedObject() {
+        return pickedObject;
     }
 
     /**
      * Use this flag to detect if the input "is over" the {@link GVRSceneObject}
-     * .
      * 
      * @return <code>true</code> if the input is over the corresponding
      *         {@link GVRSceneObject}. The {@link ISensorEvents} delivers
@@ -184,58 +172,6 @@ public class SensorEvent {
      */
     public boolean isOver() {
         return isOver;
-    }
-
-    /**
-     * Get the X component of the hit point.
-     *
-     * The values returned by this call persist only for the duration of the
-     * {@link ISensorEvents#onSensorEvent(SensorEvent)} call. Make sure to make a copy of this
-     * value if you wish to use it past its lifetime.
-     *
-     * @return 'X' component of the hit point.
-     */
-    public float getHitX() {
-        return hitPoint.x;
-    }
-
-    /**
-     * Get the 'Y' component of the hit point.
-     *
-     * The values returned by this call persist only for the duration of the
-     * {@link ISensorEvents#onSensorEvent(SensorEvent)} call. Make sure to make a copy of this
-     * value if you wish to use it past its lifetime.
-     *
-     * @return 'Y' component of the hit point.
-     */
-    public float getHitY() {
-        return hitPoint.y;
-    }
-
-    /**
-     * Get the 'Z' component of the hit point.
-     * The values returned by this call persist only for the duration of the
-     * {@link ISensorEvents#onSensorEvent(SensorEvent)} call. Make sure to make a copy of this
-     * value if you wish to use it past its lifetime.
-     *
-     * @return 'Z' component of the hit point.
-     */
-    public float getHitZ() {
-        return hitPoint.z;
-    }
-
-    /**
-     * Returns the hit point of the input and the affected
-     * {@link GVRSceneObject}
-     *
-     * @return The coordinates where the input intersects with the
-     * {@link GVRSceneObject}.
-     * @deprecated Returns a new float array every call which may lead to
-     * frequent GC cycles. Use the more efficient call to {{@link #getHitX()}},
-     * {{@link #getHitY()}} and {{@link #getHitZ()}}.
-     */
-    public float[] getHitPoint() {
-        return new float[]{hitPoint.x, hitPoint.y, hitPoint.z};
     }
 
     /**

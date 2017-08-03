@@ -23,6 +23,7 @@ import android.view.MotionEvent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
@@ -47,7 +48,8 @@ class ObjectCursor extends Cursor {
 
     @Override
     void dispatchSensorEvent(SensorEvent event) {
-        GVRSceneObject object = event.getObject();
+        GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
+        GVRSceneObject object = pickedObject.getHitObject();
 
         GVRCursorController controller = event.getCursorController();
         isControllerActive = event.isActive();
@@ -74,12 +76,12 @@ class ObjectCursor extends Cursor {
         }
 
         if (object != null && colliding) {
-            createAndSendCursorEvent(object, true, event.getHitX(), event.getHitY(),
-                    event.getHitZ(), true, event.isActive(),
+            createAndSendCursorEvent(object, true, pickedObject.getHitX(), pickedObject.getHitY(),
+                    pickedObject.getHitZ(), true, event.isActive(),
                     event.getCursorController().getKeyEvent(), controller.getMotionEvents());
         } else {
-            createAndSendCursorEvent(object, false, event.getHitX(), event.getHitY(),
-                    event.getHitZ(), event.isOver(), event.isActive(),
+            createAndSendCursorEvent(object, false, pickedObject.getHitX(), pickedObject.getHitY(),
+                    pickedObject.getHitZ(), event.isOver(), event.isActive(),
                     event.getCursorController().getKeyEvent(), controller.getMotionEvents());
         }
     }
