@@ -530,7 +530,6 @@ abstract class GVRViewManager extends GVRContext {
     {
         cullAndRender(renderTarget.getNative(), scene.getNative(),
                 mRenderBundle.getMaterialShaderManager().getNative(),
-                mRenderBundle.getPostEffectShaderManager().getNative(),
                 mRenderBundle.getPostEffectRenderTextureA().getNative(),
                 mRenderBundle.getPostEffectRenderTextureB().getNative());
     }
@@ -801,7 +800,7 @@ abstract class GVRViewManager extends GVRContext {
     protected native void cull(long scene, long camera, long shader_manager);
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
     protected native void cullAndRender(long render_target, long scene, long shader_manager,
-                                        long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
+                                        long postEffectRenderTextureA, long postEffectRenderTextureB);
     private native static void readRenderResultNative(Object readbackBuffer);
 
     private static final String TAG = "GVRViewManager";
