@@ -59,9 +59,6 @@ public class GVRVersion {
      * Add API ({@link GVRContext#captureScreen3D(GVRScreenshot3DCallback)}) to
      * capture 3D screenshot.
      * 
-     * Add high-level GVRSceneObject.GVRSceneObject(GVRContext,
-     * Future<GVRMesh>, Future<GVRTexture>) constructor.
-     * 
      * Add {@link FutureWrapper} to generate required Future<T> for the new
      * constructor.
      */

@@ -453,7 +453,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a GL mesh asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
+     * {@link GVRAssetLoader#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
      * - it will usually be more convenient to call that directly.
      * 
      * @param gvrContext
@@ -483,36 +483,6 @@ public class GVRAsynchronousResourceLoader {
                 priority);
 
         AsyncMesh.get().loadMesh(gvrContext, callback, resource, priority);
-    }
-
-    /**
-     * Load a GL mesh asynchronously.
-     * 
-     * This is the implementation of
-     * {@link GVRContext#loadFutureMesh(GVRAndroidResource, int)} - it will
-     * usually be more convenient to call that directly.
-     * 
-     * @param gvrContext
-     *            The GVRF context
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @param priority
-     *            This request's priority. Please see the notes on asynchronous
-     *            priorities in the <a href="package-summary.html#async">package
-     *            description</a>.
-     * @return A {@link Future} that you can pass to
-     *         {@link GVRRenderData#setMesh(Future)}
-     */
-    public static Future<GVRMesh> loadFutureMesh(GVRContext gvrContext,
-            GVRAndroidResource resource, int priority) {
-        FutureResource<GVRMesh> result = new FutureResource<GVRMesh>(resource);
-
-        loadMesh(gvrContext, result.callback, resource, priority);
-
-        return result;
     }
 
     public static class FutureResource<T extends GVRHybridObject> implements

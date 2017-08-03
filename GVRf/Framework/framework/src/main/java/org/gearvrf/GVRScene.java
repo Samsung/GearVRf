@@ -439,7 +439,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @see GVRShaderTemplate
      * @see GVRScene#addSceneObject(GVRSceneObject)
      */
-    private void bindShaders(GVRSceneObject root) {
+    public void bindShaders(GVRSceneObject root) {
         if (root != null)
         {
             if (mBindShaderVisitor == null)

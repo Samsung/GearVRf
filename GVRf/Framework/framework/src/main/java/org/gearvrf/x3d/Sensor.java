@@ -64,6 +64,10 @@ public class Sensor
     sensorSceneObject.getEventReceiver().addListener(sensorEvents);
   }
 
+  void setDepthOrderEnabled(boolean depthOrderEnabled){
+    baseSensor.setDepthOrderEnabled(depthOrderEnabled);
+  }
+
   public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
   {
     this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
