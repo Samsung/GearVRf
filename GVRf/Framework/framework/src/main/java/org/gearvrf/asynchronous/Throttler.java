@@ -328,7 +328,7 @@ class Throttler implements Scheduler {
                     {
                         request.openStream();
                     }
-                    catch (IOException ex)
+                    catch (Exception ex)
                     {
                         callback.failed(ex, request);
                         return;
