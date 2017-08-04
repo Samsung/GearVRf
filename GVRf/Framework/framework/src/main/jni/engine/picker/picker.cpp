@@ -46,7 +46,7 @@ Picker::~Picker() {
  * array of colliders which could be updated by a different thread.
  */
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transform* t,
-         float ox, float oy, float oz, float dx, float dy, float dz) {
+                       float ox, float oy, float oz, float dx, float dy, float dz) {
     glm::vec3 ray_start(ox, oy, oz);
     glm::vec3 ray_dir(dx, dy, dz);
     const std::vector<Component*>& colliders = scene->lockColliders();
@@ -61,39 +61,37 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transf
             if ((collider->pick_distance() > 0) && (collider->pick_distance() < data.Distance)) {
                 data.IsHit = false;
             }
-             if (data.IsHit) {
+            if (data.IsHit) {
                 picklist.push_back(data);
             }
         }
     }
     std::sort(picklist.begin(), picklist.end(), compareColliderData);
     scene->unlockColliders();
- }
+}
 
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
     Transform* t = scene->main_camera_rig()->getHeadTransform();
     pickScene(scene, pickList, t, 0, 0, 0, 0, 0, -1.0f);
 }
 
-float Picker::pickSceneObject(const SceneObject* scene_object,
-        const CameraRig* camera_rig) {
+/**
+ * Picks a single scene object from the scene. If the object has a mesh collider, the picker will calculate the
+ * texture coordinates and barycentric coordinates of the corresponding hit-point. Note that this will do nothing
+ * if the scene object doesn't have a collider.
+ */
+void Picker::pickSceneObject(const SceneObject *scene_object, float ox, float oy, float oz, float dx, float dy, float dz, ColliderData &colliderData){
     Collider* collider = (Collider*) scene_object->getComponent(Collider::getComponentType());
-    if (collider) {
-        if (collider->enabled()) {
-            glm::mat4 model_matrix = camera_rig->getHeadTransform()->getModelMatrix();
-            glm::vec3 rayStart(0, 0, 0);
-            glm::vec3 rayDir(0, 0, -1);
-
-            Collider::transformRay(model_matrix, rayStart, rayDir);
-            ColliderData data = collider->isHit(rayStart, rayDir);
-            if (data.IsHit) {
-                return data.Distance;
-            }
-        }
+    if(collider == nullptr){
+        return;
     }
-    return std::numeric_limits<float>::infinity();
-}
+    else if (collider->enabled() && scene_object->enabled()) {
+        glm::vec3 rayStart(ox, oy, oz);
+        glm::vec3 rayDir(dx, dy, dz);
 
+        colliderData = collider->isHit(rayStart, rayDir);
+    }
+}
 /*
  * Pick against the scene bounding box.
  * The input ray is in world coordinates.
@@ -102,8 +100,7 @@ float Picker::pickSceneObject(const SceneObject* scene_object,
  * so we must apply the inverse of the model matrix from the scene object
  * to the ray to put it into mesh coordinates.
  */
-glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(
-        const SceneObject* scene_object, float ox, float oy, float oz, float dx, float dy, float dz) {
+glm::vec3 Picker::pickSceneObjectAgainstBoundingBox(const SceneObject* scene_object, float ox, float oy, float oz, float dx, float dy, float dz) {
     RenderData* rd = scene_object->render_data();
 
     if ((rd == NULL) || (rd->mesh() == NULL)) {
@@ -147,5 +144,5 @@ void Picker::pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& 
     }
     std::sort(picklist.begin(), picklist.end(), compareColliderData);
     scene->unlockColliders();
- }
+}
 }

@@ -29,6 +29,10 @@ extern "C" {
             jobject obj, jlong jmesh);
 
     JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMeshCollider_ctorMeshPicking(JNIEnv * env,
+             jobject obj, jlong jmesh, jboolean pickCoordinates);
+
+    JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeMeshCollider_ctor(JNIEnv * env,
             jobject obj, jboolean useBounds);
 
@@ -42,6 +46,13 @@ Java_org_gearvrf_NativeMeshCollider_ctorMesh(JNIEnv * env,
         jobject obj, jlong jmesh) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     return reinterpret_cast<jlong>(new MeshCollider(mesh));
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeMeshCollider_ctorMeshPicking(JNIEnv * env,
+                                             jobject obj, jlong jmesh, jboolean pickCoordinates) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    return reinterpret_cast<jlong>(new MeshCollider(mesh, pickCoordinates));
 }
 
 JNIEXPORT void JNICALL
