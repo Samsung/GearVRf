@@ -43,6 +43,9 @@ abstract class GVRConfigurationManager {
 
         mResetFovY = (0 == Float.compare(0, activity.getAppSettings().getEyeBufferParams().getFovY()));
 
+    }
+
+    protected void addDockListener(GVRActivity activity) {
         activity.addDockListener(new GVRActivity.DockListener() {
             @Override
             public void onDock() {
@@ -53,8 +56,8 @@ abstract class GVRConfigurationManager {
             public void onUndock() {
             }
         });
-    }
 
+    }
     private final Runnable mUsbCheckRunnable = new Runnable() {
         private final static int MAX_TRIES = 50;
         private int mCounter;
