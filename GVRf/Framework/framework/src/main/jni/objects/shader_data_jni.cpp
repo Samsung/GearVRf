@@ -50,7 +50,7 @@ namespace gvr
         Java_org_gearvrf_NativeShaderData_getFloat(JNIEnv* env,
                                                    jobject obj, jlong jshader_data, jstring key);
 
-        JNIEXPORT jboolean JNICALL
+        JNIEXPORT void JNICALL
         Java_org_gearvrf_NativeShaderData_setFloat(JNIEnv* env,
                                                    jobject obj, jlong jshader_data, jstring key,
                                                    jfloat value);
@@ -244,7 +244,7 @@ namespace gvr
         return static_cast<jfloat>(f);
     }
 
-    JNIEXPORT jboolean JNICALL
+    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeShaderData_setFloat(JNIEnv* env, jobject obj, jlong jshader_data,
                                                jstring key, jfloat value)
     {

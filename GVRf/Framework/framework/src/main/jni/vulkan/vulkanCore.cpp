@@ -23,6 +23,8 @@
 #include "vulkan/vk_framebuffer.h"
 #include "vulkan/vk_render_to_texture.h"
 #include "vk_imagebase.h"
+#include <array>
+
 #define CUSTOM_TEXTURE
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999

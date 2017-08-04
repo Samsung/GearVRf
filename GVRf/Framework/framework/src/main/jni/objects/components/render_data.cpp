@@ -79,6 +79,7 @@ JNIEnv *RenderData::set_java(jobject javaObj, JavaVM *javaVM)
             LOGE("RenderData::bindShader ERROR cannot find 'GVRRenderData.bindShaderNative()' Java method");
         }
     }
+    return env;
 }
 
 void RenderData::setStencilFunc(int func, int ref, int mask) {
