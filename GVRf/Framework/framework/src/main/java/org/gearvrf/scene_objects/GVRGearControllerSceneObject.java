@@ -19,7 +19,16 @@ import org.joml.Vector3f;
 import java.util.Arrays;
 
 /**
- * Created by j.reynolds on 6/30/2017.
+ * A {@link GVRSceneObject} meant to better respresent a GearVR controller.
+ * One feature of the {@link GVRGearControllerSceneObject} is a default model for
+ * representing the Gear Controller in VR as well as a means to replace it with your
+ * own model. Additionally, a ray can be emitted from the controller object at variable
+ * lengths, which is useful for interacting with objects at different distances.
+ * One can optionally allow the ray to automatically adjust its length to
+ * extend to the first object in the scene that the ray vector would intersect. This makes
+ * it obvious to the user which object they are currently pointing at with the Gear Controller.
+ * Lastly, one can use {@link this#enableSurfaceProjection()} to project the cursor onto the
+ * object being picked. Read the method documentation for more information.
  */
 
 public class GVRGearControllerSceneObject extends GVRSceneObject {
@@ -213,7 +222,7 @@ public class GVRGearControllerSceneObject extends GVRSceneObject {
      * ProjectionListener, but the cursor will not be transformed according to
      * surface normals. Also note that a {@link org.gearvrf.GVRMeshCollider}
      * must be attached to a {@link GVRSceneObject} in order for surface normals
-     * to be calculated.
+     * to be calculated during picking.
      */
     public void enableSurfaceProjection(){
         projectToSurface = true;
@@ -232,6 +241,7 @@ public class GVRGearControllerSceneObject extends GVRSceneObject {
             }
         }
     }
+
 
     private class SensorListener implements ISensorEvents {
         private final float[] nullCoords = {-1f, -1f, -1f};
@@ -255,25 +265,24 @@ public class GVRGearControllerSceneObject extends GVRSceneObject {
                         if (parent != collision.hitObject) {
                             parent.removeChildObject(cursor);
                             collision.hitObject.addChildObject(cursor);
-                        }
-                        Vector3f lookat = new Vector3f(0, 0, 0);
-                        Vector3f up = new Vector3f(0, 1, 0);
-                        Vector3f Xaxis = new Vector3f(0, 0, 0);
-                        Vector3f Yaxis = new Vector3f(0, 0, 0);
 
-                        lookat.set(collision.getNormalX(), collision.getNormalY(), collision.getNormalZ());
-                        lookat = lookat.normalize();
+                        }
+                        float[] normal = collision.getNormalCoords();
+                        float[] location = collision.getHitLocation();
+                        Vector3f lookat = new Vector3f(normal[0], normal[1], normal[2]);
+                        Vector3f Xaxis = new Vector3f();
+                        Vector3f Yaxis = new Vector3f();
+                        Vector3f up = new Vector3f(0, 1, 0);
 
                         up.cross(lookat.x, lookat.y, lookat.z, Xaxis);
                         Xaxis = Xaxis.normalize();
-
                         lookat.cross(Xaxis.x, Xaxis.y, Xaxis.z, Yaxis);
                         Yaxis = Yaxis.normalize();
 
                         cursor.getTransform().setModelMatrix(new float[]{Xaxis.x, Xaxis.y, Xaxis.z, 0.0f,
                                 Yaxis.x, Yaxis.y, Yaxis.z, 0.0f,
                                 lookat.x, lookat.y, lookat.z, 0.0f,
-                                collision.getHitX(), +collision.getHitY(), collision.getHitZ(), 1.0f});
+                                location[0], location[1], location[2], 1.0f});
                     }
                     else {
                         cursor.getTransform().setPosition(0,0,-collision.hitDistance);
