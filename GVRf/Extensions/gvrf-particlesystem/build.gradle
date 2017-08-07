@@ -1,0 +1,82 @@
+apply plugin: 'com.android.library'
+
+repositories {
+    flatDir {
+        dirs '../../gearvrf-libs/'
+    }
+}
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 21
+
+        ndk {
+            moduleName "gvrf-particlesystem"
+            abiFilter "armeabi-v7a"
+        }
+        externalNativeBuild {
+            cmake {
+                //difference in sign extension when reinterpret_cast-ing a pointer between
+                //gcc and clang hence overriding the default toolchain to match the one used
+                //by the other modules
+                arguments.add('-DANDROID_TOOLCHAIN=gcc')
+                if (rootProject.hasProperty("buildGvrfAndDemos")) {
+                    arguments.add('-DCMAKE_BUILD_TYPE=Debug')
+                }
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable = true
+            jniDebuggable = true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+        debug {
+            jniDebuggable true
+        }
+    }
+
+    sourceSets.main {
+        java.srcDirs = ['src/main/java']
+    }
+}
+
+dependencies {
+    if (findProject(':framework')) {
+        compile project (':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
+    compile 'org.joml:joml-android:1.9.1-SNAPSHOT'
+}
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
+}
