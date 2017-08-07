@@ -25,8 +25,11 @@ import android.view.KeyEvent;
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 /**
  * This class represents the Gear Controller.
@@ -46,10 +49,20 @@ import org.joml.Vector3f;
  * notification whenever the controller information is updated.
  */
 final class GearCursorController extends GVRCursorController {
-    private static final int OVR_BUTTON_A = 0x00000001;
-    private static final int OVR_BUTTON_ENTER = 0x00100000;
-    private static final int OVR_BUTTON_BACK = 0x00200000;
 
+    public enum OVR_KEYS{
+        OVR_BUTTON_A (0x00000001), OVR_BUTTON_ENTER (0x00100000), OVR_BUTTON_BACK (0x00200000), OVR_BUTTON_UP (0x00010000), OVR_BUTTON_DOWN(0x00020000),
+        OVR_BUTTON_LEFT (0x00040000), OVR_BUTTON_RIGHT (0x00080000);
+        private int numVal;
+
+        OVR_KEYS(int numVal) {
+            this.numVal = numVal;
+        }
+
+        public int getNumVal() {
+            return numVal;
+        }
+    }
     /**
      * Defines the handedness of the gear controller.
      */
@@ -320,15 +333,15 @@ final class GearCursorController extends GVRCursorController {
             pivot.getTransform().setPosition(position.x, position.y, position.z);
             setOrigin(position.x + result.x, position.y + result.y, position.z + result.z);
 
-            int handleResult = handleButton(key, OVR_BUTTON_ENTER, prevButtonEnter, KeyEvent
+            int handleResult = handleButton(key, OVR_KEYS.OVR_BUTTON_ENTER.getNumVal(), prevButtonEnter, KeyEvent
                     .KEYCODE_ENTER);
             prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
 
-            handleResult = handleButton(key, OVR_BUTTON_A, prevButtonA, KeyEvent
+            handleResult = handleButton(key, OVR_KEYS.OVR_BUTTON_A.getNumVal(), prevButtonA, KeyEvent
                     .KEYCODE_A);
             prevButtonA = handleResult == -1 ? prevButtonA : handleResult;
 
-            handleResult = handleButton(key, OVR_BUTTON_BACK, prevButtonBack, KeyEvent
+            handleResult = handleButton(key, OVR_KEYS.OVR_BUTTON_BACK.getNumVal(), prevButtonBack, KeyEvent
                     .KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
 
