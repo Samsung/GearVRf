@@ -879,7 +879,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
                                                                              &scissor);
     pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                                                                     disable_color_depth_write ? VK_FALSE: VK_TRUE,
+                                                                                     rdata->depth_mask() ? VK_TRUE : VK_FALSE,
                                                                                      VK_COMPARE_OP_LESS_OR_EQUAL,
                                                                                      VK_FALSE,
                                                                                      VK_STENCIL_OP_KEEP,

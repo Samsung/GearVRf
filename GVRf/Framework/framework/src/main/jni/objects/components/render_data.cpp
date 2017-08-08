@@ -202,6 +202,7 @@ std::string RenderData::getHashCode()
         render_data_string.append(to_string(offset_factor_));
         render_data_string.append(to_string(offset_units_));
         render_data_string.append(to_string(depth_test_));
+        render_data_string.append(to_string(depth_mask_));
         render_data_string.append(to_string(alpha_blend_));
         render_data_string.append(to_string(alpha_to_coverage_));
         render_data_string.append(to_string(sample_coverage_));
