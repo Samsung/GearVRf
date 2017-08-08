@@ -350,6 +350,8 @@ public:
         render_pass_list_[pass]->set_shader(shaderid);
     }
 
+    void adjustRenderingOrderForTransparency();
+
     int             get_shader(int pass =0) const { return render_pass_list_[pass]->get_shader(); }
     std::string     getHashCode();
     void            setCameraDistanceLambda(std::function<float()> func);

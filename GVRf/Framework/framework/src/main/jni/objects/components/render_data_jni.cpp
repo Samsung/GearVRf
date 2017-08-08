@@ -25,7 +25,7 @@ namespace gvr {
 
 extern "C" {
     JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj);
+    Java_org_gearvrf_NativeRenderData_ctor(JNIEnv * env, jobject obj);
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeRenderData_getComponentType(JNIEnv * env, jobject obj);
@@ -254,6 +254,7 @@ JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderData_getRenderingOrder(
     JNIEnv * env, jobject obj, jlong jrender_data) {
 RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+render_data->adjustRenderingOrderForTransparency();
 return render_data->rendering_order();
 }
 

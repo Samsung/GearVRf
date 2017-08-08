@@ -61,6 +61,34 @@ ShaderData* RenderData::material(int pass) const {
     return nullptr;
 }
 
+void RenderData::adjustRenderingOrderForTransparency() {
+    int list_size = render_pass_list_.size();
+
+    for(int i=0;i<list_size;i++) {
+        ShaderData *material_ = material(i);
+        Texture *mainTexture = material_->getTexture("u_texture");
+        Texture *diffuseTexture = material_->getTexture("diffuseTexture");
+
+        if((mainTexture != NULL && !mainTexture->transparency()) ||
+           diffuseTexture != NULL && !diffuseTexture->transparency()) {
+            // had transparency before, but is now opaque
+            if(rendering_order_ > Geometry) {
+                rendering_order_ = Geometry;
+                return;
+            }
+            continue;
+        }
+
+        if(mainTexture != NULL || diffuseTexture != NULL) {
+            // has transparency now, but was opaque before
+            if(rendering_order_ < Transparent) {
+                rendering_order_ = Transparent;
+                return;
+            }
+        }
+    }
+}
+
 void RenderData::setCameraDistanceLambda(std::function<float()> func)
 {
     cameraDistanceLambda_ = func;
@@ -148,6 +176,13 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
     //1. rendering order needs to be sorted first to guarantee specified correct order
     if (i->rendering_order() == j->rendering_order())
     {
+        // if it is a transparent object, sort by camera distance from back to front
+        if (i->rendering_order() >= RenderData::Transparent
+            && i->rendering_order() < RenderData::Overlay)
+        {
+            return i->camera_distance() > j->camera_distance();
+        }
+
         if (i->get_shader(0) == j->get_shader(0))
         {
             int no_passes1 = i->pass_count();
@@ -155,13 +190,6 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
 
             if (no_passes1 == no_passes2)
             {
-                // if it is a transparent object, sort by camera distance from back to front
-                if (i->rendering_order() >= RenderData::Transparent
-                    && i->rendering_order() < RenderData::Overlay)
-                {
-                    return i->camera_distance() > j->camera_distance();
-                }
-
                 //@todo what about the other passes
 
                 //this is pointer comparison; assumes batching is on; if the materials are not

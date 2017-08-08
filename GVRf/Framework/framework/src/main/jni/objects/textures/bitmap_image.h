@@ -36,10 +36,19 @@ namespace gvr {
         explicit BitmapImage(int format);
         virtual ~BitmapImage();
         void update(JNIEnv* env, int width, int height, jbyteArray data);
-        void update(JNIEnv* env, jobject bitmap);
+        void update(JNIEnv* env, jobject bitmap, bool hasAlpha);
         void update(JNIEnv* env, int width, int height, int format, int type, jobject bitmap);
         void update(JNIEnv *env, int width, int height, int imageSize,
                     jbyteArray bytes, int levels, const int* dataOffsets);
+
+        void set_transparency(bool hasTransparency) {
+            mHasTransparency = hasTransparency;
+        }
+
+        virtual bool transparency() {
+            return mHasTransparency;
+        }
+
     protected:
         void clearData(JNIEnv* env);
 
@@ -48,7 +57,7 @@ namespace gvr {
         BitmapImage(BitmapImage&& texture) = delete;
         BitmapImage& operator=(const BitmapImage& texture) = delete;
         BitmapImage& operator=(BitmapImage&& texture) = delete;
-
+        bool hasAlpha(int format);
 
     protected:
         JavaVM* mJava;
@@ -56,6 +65,7 @@ namespace gvr {
         jobject mBitmap;
         bool mIsBuffer;
         bool mIsCompressed;
+        bool mHasTransparency;
     };
 
 }
