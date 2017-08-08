@@ -16,7 +16,6 @@
 package org.gearvrf;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -299,124 +298,7 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Casts a ray into the scene graph, and returns the GVREyePointeeHolders it intersects.
-     *
-     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
-     * {@code [dx, dy, dz]}.
-     *
-     * <p>
-     * The ray origin may be [0, 0, 0] and the direction components should be
-     * normalized from -1 to 1: Note that the y direction runs from -1 at the
-     * bottom to 1 at the top. To construct a picking ray originating at the
-     * user's head and pointing into the scene along the camera lookat vector,
-     * pass in 0, 0, 0 for the origin and 0, 0, -1 for the direction.
-     *
-     * <p>
-     * Note: this function only returns GVREyePointeeHolder colliders
-     * and is deprecated in favor of pickObject which returns all colliders.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @param ox
-     *            The x coordinate of the ray origin.
-     *
-     * @param oy
-     *            The y coordinate of the ray origin.
-     *
-     * @param oz
-     *            The z coordinate of the ray origin.
-     *
-     * @param dx
-     *            The x vector of the ray direction.
-     *
-     * @param dy
-     *            The y vector of the ray direction.
-     *
-     * @param dz
-     *            The z vector of the ray direction.
-     *
-     * @return The {@linkplain GVRCollider colliders}
-     *         penetrated by the ray, sorted by distance from the camera rig.
-     *         Use {@link GVRCollider#getOwnerObject()} to get the
-     *         corresponding scene objects.
-     * @deprecated use pickObjects instead
-     */
-    public static final GVREyePointeeHolder[] pickScene(GVRScene scene, float ox, float oy, float oz, float dx,
-                                                        float dy, float dz) {
-        sFindObjectsLock.lock();
-        try {
-            final long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz, dx, dy, dz);
-            final ArrayList<GVREyePointeeHolder> colliders = new ArrayList<GVREyePointeeHolder>(ptrs.length);
-
-            for (int i = 0, length = ptrs.length; i < length; ++i) {
-                final GVRCollider collider = GVRCollider.lookup(ptrs[i]);
-                if ((null != collider) && GVREyePointeeHolder.class.isAssignableFrom(collider.getClass()))
-                {
-                    colliders.add((GVREyePointeeHolder) collider);
-                }
-            }
-            GVREyePointeeHolder[] holders = new GVREyePointeeHolder[colliders.size()];
-            return colliders.toArray(holders);
-        }
-        finally {
-            sFindObjectsLock.unlock();
-        }
-    }
-
-    /**
-     * Tests the {@link GVRSceneObject}s contained within scene against the
-     * camera rig's lookat vector.
-     * <p/>
-     * Note: this function only returns GVREyePointeeHolder colliders
-     * and is deprecated in favor of pickObject which returns all colliders.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @return the array of {@link GVREyePointeeHolder } objects which are penetrated by the
-     *         picking ray. They are sorted by distance from the camera.
-     *
-     * @deprecated use pickObjects instead
-     */
-    public static final GVREyePointeeHolder[] pickScene(GVRScene scene) {
-        return pickScene(scene, 0, 0, 0, 0, 0, -1.0f);
-    }
-
-    /**
      * Tests the {@link GVRSceneObject} against the ray information passed to the function.
-     *
-     * @param sceneObject
-     *            The {@link GVRSceneObject} to be tested.
-     *
-     * @param ox
-     *            The x coordinate of the ray origin (in world coords).
-     *
-     * @param oy
-     *            The y coordinate of the ray origin (in world coords).
-     *
-     * @param oz
-     *            The z coordinate of the ray origin (in world coords).
-     *
-     * @param dx
-     *            The x vector of the ray direction (in world coords).
-     *
-     * @param dy
-     *            The y vector of the ray direction (in world coords).
-     *
-     * @param dz
-     *            The z vector of the ray direction (in world coords).
-     *
-     * @return  a {@link GVRPicker.GVRPickedObject} containing the picking information
-     *
-     */
-    public static final GVRPickedObject pickSceneObject(GVRSceneObject sceneObject, float ox, float oy, float oz, float dx,
-                                                        float dy, float dz) {
-        return NativePicker.pickSceneObject(sceneObject.getNative(), ox, oy, oz, dx, dy, dz);
-    }
-
-    /**
-     * Tests the {@link GVRSceneObject} against the main camera rig's lookat vector.
      *
      * @param sceneObject
      *            The {@link GVRSceneObject} to be tested.
@@ -660,8 +542,7 @@ public class GVRPicker extends GVRBehavior {
      *
      * @return A list of {@link GVRPickedObject}, sorted by distance from the
      *         camera rig. Each {@link GVRPickedObject} contains the object
-     *         within the {@link GVREyePointeeHolder} along with the hit
-     *         location.
+     *         along with the hit location.
      *
      */
     public static final List<GVRPickedObject> findObjects(GVRScene scene) {
@@ -760,9 +641,7 @@ public class GVRPicker extends GVRBehavior {
         /**
          * The hit location, as an [x, y, z] array.
          *
-         * @return A copy of the {@link GVREyePointeeHolder#getHit()} result:
-         *         changing the result will not change the
-         *         {@link GVRPickedObject picked object's} hit data.
+         * @return A copy of the hit result
          */
         public float[] getHitLocation() {
             return Arrays.copyOf(hitLocation, hitLocation.length);

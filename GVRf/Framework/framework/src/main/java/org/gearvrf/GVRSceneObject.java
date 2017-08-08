@@ -574,21 +574,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         }
         return list;
     }
-    
-    /**
-     * Attach a new {@link GVRCollider} to the object.
-     * 
-     * If another {@link GVRCollider} is currently attached, it is
-     * replaced with the new one.
-     * 
-     * @param collider
-     *            New {@link GVRCollider}.
-     *            
-     * @deprecated use attachCollider
-     */
-    public void attachEyePointeeHolder(GVREyePointeeHolder collider) {
-        attachComponent(collider);
-    }
 
     /**
      * Attach a new {@link GVRCollider} to the object.
@@ -619,62 +604,6 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      */
     public void detachCollider() {
         detachComponent(GVRCollider.getComponentType());
-    }
-
-    /**
-     * Attach a default {@link GVREyePointeeHolder} to the object.
-     * 
-     * The default holder contains a single {@link GVRMeshEyePointee}, which
-     * refers to the bounding box of the {@linkplain GVRMesh mesh} in this scene
-     * object's {@linkplain GVRRenderData render data}. If you need more control
-     * (multiple meshes, perhaps, or using the actual mesh instead of a bounding
-     * box) use the {@linkplain #attachEyePointeeHolder(GVREyePointeeHolder)
-     * explicit overload.} If another {@link GVREyePointeeHolder} is currently
-     * attached, it is replaced with the new one.
-     * 
-     * @return {@code true} if and only this scene object has render data
-     *         <em>and</em> you have called either
-     *         {@link GVRRenderData#setMesh(GVRMesh)} or
-     *         {@link GVRRenderData#setMesh(Future)}; {@code false}, otherwise.
-     * @deprecated use attachComponent(new GVRMeshCollider(GVRContext))
-     */
-    public boolean attachEyePointeeHolder() {
-        GVREyePointeeHolder holder = new GVREyePointeeHolder(getGVRContext());
-        GVRRenderData rdata = getRenderData();
-        if (rdata != null) {
-            GVRMesh mesh = rdata.getMesh();
-            GVREyePointee pointee = new GVRMeshEyePointee(mesh, false);
-            holder.addPointee(pointee);
-            attachComponent(holder);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Detach the object's current {@link GVREyePointeeHolder}.
-     * @deprecated use detachCollider or detachComponent(GVRCollider.getComponentType())
-     */
-    public void detachEyePointeeHolder() {
-        detachComponent(GVRCollider.getComponentType());
-    }
-
-    /**
-     * Get the attached {@link GVREyePointeeHolder}
-     * This function is deprecated in favor of getCollider which can
-     * return any type of collider, not just a GVREyePointeeHolder.
-     * 
-     * @return The {@link GVREyePointeeHolder} attached to the object. If no
-     *         {@link GVREyePointeeHolder} is currently attached, returns
-     *         {@code null}.
-     * @deprecated use getCollider or getComponent(GVRCollider.getComponenType())
-     */
-    public GVREyePointeeHolder getEyePointeeHolder() {
-        GVRCollider collider = getCollider();
-        if ((collider != null) && GVREyePointeeHolder.class.isAssignableFrom(collider.getClass())) {
-            return (GVREyePointeeHolder) collider;
-        }
-        return null;
     }
 
     /**
