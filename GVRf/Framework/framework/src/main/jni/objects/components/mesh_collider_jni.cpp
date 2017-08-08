@@ -29,12 +29,16 @@ extern "C" {
             jobject obj, jlong jmesh);
 
     JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_NativeMeshCollider_ctorMeshPicking(JNIEnv * env,
+             jobject obj, jlong jmesh, jboolean pickCoordinates);
+
+    JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeMeshCollider_ctor(JNIEnv * env,
             jobject obj, jboolean useBounds);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeMeshCollider_setMesh(JNIEnv * env,
-            jobject obj, jlong jmesh_eye_pointee, jlong jmesh);
+            jobject obj, jlong jmesh_collider, jlong jmesh);
 }
 
 JNIEXPORT jlong JNICALL
@@ -44,10 +48,17 @@ Java_org_gearvrf_NativeMeshCollider_ctorMesh(JNIEnv * env,
     return reinterpret_cast<jlong>(new MeshCollider(mesh));
 }
 
+JNIEXPORT jlong JNICALL
+Java_org_gearvrf_NativeMeshCollider_ctorMeshPicking(JNIEnv * env,
+                                             jobject obj, jlong jmesh, jboolean pickCoordinates) {
+    Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
+    return reinterpret_cast<jlong>(new MeshCollider(mesh, pickCoordinates));
+}
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeMeshCollider_setMesh(JNIEnv * env,
-        jobject obj, jlong jmesh_eye_pointee, jlong jmesh) {
-    MeshCollider* meshcollider = reinterpret_cast<MeshCollider*>(jmesh_eye_pointee);
+        jobject obj, jlong jmesh_collider, jlong jmesh) {
+    MeshCollider* meshcollider = reinterpret_cast<MeshCollider*>(jmesh_collider);
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     meshcollider->set_mesh(mesh);
 }

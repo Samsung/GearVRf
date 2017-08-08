@@ -39,7 +39,7 @@ class MeshCursorAsset extends CursorAsset {
     private static final int OVERLAY_RENDER_ORDER = 100000;
     private GVRTexture futureTexture;
     private GVRMesh mesh;
-    private Future<GVRMesh> futureMesh;
+    private GVRMesh futureMesh;
     private String texture;
     private float x;
     private float y;
@@ -56,7 +56,7 @@ class MeshCursorAsset extends CursorAsset {
 
         if (mesh != null) {
             try {
-                futureMesh = context.getAssetLoader().loadFutureMesh(new GVRAndroidResource(context, mesh));
+                futureMesh = context.getAssetLoader().loadMesh(new GVRAndroidResource(context, mesh));
             } catch (IOException e) {
                 throw new IllegalArgumentException("Error loading mesh");
             }

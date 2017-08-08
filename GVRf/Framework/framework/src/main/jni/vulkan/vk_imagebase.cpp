@@ -315,6 +315,7 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
             imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageBlit.srcSubresource.layerCount = 1;
             imageBlit.srcSubresource.mipLevel = i-1;
+            imageBlit.srcSubresource.baseArrayLayer = j;
             imageBlit.srcOffsets[1].x = int32_t(bitmapInfos[j].width >> (i - 1)) == 0 ? 1 : int32_t(bitmapInfos[j].width >> (i - 1));
             imageBlit.srcOffsets[1].y = int32_t(bitmapInfos[j].height >> (i - 1)) == 0 ? 1 : int32_t(bitmapInfos[j].height >> (i - 1));
 
@@ -323,6 +324,7 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
             // Destination
             imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageBlit.dstSubresource.layerCount = 1;
+            imageBlit.dstSubresource.baseArrayLayer = j;
             imageBlit.dstSubresource.mipLevel = i;
             imageBlit.dstOffsets[1].x = int32_t(bitmapInfos[j].width >> i) == 0 ? 1 : int32_t(bitmapInfos[j].width >> i);
             imageBlit.dstOffsets[1].y = int32_t(bitmapInfos[j].height >> i) == 0 ? 1 : int32_t(bitmapInfos[j].height >> i);

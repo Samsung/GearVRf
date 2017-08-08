@@ -89,18 +89,17 @@ void VkTexture::createSampler(int maxLod) {
 
     err = vkCreateSampler(vk_renderer->getDevice(), gvr::SamplerCreateInfo(min_filter_type_,
                                                                            mag_filter_type_,
-                                                                           VK_SAMPLER_MIPMAP_MODE_LINEAR,
+                                                                           VK_SAMPLER_MIPMAP_MODE_NEAREST,
                                                                            wrap_s_type_,
                                                                            wrap_t_type_,
-                                                                           VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                                                                           wrap_t_type_,
                                                                            0.0f,
                                                                            VK_FALSE, 0,
                                                                            VK_FALSE,
                                                                            VK_COMPARE_OP_NEVER,
                                                                            0.0f, (float) maxLod,
                                                                            VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
-                                                                           VK_FALSE), NULL,
-                          &sampler);
+                                                                           VK_FALSE), NULL, &sampler);
 
     samplers.push_back(index);
     samplers.push_back((uint64_t )sampler);

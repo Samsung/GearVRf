@@ -21,6 +21,7 @@ import org.gearvrf.scene_objects.GVRViewSceneObject;
 import android.graphics.Canvas;
 import android.view.View;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 /**
  * This class represents a {@link WebView} that is rendered
@@ -33,6 +34,7 @@ public class GVRWebView extends WebView implements GVRView {
     public GVRWebView(GVRActivity context) {
         super(context);
 
+        setWebViewClient(new WebViewClient());
         context.registerView(this);
     }
 

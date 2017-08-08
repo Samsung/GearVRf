@@ -23,6 +23,8 @@
 #include "vulkan/vk_framebuffer.h"
 #include "vulkan/vk_render_to_texture.h"
 #include "vk_imagebase.h"
+#include <array>
+
 #define CUSTOM_TEXTURE
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999
@@ -877,7 +879,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
                                                                              &scissor);
     pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                                                                     disable_color_depth_write ? VK_FALSE: VK_TRUE,
+                                                                                     rdata->depth_mask() ? VK_TRUE : VK_FALSE,
                                                                                      VK_COMPARE_OP_LESS_OR_EQUAL,
                                                                                      VK_FALSE,
                                                                                      VK_STENCIL_OP_KEEP,
@@ -972,26 +974,13 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         LOGI("Vulkan initsync start");
         VkResult ret = VK_SUCCESS;
 
-        ret = vkCreateSemaphore(m_device, gvr::SemaphoreCreateInfo(), nullptr,
-                                &m_backBufferSemaphore);
-        GVR_VK_CHECK(!ret);
-
-        ret = vkCreateSemaphore(m_device, gvr::SemaphoreCreateInfo(), nullptr,
-                                &m_renderCompleteSemaphore);
-        GVR_VK_CHECK(!ret);
-
-        // Fences (Used to check draw command buffer completion)
-        VkFenceCreateInfo fenceCreateInfo = {};
-        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceCreateInfo.flags = 0;
-
         waitFences.resize(SWAP_CHAIN_COUNT);
         for (auto &fence : waitFences) {
             ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
             GVR_VK_CHECK(!ret);
         }
 
-        waitSCBFences.resize(SWAP_CHAIN_COUNT);
+        waitSCBFences.resize(1);
         for (auto &fence : waitSCBFences) {
             ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
             GVR_VK_CHECK(!ret);
@@ -1265,9 +1254,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkCommandBuffer trnCmdBuf;
         createTransientCmdBuffer(trnCmdBuf);
         if(postEffectFlag)
-            mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[index]);
+            mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[0]);
         else
-            mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[index]);
+            mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[0]);
 
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
     }
@@ -1279,7 +1268,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         poolSize[0].descriptorCount = 5;
 
         poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize[1].descriptorCount = 5;
+        poolSize[1].descriptorCount = 12;
 
         poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         poolSize[2].descriptorCount = 5;
@@ -1338,7 +1327,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         // TODO: add shadowmap descriptor
 
-        vkShader->bindTextures(vkmtl, writes,  descriptorSet, TEXTURE_BIND_START);
+        vkShader->bindTextures(vkmtl, writes,  descriptorSet);
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         vkData->setDescriptorSetNull(false,pass);
         LOGI("Vulkan after update descriptor");

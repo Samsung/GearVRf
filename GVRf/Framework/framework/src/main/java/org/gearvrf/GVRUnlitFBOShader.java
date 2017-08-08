@@ -37,12 +37,12 @@ public class GVRUnlitFBOShader extends GVRShaderTemplate
         super("float3 u_color float u_opacity", "sampler2D u_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         Context context = gvrContext.getContext();
         setSegment("FragmentTemplate", TextFile.readTextFile(context,R.raw.unlit_tex_frag));
-        setSegment("VertexTemplate",TextFile.readTextFile(context,R.raw.horz_flip_tex));
+        setSegment("VertexTemplate",TextFile.readTextFile(context,R.raw.unlit_flip_tex));
     }
 
     protected void setMaterialDefaults(GVRShaderData material)
     {
-        material.setVec3("u_color", 0.5f, 0.5f, 0.5f);
+        material.setVec3("u_color", 1.0f, 1.0f, 1.0f);
         material.setFloat("u_opacity", 1.0f);
     }
 }
