@@ -116,7 +116,7 @@ public class GVRBitmapTexture extends GVRImage
      */
     public void setBitmap(Bitmap bmap)
     {
-        NativeBitmapImage.updateFromBitmap(getNative(), bmap);
+        NativeBitmapImage.updateFromBitmap(getNative(), bmap, bmap.hasAlpha());
     }
 
     /**
@@ -188,7 +188,7 @@ class NativeBitmapImage {
     static native void setFileName(long pointer, String fname);
     static native String getFileName(long pointer);
     static native void updateFromMemory(long pointer, int width, int height, byte[] data);
-    static native void updateFromBitmap(long pointer, Bitmap bitmap);
+    static native void updateFromBitmap(long pointer, Bitmap bitmap, boolean hasAlpha);
     static native void updateFromBuffer(long pointer, int width, int height, int format, int type, Buffer pixels);
     static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[] data, int levels, int[] offsets);
 

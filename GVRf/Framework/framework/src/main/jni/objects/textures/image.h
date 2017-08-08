@@ -84,6 +84,7 @@ public:
     virtual int getId() = 0;
     virtual bool isReady() = 0;
     virtual void texParamsChanged(const TextureParameters&) = 0;
+    virtual bool transparency() { return false; }
 
     bool hasData() const { return mState == HAS_DATA; }
     short getWidth() const { return mWidth; }

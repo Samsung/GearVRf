@@ -50,7 +50,7 @@ namespace gvr
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
-                                                        jlong jtexture, jobject jbitmap);
+                                                        jlong jtexture, jobject jbitmap, jboolean hasAlpha);
     }
 
     JNIEXPORT jlong JNICALL
@@ -75,10 +75,10 @@ namespace gvr
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
-                                                        jlong jtexture, jobject jbitmap)
+                                                        jlong jtexture, jobject jbitmap, jboolean hasAlpha)
     {
         BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
-        texture->update(env, jbitmap);
+        texture->update(env, jbitmap, static_cast<bool>(hasAlpha) );
     }
 
     JNIEXPORT void JNICALL
