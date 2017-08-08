@@ -151,7 +151,9 @@ bool GLShader::useShader()
     }
     if (LOG_SHADER) LOGV("SHADER: rendering with program %d", programID);
     glUseProgram(programID);
-    findTextures();
+
+    if(!mTextureLocs.size())
+        findTextures();
     if (!useMaterialGPUBuffer())
     {
         findUniforms(mUniformDesc, MATERIAL_UBO_INDEX);
