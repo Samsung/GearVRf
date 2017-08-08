@@ -34,9 +34,10 @@ extern "C" {
     Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
             jobject obj, jlong jscene, jlong jtransform, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
             jfloat dy, jfloat dz);
-    JNIEXPORT jfloat JNICALL
+    JNIEXPORT jobject JNICALL
     Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
-            jobject obj, jlong jscene_object, jlong jcamera_rig);
+            jobject obj, jlong jscene_object, jfloat ox, jfloat oy, jfloat oz,
+            jfloat dx, jfloat dy, jfloat dz);
     JNIEXPORT bool JNICALL
     Java_org_gearvrf_NativePicker_pickSceneObjectAgainstBoundingBox(JNIEnv * env,
             jobject obj, jlong jscene_object, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
@@ -74,7 +75,7 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
     std::vector<ColliderData> colliders;
     Transform* t = reinterpret_cast<Transform*>(jtransform);
 
@@ -92,7 +93,11 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
         const ColliderData& data = *it;
         jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
         jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
-                              data.HitPosition.x, data.HitPosition.y, data.HitPosition.z);
+                                                        data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
+                                                        data.FaceIndex,
+                                                        data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
+                                                        data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                        data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);
@@ -104,13 +109,32 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
     return pickList;
 }
 
-JNIEXPORT jfloat JNICALL
+JNIEXPORT jobject JNICALL
 Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
-        jobject obj, jlong jscene_object, jlong jcamera_rig) {
+                                              jobject obj, jlong jscene_object,
+                                              jfloat ox, jfloat oy, jfloat oz,
+                                              jfloat dx, jfloat dy, jfloat dz) {
     SceneObject* scene_object =
             reinterpret_cast<SceneObject*>(jscene_object);
-    CameraRig* camera_rig = reinterpret_cast<CameraRig*>(jcamera_rig);
-    return Picker::pickSceneObject(scene_object, camera_rig);
+    ColliderData data;
+    Picker::pickSceneObject(scene_object, ox, oy, oz, dx, dy, dz, data);
+
+    jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
+    jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+
+    jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
+
+    jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
+                                                    data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
+                                                    data.FaceIndex,
+                                                    data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
+                                                    data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                    data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+
+    env->DeleteLocalRef(pickerClass);
+    env->DeleteLocalRef(hitClass);
+    return hitObject;
 }
 
 JNIEXPORT bool JNICALL
@@ -145,7 +169,7 @@ Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
     std::vector<ColliderData> colliders;
     Transform* t = scene->main_camera_rig()->getHeadTransform();
 
@@ -160,7 +184,11 @@ Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
         const ColliderData& data = *it;
         jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
         jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
-                              data.HitPosition.x, data.HitPosition.y, data.HitPosition.z);
+                                                        data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
+                                                        data.FaceIndex,
+                                                        data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
+                                                        data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                        data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);

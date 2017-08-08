@@ -49,9 +49,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     private static final String TAG = "GearVRf";
     private GVRLight mLight;
     private boolean mLightMapEnabled;
-
-    /** Just for {@link #getMeshEyePointee()} */
-    private Future<GVRMesh> mFutureMesh;
     private boolean isLightEnabled;
     private HashMap<String, Integer> mShaderFeatures = new HashMap<String, Integer>();
 
@@ -137,17 +134,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * a pending future mesh, it is resolved.
       */
     public GVRMesh getMesh() {
-        if (mFutureMesh != null) {
-            try
-            {
-                mMesh = mFutureMesh.get();
-                setMesh(mMesh);
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
         return mMesh;
     }
 
@@ -161,7 +147,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         GVRMesh oldMesh = mMesh;
         synchronized (this) {
             mMesh = mesh;
-            mFutureMesh = null;
             for (GVRRenderPass pass : mRenderPassList)
             {
                 pass.setMesh(mesh);
@@ -171,72 +156,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         if ((oldMesh != null) && (oldMesh != mesh))
         {
             bindShader(getGVRContext().getMainScene());
-        }
-    }
-
-    /**
-     * Asynchronously set the {@link GVRMesh mesh} to be rendered.
-     * 
-     * Uses a background thread from the thread pool to wait for the
-     * {@code Future.get()} method; unless you are loading dozens of meshes
-     * asynchronously, the extra overhead should be modest compared to the cost
-     * of loading a mesh.
-     * 
-     * @param mesh
-     *            The mesh to be rendered.
-     * 
-     * @since 1.6.7
-     */
-    public void setMesh(final Future<GVRMesh> mesh) {
-        synchronized (this) {
-            mFutureMesh = mesh;
-        }
-
-        if (mesh.isDone()) {
-            try {
-                setMesh(mesh.get());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            if (mesh instanceof FutureResource<?>) {
-
-                MeshCallback callback = new MeshCallback() {
-                    @Override
-                    public void loaded(GVRMesh mesh,
-                            GVRAndroidResource ignored) {
-                        setMesh(mesh);
-                        Log.d(TAG, "Finish loading and setting mesh %s", mesh);
-                    }
-
-                    @Override
-                    public void failed(Throwable t,
-                            GVRAndroidResource androidResource) {
-                        Log.e(TAG, "Error loading mesh %s; exception: %s", mesh,
-                                t.getMessage());
-                    }
-
-                    @Override
-                    public boolean stillWanted(
-                            GVRAndroidResource androidResource) {
-                        return true;
-                    }
-                };
-
-                getGVRContext().loadMesh(callback,
-                        ((FutureResource<GVRMesh>) mesh).getResource());
-            } else {
-                Threads.spawn(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            setMesh(mesh.get());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
         }
     }
 
@@ -693,6 +612,19 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         return this;
     }
 
+    /** Set the glDepthMask option
+     *
+     *
+     * @param depthMask
+     *            {@code true} if glDepthMask should be enabled,
+     *            {@code false} if not.
+     */
+
+    public GVRRenderData setDepthMask(boolean depthMask) {
+        NativeRenderData.setDepthMask(getNative(), depthMask);
+        return this;
+    }
+
     /**
      * @return {@code true} if {@code GL_BLEND} is enabled, {@code false} if
      *         not.
@@ -890,21 +822,11 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
-        GVRMesh mesh = null;
         if (mMesh != null) {
-            mesh = mMesh;
-        } else if (this.mFutureMesh != null) {
-            try {
-                mesh = mFutureMesh.get();
-            } catch (Exception e) {
-            }
-        }
-        if (mesh != null) {
             sb.append(Log.getSpaces(indent));
             sb.append("Mesh: ");
-            mesh.prettyPrint(sb, indent);
+            mMesh.prettyPrint(sb, indent);
         }
-
         sb.append(Log.getSpaces(indent));
         sb.append("Light: " + mLight);
         sb.append(System.lineSeparator());
@@ -994,6 +916,8 @@ class NativeRenderData {
     static native boolean getDepthTest(long renderData);
 
     static native void setDepthTest(long renderData, boolean depthTest);
+
+    static native void setDepthMask(long renderData, boolean depthMask);
 
     static native boolean getAlphaBlend(long renderData);
 

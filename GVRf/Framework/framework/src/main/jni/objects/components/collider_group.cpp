@@ -33,12 +33,12 @@ ColliderGroup::ColliderGroup() :
 ColliderGroup::~ColliderGroup() {
 }
 
-void ColliderGroup::addCollider(Collider* pointee) {
-    colliders_.push_back(pointee);
+void ColliderGroup::addCollider(Collider* collider) {
+    colliders_.push_back(collider);
 }
 
-void ColliderGroup::removeCollider(Collider* pointee) {
-    colliders_.erase(std::remove(colliders_.begin(), colliders_.end(), pointee),
+void ColliderGroup::removeCollider(Collider* collider) {
+    colliders_.erase(std::remove(colliders_.begin(), colliders_.end(), collider),
             colliders_.end());
 }
 

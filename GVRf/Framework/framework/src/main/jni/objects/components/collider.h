@@ -41,11 +41,15 @@ public:
 
     void CopyHit(const ColliderData& src);
 
-    SceneObject* ObjectHit;
-    Collider*    ColliderHit;
-    bool         IsHit;
-    glm::vec3    HitPosition;
-    float        Distance;
+    SceneObject*    ObjectHit;
+    Collider*       ColliderHit;
+    bool            IsHit;
+    glm::vec3       HitPosition;
+    float           Distance;
+    int             FaceIndex;
+    glm::vec3       BarycentricCoordinates;
+    glm::vec2       TextureCoordinates;
+    glm::vec3       NormalCoordinates;
 };
 
 /*
@@ -104,7 +108,11 @@ inline ColliderData::ColliderData(Collider* collider) :
         ColliderHit(collider),
         IsHit(false),
         HitPosition(std::numeric_limits<float>::infinity()),
-        Distance((std::numeric_limits<float>::infinity()))
+        Distance((std::numeric_limits<float>::infinity())),
+        FaceIndex(-1),
+        BarycentricCoordinates(-1.0f),
+        TextureCoordinates(-1.0f),
+        NormalCoordinates(0.0f)
 {
     if (collider != NULL)
     {
@@ -121,7 +129,11 @@ inline ColliderData::ColliderData() :
         ObjectHit(NULL),
         IsHit(false),
         HitPosition(std::numeric_limits<float>::infinity()),
-        Distance((std::numeric_limits<float>::infinity()))
+        Distance(std::numeric_limits<float>::infinity()),
+        FaceIndex(-1),
+        BarycentricCoordinates(-1.0f),
+        TextureCoordinates(-1.0f),
+        NormalCoordinates(0.0f)
 {
 }
 

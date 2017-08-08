@@ -146,13 +146,12 @@ std::map<int, VkFormat> compressed_formats = {
             LOGE("BitmapImage::updateFromMemory array is null");
             return;
         }
-       // mLevels = static_cast<int>(floor(log2(std::max(mWidth, mHeight))) + 1);
+        mLevels = 0;
         jbyte *pixels = env->GetByteArrayElements(mData, 0);
         std::vector<void *> texData;
         std::vector<VkBufferImageCopy> bufferCopyRegions;
         std::vector<ImageInfo> imageInfos;
         VkFormat internal_format;
-        if (mLevels == 1) {
 
             VkImageViewType target = getImageType();
             ImageInfo imageInfo = {};
@@ -180,14 +179,10 @@ std::map<int, VkFormat> compressed_formats = {
                 internal_format = VK_FORMAT_R8_UNORM;
 
             updateMipVkImage(mImageSize, texData, imageInfos, bufferCopyRegions, target,
-                             internal_format, mLevels);
+                             internal_format, 1);
         }
         else {
 
-            // TODO : loadCompressed Mipmaps
-            // This is not supported for Vulkan : our physical device does not have feature with  VK_FORMAT_FEATURE_BLIT_DST_BIT
-
-        }
         env->ReleaseByteArrayElements(mData, pixels, 0);
         clearData(env);
     }

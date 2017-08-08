@@ -53,6 +53,34 @@ import java.util.concurrent.Future;
  * services, and global information about an application environment.
  * {@code GVRContext} also holds the {@linkplain GVRScene main scene} and miscellaneous information
  * like {@linkplain #getFrameTime() the frame time.}
+ * <ul>
+ * <li>
+ * The application <b>activity</b> resides in the context {@link #getActivity()}.
+ * </li>
+ * <li>
+ * The current scene in the context contains all the displayable 3D objects {@link #getMainScene()}.
+ * </li>
+ * <li>
+ * The <b>event receiver</b> in the context listens for events from scripting,
+ * picking, the asset loader and dispatches to user callbacks {@link #getEventReceiver()}.
+ * </li>
+ * <li>
+ * The context allows you to run code on either the Java or rendering thread
+ * {@link #runOnGlThread(Runnable), {@link #runOnTheFrameworkThread(Runnable)}.
+ * </li>
+ * <li>
+ * The <b>asset loader</b> in the context can load textures and models from a variety of sources
+ * both synchronously and asynchronously {@link #getAssetLoader()}.
+ * </li>
+ * <li>
+ * You can capture the 3D screen using context screen capture functions {@link #captureScreenCenter(GVRScreenshotCallback)}.
+ * </li>
+ * <li>
+ *  The <b>shader manager</b> in the context lets you create custom shaders.
+ * </ul>
+ * @see GVRAssetLoader
+ * @see GVREventReceiver
+ * @see GVRScene
  */
 public abstract class GVRContext implements IEventReceiver {
     private static final String TAG = Log.tag(GVRContext.class);
@@ -113,7 +141,7 @@ public abstract class GVRContext implements IEventReceiver {
 
     /**
      * The priority used by
-     * {@link #loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)}
+     * {@link GVRAssetLoader#loadTexture(GVRAndroidResource)}
      * and
      * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
      *
@@ -228,325 +256,6 @@ public abstract class GVRContext implements IEventReceiver {
     public GVREventReceiver getEventReceiver() {
         return mEventReceiver;
     }
-    
-    /**
-     * Loads a file as a {@link GVRMesh}.
-     * 
-     * Note that this method can be quite slow; we recommend never calling it
-     * from the GL thread. The asynchronous version
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)} is
-     * better because it moves most of the work to a background thread, doing as
-     * little as possible on the GL thread.
-     * 
-     * @param androidResource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @return The file as a GL mesh or null if mesh cannot be loaded.
-     * 
-     * @since 1.6.2
-     */
-    public GVRMesh loadMesh(GVRAndroidResource androidResource) {
-        return loadMesh(androidResource,
-                GVRImportSettings.getRecommendedSettings());
-    }
-
-    /**
-     * Loads a file as a {@link GVRMesh}.
-     * 
-     * Note that this method can be quite slow; we recommend never calling it
-     * from the GL thread. The asynchronous version
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)} is
-     * better because it moves most of the work to a background thread, doing as
-     * little as possible on the GL thread.
-     * 
-     * @param androidResource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * 
-     * @param settings
-     *            Additional import {@link GVRImportSettings settings}.
-     * @return The file as a GL mesh or null if mesh cannot be loaded.
-     * 
-     * @since 1.6.2
-     */
-    public GVRMesh loadMesh(GVRAndroidResource androidResource,
-            EnumSet<GVRImportSettings> settings)
-    {
-        class MeshFinder implements GVRSceneObject.ComponentVisitor
-        {
-            private GVRMesh meshFound = null;
-            public GVRMesh getMesh() { return meshFound; }
-            public boolean visit(GVRComponent comp)
-            {
-                GVRRenderData rdata = (GVRRenderData) comp;
-                meshFound = rdata.getMesh();
-                return (meshFound == null);
-            }
-        };
-        MeshFinder findMesh = new MeshFinder();
-        GVRMesh mesh = meshCache.get(androidResource);
-        if (mesh == null)
-        {
-            try
-            {
-                GVRSceneObject model = mImporter.loadModel(androidResource, settings, true, null);
-                model.forAllComponents(findMesh, GVRRenderData.getComponentType());
-                mesh = findMesh.getMesh();
-                if (mesh != null)
-                {
-                    meshCache.put(androidResource, mesh);
-                }
-                else
-                {
-                    throw new IOException("No mesh found in model " + androidResource.getResourceFilename());
-                }
-            }
-            catch (IOException ex)
-            {
-                getEventManager().sendEvent(this, IAssetEvents.class,
-                                            "onModelError", new Object[]{this, ex.getMessage(),
-                                androidResource.getResourceFilename()});
-                return null;
-            }
-        }
-        return mesh;
-    }
-
-    private final ResourceCache<GVRMesh> meshCache = new ResourceCache<GVRMesh>();
-
-    /**
-     * Loads a mesh file, asynchronously, at a default priority.
-     * 
-     * This method and the
-     * {@linkplain #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)
-     * overload that takes a priority} are generally going to be your best
-     * choices for loading {@link GVRMesh} resources: mesh loading can take
-     * hundreds - and even thousands - of milliseconds, and so should not be
-     * done on the GL thread in either {@link GVRMain#onInit(GVRContext)}
-     * onInit()} or {@link GVRMain#onStep() onStep()}.
-     * 
-     * <p>
-     * The asynchronous methods improve throughput in three ways. First, by
-     * doing all the work on a background thread, then delivering the loaded
-     * mesh to the GL thread on a {@link #runOnGlThread(Runnable)
-     * runOnGlThread()} callback. Second, they use a throttler to avoid
-     * overloading the system and/or running out of memory. Third, they do
-     * 'request consolidation' - if you issue any requests for a particular file
-     * while there is still a pending request, the file will only be read once,
-     * and each callback will get the same {@link GVRMesh}.
-     * 
-     * @param callback
-     *            App supplied callback, with three different methods.
-     *            <ul>
-     *            <li>Before loading, GVRF may call
-     *            {@link GVRAndroidResource.MeshCallback#stillWanted(GVRAndroidResource)
-     *            stillWanted()} (on a background thread) to give you a chance
-     *            to abort a 'stale' load.
-     * 
-     *            <li>Successful loads will call
-     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
-     *            loaded()} on the GL thread.
-     * 
-     *            <li>Any errors will call
-     *            {@link GVRAndroidResource.MeshCallback#failed(Throwable, GVRAndroidResource)
-     *            failed(),} with no promises about threading.
-     *            </ul>
-     * @param androidResource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @throws IllegalArgumentException
-     *             If either parameter is {@code null} or if you 'abuse' request
-     *             consolidation by passing the same {@link GVRAndroidResource}
-     *             descriptor to multiple load calls.
-     *             <p>
-     *             It's fairly common for multiple scene objects to use the same
-     *             texture or the same mesh. Thus, if you try to load, say,
-     *             {@code R.raw.whatever} while you already have a pending
-     *             request for {@code R.raw.whatever}, it will only be loaded
-     *             once; the same resource will be used to satisfy both (all)
-     *             requests. This "consolidation" uses
-     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
-     *             {@code ==} (aka "reference equality"): The problem with using
-     *             the same resource descriptor is that if requests can't be
-     *             consolidated (because the later one(s) came in after the
-     *             earlier one(s) had already completed) the resource will be
-     *             reloaded ... but the original descriptor will have been
-     *             closed.
-     * @since 1.6.2
-     */
-    public void loadMesh(MeshCallback callback,
-            GVRAndroidResource androidResource) throws IllegalArgumentException {
-        loadMesh(callback, androidResource, DEFAULT_PRIORITY);
-    }
-
-    /**
-     * Loads a mesh file, asynchronously, at an explicit priority.
-     * 
-     * This method and the
-     * {@linkplain #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)
-     * overload that supplies a default priority} are generally going to be your
-     * best choices for loading {@link GVRMesh} resources: mesh loading can take
-     * hundreds - and even thousands - of milliseconds, and so should not be
-     * done on the GL thread in either {@link GVRMain#onInit(GVRContext)
-     * onInit()} or {@link GVRMain#onStep() onStep()}.
-     * 
-     * <p>
-     * The asynchronous methods improve throughput in three ways. First, by
-     * doing all the work on a background thread, then delivering the loaded
-     * mesh to the GL thread on a {@link #runOnGlThread(Runnable)
-     * runOnGlThread()} callback. Second, they use a throttler to avoid
-     * overloading the system and/or running out of memory. Third, they do
-     * 'request consolidation' - if you issue any requests for a particular file
-     * while there is still a pending request, the file will only be read once,
-     * and each callback will get the same {@link GVRMesh}.
-     * 
-     * @param callback
-     *            App supplied callback, with three different methods.
-     *            <ul>
-     *            <li>Before loading, GVRF may call
-     *            {@link GVRAndroidResource.MeshCallback#stillWanted(GVRAndroidResource)
-     *            stillWanted()} (on a background thread) to give you a chance
-     *            to abort a 'stale' load.
-     * 
-     *            <li>Successful loads will call
-     *            {@link GVRAndroidResource.Callback#loaded(GVRHybridObject, GVRAndroidResource)
-     *            loaded()} on the GL thread.
-     * 
-     *            <li>Any errors will call
-     *            {@link GVRAndroidResource.MeshCallback#failed(Throwable, GVRAndroidResource)
-     *            failed(),} with no promises about threading.
-     *            </ul>
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @param priority
-     *            This request's priority. Please see the notes on asynchronous
-     *            priorities in the <a href="package-summary.html#async">package
-     *            description</a>.
-     * 
-     * @throws IllegalArgumentException
-     *             If either {@code callback} or {@code resource} is
-     *             {@code null}, or if {@code priority} is out of range - or if
-     *             you 'abuse' request consolidation by passing the same
-     *             {@link GVRAndroidResource} descriptor to multiple load calls.
-     *             <p>
-     *             It's fairly common for multiple scene objects to use the same
-     *             texture or the same mesh. Thus, if you try to load, say,
-     *             {@code R.raw.whatever} while you already have a pending
-     *             request for {@code R.raw.whatever}, it will only be loaded
-     *             once; the same resource will be used to satisfy both (all)
-     *             requests. This "consolidation" uses
-     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
-     *             {@code ==} (aka "reference equality"): The problem with using
-     *             the same resource descriptor is that if requests can't be
-     *             consolidated (because the later one(s) came in after the
-     *             earlier one(s) had already completed) the resource will be
-     *             reloaded ... but the original descriptor will have been
-     *             closed.
-     * @since 1.6.2
-     */
-    public void loadMesh(MeshCallback callback, GVRAndroidResource resource,
-            int priority) throws IllegalArgumentException {
-        GVRAsynchronousResourceLoader.loadMesh(this, callback, resource,
-                priority);
-    }
-
-    /**
-     * Simple, high-level method to load a mesh asynchronously, for use with
-     * {@link GVRRenderData#setMesh(Future)}.
-     * 
-     * This method uses a default priority; use
-     * {@link #loadFutureMesh(GVRAndroidResource, int)} to specify a priority;
-     * use one of the lower-level
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
-     * methods to get more control over loading.
-     * 
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @return A {@link Future} that you can pass to
-     *         {@link GVRRenderData#setMesh(Future)}
-     * 
-     * @since 1.6.7
-     * 
-     * @throws IllegalArgumentException
-     *             If you 'abuse' request consolidation by passing the same
-     *             {@link GVRAndroidResource} descriptor to multiple load calls.
-     *             <p>
-     *             It's fairly common for multiple scene objects to use the same
-     *             texture or the same mesh. Thus, if you try to load, say,
-     *             {@code R.raw.whatever} while you already have a pending
-     *             request for {@code R.raw.whatever}, it will only be loaded
-     *             once; the same resource will be used to satisfy both (all)
-     *             requests. This "consolidation" uses
-     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
-     *             {@code ==} (aka "reference equality"): The problem with using
-     *             the same resource descriptor is that if requests can't be
-     *             consolidated (because the later one(s) came in after the
-     *             earlier one(s) had already completed) the resource will be
-     *             reloaded ... but the original descriptor will have been
-     *             closed.
-     */
-    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource) {
-        return loadFutureMesh(resource, DEFAULT_PRIORITY);
-    }
-
-    /**
-     * Simple, high-level method to load a mesh asynchronously, for use with
-     * {@link GVRRenderData#setMesh(Future)}.
-     * 
-     * This method trades control for convenience; use one of the lower-level
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
-     * methods if, say, you want to do something more than just
-     * {@link GVRRenderData#setMesh(GVRMesh)} when the mesh loads.
-     * 
-     * @param resource
-     *            Basically, a stream containing a 3D model. The
-     *            {@link GVRAndroidResource} class has six constructors to
-     *            handle a wide variety of Android resource types. Taking a
-     *            {@code GVRAndroidResource} here eliminates six overloads.
-     * @param priority
-     *            This request's priority. Please see the notes on asynchronous
-     *            priorities in the <a href="package-summary.html#async">package
-     *            description</a>.
-     * @return A {@link Future} that you can pass to
-     *         {@link GVRRenderData#setMesh(Future)}
-     * 
-     * @since 1.6.7
-     * 
-     * @throws IllegalArgumentException
-     *             If you 'abuse' request consolidation by passing the same
-     *             {@link GVRAndroidResource} descriptor to multiple load calls.
-     *             <p>
-     *             It's fairly common for multiple scene objects to use the same
-     *             texture or the same mesh. Thus, if you try to load, say,
-     *             {@code R.raw.whatever} while you already have a pending
-     *             request for {@code R.raw.whatever}, it will only be loaded
-     *             once; the same resource will be used to satisfy both (all)
-     *             requests. This "consolidation" uses
-     *             {@link GVRAndroidResource#equals(Object)}, <em>not</em>
-     *             {@code ==} (aka "reference equality"): The problem with using
-     *             the same resource descriptor is that if requests can't be
-     *             consolidated (because the later one(s) came in after the
-     *             earlier one(s) had already completed) the resource will be
-     *             reloaded ... but the original descriptor will have been
-     *             closed.
-     */
-    public Future<GVRMesh> loadFutureMesh(GVRAndroidResource resource,
-            int priority) {
-        return GVRAsynchronousResourceLoader.loadFutureMesh(this, resource,
-                priority);
-    }
 
     /**
      * Creates a quad consisting of two triangles, with the specified width and
@@ -557,10 +266,28 @@ public abstract class GVRContext implements IEventReceiver {
      * @param height
      *            the quad's height
      * @return A 2D, rectangular mesh with four vertices and two triangles
-     * @deprecated use GVRMesh.createQuad instead
      */
+    @SuppressWarnings("deprecation")
     public GVRMesh createQuad(float width, float height) {
-        return GVRMesh.createQuad(this, "float3 a_position float2 a_texcoord float3 a_normal", width, height);
+        GVRMesh mesh = new GVRMesh(this);
+
+        float[] vertices = { width * -0.5f, height * 0.5f, 0.0f, width * -0.5f,
+                height * -0.5f, 0.0f, width * 0.5f, height * 0.5f, 0.0f,
+                width * 0.5f, height * -0.5f, 0.0f };
+        mesh.setVertices(vertices);
+
+        final float[] normals = { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f, 1.0f };
+        mesh.setNormals(normals);
+
+        final float[] texCoords = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+                1.0f };
+        mesh.setTexCoords(texCoords);
+
+        char[] triangles = { 0, 1, 2, 1, 3, 2 };
+        mesh.setTriangles(triangles);
+
+        return mesh;
     }
 
     /**
@@ -587,31 +314,6 @@ public abstract class GVRContext implements IEventReceiver {
 
     public boolean isCurrentThreadGLThread() {
         return Thread.currentThread().getId() == mGLThreadID;
-    }
-
-
-    /**
-     * Loads atlas information file placed in the assets folder.
-     *
-     * Atlas information file contains in UV space the information of offset and
-     * scale for each mesh mapped in some atlas texture.
-     * The content of the file is at json format like:
-     *
-     * [ {name: SUN, offset.x: 0.9, offset.y: 0.9, scale.x: 0.5, scale.y: 0.5},
-     * {name: EARTH, offset.x: 0.5, offset.y: 0.9, scale.x: 0.5, scale.y: 0.5} ]
-     *
-     * @param resource
-     *            A stream containing a text file on JSON format.
-     *
-     * @return List of atlas information load.
-     */
-    public List<GVRAtlasInformation> loadTextureAtlasInformation(GVRAndroidResource resource) throws IOException {
-
-        List<GVRAtlasInformation> atlasInformation
-                = GVRAsynchronousResourceLoader.loadAtlasInformation(resource.getStream());
-        resource.closeStream();
-
-        return atlasInformation;
     }
 
     /**

@@ -28,7 +28,7 @@
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
-#define SWAP_CHAIN_COUNT 6
+#define SWAP_CHAIN_COUNT 4
 #define POSTEFFECT_CHAIN_COUNT 2
 
 namespace gvr {
@@ -103,9 +103,6 @@ public:
     int DrawFrameForRenderDataPE();
     int getCurrentSwapChainIndx(){
         return imageIndex;
-    }
-    VkFence getCurrentWaitFence(){
-        return waitSCBFences[imageIndex];
     }
     VkCommandBuffer* getCurrentCmdBuffer(){
         return swapChainCmdBuffer[imageIndex];

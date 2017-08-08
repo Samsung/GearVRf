@@ -63,7 +63,7 @@ public abstract class GVRHybridObject {
     }
 
     /**
-     * Special constructor, for descendants like {#link GVRMeshEyePointee} that
+     * Special constructor, for descendants like {@link GVRCollider} that
      * need to 'unregister' instances.
      * 
      * @param gvrContext
@@ -81,7 +81,7 @@ public abstract class GVRHybridObject {
      *            {@link CleanupHandlerListManager} to maintain a
      *            {@code Map<List<NativeCleanupHandler>, List<NativeCleanupHandler>>}
      *            whose keys are descendant lists and whose values are unique
-     *            concatenated lists - see {@link GVREyePointeeHolder} for an
+     *            concatenated lists - see {@link GVRCollider} for an
      *            example.
      */
     protected GVRHybridObject(GVRContext gvrContext, long nativePointer,
@@ -194,7 +194,7 @@ public abstract class GVRHybridObject {
      * descendant class that adds a list of cleanup handler(s), instead of
      * (potentially) one list per instance.
      * 
-     * See the usage in {@link GVREyePointeeHolder}.
+     * See the usage in {@link GVRCollider}.
      */
     protected static class CleanupHandlerListManager {
         private final List<NativeCleanupHandler> mPrefixList;
