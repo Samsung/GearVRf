@@ -8,6 +8,7 @@ import org.gearvrf.GVRContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -22,6 +23,7 @@ public class GVRExternalScene extends GVRBehavior
     static private long TYPE_EXTERNALSCENE = newComponentType(GVRExternalScene.class);
     private String mFilePath;
     private boolean mReplaceScene;
+    private EnumSet<GVRImportSettings> mImportSettings = null;
     public final GVRResourceVolume mVolume;
 
     /**
@@ -37,6 +39,7 @@ public class GVRExternalScene extends GVRBehavior
         mVolume = new GVRResourceVolume(ctx, filePath);
         mFilePath = filePath;
         mReplaceScene = replaceScene;
+        mImportSettings = GVRImportSettings.getRecommendedSettings();
     }
 
     /**
@@ -47,6 +50,23 @@ public class GVRExternalScene extends GVRBehavior
     public GVRExternalScene(GVRResourceVolume volume, boolean replaceScene)
     {
         super(volume.gvrContext);
+        mType = getComponentType();
+        mVolume = volume;
+        mFilePath = volume.getFullPath();
+        mReplaceScene = replaceScene;
+        mImportSettings = GVRImportSettings.getRecommendedSettings();
+    }
+
+    /**
+     * Constructs an external scene component to load the given asset file.
+     * @param volume        GVRResourceVolume containing the path of the asset.
+     * @param settings      import settings
+     * @param replaceScene  true to replace the current scene, false to just add the model
+     */
+    public GVRExternalScene(GVRResourceVolume volume, EnumSet<GVRImportSettings> settings, boolean replaceScene)
+    {
+        super(volume.gvrContext);
+        mImportSettings = settings;
         mType = getComponentType();
         mVolume = volume;
         mFilePath = volume.getFullPath();
@@ -120,11 +140,11 @@ public class GVRExternalScene extends GVRBehavior
         }
         if (mReplaceScene)
         {
-            loader.loadScene(getOwnerObject(), mVolume, scene, null);
+            loader.loadScene(getOwnerObject(), mVolume, mImportSettings, scene, null);
         }
         else
         {
-            loader.loadModel(getOwnerObject(), mVolume, scene);
+            loader.loadModel(getOwnerObject(), mVolume, mImportSettings, scene);
         }
         return true;
     }
@@ -152,11 +172,11 @@ public class GVRExternalScene extends GVRBehavior
 
         if (mReplaceScene)
         {
-            loader.loadScene(getOwnerObject(), mVolume, getGVRContext().getMainScene(), handler);
+            loader.loadScene(getOwnerObject(), mVolume, mImportSettings, getGVRContext().getMainScene(), handler);
         }
         else
         {
-            loader.loadModel(mVolume, getOwnerObject(), GVRImportSettings.getRecommendedSettings(), true, handler);
+            loader.loadModel(mVolume, getOwnerObject(), mImportSettings, true, handler);
         }
     }
 }
