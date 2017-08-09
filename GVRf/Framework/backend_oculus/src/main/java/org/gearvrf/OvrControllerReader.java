@@ -26,7 +26,62 @@ class OvrControllerReader implements GearCursorController.ControllerReader {
     public boolean isConnected() {
         return readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
     }
-
+    @Override
+    public GearCursorController.GazeBehavior getGazeBehavior() {
+        return GearCursorController.GazeBehavior.Never;
+    }
+    @Override
+    public void setGazeBehavior(GearCursorController.GazeBehavior gazeBehavior) {}
+    @Override
+    public void setAddedElbowHeight(float elbowHeight){}
+    @Override
+    public void setAddedElbowDepth(float elbowDepth){}
+    @Override
+    public void setPointerTiltAngle(float tiltAngle){}
+    @Override
+    public void setHandedness(GearCursorController.Handedness newHandedness){}
+    @Override
+    public void setUseAccelerometer(boolean newUseAccelerometer){}
+    @Override
+    public  void setFadeDistanceFromFace(float distanceFromFace){}
+    @Override
+    public  void setTooltipMinDistanceFromFace(float distanceFromFace){}
+    @Override
+    public Vector3f getPointerPositionOffset(){
+        return new Vector3f(0f,0f,0f);
+    }
+    @Override
+    public float getAddedElbowHeight(){
+        return 0f;
+    }
+    @Override
+    public float getAddedElbowDepth(){
+        return 0f;
+    }
+    @Override
+    public float getPointerTiltAngle(){
+        return 0f;
+    }
+    @Override
+    public boolean getUseAccelerometer(){
+        return false;
+    }
+    @Override
+    public float getFadeDistanceFromFace(){
+        return 0f
+    }
+    @Override
+    public float getTooltipMinDistanceFromFace(){
+        return 0f;
+    }
+    @Override
+    public float getControllerAlphaValue(){
+        return 0f;
+    }
+    @Override
+    public float getTooltipAlphaValue(){
+        return 0f;
+    }
     @Override
     public void updateRotation(Quaternionf quat) {
         quat.set(readbackBuffer.get(INDEX_ROTATION + 1),

@@ -69,7 +69,14 @@ final class GearCursorController extends GVRCursorController {
     public enum Handedness {
         LEFT, RIGHT
     }
-
+    /**
+     * Defines the GazeBehavior of the gear controller.
+     */
+    public enum GazeBehavior {
+        Never,
+        DuringMotion,
+        Always
+    }
     private GVRSceneObject pivot;
     private GVRContext context;
     private final Vector3f position;
@@ -84,7 +91,25 @@ final class GearCursorController extends GVRCursorController {
         void updatePosition(Vector3f vec);
         int getKey();
         float getHandedness();
+        void setAddedElbowHeight(float elbowHeight);
+        void setAddedElbowDepth(float elbowDepth);
+        void setPointerTiltAngle(float tiltAngle);
+        void setHandedness(Handedness newHandedness);
+        void setUseAccelerometer(boolean newUseAccelerometer);
+        void setFadeDistanceFromFace(float distanceFromFace);
+        void setTooltipMinDistanceFromFace(float distanceFromFace);
+        Vector3f getPointerPositionOffset();
+        float getAddedElbowHeight();
+        float getAddedElbowDepth();
+        float getPointerTiltAngle();
+        boolean getUseAccelerometer();
+        float getFadeDistanceFromFace();
+        float getTooltipMinDistanceFromFace();
+        float getControllerAlphaValue();
+        float getTooltipAlphaValue();
         void updateTouchpad(PointF pt);
+        GearCursorController.GazeBehavior getGazeBehavior();
+        void setGazeBehavior(GearCursorController.GazeBehavior gazeBehavior);
     }
 
     GearCursorController(GVRContext context, ControllerReader controllerReader) {
@@ -105,7 +130,78 @@ final class GearCursorController extends GVRCursorController {
         }
         pivot.addChildObject(object);
     }
-
+    @Override
+    public void setAddedElbowHeight(float elbowHeight){
+        mControllerReader.setAddedElbowHeight(elbowHeight);
+    }
+    @Override
+    public void setAddedElbowDepth(float elbowDepth){
+        mControllerReader.setAddedElbowDepth(elbowDepth);
+    }
+    @Override
+    public void setPointerTiltAngle(float tiltAngle){
+        mControllerReader.setPointerTiltAngle(tiltAngle);
+    }
+    @Override
+    public void setHandedness(Handedness newHandedness){
+        mControllerReader.setHandedness(newHandedness);
+    }
+    @Override
+    public  void setUseAccelerometer(boolean newUseAccelerometer){
+        mControllerReader.setUseAccelerometer(newUseAccelerometer);
+    }
+    @Override
+    public  void setFadeDistanceFromFace(float distanceFromFace){
+        mControllerReader.setFadeDistanceFromFace(distanceFromFace);
+    }
+    @Override
+    public void setTooltipMinDistanceFromFace(float distanceFromFace){
+        mControllerReader.setTooltipMinDistanceFromFace(distanceFromFace);
+    }
+    @Override
+    public Vector3f getPointerPositionOffset(){
+        return mControllerReader.getPointerPositionOffset();
+    }
+    @Override
+    public float getAddedElbowHeight(){
+        return mControllerReader.getAddedElbowHeight();
+    }
+    @Override
+    public float getAddedElbowDepth(){
+        return mControllerReader.getAddedElbowDepth();
+    }
+    @Override
+    public float getPointerTiltAngle(){
+        return mControllerReader.getPointerTiltAngle();
+    }
+    @Override
+    public  boolean getUseAccelerometer(){
+        return mControllerReader.getUseAccelerometer();
+    }
+    @Override
+    public float getFadeDistanceFromFace(){
+        return mControllerReader.getFadeDistanceFromFace();
+    }
+    @Override
+    public float getTooltipMinDistanceFromFace(){
+        return mControllerReader.getTooltipMinDistanceFromFace();
+    }
+    @Override
+    public float getControllerAlphaValue(){
+        return mControllerReader.getControllerAlphaValue();
+    }
+    @Override
+    public  float getTooltipAlphaValue(){
+        return mControllerReader.getTooltipAlphaValue();
+    }
+    @Override
+    public GazeBehavior getGazeBehavior() {
+        return mControllerReader.getGazeBehavior();
+    }
+    @Override
+    public void setGazeBehavior(GazeBehavior gazeBehavior) {
+        mControllerReader.setGazeBehavior(gazeBehavior);
+    }
     @Override
     public void resetSceneObject() {
         if(pivot.getParent() == context.getMainScene().getRoot()) {
@@ -171,7 +267,6 @@ final class GearCursorController extends GVRCursorController {
                 thread.initialize();
                 initialized = true;
             }
-
             ControllerEvent event = ControllerEvent.obtain();
 
             mControllerReader.updateRotation(event.rotation);
