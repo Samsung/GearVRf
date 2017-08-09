@@ -13,22 +13,28 @@
  * limitations under the License.
  */
 
-/***************************************************************************
- * Represents a physics 3D world
- ***************************************************************************/
+//
+// Created by c.bozzetto on 06/06/2017.
+//
 
-#ifndef PHYSICS_3DWORLD_H_
-#define PHYSICS_3DWORLD_H_
+#ifndef EXTENSIONS_PHYSICS_CONETWISTCONSTRAINT_H
+#define EXTENSIONS_PHYSICS_CONETWISTCONSTRAINT_H
 
-#include "../physics_world.h"
+#include "physics_constraint.h"
 
 namespace gvr {
 
-class Physics3DWorld : public PhysicsWorld {
- public:
-    ~Physics3DWorld() { }
-};
+    class PhysicsConeTwistConstraint : public PhysicsConstraint {
+    public:
+        virtual void setSwingLimit(float limit) = 0;
+
+        virtual float getSwingLimit() const = 0;
+
+        virtual void setTwistLimit(float limit) = 0;
+
+        virtual float getTwistLimit() const = 0;
+    };
 
 }
 
-#endif /* PHYSICS_3DWORLD_H_ */
+#endif //EXTENSIONS_PHYSICS_CONETWISTCONSTRAINT_H

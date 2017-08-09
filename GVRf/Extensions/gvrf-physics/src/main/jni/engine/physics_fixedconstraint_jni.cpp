@@ -13,19 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef PHYSICS_3DRIGIDBODY_H_
-#define PHYSICS_3DRIGIDBODY_H_
-
-#include "../physics_rigidbody.h"
+#include "bullet/bullet_fixedconstraint.h"
+#include "physics_rigidbody.h"
 
 namespace gvr {
 
-class Physics3DRigidBody : public PhysicsRigidBody {
- public:
-    Physics3DRigidBody() : PhysicsRigidBody() {}
-    ~Physics3DRigidBody(){}
-};
+    extern "C" {
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_physics_Native3DFixedConstraint_ctor(JNIEnv * env, jobject obj, jlong rigidBodyB);
+    }
+
+    JNIEXPORT jlong JNICALL
+    Java_org_gearvrf_physics_Native3DFixedConstraint_ctor(JNIEnv * env, jobject obj, jlong rigidBodyB) {
+        return reinterpret_cast<jlong>(
+                new BulletFixedConstraint(reinterpret_cast<PhysicsRigidBody*>(rigidBodyB)));
+    }
 
 }
-
-#endif /* PHYSICS_3DRIGIDBODY_H_ */
