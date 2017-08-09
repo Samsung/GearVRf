@@ -30,8 +30,10 @@
     </style>
 
     <!-- Application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    <style name="GVRfAppTheme" parent="AppBaseTheme">
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowBackground">@color/black</item>
     </style>
 
+    <color name="black">#000000</color>
 </resources>
