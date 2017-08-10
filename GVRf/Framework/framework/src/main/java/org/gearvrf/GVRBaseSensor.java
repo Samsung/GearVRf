@@ -25,9 +25,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Create an instance of this class to receive {@link SensorEvent}s whenever an
@@ -89,19 +88,17 @@ public class GVRBaseSensor {
         getControllerData(controller).setActive(active);
     }
 
-    void addSceneObject(GVRCursorController controller, GVRSceneObject object,
-            float hitX, float hitY, float hitZ) {
+    void addPickedObject(GVRCursorController controller, GVRPicker.GVRPickedObject pickedObject) {
         ControllerData data = getControllerData(controller);
-        Set<GVRSceneObject> prevHits = data.getPrevHits();
+        Map<GVRSceneObject, GVRPicker.GVRPickedObject> prevHits = data.getPrevHits();
         List<SensorEvent> newHits = data.getNewHits();
 
-        if (prevHits.contains(object)) {
-            prevHits.remove(object);
+        if (prevHits.containsKey(pickedObject.hitObject)) {
+            prevHits.remove(pickedObject.hitObject);
         }
 
         SensorEvent event = SensorEvent.obtain();
-        event.setObject(object);
-        event.setHitPoint(hitX, hitY, hitZ);
+        event.setPickedObject(pickedObject);
         event.setOver(true);
         newHits.add(event);
     }
@@ -110,18 +107,16 @@ public class GVRBaseSensor {
         final List<SensorEvent> events = new ArrayList<SensorEvent>();
 
         ControllerData data = getControllerData(controller);
-        Set<GVRSceneObject> prevHits = data.getPrevHits();
+        Map<GVRSceneObject, GVRPicker.GVRPickedObject> prevHits = data.getPrevHits();
         List<SensorEvent> newHits = data.getNewHits();
 
         // process the previous hit objects to set isOver to false.
         if (prevHits.isEmpty() == false) {
-            for (GVRSceneObject object : prevHits) {
+            for (GVRPicker.GVRPickedObject object : prevHits.values()) {
                 SensorEvent event = SensorEvent.obtain();
                 event.setActive(data.getActive());
                 event.setCursorController(controller);
-                event.setObject(object);
-                // clear the hit point
-                event.setHitPoint(EMPTY_HIT_POINT[0], EMPTY_HIT_POINT[1], EMPTY_HIT_POINT[2]);
+                event.setPickedObject(object);
                 event.setOver(false);
                 events.add(event);
             }
@@ -132,10 +127,11 @@ public class GVRBaseSensor {
 
         if (newHits.isEmpty() == false) {
             for (SensorEvent event : newHits) {
+                GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
                 event.setActive(data.getActive());
                 event.setCursorController(controller);
                 events.add(event);
-                prevHits.add(event.getObject());
+                prevHits.put(pickedObject.hitObject, pickedObject);
             }
             newHits.clear();
         }
@@ -243,12 +239,12 @@ public class GVRBaseSensor {
      * {@link GVRCursorController} on a given {@link GVRBaseSensor}.
      */
     private static class ControllerData {
-        private Set<GVRSceneObject> prevHits;
+        private Map<GVRSceneObject, GVRPicker.GVRPickedObject> prevHits;
         private List<SensorEvent> newHits;
         private boolean active;
 
         public ControllerData() {
-            prevHits = new HashSet<GVRSceneObject>();
+            prevHits = new HashMap<GVRSceneObject, GVRPicker.GVRPickedObject>();
             newHits = new ArrayList<SensorEvent>();
         }
 
@@ -256,7 +252,7 @@ public class GVRBaseSensor {
             this.active = active;
         }
 
-        public Set<GVRSceneObject> getPrevHits() {
+        public Map<GVRSceneObject, GVRPicker.GVRPickedObject> getPrevHits() {
             return prevHits;
         }
 
@@ -327,8 +323,9 @@ public class GVRBaseSensor {
 
         void updateDepthCache(List<SensorEvent> events) {
             for(SensorEvent sensorEvent: events) {
-                modelMatrix.set(sensorEvent.getObject().getTransform().getModelMatrix());
-                hitPoint.set(sensorEvent.getHitX(), sensorEvent.getHitY(), sensorEvent.getHitZ());
+                modelMatrix.set(sensorEvent.getPickedObject().getHitObject().getTransform().getModelMatrix());
+                GVRPicker.GVRPickedObject pickedObject = sensorEvent.getPickedObject();
+                hitPoint.set(pickedObject.getHitX(), pickedObject.getHitY(), pickedObject.getHitZ());
                 hitPoint.mulPosition(modelMatrix);
                 float depth = hitPoint.distance(0,0,0);
                 depthCache.put(sensorEvent, depth);

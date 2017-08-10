@@ -303,6 +303,38 @@ public class GVRPicker extends GVRBehavior {
      * @param sceneObject
      *            The {@link GVRSceneObject} to be tested.
      *
+     * @param ox
+     *            The x coordinate of the ray origin (in world coords).
+     *
+     * @param oy
+     *            The y coordinate of the ray origin (in world coords).
+     *
+     * @param oz
+     *            The z coordinate of the ray origin (in world coords).
+     *
+     * @param dx
+     *            The x vector of the ray direction (in world coords).
+     *
+     * @param dy
+     *            The y vector of the ray direction (in world coords).
+     *
+     * @param dz
+     *            The z vector of the ray direction (in world coords).
+     *
+     * @return  a {@link GVRPicker.GVRPickedObject} containing the picking information
+     *
+     */
+    public static final GVRPickedObject pickSceneObject(GVRSceneObject sceneObject, float ox, float oy, float oz, float dx,
+                                                        float dy, float dz) {
+        return NativePicker.pickSceneObject(sceneObject.getNative(), ox, oy, oz, dx, dy, dz);
+    }
+
+    /**
+     * Tests the {@link GVRSceneObject} against the ray information passed to the function.
+     *
+     * @param sceneObject
+     *            The {@link GVRSceneObject} to be tested.
+     *
      * @return  a {@link GVRPicker.GVRPickedObject} containing the picking information
      *
      */

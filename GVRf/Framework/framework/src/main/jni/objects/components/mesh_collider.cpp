@@ -59,7 +59,7 @@ MeshCollider::~MeshCollider() { }
  * @param rayStart      origin of the ray in world coordinates
  * @param rayDir        direction of the ray in world coordinates
  *
- * @returns EyePointData structure with hit point and distance from camera
+ * @returns ColliderData structure with collision information
  */
 ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
