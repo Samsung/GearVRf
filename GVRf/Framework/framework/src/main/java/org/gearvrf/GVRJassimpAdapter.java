@@ -427,6 +427,8 @@ class GVRJassimpAdapter {
                 return AiPostProcessSteps.OPTIMIZE_GRAPH;
             case FLIP_UV:
                 return AiPostProcessSteps.FLIP_UVS;
+            case START_ANIMATIONS:
+                return null;
             case NO_ANIMATION:
             case NO_LIGHTING:
             case NO_TEXTURING:
