@@ -980,11 +980,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             GVR_VK_CHECK(!ret);
         }
 
-        waitSCBFences.resize(1);
-        for (auto &fence : waitSCBFences) {
-            ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
-            GVR_VK_CHECK(!ret);
-        }
+        ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &waitSCBFences);
+        GVR_VK_CHECK(!ret);
+
 
         ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &postEffectFence);
         GVR_VK_CHECK(!ret);
@@ -1254,9 +1252,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkCommandBuffer trnCmdBuf;
         createTransientCmdBuffer(trnCmdBuf);
         if(postEffectFlag)
-            mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[0]);
+            mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences);
         else
-            mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[0]);
+            mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences);
 
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
     }
@@ -1606,6 +1604,30 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         CreateSampler(textureObject);
+    }
+
+    VulkanCore::~VulkanCore() {
+        if(swapChainCmdBuffer.capacity() != 0) {
+            for (int i = 0; i < SWAP_CHAIN_COUNT; i++) {
+                delete mRenderTexture[i];
+                vkFreeCommandBuffers(m_device, m_commandPool, 1, swapChainCmdBuffer[i]);
+
+                vkDestroyFence(m_device, waitFences[i], nullptr);
+            }
+        }
+
+        if(postEffectCmdBuffer != nullptr){
+            vkFreeCommandBuffers(m_device, m_commandPool, 1, postEffectCmdBuffer);
+            for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
+                delete mPostEffectTexture[i];
+            }
+
+            vkDestroyFence(m_device, postEffectFence, nullptr);
+        }
+
+        vkDestroyFence(m_device, waitSCBFences, nullptr);
+        vkDestroyDevice(getDevice(), nullptr);
+        vkDestroyInstance(m_instance, nullptr);
     }
 
     void VulkanCore::initVulkanCore() {

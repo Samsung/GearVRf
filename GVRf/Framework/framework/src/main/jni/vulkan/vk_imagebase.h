@@ -19,6 +19,7 @@
 #include <vector>
 #include <memory>
 #include "vulkan_wrapper.h"
+
 namespace gvr {
     struct ImageInfo
     {
@@ -32,7 +33,6 @@ namespace gvr {
     enum ImageType{
         COLOR_IMAGE = 1, DEPTH_IMAGE = 2
     };
-
 
 class vkImageBase
 {
@@ -49,6 +49,7 @@ class vkImageBase
     vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout, int layers, int sample_count )
     :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
     { }
+    ~vkImageBase();
         void createImageView(bool host_accessible);
         int updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
 
@@ -79,7 +80,7 @@ class vkImageBase
     private:
         VkImageViewType imageType;
         VkImage image;
-        VkDeviceMemory dev_memory ;
+        VkDeviceMemory dev_memory, host_memory;
         VkImageLayout imageLayout;
         VkImageView imageView;
         VkFormat format_;
@@ -87,7 +88,9 @@ class vkImageBase
         int width_, height_, depth_ ,  mLayers;;
         VkImageUsageFlags usage_flags_;
         std::unique_ptr<VkBuffer> outBuffer;
+        VkBuffer hostBuffer;
         VkDeviceSize size;
+        bool host_accessible_;
 };
 }
 #endif

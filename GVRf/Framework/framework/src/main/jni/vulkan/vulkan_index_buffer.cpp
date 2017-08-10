@@ -36,16 +36,10 @@ namespace gvr {
         void*       data;
         uint32_t    indexBufferSize = getDataSize();//sizeof(uint32_t);//*
         VkDevice&   device = vulkanCore->getDevice();
-        VkBufferCreateInfo indexbufferInfo = {};
         VkCommandBuffer trnCmdBuf;
         vulkanCore->createTransientCmdBuffer(trnCmdBuf);
 
-        indexbufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        indexbufferInfo.size = indexBufferSize;
-        indexbufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-
         // Copy index data to a buffer visible to the host
-        //err = vkCreateBuffer(m_device, &indexbufferInfo, nullptr, &m_indices.buffer);
         VkResult   err = vkCreateBuffer(device, gvr::BufferCreateInfo(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT), nullptr, &m_indices.buffer);
         GVR_VK_CHECK(!err);
 
@@ -100,6 +94,10 @@ namespace gvr {
         vkQueueSubmit(vulkanCore->getVkQueue(), 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(vulkanCore->getVkQueue());
         vkFreeCommandBuffers(device, vulkanCore->getTransientCmdPool(), 1, &trnCmdBuf);
+
+        // Free up the staging buffer
+        vkDestroyBuffer(device, buf_staging_indi, nullptr);
+        vkFreeMemory(device, mem_staging_indi, nullptr);
 
         mIsDirty = false;
     }

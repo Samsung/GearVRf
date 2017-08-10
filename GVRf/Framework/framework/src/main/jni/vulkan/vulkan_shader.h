@@ -56,7 +56,7 @@ public:
             const char* vertexShader,
             const char* fragmentShader);
 
-    virtual ~VulkanShader();
+    ~VulkanShader();
 
     virtual bool useShader() { return true; }
 

@@ -59,7 +59,9 @@ class VulkanRenderer: public Renderer {
     friend class Renderer;
 
 protected:
-    virtual ~VulkanRenderer(){}
+    virtual ~VulkanRenderer(){
+        vulkanCore_->releaseInstance();
+    }
 
 public:
     Texture* createSharedTexture( int id) {};
