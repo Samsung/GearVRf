@@ -142,7 +142,6 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     private void drawEyes() {
         // Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().updateRotation();
-        OvrMonoscopicRenderer.cull(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle);
         OvrMonoscopicRenderer.renderCamera(mMainScene, mMainScene
                         .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
                 mViewportWidth, mViewportHeight, mRenderBundle);

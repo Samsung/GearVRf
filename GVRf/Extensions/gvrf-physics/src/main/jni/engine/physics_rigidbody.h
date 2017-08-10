@@ -28,12 +28,21 @@ namespace gvr {
 
 class PhysicsRigidBody : public Component {
  public:
-    PhysicsRigidBody() : Component(PhysicsRigidBody::getComponentType()) {}
+	enum SimulationType
+	{
+		DYNAMIC = 0,
+		KINEMATIC = 1,
+		STATIC = 2
+	};
+
+	PhysicsRigidBody() : Component(PhysicsRigidBody::getComponentType()) {}
 
 	static long long getComponentType() {
-	        return COMPONENT_TYPE_PHYSICS_RIGID_BODY;
+	    return COMPONENT_TYPE_PHYSICS_RIGID_BODY;
 	}
 
+	virtual void setSimulationType(SimulationType t) = 0;
+	virtual SimulationType getSimulationType() const = 0;
 	virtual float getMass() = 0;
 	virtual void setMass(float mass) = 0;
     virtual void setCenterOfMass(const Transform* t) = 0;
@@ -41,22 +50,6 @@ class PhysicsRigidBody : public Component {
     virtual void getTranslation(float &x, float &y, float &z) = 0;
     virtual void applyCentralForce(float x, float y, float z) = 0;
     virtual void applyTorque(float x, float y, float z) = 0;
-    virtual void onAttach() = 0;
-    virtual void onDetach() = 0;
-
-	virtual float center_x() const  = 0;
-	virtual float center_y() const  = 0;
-	virtual float center_z() const  = 0;
-	virtual void  set_center(float x, float y, float z) = 0;
-	virtual float rotation_w() const  = 0;
-	virtual float rotation_x() const  = 0;
-	virtual float rotation_y() const  = 0;
-	virtual float rotation_z() const  = 0;
-	virtual void  set_rotation(float w, float x, float y, float z) = 0;
-	virtual float scale_x()  const = 0;
-	virtual float scale_y() const  = 0;
-	virtual float scale_z() const  = 0;
-	virtual void  set_scale(float x, float y, float z) = 0;
 
 	virtual void setGravity(float x, float y, float z)  = 0;
 	virtual void setDamping(float linear, float angular)  = 0;

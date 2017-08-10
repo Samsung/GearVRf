@@ -20,7 +20,9 @@
 #ifndef PHYSICS_WORLD_H_
 #define PHYSICS_WORLD_H_
 
+#include "physics_common.h"
 #include "physics_rigidbody.h"
+#include "physics_constraint.h"
 #include "../objects/scene_object.h"
 #include <list>
 
@@ -42,15 +44,23 @@ class PhysicsWorld : public Component {
 	        return COMPONENT_TYPE_PHYSICS_WORLD;
 	}
 
-	void addRigidBody(PhysicsRigidBody *body);
+	virtual void addConstraint(PhysicsConstraint *constraint) = 0;
 
-	void addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith);
+	virtual void removeConstraint(PhysicsConstraint *constraint) = 0;
 
-	void removeRigidBody(PhysicsRigidBody *body);
+	virtual void addRigidBody(PhysicsRigidBody *body) = 0;
 
-	void step(float timeStep);
+	virtual void addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) = 0;
 
-	void listCollisions(std::list<ContactPoint>& contactPoints);
+	virtual void removeRigidBody(PhysicsRigidBody *body) = 0;
+
+	virtual void step(float timeStep) = 0;
+
+	virtual void listCollisions(std::list<ContactPoint>& contactPoints) = 0;
+
+    virtual void setGravity(float gx, float gy, float gz) = 0;
+
+    virtual PhysicsVec3 getGravity() const = 0;
 };
 
 }
