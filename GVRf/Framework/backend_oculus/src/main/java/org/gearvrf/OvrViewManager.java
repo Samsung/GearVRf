@@ -76,7 +76,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     private GVRMethodCallTracer mTracerDrawEyes2;
     private GVRMethodCallTracer mTracerDrawFrame;
     private GVRMethodCallTracer mTracerDrawFrameGap;
-    private OvrGearController mGearController;
+    private GearCursorController mGearController;
 
     /**
      * Constructs OvrViewManager object with GVRMain which controls GL
@@ -141,9 +141,8 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         mStatsLine.addColumn(mTracerDrawEyes1.getStatColumn());
         mStatsLine.addColumn(mTracerDrawEyes2.getStatColumn());
         mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
-        mGearController = new OvrGearController(this);
-        nativeInitializeGearController(gvrActivity.getActivityNative().getNative(),
-                mGearController.getPtr());
+
+        mGearController = new GearCursorController(this, new OvrControllerReader(gvrActivity.getActivityNative().getNative()));
     }
 
     /*
@@ -332,5 +331,4 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     }
 
     private native void drawEyes(long ptr);
-    private static native void nativeInitializeGearController(long ptr, long controllerPtr);
 }
