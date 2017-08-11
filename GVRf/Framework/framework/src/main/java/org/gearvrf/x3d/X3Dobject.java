@@ -3494,11 +3494,11 @@ public class X3Dobject {
                             }
                             // X3D doesn't have an ambient color so need to do color
                             // calibration tests on how to set this.
-                            // gvrMaterial.setVec4("ambient_color", 1.0f, 1.0f, 1.0f, 1.0f);
                             gvrMaterial.setVec4("diffuse_color",
                                                 shaderSettings.diffuseColor[0],
                                                 shaderSettings.diffuseColor[1],
-                                                shaderSettings.diffuseColor[2], 1.0f);
+                                                shaderSettings.diffuseColor[2],
+                                                (1.0f - shaderSettings.getTransparency()) );
                             gvrMaterial.setVec4("specular_color",
                                                 shaderSettings.specularColor[0],
                                                 shaderSettings.specularColor[1],
@@ -3530,14 +3530,13 @@ public class X3Dobject {
                                 DefinedItem definedItem = new DefinedItem(
                                         shaderSettings.getAppearanceName());
                                 definedItem.setGVRMaterial(gvrMaterial);
-                                mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
+                                mDefinedItems.add(definedItem);
+                                // Add gvrMaterial to Array list
                                 // of DEFined items Clones
                                 // objects with USE
                             }
 
-                            float transparency = shaderSettings.getTransparency();
-                            gvrMaterial.setOpacity(transparency);
-                            if ((transparency != 0) && (transparency != 1)) {
+                            if ((shaderSettings.getTransparency() != 0) && (shaderSettings.getTransparency() != 1)) {
                                 gvrRenderData.setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
                             }
 
