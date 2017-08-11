@@ -553,12 +553,12 @@ public final class GVRAssetLoader {
     }
 
 
-    protected GVRContext mContext;
     protected static ResourceCache<GVRImage> mTextureCache = new ResourceCache<GVRImage>();
     protected static HashMap<String, GVRImage> mEmbeddedCache = new HashMap<String, GVRImage>();
-    protected static ResourceCache<GVRMesh> mMeshCache = new ResourceCache<GVRMesh>();
-
     protected static GVRBitmapTexture mDefaultImage = null;
+
+    protected GVRContext mContext;
+    protected ResourceCache<GVRMesh> mMeshCache = new ResourceCache<GVRMesh>();
 
     /**
      * When the application is restarted we recreate the texture cache
@@ -1874,8 +1874,4 @@ public final class GVRAssetLoader {
      */
     private final static String TAG = "GVRAssetLoader";
 
-}
-
-class NativeImporter {
-    static native long readFromByteArray(byte[] bytes, String filename, int settings);
 }
