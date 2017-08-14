@@ -199,7 +199,8 @@ abstract class GVRViewManager extends GVRContext {
         final DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
         getActivity().getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
 
-        setMainSceneImpl(new GVRScene(GVRViewManager.this));
+        final GVRScene scene = null == mMainScene ? new GVRScene(GVRViewManager.this) : mMainScene;
+        setMainSceneImpl(scene);
     }
 
     private void createMainScene() {
