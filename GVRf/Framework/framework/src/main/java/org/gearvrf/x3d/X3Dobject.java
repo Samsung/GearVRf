@@ -853,8 +853,8 @@ public class X3Dobject {
                                             .pow(10, -exponentInt.intValue());
                                 } catch (NumberFormatException e) {
                                     Log.e(TAG,
-                                          "parsing fixed length string, exponent number conversion error: "
-                                          + exponentString);
+                                            "parsing fixed length string, exponent number conversion error: "
+                                                    + exponentString);
                                 }
                             } else if (word.equalsIgnoreCase("e")) { // exponent with plus sign
                                 tokenType = st.nextToken();
@@ -867,7 +867,7 @@ public class X3Dobject {
                                     } else {
                                         st.pushBack();
                                         Log.e(TAG,
-                                              "Error: exponent in X3D parser with fixed length float");
+                                                "Error: exponent in X3D parser with fixed length float");
                                     }
                                 } else
                                     st.pushBack();
@@ -895,8 +895,8 @@ public class X3Dobject {
         private float parseSingleFloatString(String numberString,
                                              boolean constrained0to1, boolean zeroOrGreater) {
             float[] value = parseFixedLengthFloatString(numberString, 1,
-                                                        constrained0to1,
-                                                        zeroOrGreater);
+                    constrained0to1,
+                    zeroOrGreater);
             return value[0];
         }
 
@@ -998,46 +998,46 @@ public class X3Dobject {
                         //TODO: check for 'e' exponent values.
 
                         else if (componentType == X3Dobject.verticesComponent) {
-                                componentFloat[index] = (float) (st.nval);
-                                index++;
-                                if (index == componentCount) {
+                            componentFloat[index] = (float) (st.nval);
+                            index++;
+                            if (index == componentCount) {
                                     meshCreator.addInputPosition(componentFloat);
-                                    index = 0;
-                                }
-                            } else if (componentType == X3Dobject.textureCoordComponent) {
-                                componentFloat[index] = (float) st.nval;
-                                index++;
-                                if (index == componentCount) {
-                                    meshCreator.addInputTexcoord(componentFloat);
-                                    index = 0;
-                                }
-                            } else if (componentType == X3Dobject.normalsComponent) {
-                                componentFloat[index] = (float) st.nval;
-                                index++;
-                                if (index == componentCount) {
-                                    meshCreator.addInputNormal(componentFloat);
-                                    index = 0;
-                                }
-                            } else if (componentType == X3Dobject.interpolatorKeyComponent) {
-                                componentFloat[index] = (float) st.nval;
-                                index++;
-                                if (index == componentCount) {
-                                    AddKeys(componentFloat[0]);
-                                    index = 0;
-                                }
-                            } else if (componentType == X3Dobject.interpolatorKeyValueComponent) {
-                                componentFloat[index] = (float) st.nval;
-                                index++;
-                                if (index == componentCount) {
-                                    AddKeyValues(componentFloat);
-                                    index = 0;
-                                }
-                            } else if (componentType == X3Dobject.LODComponent) {
-                                componentFloat[index] = (float) st.nval;
-                                AddKeys(componentFloat[0]);
-                            } else if (componentType == X3Dobject.elevationGridHeight) {
-                                floatArray.add(new Float((float) st.nval));
+                                index = 0;
                             }
+                        } else if (componentType == X3Dobject.textureCoordComponent) {
+                            componentFloat[index] = (float) st.nval;
+                            index++;
+                            if (index == componentCount) {
+                                    meshCreator.addInputTexcoord(componentFloat);
+                                index = 0;
+                            }
+                        } else if (componentType == X3Dobject.normalsComponent) {
+                            componentFloat[index] = (float) st.nval;
+                            index++;
+                            if (index == componentCount) {
+                                    meshCreator.addInputNormal(componentFloat);
+                                index = 0;
+                            }
+                        } else if (componentType == X3Dobject.interpolatorKeyComponent) {
+                            componentFloat[index] = (float) st.nval;
+                            index++;
+                            if (index == componentCount) {
+                                AddKeys(componentFloat[0]);
+                                index = 0;
+                            }
+                        } else if (componentType == X3Dobject.interpolatorKeyValueComponent) {
+                            componentFloat[index] = (float) st.nval;
+                            index++;
+                            if (index == componentCount) {
+                                AddKeyValues(componentFloat);
+                                index = 0;
+                            }
+                        } else if (componentType == X3Dobject.LODComponent) {
+                            componentFloat[index] = (float) st.nval;
+                            AddKeys(componentFloat[0]);
+                        } else if (componentType == X3Dobject.elevationGridHeight) {
+                            floatArray.add(new Float((float) st.nval));
+                        }
 
                     } // end if token = number
                 } // end while loop
@@ -1079,17 +1079,17 @@ public class X3Dobject {
                         currentSceneObject.setName("USE_" + useItemName + splitName[1]);
                     currentSceneObject.getTransform()
                             .setPosition(gvrSceneObjectDEFitem.getTransform().getPositionX(),
-                                         gvrSceneObjectDEFitem.getTransform().getPositionY(),
-                                         gvrSceneObjectDEFitem.getTransform().getPositionZ());
+                                    gvrSceneObjectDEFitem.getTransform().getPositionY(),
+                                    gvrSceneObjectDEFitem.getTransform().getPositionZ());
                     currentSceneObject.getTransform()
                             .setRotation(gvrSceneObjectDEFitem.getTransform().getRotationW(),
-                                         gvrSceneObjectDEFitem.getTransform().getRotationX(),
-                                         gvrSceneObjectDEFitem.getTransform().getRotationY(),
-                                         gvrSceneObjectDEFitem.getTransform().getRotationZ());
+                                    gvrSceneObjectDEFitem.getTransform().getRotationX(),
+                                    gvrSceneObjectDEFitem.getTransform().getRotationY(),
+                                    gvrSceneObjectDEFitem.getTransform().getRotationZ());
                     currentSceneObject.getTransform()
                             .setScale(gvrSceneObjectDEFitem.getTransform().getScaleX(),
-                                      gvrSceneObjectDEFitem.getTransform().getScaleY(),
-                                      gvrSceneObjectDEFitem.getTransform().getScaleZ());
+                                    gvrSceneObjectDEFitem.getTransform().getScaleY(),
+                                    gvrSceneObjectDEFitem.getTransform().getScaleZ());
                     gvrSceneObjectDEFitem = gvrSceneObjectDEFitem.getChildByIndex(0);
                 }
                 if (gvrSceneObjectDEFitem.hasMesh()) {
@@ -1179,23 +1179,23 @@ public class X3Dobject {
                     String translationAttribute = attributes.getValue("translation");
                     if (translationAttribute != null) {
                         translation = parseFixedLengthFloatString(translationAttribute, 3,
-                                                                  false, false);
+                                false, false);
                     }
                     String centerAttribute = attributes.getValue("center");
                     if (centerAttribute != null) {
                         center = parseFixedLengthFloatString(centerAttribute, 3, false,
-                                                             false);
+                                false);
                     }
                     String rotationAttribute = attributes.getValue("rotation");
                     if (rotationAttribute != null) {
                         rotation = parseFixedLengthFloatString(rotationAttribute, 4, false,
-                                                               false);
+                                false);
                     }
                     String scaleOrientationAttribute = attributes
                             .getValue("scaleOrientation");
                     if (scaleOrientationAttribute != null) {
                         scaleOrientation = parseFixedLengthFloatString(scaleOrientationAttribute,
-                                                                       4, false, false);
+                                4, false, false);
                     }
                     attributeValue = attributes.getValue("scale");
                     if (attributeValue != null) {
@@ -1209,11 +1209,11 @@ public class X3Dobject {
                         // Therefore, just set the values in a single GVRSceneObject
                         GVRTransform transform = currentSceneObject.getTransform();
                         transform.setPosition(translation[0], translation[1],
-                                              translation[2]);
+                                translation[2]);
                         transform.rotateByAxisWithPivot((float) Math.toDegrees(rotation[3]),
-                                                        rotation[0], rotation[1],
-                                                        rotation[2], center[0], center[1],
-                                                        center[2]);
+                                rotation[0], rotation[1],
+                                rotation[2], center[0], center[1],
+                                center[2]);
                         transform.setScale(scale[0], scale[1], scale[2]);
                     } else {
 
@@ -1244,31 +1244,31 @@ public class X3Dobject {
                         currentSceneObject = AddGVRSceneObject();
                         currentSceneObject.getTransform()
                                 .setRotationByAxis((float) Math.toDegrees(rotation[3]),
-                                                   rotation[0], rotation[1], rotation[2]);
+                                        rotation[0], rotation[1], rotation[2]);
                         currentSceneObject.setName(name + TRANSFORM_ROTATION_);
                         // now check if we have a scale orientation value.
                         if ((scaleOrientation[0] != 0) || (scaleOrientation[1] != 0)
-                            || (scaleOrientation[2] != 1) || (scaleOrientation[3] != 0)) {
+                                || (scaleOrientation[2] != 1) || (scaleOrientation[3] != 0)) {
                             currentSceneObject = AddGVRSceneObject();
                             currentSceneObject.getTransform()
                                     .setRotationByAxis((float) Math
-                                                               .toDegrees(scaleOrientation[3]), scaleOrientation[0],
-                                                       scaleOrientation[1], scaleOrientation[2]);
+                                                    .toDegrees(scaleOrientation[3]), scaleOrientation[0],
+                                            scaleOrientation[1], scaleOrientation[2]);
                             currentSceneObject.setName(name + TRANSFORM_SCALE_ORIENTATION_);
                         }
                         // add rotation
                         currentSceneObject = AddGVRSceneObject();
                         currentSceneObject.getTransform().setScale(scale[0], scale[1],
-                                                                   scale[2]);
+                                scale[2]);
                         currentSceneObject.setName(name + TRANSFORM_SCALE_);
                         // if we had a scale orientation, now we have to negate it.
                         if ((scaleOrientation[0] != 0) || (scaleOrientation[1] != 0)
-                            || (scaleOrientation[2] != 1) || (scaleOrientation[3] != 0)) {
+                                || (scaleOrientation[2] != 1) || (scaleOrientation[3] != 0)) {
                             currentSceneObject = AddGVRSceneObject();
                             currentSceneObject.getTransform()
                                     .setRotationByAxis((float) Math
-                                                               .toDegrees(-scaleOrientation[3]), scaleOrientation[0],
-                                                       scaleOrientation[1], scaleOrientation[2]);
+                                                    .toDegrees(-scaleOrientation[3]), scaleOrientation[0],
+                                            scaleOrientation[1], scaleOrientation[2]);
                             currentSceneObject
                                     .setName(name + TRANSFORM_NEGATIVE_SCALE_ORIENTATION_);
                         }
@@ -1287,7 +1287,7 @@ public class X3Dobject {
                         // The AxisAngle is saved for Scripts which is how X3D describes
                         // rotations, not quaternions.
                         DefinedItem definedItem = new DefinedItem(name, rotation[3],
-                                                                  rotation[0], rotation[1], rotation[2]);
+                                rotation[0], rotation[1], rotation[2]);
                         definedItem.setGVRSceneObject(currentSceneObject);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     } // end if DEF name and thus possible animation / interactivity
@@ -1342,128 +1342,128 @@ public class X3Dobject {
                     currentSceneObject = shapeLODSceneObject;
                 }
 
-                    attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) { // Shape node to be shared / re-used
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
-                        }
-                        if (useItem != null) {
-                            // GVRRenderingData doesn't seem to be shared, but instead has an
-                            // owner.  Thus share the GVRMesh and GVRMaterial attached to
-                            // GVRRenderingData.
-                            GVRRenderData gvrRenderDataDEFined = useItem.getGVRRenderData();
-                            gvrRenderData.setMaterial(gvrRenderDataDEFined.getMaterial());
-                            gvrRenderData.setMesh(gvrRenderDataDEFined.getMesh());
-                            gvrRenderingDataUSEd = true;
-                        }
-                    } else {
-
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            DefinedItem definedItem = new DefinedItem(attributeValue);
-                            definedItem.setGVRRenderData(gvrRenderData);
-                            mDefinedItems.add(definedItem); // Array list of DEFined items
-                            // Clones objects with USE
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) { // Shape node to be shared / re-used
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
                         }
                     }
+                    if (useItem != null) {
+                        // GVRRenderingData doesn't seem to be shared, but instead has an
+                        // owner.  Thus share the GVRMesh and GVRMaterial attached to
+                        // GVRRenderingData.
+                        GVRRenderData gvrRenderDataDEFined = useItem.getGVRRenderData();
+                        gvrRenderData.setMaterial(gvrRenderDataDEFined.getMaterial());
+                        gvrRenderData.setMesh(gvrRenderDataDEFined.getMesh());
+                        gvrRenderingDataUSEd = true;
+                    }
+                } else {
+
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        DefinedItem definedItem = new DefinedItem(attributeValue);
+                        definedItem.setGVRRenderData(gvrRenderData);
+                        mDefinedItems.add(definedItem); // Array list of DEFined items
+                        // Clones objects with USE
+                    }
+                }
 
             } // end <Shape> node
 
 
             /********** Appearance **********/
             else if (qName.equalsIgnoreCase("Appearance")) {
-                    /* This gives the X3D-only Shader */
-                    attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) { // shared Appearance node, GVRMaterial
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
-                        }
-                        if (useItem != null) {
-                            gvrMaterial = useItem.getGVRMaterial();
-                            gvrRenderData.setMaterial(gvrMaterial);
-                            gvrMaterialUSEd = true; // for DEFine and USE, we encounter a USE,
-                            // and thus have set the material
-                        }
-                    } else {
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            shaderSettings.setAppearanceName(attributeValue);
+        /* This gives the X3D-only Shader */
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) { // shared Appearance node, GVRMaterial
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
                         }
                     }
+                    if (useItem != null) {
+                        gvrMaterial = useItem.getGVRMaterial();
+                        gvrRenderData.setMaterial(gvrMaterial);
+                        gvrMaterialUSEd = true; // for DEFine and USE, we encounter a USE,
+                        // and thus have set the material
+                    }
+                } else {
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        shaderSettings.setAppearanceName(attributeValue);
+                    }
+                }
 
             } // end <Appearance> node
 
 
             /********** Material **********/
             else if (qName.equalsIgnoreCase("material")) {
-                    attributeValue = attributes.getValue("USE");
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) {
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
+                        }
+                    }
+                    if (useItem != null) {
+                        gvrMaterial = useItem.getGVRMaterial();
+                        gvrRenderData.setMaterial(gvrMaterial);
+                        gvrMaterialUSEd = true; // for DEFine and USE, we encounter a USE,
+                        // and thus have set the material
+                    }
+                } else {
+                    attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
-                        }
-                        if (useItem != null) {
-                            gvrMaterial = useItem.getGVRMaterial();
-                            gvrRenderData.setMaterial(gvrMaterial);
-                            gvrMaterialUSEd = true; // for DEFine and USE, we encounter a USE,
-                            // and thus have set the material
-                        }
-                    } else {
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            shaderSettings.setMaterialName(attributeValue);
-                        }
-                        String diffuseColorAttribute = attributes.getValue("diffuseColor");
-                        if (diffuseColorAttribute != null) {
-                            float diffuseColor[] = parseFixedLengthFloatString(diffuseColorAttribute,
-                                                                               3, true, false);
-                            shaderSettings.setDiffuseColor(diffuseColor);
-                        }
-                        String specularColorAttribute = attributes.getValue("specularColor");
-                        if (specularColorAttribute != null) {
-                            float specularColor[] = parseFixedLengthFloatString(specularColorAttribute,
-                                                                                3, true, false);
-                            shaderSettings.setSpecularColor(specularColor);
-                        }
-                        String emissiveColorAttribute = attributes.getValue("emissiveColor");
-                        if (emissiveColorAttribute != null) {
-                            float emissiveColor[] = parseFixedLengthFloatString(emissiveColorAttribute,
-                                                                                3, true, false);
-                            shaderSettings.setEmmissiveColor(emissiveColor);
-                        }
-                        String ambientIntensityAttribute = attributes
-                                .getValue("ambientIntensity");
-                        if (ambientIntensityAttribute != null) {
-                            Log.e(TAG, "ambientIntensity currently not implemented.");
-                            shaderSettings
-                                    .setAmbientIntensity(parseSingleFloatString(ambientIntensityAttribute,
-                                                                                true, false));
-                        }
-                        String shininessAttribute = attributes.getValue("shininess");
-                        if (shininessAttribute != null) {
-                            shaderSettings
-                                    .setShininess(parseSingleFloatString(shininessAttribute, true,
-                                                                         false));
-                        }
-                        String transparencyAttribute = attributes.getValue("transparency");
-                        if (transparencyAttribute != null) {
+                        shaderSettings.setMaterialName(attributeValue);
+                    }
+                    String diffuseColorAttribute = attributes.getValue("diffuseColor");
+                    if (diffuseColorAttribute != null) {
+                        float diffuseColor[] = parseFixedLengthFloatString(diffuseColorAttribute,
+                                3, true, false);
+                        shaderSettings.setDiffuseColor(diffuseColor);
+                    }
+                    String specularColorAttribute = attributes.getValue("specularColor");
+                    if (specularColorAttribute != null) {
+                        float specularColor[] = parseFixedLengthFloatString(specularColorAttribute,
+                                3, true, false);
+                        shaderSettings.setSpecularColor(specularColor);
+                    }
+                    String emissiveColorAttribute = attributes.getValue("emissiveColor");
+                    if (emissiveColorAttribute != null) {
+                        float emissiveColor[] = parseFixedLengthFloatString(emissiveColorAttribute,
+                                3, true, false);
+                        shaderSettings.setEmmissiveColor(emissiveColor);
+                    }
+                    String ambientIntensityAttribute = attributes
+                            .getValue("ambientIntensity");
+                    if (ambientIntensityAttribute != null) {
+                        Log.e(TAG, "ambientIntensity currently not implemented.");
+                        shaderSettings
+                                .setAmbientIntensity(parseSingleFloatString(ambientIntensityAttribute,
+                                        true, false));
+                    }
+                    String shininessAttribute = attributes.getValue("shininess");
+                    if (shininessAttribute != null) {
+                        shaderSettings
+                                .setShininess(parseSingleFloatString(shininessAttribute, true,
+                                        false));
+                    }
+                    String transparencyAttribute = attributes.getValue("transparency");
+                    if (transparencyAttribute != null) {
 
-                            shaderSettings
-                                    .setTransparency(parseSingleFloatString(transparencyAttribute,
-                                                                            true, false));
-                        }
-                    } // end ! USE attribute
+                        shaderSettings
+                                .setTransparency(parseSingleFloatString(transparencyAttribute,
+                                        true, false));
+                    }
+                } // end ! USE attribute
 
             } // end <Material> node
 
@@ -1471,93 +1471,93 @@ public class X3Dobject {
             /********** ImageTexture **********/
             else if (qName.equalsIgnoreCase("ImageTexture")) {
 
-                    attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) {
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) {
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
+                        }
+                    }
+                    if (useItem != null) {
+                        gvrTexture = useItem.getGVRTexture();
+                    }
+                } else {
+                    gvrTextureParameters = new GVRTextureParameters(gvrContext);
+                    gvrTextureParameters.setWrapSType(TextureWrapType.GL_REPEAT);
+                    gvrTextureParameters.setWrapTType(TextureWrapType.GL_REPEAT);
+                    gvrTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+
+                    String urlAttribute = attributes.getValue("url");
+                    if (urlAttribute != null) {
+                        urlAttribute = urlAttribute.replace("\"", ""); // remove double and
+                        // single quotes
+                        urlAttribute = urlAttribute.replace("\'", "");
+
+                        final String filename = urlAttribute;
+                        String repeatSAttribute = attributes.getValue("repeatS");
+                        if (repeatSAttribute != null) {
+                            if (!parseBooleanString(repeatSAttribute)) {
+                                gvrTextureParameters
+                                        .setWrapSType(TextureWrapType.GL_CLAMP_TO_EDGE);
                             }
                         }
-                        if (useItem != null) {
-                            gvrTexture = useItem.getGVRTexture();
+                        String repeatTAttribute = attributes.getValue("repeatT");
+                        if (repeatTAttribute != null) {
+                            if (!parseBooleanString(repeatTAttribute)) {
+                                gvrTextureParameters
+                                        .setWrapTType(TextureWrapType.GL_CLAMP_TO_EDGE);
+                            }
                         }
-                    } else {
-                        gvrTextureParameters = new GVRTextureParameters(gvrContext);
-                        gvrTextureParameters.setWrapSType(TextureWrapType.GL_REPEAT);
-                        gvrTextureParameters.setWrapTType(TextureWrapType.GL_REPEAT);
-                        gvrTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
 
-                        String urlAttribute = attributes.getValue("url");
-                        if (urlAttribute != null) {
-                            urlAttribute = urlAttribute.replace("\"", ""); // remove double and
-                            // single quotes
-                            urlAttribute = urlAttribute.replace("\'", "");
-
-                            final String filename = urlAttribute;
-                            String repeatSAttribute = attributes.getValue("repeatS");
-                            if (repeatSAttribute != null) {
-                                if (!parseBooleanString(repeatSAttribute)) {
-                                    gvrTextureParameters
-                                            .setWrapSType(TextureWrapType.GL_CLAMP_TO_EDGE);
-                                }
-                            }
-                            String repeatTAttribute = attributes.getValue("repeatT");
-                            if (repeatTAttribute != null) {
-                                if (!parseBooleanString(repeatTAttribute)) {
-                                    gvrTextureParameters
-                                            .setWrapTType(TextureWrapType.GL_CLAMP_TO_EDGE);
-                                }
-                            }
-
-                            final String defValue = attributes.getValue("DEF");
+                        final String defValue = attributes.getValue("DEF");
                             gvrTexture = new GVRTexture(gvrContext, gvrTextureParameters);
                             GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest, gvrTexture, (inlineSubdirectory + filename));
                             assetRequest.loadTexture(request);
                             shaderSettings.setTexture(gvrTexture);
-                            if (defValue != null) {
-                                DefinedItem item = new DefinedItem(defValue);
+                        if (defValue != null) {
+                            DefinedItem item = new DefinedItem(defValue);
                                 item.setGVRTexture(gvrTexture);
-                                mDefinedItems.add(item);
-                            }
+                            mDefinedItems.add(item);
                         }
                     }
+                }
             } // end <ImageTexture> node
 
 
             /********** TextureTransform **********/
             else if (qName.equalsIgnoreCase("TextureTransform")) {
-                    Log.e(TAG, "X3D TextureTransform not currently implemented");
-                    attributeValue = attributes.getValue("DEF");
-                    if (attributeValue != null) {
-                        Log.e(TAG,
-                              "TextureTransform DEF attribute not currently implemented");
-                    }
-                    String centerAttribute = attributes.getValue("center");
-                    if (centerAttribute != null) {
-                        float[] center = parseFixedLengthFloatString(centerAttribute, 2,
-                                                                     false, false);
-                        shaderSettings.setTextureCenter(center);
-                    }
-                    String rotationAttribute = attributes.getValue("rotation");
-                    if (rotationAttribute != null) {
-                        float[] rotation = parseFixedLengthFloatString(rotationAttribute, 1,
-                                                                       false, false);
-                        shaderSettings.setTextureRotation(rotation[0]);
-                    }
-                    String scaleAttribute = attributes.getValue("scale");
-                    if (scaleAttribute != null) {
-                        float[] scale = parseFixedLengthFloatString(scaleAttribute, 2, false,
-                                                                    true);
-                        shaderSettings.setTextureScale(scale);
-                    }
-                    String translationAttribute = attributes.getValue("translation");
-                    if (translationAttribute != null) {
-                        float[] translation = parseFixedLengthFloatString(translationAttribute,
-                                                                          2, false, false);
-                        shaderSettings.setTextureTranslation(translation);
-                    }
+                Log.e(TAG, "X3D TextureTransform not currently implemented");
+                attributeValue = attributes.getValue("DEF");
+                if (attributeValue != null) {
+                    Log.e(TAG,
+                            "TextureTransform DEF attribute not currently implemented");
+                }
+                String centerAttribute = attributes.getValue("center");
+                if (centerAttribute != null) {
+                    float[] center = parseFixedLengthFloatString(centerAttribute, 2,
+                            false, false);
+                    shaderSettings.setTextureCenter(center);
+                }
+                String rotationAttribute = attributes.getValue("rotation");
+                if (rotationAttribute != null) {
+                    float[] rotation = parseFixedLengthFloatString(rotationAttribute, 1,
+                            false, false);
+                    shaderSettings.setTextureRotation(rotation[0]);
+                }
+                String scaleAttribute = attributes.getValue("scale");
+                if (scaleAttribute != null) {
+                    float[] scale = parseFixedLengthFloatString(scaleAttribute, 2, false,
+                            true);
+                    shaderSettings.setTextureScale(scale);
+                }
+                String translationAttribute = attributes.getValue("translation");
+                if (translationAttribute != null) {
+                    float[] translation = parseFixedLengthFloatString(translationAttribute,
+                            2, false, false);
+                    shaderSettings.setTextureTranslation(translation);
+                }
             }
 
             /********** IndexedFaceSet **********/
@@ -1565,709 +1565,709 @@ public class X3Dobject {
             //TODO: eventually include IndexedLineSet **********/
 
             else if (qName.equalsIgnoreCase("IndexedFaceSet")) {
-                    attributeValue = attributes.getValue("USE");
+                attributeValue = attributes.getValue("USE");
                     if (attributeValue != null) { // shared GVRIndexBuffer
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
-                        }
-                        if (useItem != null) {
-                            gvrIndexBuffer = useItem.getIndexBuffer();
-                        }
-                    } else {
-                        gvrIndexBuffer = new GVRIndexBuffer(gvrContext, 4, 0);
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            DefinedItem definedItem = new DefinedItem(attributeValue);
-                            definedItem.setIndexBuffer(gvrIndexBuffer);
-                            mDefinedItems.add(definedItem); // Array list of DEFined items
-                            // Clones objects with USE
-                        }
-                        attributeValue = attributes.getValue("solid");
-                        if (attributeValue != null) {
-                            if (parseBooleanString(attributeValue)) {
-                                Log.e(TAG, "IndexedFaceSet solid=true attribute not implemented. ");
-                            }
-                        }
-                        attributeValue = attributes.getValue("ccw");
-                        if (attributeValue != null) {
-                            if (!parseBooleanString(attributeValue)) {
-                                Log.e(TAG, "IndexedFaceSet ccw=false attribute not implemented. ");
-                            }
-                        }
-                        attributeValue = attributes.getValue("colorPerVertex");
-                        if (attributeValue != null) {
-
-                            Log.e(TAG,
-                                  "IndexedFaceSet colorPerVertex attribute not implemented. ");
-
-                        }
-                        attributeValue = attributes.getValue("normalPerVertex");
-                        if (attributeValue != null) {
-
-                            if ( !parseBooleanString(attributeValue)) {
-                                Log.e(TAG,
-                                        "IndexedFaceSet normalPerVertex=false attribute not implemented. ");
-                            }
-
-                        }
-                        String coordIndexAttribute = attributes.getValue("coordIndex");
-                        if (coordIndexAttribute != null) {
-                            parseNumbersString(coordIndexAttribute,
-                                               X3Dobject.indexedFaceSetComponent, 3);
-                            reorganizeVerts = true;
-                        }
-                        String normalIndexAttribute = attributes.getValue("normalIndex");
-                        if (normalIndexAttribute != null) {
-                            parseNumbersString(normalIndexAttribute,
-                                               X3Dobject.normalIndexComponent, 3);
-                        }
-                        String texCoordIndexAttribute = attributes.getValue("texCoordIndex");
-                        if (texCoordIndexAttribute != null) {
-                            parseNumbersString(texCoordIndexAttribute,
-                                               X3Dobject.textureIndexComponent, 3);
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
                         }
                     }
+                    if (useItem != null) {
+                            gvrIndexBuffer = useItem.getIndexBuffer();
+                    }
+                } else {
+                        gvrIndexBuffer = new GVRIndexBuffer(gvrContext, 4, 0);
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        DefinedItem definedItem = new DefinedItem(attributeValue);
+                            definedItem.setIndexBuffer(gvrIndexBuffer);
+                        mDefinedItems.add(definedItem); // Array list of DEFined items
+                        // Clones objects with USE
+                    }
+                    attributeValue = attributes.getValue("solid");
+                    if (attributeValue != null) {
+                        if (parseBooleanString(attributeValue)) {
+                            Log.e(TAG, "IndexedFaceSet solid=true attribute not implemented. ");
+                        }
+                    }
+                    attributeValue = attributes.getValue("ccw");
+                    if (attributeValue != null) {
+                        if ( !parseBooleanString(attributeValue)) {
+                            Log.e(TAG, "IndexedFaceSet ccw=false attribute not implemented. ");
+                        }
+                    }
+                    attributeValue = attributes.getValue("colorPerVertex");
+                    if (attributeValue != null) {
+
+                        Log.e(TAG,
+                                "IndexedFaceSet colorPerVertex attribute not implemented. ");
+
+                    }
+                    attributeValue = attributes.getValue("normalPerVertex");
+                    if (attributeValue != null) {
+
+                        if ( !parseBooleanString(attributeValue)) {
+                            Log.e(TAG,
+                                    "IndexedFaceSet normalPerVertex=false attribute not implemented. ");
+                        }
+
+                    }
+                    String coordIndexAttribute = attributes.getValue("coordIndex");
+                    if (coordIndexAttribute != null) {
+                        parseNumbersString(coordIndexAttribute,
+                                X3Dobject.indexedFaceSetComponent, 3);
+                        reorganizeVerts = true;
+                    }
+                    String normalIndexAttribute = attributes.getValue("normalIndex");
+                    if (normalIndexAttribute != null) {
+                        parseNumbersString(normalIndexAttribute,
+                                X3Dobject.normalIndexComponent, 3);
+                    }
+                    String texCoordIndexAttribute = attributes.getValue("texCoordIndex");
+                    if (texCoordIndexAttribute != null) {
+                        parseNumbersString(texCoordIndexAttribute,
+                                X3Dobject.textureIndexComponent, 3);
+                    }
+                }
 
             } // end <IndexedFaceSet> node
 
 
             /********** Coordinate **********/
             else if (qName.equalsIgnoreCase("Coordinate")) {
-                    attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) { // Coordinate node to be shared / re-used
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) { // Coordinate node to be shared / re-used
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
                         }
-                        if (useItem != null) {
+                    }
+                    if (useItem != null) {
 
-                            // 'useItem' points to GVRMesh who's useItem.getGVRMesh Coordinates
-                            // were DEFined earlier. We don't want to share the entire GVRMesh
-                            // since the 2 meshes may have different Normals and
-                            // Texture Coordinates.  So as an alternative, copy the vertices.
+                        // 'useItem' points to GVRMesh who's useItem.getGVRMesh Coordinates
+                        // were DEFined earlier. We don't want to share the entire GVRMesh
+                        // since the 2 meshes may have different Normals and
+                        // Texture Coordinates.  So as an alternative, copy the vertices.
                             gvrVertexBuffer = useItem.getVertexBuffer();
-                            reorganizeVerts = false;
-                        }
-                    } // end USE Coordinate
-                    else {
-                        // Not a 'Coordinate USE="..." node
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            DefinedItem definedItem = new DefinedItem(attributeValue);
+                        reorganizeVerts = false;
+                    }
+                } // end USE Coordinate
+                else {
+                    // Not a 'Coordinate USE="..." node
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        DefinedItem definedItem = new DefinedItem(attributeValue);
                             meshCreator.defineVertexBuffer(definedItem);
-                            // Array list of DEFined items clones objects with USE
-                            mDefinedItems.add(definedItem);
-                        }
-                        String pointAttribute = attributes.getValue("point");
-                        if (pointAttribute != null) {
-                            parseNumbersString(pointAttribute, X3Dobject.verticesComponent, 3);
-                        }
-                    } // end NOT a USE Coordinates condition
+                        // Array list of DEFined items clones objects with USE
+                        mDefinedItems.add(definedItem);
+                    }
+                    String pointAttribute = attributes.getValue("point");
+                    if (pointAttribute != null) {
+                        parseNumbersString(pointAttribute, X3Dobject.verticesComponent, 3);
+                    }
+                } // end NOT a USE Coordinates condition
 
             } // end <Coordinate> node
 
 
             /********** TextureCoordinate **********/
             else if (qName.equalsIgnoreCase("TextureCoordinate")) {
-                    attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) { // Coordinate node to be shared / re-used
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) { // Coordinate node to be shared / re-used
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
                         }
-                        if (useItem != null) {
+                    }
+                    if (useItem != null) {
 
                             // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer
-                            // TextureCoordinates were DEFined earlier.
+                        // TextureCoordinates were DEFined earlier.
                             // We don't want to share the entire GVRVertexBuffer since the
                             // the 2 meshes may have different Normals and Positions
-                            // So as an alternative, copy the texture coordinates.
+                        // So as an alternative, copy the texture coordinates.
                             gvrVertexBuffer.setFloatArray("a_texcoord", useItem.getVertexBuffer().getFloatArray("a_texcoord"));
-                            reorganizeVerts = false;
-                        }
-                    } // end USE TextureCoordinate
-                    else {
-                        // Not a 'TextureCoordinate USE="..." node
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            // This is a 'TextureCoordinate DEF="..." case, so save the item
-                            DefinedItem definedItem = new DefinedItem(attributeValue);
+                        reorganizeVerts = false;
+                    }
+                } // end USE TextureCoordinate
+                else {
+                    // Not a 'TextureCoordinate USE="..." node
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        // This is a 'TextureCoordinate DEF="..." case, so save the item
+                        DefinedItem definedItem = new DefinedItem(attributeValue);
                             definedItem.setVertexBuffer(gvrVertexBuffer);
-                            // Array list of DEFined items clones objects with USE
-                            mDefinedItems.add(definedItem);
-                        }
-                        // Have to flip the y texture coordinates because the image will be
-                        // upside down
-                        String pointAttribute = attributes.getValue("point");
-                        if (pointAttribute != null) {
-                            parseNumbersString(pointAttribute, X3Dobject.textureCoordComponent, 2);
-                        }
+                        // Array list of DEFined items clones objects with USE
+                        mDefinedItems.add(definedItem);
+                    }
+                    // Have to flip the y texture coordinates because the image will be
+                    // upside down
+                    String pointAttribute = attributes.getValue("point");
+                    if (pointAttribute != null) {
+                        parseNumbersString(pointAttribute, X3Dobject.textureCoordComponent, 2);
+                    }
 
-                    } // end NOT a USE TextureCoordinate condition
+                } // end NOT a USE TextureCoordinate condition
             } // end <TextureCoordinate> node
 
 
             /********** Normal **********/
             else if (qName.equalsIgnoreCase("Normal")) {
-                    attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) { // Coordinate node to be shared / re-used
-                        DefinedItem useItem = null;
-                        for (DefinedItem definedItem : mDefinedItems) {
-                            if (attributeValue.equals(definedItem.getName())) {
-                                useItem = definedItem;
-                                break;
-                            }
+                attributeValue = attributes.getValue("USE");
+                if (attributeValue != null) { // Coordinate node to be shared / re-used
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (attributeValue.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
                         }
-                        if (useItem != null) {
+                    }
+                    if (useItem != null) {
 
                             // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer Coordinates
                             // were DEFined earlier. We don't want to share the entire vertex buffer since
                             // the 2 vertex buffers may have different Normals and Texture Coordinates
-                            // So as an alternative, copy the normals.
+                        // So as an alternative, copy the normals.
                             gvrVertexBuffer.setFloatArray("a_normal", useItem.getVertexBuffer().getFloatArray("a_normal"));
-                            reorganizeVerts = false;
-                        }
-                    } // end USE Coordinate
-                    else {
-                        // Not a 'Normal USE="..." node
-                        attributeValue = attributes.getValue("DEF");
-                        if (attributeValue != null) {
-                            // This is a 'Normal DEF="..." case, so save the item
-                            DefinedItem definedItem = new DefinedItem(attributeValue);
+                        reorganizeVerts = false;
+                    }
+                } // end USE Coordinate
+                else {
+                    // Not a 'Normal USE="..." node
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        // This is a 'Normal DEF="..." case, so save the item
+                        DefinedItem definedItem = new DefinedItem(attributeValue);
                             definedItem.setVertexBuffer(gvrVertexBuffer);
-                            // Array list of DEFined items clones objects with USE
-                            mDefinedItems.add(definedItem);
-                        }
-                        String vectorAttribute = attributes.getValue("vector");
-                        if (vectorAttribute != null) {
-                            parseNumbersString(vectorAttribute, X3Dobject.normalsComponent, 3);
-                        }
-                    } // end NOT a USE Normals condition
+                        // Array list of DEFined items clones objects with USE
+                        mDefinedItems.add(definedItem);
+                    }
+                    String vectorAttribute = attributes.getValue("vector");
+                    if (vectorAttribute != null) {
+                        parseNumbersString(vectorAttribute, X3Dobject.normalsComponent, 3);
+                    }
+                } // end NOT a USE Normals condition
             } // end <Normal> node
 
 
             /********** LIGHTS **********/
             /********** PointLight **********/
             else if (qName.equalsIgnoreCase("PointLight")) {
-                    if (UNIVERSAL_LIGHTS) {
-                        attributeValue = attributes.getValue("USE");
-                        if (attributeValue != null) { // shared PointLight
-                            DefinedItem useItem = null;
-                            for (DefinedItem definedItem : mDefinedItems) {
-                                if (attributeValue.equals(definedItem.getName())) {
-                                    useItem = definedItem;
-                                    break;
-                                }
+                if (UNIVERSAL_LIGHTS) {
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) { // shared PointLight
+                        DefinedItem useItem = null;
+                        for (DefinedItem definedItem : mDefinedItems) {
+                            if (attributeValue.equals(definedItem.getName())) {
+                                useItem = definedItem;
+                                break;
                             }
-                            if (useItem != null) {
-                                // GVRf does not allow a light attached at two places
-                                // so copy the attributes of the original light into the second
-                                // light
-                                GVRSceneObject definedSceneObject = useItem.getGVRSceneObject();
-                                GVRPointLight definedPtLight = (GVRPointLight) definedSceneObject
-                                        .getLight();
-                                GVRTransform definedTransform = definedPtLight.getTransform();
-
-                                GVRSceneObject newPtLightSceneObj = AddGVRSceneObject();
-                                newPtLightSceneObj.getTransform()
-                                        .setPosition(definedTransform.getPositionX(),
-                                                     definedTransform.getPositionY(),
-                                                     definedTransform.getPositionZ());
-                                // attachLight does not allow a light to be shared so we need to
-                                // just create a new light and share its attributes
-                                GVRPointLight newPtLight = new GVRPointLight(gvrContext);
-                                newPtLightSceneObj.attachLight(newPtLight);
-                                float[] attribute = definedPtLight.getAmbientIntensity();
-                                newPtLight.setAmbientIntensity(attribute[0], attribute[1],
-                                                               attribute[2], attribute[3]);
-                                attribute = definedPtLight.getDiffuseIntensity();
-                                newPtLight.setDiffuseIntensity(attribute[0], attribute[1],
-                                                               attribute[2], 1);
-                                attribute = definedPtLight.getSpecularIntensity();
-                                newPtLight.setSpecularIntensity(attribute[0], attribute[1],
-                                                                attribute[2], 1);
-                                newPtLight
-                                        .setAttenuation(definedPtLight.getAttenuationConstant(),
-                                                        definedPtLight.getAttenuationLinear(),
-                                                        definedPtLight.getAttenuationQuadratic());
-                                newPtLight.enable();
-                            }
-                        } // end reuse a PointLight
-                        else {
-                            // add a new PointLight
-                            float ambientIntensity = 0;
-                            float[] attenuation =
-                                    {
-                                            1, 0, 0
-                                    };
-                            float[] color =
-                                    {
-                                            1, 1, 1
-                                    };
-                            boolean global = true;
-                            float intensity = 1;
-                            float[] location =
-                                    {
-                                            0, 0, 0
-                                    };
-                            boolean on = true;
-                            float radius = 100;
+                        }
+                        if (useItem != null) {
+                            // GVRf does not allow a light attached at two places
+                            // so copy the attributes of the original light into the second
+                            // light
+                            GVRSceneObject definedSceneObject = useItem.getGVRSceneObject();
+                            GVRPointLight definedPtLight = (GVRPointLight) definedSceneObject
+                                    .getLight();
+                            GVRTransform definedTransform = definedPtLight.getTransform();
 
                             GVRSceneObject newPtLightSceneObj = AddGVRSceneObject();
+                            newPtLightSceneObj.getTransform()
+                                    .setPosition(definedTransform.getPositionX(),
+                                            definedTransform.getPositionY(),
+                                            definedTransform.getPositionZ());
+                            // attachLight does not allow a light to be shared so we need to
+                            // just create a new light and share its attributes
                             GVRPointLight newPtLight = new GVRPointLight(gvrContext);
                             newPtLightSceneObj.attachLight(newPtLight);
+                            float[] attribute = definedPtLight.getAmbientIntensity();
+                            newPtLight.setAmbientIntensity(attribute[0], attribute[1],
+                                    attribute[2], attribute[3]);
+                            attribute = definedPtLight.getDiffuseIntensity();
+                            newPtLight.setDiffuseIntensity(attribute[0], attribute[1],
+                                    attribute[2], 1);
+                            attribute = definedPtLight.getSpecularIntensity();
+                            newPtLight.setSpecularIntensity(attribute[0], attribute[1],
+                                    attribute[2], 1);
+                            newPtLight
+                                    .setAttenuation(definedPtLight.getAttenuationConstant(),
+                                            definedPtLight.getAttenuationLinear(),
+                                            definedPtLight.getAttenuationQuadratic());
+                            newPtLight.enable();
+                        }
+                    } // end reuse a PointLight
+                    else {
+                        // add a new PointLight
+                        float ambientIntensity = 0;
+                        float[] attenuation =
+                                {
+                                        1, 0, 0
+                                };
+                        float[] color =
+                                {
+                                        1, 1, 1
+                                };
+                        boolean global = true;
+                        float intensity = 1;
+                        float[] location =
+                                {
+                                        0, 0, 0
+                                };
+                        boolean on = true;
+                        float radius = 100;
 
-                            attributeValue = attributes.getValue("DEF");
-                            if (attributeValue != null) {
-                                newPtLightSceneObj.setName(attributeValue);
-                                DefinedItem definedItem = new DefinedItem(attributeValue);
-                                definedItem.setGVRSceneObject(newPtLightSceneObj);
-                                mDefinedItems.add(definedItem); // Array list of DEFined items
-                                // Clones objects with USE
-                            }
-                            attributeValue = attributes.getValue("ambientIntensity");
-                            if (attributeValue != null) {
-                                ambientIntensity = parseSingleFloatString(attributeValue, true,
-                                                                          false);
-                            }
-                            attributeValue = attributes.getValue("attenuation");
-                            if (attributeValue != null) {
-                                attenuation = parseFixedLengthFloatString(attributeValue, 3,
-                                                                          false, true);
-                                if ((attenuation[0] == 0) && (attenuation[1] == 0)
+                        GVRSceneObject newPtLightSceneObj = AddGVRSceneObject();
+                        GVRPointLight newPtLight = new GVRPointLight(gvrContext);
+                        newPtLightSceneObj.attachLight(newPtLight);
+
+                        attributeValue = attributes.getValue("DEF");
+                        if (attributeValue != null) {
+                            newPtLightSceneObj.setName(attributeValue);
+                            DefinedItem definedItem = new DefinedItem(attributeValue);
+                            definedItem.setGVRSceneObject(newPtLightSceneObj);
+                            mDefinedItems.add(definedItem); // Array list of DEFined items
+                            // Clones objects with USE
+                        }
+                        attributeValue = attributes.getValue("ambientIntensity");
+                        if (attributeValue != null) {
+                            ambientIntensity = parseSingleFloatString(attributeValue, true,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("attenuation");
+                        if (attributeValue != null) {
+                            attenuation = parseFixedLengthFloatString(attributeValue, 3,
+                                    false, true);
+                            if ((attenuation[0] == 0) && (attenuation[1] == 0)
                                     && (attenuation[2] == 0))
-                                    attenuation[0] = 1;
-                            }
-                            attributeValue = attributes.getValue("color");
-                            if (attributeValue != null) {
-                                color = parseFixedLengthFloatString(attributeValue, 3, true,
-                                                                    false);
-                            }
-                            attributeValue = attributes.getValue("global");
-                            if (attributeValue != null) {
-                                global = parseBooleanString(attributeValue); // NOT IMPLEMENTED
-                                Log.e(TAG, "Point Light global attribute not implemented. ");
-                            }
-                            attributeValue = attributes.getValue("intensity");
-                            if (attributeValue != null) {
-                                intensity = parseSingleFloatString(attributeValue, true, false);
-                            }
-                            attributeValue = attributes.getValue("location");
-                            if (attributeValue != null) {
-                                location = parseFixedLengthFloatString(attributeValue, 3, false,
-                                                                       false);
-                            }
-                            attributeValue = attributes.getValue("on");
-                            if (attributeValue != null) {
-                                on = parseBooleanString(attributeValue);
-                            }
-                            attributeValue = attributes.getValue("radius");
-                            if (attributeValue != null) {
-                                radius = parseSingleFloatString(attributeValue, false, true);
-                            }
-                            // In x3d, ambientIntensity is only 1 value, not 3.
-                            newPtLight.setAmbientIntensity(ambientIntensity, ambientIntensity,
-                                                           ambientIntensity, 1);
-                            newPtLight.setDiffuseIntensity(color[0] * intensity,
-                                                           color[1] * intensity,
-                                                           color[2] * intensity, 1);
-                            // x3d doesn't have an equivalent for specular intensity
-                            newPtLight.setSpecularIntensity(color[0] * intensity,
-                                                            color[1] * intensity,
-                                                            color[2] * intensity, 1);
-                            newPtLight.setAttenuation(attenuation[0], attenuation[1],
-                                                      attenuation[2]);
-                            if (on)
-                                newPtLight.enable();
-                            else
-                                newPtLight.disable();
+                                attenuation[0] = 1;
+                        }
+                        attributeValue = attributes.getValue("color");
+                        if (attributeValue != null) {
+                            color = parseFixedLengthFloatString(attributeValue, 3, true,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("global");
+                        if (attributeValue != null) {
+                            global = parseBooleanString(attributeValue); // NOT IMPLEMENTED
+                            Log.e(TAG, "Point Light global attribute not implemented. ");
+                        }
+                        attributeValue = attributes.getValue("intensity");
+                        if (attributeValue != null) {
+                            intensity = parseSingleFloatString(attributeValue, true, false);
+                        }
+                        attributeValue = attributes.getValue("location");
+                        if (attributeValue != null) {
+                            location = parseFixedLengthFloatString(attributeValue, 3, false,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("on");
+                        if (attributeValue != null) {
+                            on = parseBooleanString(attributeValue);
+                        }
+                        attributeValue = attributes.getValue("radius");
+                        if (attributeValue != null) {
+                            radius = parseSingleFloatString(attributeValue, false, true);
+                        }
+                        // In x3d, ambientIntensity is only 1 value, not 3.
+                        newPtLight.setAmbientIntensity(ambientIntensity, ambientIntensity,
+                                ambientIntensity, 1);
+                        newPtLight.setDiffuseIntensity(color[0] * intensity,
+                                color[1] * intensity,
+                                color[2] * intensity, 1);
+                        // x3d doesn't have an equivalent for specular intensity
+                        newPtLight.setSpecularIntensity(color[0] * intensity,
+                                color[1] * intensity,
+                                color[2] * intensity, 1);
+                        newPtLight.setAttenuation(attenuation[0], attenuation[1],
+                                attenuation[2]);
+                        if (on)
+                            newPtLight.enable();
+                        else
+                            newPtLight.disable();
 
-                            GVRTransform newPtLightSceneObjTransform = newPtLightSceneObj
-                                    .getTransform();
-                            newPtLightSceneObjTransform.setPosition(location[0], location[1],
-                                                                    location[2]);
-                        } // end a new PointLight
-                    } // end if UNIVERSAL_LIGHTS
+                        GVRTransform newPtLightSceneObjTransform = newPtLightSceneObj
+                                .getTransform();
+                        newPtLightSceneObjTransform.setPosition(location[0], location[1],
+                                location[2]);
+                    } // end a new PointLight
+                } // end if UNIVERSAL_LIGHTS
 
             } // end <PointLight> node
 
 
             /********** DirectionalLight **********/
             else if (qName.equalsIgnoreCase("DirectionalLight")) {
-                    if (UNIVERSAL_LIGHTS) {
-                        attributeValue = attributes.getValue("USE");
-                        if (attributeValue != null) { // shared PointLight
-                            DefinedItem useItem = null;
-                            for (DefinedItem definedItem : mDefinedItems) {
-                                if (attributeValue.equals(definedItem.getName())) {
-                                    useItem = definedItem;
-                                    break;
-                                }
+                if (UNIVERSAL_LIGHTS) {
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) { // shared PointLight
+                        DefinedItem useItem = null;
+                        for (DefinedItem definedItem : mDefinedItems) {
+                            if (attributeValue.equals(definedItem.getName())) {
+                                useItem = definedItem;
+                                break;
                             }
-                            if (useItem != null) {
-                                // GVRf does not allow a light attached at two places
-                                // so copy the attributes of the original light into the second
-                                // light
-                                GVRSceneObject definedSceneObject = useItem.getGVRSceneObject();
-                                GVRDirectLight definedDirectLight = (GVRDirectLight) definedSceneObject
-                                        .getLight();
-                                GVRTransform definedTransform = definedDirectLight.getTransform();
+                        }
+                        if (useItem != null) {
+                            // GVRf does not allow a light attached at two places
+                            // so copy the attributes of the original light into the second
+                            // light
+                            GVRSceneObject definedSceneObject = useItem.getGVRSceneObject();
+                            GVRDirectLight definedDirectLight = (GVRDirectLight) definedSceneObject
+                                    .getLight();
+                            GVRTransform definedTransform = definedDirectLight.getTransform();
 
-                                GVRSceneObject newDirectLightSceneObj = AddGVRSceneObject();
-                                newDirectLightSceneObj.getTransform()
-                                        .setRotation(definedTransform.getRotationW(),
-                                                     definedTransform.getRotationX(),
-                                                     definedTransform.getRotationY(),
-                                                     definedTransform.getRotationZ());
-                                // attachLight does not allow a light to be shared so we need to
-                                // just create a new light and share its attributes
-                                GVRDirectLight newDirectLight = new GVRDirectLight(gvrContext);
-                                newDirectLightSceneObj.attachLight(newDirectLight);
-                                float[] attribute = definedDirectLight.getAmbientIntensity();
-                                newDirectLight.setAmbientIntensity(attribute[0], attribute[1],
-                                                                   attribute[2], attribute[3]);
-                                attribute = definedDirectLight.getDiffuseIntensity();
-                                newDirectLight.setDiffuseIntensity(attribute[0], attribute[1],
-                                                                   attribute[2], 1);
-                                attribute = definedDirectLight.getSpecularIntensity();
-                                newDirectLight.setSpecularIntensity(attribute[0], attribute[1],
-                                                                    attribute[2], 1);
-                                newDirectLight.enable();
-                            }
-                        } // end reuse a DirectionalLight
-                        else {
-                            // add a new DirectionalLight
-                            float ambientIntensity = 0;
-                            float[] color =
-                                    {
-                                            1, 1, 1
-                                    };
-                            float[] direction =
-                                    {
-                                            0, 0, -1
-                                    };
-                            boolean global = true;
-                            float intensity = 1;
-                            boolean on = true;
+                            GVRSceneObject newDirectLightSceneObj = AddGVRSceneObject();
+                            newDirectLightSceneObj.getTransform()
+                                    .setRotation(definedTransform.getRotationW(),
+                                            definedTransform.getRotationX(),
+                                            definedTransform.getRotationY(),
+                                            definedTransform.getRotationZ());
+                            // attachLight does not allow a light to be shared so we need to
+                            // just create a new light and share its attributes
+                            GVRDirectLight newDirectLight = new GVRDirectLight(gvrContext);
+                            newDirectLightSceneObj.attachLight(newDirectLight);
+                            float[] attribute = definedDirectLight.getAmbientIntensity();
+                            newDirectLight.setAmbientIntensity(attribute[0], attribute[1],
+                                    attribute[2], attribute[3]);
+                            attribute = definedDirectLight.getDiffuseIntensity();
+                            newDirectLight.setDiffuseIntensity(attribute[0], attribute[1],
+                                    attribute[2], 1);
+                            attribute = definedDirectLight.getSpecularIntensity();
+                            newDirectLight.setSpecularIntensity(attribute[0], attribute[1],
+                                    attribute[2], 1);
+                            newDirectLight.enable();
+                        }
+                    } // end reuse a DirectionalLight
+                    else {
+                        // add a new DirectionalLight
+                        float ambientIntensity = 0;
+                        float[] color =
+                                {
+                                        1, 1, 1
+                                };
+                        float[] direction =
+                                {
+                                        0, 0, -1
+                                };
+                        boolean global = true;
+                        float intensity = 1;
+                        boolean on = true;
 
-                            GVRSceneObject newDirectionalLightSceneObj = AddGVRSceneObject();
-                            GVRDirectLight newDirectionalLight = new GVRDirectLight(gvrContext);
-                            newDirectionalLightSceneObj.attachLight(newDirectionalLight);
-                            DefinedItem definedItem = null;
+                        GVRSceneObject newDirectionalLightSceneObj = AddGVRSceneObject();
+                        GVRDirectLight newDirectionalLight = new GVRDirectLight(gvrContext);
+                        newDirectionalLightSceneObj.attachLight(newDirectionalLight);
+                        DefinedItem definedItem = null;
 
-                            attributeValue = attributes.getValue("DEF");
-                            if (attributeValue != null) {
-                                newDirectionalLightSceneObj.setName(attributeValue);
-                                definedItem = new DefinedItem(attributeValue);
-                                definedItem.setGVRSceneObject(newDirectionalLightSceneObj);
-                                mDefinedItems.add(definedItem); // Array list of DEFined items
-                                // Clones objects with USE
-                            }
-                            attributeValue = attributes.getValue("ambientIntensity");
-                            if (attributeValue != null) {
-                                ambientIntensity = parseSingleFloatString(attributeValue, true,
-                                                                          false);
-                            }
-                            attributeValue = attributes.getValue("color");
-                            if (attributeValue != null) {
-                                color = parseFixedLengthFloatString(attributeValue, 3, true,
-                                                                    false);
-                            }
-                            attributeValue = attributes.getValue("direction");
-                            if (attributeValue != null) {
-                                direction = parseFixedLengthFloatString(attributeValue, 3, false,
-                                                                        false);
-                            }
-                            attributeValue = attributes.getValue("global");
-                            if (attributeValue != null) {
-                                Log.e(TAG,
-                                      "DirectionalLight global attribute not currently implemented. ");
-                            }
-                            attributeValue = attributes.getValue("intensity");
-                            if (attributeValue != null) {
-                                intensity = parseSingleFloatString(attributeValue, true, false);
-                            }
-                            attributeValue = attributes.getValue("on");
-                            if (attributeValue != null) {
-                                on = parseBooleanString(attributeValue);
-                            }
+                        attributeValue = attributes.getValue("DEF");
+                        if (attributeValue != null) {
+                            newDirectionalLightSceneObj.setName(attributeValue);
+                            definedItem = new DefinedItem(attributeValue);
+                            definedItem.setGVRSceneObject(newDirectionalLightSceneObj);
+                            mDefinedItems.add(definedItem); // Array list of DEFined items
+                            // Clones objects with USE
+                        }
+                        attributeValue = attributes.getValue("ambientIntensity");
+                        if (attributeValue != null) {
+                            ambientIntensity = parseSingleFloatString(attributeValue, true,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("color");
+                        if (attributeValue != null) {
+                            color = parseFixedLengthFloatString(attributeValue, 3, true,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("direction");
+                        if (attributeValue != null) {
+                            direction = parseFixedLengthFloatString(attributeValue, 3, false,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("global");
+                        if (attributeValue != null) {
+                            Log.e(TAG,
+                                    "DirectionalLight global attribute not currently implemented. ");
+                        }
+                        attributeValue = attributes.getValue("intensity");
+                        if (attributeValue != null) {
+                            intensity = parseSingleFloatString(attributeValue, true, false);
+                        }
+                        attributeValue = attributes.getValue("on");
+                        if (attributeValue != null) {
+                            on = parseBooleanString(attributeValue);
+                        }
 
-                            newDirectionalLight.setAmbientIntensity(1, 1, 1, 1);
-                            newDirectionalLight.setDiffuseIntensity(color[0] * intensity,
-                                                                    color[1] * intensity,
-                                                                    color[2] * intensity, 1);
-                            newDirectionalLight.setSpecularIntensity(1, 1, 1, 1);
+                        newDirectionalLight.setAmbientIntensity(1, 1, 1, 1);
+                        newDirectionalLight.setDiffuseIntensity(color[0] * intensity,
+                                color[1] * intensity,
+                                color[2] * intensity, 1);
+                        newDirectionalLight.setSpecularIntensity(1, 1, 1, 1);
 
-                            if (on)
-                                newDirectionalLight.enable();
-                            else
-                                newDirectionalLight.disable();
+                        if (on)
+                            newDirectionalLight.enable();
+                        else
+                            newDirectionalLight.disable();
 
-                            if (definedItem != null) definedItem.setDirection(direction);
+                        if (definedItem != null) definedItem.setDirection(direction);
 
-                            Quaternionf q = animationInteractivityManager.ConvertDirectionalVectorToQuaternion(
-                                    new Vector3f(direction[0], direction[1], direction[2]));
-                            // set direction in the Light's GVRScene
-                            GVRTransform newDirectionalLightSceneObjTransform = newDirectionalLightSceneObj
-                                    .getTransform();
-                            newDirectionalLightSceneObjTransform.setRotation(q.w, q.x, q.y,
-                                                                             q.z);
-                        } // end if adding new Directional Light
-                    } // end if Universal Lights
+                        Quaternionf q = animationInteractivityManager.ConvertDirectionalVectorToQuaternion(
+                                new Vector3f(direction[0], direction[1], direction[2]));
+                        // set direction in the Light's GVRScene
+                        GVRTransform newDirectionalLightSceneObjTransform = newDirectionalLightSceneObj
+                                .getTransform();
+                        newDirectionalLightSceneObjTransform.setRotation(q.w, q.x, q.y,
+                                q.z);
+                    } // end if adding new Directional Light
+                } // end if Universal Lights
 
             } // end <Directional Light> node
 
 
             /********** SpotLight **********/
             else if (qName.equalsIgnoreCase("SpotLight")) {
-                    if (UNIVERSAL_LIGHTS) {
-                        attributeValue = attributes.getValue("USE");
-                        if (attributeValue != null) { // shared PointLight
-                            DefinedItem useItem = null;
-                            for (DefinedItem definedItem : mDefinedItems) {
-                                if (attributeValue.equals(definedItem.getName())) {
-                                    useItem = definedItem;
-                                    break;
-                                }
+                if (UNIVERSAL_LIGHTS) {
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) { // shared PointLight
+                        DefinedItem useItem = null;
+                        for (DefinedItem definedItem : mDefinedItems) {
+                            if (attributeValue.equals(definedItem.getName())) {
+                                useItem = definedItem;
+                                break;
                             }
-                            if (useItem != null) {
-                                // GVRf does not allow a light attached at two places
-                                // so copy the attributes of the original light into the second
-                                // light
-                                GVRSceneObject definedSceneObject = useItem.getGVRSceneObject();
-                                GVRSpotLight definedSpotLight = (GVRSpotLight) definedSceneObject
-                                        .getLight();
-                                GVRTransform definedTransform = definedSpotLight.getTransform();
-
-                                GVRSceneObject newSpotLightSceneObj = AddGVRSceneObject();
-                                newSpotLightSceneObj.getTransform()
-                                        .setPosition(definedTransform.getPositionX(),
-                                                     definedTransform.getPositionY(),
-                                                     definedTransform.getPositionZ());
-                                newSpotLightSceneObj.getTransform()
-                                        .setRotation(definedTransform.getRotationW(),
-                                                     definedTransform.getRotationX(),
-                                                     definedTransform.getRotationY(),
-                                                     definedTransform.getRotationZ());
-                                // attachLight does not allow a light to be shared so we need to
-                                // just create a new light and share its attributes
-                                GVRSpotLight newSpotLight = new GVRSpotLight(gvrContext);
-                                newSpotLightSceneObj.attachLight(newSpotLight);
-                                float[] attribute = definedSpotLight.getAmbientIntensity();
-                                newSpotLight.setAmbientIntensity(attribute[0], attribute[1],
-                                                                 attribute[2], attribute[3]);
-                                attribute = definedSpotLight.getDiffuseIntensity();
-                                newSpotLight.setDiffuseIntensity(attribute[0], attribute[1],
-                                                                 attribute[2], 1);
-                                attribute = definedSpotLight.getSpecularIntensity();
-                                newSpotLight.setSpecularIntensity(attribute[0], attribute[1],
-                                                                  attribute[2], 1);
-                                newSpotLight
-                                        .setAttenuation(definedSpotLight.getAttenuationConstant(),
-                                                        definedSpotLight.getAttenuationLinear(),
-                                                        definedSpotLight.getAttenuationQuadratic());
-                                newSpotLight
-                                        .setInnerConeAngle(definedSpotLight.getInnerConeAngle());
-                                newSpotLight
-                                        .setOuterConeAngle(definedSpotLight.getOuterConeAngle());
-                                newSpotLight.enable();
-                            }
-                        } // end reuse a SpotLight
-                        else {
-                            // add a new SpotLight
-                            float ambientIntensity = 0;
-                            float[] attenuation =
-                                    {
-                                            1, 0, 0
-                                    };
-                            float beamWidth = (float) Math.PI / 4; // range is 0 to PI
-                            float[] color =
-                                    {
-                                            1, 1, 1
-                                    };
-                            float cutOffAngle = (float) Math.PI / 2; // range is 0 to PI
-                            float[] direction =
-                                    {
-                                            0, 0, -1
-                                    };
-                            boolean global = true;
-                            float intensity = 1;
-                            float[] location =
-                                    {
-                                            0, 0, 0
-                                    };
-                            boolean on = true;
-                            float radius = 100;
+                        }
+                        if (useItem != null) {
+                            // GVRf does not allow a light attached at two places
+                            // so copy the attributes of the original light into the second
+                            // light
+                            GVRSceneObject definedSceneObject = useItem.getGVRSceneObject();
+                            GVRSpotLight definedSpotLight = (GVRSpotLight) definedSceneObject
+                                    .getLight();
+                            GVRTransform definedTransform = definedSpotLight.getTransform();
 
                             GVRSceneObject newSpotLightSceneObj = AddGVRSceneObject();
+                            newSpotLightSceneObj.getTransform()
+                                    .setPosition(definedTransform.getPositionX(),
+                                            definedTransform.getPositionY(),
+                                            definedTransform.getPositionZ());
+                            newSpotLightSceneObj.getTransform()
+                                    .setRotation(definedTransform.getRotationW(),
+                                            definedTransform.getRotationX(),
+                                            definedTransform.getRotationY(),
+                                            definedTransform.getRotationZ());
+                            // attachLight does not allow a light to be shared so we need to
+                            // just create a new light and share its attributes
                             GVRSpotLight newSpotLight = new GVRSpotLight(gvrContext);
                             newSpotLightSceneObj.attachLight(newSpotLight);
+                            float[] attribute = definedSpotLight.getAmbientIntensity();
+                            newSpotLight.setAmbientIntensity(attribute[0], attribute[1],
+                                    attribute[2], attribute[3]);
+                            attribute = definedSpotLight.getDiffuseIntensity();
+                            newSpotLight.setDiffuseIntensity(attribute[0], attribute[1],
+                                    attribute[2], 1);
+                            attribute = definedSpotLight.getSpecularIntensity();
+                            newSpotLight.setSpecularIntensity(attribute[0], attribute[1],
+                                    attribute[2], 1);
+                            newSpotLight
+                                    .setAttenuation(definedSpotLight.getAttenuationConstant(),
+                                            definedSpotLight.getAttenuationLinear(),
+                                            definedSpotLight.getAttenuationQuadratic());
+                            newSpotLight
+                                    .setInnerConeAngle(definedSpotLight.getInnerConeAngle());
+                            newSpotLight
+                                    .setOuterConeAngle(definedSpotLight.getOuterConeAngle());
+                            newSpotLight.enable();
+                        }
+                    } // end reuse a SpotLight
+                    else {
+                        // add a new SpotLight
+                        float ambientIntensity = 0;
+                        float[] attenuation =
+                                {
+                                        1, 0, 0
+                                };
+                        float beamWidth = (float) Math.PI / 4; // range is 0 to PI
+                        float[] color =
+                                {
+                                        1, 1, 1
+                                };
+                        float cutOffAngle = (float) Math.PI / 2; // range is 0 to PI
+                        float[] direction =
+                                {
+                                        0, 0, -1
+                                };
+                        boolean global = true;
+                        float intensity = 1;
+                        float[] location =
+                                {
+                                        0, 0, 0
+                                };
+                        boolean on = true;
+                        float radius = 100;
 
-                            DefinedItem definedItem = null;
+                        GVRSceneObject newSpotLightSceneObj = AddGVRSceneObject();
+                        GVRSpotLight newSpotLight = new GVRSpotLight(gvrContext);
+                        newSpotLightSceneObj.attachLight(newSpotLight);
 
-                            attributeValue = attributes.getValue("DEF");
-                            if (attributeValue != null) {
-                                newSpotLightSceneObj.setName(attributeValue);
-                                definedItem = new DefinedItem(attributeValue);
-                                definedItem.setGVRSceneObject(newSpotLightSceneObj);
-                                mDefinedItems.add(definedItem); // Array list of DEFined items
-                                // Clones objects with USE
-                            }
-                            attributeValue = attributes.getValue("ambientIntensity");
-                            if (attributeValue != null) {
-                                ambientIntensity = parseSingleFloatString(attributeValue, true,
-                                                                          false);
-                            }
-                            attributeValue = attributes.getValue("attenuation");
-                            if (attributeValue != null) {
-                                attenuation = parseFixedLengthFloatString(attributeValue, 3,
-                                                                          false, true);
-                                if ((attenuation[0] == 0) && (attenuation[1] == 0)
+                        DefinedItem definedItem = null;
+
+                        attributeValue = attributes.getValue("DEF");
+                        if (attributeValue != null) {
+                            newSpotLightSceneObj.setName(attributeValue);
+                            definedItem = new DefinedItem(attributeValue);
+                            definedItem.setGVRSceneObject(newSpotLightSceneObj);
+                            mDefinedItems.add(definedItem); // Array list of DEFined items
+                            // Clones objects with USE
+                        }
+                        attributeValue = attributes.getValue("ambientIntensity");
+                        if (attributeValue != null) {
+                            ambientIntensity = parseSingleFloatString(attributeValue, true,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("attenuation");
+                        if (attributeValue != null) {
+                            attenuation = parseFixedLengthFloatString(attributeValue, 3,
+                                    false, true);
+                            if ((attenuation[0] == 0) && (attenuation[1] == 0)
                                     && (attenuation[2] == 0))
-                                    attenuation[0] = 1;
+                                attenuation[0] = 1;
+                        }
+                        attributeValue = attributes.getValue("beamWidth");
+                        if (attributeValue != null) {
+                            beamWidth = parseSingleFloatString(attributeValue, false, true);
+                            if (beamWidth > (float) Math.PI / 2) {
+                                beamWidth = (float) Math.PI / 2;
+                                Log.e(TAG, "Spot Light beamWidth cannot exceed PI/2.");
                             }
-                            attributeValue = attributes.getValue("beamWidth");
-                            if (attributeValue != null) {
-                                beamWidth = parseSingleFloatString(attributeValue, false, true);
-                                if (beamWidth > (float) Math.PI / 2) {
-                                    beamWidth = (float) Math.PI / 2;
-                                    Log.e(TAG, "Spot Light beamWidth cannot exceed PI/2.");
-                                }
+                        }
+                        attributeValue = attributes.getValue("color");
+                        if (attributeValue != null) {
+                            color = parseFixedLengthFloatString(attributeValue, 3, true,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("cutOffAngle");
+                        if (attributeValue != null) {
+                            cutOffAngle = parseSingleFloatString(attributeValue, false, true);
+                            if (cutOffAngle > (float) Math.PI / 2) {
+                                cutOffAngle = (float) Math.PI / 2;
+                                Log.e(TAG, "Spot Light cutOffAngle cannot exceed PI/2.");
                             }
-                            attributeValue = attributes.getValue("color");
-                            if (attributeValue != null) {
-                                color = parseFixedLengthFloatString(attributeValue, 3, true,
-                                                                    false);
-                            }
-                            attributeValue = attributes.getValue("cutOffAngle");
-                            if (attributeValue != null) {
-                                cutOffAngle = parseSingleFloatString(attributeValue, false, true);
-                                if (cutOffAngle > (float) Math.PI / 2) {
-                                    cutOffAngle = (float) Math.PI / 2;
-                                    Log.e(TAG, "Spot Light cutOffAngle cannot exceed PI/2.");
-                                }
-                            }
-                            attributeValue = attributes.getValue("direction");
-                            if (attributeValue != null) {
-                                direction = parseFixedLengthFloatString(attributeValue, 3, false,
-                                                                        false);
-                            }
-                            attributeValue = attributes.getValue("global");
-                            if (attributeValue != null) {
-                                Log.e(TAG,
-                                      "Spot Light global attribute not currently implemented. ");
-                            }
-                            attributeValue = attributes.getValue("intensity");
-                            if (attributeValue != null) {
-                                intensity = parseSingleFloatString(attributeValue, true, false);
-                            }
-                            attributeValue = attributes.getValue("location");
-                            if (attributeValue != null) {
-                                location = parseFixedLengthFloatString(attributeValue, 3, false,
-                                                                       false);
-                            }
-                            attributeValue = attributes.getValue("on");
-                            if (attributeValue != null) {
-                                on = parseBooleanString(attributeValue);
-                            }
-                            attributeValue = attributes.getValue("radius");
-                            if (attributeValue != null) {
-                                radius = parseSingleFloatString(attributeValue, false, true);
-                            }
-                            // x3d only has a single value for ambient intensity
-                            newSpotLight.setAmbientIntensity(ambientIntensity, ambientIntensity,
-                                                             ambientIntensity, 1);
-                            newSpotLight.setDiffuseIntensity(color[0] * intensity,
-                                                             color[1] * intensity,
-                                                             color[2] * intensity, 1);
-                            newSpotLight.setSpecularIntensity(0, 0, 0, 1);
-                            newSpotLight.setAttenuation(attenuation[0], attenuation[1],
-                                                        attenuation[2]);
+                        }
+                        attributeValue = attributes.getValue("direction");
+                        if (attributeValue != null) {
+                            direction = parseFixedLengthFloatString(attributeValue, 3, false,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("global");
+                        if (attributeValue != null) {
+                            Log.e(TAG,
+                                    "Spot Light global attribute not currently implemented. ");
+                        }
+                        attributeValue = attributes.getValue("intensity");
+                        if (attributeValue != null) {
+                            intensity = parseSingleFloatString(attributeValue, true, false);
+                        }
+                        attributeValue = attributes.getValue("location");
+                        if (attributeValue != null) {
+                            location = parseFixedLengthFloatString(attributeValue, 3, false,
+                                    false);
+                        }
+                        attributeValue = attributes.getValue("on");
+                        if (attributeValue != null) {
+                            on = parseBooleanString(attributeValue);
+                        }
+                        attributeValue = attributes.getValue("radius");
+                        if (attributeValue != null) {
+                            radius = parseSingleFloatString(attributeValue, false, true);
+                        }
+                        // x3d only has a single value for ambient intensity
+                        newSpotLight.setAmbientIntensity(ambientIntensity, ambientIntensity,
+                                ambientIntensity, 1);
+                        newSpotLight.setDiffuseIntensity(color[0] * intensity,
+                                color[1] * intensity,
+                                color[2] * intensity, 1);
+                        newSpotLight.setSpecularIntensity(0, 0, 0, 1);
+                        newSpotLight.setAttenuation(attenuation[0], attenuation[1],
+                                attenuation[2]);
 
-                            if (on)
-                                newSpotLight.enable();
-                            else
-                                newSpotLight.disable();
-                            newSpotLight.setInnerConeAngle(beamWidth * 180 / (float) Math.PI);
-                            newSpotLight.setOuterConeAngle(cutOffAngle * 180 / (float) Math.PI);
+                        if (on)
+                            newSpotLight.enable();
+                        else
+                            newSpotLight.disable();
+                        newSpotLight.setInnerConeAngle(beamWidth * 180 / (float) Math.PI);
+                        newSpotLight.setOuterConeAngle(cutOffAngle * 180 / (float) Math.PI);
 
-                            if (definedItem != null) definedItem.setDirection(direction);
-                            Quaternionf q = animationInteractivityManager.ConvertDirectionalVectorToQuaternion(
-                                    new Vector3f(direction[0], direction[1], direction[2]));
-                            // set position and direction in the SpotLight's GVRScene
-                            GVRTransform newSpotLightSceneObjTransform = newSpotLightSceneObj
-                                    .getTransform();
-                            newSpotLightSceneObjTransform.setPosition(location[0], location[1],
-                                                                      location[2]);
-                            newSpotLightSceneObjTransform.setRotation(q.w, q.x, q.y, q.z);
-                        } // end adding a new SpotLight
+                        if (definedItem != null) definedItem.setDirection(direction);
+                        Quaternionf q = animationInteractivityManager.ConvertDirectionalVectorToQuaternion(
+                                new Vector3f(direction[0], direction[1], direction[2]));
+                        // set position and direction in the SpotLight's GVRScene
+                        GVRTransform newSpotLightSceneObjTransform = newSpotLightSceneObj
+                                .getTransform();
+                        newSpotLightSceneObjTransform.setPosition(location[0], location[1],
+                                location[2]);
+                        newSpotLightSceneObjTransform.setRotation(q.w, q.x, q.y, q.z);
+                    } // end adding a new SpotLight
 
-                    } // end if UNIVERSAL_LIGHTS
+                } // end if UNIVERSAL_LIGHTS
 
             } // end <SpotLight> node
 
 
             /********** TimeSensor **********/
             else if (qName.equalsIgnoreCase("TimeSensor")) {
-                    String name = null;
-                    float cycleInterval = 1;
-                    boolean enabled = true;
-                    boolean loop = false;
-                    float pauseTime = 0;
-                    float resumeTime = 0;
-                    float startTime = 0;
-                    float stopTime = 0;
+                String name = null;
+                float cycleInterval = 1;
+                boolean enabled = true;
+                boolean loop = false;
+                float pauseTime = 0;
+                float resumeTime = 0;
+                float startTime = 0;
+                float stopTime = 0;
 
-                    attributeValue = attributes.getValue("DEF");
-                    if (attributeValue != null) {
-                        name = attributeValue;
-                    }
-                    attributeValue = attributes.getValue("cycleInterval");
-                    if (attributeValue != null) {
-                        cycleInterval = parseSingleFloatString(attributeValue, false, true);
-                    }
-                    attributeValue = attributes.getValue("enabled");
-                    if (attributeValue != null) {
-                        enabled = parseBooleanString(attributeValue);
-                    }
-                    attributeValue = attributes.getValue("loop");
-                    if (attributeValue != null) {
-                        loop = parseBooleanString(attributeValue);
-                    }
-                    attributeValue = attributes.getValue("pauseTime");
-                    if (attributeValue != null) {
-                        pauseTime = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "Timer pauseTime not currently implemented. ");
-                    }
-                    attributeValue = attributes.getValue("resumeTime");
-                    if (attributeValue != null) {
-                        resumeTime = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "Timer resumeTime not currently implemented. ");
-                    }
-                    attributeValue = attributes.getValue("startTime");
-                    if (attributeValue != null) {
-                        startTime = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "Timer startTime not currently implemented. ");
-                    }
-                    attributeValue = attributes.getValue("stopTime");
-                    if (attributeValue != null) {
-                        stopTime = parseSingleFloatString(attributeValue, false, true);
-                        Log.e(TAG, "Timer stopTime not currently implemented. ");
-                    }
+                attributeValue = attributes.getValue("DEF");
+                if (attributeValue != null) {
+                    name = attributeValue;
+                }
+                attributeValue = attributes.getValue("cycleInterval");
+                if (attributeValue != null) {
+                    cycleInterval = parseSingleFloatString(attributeValue, false, true);
+                }
+                attributeValue = attributes.getValue("enabled");
+                if (attributeValue != null) {
+                    enabled = parseBooleanString(attributeValue);
+                }
+                attributeValue = attributes.getValue("loop");
+                if (attributeValue != null) {
+                    loop = parseBooleanString(attributeValue);
+                }
+                attributeValue = attributes.getValue("pauseTime");
+                if (attributeValue != null) {
+                    pauseTime = parseSingleFloatString(attributeValue, false, true);
+                    Log.e(TAG, "Timer pauseTime not currently implemented. ");
+                }
+                attributeValue = attributes.getValue("resumeTime");
+                if (attributeValue != null) {
+                    resumeTime = parseSingleFloatString(attributeValue, false, true);
+                    Log.e(TAG, "Timer resumeTime not currently implemented. ");
+                }
+                attributeValue = attributes.getValue("startTime");
+                if (attributeValue != null) {
+                    startTime = parseSingleFloatString(attributeValue, false, true);
+                    Log.e(TAG, "Timer startTime not currently implemented. ");
+                }
+                attributeValue = attributes.getValue("stopTime");
+                if (attributeValue != null) {
+                    stopTime = parseSingleFloatString(attributeValue, false, true);
+                    Log.e(TAG, "Timer stopTime not currently implemented. ");
+                }
 
-                    TimeSensor newTimeSensor = new TimeSensor(name, cycleInterval, enabled,
-                                                              loop, pauseTime, resumeTime, startTime, stopTime);
-                    timeSensors.add(newTimeSensor);
+                TimeSensor newTimeSensor = new TimeSensor(name, cycleInterval, enabled,
+                        loop, pauseTime, resumeTime, startTime, stopTime);
+                timeSensors.add(newTimeSensor);
 
             } // end <TimeSensor> node
 
@@ -2297,54 +2297,11 @@ public class X3Dobject {
                     }
 
                     animationInteractivityManager.buildInteractiveObject(fromNode, fromField, toNode, toField);
-            } // end <ROUTE> node
+                } // end <ROUTE> node
 
 
-            /********** PositionInterpolator **********/
-            else if (qName.equalsIgnoreCase("PositionInterpolator")) {
-                String name = null;
-                float[] keysList = null;
-                float[] keyValuesList = null;
-
-                attributeValue = attributes.getValue("DEF");
-                if (attributeValue != null) {
-                    name = attributeValue;
-                }
-                attributeValue = attributes.getValue("key");
-                if (attributeValue != null) {
-                    parseNumbersString(attributeValue, X3Dobject.interpolatorKeyComponent,
-                                       1);
-
-                    keysList = new float[keys.size()];
-                    for (int i = 0; i < keysList.length; i++) {
-                        Key keyObject = keys.get(i);
-                        keysList[i] = keyObject.key;
-                    }
-                    keys.clear();
-                }
-                attributeValue = attributes.getValue("keyValue");
-                if (attributeValue != null) {
-                    parseNumbersString(attributeValue,
-                                       X3Dobject.interpolatorKeyValueComponent, 3);
-
-                    keyValuesList = new float[keyValues.size() * 3];
-                    for (int i = 0; i < keyValues.size(); i++) {
-                        KeyValue keyValueObject = keyValues.get(i);
-                        for (int j = 0; j < 3; j++) {
-                            keyValuesList[i * 3 + j] = keyValueObject.keyValues[j];
-                        }
-                    }
-                    keyValues.clear();
-                }
-                Interpolator newInterporlator = new Interpolator(name, keysList,
-                                                                 keyValuesList);
-                interpolators.add(newInterporlator);
-
-            } // end <PositionInterpolator> node
-
-
-            /********** OrientationInterpolator **********/
-            else if (qName.equalsIgnoreCase("OrientationInterpolator")) {
+                /********** PositionInterpolator **********/
+                else if (qName.equalsIgnoreCase("PositionInterpolator")) {
                     String name = null;
                     float[] keysList = null;
                     float[] keyValuesList = null;
@@ -2356,7 +2313,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("key");
                     if (attributeValue != null) {
                         parseNumbersString(attributeValue, X3Dobject.interpolatorKeyComponent,
-                                           1);
+                                1);
 
                         keysList = new float[keys.size()];
                         for (int i = 0; i < keysList.length; i++) {
@@ -2368,7 +2325,50 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("keyValue");
                     if (attributeValue != null) {
                         parseNumbersString(attributeValue,
-                                           X3Dobject.interpolatorKeyValueComponent, 4);
+                                X3Dobject.interpolatorKeyValueComponent, 3);
+
+                        keyValuesList = new float[keyValues.size() * 3];
+                        for (int i = 0; i < keyValues.size(); i++) {
+                            KeyValue keyValueObject = keyValues.get(i);
+                            for (int j = 0; j < 3; j++) {
+                                keyValuesList[i * 3 + j] = keyValueObject.keyValues[j];
+                            }
+                        }
+                        keyValues.clear();
+                    }
+                    Interpolator newInterporlator = new Interpolator(name, keysList,
+                            keyValuesList);
+                    interpolators.add(newInterporlator);
+
+                } // end <PositionInterpolator> node
+
+
+                /********** OrientationInterpolator **********/
+                else if (qName.equalsIgnoreCase("OrientationInterpolator")) {
+                    String name = null;
+                    float[] keysList = null;
+                    float[] keyValuesList = null;
+
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        name = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("key");
+                    if (attributeValue != null) {
+                        parseNumbersString(attributeValue, X3Dobject.interpolatorKeyComponent,
+                                1);
+
+                        keysList = new float[keys.size()];
+                        for (int i = 0; i < keysList.length; i++) {
+                            Key keyObject = keys.get(i);
+                            keysList[i] = keyObject.key;
+                        }
+                        keys.clear();
+                    }
+                    attributeValue = attributes.getValue("keyValue");
+                    if (attributeValue != null) {
+                        parseNumbersString(attributeValue,
+                                X3Dobject.interpolatorKeyValueComponent, 4);
 
                         keyValuesList = new float[keyValues.size() * 4];
                         for (int i = 0; i < keyValues.size(); i++) {
@@ -2380,14 +2380,14 @@ public class X3Dobject {
                         keyValues.clear();
                     }
                     Interpolator newInterporlator = new Interpolator(name, keysList,
-                                                                     keyValuesList);
+                            keyValuesList);
                     interpolators.add(newInterporlator);
 
-            } // end <OrientationInterpolator> node
+                } // end <OrientationInterpolator> node
 
 
-            /********** Box **********/
-            else if (qName.equalsIgnoreCase("Box")) {
+                /********** Box **********/
+                else if (qName.equalsIgnoreCase("Box")) {
                     float[] size =
                             {
                                     2, 2, 2
@@ -2409,11 +2409,11 @@ public class X3Dobject {
                     meshAttachedSceneObject = gvrCubeSceneObject;
 
 
-            } // end <Box> node
+                } // end <Box> node
 
 
-            /********** Cone **********/
-            else if (qName.equalsIgnoreCase("Cone")) {
+                /********** Cone **********/
+                else if (qName.equalsIgnoreCase("Cone")) {
                     boolean bottom = true;
                     float bottomRadius = 1;
                     float height = 2;
@@ -2449,16 +2449,16 @@ public class X3Dobject {
                     params.HasBottomCap = bottom;
                     params.Material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
                     GVRCylinderSceneObject cone = new GVRCylinderSceneObject(gvrContext,
-                                                                             params);
+                            params);
 
                     currentSceneObject.addChildObject(cone);
                     meshAttachedSceneObject = cone;
 
-            }  // end <Cone> node
+                }  // end <Cone> node
 
 
-            /********** Cylinder **********/
-            else if (qName.equalsIgnoreCase("Cylinder")) {
+                /********** Cylinder **********/
+                else if (qName.equalsIgnoreCase("Cylinder")) {
                     boolean bottom = true;
                     float height = 2;
                     float radius = 1;
@@ -2503,11 +2503,11 @@ public class X3Dobject {
                     currentSceneObject.addChildObject(gvrCylinderSceneObject);
                     meshAttachedSceneObject = gvrCylinderSceneObject;
 
-            } // end <Cylinder> node
+                } // end <Cylinder> node
 
 
-            /********** Sphere **********/
-            else if (qName.equalsIgnoreCase("Sphere")) {
+                /********** Sphere **********/
+                else if (qName.equalsIgnoreCase("Sphere")) {
                     float radius = 1;
                     boolean solid = true; // sphere visible from inside
                     attributeValue = attributes.getValue("radius");
@@ -2523,12 +2523,12 @@ public class X3Dobject {
                     currentSceneObject.addChildObject(gvrSphereSceneObject);
                     meshAttachedSceneObject = gvrSphereSceneObject;
 
-            } // end <Sphere> node
+                } // end <Sphere> node
 
-            // Less frequent commands and thus moved to end of if-then-else.
+                // Less frequent commands and thus moved to end of if-then-else.
 
-            /********** Viewpoint **********/
-            else if (qName.equalsIgnoreCase("Viewpoint")) {
+                /********** Viewpoint **********/
+                else if (qName.equalsIgnoreCase("Viewpoint")) {
                     float[] centerOfRotation =
                             {
                                     0, 0, 0
@@ -2554,7 +2554,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("centerOfRotation");
                     if (attributeValue != null) {
                         centerOfRotation = parseFixedLengthFloatString(attributeValue, 3,
-                                                                       false, false);
+                                false, false);
                         Log.e(TAG, "X3D Viewpoint centerOfRotation not implemented in GearVR.");
                     }
                     attributeValue = attributes.getValue("description");
@@ -2575,12 +2575,12 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("orientation");
                     if (attributeValue != null) {
                         orientation = parseFixedLengthFloatString(attributeValue, 4, false,
-                                                                  false);
+                                false);
                     }
                     attributeValue = attributes.getValue("position");
                     if (attributeValue != null) {
                         position = parseFixedLengthFloatString(attributeValue, 3, false,
-                                                               false);
+                                false);
                     }
                     attributeValue = attributes.getValue("retainUserOffsets");
                     if (attributeValue != null) {
@@ -2590,8 +2590,8 @@ public class X3Dobject {
                     // Add viewpoint to the list.
                     // Since viewpoints can be under a Transform, save the parent.
                     Viewpoint viewpoint = new Viewpoint(centerOfRotation, description,
-                                                        fieldOfView, jump, name, orientation, position, retainUserOffsets,
-                                                        currentSceneObject);
+                            fieldOfView, jump, name, orientation, position, retainUserOffsets,
+                            currentSceneObject);
                     viewpoints.add(viewpoint);
 
                     if ( !name.equals("") ) {
@@ -2601,14 +2601,14 @@ public class X3Dobject {
                     }
 
 
-            } // end <Viewpoint> node
-   
+                } // end <Viewpoint> node
 
-            /********** Text **********/
-            else if (qName.equalsIgnoreCase("Text")) {
+
+                /********** Text **********/
+                else if (qName.equalsIgnoreCase("Text")) {
                     Init_Text_FontParams();
 
-                    attributeValue = attributes.getValue("DEF");
+                   attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         Text_FontParams.nameTextAttribute = attributeValue;
                         Log.e(TAG, "Text DEF name currently not implemented.");
@@ -2741,8 +2741,8 @@ public class X3Dobject {
                     } // not re-USE FontStyle
                 } // end <FontStyle> node
 
-            /********** Billboard **********/
-            else if (qName.equalsIgnoreCase("Billboard")) {
+                /********** Billboard **********/
+                else if (qName.equalsIgnoreCase("Billboard")) {
                     Log.e(TAG, "X3D Billboard currently not implemented. ");
                     //TODO: Billboard not currently implemented
                     String name = "";
@@ -2757,50 +2757,50 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("axisOfRotation");
                     if (attributeValue != null) {
                         axisOfRotation = parseFixedLengthFloatString(attributeValue, 3, true,
-                                                                     false);
+                                false);
                     }
 
-            } // end <Billboard> node
+                } // end <Billboard> node
 
 
-            /********** Inline **********/
-            else if (qName.equalsIgnoreCase("Inline")) {
-                // Inline data saved, and added after the inital .x3d program is parsed
-                String name = "";
-                String[] url = new String[1];
-                attributeValue = attributes.getValue("DEF");
-                if (attributeValue != null) {
-                    name = attributeValue;
-                }
-                attributeValue = attributes.getValue("url");
-                if (attributeValue != null) {
-                    //url = parseMFString(attributeValue);
-                    url[0] = attributeValue;
-                    GVRSceneObject inlineGVRSceneObject = currentSceneObject; // preserve
-                    // the
-                    // currentSceneObject
-                    if (lodManager.isActive()) {
-                        inlineGVRSceneObject = AddGVRSceneObject();
-                        inlineGVRSceneObject.setName("inlineGVRSceneObject"
-                                + lodManager.getCurrentRangeIndex());
-                        final GVRSceneObject parent = inlineGVRSceneObject.getParent();
-                        if (null == parent.getComponent(GVRLODGroup.getComponentType())) {
-                            parent.attachComponent(new GVRLODGroup(gvrContext));
+                /********** Inline **********/
+                else if (qName.equalsIgnoreCase("Inline")) {
+                    // Inline data saved, and added after the inital .x3d program is parsed
+                    String name = "";
+                    String[] url = new String[1];
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        name = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("url");
+                    if (attributeValue != null) {
+                        //url = parseMFString(attributeValue);
+                        url[0] = attributeValue;
+                        GVRSceneObject inlineGVRSceneObject = currentSceneObject; // preserve
+                        // the
+                        // currentSceneObject
+                        if (lodManager.isActive()) {
+                            inlineGVRSceneObject = AddGVRSceneObject();
+                            inlineGVRSceneObject.setName("inlineGVRSceneObject"
+                                    + lodManager.getCurrentRangeIndex());
+                            final GVRSceneObject parent = inlineGVRSceneObject.getParent();
+                            if (null == parent.getComponent(GVRLODGroup.getComponentType())) {
+                                parent.attachComponent(new GVRLODGroup(gvrContext));
+                            }
+                            final GVRLODGroup lodGroup = (GVRLODGroup) parent.getComponent(GVRLODGroup.getComponentType());
+                            lodGroup.addRange(lodManager.getMinRange(), inlineGVRSceneObject);
+                            lodManager.increment();
                         }
-                        final GVRLODGroup lodGroup = (GVRLODGroup) parent.getComponent(GVRLODGroup.getComponentType());
-                        lodGroup.addRange(lodManager.getMinRange(), inlineGVRSceneObject);
-                        lodManager.increment();
+                        InlineObject inlineObject = new InlineObject(inlineGVRSceneObject,
+                                url);
+                        inlineObjects.add(inlineObject);
                     }
-                    InlineObject inlineObject = new InlineObject(inlineGVRSceneObject,
-                            url);
-                    inlineObjects.add(inlineObject);
-                }
 
-            } // end <Inline> node
+                } // end <Inline> node
 
 
-            /********** LOD **********/
-            else if (qName.equalsIgnoreCase("LOD")) {
+                /********** LOD **********/
+                else if (qName.equalsIgnoreCase("LOD")) {
                     String name = "";
                     float[] center =
                             {
@@ -2829,11 +2829,11 @@ public class X3Dobject {
                     }
                     lodManager.set(range, center);
 
-            } // end <LOD> Level-of-Detail node
+                } // end <LOD> Level-of-Detail node
 
 
-            /********** Anchor **********/
-            else if (qName.equalsIgnoreCase("Anchor")) {
+                /********** Anchor **********/
+                else if (qName.equalsIgnoreCase("Anchor")) {
                     String name = "";
                     String description = "";
                     String[] parameter = null;
@@ -2864,17 +2864,17 @@ public class X3Dobject {
                     currentSceneObject = AddGVRSceneObject();
                     currentSceneObject.setName(name);
                     Sensor sensor = new Sensor(name, Sensor.Type.ANCHOR,
-                                               currentSceneObject);
+                            currentSceneObject);
                     sensor.setAnchorURL(url);
                     sensors.add(sensor);
                     animationInteractivityManager.BuildInteractiveObjectFromAnchor(sensor, url);
 
                     currentSensor = sensor;
-            } // end <Anchor> node
+                } // end <Anchor> node
 
 
-            /********** TouchSensor **********/
-            else if (qName.equalsIgnoreCase("TouchSensor")) {
+                /********** TouchSensor **********/
+                else if (qName.equalsIgnoreCase("TouchSensor")) {
                     String name = "";
                     String description = "";
                     boolean enabled = true;
@@ -2894,7 +2894,7 @@ public class X3Dobject {
                     GVRSceneObject gvrSensorSceneObject = new GVRSceneObject(gvrContext);
                     gvrSensorSceneObject.setName(name);
                     Sensor sensor = new Sensor(name, Sensor.Type.TOUCH,
-                                               gvrSensorSceneObject);
+                            gvrSensorSceneObject);
                     sensors.add(sensor);
                     currentSensor = sensor;
                     // attach any existing child objects of the parent to the new
@@ -2909,11 +2909,11 @@ public class X3Dobject {
                     }
                     currentSceneObject.addChildObject(gvrSensorSceneObject);
                     currentSceneObject = gvrSensorSceneObject;
-            } // end <TouchSensor> node
+                } // end <TouchSensor> node
 
 
-            /********** ProximitySensor **********/
-            else if (qName.equalsIgnoreCase("ProximitySensor")) {
+                /********** ProximitySensor **********/
+                else if (qName.equalsIgnoreCase("ProximitySensor")) {
                     Log.e(TAG, "ProximitySensor currently not implemented. ");
                     //TODO Proximity Sensor not currently implemented
                     String name = "";
@@ -2928,11 +2928,11 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         url = parseMFString(attributeValue);
                     }
-            }  //  end <ProximitySensor> node
+                }  //  end <ProximitySensor> node
 
 
-            /********** Script **********/
-            else if (qName.equalsIgnoreCase("Script")) {
+                /********** Script **********/
+                else if (qName.equalsIgnoreCase("Script")) {
                     String name = "";
                     Boolean directOutput = false;
                     Boolean mustEvaluate = false;
@@ -2961,11 +2961,11 @@ public class X3Dobject {
                         mustEvaluate = parseBooleanString(attributeValue);
                     }
                     currentScriptObject = new ScriptObject(name, directOutput, mustEvaluate, url);
-            }  //  end <Script> node
+                }  //  end <Script> node
 
 
-            /******* field (embedded inside <Script>) node *******/
-            else if (qName.equalsIgnoreCase("field")) {
+                /******* field (embedded inside <Script>) node *******/
+                else if (qName.equalsIgnoreCase("field")) {
 
                     String name = "";
                     ScriptObject.AccessType accessType = ScriptObject.AccessType.INPUT_OUTPUT;
@@ -2994,11 +2994,11 @@ public class X3Dobject {
                     if (currentScriptObject != null) {
                         currentScriptObject.addField(name, accessType, type);
                     }
-            }  //  end <field> node
+                }  //  end <field> node
 
 
-            /********** BooleanToggle **********/
-            else if (qName.equalsIgnoreCase("BooleanToggle")) {
+                /********** BooleanToggle **********/
+                else if (qName.equalsIgnoreCase("BooleanToggle")) {
                     String name = "";
                     boolean toggle = false;
 
@@ -3012,11 +3012,11 @@ public class X3Dobject {
                     }
                     EventUtility eventUtility = new EventUtility(name, EventUtility.DataType.BOOLEAN, EventUtility.Type.TOGGLE, toggle);
                     eventUtilities.add(eventUtility);
-            }  //  end <BooleanToggle> node
+                }  //  end <BooleanToggle> node
 
 
-            /********** ElevationGrid **********/
-            else if (qName.equalsIgnoreCase("ElevationGrid")) {
+                /********** ElevationGrid **********/
+                else if (qName.equalsIgnoreCase("ElevationGrid")) {
                     Log.e(TAG, "X3D ElevationGrid not currently implemented. ");
                     String name = "";
                     float creaseAngle = 0;
@@ -3034,7 +3034,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("xDimension");
                     if (attributeValue != null) {
                         xDimension = (int) parseSingleFloatString(attributeValue, false,
-                                                                  true);
+                                true);
                     }
                     attributeValue = attributes.getValue("xSpacing");
                     if (attributeValue != null) {
@@ -3043,7 +3043,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("zDimension");
                     if (attributeValue != null) {
                         zDimension = (int) parseSingleFloatString(attributeValue, false,
-                                                                  true);
+                                true);
                     }
                     attributeValue = attributes.getValue("zSpacing");
                     if (attributeValue != null) {
@@ -3052,7 +3052,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("height");
                     if (attributeValue != null) {
                         parseNumbersString(attributeValue, X3Dobject.elevationGridHeight,
-                                           xDimension * zDimension);
+                                xDimension * zDimension);
                         height = new float[(xDimension + 1) * (zDimension + 1)];
                         for (int i = 0; i < height.length; i++) {
                             height[i] = floatArray.get(i);
@@ -3069,7 +3069,7 @@ public class X3Dobject {
                                 vertices[i * (xDimension + 1) + j][0] = (j * xSpacing); // vertex
                                 // x value
                                 vertices[i * (xDimension + 1)
-                                         + j][1] = (height[i * (xDimension + 1) + j]); // vertex y
+                                        + j][1] = (height[i * (xDimension + 1) + j]); // vertex y
                                 // value
                                 vertices[i * (xDimension + 1) + j][2] = (i * zSpacing); // vertex
                                 // z value
@@ -3083,7 +3083,7 @@ public class X3Dobject {
                             polygonNormals[i] = new Vector3f();
                         }
                         Vector3f[] vertexNormals = new Vector3f[(xDimension + 1)
-                                                                * (zDimension + 1)];
+                                * (zDimension + 1)];
                         for (int i = 0; i < (xDimension + 1) * (zDimension + 1); i++) {
                             vertexNormals[i] = new Vector3f();
                         }
@@ -3108,31 +3108,31 @@ public class X3Dobject {
                                 // the rectangle
                                 vLine[0].set(
                                         vertices[i * (xDimension + 1) + j + 1][0]
-                                        - vertices[i * (xDimension + 1) + j][0],
+                                                - vertices[i * (xDimension + 1) + j][0],
                                         vertices[i * (xDimension + 1) + j + 1][1]
-                                        - vertices[i * (xDimension + 1) + j][1],
+                                                - vertices[i * (xDimension + 1) + j][1],
                                         vertices[i * (xDimension + 1) + j + 1][2]
-                                        - vertices[i * (xDimension + 1) + j][2]);
+                                                - vertices[i * (xDimension + 1) + j][2]);
                                 vLine[1]
                                         .set(vertices[i * (xDimension + 1) + j + xDimension + 2][0]
-                                             - vertices[i * (xDimension + 1) + j + xDimension + 1][0],
-                                             vertices[i * (xDimension + 1) + j + xDimension + 2][1]
-                                             - vertices[i * (xDimension + 1) + j + xDimension
+                                                        - vertices[i * (xDimension + 1) + j + xDimension + 1][0],
+                                                vertices[i * (xDimension + 1) + j + xDimension + 2][1]
+                                                        - vertices[i * (xDimension + 1) + j + xDimension
                                                         + 1][1],
-                                             vertices[i * (xDimension + 1) + j + xDimension + 2][2]
-                                             - vertices[i * (xDimension + 1) + j + xDimension
+                                                vertices[i * (xDimension + 1) + j + xDimension + 2][2]
+                                                        - vertices[i * (xDimension + 1) + j + xDimension
                                                         + 1][2]);
                                 // hypotenuse of the 4 vertices that create a rectangle
                                 vLine[2].set(
                                         vertices[i * (xDimension + 1) + j + 1][0]
-                                        - vertices[i * (xDimension + 1) + j + xDimension
-                                                   + 1][0],
+                                                - vertices[i * (xDimension + 1) + j + xDimension
+                                                + 1][0],
                                         vertices[i * (xDimension + 1) + j + 1][1]
-                                        - vertices[i * (xDimension + 1) + j + xDimension
-                                                   + 1][1],
+                                                - vertices[i * (xDimension + 1) + j + xDimension
+                                                + 1][1],
                                         vertices[i * (xDimension + 1) + j + 1][2]
-                                        - vertices[i * (xDimension + 1) + j + xDimension
-                                                   + 1][2]);
+                                                - vertices[i * (xDimension + 1) + j + xDimension
+                                                + 1][2]);
 
                                 // cross product to determine normal and save the value: line0 x
                                 // hypotenuse, line1 x hypotenuse
@@ -3159,11 +3159,11 @@ public class X3Dobject {
                         //TODO: ElevationGrid not completed
                         // gvrMesh = new GVRMesh(gvrContext);
                     }
-            } // end <ElevationGrid> node
+                } // end <ElevationGrid> node
 
 
-            /********** Navigation Info **********/
-            else if (qName.equalsIgnoreCase("NavigationInfo")) {
+                /********** Navigation Info **********/
+                else if (qName.equalsIgnoreCase("NavigationInfo")) {
                     String name = "";
                     float[] avatarSize =
                             {
@@ -3181,7 +3181,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("avatarSize");
                     if (attributeValue != null) {
                         avatarSize = parseFixedLengthFloatString(attributeValue, 3, false,
-                                                                 true);
+                                true);
                         Log.e(TAG, "NavigationInfo avatarSize attribute not implemented. ");
                     }
                     attributeValue = attributes.getValue("headlight");
@@ -3197,7 +3197,7 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         transitionTime = parseSingleFloatString(attributeValue, false, true);
                         Log.e(TAG,
-                              "NavigationInfo transitionTime attribute not implemented. ");
+                                "NavigationInfo transitionTime attribute not implemented. ");
                     }
                     attributeValue = attributes.getValue("type");
                     if (attributeValue != null) {
@@ -3207,7 +3207,7 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         visibilityLimit = parseSingleFloatString(attributeValue, false, true);
                         Log.e(TAG,
-                              "NavigationInfo visibilityLimit attribute not implemented. ");
+                                "NavigationInfo visibilityLimit attribute not implemented. ");
                     }
                     if (headlight) {
                         GVRSceneObject headlightSceneObject = new GVRSceneObject(gvrContext);
@@ -3218,11 +3218,11 @@ public class X3Dobject {
                         cameraRigAtRoot.addChildObject(headlightSceneObject);
                     }
 
-            } // end <NavigationInfo> node
+                } // end <NavigationInfo> node
 
 
-            /********** Background **********/
-            else if (qName.equalsIgnoreCase("Background")) {
+                /********** Background **********/
+                else if (qName.equalsIgnoreCase("Background")) {
                     float[] skycolor =
                             {
                                     0, 0, 0
@@ -3247,7 +3247,7 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("skyColor");
                     if (attributeValue != null) {
                         skycolor = parseFixedLengthFloatString(attributeValue, 3, true,
-                                                               false);
+                                false);
                     }
                     attributeValue = attributes.getValue("backUrl");
                     if (attributeValue != null) {
@@ -3290,16 +3290,16 @@ public class X3Dobject {
 
                     // if url's defined, use cube mapping for the background
                     if ((backUrl.length > 0) && (bottomUrl.length > 0)
-                        && (frontUrl.length > 0) && (leftUrl.length > 0)
-                        && (rightUrl.length > 0) && (topUrl.length > 0)) {
+                            && (frontUrl.length > 0) && (leftUrl.length > 0)
+                            && (rightUrl.length > 0) && (topUrl.length > 0)) {
 
                         ArrayList<GVRTexture> textureList = new ArrayList<GVRTexture>(6);
                         GVRAssetLoader loader = gvrContext.getAssetLoader();
                         String urlAttribute = backUrl[0].substring(0,
-                                                                   backUrl[0].indexOf("."));
+                                backUrl[0].indexOf("."));
                         int assetID = activityContext.getResources()
                                 .getIdentifier(urlAttribute, "drawable",
-                                               activityContext.getPackageName());
+                                        activityContext.getPackageName());
                         if (assetID != 0) {
                             textureList
                                     .add(loader.loadTexture(new GVRAndroidResource(
@@ -3309,7 +3309,7 @@ public class X3Dobject {
                         urlAttribute = rightUrl[0].substring(0, rightUrl[0].indexOf("."));
                         assetID = activityContext.getResources()
                                 .getIdentifier(urlAttribute, "drawable",
-                                               activityContext.getPackageName());
+                                        activityContext.getPackageName());
                         if (assetID != 0) {
                             textureList
                                     .add(loader.loadTexture(new GVRAndroidResource(
@@ -3319,7 +3319,7 @@ public class X3Dobject {
                         urlAttribute = frontUrl[0].substring(0, frontUrl[0].indexOf("."));
                         assetID = activityContext.getResources()
                                 .getIdentifier(urlAttribute, "drawable",
-                                               activityContext.getPackageName());
+                                        activityContext.getPackageName());
                         if (assetID != 0) {
                             textureList
                                     .add(loader.loadTexture(new GVRAndroidResource(
@@ -3329,7 +3329,7 @@ public class X3Dobject {
                         urlAttribute = leftUrl[0].substring(0, leftUrl[0].indexOf("."));
                         assetID = activityContext.getResources()
                                 .getIdentifier(urlAttribute, "drawable",
-                                               activityContext.getPackageName());
+                                        activityContext.getPackageName());
                         if (assetID != 0) {
                             textureList
                                     .add(loader.loadTexture(new GVRAndroidResource(
@@ -3339,7 +3339,7 @@ public class X3Dobject {
                         urlAttribute = topUrl[0].substring(0, topUrl[0].indexOf("."));
                         assetID = activityContext.getResources()
                                 .getIdentifier(urlAttribute, "drawable",
-                                               activityContext.getPackageName());
+                                        activityContext.getPackageName());
                         if (assetID != 0) {
                             textureList
                                     .add(loader.loadTexture(new GVRAndroidResource(
@@ -3349,7 +3349,7 @@ public class X3Dobject {
                         urlAttribute = bottomUrl[0].substring(0, bottomUrl[0].indexOf("."));
                         assetID = activityContext.getResources()
                                 .getIdentifier(urlAttribute, "drawable",
-                                               activityContext.getPackageName());
+                                        activityContext.getPackageName());
                         if (assetID != 0) {
                             textureList
                                     .add(loader.loadTexture(new GVRAndroidResource(
@@ -3359,7 +3359,7 @@ public class X3Dobject {
                         GVRCubeSceneObject mCubeEvironment = new GVRCubeSceneObject(
                                 gvrContext, false, textureList);
                         mCubeEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
-                                                                CUBE_WIDTH);
+                                CUBE_WIDTH);
 
                         root.addChildObject(mCubeEvironment);
                     } else {
@@ -3367,13 +3367,13 @@ public class X3Dobject {
                         gvrContext.getMainScene().setBackgroundColor(skycolor[0], skycolor[1], skycolor[2], 1);
                     }
 
-            } // end <Background> node
+                } // end <Background> node
 
-            // These next few nodes are used once per file and thus moved
-            //  to the end of the parsing's if-then-else statement
+                // These next few nodes are used once per file and thus moved
+                //  to the end of the parsing's if-then-else statement
 
-            /********** X3D **********/
-            else if (qName.equalsIgnoreCase("x3d")) {
+                /********** X3D **********/
+                else if (qName.equalsIgnoreCase("x3d")) {
                     attributeValue = attributes.getValue("version");
                     if (attributeValue != null) {
                         // currently, we don't do anything with the version information
@@ -3383,10 +3383,10 @@ public class X3Dobject {
                         // currently, we don't do anything with the profile information
                     }
 
-            }  //  end <X3D> node
+                }  //  end <X3D> node
 
-            /********** Scene **********/
-            else if (qName.equalsIgnoreCase("scene")) {
+                /********** Scene **********/
+                else if (qName.equalsIgnoreCase("scene")) {
                     ;
 
                 }  //  end <Sene> node
@@ -3419,17 +3419,17 @@ public class X3Dobject {
                         String name = currentSceneObject.getName();
                         currentSceneObject = currentSceneObject.getParent();
                         while (currentSceneObject.getName()
-                                       .equals(name + TRANSFORM_ROTATION_)
-                               || currentSceneObject.getName()
-                                       .equals(name + TRANSFORM_TRANSLATION_)
-                               || currentSceneObject.getName().equals(name + TRANSFORM_SCALE_)
-                               || currentSceneObject.getName().equals(name + TRANSFORM_CENTER_)
-                               || currentSceneObject.getName()
-                                       .equals(name + TRANSFORM_NEGATIVE_CENTER_)
-                               || currentSceneObject.getName()
-                                       .equals(name + TRANSFORM_SCALE_ORIENTATION_)
-                               || currentSceneObject.getName()
-                                       .equals(name + TRANSFORM_NEGATIVE_SCALE_ORIENTATION_)) {
+                                .equals(name + TRANSFORM_ROTATION_)
+                                || currentSceneObject.getName()
+                                .equals(name + TRANSFORM_TRANSLATION_)
+                                || currentSceneObject.getName().equals(name + TRANSFORM_SCALE_)
+                                || currentSceneObject.getName().equals(name + TRANSFORM_CENTER_)
+                                || currentSceneObject.getName()
+                                .equals(name + TRANSFORM_NEGATIVE_CENTER_)
+                                || currentSceneObject.getName()
+                                .equals(name + TRANSFORM_SCALE_ORIENTATION_)
+                                || currentSceneObject.getName()
+                                .equals(name + TRANSFORM_NEGATIVE_SCALE_ORIENTATION_)) {
                             currentSceneObject = currentSceneObject.getParent();
                         }
                     }
@@ -3458,9 +3458,9 @@ public class X3Dobject {
                     // Shape containts Text
                     if (gvrTextViewSceneObject != null) {
                         gvrTextViewSceneObject.setTextColor((((0xFF << 8)
-                                                              + (int) (shaderSettings.diffuseColor[0] * 255) << 8)
-                                                             + (int) (shaderSettings.diffuseColor[1] * 255) << 8)
-                                                            + (int) (shaderSettings.diffuseColor[2] * 255));
+                                + (int) (shaderSettings.diffuseColor[0] * 255) << 8)
+                                + (int) (shaderSettings.diffuseColor[1] * 255) << 8)
+                                + (int) (shaderSettings.diffuseColor[2] * 255));
                         gvrTextViewSceneObject = null;
                     }
 
@@ -3500,18 +3500,18 @@ public class X3Dobject {
                             // X3D doesn't have an ambient color so need to do color
                             // calibration tests on how to set this.
                             gvrMaterial.setVec4("diffuse_color",
-                                                shaderSettings.diffuseColor[0],
-                                                shaderSettings.diffuseColor[1],
-                                                shaderSettings.diffuseColor[2],
-                                                (1.0f - shaderSettings.getTransparency()) );
+                                    shaderSettings.diffuseColor[0],
+                                    shaderSettings.diffuseColor[1],
+                                    shaderSettings.diffuseColor[2],
+                                    (1.0f - shaderSettings.getTransparency()) );
                             gvrMaterial.setVec4("specular_color",
-                                                shaderSettings.specularColor[0],
-                                                shaderSettings.specularColor[1],
-                                                shaderSettings.specularColor[2], 1.0f);
+                                    shaderSettings.specularColor[0],
+                                    shaderSettings.specularColor[1],
+                                    shaderSettings.specularColor[2], 1.0f);
                             gvrMaterial.setVec4("emissive_color",
-                                                shaderSettings.emissiveColor[0],
-                                                shaderSettings.emissiveColor[1],
-                                                shaderSettings.emissiveColor[2], 1.0f);
+                                    shaderSettings.emissiveColor[0],
+                                    shaderSettings.emissiveColor[1],
+                                    shaderSettings.emissiveColor[2], 1.0f);
                             gvrMaterial.setFloat("specular_exponent",
                                     128.0f * shaderSettings.shininess);
 
@@ -3526,7 +3526,7 @@ public class X3Dobject {
 
                             if (shaderSettings.texture != null) {
                                 gvrMaterial.setTexture("diffuseTexture",
-                                                       shaderSettings.texture);
+                                        shaderSettings.texture);
                             }
 
                             // Appearance node thus far contains properties of GVRMaterial
@@ -3656,9 +3656,9 @@ public class X3Dobject {
              * if-then-else.
              ********/
             else if (qName.equalsIgnoreCase("Viewpoint")) {
-                    ;
+                ;
             } else if (qName.equalsIgnoreCase("Script")) {
-                javaScriptCode = JAVASCRIPT_IMPORT_PACKAGE + '\n' + javaScriptCode + '\n';
+                javaScriptCode = JAVASCRIPT_IMPORT_PACKAGE + '\n' + javaScriptCode  + '\n';
                 currentScriptObject.setJavaScriptCode(javaScriptCode);
                 if ( animationInteractivityManager.V8JavaScriptEngine) {
                     GVRJavascriptV8File gvrJavascriptV8File = new GVRJavascriptV8File(gvrContext, javaScriptCode);
@@ -3794,15 +3794,15 @@ public class X3Dobject {
                             saxParser.parse(inputStream, userhandler);
                         } catch (FileNotFoundException e) {
                             Log.e(TAG,
-                                  "Inline file reading: File Not Found: url " + urls[j] + ", Exception "
-                                  + e);
+                                    "Inline file reading: File Not Found: url " + urls[j] + ", Exception "
+                                            + e);
                         } catch (IOException ioException) {
                             Log.e(TAG,
-                                  "Inline file reading url " + urls[j]);
+                                    "Inline file reading url " + urls[j]);
                             Log.e(TAG, "IOException: " + ioException.toString());
                         } catch (Exception exception) {
                             Log.e(TAG, "Inline file reading error: Exception "
-                                       + exception);
+                                    + exception);
                         }
                     }
                 }
