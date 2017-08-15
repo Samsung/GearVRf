@@ -558,7 +558,7 @@ public final class GVRAssetLoader {
     protected static GVRBitmapTexture mDefaultImage = null;
 
     protected GVRContext mContext;
-    protected ResourceCache<GVRMesh> mMeshCache = new ResourceCache<GVRMesh>();
+    protected ResourceCache<GVRMesh> mMeshCache = new ResourceCache<>();
 
     /**
      * When the application is restarted we recreate the texture cache
@@ -1530,7 +1530,7 @@ public final class GVRAssetLoader {
      *
      * Note that this method can be quite slow; we recommend never calling it
      * from the GL thread. The asynchronous version
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)} is
+     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)} is
      * better because it moves most of the work to a background thread, doing as
      * little as possible on the GL thread.
      *
@@ -1869,9 +1869,6 @@ public final class GVRAssetLoader {
         return mDefaultTextureParameters;
     }
 
-     /**
-     * State-less, should be fine having one instance
-     */
     private final static String TAG = "GVRAssetLoader";
 
 }
