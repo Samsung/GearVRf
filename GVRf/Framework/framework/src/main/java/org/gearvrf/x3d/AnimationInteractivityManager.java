@@ -23,6 +23,7 @@ import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSwitch;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
@@ -41,6 +42,7 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.x3d.data_types.SFBool;
 import org.gearvrf.x3d.data_types.SFColor;
 import org.gearvrf.x3d.data_types.SFFloat;
+import org.gearvrf.x3d.data_types.SFInt32;
 import org.gearvrf.x3d.data_types.SFTime;
 import org.gearvrf.x3d.data_types.SFVec3f;
 import org.gearvrf.x3d.data_types.SFRotation;
@@ -300,7 +302,6 @@ public class AnimationInteractivityManager {
                     else if ( (interactiveObject.getScriptObject() == null) && (routeFromScriptObject != null) ) {
                         for (ScriptObject.Field field : routeFromScriptObject.getFieldsArrayList()) {
                             if (fromField.equalsIgnoreCase(routeFromScriptObject.getFieldName(field))) {
-                                //routeFromScriptObject.setToDefinedItem(field, routeToDefinedItem, toField);
                                 routeFromScriptObject.setToEventUtility(field, routeToEventUtility, toField);
                                 routeToEventUtilityFound = true;
                             }
@@ -1100,6 +1101,20 @@ public class AnimationInteractivityManager {
                             }
                         }
                     }  // end if SFFloat
+                    else if (fieldType.equalsIgnoreCase("SFInt32")) {
+                        int parameter = 0;
+                        if (definedItem.getGVRSceneObject() != null) {
+                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(GVRSwitch.getComponentType());
+                            if (gvrComponent != null) {
+                                if (gvrComponent instanceof GVRSwitch) {
+                                    // We have a Switch node
+                                    GVRSwitch gvrSwitch = (GVRSwitch) gvrComponent;
+                                    parameter = gvrSwitch.getSwitchIndex();
+                                }
+                            }
+                        }
+                        scriptParameters.add(parameter);
+                    }
                 }  //  end if definedItem != null
             }  //  end INPUT_ONLY, INPUT_OUTPUT (only ways to pass parameters to JS parser
         }  // for loop checking for parameters passed to the JavaScript parser
@@ -1131,8 +1146,8 @@ public class AnimationInteractivityManager {
                     Bindings bindings = gvrJavascriptV8FileFinal.getLocalBindings();
                     SetResultsFromScript(interactiveObjectFinal, bindings);
                 } else {
-                    Log.e(TAG, "Error in SCRIPT node '" +  interactiveObjectFinal.getScriptObject().getName() +
-                            "' running V8 Engine JavaScript function initialize()");
+                    Log.e(TAG, "Error in SCRIPT node '"+  interactiveObjectFinal.getScriptObject().getName() +
+                            "' JavaScript initialize() function.");
                 }
             }
         } else {
@@ -1236,19 +1251,19 @@ public class AnimationInteractivityManager {
                         gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
                                 "( params[" + argumentNum + "], params[" + (argumentNum + 1) + "], params[" + (argumentNum + 2) + "]);\n";
                         argumentNum += 3;
-                    }  // end if SFColor of SFVec3f
+                    }  // end if SFColor of SFVec3f, a 3-value parameter
                     else if (fieldType.equalsIgnoreCase("SFRotation")) {
                         gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
                                 "( params[" + argumentNum + "], params[" + (argumentNum + 1) + "], params[" + (argumentNum + 2)
                                 + "], params[" + (argumentNum + 3) + "]);\n";
                         argumentNum += 4;
-                    }  // end if SFRotation
+                    }  // end if SFRotation, a 4-value parameter
 
-                    else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool"))) {
+                    else if ((fieldType.equalsIgnoreCase("SFFloat")) || (fieldType.equalsIgnoreCase("SFBool")) || (fieldType.equalsIgnoreCase("SFInt32")) ) {
                         gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
                                 "( params[" + argumentNum + "]);\n";
                         argumentNum += 1;
-                    }  // end if SFFloat or SFBool
+                    }  // end if SFFloat, SFBool or SFInt32 - a single parameter
                 }
                 else if (scriptObject.getFromEventUtility(field) != null) {
                     if (fieldType.equalsIgnoreCase("SFBool")) {
@@ -1330,7 +1345,7 @@ public class AnimationInteractivityManager {
             } // second complete check
             else {
                 Log.e(TAG, "Error in SCRIPT node '" + interactiveObjectFinal.getScriptObject().getName() +
-                        "' running V8 Engine JavaScript function '" + functionNameFinal + "'");
+                        "' JavaScript function '" + functionNameFinal + "'");
             }
         } // first complete check
     }  //  end RunScriptThread
@@ -1600,6 +1615,37 @@ public class AnimationInteractivityManager {
                                 Log.e(TAG, "Error: Not setting SFRotation '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
                             }
                         }  //  end SFRotation
+                        else if (fieldType.equalsIgnoreCase("SFInt32")) {
+                            try {
+                                SFInt32 sfInt32 = new SFInt32(new Integer(returnedJavaScriptValue.toString()).intValue() );
+                                if (scriptObjectToDefinedItem.getGVRSceneObject() != null) {
+                                    // Check if the field is 'whichChoice', meaning it's a Switch node
+                                    if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("whichChoice")) {
+                                        GVRSceneObject gvrSwitchSceneObject = scriptObject.getToDefinedItem(fieldNode).getGVRSceneObject();
+                                        GVRComponent gvrComponent = gvrSwitchSceneObject.getComponent(GVRSwitch.getComponentType());
+                                        if (gvrComponent instanceof GVRSwitch) {
+                                            // Set the value inside the Switch node
+                                            GVRSwitch gvrSwitch = (GVRSwitch) gvrComponent;
+                                            // Check if we are to switch to a value out of range (i.e. no mesh exists)
+                                            // and thus set to not show any object.
+                                            if ( (gvrSwitchSceneObject.getChildrenCount() <= sfInt32.getValue()) ||
+                                                    (sfInt32.getValue() < 0) ) {
+                                                sfInt32.setValue( gvrSwitchSceneObject.getChildrenCount() );
+                                            }
+                                            gvrSwitch.setSwitchIndex( sfInt32.getValue() );
+                                        }
+                                    }
+                                }  // end GVRSceneObject with SFInt32
+                                else {
+                                    Log.e(TAG, "Error: Not setting SFInt32 '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'.");
+                                }
+                            }
+                            catch (Exception e) {
+                                Log.e(TAG, "Error: Not setting SFInt32 '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT " + scriptObject.getName() + "'.");
+                                Log.e(TAG, "Exception: " + e);
+                            }
+
+                        }  //  end SFInt32
                     }  //  end value != null
                 }  //  end OUTPUT-ONLY or INPUT_OUTPUT
             }  // end for-loop list of fields for a single script
