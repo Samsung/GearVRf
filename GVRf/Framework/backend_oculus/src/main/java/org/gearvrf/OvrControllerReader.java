@@ -68,7 +68,7 @@ class OvrControllerReader implements GearCursorController.ControllerReader {
     }
     @Override
     public float getFadeDistanceFromFace(){
-        return 0f
+        return 0f;
     }
     @Override
     public float getTooltipMinDistanceFromFace(){
