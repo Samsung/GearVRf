@@ -438,6 +438,102 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         }
     }
 
+    /**
+     * A static method to generate a curved mesh along an arc.
+     *
+     * Note the width and height arguments are used only as a means to
+     * get the width:height ratio.
+     *
+     * @param gvrContext    the current context
+     * @param width         a number representing the width
+     * @param height        a number representing the height
+     * @param centralAngle  the central angle of the arc
+     * @param radius        the radius of the circle
+     * @return
+     */
+    public static GVRMesh createCurvedMesh(GVRContext gvrContext, int width, int height, float centralAngle, float radius){
+        GVRMesh mesh = new GVRMesh(gvrContext);
+        final float MAX_DEGREES_PER_SUBDIVISION = 10f;
+
+        float ratio = (float)width/(float)height;
+        int subdivisions = (int) Math.ceil(centralAngle / MAX_DEGREES_PER_SUBDIVISION);
+        float degreesPerSubdivision = centralAngle/subdivisions;
+        // Scale the number of subdivisions with the central angle size
+        // Let each subdivision represent a constant number of degrees on the arc
+        double startDegree = -centralAngle/2.0;
+
+        float h = (float) (radius * Math.toRadians(centralAngle))/ratio;
+
+        float yTop = h/2;
+        float yBottom = -yTop;
+
+        float[] vertices = new float[(subdivisions+1)*6];
+        float[] normals = new float[(subdivisions+1)*6];
+        float[] texCoords= new float[(subdivisions+1)*4];
+        char[] triangles = new char[subdivisions*6];
+
+        /*
+         * The following diagram illustrates the construction method
+         * Let s be the number of subdivisions, then we create s pairs of vertices
+         * like so
+         *
+         * {0}  {2}  {4} ... {2s-1}
+         *                             |y+
+         * {1}  {3}  {5} ... {2s}      |___x+
+         *                          z+/
+         */
+        for(int i = 0; i <= subdivisions; i++){
+            double angle = Math.toRadians(-90+startDegree + degreesPerSubdivision*i);
+            double cos = Math.cos(angle);
+            double sin = Math.sin(angle);
+            float x = (float) (radius * cos);
+            float z = (float) ((radius * sin) + radius);
+            vertices[6*i] = x;
+            vertices[6*i + 1] = yTop;
+            vertices[6*i + 2] = z;
+            normals[6*i] = (float)-cos;
+            normals[6*i + 1] = 0.0f;
+            normals[6*i + 2] = (float)-sin;
+            texCoords[4*i] = (float)i/subdivisions;
+            texCoords[4*i + 1] = 0.0f;
+
+            vertices[6*i + 3] = x;
+            vertices[6*i + 4] = yBottom;
+            vertices[6*i + 5] = z;
+            normals[6*i + 3] = (float)-cos;
+            normals[6*i + 4] = 0.0f;
+            normals[6*i + 5] = (float)-sin;
+            texCoords[4*i + 2] = (float)i/subdivisions;
+            texCoords[4*i + 3] = 1.0f;
+        }
+
+        /*
+         * Referring to the diagram above, we create two triangles
+         * for each pair of consecutive pairs of vertices
+         * (e.g. we create two triangles with {0, 1} and {2, 3}
+         *  and two triangles with {2, 3} and {4, 5})
+         *
+         * {0}--{2}--{4}-...-{2s-1}
+         *  | ＼  | ＼ |        |       |y+
+         * {1}--{3}--{5}-...-{2s}      |___x+
+         *                          z+/
+         */
+        for(int i = 0; i < subdivisions; i++){
+            triangles[6*i] = (char)(2*(i+1)+1);
+            triangles[6*i+1] = (char) (2*(i));
+            triangles[6*i+2] = (char) (2*(i)+1);
+            triangles[6*i+3] = (char) (2*(i+1)+1);
+            triangles[6*i+4] = (char) (2*(i+1));
+            triangles[6*i+5] = (char) (2*(i));
+        }
+
+        mesh.setVertices(vertices);
+        mesh.setNormals(normals);
+        mesh.setTexCoords(texCoords);
+        mesh.setIndices(triangles);
+        return mesh;
+    }
+
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
