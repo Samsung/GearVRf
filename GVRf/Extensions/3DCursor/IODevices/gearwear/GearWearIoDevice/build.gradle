@@ -46,7 +46,7 @@ dependencies {
         if (findProject(':framework')) {
             compile project(':framework')
         } else {
-            compile(name: ':framework-debug', ext: 'aar')
+            compile(name: 'framework-debug', ext: 'aar')
         }
     } else {
         compile "org.gearvrf:framework-debug:$gearvrfVersion"
