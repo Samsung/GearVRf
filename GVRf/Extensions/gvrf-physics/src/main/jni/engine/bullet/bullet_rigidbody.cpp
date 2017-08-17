@@ -87,7 +87,7 @@ void BulletRigidBody::set_owner_object(SceneObject* obj) {
 
 void BulletRigidBody::onAttach(SceneObject* owner) {
     bool isDynamic = (getMass() != 0.f);
-    Collider* collider = owner->collider();
+    Collider* collider = reinterpret_cast<Collider*>(owner->getComponent(Collider::getComponentType()));
     RenderData* rdata = owner->render_data();
     if (mConstructionInfo.m_collisionShape) {
         delete mConstructionInfo.m_collisionShape;
