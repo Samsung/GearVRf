@@ -25,11 +25,9 @@ import android.view.KeyEvent;
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
-import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 /**
  * This class represents the Gear Controller.
@@ -50,12 +48,12 @@ import static android.webkit.ConsoleMessage.MessageLevel.LOG;
  */
 final class GearCursorController extends GVRCursorController {
 
-    public enum OVR_KEYS{
-        OVR_BUTTON_A (0x00000001), OVR_BUTTON_ENTER (0x00100000), OVR_BUTTON_BACK (0x00200000), OVR_BUTTON_UP (0x00010000), OVR_BUTTON_DOWN(0x00020000),
-        OVR_BUTTON_LEFT (0x00040000), OVR_BUTTON_RIGHT (0x00080000);
+    public enum CONTROLLER_KEYS{
+        BUTTON_A (0x00000001), BUTTON_ENTER (0x00100000), BUTTON_BACK (0x00200000), BUTTON_UP (0x00010000), BUTTON_DOWN(0x00020000),
+        BUTTON_LEFT (0x00040000), BUTTON_RIGHT (0x00080000);
         private int numVal;
 
-        OVR_KEYS(int numVal) {
+        CONTROLLER_KEYS(int numVal) {
             this.numVal = numVal;
         }
 
@@ -68,14 +66,6 @@ final class GearCursorController extends GVRCursorController {
      */
     public enum Handedness {
         LEFT, RIGHT
-    }
-    /**
-     * Defines the GazeBehavior of the gear controller.
-     */
-    public enum GazeBehavior {
-        Never,
-        DuringMotion,
-        Always
     }
     private GVRSceneObject pivot;
     private GVRContext context;
@@ -91,25 +81,7 @@ final class GearCursorController extends GVRCursorController {
         void updatePosition(Vector3f vec);
         int getKey();
         float getHandedness();
-        void setAddedElbowHeight(float elbowHeight);
-        void setAddedElbowDepth(float elbowDepth);
-        void setPointerTiltAngle(float tiltAngle);
-        void setHandedness(Handedness newHandedness);
-        void setUseAccelerometer(boolean newUseAccelerometer);
-        void setFadeDistanceFromFace(float distanceFromFace);
-        void setTooltipMinDistanceFromFace(float distanceFromFace);
-        Vector3f getPointerPositionOffset();
-        float getAddedElbowHeight();
-        float getAddedElbowDepth();
-        float getPointerTiltAngle();
-        boolean getUseAccelerometer();
-        float getFadeDistanceFromFace();
-        float getTooltipMinDistanceFromFace();
-        float getControllerAlphaValue();
-        float getTooltipAlphaValue();
         void updateTouchpad(PointF pt);
-        GearCursorController.GazeBehavior getGazeBehavior();
-        void setGazeBehavior(GearCursorController.GazeBehavior gazeBehavior);
     }
 
     GearCursorController(GVRContext context, ControllerReader controllerReader) {
@@ -129,78 +101,6 @@ final class GearCursorController extends GVRCursorController {
             object.getTransform().setPosition(position.x, position.y, position.z);
         }
         pivot.addChildObject(object);
-    }
-    @Override
-    public void setAddedElbowHeight(float elbowHeight){
-        mControllerReader.setAddedElbowHeight(elbowHeight);
-    }
-    @Override
-    public void setAddedElbowDepth(float elbowDepth){
-        mControllerReader.setAddedElbowDepth(elbowDepth);
-    }
-    @Override
-    public void setPointerTiltAngle(float tiltAngle){
-        mControllerReader.setPointerTiltAngle(tiltAngle);
-    }
-    @Override
-    public void setHandedness(Handedness newHandedness){
-        mControllerReader.setHandedness(newHandedness);
-    }
-    @Override
-    public  void setUseAccelerometer(boolean newUseAccelerometer){
-        mControllerReader.setUseAccelerometer(newUseAccelerometer);
-    }
-    @Override
-    public  void setFadeDistanceFromFace(float distanceFromFace){
-        mControllerReader.setFadeDistanceFromFace(distanceFromFace);
-    }
-    @Override
-    public void setTooltipMinDistanceFromFace(float distanceFromFace){
-        mControllerReader.setTooltipMinDistanceFromFace(distanceFromFace);
-    }
-    @Override
-    public Vector3f getPointerPositionOffset(){
-        return mControllerReader.getPointerPositionOffset();
-    }
-    @Override
-    public float getAddedElbowHeight(){
-        return mControllerReader.getAddedElbowHeight();
-    }
-    @Override
-    public float getAddedElbowDepth(){
-        return mControllerReader.getAddedElbowDepth();
-    }
-    @Override
-    public float getPointerTiltAngle(){
-        return mControllerReader.getPointerTiltAngle();
-    }
-    @Override
-    public  boolean getUseAccelerometer(){
-        return mControllerReader.getUseAccelerometer();
-    }
-    @Override
-    public float getFadeDistanceFromFace(){
-        return mControllerReader.getFadeDistanceFromFace();
-    }
-    @Override
-    public float getTooltipMinDistanceFromFace(){
-        return mControllerReader.getTooltipMinDistanceFromFace();
-    }
-    @Override
-    public float getControllerAlphaValue(){
-        return mControllerReader.getControllerAlphaValue();
-    }
-    @Override
-    public  float getTooltipAlphaValue(){
-        return mControllerReader.getTooltipAlphaValue();
-    }
-    @Override
-    public GazeBehavior getGazeBehavior() {
-        return mControllerReader.getGazeBehavior();
-    }
-    @Override
-    public void setGazeBehavior(GazeBehavior gazeBehavior) {
-        mControllerReader.setGazeBehavior(gazeBehavior);
     }
     @Override
     public void resetSceneObject() {
@@ -428,15 +328,15 @@ final class GearCursorController extends GVRCursorController {
             pivot.getTransform().setPosition(position.x, position.y, position.z);
             setOrigin(position.x + result.x, position.y + result.y, position.z + result.z);
 
-            int handleResult = handleButton(key, OVR_KEYS.OVR_BUTTON_ENTER.getNumVal(), prevButtonEnter, KeyEvent
+            int handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_ENTER.getNumVal(), prevButtonEnter, KeyEvent
                     .KEYCODE_ENTER);
             prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
 
-            handleResult = handleButton(key, OVR_KEYS.OVR_BUTTON_A.getNumVal(), prevButtonA, KeyEvent
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_A.getNumVal(), prevButtonA, KeyEvent
                     .KEYCODE_A);
             prevButtonA = handleResult == -1 ? prevButtonA : handleResult;
 
-            handleResult = handleButton(key, OVR_KEYS.OVR_BUTTON_BACK.getNumVal(), prevButtonBack, KeyEvent
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK.getNumVal(), prevButtonBack, KeyEvent
                     .KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
 

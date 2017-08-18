@@ -47,8 +47,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Use the {@link GVRInputManager#addCursorController(GVRCursorController)} call
  * to add an external {@link GVRCursorController} to the framework.
  */
-
-public abstract class GVRCursorController implements GVRArmModel {
+public abstract class GVRCursorController {
     private static final String TAG = "GVRCursorController";
     private static int uniqueControllerId = 0;
     private final int controllerId;
