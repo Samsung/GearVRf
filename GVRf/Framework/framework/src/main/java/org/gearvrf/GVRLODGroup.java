@@ -120,7 +120,7 @@ public final class GVRLODGroup extends GVRBehavior {
 
             final float[] values = child.getBoundingVolumeRawValues();
             mCenter.set(values[0], values[1], values[2], 1.0f);
-            mVector.set(t.getPositionX(), t.getPositionY(), getTransform().getPositionZ(), 1.0f);
+            mVector.set(t.getPositionX(), t.getPositionY(), t.getPositionZ(), 1.0f);
 
             mVector.sub(mCenter);
             mVector.negate();
