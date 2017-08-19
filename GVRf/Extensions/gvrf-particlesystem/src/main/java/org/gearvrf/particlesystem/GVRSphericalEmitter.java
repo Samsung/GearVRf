@@ -120,11 +120,17 @@ public class GVRSphericalEmitter extends GVREmitter{
             temp.y = mParticlePositions[i+1];
             temp.z = mParticlePositions[i+2];
 
-            float scaleFactor = mRandom.nextFloat() * (maxVelocity - minVelocity)
-                                + minVelocity;
 
-            temp = temp.normalize() ;
-            temp.mul(scaleFactor, temp);
+            float velx = mRandom.nextFloat() * (maxVelocity.x- minVelocity.x)
+                    + minVelocity.x;
+
+            float vely = mRandom.nextFloat() * (maxVelocity.y - minVelocity.y)
+                                + minVelocity.y;
+            float velz = mRandom.nextFloat() * (maxVelocity.z - minVelocity.z)
+                    + minVelocity.z;
+
+            temp = temp.normalize();
+            temp.mul(velx, vely, velz, temp);
 
             particleVelocities[i] = temp.x;
             particleVelocities[i+1] = temp.y;
