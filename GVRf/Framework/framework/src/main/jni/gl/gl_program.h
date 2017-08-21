@@ -20,6 +20,7 @@
 #ifndef GL_PROGRAM_H_
 #define GL_PROGRAM_H_
 
+#include <string>
 #include "gl/gl_headers.h"
 
 #include "util/gvr_log.h"

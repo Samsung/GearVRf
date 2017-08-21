@@ -318,7 +318,7 @@ final class GearCursorController extends GVRCursorController {
             quaternionf.transform(FORWARD, result);
 
             pivot.getTransform().setPosition(position.x, position.y, position.z);
-            setOrigin(position.x, position.y, position.z);
+            setOrigin(position.x + result.x, position.y + result.y, position.z + result.z);
 
             int handleResult = handleButton(key, OVR_BUTTON_ENTER, prevButtonEnter, KeyEvent
                     .KEYCODE_ENTER);

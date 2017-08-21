@@ -76,7 +76,7 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
     std::vector<ColliderData> colliders;
     Transform* t = reinterpret_cast<Transform*>(jtransform);
 
@@ -97,7 +97,8 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
                                                         data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
                                                         data.FaceIndex,
                                                         data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
-                                                        data.TextureCoordinates.x, data.TextureCoordinates.y);
+                                                        data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                        data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);
@@ -122,7 +123,7 @@ Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
 
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
 
     jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
 
@@ -130,7 +131,8 @@ Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
                                                     data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
                                                     data.FaceIndex,
                                                     data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
-                                                    data.TextureCoordinates.x, data.TextureCoordinates.y);
+                                                    data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                    data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
 
     env->DeleteLocalRef(pickerClass);
     env->DeleteLocalRef(hitClass);
@@ -169,7 +171,7 @@ Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
     std::vector<ColliderData> colliders;
     Transform* t = scene->main_camera_rig()->getHeadTransform();
 
@@ -187,7 +189,8 @@ Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
                                                         data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
                                                         data.FaceIndex,
                                                         data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
-                                                        data.TextureCoordinates.x, data.TextureCoordinates.y);
+                                                        data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                        data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);

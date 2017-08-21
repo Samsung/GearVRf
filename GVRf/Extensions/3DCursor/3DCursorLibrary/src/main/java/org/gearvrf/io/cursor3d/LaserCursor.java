@@ -19,6 +19,7 @@ package org.gearvrf.io.cursor3d;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRCursorController.ControllerEventListener;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
@@ -48,7 +49,8 @@ class LaserCursor extends Cursor {
         cursorEvent.setColliding(COLLIDING);
         cursorEvent.setActive(event.isActive());
         cursorEvent.setCursor(this);
-        GVRSceneObject object = event.getObject();
+        GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
+        GVRSceneObject object = pickedObject.getHitObject();
         SelectableGroup selectableGroup = (SelectableGroup) object.getComponent
                 (SelectableGroup.getComponentType());
 
@@ -61,7 +63,7 @@ class LaserCursor extends Cursor {
         }
 
         cursorEvent.setObject(object);
-        cursorEvent.setHitPoint(event.getHitX(), event.getHitY(), event.getHitZ());
+        cursorEvent.setHitPoint(pickedObject.getHitX(), pickedObject.getHitY(), pickedObject.getHitZ());
         cursorEvent.setCursorPosition(getPositionX(), getPositionY(), getPositionZ());
         cursorEvent.setCursorRotation(getRotationW(), getRotationX(), getRotationY(),
                 getRotationZ());

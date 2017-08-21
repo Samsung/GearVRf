@@ -21,6 +21,7 @@
 #define GVR_JAVA_STACK_TRACE_H_
 
 #include "jni.h"
+#include <string>
 
 namespace gvr {
 static void printJavaCallStack(JNIEnv *env, const char *msg) {
