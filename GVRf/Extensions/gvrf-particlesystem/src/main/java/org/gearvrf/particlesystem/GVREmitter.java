@@ -21,7 +21,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -248,7 +247,6 @@ class GVREmitter extends GVRSceneObject {
         {
             GVRSceneObject obj = meshInfo.get(i).first;
             obj.getRenderData().getMaterial().setFloat("u_time", time);
-            Log.e("sushant", "time = " + time);
         }
     }
 
