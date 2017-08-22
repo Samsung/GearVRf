@@ -23,8 +23,6 @@
 #include "eglextension/msaa/msaa.h"
 
 namespace gvr {
-GLFrameBuffer *RenderTexture::renderTexture_gl_read_buffer = nullptr;
-
 typedef void (GL_APIENTRY *PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum target,
                                                                     GLenum attachment,
                                                                     GLuint texture, GLint level,

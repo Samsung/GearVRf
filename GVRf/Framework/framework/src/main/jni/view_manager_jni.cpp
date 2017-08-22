@@ -101,7 +101,12 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
     GLint viewport[4];
 
     if(isMultiviewSet){
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, RenderTexture::getReadBufferId());
+        static GLFrameBuffer* fb = new GLFrameBuffer;
+        if (!glIsFramebuffer(fb->id())) {
+            delete fb;
+            fb = new GLFrameBuffer;
+        }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->id());
         glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texId, 0, layer);
         glReadBuffer(GL_COLOR_ATTACHMENT0);
     }

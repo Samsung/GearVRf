@@ -31,16 +31,14 @@ CustomShader::CustomShader(const std::string& vertex_shader, const std::string& 
 void CustomShader::initializeOnDemand(RenderState* rstate) {
     if (nullptr == program_)
     {
-        program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
         if(rstate->is_multiview && !(strstr(vertexShader_.c_str(),"gl_ViewID_OVR")
-                && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
-                && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){
-            std::string error = "Your shaders are not multiview";
+                                     && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
+                                     && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){
             LOGE("Your shaders are not multiview");
             std::terminate();
         }
+        program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
         if(rstate->is_multiview && !rstate->shadow_map){
-            LOGE("Rendering with multiview");
             u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
             u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
             u_mv_ = glGetUniformLocation(program_->id(), "u_mv_[0]");

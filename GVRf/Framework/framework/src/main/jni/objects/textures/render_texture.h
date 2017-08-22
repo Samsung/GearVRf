@@ -66,7 +66,7 @@ public:
     GLuint getFrameBufferId() const {
         return renderTexture_gl_frame_buffer_->id();
     }
-    static GLuint getReadBufferId(){
+    GLuint getReadBufferId(){
         if(renderTexture_gl_read_buffer == NULL)
             renderTexture_gl_read_buffer = new GLFrameBuffer();
 
@@ -121,7 +121,7 @@ protected:
     GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
     GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;
     GLRenderBuffer* renderTexture_gl_color_buffer_ = nullptr;// This is only for multisampling case
-    static GLFrameBuffer* renderTexture_gl_read_buffer;                                 // when resolveDepth is on.
+    GLFrameBuffer* renderTexture_gl_read_buffer;                                 // when resolveDepth is on.
     GLuint render_texture_gl_texture_ = 0;
     GLuint renderTexture_gl_pbo_ = 0;
     GLenum target_;

@@ -96,8 +96,12 @@ namespace gvr
         }
         else
         {
+            if(post_effects.size() > 1 && is_multiview){
+                LOGE("multiple post effects with multiview are not supported, terminating program...");
+                std::terminate();
+            }
             RenderTexture* texture_render_texture = post_effect_render_texture_a;
-
+            RenderTexture* input_texture = texture_render_texture;
             GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getFrameBufferId()));
             GL(glViewport(0, 0, texture_render_texture->width(), texture_render_texture->height()));
             // post effect render texture is not multiview
@@ -109,8 +113,6 @@ namespace gvr
             }
             GL(glDisable(GL_DEPTH_TEST));
             GL(glDisable(GL_CULL_FACE));
-            // oculus FBO can be multiview
-            rstate.is_multiview = is_multiview;
             for (int i = 0; i < post_effects.size() - 1; ++i)
             {
                 if (i % 2 == 0)
@@ -121,13 +123,14 @@ namespace gvr
                 {
                     texture_render_texture = post_effect_render_texture_b;
                 }
-                GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-                GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
+                GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getId()));
+                GL(glViewport(0, 0, texture_render_texture->width(), texture_render_texture->height()));
                 GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-                GL(renderPostEffectData(camera, texture_render_texture,
-                        post_effects[i], post_effect_shader_manager));
+                renderPostEffectData(camera, input_texture, post_effects.back(), post_effect_shader_manager);
+                input_texture = texture_render_texture;
             }
-
+            // oculus FBO can be multiview
+            rstate.is_multiview = is_multiview;
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
             GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
             GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
@@ -156,6 +159,10 @@ namespace gvr
         rstate.is_multiview = false;
         if (!rstate.shadow_map)
         {
+            if(use_multiview){
+                LOGE("multiview with render-target is not supported.. terminating program..");
+                std::terminate();
+            }
             state_sort();
             GL(glEnable (GL_BLEND));
             GL(glBlendEquation (GL_FUNC_ADD));
