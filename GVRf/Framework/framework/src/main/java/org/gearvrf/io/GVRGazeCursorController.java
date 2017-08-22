@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRTransform;
 import org.joml.Vector3f;
 
 import java.util.concurrent.CountDownLatch;
@@ -41,9 +42,8 @@ final class GVRGazeCursorController extends GVRBaseController implements GVRDraw
     private float actionDownZ;
     private boolean isEnabled;
 
-    // Used to calculate the absolute position that the controller reports to
-    // the user.
-    private final Vector3f gazePosition;
+    // Used to calculate the gaze-direction
+    private final Vector3f gazeDirection;
     private final Object lock = new Object();
     
     // Saves the relative position of the cursor with respect to the camera.
@@ -55,7 +55,7 @@ final class GVRGazeCursorController extends GVRBaseController implements GVRDraw
                                    int productId) {
         super(controllerType, name, vendorId, productId);
         this.context = context;
-        gazePosition = new Vector3f();
+        gazeDirection = new Vector3f();
         setPosition = new Vector3f();
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
@@ -193,6 +193,12 @@ final class GVRGazeCursorController extends GVRBaseController implements GVRDraw
     }
 
     @Override
+    protected Vector3f getOrigin(){
+        GVRTransform t = context.getMainScene().getMainCameraRig().getTransform();
+        return new Vector3f(t.getPositionX(), t.getPositionY(), t.getPositionZ());
+    }
+
+    @Override
     public void setPosition(float x, float y, float z) {
         setPosition.set(x, y, z);
         thread.setPosition(x, y, z);
@@ -201,10 +207,10 @@ final class GVRGazeCursorController extends GVRBaseController implements GVRDraw
     @Override
     public void onDrawFrame(float frameTime) {
         synchronized (lock) {
-            setPosition.mulPosition(context.getMainScene().getMainCameraRig()
-                    .getHeadTransform().getModelMatrix4f(), gazePosition);
+            setPosition.mulDirection(context.getMainScene().getMainCameraRig()
+                    .getHeadTransform().getModelMatrix4f(), gazeDirection);
         }
-        thread.setPosition(gazePosition.x, gazePosition.y, gazePosition.z);
+        thread.setPosition(gazeDirection.x, gazeDirection.y, gazeDirection.z);
     }
 
     void close() {
