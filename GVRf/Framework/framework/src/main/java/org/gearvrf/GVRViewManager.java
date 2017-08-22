@@ -696,12 +696,14 @@ abstract class GVRViewManager extends GVRContext {
         if (mScreenshotCenterCallback == null) {
             return;
         }
-        GVRRenderTexture eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
+
+        GVRRenderTexture eyeCaptureRenderTexture = null;
 
         // if the multiview is set, render on normal FBO instead of multiview buffers
-        if(mUseMultiview)
+        if(mUseMultiview) {
+            eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
             eyeCaptureRenderTexture.beginRendering();
-
+        }
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         final GVRPostEffect postEffect = new GVRPostEffect(this, GVRPostEffect.GVRPostEffectShaderType.HorizontalFlip.ID);
         centerCamera.addPostEffect(postEffect);
@@ -728,10 +730,12 @@ abstract class GVRViewManager extends GVRContext {
 
     private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index, boolean isMultiviewSet) {
 
-        GVRRenderTexture eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
-        if(isMultiviewSet)
-            eyeCaptureRenderTexture.beginRendering();
+        GVRRenderTexture eyeCaptureRenderTexture = null;
 
+        if(isMultiviewSet) {
+            eyeCaptureRenderTexture = mRenderBundle.getEyeCaptureRenderTexture();
+            eyeCaptureRenderTexture.beginRendering();
+        }
         renderCamera(mMainScene, centerCamera, mRenderBundle, false);
 
         if(isMultiviewSet)
