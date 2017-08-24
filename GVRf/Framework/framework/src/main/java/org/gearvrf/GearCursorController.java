@@ -50,7 +50,7 @@ final class GearCursorController extends GVRCursorController {
 
     public enum CONTROLLER_KEYS{
         BUTTON_A (0x00000001), BUTTON_ENTER (0x00100000), BUTTON_BACK (0x00200000), BUTTON_UP (0x00010000), BUTTON_DOWN(0x00020000),
-        BUTTON_LEFT (0x00040000), BUTTON_RIGHT (0x00080000);
+        BUTTON_LEFT (0x00040000), BUTTON_RIGHT (0x00080000), BUTTON_VOLUME_UP(0x00400000), BUTTON_VOLUME_DOWN(0x00800000), BUTTON_HOME(0x01000000);
         private int numVal;
 
         CONTROLLER_KEYS(int numVal) {
@@ -263,6 +263,10 @@ final class GearCursorController extends GVRCursorController {
         private int prevButtonEnter = KeyEvent.ACTION_UP;
         private int prevButtonA = KeyEvent.ACTION_UP;
         private int prevButtonBack = KeyEvent.ACTION_UP;
+        private int prevButtonVolumeUp = KeyEvent.ACTION_UP;
+        private int prevButtonVolumeDown = KeyEvent.ACTION_UP;
+        private int prevButtonHome = KeyEvent.ACTION_UP;
+
         private static final int MSG_INITIALIZE = 1;
         private static final int MSG_UNINITIALIZE = 2;
         private static final int MSG_EVENT = 3;
@@ -339,6 +343,18 @@ final class GearCursorController extends GVRCursorController {
             handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK.getNumVal(), prevButtonBack, KeyEvent
                     .KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
+
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_UP.getNumVal(), prevButtonVolumeUp, KeyEvent
+                    .KEYCODE_VOLUME_UP);
+            prevButtonVolumeUp = handleResult == -1 ? prevButtonVolumeUp : handleResult;
+
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_DOWN.getNumVal(), prevButtonVolumeDown, KeyEvent
+                    .KEYCODE_VOLUME_DOWN);
+            prevButtonVolumeDown = handleResult == -1 ? prevButtonVolumeDown : handleResult;
+
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_HOME.getNumVal(), prevButtonHome, KeyEvent
+                    .KEYCODE_HOME);
+            prevButtonHome = handleResult == -1 ? prevButtonHome : handleResult;
 
             GearCursorController.super.setPosition(result.x, result.y, result.z);
             event.recycle();
