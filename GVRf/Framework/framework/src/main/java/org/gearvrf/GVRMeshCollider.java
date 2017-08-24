@@ -67,6 +67,7 @@ public class GVRMeshCollider extends GVRCollider {
      */
     public GVRMeshCollider(GVRContext gvrContext, GVRMesh mesh, boolean pickCoordinates) {
         super(gvrContext, NativeMeshCollider.ctorMeshPicking(mesh.getNative(), pickCoordinates));
+        mMesh = mesh;
     }
 
     /**

@@ -126,6 +126,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         }
 
         oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
+        env.ExceptionClear(); //clear a weird GearVrRemoteForBatteryWorkAround raised by Oculus
         configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
         oculusPerformanceParms_.MainThreadTid = mainThreadId_;
         oculusPerformanceParms_.RenderThreadTid = gettid();
