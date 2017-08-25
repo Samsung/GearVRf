@@ -18,6 +18,7 @@
  * A user-made shader for a post effects.
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "custom_post_effect_shader.h"
 
 #include "gl/gl_program.h"
@@ -86,7 +87,13 @@ void CustomPostEffectShader::render(Camera* camera,
         std::vector<glm::vec3>& vertices, std::vector<glm::vec2>& tex_coords,
         std::vector<unsigned short>& triangles) {
 
-    if (0 == program_) {
+      if (0 == program_) {
+        if(use_multiview && !(strstr(vertex_shader_.c_str(),"gl_ViewID_OVR")
+                                     && strstr(vertex_shader_.c_str(),"GL_OVR_multiview2")
+                                     && strstr(vertex_shader_.c_str(),"GL_OVR_multiview2"))){
+            LOGE("Your shaders are not multiview, terminating program..");
+            std::terminate();
+        }
         program_ = new GLProgram(vertex_shader_.c_str(), fragment_shader_.c_str());
         vertex_shader_.empty();
         fragment_shader_.empty();
@@ -227,6 +234,7 @@ void CustomPostEffectShader::render(Camera* camera,
 
     glBindVertexArray(vaoID_);
     glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_SHORT, 0);
+    checkGLError(" CustomPostEffectShader::render");
     glBindVertexArray(0);
 }
 

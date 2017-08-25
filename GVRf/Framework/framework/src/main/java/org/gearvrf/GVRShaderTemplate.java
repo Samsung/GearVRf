@@ -347,7 +347,7 @@ public class GVRShaderTemplate
         return defines + combinedSource;
     }
 
-    private String generateShaderSource(String type)
+    private String generateShaderSource(String type, boolean is_multiview)
     {
         String template = getSegment(type + "Template");
 
@@ -368,6 +368,8 @@ public class GVRShaderTemplate
                 combinedSource = combinedSource.replace("@" + key, segmentSource);
             }
         }
+        if(is_multiview)
+            combinedSource = "#define HAS_MULTIVIEW\n" + combinedSource;
         combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
         if (mGLSLVersion <= 100)
             return combinedSource;
@@ -574,6 +576,8 @@ public class GVRShaderTemplate
         }
         String signature = generateSignature(variantDefines, null);
         ShaderVariant variant = mShaderVariants.get(signature);
+
+
         if (variant != null)
         {
             if (variant.ShaderID != null)
@@ -585,12 +589,14 @@ public class GVRShaderTemplate
         }
         else
         {
+            boolean isMultiviewSet = context.getActivity().getAppSettings().isMultiviewSet();
             variant = new ShaderVariant();
-            variant.VertexShaderSource = generateShaderSource("Vertex");
-            variant.FragmentShaderSource = generateShaderSource("Fragment");
+            variant.VertexShaderSource = generateShaderSource("Vertex", isMultiviewSet);
+            variant.FragmentShaderSource = generateShaderSource("Fragment", isMultiviewSet);
             mShaderVariants.put(signature, variant);
         }
         GVRShaderManagers shaderManager = context.getPostEffectShaderManager();
+
         if (variant.ShaderID == null)
         {
             variant.ShaderID = shaderManager.newShader(variant.VertexShaderSource, variant.FragmentShaderSource);

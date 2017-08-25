@@ -72,13 +72,10 @@ OESShader::OESShader() :
         u_mvp_(0),
         u_texture_(0),
         u_color_(0),
-        u_opacity_(0)
-{
-    programInit();
-}
+        u_opacity_(0) {}
 
-void OESShader::programInit() {
-    if (use_multiview) {
+void OESShader::programInit(RenderState* rstate) {
+    if (rstate->is_multiview) {
         const char* extensions = (const char*) glGetString(GL_EXTENSIONS);
         if (std::strstr(extensions, "GL_OES_EGL_image_external") == NULL) {
             LOGE("GLSL does not support GL_OES_EGL_image_external, try with disabling multiview \n");
@@ -102,6 +99,9 @@ OESShader::~OESShader() {
 }
 
 void OESShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
+    if(program_ == nullptr)
+        programInit(rstate);
+
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -112,7 +112,7 @@ void OESShader::render(RenderState* rstate, RenderData* render_data, Material* m
     }
 
     glUseProgram(program_->id());
-    if (use_multiview) {
+    if (rstate->is_multiview) {
         glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
     } else {
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));

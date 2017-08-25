@@ -128,10 +128,10 @@ abstract class BaseView {
                         sendSwipeEvent(keyEvent);
                         continue;
                     }
-                    sendMotionEvent(pickedObject.getHitX(), pickedObject.getHitY(), keyEvent.getAction());
+                    sendMotionEvent(pickedObject.hitLocation[0], pickedObject.hitLocation[1], keyEvent.getAction());
                 }
             } else {
-                sendMotionEvent(pickedObject.getHitX(), pickedObject.getHitY(), MotionEvent.ACTION_MOVE);
+                sendMotionEvent(pickedObject.hitLocation[0], pickedObject.hitLocation[1], MotionEvent.ACTION_MOVE);
             }
         }
     };

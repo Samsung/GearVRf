@@ -17,6 +17,7 @@ package org.gearvrf.physics;
 
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 
 /**
@@ -412,8 +413,8 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
         if (newOwner.getCollider() == null) {
             throw new UnsupportedOperationException("You must have a collider attached to the scene object before attaching the rigid body");
         }
-        if ((newOwner.getRenderData() == null) ||
-            (newOwner.getRenderData().getMesh() == null)) {
+        final GVRRenderData renderData = newOwner.getRenderData();
+        if (renderData != null && renderData.getMesh() == null) {
             throw new UnsupportedOperationException("You must have a mesh attached to the scene object before attaching the rigid body");
         }
         super.onAttach(newOwner);

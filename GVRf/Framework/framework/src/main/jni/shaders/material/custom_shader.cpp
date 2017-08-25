@@ -31,16 +31,14 @@ CustomShader::CustomShader(const std::string& vertex_shader, const std::string& 
 void CustomShader::initializeOnDemand(RenderState* rstate) {
     if (nullptr == program_)
     {
-        program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
-        if(use_multiview && !(strstr(vertexShader_.c_str(),"gl_ViewID_OVR")
-                && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
-                && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){
-            std::string error = "Your shaders are not multiview";
+        if(rstate->is_multiview && !(strstr(vertexShader_.c_str(),"gl_ViewID_OVR")
+                                     && strstr(vertexShader_.c_str(),"GL_OVR_multiview2")
+                                     && strstr(vertexShader_.c_str(),"GL_OVR_multiview2"))){
             LOGE("Your shaders are not multiview");
-            throw error;
+            std::terminate();
         }
-        if(use_multiview && !rstate->shadow_map){
-            LOGE("Rendering with multiview");
+        program_ = new GLProgram(vertexShader_.c_str(), fragmentShader_.c_str());
+        if(rstate->is_multiview && !rstate->shadow_map){
             u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
             u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
             u_mv_ = glGetUniformLocation(program_->id(), "u_mv_[0]");
@@ -308,25 +306,25 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
     	glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
     }
     if (u_mvp_ != -1) {
-        if(use_multiview && !rstate->shadow_map)
+        if(rstate->is_multiview && !rstate->shadow_map)
             glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
         else
             glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     }
     if (u_view_ != -1) {
-        if(use_multiview && !rstate->shadow_map)
+        if(rstate->is_multiview  && !rstate->shadow_map)
             glUniformMatrix4fv(u_view_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view_[0]));
         else
             glUniformMatrix4fv(u_view_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
     }
     if (u_mv_ != -1) {
-       if(use_multiview && !rstate->shadow_map)
+       if(rstate->is_multiview  && !rstate->shadow_map)
            glUniformMatrix4fv(u_mv_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_[0]));
        else
           glUniformMatrix4fv(u_mv_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv));
     }
     if (u_mv_it_ != -1) {
-        if(use_multiview && !rstate->shadow_map)
+        if(rstate->is_multiview  && !rstate->shadow_map)
             glUniformMatrix4fv(u_mv_it_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it_[0]));
         else
             glUniformMatrix4fv(u_mv_it_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mv_it));

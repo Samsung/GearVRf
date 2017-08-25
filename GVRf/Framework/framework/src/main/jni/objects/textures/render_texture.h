@@ -32,12 +32,13 @@ namespace gvr {
 class RenderTexture: public Texture {
 public:
     RenderTexture(int width, int height, GLTexture* tex);
-    explicit RenderTexture(int width, int height);
-    explicit RenderTexture(int width, int height, int sample_count);
-    explicit RenderTexture(int width, int height, int sample_count,
-            int jcolor_format, int jdepth_format, bool resolve_depth,
-            int* texture_parameters);
-
+    explicit RenderTexture(int width, int height, GLenum target);
+    explicit RenderTexture(int width, int height, int sample_count, GLenum target);
+    explicit RenderTexture(int width, int height, GLenum target, int sample_count,
+                                     int jcolor_format, int jdepth_format, bool resolve_depth,
+                                     int* texture_parameters);
+    void createArrayRenderTexture(int, int,bool);
+    void create2DRenderTexture(int jcolor_format, int jdepth_format, bool resolve_depth);
     virtual ~RenderTexture() {
         delete renderTexture_gl_render_buffer_;
         delete renderTexture_gl_frame_buffer_;
@@ -65,7 +66,12 @@ public:
     GLuint getFrameBufferId() const {
         return renderTexture_gl_frame_buffer_->id();
     }
+    GLuint getReadBufferId(){
+        if(renderTexture_gl_read_buffer == NULL)
+            renderTexture_gl_read_buffer = new GLFrameBuffer();
 
+        return  renderTexture_gl_read_buffer->id();
+    }
     GLuint getDepthBufferId() { return renderTexture_gl_render_buffer_->id(); }
 
     void bind() {
@@ -87,11 +93,11 @@ public:
 
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.
-    void startReadBack();
+    void startReadBack(int layer);
 
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
-    bool readRenderResult(uint32_t *readback_buffer, long capacity);
+    bool readRenderResult(uint32_t *readback_buffer, long capacity, int eye);
 
 private:
     RenderTexture(const RenderTexture& render_texture);
@@ -105,6 +111,7 @@ private:
     void invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer);
 
 protected:
+    GLuint frameBufferDepthTextureId;
     int width_;
     int height_;
     int sample_count_;
@@ -114,7 +121,8 @@ protected:
     GLFrameBuffer* renderTexture_gl_frame_buffer_ = nullptr;
     GLFrameBuffer* renderTexture_gl_resolve_buffer_ = nullptr;
     GLRenderBuffer* renderTexture_gl_color_buffer_ = nullptr;// This is only for multisampling case
-                                     // when resolveDepth is on.
+    GLFrameBuffer* renderTexture_gl_read_buffer;                                 // when resolveDepth is on.
+    GLuint render_texture_gl_texture_ = 0;
     GLuint renderTexture_gl_pbo_ = 0;
     GLenum target_;
     bool readback_started_;          // set by startReadBack()
