@@ -56,7 +56,8 @@ public:
     void expand(const BoundingVolume &volume);
     void expand(const glm::vec3 &in_center, float in_radius);
     void transform(const BoundingVolume &volume, glm::mat4 matrix);
-    bool intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir)  const;
+    bool intersect(glm::vec3 &hitPoint, const glm::vec3 &rayStart, const glm::vec3 &rayDir) const;
+    static bool intersect(glm::vec3& hitPoint, const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& minCorner, const glm::vec3& maxCorner);
 
 private:
     void updateCenterAndRadius();
