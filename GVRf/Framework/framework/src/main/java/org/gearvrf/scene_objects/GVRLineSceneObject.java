@@ -31,6 +31,7 @@ public class GVRLineSceneObject extends GVRSceneObject {
     public GVRLineSceneObject(GVRContext gvrContext, float length){
         super(gvrContext, generateLine(gvrContext, length));
         this.getRenderData().setDrawMode(android.opengl.GLES30.GL_LINES);
+        this.getRenderData().disableLight();
     }
 
     private static GVRMesh generateLine(GVRContext gvrContext, float length){
