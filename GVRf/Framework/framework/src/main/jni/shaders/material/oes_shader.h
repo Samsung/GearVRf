@@ -39,7 +39,7 @@ private:
     OESShader& operator=(const OESShader& oes_shader) = delete;
     OESShader& operator=(OESShader&& oes_shader) = delete;
 
-    void programInit();
+    void programInit(RenderState*);
 
 private:
     GLint u_mvp_;

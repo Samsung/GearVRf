@@ -73,7 +73,7 @@ extern "C" {
                                                       jlong jshader_manager,
                                                       jlong jpost_effect_shader_manager,
                                                       jlong jpost_effect_render_texture_a,
-                                                      jlong jpost_effect_render_texture_b) {
+                                                      jlong jpost_effect_render_texture_b, jboolean is_multiview_set) {
         Scene *scene = reinterpret_cast<Scene *>(jscene);
         Camera *camera = reinterpret_cast<Camera *>(jcamera);
         ShaderManager *shader_manager =
@@ -87,22 +87,32 @@ extern "C" {
 
         gRenderer->renderCamera(scene, camera, shader_manager,
                                 post_effect_shader_manager, post_effect_render_texture_a,
-                                post_effect_render_texture_b);
+                                post_effect_render_texture_b, is_multiview_set);
     }
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
-                                                           jobject jreadback_buffer);
+                                                           jobject jreadback_buffer, jint texId, jint layer, jboolean isMultiviewSet);
 } // extern "C"
 
-
-JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * env, jclass clazz, jobject jreadback_buffer) {
+JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * env, jclass clazz, jobject jreadback_buffer,
+                                                                              jint texId, jint layer, jboolean isMultiviewSet) {
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
-
     GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
 
+    if(isMultiviewSet){
+        static GLFrameBuffer* fb = new GLFrameBuffer;
+        if (!glIsFramebuffer(fb->id())) {
+            delete fb;
+            fb = new GLFrameBuffer;
+        }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->id());
+        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texId, 0, layer);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
+    glGetIntegerv(GL_VIEWPORT, viewport);
     glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, readback_buffer);
+
 }
 
 }

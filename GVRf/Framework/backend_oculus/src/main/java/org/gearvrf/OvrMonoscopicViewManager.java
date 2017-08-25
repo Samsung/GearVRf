@@ -72,7 +72,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      */
     OvrMonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
                              OvrXMLParser xmlParser) {
-        super(gvrActivity, gvrMain, xmlParser);
+        super(gvrActivity, gvrMain, xmlParser,false);
 
         /*
          * Sets things with the numbers in the xml.

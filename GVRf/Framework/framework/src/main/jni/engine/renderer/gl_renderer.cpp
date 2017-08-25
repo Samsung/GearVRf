@@ -47,16 +47,16 @@ namespace gvr
         }
         glClear(mask);
     }
-
     void GLRenderer::renderCamera(Scene* scene, Camera* camera, int framebufferId,
             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) {
+            RenderTexture* post_effect_render_texture_b, bool is_multiview) {
 
         resetStats();
         RenderState rstate;
+        rstate.is_multiview = is_multiview;
         rstate.shadow_map = false;
         rstate.material_override = NULL;
         rstate.viewportX = viewportX;
@@ -96,20 +96,23 @@ namespace gvr
         }
         else
         {
+            if(post_effects.size() > 1 && is_multiview){
+                LOGE("multiple post effects with multiview are not supported, terminating program...");
+                std::terminate();
+            }
             RenderTexture* texture_render_texture = post_effect_render_texture_a;
-
+            RenderTexture* input_texture = texture_render_texture;
             GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getFrameBufferId()));
             GL(glViewport(0, 0, texture_render_texture->width(), texture_render_texture->height()));
-
+            // post effect render texture is not multiview
+            rstate.is_multiview = false;
             clearBuffers(*camera);
             for (auto it = render_data_vector.begin(); it != render_data_vector.end(); ++it)
             {
                 GL(renderRenderData(rstate, *it));
             }
-
             GL(glDisable(GL_DEPTH_TEST));
             GL(glDisable(GL_CULL_FACE));
-
             for (int i = 0; i < post_effects.size() - 1; ++i)
             {
                 if (i % 2 == 0)
@@ -120,14 +123,14 @@ namespace gvr
                 {
                     texture_render_texture = post_effect_render_texture_b;
                 }
-                GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-                GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
-
+                GL(glBindFramebuffer(GL_FRAMEBUFFER, texture_render_texture->getId()));
+                GL(glViewport(0, 0, texture_render_texture->width(), texture_render_texture->height()));
                 GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-                GL(renderPostEffectData(camera, texture_render_texture,
-                        post_effects[i], post_effect_shader_manager));
+                renderPostEffectData(camera, input_texture, post_effects.back(), post_effect_shader_manager);
+                input_texture = texture_render_texture;
             }
-
+            // oculus FBO can be multiview
+            rstate.is_multiview = is_multiview;
             GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
             GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
             GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
@@ -153,8 +156,13 @@ namespace gvr
         cullFromCamera(scene, camera, shader_manager);
         rstate.shader_manager = shader_manager;
         rstate.scene = scene;
+        rstate.is_multiview = false;
         if (!rstate.shadow_map)
         {
+            if(use_multiview){
+                LOGE("multiview with render-target is not supported.. terminating program..");
+                std::terminate();
+            }
             state_sort();
             GL(glEnable (GL_BLEND));
             GL(glBlendEquation (GL_FUNC_ADD));
@@ -362,19 +370,19 @@ namespace gvr
             RenderTexture* render_texture, ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) {
+            RenderTexture* post_effect_render_texture_b, bool is_multiview) {
 
         renderCamera(scene, camera, render_texture->getFrameBufferId(), 0, 0,
                 render_texture->width(), render_texture->height(), shader_manager,
                 post_effect_shader_manager, post_effect_render_texture_a,
-                post_effect_render_texture_b);
+                post_effect_render_texture_b, is_multiview);
     }
 
 
     void GLRenderer::renderCamera(Scene *scene, Camera *camera, ShaderManager *shader_manager,
                                   PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
+                                  RenderTexture *post_effect_render_texture_b, bool is_multiview)
     {
         GLint curFBO;
         GLint viewport[4];
@@ -383,7 +391,7 @@ namespace gvr
 
         renderCamera(scene, camera, curFBO, viewport[0], viewport[1], viewport[2], viewport[3],
                      shader_manager, post_effect_shader_manager, post_effect_render_texture_a,
-                     post_effect_render_texture_b
+                     post_effect_render_texture_b, is_multiview
         );
     }
 
@@ -392,12 +400,12 @@ namespace gvr
                                   ShaderManager *shader_manager,
                                   PostEffectShaderManager *post_effect_shader_manager,
                                   RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
+                                  RenderTexture *post_effect_render_texture_b, bool is_multiview)
     {
 
         renderCamera(scene, camera, 0, viewportX, viewportY, viewportWidth, viewportHeight,
                      shader_manager, post_effect_shader_manager, post_effect_render_texture_a,
-                     post_effect_render_texture_b
+                     post_effect_render_texture_b, is_multiview
         );
     }
     void GLRenderer::set_face_culling(int cull_face)
@@ -560,7 +568,7 @@ namespace gvr
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
 
 
-        if(use_multiview && !rstate.shadow_map){
+        if(rstate.is_multiview  && !rstate.shadow_map){
             rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
             rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
             rstate.uniforms.u_mv_[0] = rstate.uniforms.u_view_[0] * rstate.uniforms.u_model;
@@ -599,7 +607,7 @@ namespace gvr
                     shader = shader_manager->getCubemapShader();
                     break;
                 case Material::ShaderType::CUBEMAP_REFLECTION_SHADER:
-                    if(use_multiview){
+                    if(rstate.is_multiview ){
                         rstate.uniforms.u_view_inv_[0] = glm::inverse(rstate.uniforms.u_view_[0]);
                         rstate.uniforms.u_view_inv_[1] = glm::inverse(rstate.uniforms.u_view_[1]);
                     }

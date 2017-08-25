@@ -46,8 +46,7 @@ void Java_org_gearvrf_OvrNativeMonoscopicRenderer_renderCamera(JNIEnv * env,
     gRenderer = Renderer::getInstance();
     gRenderer->renderCamera(scene, camera, viewportX, viewportY, viewportWidth,
                viewportHeight, shader_manager, post_effect_shader_manager,
-               post_effect_render_texture_a, post_effect_render_texture_b);
-
+               post_effect_render_texture_a, post_effect_render_texture_b, false);
 
 }
 

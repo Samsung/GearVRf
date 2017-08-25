@@ -38,8 +38,8 @@ class DaydreamViewManager extends GVRViewManager {
                 }
             };
 
-    DaydreamViewManager(final GVRActivity gvrActivity, GVRMain gvrMain) {
-        super(gvrActivity, gvrMain);
+    DaydreamViewManager(final GVRActivity gvrActivity, GVRMain gvrMain, boolean useMultiview) {
+        super(gvrActivity, gvrMain, useMultiview);
 
         // Initialize GvrLayout and the native renderer.
         gvrLayout = new GvrLayout(gvrActivity);
@@ -107,11 +107,11 @@ class DaydreamViewManager extends GVRViewManager {
             captureCenterEye();
             capture3DScreenShot();
 
-            renderCamera(mMainScene, cameraRig.getLeftCamera(), mRenderBundle);
-            captureLeftEye();
+            renderCamera(mMainScene, cameraRig.getLeftCamera(), mRenderBundle, false);
+            captureLeftEye(0);
         } else {
-            renderCamera(mMainScene, cameraRig.getRightCamera(), mRenderBundle);
-            captureRightEye();
+            renderCamera(mMainScene, cameraRig.getRightCamera(), mRenderBundle, false);
+            captureRightEye(0);
         }
         captureFinish();
     }

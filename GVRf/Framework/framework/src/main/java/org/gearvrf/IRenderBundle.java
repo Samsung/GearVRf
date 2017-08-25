@@ -23,4 +23,5 @@ interface IRenderBundle {
     GVRRenderTexture getPostEffectRenderTextureA();
 
     GVRRenderTexture getPostEffectRenderTextureB();
+    GVRRenderTexture getEyeCaptureRenderTexture();
 }

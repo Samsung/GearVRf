@@ -106,7 +106,7 @@ void TextureCapturer::beginCapture() {
 }
 
 void TextureCapturer::startReadBack() {
-    mRenderTexture->startReadBack();
+    mRenderTexture->startReadBack(0);
 }
 
 void TextureCapturer::endCapture() {

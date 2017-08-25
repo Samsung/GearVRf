@@ -109,6 +109,7 @@ static const char VERTEX_SHADER[] =
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
+        "precision mediump sampler2D;\n"
         "precision highp float;\n"
         "out vec4 out_color;\n"
         "uniform sampler2D u_texture;\n"
@@ -231,10 +232,10 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
     bool batching_enabled = batching;
     int feature_set =0;
     feature_set |= (use_light) ? LIGHT : NO_LIGHT;
-    feature_set |= (use_multiview) ? MULTIVIEW : NO_MULTIVIEW;
+    feature_set |= (rstate->is_multiview) ? MULTIVIEW : NO_MULTIVIEW;
     feature_set |= (batching_enabled) ? BATCHING : NO_BATCHING;
 
-    bool properties [] = {use_light, use_multiview, batching_enabled};
+    bool properties [] = {use_light, rstate->is_multiview, batching_enabled};
     const char* feature_strings[2][3]={{NOT_USE_LIGHT, NOT_USE_MULTIVIEW, NOT_USE_BATCHING},
             {USE_LIGHT, USE_MULTIVIEW, USE_BATCHING}};
 
@@ -272,7 +273,7 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
                 frag_shader_string_lengths, 5);
         program_object_map_[feature_set] = prgram;
 
-        if(use_multiview)
+        if(rstate->is_multiview)
             LOGE("Rendering with multiview");
         initUniforms(feature_set, prgram->id(), uniform_locations);
         uniform_loc[feature_set] = uniform_locations;
@@ -329,7 +330,7 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
 
     }
 
-    if(use_multiview)
+    if(rstate->is_multiview)
         glUniformMatrix4fv(uniform_locations.u_view, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view_[0]));
     else
         glUniformMatrix4fv(uniform_locations.u_view, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
