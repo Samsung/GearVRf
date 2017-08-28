@@ -15,6 +15,7 @@
 
 package org.gearvrf.io;
 
+import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 
 import android.hardware.input.InputManager;
@@ -32,9 +33,9 @@ import android.view.MotionEvent;
  */
 abstract class GVRBaseController extends GVRCursorController {
 
-    public GVRBaseController(GVRControllerType controllerType, String name,
-            int vendorId, int productId) {
-        super(controllerType, name, vendorId, productId);
+    public GVRBaseController(GVRContext context, GVRControllerType controllerType, String name,
+                             int vendorId, int productId) {
+        super(context, controllerType, name, vendorId, productId);
     }
 
     abstract boolean dispatchKeyEvent(KeyEvent event);

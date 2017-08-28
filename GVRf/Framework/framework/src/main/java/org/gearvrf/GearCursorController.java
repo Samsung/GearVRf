@@ -75,8 +75,7 @@ final class GearCursorController extends GVRCursorController {
     }
 
     GearCursorController(GVRContext context, ControllerReader controllerReader) {
-        super(GVRControllerType.CONTROLLER);
-        this.context = context;
+        super(context, GVRControllerType.CONTROLLER);
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();

@@ -261,7 +261,7 @@ public class AnchorImplementation {
                     webPageClosed = false;
                 }
                 else if (event.isOver()) {
-                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getOwnerObject();
                     if (sensorObj != null) {
                         GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
                         if (sensorObj2 != null) {
@@ -273,7 +273,7 @@ public class AnchorImplementation {
                         }
                     }
                 } else {
-                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getOwnerObject();
                     if (sensorObj != null) {
                         GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
                         if (sensorObj2 != null) {
@@ -333,7 +333,7 @@ public class AnchorImplementation {
     private void LaunchWebPage(InteractiveObject interactiveObjectFinal, String url) {
         if (webPagePlusUISceneObject == null) {
             final String urlFinal = url;
-            final GVRSceneObject gvrSceneObjectAnchor = interactiveObjectFinal.getSensor().getGVRSceneObject();
+            final GVRSceneObject gvrSceneObjectAnchor = interactiveObjectFinal.getSensor().getOwnerObject();
             gvrContext.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

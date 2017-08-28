@@ -19,6 +19,7 @@ import android.content.Context;
 import android.graphics.Color;
 
 import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.utility.Log;
@@ -2588,7 +2589,8 @@ public class X3Dobject {
                     sensors.add(sensor);
                     currentSensor = sensor;
                     // attach any existing child objects of the parent to the new
-                    // gvrSensorSceneObject
+                    // gvrSensorSceneObject and add colliders to them
+                    gvrSensorSceneObject.attachCollider(new GVRMeshCollider(gvrContext, true));
                     for (int i = (currentSceneObject.getChildrenCount() - 1); i >= 0; i--) {
                         // detach the children of the parent and re-attach them to the new
                         // sensor object
@@ -2596,6 +2598,7 @@ public class X3Dobject {
 
                         currentSceneObject.removeChildObject(childObject);
                         gvrSensorSceneObject.addChildObject(childObject);
+                        childObject.attachCollider(new GVRMeshCollider(gvrContext, true));
                     }
                     currentSceneObject.addChildObject(gvrSensorSceneObject);
                     currentSceneObject = gvrSensorSceneObject;
@@ -3097,7 +3100,7 @@ public class X3Dobject {
                         // A GVRScene object was added between the parent and it's children.
                         // If the currentSensor points to the currentSceneObject, go up to
                         //   it's parent thus skipping past the sensor's sensor's GVRSceneObject
-                        if (currentSensor.getGVRSceneObject() == currentSceneObject) {
+                        if (currentSensor.getOwnerObject() == currentSceneObject) {
                             currentSensor = null;
                             currentSceneObject = currentSceneObject.getParent();
                         }
@@ -3131,7 +3134,7 @@ public class X3Dobject {
                     // A GVRScene object was added between the parent and it's children.
                     // If the currentSensor points to the currentSceneObject, go up to
                     //   it's parent thus skipping past the sensor's sensor's GVRSceneObject
-                    if (currentSensor.getGVRSceneObject() == currentSceneObject) {
+                    if (currentSensor.getOwnerObject() == currentSceneObject) {
                         currentSensor = null;
                         currentSceneObject = currentSceneObject.getParent();
                     }

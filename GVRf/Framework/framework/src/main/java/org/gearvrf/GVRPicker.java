@@ -16,8 +16,10 @@
 package org.gearvrf;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.gearvrf.utility.Log;
@@ -56,21 +58,27 @@ import org.joml.Vector3f;
  * <li>onPick(GVRPicker)        called when the set of picked objects changes.</li>
  * <li>onNoPick(GVRPicker)      called once when nothing is picked.</li>
  * </ul
+ * Each cursor controller has an internal picker that generates pick events
+ * from that cursor. When a cursor is used, the pick events contain touch
+ * information. You can register as a listener for pick events from a specific cursor.
  * @see IPickEvents
  * @see GVRSceneObject#attachCollider(GVRCollider)
  * @see GVRCollider
  * @see GVRCollider#setEnable(boolean)
  * @see GVRPickedObject
+ * @see GVRCursorController#addPickEventListener(IPickEvents)
  */
-public class GVRPicker extends GVRBehavior {
+public class GVRPicker extends GVRBehavior implements IEventReceiver {
     private static final String TAG = Log.tag(GVRPicker.class);
     static private long TYPE_PICKMANAGER = newComponentType(GVRPicker.class);
-    private Vector3f mRayOrigin = new Vector3f(0, 0, 0);
-    private Vector3f mRayDirection = new Vector3f(0, 0, -1);
-    private float[] mPickRay = new float[6];
-
-    protected GVRScene mScene;
+    private final Vector3f mRayOrigin = new Vector3f(0, 0, 0);
+    private final Vector3f mRayDirection = new Vector3f(0, 0, -1);
+    private final float[] mPickRay = new float[6];
+    protected volatile int mTouchFlags = 0;
+    protected GVRScene mScene = null;
+    protected GVRCursorController mController = null;
     protected GVRPickedObject[] mPicked = null;
+    protected GVREventReceiver mListeners = null;
 
     /**
      * Construct a picker which picks from a given scene.
@@ -82,10 +90,7 @@ public class GVRPicker extends GVRBehavior {
      */
     public GVRPicker(GVRContext context, GVRScene scene)
     {
-        super(context);
-        mScene = scene;
-        mType = getComponentType();
-        startListening();
+        this(scene, true);
     }
 
     /**
@@ -104,13 +109,55 @@ public class GVRPicker extends GVRBehavior {
      */
     public GVRPicker(GVRSceneObject owner, GVRScene scene)
     {
-        super(owner.getGVRContext());
-        mScene = scene;
-        setPickRay(0, 0, 0, 0, 0, 1);
+        this(scene, false);
         owner.attachComponent(this);
     }
 
+    /**
+     * Construct a picker which picks from a given cursor controller.
+     * Instantiating the picker will cause it to generate pick
+     * events from the position and direction specified by the controller.
+     * @param controller {@link GVRCursorController} which will generate the pick ray.
+     * @param start start picking event loop
+     */
+    public GVRPicker(GVRCursorController controller, boolean start)
+    {
+        super(controller.getGVRContext());
+        mScene = null;
+        mType = getComponentType();
+        mListeners = new GVREventReceiver(this);
+        setPickRay(0, 0, 0, 0, 0, -1);
+        mController = controller;
+        if (start)
+        {
+            startListening();
+        }
+    }
+
+    /**
+     * Construct a picker which picks from a given scene.
+     *
+     * @param scene scene containing the scene objects to pick from
+     * @param start start picking event loop
+     */
+    public GVRPicker(GVRScene scene, boolean start)
+    {
+        super(scene.getGVRContext());
+        mScene = scene;
+        mType = getComponentType();
+        mListeners = new GVREventReceiver(this);
+        setPickRay(0, 0, 0, 0, 0, -1);
+        if (start)
+        {
+            startListening();
+        }
+    }
+
     static public long getComponentType() { return TYPE_PICKMANAGER; }
+
+    public GVRScene getScene() { return mScene; }
+
+    public void setScene(GVRScene scene) { mScene = scene; }
 
     /**
      * Get the current ray to use for picking.
@@ -127,14 +174,17 @@ public class GVRPicker extends GVRBehavior {
      *
      * @return pick ray
      */
-    public float[] getPickRay()
+    public final float[] getPickRay()
     {
-        mPickRay[0] = mRayOrigin.x;
-        mPickRay[1] = mRayOrigin.y;
-        mPickRay[2] = mRayOrigin.z;
-        mPickRay[3] = mRayDirection.x;
-        mPickRay[4] = mRayDirection.y;
-        mPickRay[5] = mRayDirection.z;
+        synchronized (this)
+        {
+            mPickRay[0] = mRayOrigin.x;
+            mPickRay[1] = mRayOrigin.y;
+            mPickRay[2] = mRayOrigin.z;
+            mPickRay[3] = mRayDirection.x;
+            mPickRay[4] = mRayDirection.y;
+            mPickRay[5] = mRayDirection.z;
+        }
         return mPickRay;
     }
 
@@ -181,13 +231,27 @@ public class GVRPicker extends GVRBehavior {
      */
     public void setPickRay(float ox, float oy, float oz, float dx, float dy, float dz)
     {
-        mRayOrigin.x = ox;
-        mRayOrigin.y = oy;
-        mRayOrigin.z = oz;
-        mRayDirection.x = dx;
-        mRayDirection.y = dy;
-        mRayDirection.z = dz;
+        synchronized (this)
+        {
+            mRayOrigin.x = ox;
+            mRayOrigin.y = oy;
+            mRayOrigin.z = oz;
+            mRayDirection.x = dx;
+            mRayDirection.y = dy;
+            mRayDirection.z = dz;
+        }
     }
+
+    public GVRCursorController getController() { return mController; }
+
+    public final GVREventReceiver getEventReceiver() { return mListeners; }
+
+    public void setTouchFlags(int touchFlags)
+    {
+        mTouchFlags = touchFlags;
+    }
+
+    public int getTouchFlags() { return mTouchFlags; }
 
     public void onDrawFrame(float frameTime)
     {
@@ -204,14 +268,34 @@ public class GVRPicker extends GVRBehavior {
      * the picker every frame.
      * @see IPickEvents
      * @see #pickObjects(GVRScene, float, float, float, float, float, float)
-     */
-    protected void doPick()
+\     */
+    public void doPick()
     {
         GVRSceneObject owner = getOwnerObject();
         GVRTransform trans = (owner != null) ? owner.getTransform() : null;
         GVRPickedObject[] picked = pickObjects(mScene, trans,
                 mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
                 mRayDirection.x, mRayDirection.y, mRayDirection.z);
+        generatePickEvents(picked);
+    }
+
+    /**
+     * Scans the scene graph to collect picked items
+     * and generates appropriate pick events.
+     * This function is called by the cursor controller
+     * to generate pick events.
+     * @see IPickEvents
+     * @see #pickObjects(GVRScene, float, float, float, float, float, float)
+     * @param touchFlags    integer flags for touch (mouse buttons)
+     */
+    public void processPick(int touchFlags)
+    {
+        GVRSceneObject owner = getOwnerObject();
+        GVRTransform trans = (owner != null) ? owner.getTransform() : null;
+        GVRPickedObject[] picked = pickObjects(mScene, trans,
+                mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
+                mRayDirection.x, mRayDirection.y, mRayDirection.z);
+        mTouchFlags = touchFlags;
         generatePickEvents(picked);
     }
 
@@ -232,9 +316,10 @@ public class GVRPicker extends GVRBehavior {
                     continue;
                 }
                 GVRCollider collider = collision.hitCollider;
-                if (!hasCollider(picked, collider))
+                GVRPickedObject temp = findCollider(picked, collider);
+                if (temp == null)
                 {
-                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());
+                    propagateOnExit(collider.getOwnerObject());
                     selectionChanged = true;
                 }
             }
@@ -254,16 +339,19 @@ public class GVRPicker extends GVRBehavior {
             }
             //increment the pick count
             pickedCount++;
-
             GVRCollider collider = collision.hitCollider;
-            if (!hasCollider(mPicked, collider))
+            GVRPickedObject prevHit = findCollider(mPicked, collider);
+
+            collision.picker = this;
+            collision.touchFlags = mTouchFlags;
+            if (prevHit == null)
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);
+                propagateOnEnter(collision);
                 selectionChanged = true;
             }
             else
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);
+                propagateOnInside(collision);
             }
         }
         if (selectionChanged)
@@ -271,30 +359,80 @@ public class GVRPicker extends GVRBehavior {
             if (pickedCount > 0)
             {
                 mPicked = picked;
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onPick", this);
+                propagateOnPick(this);
             }
             else
             {
                 mPicked = null;
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", this);
+                propagateOnNoPick(this);
             }
         }
     }
 
-    private boolean hasCollider(GVRPickedObject[] pickList, GVRCollider findme)
+    protected void propagateOnNoPick(GVRPicker picker)
+    {
+        getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", picker);
+        for (IEvents listener : mListeners.getListeners())
+        {
+            if (IPickEvents.class.isAssignableFrom(listener.getClass()))
+                ((IPickEvents) listener).onNoPick(picker);
+        }
+    }
+
+    protected void propagateOnPick(GVRPicker picker)
+    {
+        getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onPick", picker);
+        for (IEvents listener : mListeners.getListeners())
+        {
+            if (IPickEvents.class.isAssignableFrom(listener.getClass()))
+                ((IPickEvents) listener).onPick(picker);
+        }
+    }
+
+    protected void propagateOnEnter(GVRPickedObject hit)
+    {
+        getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", hit.getHitObject(), hit);
+        for (IEvents listener : mListeners.getListeners())
+        {
+            if (IPickEvents.class.isAssignableFrom(listener.getClass()))
+                ((IPickEvents) listener).onEnter(hit.getHitObject(), hit);
+        }
+    }
+
+    protected void propagateOnInside(GVRPickedObject hit)
+    {
+        getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", hit.getHitObject(), hit);
+        for (IEvents listener : mListeners.getListeners())
+        {
+            if (IPickEvents.class.isAssignableFrom(listener.getClass()))
+                ((IPickEvents) listener).onInside(hit.getHitObject(), hit);
+        }
+    }
+
+    protected void propagateOnExit(GVRSceneObject obj)
+    {
+        getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", obj);
+        for (IEvents listener : mListeners.getListeners())
+        {
+            if (IPickEvents.class.isAssignableFrom(listener.getClass()))
+                ((IPickEvents) listener).onExit(obj);
+        }
+    }
+
+    private GVRPickedObject findCollider(GVRPickedObject[] pickList, GVRCollider findme)
     {
         if (pickList == null)
         {
-            return false;
+            return null;
         }
         for (GVRPickedObject hit : pickList)
         {
             if ((hit != null) && (hit.hitCollider == findme))
             {
-                return true;
+                return hit;
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -531,16 +669,6 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Casts a ray into the scene graph, and returns the objects it intersects.
-     *
-     * @deprecated use GVRPickedObject[] pickObjects
-     */
-    public static final List<GVRPickedObject> findObjects(GVRScene scene, float ox, float oy, float oz, float dx,
-                                                          float dy, float dz) {
-        return Arrays.asList(pickObjects(scene, ox, oy, oz, dx, dy, dz));
-    }
-
-    /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
     static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz)
@@ -573,27 +701,6 @@ public class GVRPicker extends GVRBehavior {
     }
     
     /**
-     * Tests the {@link GVRSceneObject}s contained within scene against the
-     * camera rig's lookat vector.
-     *
-     * <p>
-     * This method uses higher-level function
-     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
-     * findObjects()} internally.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @return A list of {@link GVRPickedObject}, sorted by distance from the
-     *         camera rig. Each {@link GVRPickedObject} contains the object
-     *         along with the hit location.
-     *
-     */
-    public static final List<GVRPickedObject> findObjects(GVRScene scene) {
-        return findObjects(scene, 0, 0, 0, 0, 0, -1.0f);
-    }
-
-    /**
      * The result of a pick request which hits an object.
      * <p/>
      * When a pick request is performed, each collision is
@@ -601,14 +708,14 @@ public class GVRPicker extends GVRBehavior {
      *
      * @since 1.6.6
      * @see GVRPicker#pickObjects(GVRScene, float, float, float, float, float, float)
-     * @see GVRPicker#findObjects(GVRScene)
      */
     public static final class GVRPickedObject {
         public final GVRSceneObject hitObject;
         public final GVRCollider hitCollider;
+        public GVRPicker picker;
         public final float[] hitLocation;
         public final float hitDistance;
-
+        public int touchFlags;
         public final int faceIndex;
         public final float[] barycentricCoords;
         public final float[] textureCoords;
@@ -648,6 +755,7 @@ public class GVRPicker extends GVRBehavior {
             this.barycentricCoords = barycentricCoords;
             this.textureCoords = textureCoords;
             this.normalCoords = normalCoords;
+            this.touchFlags = 0;
         }
 
         public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance) {
@@ -667,9 +775,10 @@ public class GVRPicker extends GVRBehavior {
             this.hitDistance = -1;
             this.hitCollider = null;
             this.faceIndex = -1;
-            this.barycentricCoords = null;
-            this.textureCoords = null;
-            this.normalCoords = null;
+            this.barycentricCoords = new float[]{-1.0f, -1.0f, -1.0f};
+            this.textureCoords = new float[]{-1.0f, -1.0f};
+            this.normalCoords = new float[]{0.0f, 0.0f, 0.0f};
+            this.touchFlags = 0;
         }
 
         /**
@@ -694,6 +803,13 @@ public class GVRPicker extends GVRBehavior {
         }
 
         /**
+         * The {@link GVRPicker} this collision came from.
+         * This will be null if the collision was generated
+         * from {@link #pickObjects(GVRScene, float, float, float, float, float, float)}
+         */
+        public GVRPicker getPicker() { return picker; }
+
+        /**
          * The hit location, as an [x, y, z] array.
          *
          * @return A copy of the hit result
@@ -708,7 +824,21 @@ public class GVRPicker extends GVRBehavior {
         public float getHitDistance() {
             return hitDistance;
         }
+        
+        /** The x coordinate of the hit location */
+        public float getHitX() {
+            return hitLocation[0];
+        }
 
+        /** The y coordinate of the hit location */
+        public float getHitY() {
+            return hitLocation[1];
+        }
+
+        /** The z coordinate of the hit location */
+        public float getHitZ() {
+            return hitLocation[2];
+        }
 
         /**
          * The barycentric coordinates of the hit location on the collided face

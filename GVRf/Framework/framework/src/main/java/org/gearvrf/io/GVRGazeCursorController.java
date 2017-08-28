@@ -51,9 +51,9 @@ final class GVRGazeCursorController extends GVRBaseController implements GVRDraw
     private EventHandlerThread thread;
 
     GVRGazeCursorController(GVRContext context,
-                                   GVRControllerType controllerType, String name, int vendorId,
-                                   int productId) {
-        super(controllerType, name, vendorId, productId);
+                            GVRControllerType controllerType, String name, int vendorId,
+                            int productId) {
+        super(context, controllerType, name, vendorId, productId);
         this.context = context;
         gazeDirection = new Vector3f();
         setPosition = new Vector3f();

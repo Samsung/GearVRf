@@ -25,7 +25,6 @@ import org.gearvrf.GVRSceneObject;
 import org.joml.Quaternionf;
 import org.gearvrf.SensorEvent;
 import org.joml.Vector3f;
-import org.gearvrf.SensorEvent.EventGroup;
 
 import java.util.List;
 
@@ -61,7 +60,6 @@ public class CursorEvent {
     private static int recyclerUsed;
     private static CursorEvent recyclerTop;
     private CursorEvent next;
-    private EventGroup eventGroup;
 
     CursorEvent(){
         hitPoint = new Vector3f();
@@ -431,18 +429,5 @@ public class CursorEvent {
      */
     public List<MotionEvent> getMotionEvents() {
         return motionEvents;
-    }
-
-    /**
-     * Returns the {@link EventGroup} of the {@link CursorEvent}.
-     * @see CursorManager#setDepthOrderEnabled(boolean)
-     * @return the {@link EventGroup} of the {@link CursorEvent}.
-     */
-    public EventGroup getEventGroup() {
-        return eventGroup;
-    }
-
-    void setEventGroup(EventGroup eventGroup) {
-        this.eventGroup = eventGroup;
     }
 }
