@@ -79,6 +79,8 @@ class PhysicsRigidBody : public Component {
 	virtual const float getCcdMotionThreshold() const = 0;
 	virtual const float getCcdSweptSphereRadius() const = 0;
 	virtual const float getContactProcessingThreshold() const = 0;
+
+	virtual void updateConstructionInfo() = 0;
 };
 
 }

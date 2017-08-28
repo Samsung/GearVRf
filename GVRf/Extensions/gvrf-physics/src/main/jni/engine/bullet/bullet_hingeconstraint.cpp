@@ -91,19 +91,11 @@ namespace gvr {
         }
     }
 
-    void BulletHingeConstraint::set_owner_object(SceneObject *obj) {
-        if (obj == owner_object())
-        {
-            return;
+    void BulletHingeConstraint::updateConstructionInfo() {
+        if (mHingeConstraint != 0) {
+            delete (mHingeConstraint);
         }
-        Component::set_owner_object(obj);
-        if (obj)
-        {
-            onAttach(obj);
-        }
-    }
 
-    void BulletHingeConstraint::onAttach(SceneObject *owner) {
         btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
         btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
         btVector3 axisInA(mAxisInA.x, mAxisInA.y, mAxisInA.z);

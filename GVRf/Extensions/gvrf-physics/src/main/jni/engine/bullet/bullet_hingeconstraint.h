@@ -39,8 +39,6 @@ namespace gvr {
 
         ~BulletHingeConstraint();
 
-        void set_owner_object(SceneObject* obj);
-
         void setLimits(float lower, float upper);
 
         float getLowerLimit() const;
@@ -53,8 +51,7 @@ namespace gvr {
 
         float getBreakingImpulse() const;
 
-    private:
-        void onAttach(SceneObject* owner);
+        void updateConstructionInfo();
 
     private:
         btHingeConstraint *mHingeConstraint;

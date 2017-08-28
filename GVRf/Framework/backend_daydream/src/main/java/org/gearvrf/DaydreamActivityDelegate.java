@@ -39,8 +39,9 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
     }
 
     @Override
-    public GVRViewManager makeViewManager() {
-        return new DaydreamViewManager(mActivity, mActivity.getMain());
+    public GVRViewManager makeViewManager(boolean useMultiview) {
+        // When daydream start supporting multiview, pass this flag
+        return new DaydreamViewManager(mActivity, mActivity.getMain(), false);
     }
 
     @Override

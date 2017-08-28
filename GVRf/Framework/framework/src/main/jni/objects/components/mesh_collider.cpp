@@ -70,9 +70,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     Mesh* mesh = mesh_;
     bool pickCoordinates = pickCoordinates_;
     RenderData* rd = NULL;
-    glm::mat4 model_view;
     SceneObject* owner = owner_object();
-    glm::mat4 model_matrix;
     glm::vec3 O(rayStart);
     glm::vec3 D(rayDir);
 
@@ -85,7 +83,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     if (owner != NULL)
     {
         RenderData* rd = owner->render_data();
-        model_matrix = owner->transform()->getModelMatrix();
+        glm::mat4 model_matrix = owner->transform()->getModelMatrix();
         glm::mat4 model_inverse = glm::affineInverse(model_matrix);
 
         transformRay(model_inverse, O, D);
@@ -113,9 +111,7 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
         }
         if (data.IsHit)
         {
-            glm::vec4 hitPos = model_matrix * glm::vec4(data.HitPosition, 1);
-
-            data.Distance = glm::distance(rayStart, glm::vec3(hitPos));
+            data.Distance = glm::distance(O, data.HitPosition);
             data.ColliderHit = this;
             data.ObjectHit = owner;
         }
@@ -229,7 +225,7 @@ ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, co
                 data.FaceIndex = i/3;
             }
         }
-        if(pickCoordinates){
+        if(pickCoordinates && data.IsHit){
             populateSurfaceCoords(mesh, data);
         }
 

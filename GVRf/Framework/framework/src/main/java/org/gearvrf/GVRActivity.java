@@ -264,7 +264,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
             boolean isMonoscopicMode = mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
             if (!isMonoscopicMode) {
-                mViewManager = mDelegate.makeViewManager();
+                mViewManager = mDelegate.makeViewManager(mAppSettings.isMultiviewSet());
             } else {
                 mViewManager = mDelegate.makeMonoscopicViewManager();
             }
@@ -694,7 +694,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
         VrAppSettings makeVrAppSettings();
         IActivityNative getActivityNative();
-        GVRViewManager makeViewManager();
+        GVRViewManager makeViewManager(boolean useMultiview);
         GVRViewManager makeMonoscopicViewManager();
         GVRCameraRig makeCameraRig(GVRContext context);
         GVRConfigurationManager makeConfigurationManager(GVRActivity activity);

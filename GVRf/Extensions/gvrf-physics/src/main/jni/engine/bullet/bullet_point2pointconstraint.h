@@ -36,8 +36,6 @@ namespace gvr {
 
         ~BulletPoint2PointConstraint();
 
-        virtual void set_owner_object(SceneObject* obj);
-
         virtual void* getUnderlying() {
             return this->mPoint2PointConstraint;
         }
@@ -54,9 +52,7 @@ namespace gvr {
 
         PhysicsVec3 getPivotInB() const { return mPivotInB; }
 
-    private:
-        void onAttach(SceneObject* owner);
-
+        void updateConstructionInfo();
     private:
         btPoint2PointConstraint *mPoint2PointConstraint;
         BulletRigidBody *mRigidBodyB;

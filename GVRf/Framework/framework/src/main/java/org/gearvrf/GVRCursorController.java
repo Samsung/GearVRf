@@ -646,7 +646,7 @@ public abstract class GVRCursorController {
         origin.set(x,y,z);
     }
 
-    Vector3f getOrigin(){
+    protected Vector3f getOrigin(){
         return origin;
     }
 

@@ -58,38 +58,63 @@
 // (http://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping)
 
 namespace gvr {
-static const char VERTEX_SHADER[] = "attribute vec3 a_position;\n"
+std::string VERTEX_SHADER =
+         "#ifdef HAS_MULTIVIEW\n"
+         "#extension GL_OVR_multiview2 : enable\n"
+          "layout(num_views = 2) in;\n"
+         "uniform mat4 u_mvp_[2];\n"
+         "#else\n"
+         "uniform mat4 u_mvp;\n"
+        "#endif\n"
+        "in vec3 a_position;\n"
         "uniform mat4 u_model;\n"
-        "uniform mat4 u_mvp;\n"
-        "varying vec3 v_tex_coord;\n"
+        "out vec3 v_tex_coord;\n"
         "void main() {\n"
         "  vec4 pos = vec4(a_position, 1.0);\n"
         "  v_tex_coord = normalize((u_model * pos).xyz);\n"
         "  v_tex_coord.z = -v_tex_coord.z;\n"
-        "  gl_Position = u_mvp * pos;\n"
+        "#ifdef HAS_MULTIVIEW\n"
+        "  gl_Position = u_mvp_[gl_ViewID_OVR]  * pos;\n"
+         "#else\n"
+        "  gl_Position = u_mvp  * pos;\n"
+        "#endif\n"
         "}\n";
 
-static const char FRAGMENT_SHADER[] =
+std::string FRAGMENT_SHADER =
         "precision highp float;\n"
         "uniform samplerCube u_texture;\n"
         "uniform vec3 u_color;\n"
         "uniform float u_opacity;\n"
-        "varying vec3 v_tex_coord;\n"
+        "out vec4 outColor;\n"
+        "in vec3 v_tex_coord;\n"
         "void main()\n"
         "{\n"
-        "  vec4 color = textureCube(u_texture, v_tex_coord);\n"
-        "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
+        "  vec4 color = texture(u_texture, v_tex_coord);\n"
+        "  outColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n"
         "}\n";
 
-CubemapShader::CubemapShader() :
-         u_model_(0), u_mvp_(0), u_texture_(0), u_color_(
-                0), u_opacity_(0) {
-    program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
+
+void CubemapShader::programInit(RenderState* rstate){
+
+    if(rstate->is_multiview){
+        VERTEX_SHADER = "#define HAS_MULTIVIEW\n" + VERTEX_SHADER;
+        FRAGMENT_SHADER =  "#define HAS_MULTIVIEW\n" + FRAGMENT_SHADER;
+    }
+    VERTEX_SHADER =  "#version 300 es\n" + VERTEX_SHADER;
+    FRAGMENT_SHADER = "#version 300 es\n" + FRAGMENT_SHADER;
+
+    program_ = new GLProgram(VERTEX_SHADER.c_str(), FRAGMENT_SHADER.c_str());
     u_model_ = glGetUniformLocation(program_->id(), "u_model");
-    u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+
+    if(rstate->is_multiview)
+        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
+    else
+        u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
     u_opacity_ = glGetUniformLocation(program_->id(), "u_opacity");
+}
+CubemapShader::CubemapShader() {
 }
 
 CubemapShader::~CubemapShader() {
@@ -97,6 +122,10 @@ CubemapShader::~CubemapShader() {
 }
 
 void CubemapShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
+
+    if(program_ == nullptr)
+        programInit(rstate);
+
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
     float opacity = material->getFloat("opacity");
@@ -107,7 +136,11 @@ void CubemapShader::render(RenderState* rstate, RenderData* render_data, Materia
     }
     glUseProgram(program_->id());
     glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
-    glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+    if(rstate->is_multiview)
+        glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
+    else
+        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+
     glActiveTexture (GL_TEXTURE0);
     glBindTexture(texture->getTarget(), texture->getId());
     glUniform1i(u_texture_, 0);

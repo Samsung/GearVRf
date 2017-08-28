@@ -133,19 +133,11 @@ namespace gvr {
         }
     }
 
-    void BulletSliderConstraint::set_owner_object(SceneObject* obj) {
-        if (obj == owner_object())
-        {
-            return;
+    void BulletSliderConstraint::updateConstructionInfo() {
+        if (mSliderConstraint != 0) {
+            delete (mSliderConstraint);
         }
-        Component::set_owner_object(obj);
-        if (obj)
-        {
-            onAttach(obj);
-        }
-    }
 
-    void BulletSliderConstraint::onAttach(SceneObject* owner) {
         btRigidBody* rbA = ((BulletRigidBody*)this->owner_object()->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 
         btTransform frameInA, frameInB;

@@ -46,6 +46,7 @@ namespace gvr {
         virtual void setBreakingImpulse(float impulse) = 0;
         virtual float getBreakingImpulse() const = 0;
 
+        virtual void updateConstructionInfo() = 0;
     };
 
 }

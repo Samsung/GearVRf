@@ -143,17 +143,11 @@ namespace gvr {
         }
     }
 
-    void BulletGeneric6dofConstraint::set_owner_object(SceneObject *obj) {
-        if (obj == owner_object()) {
-            return;
+    void BulletGeneric6dofConstraint::updateConstructionInfo() {
+        if (mGeneric6DofConstraint != 0) {
+            delete (mGeneric6DofConstraint);
         }
-        Component::set_owner_object(obj);
-        if (obj) {
-            onAttach(obj);
-        }
-    }
 
-    void BulletGeneric6dofConstraint::onAttach(SceneObject *owner) {
         btRigidBody *rbA = ((BulletRigidBody*)owner_object()->
                 getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 

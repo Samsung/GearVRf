@@ -7,7 +7,7 @@ interface OvrActivityHandlerRenderingCallbacks {
 
     public void onBeforeDrawEyes();
 
-    public void onDrawEye(int eye);
+    public void onDrawEye(int eye,int texId, boolean useMultiview);
 
     public void onAfterDrawEyes();
 }

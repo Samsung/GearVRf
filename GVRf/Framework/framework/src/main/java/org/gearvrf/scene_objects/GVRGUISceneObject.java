@@ -161,8 +161,9 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
                             + ((motionEvent.getY() - savedMotionEventY) * SCALE);
                 } else {
                     GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
-                    pointerCoords.x = pickedObject.getTextureU() * frameWidth;
-                    pointerCoords.y = pickedObject.getTextureV() * frameHeight;
+                    float[] texCoords = pickedObject.getTextureCoords();
+                    pointerCoords.x = texCoords[0] * frameWidth;
+                    pointerCoords.y = texCoords[1] * frameHeight;
 
 
                     if (motionEvent.getAction() == KeyEvent.ACTION_DOWN) {

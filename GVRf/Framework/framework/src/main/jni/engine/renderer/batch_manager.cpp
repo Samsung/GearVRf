@@ -119,7 +119,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
 
         gRenderer->setRenderStates(renderdata, rstate);
 
-        if(use_multiview){
+        if(rstate.is_multiview){
            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
            rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
         }

@@ -64,13 +64,13 @@ public:
              ShaderManager* shader_manager,
              PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b);
+             RenderTexture* post_effect_render_texture_b, bool);
      void renderCamera(Scene* scene, Camera* camera, int viewportX,
              int viewportY, int viewportWidth, int viewportHeight,
              ShaderManager* shader_manager,
              PostEffectShaderManager* post_effect_shader_manager,
              RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b);
+             RenderTexture* post_effect_render_texture_b, bool);
 
     void restoreRenderStates(RenderData* render_data);
     void setRenderStates(RenderData* render_data, RenderState& rstate);
@@ -87,13 +87,13 @@ public:
             ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b);
+            RenderTexture* post_effect_render_texture_b, bool);
 
      void renderCamera(Scene* scene, Camera* camera,
             RenderTexture* render_texture, ShaderManager* shader_manager,
             PostEffectShaderManager* post_effect_shader_manager,
             RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b);
+            RenderTexture* post_effect_render_texture_b, bool);
 
      void set_face_culling(int cull_face);
 

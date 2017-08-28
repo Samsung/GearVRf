@@ -48,6 +48,10 @@ public:
         mesh_ = mesh;
     }
 
+    bool pickCoordinatesEnabled(){
+        return pickCoordinates_;
+    }
+
     ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
     static ColliderData isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir);
 

@@ -33,6 +33,7 @@ public:
     virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
 
 private:
+    void programInit(RenderState* rstate);
     CubemapShader(const CubemapShader& cubemap_shader);
     CubemapShader(CubemapShader&& cubemap_shader);
     CubemapShader& operator=(const CubemapShader& cubemap_shader);
