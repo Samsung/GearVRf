@@ -26,7 +26,6 @@
 #include <android/log.h>
 
 namespace gvr {
-std::mutex BulletWorld::worldLock;
 
 BulletWorld::BulletWorld() {
     initialize();
@@ -80,36 +79,34 @@ void BulletWorld::finalize() {
 }
 
 void BulletWorld::addConstraint(PhysicsConstraint *constraint) {
-    std::lock_guard<std::mutex> lock(worldLock);
+    constraint->updateConstructionInfo();
+
     btTypedConstraint *_constr = reinterpret_cast<btTypedConstraint*>(constraint->getUnderlying());
     mPhysicsWorld->addConstraint(_constr);
 }
 
 void BulletWorld::removeConstraint(PhysicsConstraint *constraint) {
-    std::lock_guard<std::mutex> lock(worldLock);
     mPhysicsWorld->removeConstraint(reinterpret_cast<btTypedConstraint*>(constraint->getUnderlying()));
 }
 
 void BulletWorld::addRigidBody(PhysicsRigidBody *body) {
-    std::lock_guard<std::mutex> lock(worldLock);
     btRigidBody *b = (static_cast<BulletRigidBody *>(body))->getRigidBody();
+    body->updateConstructionInfo();
     mPhysicsWorld->addRigidBody(b);
 }
 
 void BulletWorld::addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) {
-    std::lock_guard<std::mutex> lock(worldLock);
+    body->updateConstructionInfo();
     mPhysicsWorld->addRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody(),
                                 collidesWith, collisiontype);
 }
 
 void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
-    std::lock_guard<std::mutex> lock(worldLock);
     mPhysicsWorld->removeRigidBody((static_cast<BulletRigidBody *>(body))->getRigidBody());
 }
 
-void BulletWorld::step(float timeStep) {
-    std::lock_guard<std::mutex> lock(worldLock);
-    mPhysicsWorld->stepSimulation(timeStep);
+void BulletWorld::step(float timeStep, int maxSubSteps) {
+    mPhysicsWorld->stepSimulation(timeStep, maxSubSteps);
 }
 
 /**

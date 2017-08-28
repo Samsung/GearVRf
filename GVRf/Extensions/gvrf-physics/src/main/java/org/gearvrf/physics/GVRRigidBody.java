@@ -43,6 +43,7 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
     }
 
     private final int mCollisionGroup;
+    private final GVRPhysicsContext mPhysicsContext;
 
     /**
      * Constructs new instance to simulate a rigid body in {@link GVRWorld}.
@@ -76,6 +77,7 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
         super(gvrContext, Native3DRigidBody.ctor());
         Native3DRigidBody.setMass(getNative(), mass);
         mCollisionGroup = collisionGroup;
+        mPhysicsContext = GVRPhysicsContext.getInstance();
     }
 
     static public long getComponentType() {
@@ -173,8 +175,13 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
      * @param y factor on the 'Y' axis.
      * @param z factor on the 'Z' axis.
      */
-    public void applyCentralForce(float x, float y, float z) {
-        Native3DRigidBody.applyCentralForce(getNative(), x, y, z);
+    public void applyCentralForce(final float x, final float y, final float z) {
+        mPhysicsContext.runOnPhysicsThread(new Runnable() {
+            @Override
+            public void run() {
+                Native3DRigidBody.applyCentralForce(getNative(), x, y, z);
+            }
+        });
     }
 
     /**
@@ -184,8 +191,13 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
      * @param y factor on the 'Y' axis.
      * @param z factor on the 'Z' axis.
      */
-    public void applyTorque(float x, float y, float z) {
-        Native3DRigidBody.applyTorque(getNative(), x, y, z);
+    public void applyTorque(final float x, final float y, final float z) {
+        mPhysicsContext.runOnPhysicsThread(new Runnable() {
+            @Override
+            public void run() {
+                Native3DRigidBody.applyTorque(getNative(), x, y, z);
+            }
+        });
     }
 
     /**

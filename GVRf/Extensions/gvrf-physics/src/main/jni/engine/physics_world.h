@@ -54,7 +54,7 @@ class PhysicsWorld : public Component {
 
 	virtual void removeRigidBody(PhysicsRigidBody *body) = 0;
 
-	virtual void step(float timeStep) = 0;
+	virtual void step(float timeStep, int maxSubSteps) = 0;
 
 	virtual void listCollisions(std::list<ContactPoint>& contactPoints) = 0;
 

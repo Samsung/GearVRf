@@ -58,19 +58,11 @@ namespace gvr {
         }
     }
 
-    void BulletPoint2PointConstraint::set_owner_object(SceneObject* obj) {
-        if (obj == owner_object())
-        {
-            return;
+    void BulletPoint2PointConstraint::updateConstructionInfo() {
+        if (mPoint2PointConstraint != 0) {
+            delete (mPoint2PointConstraint);
         }
-        Component::set_owner_object(obj);
-        if (obj)
-        {
-            onAttach(obj);
-        }
-    }
 
-    void BulletPoint2PointConstraint::onAttach(SceneObject* owner) {
         btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
         btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
         btRigidBody* rbA = ((BulletRigidBody*)owner_object()->

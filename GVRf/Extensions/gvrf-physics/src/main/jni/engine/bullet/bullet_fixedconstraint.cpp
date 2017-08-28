@@ -22,18 +22,6 @@ BulletFixedConstraint::~BulletFixedConstraint() {
     }
 }
 
-void BulletFixedConstraint::set_owner_object(SceneObject* obj) {
-    if (obj == owner_object())
-    {
-        return;
-    }
-    Component::set_owner_object(obj);
-    if (obj)
-    {
-        onAttach(obj);
-    }
-}
-
 void BulletFixedConstraint::setBreakingImpulse(float impulse) {
     if (0 != mFixedConstraint) {
         mFixedConstraint->setBreakingImpulseThreshold(impulse);
@@ -52,7 +40,10 @@ float BulletFixedConstraint::getBreakingImpulse() const {
     }
 }
 
-void BulletFixedConstraint::onAttach(SceneObject* owner) {
+void BulletFixedConstraint::updateConstructionInfo() {
+    if (mFixedConstraint != 0) {
+        delete (mFixedConstraint);
+    }
     btRigidBody* rbA = ((BulletRigidBody*)this->owner_object()->
             getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 
