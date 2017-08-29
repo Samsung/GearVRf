@@ -12,6 +12,35 @@ uniform float u_noise_factor;
 
 varying float deltaTime;
 
+float snoise(vec3);
+
+void main() {
+
+    deltaTime = u_time - a_texcoord.x;
+
+    vec4 posn = a_position +
+                vec4( (a_normal.x*deltaTime),
+                      (a_normal.y*deltaTime),
+                      (a_normal.z*deltaTime), 0) +
+                vec4( (0.5 * u_acceleration.x * deltaTime * deltaTime),
+                      (0.5 * u_acceleration.y * deltaTime * deltaTime),
+                      (0.5 * u_acceleration.z * deltaTime * deltaTime), 0);
+
+    posn = posn + vec4(u_noise_factor * vec3(snoise(posn.xyz + vec3(0.0, 0.0, deltaTime)),
+            snoise(posn.xyz + vec3(43.0, 17.0, deltaTime)),
+        	snoise(posn.xyz + vec3(-17.0, -43.0, deltaTime))), 0);
+
+    gl_Position = u_mvp * posn;
+
+    gl_PointSize = clamp((u_particle_size + u_size_change_rate * deltaTime), 0.1, 100.0);
+
+    if ( deltaTime < 0.0 || deltaTime > u_particle_age)
+    {
+        //force the vertex to be clipped
+        gl_Position = vec4(2.0,2.0,2.0,1.0);
+    }
+}
+
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex
 //               noise functions.
@@ -20,6 +49,25 @@ varying float deltaTime;
 //     Lastmod : 20110822 (ijm)
 //     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
 //               Distributed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
 //               https://github.com/ashima/webgl-noise
 //               https://github.com/stegu/webgl-noise
 //
@@ -111,31 +159,4 @@ float snoise(vec3 v)
   return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
                                 dot(p2,x2), dot(p3,x3) ) );
   }
-
-
-void main() {
-
-    deltaTime = u_time - a_texcoord.x;
-
-    vec4 posn = a_position +
-                vec4( (a_normal.x*deltaTime),
-                      (a_normal.y*deltaTime),
-                      (a_normal.z*deltaTime), 0) +
-                vec4( (0.5 * u_acceleration.x * deltaTime * deltaTime),
-                      (0.5 * u_acceleration.y * deltaTime * deltaTime),
-                      (0.5 * u_acceleration.z * deltaTime * deltaTime), 0);
-
-    posn = posn + vec4(u_noise_factor * vec3(snoise(posn.xyz + vec3(0.0, 0.0, deltaTime)),
-            snoise(posn.xyz + vec3(43.0, 17.0, deltaTime)),
-        	snoise(posn.xyz + vec3(-17.0, -43.0, deltaTime))), 0);
-
-    gl_Position = u_mvp * posn;
-
-    gl_PointSize = clamp((u_particle_size + u_size_change_rate * deltaTime), 0.1, 100.0);
-
-    if ( deltaTime < 0.0 || deltaTime > u_particle_age)
-    {
-        //force the vertex to be clipped
-        gl_Position = vec4(2.0,2.0,2.0,1.0);
-    }
-}
+  
