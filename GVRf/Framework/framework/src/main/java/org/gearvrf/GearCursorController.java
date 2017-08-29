@@ -358,22 +358,22 @@ final class GearCursorController extends GVRCursorController {
             int handleResult = handleEnterButton(key, event.pointF, event.touched);
             prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
 
-            handleResult = handleAButtton(key);
+            handleResult = handleAButton(key);
             prevButtonA = handleResult == -1 ? prevButtonA : handleResult;
 
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK.getNumVal(), prevButtonBack, KeyEvent
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK, prevButtonBack, KeyEvent
                     .KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
 
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_UP.getNumVal(), prevButtonVolumeUp, KeyEvent
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_UP, prevButtonVolumeUp, KeyEvent
                     .KEYCODE_VOLUME_UP);
             prevButtonVolumeUp = handleResult == -1 ? prevButtonVolumeUp : handleResult;
 
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_DOWN.getNumVal(), prevButtonVolumeDown, KeyEvent
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_DOWN, prevButtonVolumeDown, KeyEvent
                     .KEYCODE_VOLUME_DOWN);
             prevButtonVolumeDown = handleResult == -1 ? prevButtonVolumeDown : handleResult;
 
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_HOME.getNumVal(), prevButtonHome, KeyEvent
+            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_HOME, prevButtonHome, KeyEvent
                     .KEYCODE_HOME);
             prevButtonHome = handleResult == -1 ? prevButtonHome : handleResult;
 
@@ -414,7 +414,7 @@ final class GearCursorController extends GVRCursorController {
 
     private int handleEnterButton(int key, PointF pointF, boolean touched){
         long time = SystemClock.uptimeMillis();
-        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_ENTER.getNumVal(), thread.prevButtonEnter, KeyEvent.KEYCODE_ENTER);
+        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_ENTER, thread.prevButtonEnter, KeyEvent.KEYCODE_ENTER);
         if(handled == KeyEvent.ACTION_UP || touching && !touched){
             pointerCoords.x = pointF.x;
             pointerCoords.y = pointF.y;
@@ -445,9 +445,9 @@ final class GearCursorController extends GVRCursorController {
         return handled;
     }
 
-    private int handleAButtton(int key){
+    private int handleAButton(int key){
         long time = SystemClock.uptimeMillis();
-        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A.getNumVal(), thread.prevButtonA, KeyEvent.KEYCODE_A);
+        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A, thread.prevButtonA, KeyEvent.KEYCODE_A);
         if(handled == KeyEvent.ACTION_UP){
             pointerCoords.x = 0;
             pointerCoords.y = 0;
@@ -468,8 +468,8 @@ final class GearCursorController extends GVRCursorController {
         return handled;
     }
 
-    private int handleButton(int key, int buttonType, int prevButton, int keyCode) {
-        if ((key & buttonType) != 0) {
+    private int handleButton(int key, CONTROLLER_KEYS button, int prevButton, int keyCode) {
+        if ((key & button.getNumVal()) != 0) {
             if (prevButton != KeyEvent.ACTION_DOWN) {
                 KeyEvent keyEvent = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
                 setKeyEvent(keyEvent);
