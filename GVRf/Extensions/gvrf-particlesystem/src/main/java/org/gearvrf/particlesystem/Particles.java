@@ -47,7 +47,7 @@ class Particles {
     private Vector4f mColorMultiplier;
     private float mNoiseFactor;
 
-    public Particles(GVRContext gvrContext, float age, float particleSize,
+    Particles(GVRContext gvrContext, float age, float particleSize,
                      Vector3f acceleration, float particleSizeRate, boolean fadeWithAge,
                      GVRTexture tex, Vector4f color, float noiseFactor) {
 
@@ -75,7 +75,7 @@ class Particles {
      * @return The GVRSceneObject with this mesh.
      */
 
-    public GVRSceneObject makeParticleMesh(float[] vertices, float[] velocities,
+    GVRSceneObject makeParticleMesh(float[] vertices, float[] velocities,
                                            float[] particleTimeStamps )
     {
         mParticleMesh = new GVRMesh(mGVRContext);
