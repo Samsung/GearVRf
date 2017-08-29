@@ -45,10 +45,11 @@ class Particles {
     private float mFadeWithAge;
     private GVRTexture mTexture;
     private Vector4f mColorMultiplier;
+    private float mNoiseFactor;
 
-    public Particles(GVRContext gvrContext, float age, float particleSize,
+    Particles(GVRContext gvrContext, float age, float particleSize,
                      Vector3f acceleration, float particleSizeRate, boolean fadeWithAge,
-                     GVRTexture tex, Vector4f color) {
+                     GVRTexture tex, Vector4f color, float noiseFactor) {
 
         mGVRContext = gvrContext;
         mAge = age;
@@ -61,6 +62,7 @@ class Particles {
         else
             mFadeWithAge = 0.0f;
         mTexture = tex;
+        mNoiseFactor = noiseFactor;
     }
 
     /**
@@ -73,7 +75,7 @@ class Particles {
      * @return The GVRSceneObject with this mesh.
      */
 
-    public GVRSceneObject makeParticleMesh(float[] vertices, float[] velocities,
+    GVRSceneObject makeParticleMesh(float[] vertices, float[] velocities,
                                            float[] particleTimeStamps )
     {
         mParticleMesh = new GVRMesh(mGVRContext);
@@ -94,6 +96,7 @@ class Particles {
         material.setFloat("u_particle_size", mSize);
         material.setFloat("u_size_change_rate", mParticleSizeRate);
         material.setFloat("u_fade", mFadeWithAge);
+        material.setFloat("u_noise_factor", mNoiseFactor);
 
         GVRRenderData renderData = new GVRRenderData(mGVRContext);
         renderData.setMaterial(material);
