@@ -379,12 +379,41 @@ public class GVRBitmapTexture extends GVRTexture {
      * Schedule a load for the texture data supplied in pixels. The target is always GL_TEXTURE_2D.
      * For detailed information see glTexImage2D's internalformat, width, height, format, type,
      * pixels parameters. The buffer is not copied!
+     *
+     * @param width width of texture
+     * @param height height of texture
+     * @param format specifies the GL format of the pixel data
+     * @param type specifies the GL data type of the pixel data
+     * @param pixels a buffer of the image data
      */
     public void postBuffer(final int width, final int height, final int format, final int type, final Buffer pixels) {
         getGVRContext().runOnGlThread(new Runnable() {
             @Override
             public void run() {
-                NativeBaseTexture.updateFromBuffer(getNative(), width, height, format, type, pixels);
+                NativeBaseTexture.updateFromBufferWithOffset(getNative(), 0, 0, width, height, format, type, pixels);
+            }
+        });
+    }
+
+
+    /**
+     * Schedule a subimage load for the texture data supplied in pixels. The target is always GL_TEXTURE_2D.
+     * For detailed information see glTexImage2D's internalformat, width, height, format, type,
+     * pixels parameters. The buffer is not copied!
+     *
+     * @param xOffset texel offset in x-direction
+     * @param yOffset texel offset in y-direction
+     * @param width width of texture subimage
+     * @param height height of texture subimage
+     * @param format specifies the GL format of the pixel data
+     * @param type specifies the GL data type of the pixel data
+     * @param pixels a buffer of the image data
+     */
+    public void postBufferWithOffset(final int xOffset, final int yOffset, final int width, final int height, final int format, final int type, final Buffer pixels) {
+        getGVRContext().runOnGlThread(new Runnable() {
+            @Override
+            public void run() {
+                NativeBaseTexture.updateFromBufferWithOffset(getNative(), xOffset, yOffset, width, height, format, type, pixels);
             }
         });
     }
@@ -403,7 +432,7 @@ final class NativeBaseTexture {
     static native boolean update(long pointer, int width, int height,
             byte[] grayscaleData);
 
-    static native boolean updateFromBuffer(long pointer, int width, int height, int format, int type, Buffer pixels);
+    static native void updateFromBufferWithOffset(long pointer, int xOffset, int yOffset, int width, int height, int format, int type, Buffer pixels);
     static native boolean bitmapHasTransparency(long pointer, Bitmap bitmap);
     static native boolean setTransparency(long pointer, boolean hasTransparency);
 }

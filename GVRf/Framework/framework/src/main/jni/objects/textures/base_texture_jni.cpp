@@ -45,6 +45,10 @@ extern "C" {
 
     JNIEXPORT jboolean JNICALL
     Java_org_gearvrf_NativeBaseTexture_bitmapHasTransparency(JNIEnv * env, jobject obj, jlong jtexture, jobject jbitmap);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeBaseTexture_updateFromBufferWithOffset(JNIEnv *env, jclass type_, jlong pointer, jint xoffset,
+                                                                  jint yoffset, jint width, jint height, jint format, jint type, jobject pixels);
 }
 
 JNIEXPORT jlong JNICALL
@@ -91,15 +95,13 @@ Java_org_gearvrf_NativeBaseTexture_bitmapHasTransparency(JNIEnv * env, jobject o
     return result;
 }
 
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-Java_org_gearvrf_NativeBaseTexture_updateFromBuffer(JNIEnv *env, jclass type_, jlong pointer,
-                                                    jint width, jint height, jint format, jint type,
-                                                    jobject pixels) {
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeBaseTexture_updateFromBufferWithOffset(JNIEnv *env, jclass type_, jlong pointer,
+                                                              jint xoffset, jint yoffset, jint width, jint height,
+                                                              jint format, jint type, jobject pixels) {
     BaseTexture* texture = reinterpret_cast<BaseTexture*>(pointer);
     void* directPtr = env->GetDirectBufferAddress(pixels);
-    texture->updateFromBuffer(width, height, format, type, directPtr);
+    texture->updateFromBuffer(xoffset, yoffset, width, height, format, type, directPtr);
 }
 
 }
