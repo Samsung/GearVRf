@@ -64,35 +64,32 @@ RenderTexture::RenderTexture(int width, int height, GLenum target) :
         PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR =
                 (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC) eglGetProcAddress(
                         "glFramebufferTextureMultiviewOVR");
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindTexture(target_, gl_texture_->id());
-        glTexImage3D(target, 0, GL_RGBA8, width, height, 2, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, 0);
-        glBindTexture(target_, 0);
+        GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+        GL(glBindTexture(target_, gl_texture_->id()));
+        GL(glTexImage3D(target, 0, GL_RGBA8, width, height, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0));
+        GL(glBindTexture(target_, 0));
 
         createArrayTexture(frameBufferDepthTextureId, width_, height_, GL_DEPTH_COMPONENT16);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
-        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                         gl_texture_->id(), 0, 0, 2);
-        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                         frameBufferDepthTextureId, 0, 0, 2);
+        GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id()));
+        GL(glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                            gl_texture_->id(), 0, 0, 2));
+        GL(glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                            frameBufferDepthTextureId, 0, 0, 2));
     } else {
-        glBindTexture(target_, gl_texture_->id());
-        glTexImage2D(target_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, 0);
-        glBindTexture(target_, 0);
+        GL(glBindTexture(target_, gl_texture_->id()));
+        GL(glTexImage2D(target_, 0, GL_RGBA, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0));
+        GL(glBindTexture(target_, 0));
 
-        glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        GL(glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id()));
+        GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height));
+        GL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
 
-        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
+        GL(glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id()));
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target_,
-                               gl_texture_->id(), 0);
-
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                  GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
+        GL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target_, gl_texture_->id(),
+                                  0));
+        GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                     GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id()));
     }
 }
 
