@@ -28,6 +28,7 @@ import android.webkit.WebViewClient;
  * into the attached {@link GVRViewSceneObject}
  * See {@link GVRView} and {@link GVRViewSceneObject}
  */
+@Deprecated
 public class GVRWebView extends WebView implements GVRView {
     private GVRViewSceneObject mSceneObject = null;
 
@@ -36,23 +37,6 @@ public class GVRWebView extends WebView implements GVRView {
 
         setWebViewClient(new WebViewClient());
         context.registerView(this);
-    }
-
-    @Override
-    public void draw(Canvas canvas) {
-        if (mSceneObject == null)
-            return;
-
-        // Canvas attached to GVRViewSceneObject to draw on
-        Canvas attachedCanvas = mSceneObject.lockCanvas();
-        // translate canvas to reflect view scrolling
-        attachedCanvas.scale(attachedCanvas.getWidth() / (float) canvas.getWidth(),
-                attachedCanvas.getHeight() / (float) canvas.getHeight());
-        attachedCanvas.translate(-getScrollX(), -getScrollY());
-        // draw the view to provided canvas
-        super.draw(attachedCanvas);
-
-        mSceneObject.unlockCanvasAndPost(attachedCanvas);
     }
 
     @Override
