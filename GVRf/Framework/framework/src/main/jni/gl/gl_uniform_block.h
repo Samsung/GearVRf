@@ -49,6 +49,8 @@ namespace gvr
         virtual bool bindBuffer(Shader *, Renderer *);
 
         virtual std::string makeShaderLayout();
+        virtual bool setFloatVec(const char *name, const float *val, int n);
+        virtual bool setIntVec(const char *name, const int *val, int n);
 
         /**
          * Dump the contents of the shader uniforms to the log.

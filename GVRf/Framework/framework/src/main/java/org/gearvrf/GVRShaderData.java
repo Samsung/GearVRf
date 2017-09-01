@@ -298,6 +298,18 @@ public class GVRShaderData extends GVRHybridObject
                                  z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 
+    public void setFloatArray(String key, float val[])
+    {
+        checkKeyIsUniform(key);
+        NativeShaderData.setFloatVec(getNative(), key, val, val.length);
+    }
+
+    public void setIntArray(String key, int val[])
+    {
+        checkKeyIsUniform(key);
+        NativeShaderData.setIntVec(getNative(), key, val, val.length);
+    }
+
     private void checkKeyIsTexture(String key)
     {
         checkStringNotNullOrEmpty("key", key);
@@ -400,6 +412,8 @@ class NativeShaderData {
     static native void setInt(long shaderData, String key, int value);
 
     static native float[] getFloatVec(long shaderData, String key);
+    static native void setFloatVec(long shaderData, String key, float[] val, int n);
+    static native void setIntVec(long shaderData, String key, int[] val, int n);
 
     static native int[] getIntVec(long shaderData, String key);
 

@@ -72,32 +72,6 @@ namespace gvr
         return false;
     }
 
-    bool UniformBlock::setFloatVec(const char* name, const float *val, int n)
-    {
-        int bytesize = n * sizeof(float);
-        char *data = getData(name, bytesize);
-        if (data != NULL)
-        {
-            memcpy(data, val, bytesize);
-            markDirty();
-            return true;
-        }
-        return false;
-    }
-
-    bool UniformBlock::setIntVec(const char* name, const int *val, int n)
-    {
-        int bytesize = n * sizeof(int);
-        char *data = getData(name, bytesize);
-        if (data != NULL)
-        {
-            memcpy(data, val, bytesize);
-            markDirty();
-            return true;
-        }
-        return false;
-    }
-
     bool UniformBlock::setVec2(const char* name, const glm::vec2 &val)
     {
         int bytesize = 2 * sizeof(float);
@@ -278,24 +252,23 @@ namespace gvr
     std::string UniformBlock::makeShaderLayout()
     {
         std::ostringstream stream;
-        if (mUseBuffer)
-        {
+        if (mUseBuffer) {
             stream << "layout (std140) uniform " << getBlockName() << " {" << std::endl;
-            DataDescriptor::forEachEntry([&stream](const DataEntry& entry) mutable
-            {
-                stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
-            });
-            stream << "};" << std::endl;
         }
-        else
-        {
             DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
             {
+                int nelems = entry.Count;
                 if (entry.IsSet)
                 {
+                    if(nelems > 1)
+                    stream << "uniform " << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
+                    else
                     stream << "uniform " << entry.Type << " " << entry.Name << ";" << std::endl;
                 }
             });
+
+        if (mUseBuffer) {
+            stream << "};" << std::endl;
         }
         return stream.str();
     }

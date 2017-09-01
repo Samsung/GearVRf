@@ -131,7 +131,7 @@ namespace gvr
          * @returns true if successfully set, false on error.
          * @see getIntVec
          */
-        virtual bool setIntVec(const char *name, const int *val, int n);
+        virtual bool setIntVec(const char *name, const int *val, int n)=0;
 
         /**
          * Set the value of a floating point vector uniform.
@@ -143,7 +143,7 @@ namespace gvr
          * @returns true if successfully set, false on error.
          * @see getVec
          */
-        virtual bool setFloatVec(const char *name, const float *val, int n);
+        virtual bool setFloatVec(const char *name, const float *val, int n)=0;
 
         /**
          * Set the value of a 2D vector uniform.
