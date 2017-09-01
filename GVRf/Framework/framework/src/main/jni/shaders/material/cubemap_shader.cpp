@@ -58,35 +58,42 @@
 // (http://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping)
 
 namespace gvr {
-std::string VERTEX_SHADER =
-         "#ifdef HAS_MULTIVIEW\n"
-         "#extension GL_OVR_multiview2 : enable\n"
-          "layout(num_views = 2) in;\n"
-         "uniform mat4 u_mvp_[2];\n"
-         "#else\n"
-         "uniform mat4 u_mvp;\n"
+
+const std::string VERTEX_SHADER =
+        "#ifdef HAS_MULTIVIEW\n"
+        "#extension GL_OVR_multiview2 : enable\n"
+        "layout(num_views = 2) in;\n"
+        "uniform mat4 u_mvp_[2];\n"
+        "#else\n"
+        "uniform mat4 u_mvp;\n"
         "#endif\n"
+
         "in vec3 a_position;\n"
         "uniform mat4 u_model;\n"
         "out vec3 v_tex_coord;\n"
+
         "void main() {\n"
         "  vec4 pos = vec4(a_position, 1.0);\n"
         "  v_tex_coord = normalize((u_model * pos).xyz);\n"
         "  v_tex_coord.z = -v_tex_coord.z;\n"
+
         "#ifdef HAS_MULTIVIEW\n"
         "  gl_Position = u_mvp_[gl_ViewID_OVR]  * pos;\n"
          "#else\n"
         "  gl_Position = u_mvp  * pos;\n"
         "#endif\n"
+
         "}\n";
 
-std::string FRAGMENT_SHADER =
+const std::string FRAGMENT_SHADER =
         "precision highp float;\n"
+
         "uniform samplerCube u_texture;\n"
         "uniform vec3 u_color;\n"
         "uniform float u_opacity;\n"
         "out vec4 outColor;\n"
         "in vec3 v_tex_coord;\n"
+
         "void main()\n"
         "{\n"
         "  vec4 color = texture(u_texture, v_tex_coord);\n"
@@ -96,24 +103,31 @@ std::string FRAGMENT_SHADER =
 
 void CubemapShader::programInit(RenderState* rstate){
 
-    if(rstate->is_multiview){
-        VERTEX_SHADER = "#define HAS_MULTIVIEW\n" + VERTEX_SHADER;
-        FRAGMENT_SHADER =  "#define HAS_MULTIVIEW\n" + FRAGMENT_SHADER;
-    }
-    VERTEX_SHADER =  "#version 300 es\n" + VERTEX_SHADER;
-    FRAGMENT_SHADER = "#version 300 es\n" + FRAGMENT_SHADER;
+    std::string vertexShaderSource = VERTEX_SHADER;
+    std::string fragmentShaderSource = FRAGMENT_SHADER;
 
-    program_ = new GLProgram(VERTEX_SHADER.c_str(), FRAGMENT_SHADER.c_str());
+    if(rstate->is_multiview){
+        vertexShaderSource = "#define HAS_MULTIVIEW\n" + vertexShaderSource;
+        fragmentShaderSource =  "#define HAS_MULTIVIEW\n" + fragmentShaderSource;
+    }
+
+    vertexShaderSource = "#version 300 es\n" + vertexShaderSource;
+    fragmentShaderSource = "#version 300 es\n" + fragmentShaderSource;
+
+    program_ = new GLProgram(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
     u_model_ = glGetUniformLocation(program_->id(), "u_model");
 
-    if(rstate->is_multiview)
+    if(rstate->is_multiview) {
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
-    else
+    } else {
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
+    }
+
     u_texture_ = glGetUniformLocation(program_->id(), "u_texture");
     u_color_ = glGetUniformLocation(program_->id(), "u_color");
     u_opacity_ = glGetUniformLocation(program_->id(), "u_opacity");
 }
+
 CubemapShader::CubemapShader() {
 }
 
@@ -121,10 +135,11 @@ CubemapShader::~CubemapShader() {
     delete program_;
 }
 
-void CubemapShader::render(RenderState* rstate, RenderData* render_data, Material* material) {
+void CubemapShader::render(RenderState* rstate, RenderData*, Material* material) {
 
-    if(program_ == nullptr)
+    if(program_ == nullptr) {
         programInit(rstate);
+    }
 
     Texture* texture = material->getTexture("main_texture");
     glm::vec3 color = material->getVec3("color");
@@ -134,20 +149,20 @@ void CubemapShader::render(RenderState* rstate, RenderData* render_data, Materia
         std::string error = "CubemapShader::render : texture with wrong target";
         throw error;
     }
-    glUseProgram(program_->id());
-    glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));
-    if(rstate->is_multiview)
-        glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
-    else
-        glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
+    GL(glUseProgram(program_->id()));
+    GL(glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model)));
 
-    glActiveTexture (GL_TEXTURE0);
-    glBindTexture(texture->getTarget(), texture->getId());
-    glUniform1i(u_texture_, 0);
-    glUniform3f(u_color_, color.r, color.g, color.b);
-    glUniform1f(u_opacity_, opacity);
-    checkGLError("CubemapShader::render");
+    if(rstate->is_multiview) {
+        GL(glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0])));
+    } else {
+        GL(glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp)));
+    }
+
+    GL(glActiveTexture (GL_TEXTURE0));
+    GL(glBindTexture(texture->getTarget(), texture->getId()));
+    GL(glUniform1i(u_texture_, 0));
+    GL(glUniform3f(u_color_, color.r, color.g, color.b));
+    GL(glUniform1f(u_opacity_, opacity));
 }
 
 }
-;
