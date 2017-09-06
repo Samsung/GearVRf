@@ -656,21 +656,16 @@ public final class GVRAssetLoader {
             {
                 return texture;
             }
-            bmapTex = new GVRBitmapTexture(mContext, (Bitmap) null, textureParameters);
-            mTextureCache.put(resource, bmapTex);
-        }
-        try
-        {
-            Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(resource.getStream(), false);
-            resource.closeStream();
-            if (bitmap != null)
-            {
-                bmapTex.update(bitmap);
+
+            try {
+                Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(resource.getStream(), false);
+                bmapTex = new GVRBitmapTexture(mContext, bitmap, textureParameters);
+                mTextureCache.put(resource, bmapTex);
+            } catch (IOException e) {
+                return null;
+            } finally {
+                resource.closeStream();
             }
-        }
-        catch (IOException ex)
-        {
-            return null;
         }
         return bmapTex;
     }
