@@ -118,6 +118,10 @@ android {
             }
         }
     }
+
+    packagingOptions {
+        exclude 'lib/*/libgvrf.so'
+    }
 }
 
 project.ext.jomlVersion = "1.9.1-SNAPSHOT"

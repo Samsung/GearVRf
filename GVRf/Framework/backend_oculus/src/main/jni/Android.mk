@@ -15,6 +15,18 @@
  #
 LOCAL_PATH := $(call my-dir)
 
+ifneq (,$(strip $(wildcard $(LOCAL_PATH)/../../../../framework/build/intermediates/ndkBuild/$(APP_OPTIM)/obj/local/$(TARGET_ARCH_ABI)/libgvrf.so)))
+    LIBGVRF_EXISTS := 1
+endif
+
+###
+ifeq ($(LIBGVRF_EXISTS),1)
+    include $(CLEAR_VARS)
+    LOCAL_MODULE    := gvrf
+    LOCAL_SRC_FILES := ../../../../framework/build/intermediates/ndkBuild/$(APP_OPTIM)/obj/local/$(TARGET_ARCH_ABI)/libgvrf.so
+    include $(PREBUILT_SHARED_LIBRARY)
+endif
+
 include $(CLEAR_VARS)
 
 ifndef OVR_MOBILE_SDK
@@ -57,12 +69,10 @@ LOCAL_SHARED_LIBRARIES += vrapi
 LOCAL_CPPFLAGS += -fexceptions -std=c++11 -D__GXX_EXPERIMENTAL_CXX0X__
 LOCAL_CFLAGS := -Wattributes
 
-# include ld libraries defined in oculus's cflags.mk
-#LOCAL_LDLIBS += -ljnigraphics -lm_hard
-#softFP
 LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
-LOCAL_LDLIBS += $(PROJECT_DIR)/../framework/build/intermediates/ndkBuild/$(APP_OPTIM)/obj/local/$(TARGET_ARCH_ABI)/libgvrf.so
-
+ifeq ($(LIBGVRF_EXISTS),1)
+    LOCAL_SHARED_LIBRARIES += gvrf
+endif
 
 include $(BUILD_SHARED_LIBRARY)
 
