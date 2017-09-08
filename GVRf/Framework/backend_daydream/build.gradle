@@ -62,7 +62,7 @@ project.ext.jomlVersion = "1.9.1-SNAPSHOT"
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile 'com.google.vr:sdk-base:1.30.0'
+    compile 'com.google.vr:sdk-base:1.80.0'
     compile project(':framework')
     compile "org.joml:joml-android:${jomlVersion}"
 }
