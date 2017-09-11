@@ -45,20 +45,21 @@ private:
 
     std::unordered_map<int, GLProgram*>program_object_map_;
     struct uniforms{
-        GLuint u_model;
-        GLuint u_texture;
-        GLuint u_color;
-        GLuint u_opacity;
-        GLuint u_view;
-        GLuint u_proj;
-        GLuint u_light_pos;
-        GLuint u_material_ambient_color_;
-        GLuint u_material_diffuse_color_;
-        GLuint u_material_specular_color_;
-        GLuint u_material_specular_exponent_;
-        GLuint u_light_ambient_intensity_;
-        GLuint u_light_diffuse_intensity_;
-        GLuint u_light_specular_intensity_;
+        GLint u_render_mask;
+        GLint u_model;
+        GLint u_texture;
+        GLint u_color;
+        GLint u_opacity;
+        GLint u_view;
+        GLint u_proj;
+        GLint u_light_pos;
+        GLint u_material_ambient_color_;
+        GLint u_material_diffuse_color_;
+        GLint u_material_specular_color_;
+        GLint u_material_specular_exponent_;
+        GLint u_light_ambient_intensity_;
+        GLint u_light_diffuse_intensity_;
+        GLint u_light_specular_intensity_;
     };
     std::unordered_map<int,uniforms> uniform_loc;
 

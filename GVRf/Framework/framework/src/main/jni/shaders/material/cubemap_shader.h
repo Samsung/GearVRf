@@ -40,11 +40,12 @@ private:
     CubemapShader& operator=(CubemapShader&& cubemap_shader);
 
 private:
-    GLuint u_model_;
-    GLuint u_mvp_;
-    GLuint u_texture_;
-    GLuint u_color_;
-    GLuint u_opacity_;
+    GLint  u_render_mask_;
+    GLint u_model_;
+    GLint u_mvp_;
+    GLint u_texture_;
+    GLint u_color_;
+    GLint u_opacity_;
 };
 
 }

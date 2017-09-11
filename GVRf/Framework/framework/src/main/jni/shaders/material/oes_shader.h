@@ -42,6 +42,7 @@ private:
     void programInit(RenderState*);
 
 private:
+    GLint u_render_mask_;
     GLint u_mvp_;
     GLint u_texture_;
     GLint u_color_;

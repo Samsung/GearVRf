@@ -42,13 +42,18 @@ static const char VERTEX_SHADER_MULTIVIEW[] =
         "#version 300 es\n"
         "#extension GL_OVR_multiview2 : enable\n"
         "layout(num_views = 2) in;\n"
+        "uniform uint u_render_mask;\n"
         "uniform mat4 u_mvp_[2];\n"
         "in vec3 a_position;\n"
         "in vec2 a_texcoord;\n"
         "out vec2 v_texcoord;\n"
         "void main() {\n"
         "  v_texcoord = a_texcoord.xy;\n"
-        "  gl_Position = u_mvp_[gl_ViewID_OVR] * vec4(a_position,1.0);\n"
+        "  bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;\n"
+        "  mat4 mvp = u_mvp_[gl_ViewID_OVR];"
+        " if(!render_mask)\n"
+                "mvp = mat4(0.0);\n"     //  if render_mask is not set for particular eye, dont render that object
+         "  gl_Position = mvp * vec4(a_position,1.0);\n"
         "}\n";
 
 static const char FRAGMENT_SHADER[] =
@@ -83,8 +88,8 @@ void OESShader::programInit(RenderState* rstate) {
 
         program_ = new GLProgram(VERTEX_SHADER_MULTIVIEW,FRAGMENT_SHADER);
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
+        u_render_mask_ = glGetUniformLocation(program_->id(), "u_render_mask");
     } else {
-        LOGE("not a multiview");
         program_ = new GLProgram(VERTEX_SHADER, FRAGMENT_SHADER);
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
     }
@@ -114,6 +119,7 @@ void OESShader::render(RenderState* rstate, RenderData* render_data, Material* m
     glUseProgram(program_->id());
     if (rstate->is_multiview) {
         glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0]));
+        glUniform1ui(u_render_mask_,render_data->render_mask());
     } else {
         glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp));
     }

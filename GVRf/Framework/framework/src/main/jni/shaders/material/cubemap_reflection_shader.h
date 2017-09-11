@@ -39,13 +39,13 @@ private:
     CubemapReflectionShader& operator=(CubemapReflectionShader&& cubemap_shader);
 
 private:
-    GLuint u_mv_;
-    GLuint u_mv_it_;
-    GLuint u_mvp_;
-    GLuint u_view_i_;
-    GLuint u_texture_;
-    GLuint u_color_;
-    GLuint u_opacity_;
+    GLint u_mv_;
+    GLint u_mv_it_;
+    GLint u_mvp_;
+    GLint u_view_i_;
+    GLint u_texture_;
+    GLint u_color_;
+    GLint u_opacity_;
 };
 
 }

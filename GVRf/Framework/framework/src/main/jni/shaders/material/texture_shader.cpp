@@ -49,6 +49,7 @@ static const char VERTEX_SHADER[] =
         "in vec2 a_texcoord;\n"
 
         "#ifdef MULTIVIEW\n"
+        "uniform uint u_render_mask;\n"
         "uniform mat4 u_view_[2];\n"
         "#else\n"
         "uniform mat4 u_view;\n"
@@ -85,7 +86,11 @@ static const char VERTEX_SHADER[] =
             "#endif\n"
 
             "#ifdef MULTIVIEW\n"
-            "mvp = u_proj * u_view_[gl_ViewID_OVR] * model_matrix; \n"
+            "bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;\n"
+            "if(render_mask)\n"
+                "mvp = u_proj * u_view_[gl_ViewID_OVR] * model_matrix; \n"
+            "else\n"
+                "mvp = mat4(0.0);\n"     //  if render_mask is not set for particular eye, dont render that object
             "#else\n"
             "mvp = u_proj * u_view * model_matrix; \n"
             "#endif\n"
@@ -190,8 +195,10 @@ void TextureShader::initUniforms(int feature_set, GLuint program_id,uniforms& lo
         locations.u_light_specular_intensity_ = glGetUniformLocation(program_id,
                 "lightSpecularIntensity");
     }
-    if(feature_set & MULTIVIEW)
+    if(feature_set & MULTIVIEW) {
         locations.u_view = glGetUniformLocation(program_id, "u_view_[0]");
+        locations.u_render_mask = glGetUniformLocation(program_id, "u_render_mask");
+    }
     else
         locations.u_view = glGetUniformLocation(program_id, "u_view");
 
@@ -330,8 +337,10 @@ void TextureShader::programInit(RenderState* rstate, RenderData* render_data, Ma
 
     }
 
-    if(rstate->is_multiview)
+    if(rstate->is_multiview) {
         glUniformMatrix4fv(uniform_locations.u_view, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view_[0]));
+        glUniform1ui(uniform_locations.u_render_mask,render_data->render_mask());
+    }
     else
         glUniformMatrix4fv(uniform_locations.u_view, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_view));
 

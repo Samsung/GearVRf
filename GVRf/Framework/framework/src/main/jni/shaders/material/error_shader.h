@@ -43,8 +43,8 @@ private:
 
 private:
     GLProgram* program_;
-    GLuint u_mvp_;
-    GLuint u_color_;
+    GLint u_mvp_;
+    GLint u_color_;
 };
 
 }

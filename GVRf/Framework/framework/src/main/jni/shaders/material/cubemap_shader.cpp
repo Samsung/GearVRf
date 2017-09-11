@@ -63,6 +63,7 @@ const std::string VERTEX_SHADER =
         "#ifdef HAS_MULTIVIEW\n"
         "#extension GL_OVR_multiview2 : enable\n"
         "layout(num_views = 2) in;\n"
+         "uniform uint u_render_mask;\n"
         "uniform mat4 u_mvp_[2];\n"
         "#else\n"
         "uniform mat4 u_mvp;\n"
@@ -76,9 +77,12 @@ const std::string VERTEX_SHADER =
         "  vec4 pos = vec4(a_position, 1.0);\n"
         "  v_tex_coord = normalize((u_model * pos).xyz);\n"
         "  v_tex_coord.z = -v_tex_coord.z;\n"
-
         "#ifdef HAS_MULTIVIEW\n"
-        "  gl_Position = u_mvp_[gl_ViewID_OVR]  * pos;\n"
+        "bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;\n"
+        "  mat4 mvp = u_mvp_[gl_ViewID_OVR];"
+        " if(!render_mask)\n"
+                "mvp = mat4(0.0);\n"     //  if render_mask is not set for particular eye, dont render that object
+        "  gl_Position = mvp  * pos;\n"
          "#else\n"
         "  gl_Position = u_mvp  * pos;\n"
         "#endif\n"
@@ -118,6 +122,7 @@ void CubemapShader::programInit(RenderState* rstate){
     u_model_ = glGetUniformLocation(program_->id(), "u_model");
 
     if(rstate->is_multiview) {
+        u_render_mask_ = glGetUniformLocation(program_->id(), "u_render_mask");
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
     } else {
         u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -135,8 +140,7 @@ CubemapShader::~CubemapShader() {
     delete program_;
 }
 
-void CubemapShader::render(RenderState* rstate, RenderData*, Material* material) {
-
+void CubemapShader::render(RenderState* rstate, RenderData* renderData, Material* material) {
     if(program_ == nullptr) {
         programInit(rstate);
     }
@@ -153,6 +157,7 @@ void CubemapShader::render(RenderState* rstate, RenderData*, Material* material)
     GL(glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model)));
 
     if(rstate->is_multiview) {
+        glUniform1ui(u_render_mask_, renderData->render_mask());
         GL(glUniformMatrix4fv(u_mvp_, 2, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp_[0])));
     } else {
         GL(glUniformMatrix4fv(u_mvp_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_mvp)));

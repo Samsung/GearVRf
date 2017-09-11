@@ -63,17 +63,17 @@ private:
 private:
     GLProgram** program_list_;
 
-    GLuint u_mvp_;
-    GLuint u_texture_;
-    GLuint u_diffuse_color_;
-    GLuint u_ambient_color_;
-    GLuint u_color_;
-    GLuint u_opacity_;
+    GLint u_mvp_;
+    GLint u_texture_;
+    GLint u_diffuse_color_;
+    GLint u_ambient_color_;
+    GLint u_color_;
+    GLint u_opacity_;
 
     // Bones
-    GLuint a_bone_indices_;
-    GLuint a_bone_weights_;
-    GLuint u_bone_matrices_;
+    GLint a_bone_indices_;
+    GLint a_bone_weights_;
+    GLint u_bone_matrices_;
 };
 
 }

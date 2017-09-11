@@ -69,10 +69,13 @@ namespace gvr
         rstate.shader_manager = shader_manager;
         rstate.scene = scene;
         rstate.render_mask = camera->render_mask();
+
+        if(is_multiview)
+            rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
+
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
 
         std::vector<PostEffectData*> post_effects = camera->post_effect_data();
-
         GL(glDepthMask(GL_TRUE));
         GL(glEnable(GL_DEPTH_TEST));
         GL(glDepthFunc(GL_LEQUAL));

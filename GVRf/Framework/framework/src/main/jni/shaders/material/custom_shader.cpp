@@ -43,6 +43,7 @@ void CustomShader::initializeOnDemand(RenderState* rstate) {
             u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
             u_mv_ = glGetUniformLocation(program_->id(), "u_mv_[0]");
             u_mv_it_ = glGetUniformLocation(program_->id(), "u_mv_it_[0]");
+            u_render_mask_ = glGetUniformLocation(program_->id(), "u_render_mask");
         }
         else {
             u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp");
@@ -301,6 +302,8 @@ void CustomShader::render(RenderState* rstate, RenderData* render_data, Material
             }
         }
     }
+    if( u_render_mask_!= -1)
+        glUniform1ui(u_render_mask_,render_data->render_mask());
 
     if (u_model_ != -1){
     	glUniformMatrix4fv(u_model_, 1, GL_FALSE, glm::value_ptr(rstate->uniforms.u_model));

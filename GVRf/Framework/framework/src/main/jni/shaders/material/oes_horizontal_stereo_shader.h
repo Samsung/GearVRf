@@ -49,11 +49,11 @@ private:
             OESHorizontalStereoShader&& oes_horizontal_stereo_shader);
 
 private:
-    GLuint u_mvp_;
-    GLuint u_texture_;
-    GLuint u_color_;
-    GLuint u_opacity_;
-    GLuint u_right_;
+    GLint u_mvp_;
+    GLint u_texture_;
+    GLint u_color_;
+    GLint u_opacity_;
+    GLint u_right_;
 };
 
 }

@@ -5,6 +5,7 @@ uniform mat4 u_view_[2];
 uniform mat4 u_mvp_[2];
 uniform mat4 u_mv_[2];
 uniform mat4 u_mv_it_[2];
+uniform uint u_render_mask;
 #else
 uniform mat4 u_view;
 uniform mat4 u_mvp;
@@ -120,7 +121,11 @@ void main() {
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
 #ifdef HAS_MULTIVIEW
-	gl_Position = u_mvp_[gl_ViewID_OVR] * vertex.local_position;
+    bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
+    mat4 mvp = u_mvp_[gl_ViewID_OVR];
+    if(!render_mask)
+        mvp = mat4(0.0);
+	gl_Position = mvp * vertex.local_position;
 #else
 	gl_Position = u_mvp * vertex.local_position;	
 #endif	

@@ -38,11 +38,11 @@ private:
     LightMapShader& operator=(LightMapShader&& lightmap_shader);
 
 private:
-    GLuint u_mvp_;
-    GLuint u_texture_;
-    GLuint u_lightmap_texture_;
-    GLuint u_lightmap_offset_;
-    GLuint u_lightmap_scale_;
+    GLint u_mvp_;
+    GLint u_texture_;
+    GLint u_lightmap_texture_;
+    GLint u_lightmap_offset_;
+    GLint u_lightmap_scale_;
 };
 
 }
