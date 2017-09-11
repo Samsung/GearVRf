@@ -89,7 +89,9 @@ public abstract class GVRHybridObject {
         mGVRContext = gvrContext;
         mNativePointer = nativePointer;
 
-        gvrContext.registerHybridObject(this,nativePointer, cleanupHandlers);
+        if (0 != mNativePointer) {
+            gvrContext.registerHybridObject(this, nativePointer, cleanupHandlers);
+        }
     }
 
     /*

@@ -812,6 +812,7 @@ public abstract class GVRContext implements IEventReceiver {
     }
 
     void onDestroy() {
+        mImporter = null;
         if (null != mHandlerThread) {
             mHandlerThread.getLooper().quitSafely();
         }
@@ -856,20 +857,5 @@ public abstract class GVRContext implements IEventReceiver {
         synchronized (mReferenceSet) {
             mReferenceSet.add(new GVRReference(gvrHybridObject, nativePointer, cleanupHandlers));
         }
-    }
-
-    /**
-     * Explicitly close()ing an object is going to be relatively rare - most
-     * native memory will be freed when the owner-objects are garbage collected.
-     * Doing a lookup in these rare cases means that we can avoid giving every @link
-     * {@link GVRHybridObject} a hard reference to its {@link GVRReference}.
-     */
-    final GVRReference findReference(long nativePointer) {
-        for (GVRReference reference : mReferenceSet) {
-            if (reference.mNativePointer == nativePointer) {
-                return reference;
-            }
-        }
-        return null;
     }
 }

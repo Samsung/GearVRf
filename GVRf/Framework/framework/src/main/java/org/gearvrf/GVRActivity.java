@@ -218,10 +218,14 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         }
         if (null != mDockEventReceiver) {
             mDockEventReceiver.stop();
+            mDockEventReceiver = null;
         }
 
-        if (null != mConfigurationManager && !mConfigurationManager.isDockListenerRequired()) {
-            handleOnUndock();
+        if (null != mConfigurationManager) {
+            if (!mConfigurationManager.isDockListenerRequired()) {
+                handleOnUndock();
+            }
+            mConfigurationManager.onDestroy();
         }
 
         if (null != mActivityNative) {
@@ -235,6 +239,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mAppSettings = null;
         mRenderableViewGroup = null;
         mConfigurationManager = null;
+        mEventReceiver = null;
 
         super.onDestroy();
     }

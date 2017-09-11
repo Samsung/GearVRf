@@ -48,7 +48,6 @@ GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
 
 GVRActivity::~GVRActivity() {
     LOGV("GVRActivity::~GVRActivity");
-    uninitializeVrApi();
 
     envMainThread_->DeleteGlobalRef(activityClass_);
     envMainThread_->DeleteGlobalRef(activity_);

@@ -18,6 +18,7 @@ package org.gearvrf;
 import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
+import android.content.Context;
 
 class OvrActivityNative implements IActivityNative {
     static {
@@ -27,7 +28,10 @@ class OvrActivityNative implements IActivityNative {
     private final long mPtr;
 
     OvrActivityNative(Activity act, VrAppSettings vrAppSettings) {
-        mPtr = onCreate(act, vrAppSettings);
+        //vrapi leaks a global reference to the activity; passing an application context
+        //instead as it is much cheaper to leak; calling only vrapi_Initialize and vrapi_Shutdown
+        //leads to the leak
+        mPtr = onCreate(act.getApplicationContext(), vrAppSettings);
     }
 
     public void onDestroy() {
@@ -58,5 +62,5 @@ class OvrActivityNative implements IActivityNative {
 
     private static native void onDestroy(long appPtr);
 
-    private static native long onCreate(Activity act, VrAppSettings vrAppSettings);
+    private static native long onCreate(Context act, VrAppSettings vrAppSettings);
 }

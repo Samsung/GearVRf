@@ -230,6 +230,8 @@ abstract class GVRConfigurationManager {
         }
     }
 
+    public void onDestroy() { }
+
     @Override
     protected void finalize() throws Throwable {
         NativeConfigurationManager.delete(mPtr);

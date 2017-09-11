@@ -177,8 +177,8 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
         mSurfaceView.setPreserveEGLContextOnPause(true);
         mSurfaceView.setEGLContextClientVersion(3);
-        mSurfaceView.setEGLContextFactory(mContextFactory);
-        mSurfaceView.setEGLConfigChooser(mConfigChooser);
+        mSurfaceView.setEGLContextFactory(new AEGLContextFactory());
+        mSurfaceView.setEGLConfigChooser(new AEGLConfigChooser());
         mSurfaceView.setEGLWindowSurfaceFactory(mWindowSurfaceFactory);
         mSurfaceView.setRenderer(mRenderer);
         mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
@@ -186,7 +186,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
         mActivity.setContentView(mSurfaceView);
     }
 
-    private final EGLContextFactory mContextFactory = new EGLContextFactory() {
+    private final static class AEGLContextFactory implements EGLContextFactory {
         @Override
         public void destroyContext(final EGL10 egl, final EGLDisplay display, final EGLContext context) {
             Log.v(TAG, "EGLContextFactory.destroyContext 0x%X", context.hashCode());
@@ -210,7 +210,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
             Log.v(TAG, "EGLContextFactory.createContext 0x%X", context.hashCode());
             return context;
         }
-    };
+    }
 
     private final EGLWindowSurfaceFactory mWindowSurfaceFactory = new EGLWindowSurfaceFactory() {
         @Override
@@ -239,7 +239,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
         }
     };
 
-    private final EGLConfigChooser mConfigChooser = new EGLConfigChooser() {
+    private final static class AEGLConfigChooser implements EGLConfigChooser {
         @Override
         public EGLConfig chooseConfig(final EGL10 egl, final EGLDisplay display) {
             final int[] numberConfigs = new int[1];
