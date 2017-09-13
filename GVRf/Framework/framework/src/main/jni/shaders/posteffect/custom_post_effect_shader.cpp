@@ -89,7 +89,6 @@ void CustomPostEffectShader::render(Camera* camera,
 
       if (0 == program_) {
         if(use_multiview && !(strstr(vertex_shader_.c_str(),"gl_ViewID_OVR")
-                                     && strstr(vertex_shader_.c_str(),"GL_OVR_multiview2")
                                      && strstr(vertex_shader_.c_str(),"GL_OVR_multiview2"))){
             LOGE("Your shaders are not multiview, terminating program..");
             std::terminate();
