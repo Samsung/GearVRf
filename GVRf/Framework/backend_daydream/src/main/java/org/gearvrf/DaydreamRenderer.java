@@ -52,7 +52,9 @@ class DaydreamRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         //Do nothing
     }
-
+    public long getNativeDaydreamRenderer(){
+        return nativeDaydreamRenderer;
+    }
     @Override
     public void onDrawFrame(GL10 gl) {
         if (cameraRig == null) {
@@ -60,6 +62,7 @@ class DaydreamRenderer implements GLSurfaceView.Renderer {
         }
         GLES30.glGetBooleanv(GLES30.GL_BLEND, mBlendEnabled, 0);
         GLES30.glDisable(GLES30.GL_BLEND);
+        mViewManager.onDrawFrame();
         mViewManager.beforeDrawEyes();
 
         nativeDrawFrame(nativeDaydreamRenderer);

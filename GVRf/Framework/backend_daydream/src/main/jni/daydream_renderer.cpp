@@ -68,7 +68,7 @@ namespace {
 
 DaydreamRenderer::DaydreamRenderer(JNIEnv &env, jclass clazz,
                                    gvr_context *gvr_context)
-        : gvr_api_(gvr::GvrApi::WrapNonOwned(gvr_context)),
+        : gvr_api_(gvr::GvrApi::WrapNonOwned(gvr_context)), mUserPrefs(0),
           scratch_viewport_(gvr_api_->CreateBufferViewport()) {
     jclass rendererClass = env.GetObjectClass(clazz);
     rendererObject_ = env.NewGlobalRef(clazz);
@@ -104,16 +104,15 @@ void DaydreamRenderer::InitializeGl() {
             gvr_api_->CreateEmptyBufferViewportList()));
     scratch_viewport_list_.reset(new gvr::BufferViewportList(
             gvr_api_->CreateEmptyBufferViewportList()));
-
 }
 
 void DaydreamRenderer::DrawFrame(JNIEnv &env) {
+
     // use the scratch list to get the recommended viewports
     scratch_viewport_list_->SetToRecommendedBufferViewports();
 
     // construct FBO backed viewports
     gvr::BufferViewport fbo_viewport = gvr_api_->CreateBufferViewport();
-
     scratch_viewport_list_->GetBufferViewport(0, &scratch_viewport_);
     fbo_viewport.SetSourceBufferIndex(0);
     fbo_viewport.SetSourceFov(scratch_viewport_.GetSourceFov());

@@ -64,6 +64,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
     compile 'com.google.vr:sdk-base:1.80.0'
     compile project(':framework')
+    compile 'com.google.vr:sdk-controller:1.80.0'
     compile "org.joml:joml-android:${jomlVersion}"
 }
 
