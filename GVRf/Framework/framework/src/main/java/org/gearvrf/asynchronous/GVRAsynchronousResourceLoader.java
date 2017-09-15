@@ -55,11 +55,9 @@ import android.graphics.Bitmap;
  * Internal API for asynchronous resource loading.
  * 
  * You will normally call into this class through
- * {@link GVRContext#loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
+ * {@link #loadCompressedTexture(GVRContext, ResourceCache, GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
  * or
- * {@link GVRContext#loadBitmapTexture(GVRAndroidResource.BitmapTextureCallback, GVRAndroidResource)}
- * or
- * {@link GVRContext#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
+ * {@link org.gearvrf.GVRAssetLoader#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
  * .
  * 
  * @since 1.6.1
@@ -80,11 +78,13 @@ public class GVRAsynchronousResourceLoader {
     /**
      * Load a compressed texture asynchronously.
      * 
-     * This is the implementation of
+     * This used to implement the loading of compressed textures.
+     * Now they are treated as bitmaps and the bitmap loader inspects it.
+     *
      * {@link GVRContext#loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
      * : it will usually be more convenient (and more efficient) to call that
      * directly.
-     * 
+     *
      * @param gvrContext
      *            The GVRF context
      * @param textureCache
@@ -107,8 +107,10 @@ public class GVRAsynchronousResourceLoader {
 
     /**
      * Load a compressed texture asynchronously.
-     * 
-     * This is the implementation of
+     *
+     * This used to implement the loading of compressed textures.
+     * Now they are treated as bitmaps and the bitmap loader inspects it.
+     *
      * {@link GVRContext#loadCompressedTexture(GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource)}
      * : it will usually be more convenient (and more efficient) to call that
      * directly.
@@ -183,7 +185,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a (compressed or bitmapped) texture asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, GVRAndroidResource, int, int)}
+     * {@link org.gearvrf.GVRAssetLoader#loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback, GVRTextureParameters, int, int)}
      * - it will usually be more convenient (and more efficient) to call that
      * directly.
      * 
@@ -265,7 +267,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a (compressed or bitmapped) texture asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadFutureTexture(GVRAndroidResource, int, int)} - it
+     * {@link org.gearvrf.GVRAssetLoader#loadFutureTexture(GVRAndroidResource, int, int)} - it
      * will usually be more convenient (and more efficient) to call that
      * directly.
      * 
@@ -319,7 +321,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a cube map texture asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadFutureCubemapTexture(GVRAndroidResource)} - it will
+     * {@link org.gearvrf.GVRAssetLoader#loadFutureCubemapTexture(GVRAndroidResource)} - it will
      * usually be more convenient (and more efficient) to call that directly.
      * 
      * @param gvrContext
@@ -362,7 +364,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a compressed cube map texture asynchronously.
      *
      * This is the implementation of
-     * {@link GVRContext#loadFutureCompressedCubemapTexture(GVRAndroidResource)} -
+     * {@link org.gearvrf.GVRAssetLoader#loadFutureCompressedCubemapTexture(GVRAndroidResource)} -
      * it will usually be more convenient (and more efficient) to call that directly.
      *
      * @param gvrContext
@@ -406,7 +408,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a GL mesh asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
+     * {@link org.gearvrf.GVRAssetLoader#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
      * - it will usually be more convenient to call that directly.
      * 
      * @param gvrContext
@@ -442,7 +444,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a GL mesh asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadFutureMesh(GVRAndroidResource, int)} - it will
+     * {@link org.gearvrf.GVRAssetLoader#loadFutureMesh(GVRAndroidResource, int)} - it will
      * usually be more convenient to call that directly.
      * 
      * @param gvrContext

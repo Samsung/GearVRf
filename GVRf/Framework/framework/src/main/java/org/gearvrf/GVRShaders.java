@@ -83,7 +83,7 @@ public interface GVRShaders {
      * 
      * @param texture
      *            A future texture, from one of the the
-     *            {@link GVRContext#loadFutureTexture(GVRAndroidResource)}
+     *            {@link GVRAssetLoader#loadFutureTexture(GVRAndroidResource)}
      *            methods
      * 
      * @since 1.6.7

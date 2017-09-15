@@ -52,7 +52,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -77,7 +77,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -121,7 +121,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            a wrapper for a media player
@@ -172,7 +172,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            a wrapper for a media player

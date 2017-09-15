@@ -337,7 +337,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     /**
      * getSize is the size saved within GVRTextViewSceneObject and differs
      * from the textSize modified within Android's TextView class.
-     * @return
+     * @return The font character size
      */
     public float getSize() {
         return this.size;
@@ -417,7 +417,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * returns the length of this line based in pixels and dependent on
      * the font family and size of the characters.
      * @param text
-     * @return
+     * @return The length in pixels where the text ends. It measures with the start point of 0 instead where the the text begins.
      */
     public float getLineLength(String text) {
         return mTextView.getPaint().measureText(text);
@@ -442,7 +442,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * Note that the value saved is not the value returned for
      * setGravity(LEFT) and setGravity(RIGHT).  0x30 is added to those values by
      * Android's TextView.setGravity()
-     * @return
+     * @return The justification type
      */
     public justifyTypes getJustification() {
         justifyTypes justify = null;
@@ -462,7 +462,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      *          a string that matches the font name saved in the assets directory
      *          Must include the file ending such as "myFont.ttf"
      *
-     * @return
+     * @return True if font is changed else false
      */
     public boolean setTypeface(GVRContext gvrContext, String font) {
         return setTypeface(gvrContext, font, fontStyleTypes.PLAIN);
@@ -476,7 +476,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * @param style
      *          value for style from the enumerated list that matches values from X3D
      *          <FontStyle> style setting
-     * @return
+     * @return True if font is changed else false
      */
     public boolean setTypeface(GVRContext gvrContext, String font, fontStyleTypes style) {
         if ( !font.equals(DEFAULT_FONT) ) {
@@ -507,7 +507,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Returns the style type: plain, bold, italic or boldItalic
-     * @return
+     * @return The style type
      */
     public fontStyleTypes getStyleType() {
         fontStyleTypes styleType = fontStyleTypes.PLAIN;
@@ -519,7 +519,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Returns the font family file name
-     * @return
+     * @return The ttf file name or DEFAULT
      */
     public String getFontFamily() {
         return fontFamily;
@@ -540,7 +540,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Get the amount of extra spacing between lines.
-     * @return
+     * @return The line spacing extra space
      */
     public float getLineSpacing() {
         return mTextView.getLineSpacingExtra();

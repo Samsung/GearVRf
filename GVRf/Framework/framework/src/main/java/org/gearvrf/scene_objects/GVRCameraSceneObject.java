@@ -62,7 +62,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *
      * @param gvrContext current {@link GVRContext}
      * @param mesh       an arbitrarily complex {@link GVRMesh} object - see
-     *                   {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *                   {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *                   and {@link GVRContext#createQuad(float, float)}
      * @param camera     an Android {@link Camera}. <em>Note</em>: this constructor
      *                   calls {@link Camera#setPreviewTexture(SurfaceTexture)} so you
@@ -98,7 +98,7 @@ public class GVRCameraSceneObject extends GVRSceneObject implements
      *
      * @param gvrContext current {@link GVRContext}
      * @param mesh       an arbitrarily complex {@link GVRMesh} object - see
-     *                   {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *                   {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *                   and {@link GVRContext#createQuad(float, float)}
      * @throws GVRCameraAccessException returns this exception when the camera cannot be
      *                                  initialized correctly.

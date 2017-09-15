@@ -18,6 +18,7 @@ package org.gearvrf.scene_objects.view;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.view.View;
 
 /**
@@ -25,12 +26,12 @@ import android.view.View;
  * {@link GVRView} is a special view that provides a way to draw {@link View} into some
  * {@link GVRViewSceneObject} added to {@linkplain org.gearvrf.GVRScene the scene graph}. Call
  * {@link org.gearvrf.GVRActivity#registerView(View)} to add the {@link GVRView} to Android hierarchy view.
- * After it has been registered, the UI Thread will call {@link GVRView#draw(Canvas)} to refresh the
+ * After it has been registered, the UI Thread will call {@link View#draw(Canvas)} to refresh the
  * view as necessary. To draw the {@link GVRView} into its {@link GVRViewSceneObject} is necessary
- * override {@link GVRView#draw(Canvas)} and call the superclass version replacing the given
- * {@link Canvas} by other one provided by {@link GVRViewSceneObject#lockCanvas()}. After drawing
+ * override {@link View#draw(Canvas)} and call the superclass version replacing the given
+ * {@link Canvas} by other one provided by {@link android.view.Surface#lockCanvas(Rect)}. After drawing
  * into the {@link GVRViewSceneObject}'s {@link Canvas}, the caller must invoke
- * {@link GVRViewSceneObject#unlockCanvasAndPost} to post the new contents to the scene object.
+ * {@link android.view.Surface#unlockCanvasAndPost} to post the new contents to the scene object.
  * 
  * <pre>
  * {@code 

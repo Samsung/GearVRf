@@ -886,7 +886,7 @@ public final class GVRAssetLoader {
      *
      * <p>
      * This method is significantly easier to use than
-     * {@link #loadTexture(GVRAndroidResource, TextureCallback, GVRTextureParameters, int, int)}
+     * {@link org.gearvrf.GVRAssetLoader#loadTexture(GVRAndroidResource, TextureCallback, GVRTextureParameters, int, int)}
      * You don't have to implement a callback; you don't have to pay attention
      * to the low-level details of
      *{@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a
@@ -967,7 +967,7 @@ public final class GVRAssetLoader {
      *
      * <p>
      * This method is significantly easier to use than
-     * {@link #loadTexture(GVRAndroidResource, TextureCallback, GVRTextureParameters, int, int)}
+     * {@link org.gearvrf.GVRAssetLoader#loadTexture(GVRAndroidResource, TextureCallback, GVRTextureParameters, int, int)}
      * : you don't have to implement a callback; you don't have to pay attention
      * to the low-level details of
      * {@linkplain GVRSceneObject#attachRenderData(GVRRenderData) attaching} a

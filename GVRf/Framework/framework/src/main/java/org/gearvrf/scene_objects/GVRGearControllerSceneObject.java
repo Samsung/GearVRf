@@ -26,7 +26,7 @@ import java.util.Arrays;
  * One can optionally allow the ray to automatically adjust its length to
  * extend to the first object in the scene that the ray vector would intersect. This makes
  * it obvious to the user which object they are currently pointing at with the Gear Controller.
- * Lastly, one can use {@link this#enableSurfaceProjection()} to project the cursor onto the
+ * Lastly, one can use {@link #enableSurfaceProjection()} to project the cursor onto the
  * object being picked. Read the method documentation for more information.
  */
 
@@ -178,7 +178,7 @@ public class GVRGearControllerSceneObject extends GVRSceneObject {
      * should have a type of {@link org.gearvrf.io.GVRControllerType#CONTROLLER}.
      *
      * Note that a CursorController must be set in order to receive a non-null
-     * {@link ISensorEvents} from {@link this#getProjectionListener()}
+     * {@link ISensorEvents} from {@link #getProjectionListener()}
      *
      * @param gearCursorController the cursor controller that controls this scene object
      */
@@ -211,7 +211,7 @@ public class GVRGearControllerSceneObject extends GVRSceneObject {
      * Enables surface projection, which will cause the cursor to be projected
      * on the surface of a {@link GVRSceneObject} according to the surface normal at the
      * intersection point of the controller's ray (the object must have attached the
-     * {@link ISensorEvents} instance given by {@link this#getProjectionListener()}).
+     * {@link ISensorEvents} instance given by {@link #getProjectionListener()}).
      * Note this requires additional calculations for every {@link SensorEvent} received.
      *
      * When this is disabled, the ray/cursor depth will still be adjusted by the

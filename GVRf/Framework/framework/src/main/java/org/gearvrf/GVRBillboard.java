@@ -38,7 +38,7 @@ public class GVRBillboard extends GVRBehavior
     /**
      * Constructor
      * @param gvrContext
-     * @param up:       the up vector about which the scene object is constrained to rotate
+     * @param up    the up vector about which the scene object is constrained to rotate
      */
     public GVRBillboard(GVRContext gvrContext, Vector3f up )
     {

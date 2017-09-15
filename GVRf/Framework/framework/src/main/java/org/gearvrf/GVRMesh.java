@@ -449,7 +449,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @param height        a number representing the height
      * @param centralAngle  the central angle of the arc
      * @param radius        the radius of the circle
-     * @return
+     * @return An object of GVRMesh
      */
     public static GVRMesh createCurvedMesh(GVRContext gvrContext, int width, int height, float centralAngle, float radius){
         GVRMesh mesh = new GVRMesh(gvrContext);

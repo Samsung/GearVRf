@@ -73,7 +73,7 @@ import java.util.concurrent.Future;
  * </li>
  * <li>
  * The context allows you to run code on either the Java or rendering thread
- * {@link #runOnGlThread(Runnable), {@link #runOnTheFrameworkThread(Runnable)}.
+ * {@link #runOnGlThread(Runnable)}, {@link #runOnTheFrameworkThread(Runnable)}.
  * </li>
  * <li>
  * The <b>asset loader</b> in the context can load textures and models from a variety of sources
@@ -84,6 +84,7 @@ import java.util.concurrent.Future;
  * </li>
  * <li>
  *  The <b>shader manager</b> in the context lets you create custom shaders.
+ * </li>
  * </ul>
  * @see GVRAssetLoader
  * @see GVREventReceiver
@@ -150,7 +151,7 @@ public abstract class GVRContext implements IEventReceiver {
      * The priority used by
      * {@link GVRAssetLoader#loadTexture(GVRAndroidResource)}
      * and
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
+     * {@link GVRAssetLoader#loadMesh(MeshCallback, GVRAndroidResource, int)}}
      *
      * @since 1.6.1
      * @deprecated use GVRAssetLoader.DEFAULT_PRIORITY instead

@@ -649,7 +649,7 @@ public class GVRAndroidResource {
      * Callback for asynchronous texture loads.
      * 
      * Both compressed and bitmapped textures, using the
-     * {@link GVRContext#loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource)}
+     * {@link GVRAssetLoader#loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback)}
      * APIs.
      * 
      * @since 1.6.7
