@@ -17,6 +17,7 @@ package org.gearvrf.io.cursor3d;
 
 import android.view.KeyEvent;
 
+import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.io.GVRControllerType;
@@ -67,9 +68,9 @@ public class IoDevice {
      *                   IoDevice to the User.
      * @param vendorName name of the vendor for the {@link IoDevice}
      */
-    protected IoDevice(String deviceId, int vendorId, int productId, String name, String
+    protected IoDevice(GVRContext ctx, String deviceId, int vendorId, int productId, String name, String
             vendorName) {
-        this(deviceId, vendorId, productId, name, vendorName, true);
+        this(ctx, deviceId, vendorId, productId, name, vendorName, true);
     }
 
     /**
@@ -94,10 +95,10 @@ public class IoDevice {
      *                    connected at initialization. The {@link IoDevice#setConnected(boolean)}
      *                    call can be used to indicate the hardware device connection later.
      */
-    protected IoDevice(String deviceId, int vendorId, int productId, String name, String
+    protected IoDevice(GVRContext ctx, String deviceId, int vendorId, int productId, String name, String
             vendorName, boolean isConnected) {
         this(deviceId, vendorId, productId, name, vendorName, isConnected, new
-                GVRExternalCursorController());
+                GVRExternalCursorController(ctx));
     }
 
     IoDevice(String deviceId, int vendorId, int productId, String name, String
@@ -433,8 +434,8 @@ public class IoDevice {
 
     //TODO this will go once GVRf is changed
     static class GVRExternalCursorController extends GVRCursorController {
-        GVRExternalCursorController() {
-            super(GVRControllerType.EXTERNAL);
+        GVRExternalCursorController(GVRContext context) {
+            super(context, GVRControllerType.EXTERNAL);
         }
 
         public void setKeyEvent(KeyEvent keyEvent) {

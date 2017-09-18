@@ -20,18 +20,18 @@ import org.gearvrf.SensorEvent;
 
 /**
  * Attaches a Java or Lua script to a scene object.
- * 
+ * <p>
  * These script callbacks are invoked if they are present:
  *      onEarlyInit(GVRContext) called after script is loaded
  *      onAfterInit()           called when the script becomes active
  *                              (this component is attached to a scene object and enabled)
  *      onStep()                called every frame if this component is enabled
  *                              and attached to a scene object
- *      onPickEnter(GVRSceneObject, GVRPicker.GVRPickedObject)
+ *      onEnter(GVRSceneObject, GVRPicker.GVRPickedObject)
  *                              called when picking ray enters an object
- *      onPickExit(GVRSceneObject)
+ *      onExit(GVRSceneObject)
  *                              called when picking ray exits an object
- *      onPickInside(GVRSceneObject, GVRPicker.GVRPickedObject)
+ *      onInside(GVRSceneObject, GVRPicker.GVRPickedObject)
  *                              called when picking ray is inside an object
  *      onPick(GVRPicker)       called when picking selection changes
  *      onNoPick(GVRPicker)     called when nothing is picked

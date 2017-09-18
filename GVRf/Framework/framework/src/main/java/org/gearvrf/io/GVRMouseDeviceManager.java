@@ -98,8 +98,7 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
 
         GVRMouseController(GVRContext context, GVRControllerType controllerType, String name, int
                 vendorId, int productId, GVRMouseDeviceManager deviceManager) {
-            super(controllerType, name, vendorId, productId);
-            this.context = context;
+            super(context, controllerType, name, vendorId, productId);
             this.deviceManager = deviceManager;
             position = new Vector3f(0.0f, 0.0f, -1.0f);
             rotation = new Quaternionf();

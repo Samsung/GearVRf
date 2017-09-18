@@ -24,7 +24,6 @@ import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.SensorEvent;
-import org.gearvrf.SensorEvent.EventGroup;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
@@ -670,7 +669,6 @@ public abstract class Cursor {
 
             List<MotionEvent> motionEvents = controller.getMotionEvents();
             cursorEvent.setMotionEvents(motionEvents);
-            cursorEvent.setEventGroup(EventGroup.SINGLE);
             cursorEvent.setKeyEvent(controller.getKeyEvent());
             dispatchCursorEvent(cursorEvent);
         }
