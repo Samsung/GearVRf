@@ -59,6 +59,9 @@ android {
         }
 
         def source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
+        if (source.text.contains(commitId)) {
+            return
+        }
         def javaSource = new File(projectDir.absolutePath + '/src/main/java/org/gearvrf/', 'OvrBuildInfo.java')
 
         source.text = '#include "util/gvr_log.h"\n'
