@@ -38,7 +38,7 @@ import static android.opengl.GLES30.GL_TRIANGLE_STRIP;
 
 /**
  * Encapsulates the data associated with rendering a mesh.
- * 
+ *
  * This includes the {@link GVRMesh mesh} itself, the mesh's {@link GVRMaterial
  * material}, camera association, rendering order, and various other parameters.
  */
@@ -54,14 +54,14 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Rendering hints.
-     * 
+     *
      * You might expect the rendering process to sort the scene graph, from back
      * to front, so it can then draw translucent objects over the objects behind
      * them. But that's not how GVRF works. Instead, it sorts the scene graph by
      * render order, then draws the sorted graph in traversal order. (Please
      * don't waste your time getting angry or trying to make sense of this;
      * please just take it as a bald statement of How GVRF Currently Works.)
-     * 
+     *
      * <p>
      * The point is, to get transparency to work as you expect, you do need to
      * explicitly call {@link GVRRenderData#setRenderingOrder(int)
@@ -101,7 +101,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Constructor.
-     * 
+     *
      * @param gvrContext
      *            Current {@link GVRContext}
      */
@@ -123,23 +123,23 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         mRenderPassList = new ArrayList<GVRRenderPass>();
         addPass(basePass);
     }
-    
+
 
     static public long getComponentType() {
         return NativeRenderData.getComponentType();
     }
-    
+
     /**
      * @return The {@link GVRMesh mesh} being rendered. If there is
      * a pending future mesh, it is resolved.
-      */
+     */
     public GVRMesh getMesh() {
         return mMesh;
     }
 
     /**
      * Set the {@link GVRMesh mesh} to be rendered.
-     * 
+     *
      * @param mesh
      *            The mesh to be rendered.
      */
@@ -153,10 +153,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
             }
         }
         NativeRenderData.setMesh(getNative(), mesh.getNative());
-        if ((oldMesh != null) && (oldMesh != mesh))
-        {
-            bindShader(getGVRContext().getMainScene());
-        }
     }
 
     /**
@@ -169,7 +165,16 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         pass.setMesh(mesh);
         NativeRenderData.addPass(getNative(), pass.getNative());
     }
-    
+
+    /**
+     * Remove a render {@link GVRRenderPass pass} to this RenderData.
+     * @param passNum 0 based index of pass to remove
+     */
+    public void removePass(int passNum) {
+        mRenderPassList.remove(passNum);
+        NativeRenderData.removePass(getNative(), passNum);
+    }
+
     /**
      * Get a Rendering {@link GVRRenderPass Pass} for this Mesh
      * @param passIndex The index of the RenderPass to get.
@@ -182,7 +187,13 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
             return null;
         }
     }
-    
+
+    /**
+     * Get the number of render passes
+     * @return number of render passes
+     */
+    public int getPassCount() { return mRenderPassList.size(); }
+
     /**
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
      *         being rendered with.
@@ -190,7 +201,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     public GVRMaterial getMaterial() {
         return getMaterial(0);
     }
-    
+
     /**
      * @param passIndex The {@link GVRRenderPass pass} index to retrieve material from.
      * @return The {@link GVRMaterial material} the {@link GVRMesh mesh} is
@@ -208,7 +219,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the {@link GVRMaterial material} the mesh will be rendered with.
-     * 
+     *
      * @param material
      *            The {@link GVRMaterial material} for rendering.
      */
@@ -218,12 +229,12 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the {@link GVRMaterial material} this pass will be rendered with.
-     * 
+     *
      * @param material
      *            The {@link GVRMaterial material} for rendering.
      * @param passIndex
      *            The rendering pass this material will be assigned to.
-     * 
+     *
      */
     public void setMaterial(GVRMaterial material, int passIndex)
     {
@@ -236,32 +247,28 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         {
             Log.e(TAG, "Trying to set material from invalid pass. Pass " + passIndex + " was not created.");
         }
-        if ((oldmtl != null) && (oldmtl != material) && (getMesh() != null))
-        {
-            bindShader(getGVRContext().getMainScene());
-        }
     }
 
-    public void setShader(int shader)
+    public void setShader(int shader, boolean useMultiview)
     {
         GVRRenderPass pass = mRenderPassList.get(0);
-        pass.setShader(shader);
+        pass.setShader(shader, useMultiview);
     }
 
-    int getShader()
+    int getShader(boolean useMultiview)
     {
         GVRRenderPass pass = mRenderPassList.get(0);
-        return pass.getShader();
+        return pass.getShader(useMultiview);
     }
 
     /**
      * Set the shader template to use for rendering the mesh.
-     * 
+     *
      * A shader template generates the vertex and fragment shader
      * based on the mesh attributes, textures bound to the material
      * and light sources. The shader is generated by {@linkplain #bindShader(GVRScene)} bindShader }
      * which is called automatically after initialization.
-     * 
+     *
      * @param templateClass subclass of GVRShaderTemplate describing the
      *        shader to use for rendering the mesh
      * @see GVRShaderTemplate
@@ -270,27 +277,27 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     public void setShaderTemplate(Class<? extends GVRShaderTemplate> templateClass) {
     }
 
-     /**
+    /**
      * Selects a specific vertex and fragment shader to use for rendering.
-     * 
+     *
      * If a shader template has been specified, it is used to generate
      * a vertex and fragment shader based on mesh attributes, bound textures
      * and light sources. If the textures bound to the material are changed
      * or a new light source is added, this function must be called again
      * to select the appropriate shaders. This function may cause recompilation
      * of shaders which is quite slow.
-     * 
+     *
      * @param scene scene being rendered
      * @see GVRShaderTemplate GVRMaterialShader.getShaderType
      */
-    public synchronized void bindShader(GVRScene scene)
+    public synchronized void bindShader(GVRScene scene, boolean isMultiview)
     {
         GVRRenderPass pass = mRenderPassList.get(0);
         GVRShaderId shader = pass.getMaterial().getShaderType();
         GVRShader template = shader.getTemplate(getGVRContext());
         if (template != null)
         {
-            template.bindShader(getGVRContext(), this, scene);
+            template.bindShader(getGVRContext(), this, scene, isMultiview);
         }
         for (int i = 1; i < mRenderPassList.size(); ++i)
         {
@@ -299,7 +306,41 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
             template = shader.getTemplate(getGVRContext());
             if (template != null)
             {
-                template.bindShader(getGVRContext(), pass, scene);
+                template.bindShader(getGVRContext(), pass, scene, isMultiview);
+            }
+        }
+    }
+    /**
+     * Selects a specific vertex and fragment shader to use for rendering.
+     *
+     * If a shader template has been specified, it is used to generate
+     * a vertex and fragment shader based on mesh attributes, bound textures
+     * and light sources. If the textures bound to the material are changed
+     * or a new light source is added, this function must be called again
+     * to select the appropriate shaders. This function may cause recompilation
+     * of shaders which is quite slow.
+     *
+     * @param scene scene being rendered
+     * @see GVRShaderTemplate GVRMaterialShader.getShaderType
+     */
+    public synchronized void bindShader(GVRScene scene)
+    {
+        GVRRenderPass pass = mRenderPassList.get(0);
+        GVRShaderId shader = pass.getMaterial().getShaderType();
+        GVRShader template = shader.getTemplate(getGVRContext());
+        boolean isMultiview = getGVRContext().getActivity().getAppSettings().isMultiviewSet();
+        if (template != null)
+        {
+            template.bindShader(getGVRContext(), this, scene, isMultiview);
+        }
+        for (int i = 1; i < mRenderPassList.size(); ++i)
+        {
+            pass = mRenderPassList.get(i);
+            shader = pass.getMaterial().getShaderType();
+            template = shader.getTemplate(getGVRContext());
+            if (template != null)
+            {
+                template.bindShader(getGVRContext(), pass, scene, isMultiview);
             }
         }
     }
@@ -310,9 +351,9 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * Called from the GL thread during rendering when a
      * RenderData without a valid shader is encountered.
      */
-    void bindShaderNative(GVRScene scene)
+    void bindShaderNative(GVRScene scene, boolean isMultiview)
     {
-        bindShader(scene);
+        bindShader(scene, isMultiview);
         /*
         if (sBindShaderFromNative == null)
         {
@@ -383,7 +424,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
      * different to enable/disable status of the light. The lighting effect is
      * applied if and only if {@code mLight} is enabled (i.e. on) AND the
      * lighting effect is enabled for the render_data.
-     * 
+     *
      * @return true if lighting effect is enabled, false if lighting effect is
      *         disabled.
      */
@@ -393,7 +434,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Get the enable/disable status for the lighting map effect.
-     * 
+     *
      * @return true if lighting map effect is enabled, otherwise returns false.
      */
     public boolean isLightMapEnabled() {
@@ -402,7 +443,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Get the rendering options bit mask.
-     * 
+     *
      * @return The rendering options bit mask.
      * @see GVRRenderMaskBit
      */
@@ -412,7 +453,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the rendering options bit mask.
-     * 
+     *
      * @param renderMask
      *            The rendering options bit mask.
      * @see GVRRenderMaskBit
@@ -432,7 +473,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the order in which this mesh will be rendered.
-     * 
+     *
      * @param renderingOrder
      *            See {@link GVRRenderingOrder}
      */
@@ -443,7 +484,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * @deprecated Use {@code getCullFace() } instead.
-     * @see #getCullFace() 
+     * @see #getCullFace()
      * @return {@code true} if {@code GL_CULL_FACE} is enabled, {@code false} if
      *         not.
      */
@@ -475,7 +516,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     /**
      * @deprecated Use {@code setCullFace(GVRCullFaceEnum cullFace)} instead.
      * Set the {@code GL_CULL_FACE} option
-     * 
+     *
      * @param cullTest
      *            {@code true} if {@code GL_CULL_FACE} should be enabled,
      *            {@code false} if not.
@@ -493,7 +534,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the face to be culled
-     * 
+     *
      * @param cullFace
      *            {@code GVRCullFaceEnum.Back} Tells Graphics API to discard
      *            back faces, {@code GVRCullFaceEnum.Front} Tells Graphics API
@@ -506,7 +547,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the face to be culled
-     * 
+     *
      * @param cullFace
      *            {@code GVRCullFaceEnum.Back} Tells Graphics API to discard
      *            back faces, {@code GVRCullFaceEnum.Front} Tells Graphics API
@@ -534,7 +575,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the {@code GL_POLYGON_OFFSET_FILL} option
-     * 
+     *
      * @param offset
      *            {@code true} if {@code GL_POLYGON_OFFSET_FILL} should be
      *            enabled, {@code false} if not.
@@ -556,7 +597,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     /**
      * Set the {@code factor} value passed to {@code glPolygonOffset()} if
      * {@code GL_POLYGON_OFFSET_FILL} is enabled.
-     * 
+     *
      * @param offsetFactor
      *            Per OpenGL docs: Specifies a scale factor that is used to
      *            create a variable depth offset for each polygon. The initial
@@ -580,7 +621,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     /**
      * Set the {@code units} value passed to {@code glPolygonOffset()} if
      * {@code GL_POLYGON_OFFSET_FILL} is enabled.
-     * 
+     *
      * @param offsetUnits
      *            Per OpenGL docs: Is multiplied by an implementation-specific
      *            value to create a constant depth offset. The initial value is
@@ -602,7 +643,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the {@code GL_DEPTH_TEST} option
-     * 
+     *
      * @param depthTest
      *            {@code true} if {@code GL_DEPTH_TEST} should be enabled,
      *            {@code false} if not.
@@ -635,7 +676,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the {@code GL_BLEND} option
-     * 
+     *
      * @param alphaBlend
      *            {@code true} if {@code GL_BLEND} should be enabled,
      *            {@code false} if not.
@@ -716,7 +757,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     public boolean getAlphaToCoverage() {
         return NativeRenderData.getAlphaToCoverage(getNative());
     }
-    
+
     /**
      * @param alphaToCoverage
      *            {@code true} if {@code GL_ALPHA_TO_COVERAGE} should be enabled,
@@ -741,14 +782,14 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
         NativeRenderData.setSampleCoverage(getNative(),sampleCoverage);
         return this;
     }
-    
+
     /**
      * @return whether the modification mask implied by value is inverted or not
      */
     public boolean getInvertCoverageMask(){
         return NativeRenderData.getInvertCoverageMask(getNative());
     }
-    
+
     /**
      * @param invertCoverageMask
      *          Specifies whether the modification mask implied by value is inverted or not.
@@ -767,7 +808,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Set the draw mode for this mesh. Default is GL_TRIANGLES.
-     * 
+     *
      * @param drawMode
      */
     public GVRRenderData setDrawMode(int drawMode) {
@@ -885,6 +926,8 @@ class NativeRenderData {
 
     static native void addPass(long renderData, long renderPass);
 
+    static native void removePass(long renderData, long renderPass);
+
     static native void enableLight(long renderData);
 
     static native void disableLight(long renderData);
@@ -900,7 +943,7 @@ class NativeRenderData {
     static native int getRenderingOrder(long renderData);
 
     static native void setRenderingOrder(long renderData, int renderingOrder);
-    
+
     static native boolean getOffset(long renderData);
 
     static native void setOffset(long renderData, boolean offset);
@@ -936,7 +979,7 @@ class NativeRenderData {
     static native float getSampleCoverage(long renderData);
 
     static native void setSampleCoverage(long renderData,float sampleCoverage);
-    
+
     static native boolean getInvertCoverageMask(long renderData);
 
     static native void setInvertCoverageMask(long renderData,boolean invertCoverageMask);

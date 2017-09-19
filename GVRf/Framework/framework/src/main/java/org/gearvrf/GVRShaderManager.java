@@ -82,6 +82,11 @@ public class GVRShaderManager extends GVRHybridObject
         return shaderId;
     }
 
+    void addShaderID(GVRShaderId shaderID)
+    {
+        getShaderType(shaderID.ID);
+    }
+
     /**
      * Make a string with the shader layout for a uniform block
      * with a given descriptor. The format of the descriptor is

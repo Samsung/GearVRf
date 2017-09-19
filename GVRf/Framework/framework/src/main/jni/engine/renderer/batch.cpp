@@ -100,7 +100,7 @@ bool Batch::add(RenderData *render_data) {
     }
     render_data->getHashCode();
 
-    render_data->setDirty(0);
+    render_data->markDirty();
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;

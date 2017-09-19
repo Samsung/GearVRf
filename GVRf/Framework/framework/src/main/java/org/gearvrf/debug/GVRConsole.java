@@ -23,6 +23,7 @@ import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRImage;
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRShader;
 import org.gearvrf.GVRShaderData;
@@ -40,16 +41,16 @@ import org.gearvrf.utility.TextFile;
 
 /**
  * A debugging console for VR apps.
- * 
+ *
  * Lets you put text messages on both or either eye. This can be a useful way to
  * get feedback on your code as you exercise it, instead of having to use
  * {@code logcat} asynchronously.
- * 
+ *
  * <p>
  * You can have multiple consoles. The point of this is to let you write
  * different messages to the left eye than to the right eye: putting multiple
  * consoles on the same eye <em>will</em> make both hard/impossible to read.
- * 
+ *
  * <p>
  * <b>Known Limitations:</b>
  * <ul>
@@ -59,7 +60,7 @@ import org.gearvrf.utility.TextFile;
  * <li>Does not support Java escape characters like \n or \t.
  * </ul>
  */
-public class GVRConsole extends GVRShaderData
+public class GVRConsole extends GVRMaterial
 {
 
     public static class ConsoleShader extends GVRShader
@@ -127,7 +128,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Create a console, specifying the initial eye mode.
-     * 
+     *
      * @param gvrContext
      *            The GVR context.
      * @param startMode
@@ -141,11 +142,11 @@ public class GVRConsole extends GVRShaderData
     /**
      * Create a console, specifying the initial eye mode and the
      * {@link GVRScene} to attach it to.
-     * 
+     *
      * This overload is useful when you are using
      * {@link GVRContext#getMainScene()} and creating your debug console in
      * {@link org.gearvrf.GVRMain#onInit(GVRContext)}.
-     * 
+     *
      * @param gvrContext
      *            The GVR context.
      * @param startMode
@@ -157,7 +158,7 @@ public class GVRConsole extends GVRShaderData
      *            {@linkplain GVRContext#getMainScene() next main scene.}
      */
     public GVRConsole(GVRContext gvrContext, EyeMode startMode,
-            GVRScene gvrScene) {
+                      GVRScene gvrScene) {
         super(gvrContext, getShaderId(gvrContext));
         setEyeMode(startMode, gvrScene.getMainCameraRig());
         setMainTexture();
@@ -169,7 +170,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Write a message to the console.
-     * 
+     *
      * @param pattern
      *            A {@link String#format(String, Object...)} pattern
      * @param parameters
@@ -179,13 +180,13 @@ public class GVRConsole extends GVRShaderData
         String line = (parameters == null || parameters.length == 0) ? pattern
                 : String.format(pattern, parameters);
         lines.add(0, line); // we'll write bottom to top, then purge unwritten
-                            // lines from end
+        // lines from end
         updateHUD();
     }
 
     /**
      * Get the text color.
-     * 
+     *
      * @return The current text color, in Android {@link Color} format
      */
     public int getTextColor() {
@@ -194,7 +195,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Set the text color.
-     * 
+     *
      * @param color
      *            The text color, in Android {@link Color} format. The
      *            {@linkplain Color#alpha(int) alpha component} is ignored.
@@ -206,12 +207,12 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Get the current text size.
-     * 
+     *
      * The default text size is somewhat bigger than the default Android
      * {@link Paint} text size: this method returns the current text as a
      * multiple of this component's default text size, not the standard Android
      * text size.
-     * 
+     *
      * @return The current text size factor.
      */
     public float getTextSize() {
@@ -220,7 +221,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Set the text size.
-     * 
+     *
      * @param newSize
      *            The new text size, as a multiple of the default text size.
      */
@@ -231,11 +232,11 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Get the current eye mode, or where the console messages are displayed.
-     * 
+     *
      * This may be the value passed to
      * {@linkplain #GVRConsole(GVRContext, EyeMode) the constructor,} but you
      * can also change that at any time with {@link #setEyeMode(EyeMode)}.
-     * 
+     *
      * @return The current eye mode.
      */
     public EyeMode getEyeMode() {
@@ -244,11 +245,11 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Set the current eye mode, or where the console messages are displayed.
-     * 
+     *
      * Always 'edits' the list of post-effects; setting the mode to
      * {@link EyeMode#NEITHER_EYE} means this component will not affect render
      * times at all.
-     * 
+     *
      * @param newMode
      *            Left, right, both, or neither.
      */
@@ -307,7 +308,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Get the X offset.
-     * 
+     *
      * @return the text offset in the X direction
      */
     public float getXOffset() {
@@ -316,7 +317,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Get the Y offset.
-     * 
+     *
      * @return the text offset in the Y direction
      */
     public float getYOffset() {
@@ -343,7 +344,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Get the width of the text canvas.
-     * 
+     *
      * @return the width of the text canvas.
      */
     public int getCanvasWidth() {
@@ -352,7 +353,7 @@ public class GVRConsole extends GVRShaderData
 
     /**
      * Get the height of the text canvas.
-     * 
+     *
      * @return the height of the text canvas.
      */
     public int getCanvasHeight() {
@@ -413,7 +414,7 @@ public class GVRConsole extends GVRShaderData
             texture.setImage(image);
             setTexture("u_overlay", texture);
         }
-     }
+    }
 
     private static synchronized GVRShaderId getShaderId(GVRContext gvrContext) {
         if (shaderId == null)

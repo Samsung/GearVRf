@@ -122,7 +122,7 @@ public:
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
-                                               const TextureParameters* texture_parameters);
+                                               const TextureParameters* texture_parameters, int number_views);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) { }
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
@@ -130,18 +130,19 @@ public:
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader);
+    virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
+                                    RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){}
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
-    virtual bool renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass, int postEffectIndx);
+    virtual bool renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, int passNum);
+    virtual Mesh* getPostEffectMesh();
 private:
     VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}
     void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader*){}
-    void occlusion_cull(RenderState& rstate,
-                std::vector<SceneObject*>& scene_objects){
-        occlusion_cull_init(rstate.scene, scene_objects);
+    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) {
+        occlusion_cull_init(rstate, scene_objects, render_data_vector);
 
     }
-    RenderData* post_effect_render_data();
 
 };
 }

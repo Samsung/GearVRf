@@ -434,12 +434,18 @@ public class GVRShaderTemplate extends GVRShader
      * @param scene
      *            scene being rendered
      */
-    public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene)
+    public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene, boolean isMultiview)
     {
         GVRMesh mesh = rdata.getMesh();
         GVRShaderData material = rdata.getMaterial();
         GVRLightBase[] lightlist = (scene != null) ? scene.getLightList() : null;
         HashMap<String, Integer> variantDefines = getRenderDefines(rdata, scene);
+
+        if(isMultiview)
+            variantDefines.put("MULTIVIEW", 1);
+        else
+            variantDefines.put("MULTIVIEW", 0);
+
         String meshDesc = mesh.getVertexBuffer().getDescriptor();
         String signature = generateVariantDefines(variantDefines, meshDesc, material);
         signature += generateLightSignature(lightlist);
@@ -474,7 +480,7 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (nativeShader > 0)
             {
-                rdata.setShader(nativeShader);
+                rdata.setShader(nativeShader, isMultiview);
             }
             return nativeShader;
         }

@@ -29,7 +29,7 @@ import org.gearvrf.utility.TextFile;
  *    u_texture     external texture
  * </code>
  */
-public class GVROESShader extends GVRShader
+public class GVROESShader extends GVRShaderTemplate
 {
     public GVROESShader(GVRContext gvrContext)
     {

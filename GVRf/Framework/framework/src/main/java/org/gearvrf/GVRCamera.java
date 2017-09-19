@@ -42,11 +42,11 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
      * to the post-effects, there's no need to model the possible multiplicity
      * ... and removing a single item from a {@code Set} is cheaper than
      * removing all copies from a {@code List}.
-     * 
+     *
      * We make the collection {@code private} because descendant classes have no
      * APIs that care whether or not a particular post-effect is attached.
      */
-    private final Set<GVRShaderData> mPostEffects = new HashSet<GVRShaderData>();
+    private GVRRenderData mPostEffects = null;
 
     protected GVRCamera(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
@@ -56,12 +56,12 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         super(gvrContext, ptr);
         setOwnerObject(owner);
     }
-    
+
 
     static public long getComponentType() {
         return NativeCamera.getComponentType();
     }
-    
+
     /** Get the background color as an Android {@link Color} */
     public int getBackgroundColor() {
         return Color.argb(Colors.glToByte(getBackgroundColorA()), //
@@ -72,10 +72,10 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Set the background color.
-     * 
+     *
      * If you don't set the background color, the default is an opaque black:
      * {@link Color#BLACK}, 0xff000000.
-     * 
+     *
      * @param color
      *            An Android 32-bit (ARGB) {@link Color}, such as you get from
      *            {@link Resources#getColor(int)}
@@ -89,7 +89,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Sets the background color of the scene rendered by this camera.
-     * 
+     *
      * If you don't set the background color, the default is an opaque black.
      * Meaningful parameter values are from 0 to 1, inclusive: values
      * {@literal < 0} are clamped to 0; values {@literal > 1} are clamped to 1.
@@ -111,7 +111,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Set the red component of the background color.
-     * 
+     *
      * @param r
      *            Red component of the background color. Meaningful values are
      *            from 0 to 1, inclusive: values {@literal < 0} are clamped to
@@ -131,7 +131,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Set the green component of the background color.
-     * 
+     *
      * @param g
      *            Green component of the background color. Meaningful values are
      *            from 0 to 1, inclusive: values {@literal < 0} are clamped to
@@ -151,7 +151,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Set the blue component of the background color.
-     * 
+     *
      * @param b
      *            Blue component of the background color. Meaningful values are
      *            from 0 to 1, inclusive: values {@literal < 0} are clamped to
@@ -171,7 +171,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Set the alpha component of the background color.
-     * 
+     *
      * @param a
      *            Value of alpha component.
      */
@@ -181,7 +181,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Get the current render mask
-     * 
+     *
      * @return A mask consisting of values from
      *         {@link GVRRenderData.GVRRenderMaskBit GVRRenderMaskBit}.
      */
@@ -191,7 +191,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Set the current render mask
-     * 
+     *
      * @param renderMask
      *            A mask consisting of values from
      *            {@link GVRRenderData.GVRRenderMaskBit GVRRenderMaskBit}.
@@ -202,43 +202,53 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Add a post-effect to this camera's render chain.
-     * 
+     *
      * Post-effects are GL shaders, applied to the texture (hardware bitmap)
      * containing the rendered scene graph. Each post-effect combines a shader
      * selector with a set of parameters: This lets you pass different
      * parameters to the shaders for each eye.
-     * 
+     *
      * @param postEffectData
      *            Post-effect to append to this camera's render chain
      */
-    public void addPostEffect(GVRShaderData postEffectData) {
+    public void addPostEffect(GVRMaterial postEffectData) {
         GVRContext ctx = getGVRContext();
         GVRShaderId shader = postEffectData.getShaderType();
-        if (postEffectData.getNativeShader() == 0)
+
+        if (mPostEffects == null)
         {
-            int nativeShader = shader.getTemplate(ctx).bindShader(getGVRContext(), postEffectData, null);
-            postEffectData.setNativeShader(nativeShader);
+            mPostEffects = new GVRRenderData(ctx, postEffectData);
+            NativeCamera.setPostEffect(getNative(), mPostEffects.getNative());
         }
-        mPostEffects.add(postEffectData);
-        NativeCamera.addPostEffect(getNative(), postEffectData.getNative());
+        else
+        {
+            GVRRenderPass rpass = new GVRRenderPass(ctx, postEffectData);
+            mPostEffects.addPass(rpass);
+        }
     }
 
     /**
      * Remove (all instances of) a {@linkplain GVRShaderData post-effect} from
      * this camera's render chain
-     * 
+     *
      * @param postEffectData
      *            Post-effect to remove.
      */
-    public void removePostEffect(GVRShaderData postEffectData) {
-        mPostEffects.remove(postEffectData);
-        NativeCamera.removePostEffect(getNative(), postEffectData.getNative());
+    public void removePostEffect(GVRMaterial postEffectData) {
+        for (int i = 0; i < mPostEffects.getPassCount(); ++i)
+        {
+            GVRRenderPass pass = mPostEffects.getPass(i);
+            if (postEffectData == pass.getMaterial())
+            {
+                mPostEffects.removePass(i);
+            }
+        }
     }
 
     /**
      * Replace the current {@link GVRTransform transform} for owner object of
      * the camera.
-     * 
+     *
      * @param transform
      *            New transform.
      */
@@ -251,7 +261,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     /**
      * Remove the object's (owner object of camera) {@link GVRTransform
      * transform}.
-     * 
+     *
      */
     void detachTransform() {
         if (getOwnerObject() != null) {
@@ -261,8 +271,8 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Get the {@link GVRTransform}.
-     * 
-     * 
+     *
+     *
      * @return The current {@link GVRTransform transform} of owner object of
      *         camera. Applying transform to owner object of camera moves it. If
      *         no transform is currently attached to the object, returns
@@ -277,7 +287,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Add {@code child} as a child of this camera owner object.
-     * 
+     *
      * @param child
      *            {@link GVRSceneObject Object} to add as a child of this camera
      *            owner object.
@@ -290,7 +300,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
 
     /**
      * Remove {@code child} as a child of this camera owner object.
-     * 
+     *
      * @param child
      *            {@link GVRSceneObject Object} to remove as a child of this
      *            camera owner object.
@@ -304,7 +314,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
     /**
      * Get the number of child objects that belongs to owner object of this
      * camera.
-     * 
+     *
      * @return Number of {@link GVRSceneObject objects} added as children of
      *         this camera owner object.
      */
@@ -371,7 +381,7 @@ class NativeCamera {
     static native float getBackgroundColorR(long camera);
 
     static native long getComponentType();
-    
+
     static native void setBackgroundColorR(long camera, float r);
 
     static native float getBackgroundColorG(long camera);
@@ -390,9 +400,7 @@ class NativeCamera {
 
     static native void setRenderMask(long camera, int renderMask);
 
-    static native void addPostEffect(long camera, long postEffectData);
-
-    static native void removePostEffect(long camera, long postEffectData);
+    static native void setPostEffect(long camera, long postEffectData);
 
     static native void setViewMatrix(long camera, float[] matrix);
 }

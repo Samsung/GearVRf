@@ -40,84 +40,84 @@
 
 namespace gvr {
 
-    class Mesh: public HybridObject {
-    public:
-        Mesh(const char* descriptor);
-        Mesh(VertexBuffer& vbuf);
+class Mesh: public HybridObject {
+public:
+    Mesh(const char* descriptor);
+    Mesh(VertexBuffer& vbuf);
 
-        VertexBuffer* getVertexBuffer() const { return mVertices; }
-        IndexBuffer* getIndexBuffer() const { return mIndices; }
-        void setVertexBuffer(VertexBuffer* vbuf) { mVertices = vbuf; }
-        void setIndexBuffer(IndexBuffer* ibuf) { mIndices = ibuf; }
-        bool setVertices(const float* vertices, int nelems);
-        bool getVertices(float* vertices, int nelems);
-        bool setNormals(const float* normals, int nelems);
-        bool getNormals(float* normals, int nelems);
-        bool setIndices(const unsigned int* indices, int nindices);
-        bool setTriangles(const unsigned short* indices, int nindices);
-        bool getIndices(unsigned short* indices, int nindices);
-        bool getLongIndices(unsigned int* indices, int nindices);
-        bool setFloatVec(const char* attrName, const float* src, int nelems);
-        bool setIntVec(const char* attrName, const int* src, int nelems);
-        bool getFloatVec(const char* attrName, float* dest, int nelems);
-        bool getIntVec(const char* attrName, int* dest, int nelems);
-        bool getAttributeInfo(const char* attributeName, int& index, int& offset, int& size) const;
+    VertexBuffer* getVertexBuffer() const { return mVertices; }
+    IndexBuffer* getIndexBuffer() const { return mIndices; }
+    void setVertexBuffer(VertexBuffer* vbuf) { mVertices = vbuf; }
+    void setIndexBuffer(IndexBuffer* ibuf) { mIndices = ibuf; }
+    bool setVertices(const float* vertices, int nelems);
+    bool getVertices(float* vertices, int nelems);
+    bool setNormals(const float* normals, int nelems);
+    bool getNormals(float* normals, int nelems);
+    bool setIndices(const unsigned int* indices, int nindices);
+    bool setTriangles(const unsigned short* indices, int nindices);
+    bool getIndices(unsigned short* indices, int nindices);
+    bool getLongIndices(unsigned int* indices, int nindices);
+    bool setFloatVec(const char* attrName, const float* src, int nelems);
+    bool setIntVec(const char* attrName, const int* src, int nelems);
+    bool getFloatVec(const char* attrName, float* dest, int nelems);
+    bool getIntVec(const char* attrName, int* dest, int nelems);
+    bool getAttributeInfo(const char* attributeName, int& index, int& offset, int& size) const;
 
-        void forAllIndices(std::function<void(int iter, int index)> func);
-        void forAllVertices(const char* attrName, std::function<void(int iter, const float* vertex)> func) const;
-        void forAllTriangles(std::function<void(int iter, const float* V1, const float* V2, const float* V3)> func) const;
-        Mesh* createBoundingBox();
-        void getTransformedBoundingBoxInfo(glm::mat4 *M, float *transformed_bounding_box); //Get Bounding box info transformed by matrix
+    void forAllIndices(std::function<void(int iter, int index)> func);
+    void forAllVertices(const char* attrName, std::function<void(int iter, const float* vertex)> func) const;
+    void forAllTriangles(std::function<void(int iter, const float* V1, const float* V2, const float* V3)> func) const;
+    Mesh* createBoundingBox();
+    void getTransformedBoundingBoxInfo(glm::mat4 *M, float *transformed_bounding_box); //Get Bounding box info transformed by matrix
 
-        int getIndexSize() const
-        {
-            return mIndices ? mIndices->getIndexSize() : 0;
-        }
+    int getIndexSize() const
+    {
+        return mIndices ? mIndices->getIndexSize() : 0;
+    }
 
-        int getIndexCount() const
-        {
-            return mIndices ? mIndices->getIndexCount() : 0;
-        }
+    int getIndexCount() const
+    {
+        return mIndices ? mIndices->getIndexCount() : 0;
+    }
 
-        int getVertexCount() const
-        {
-            return mVertices->getVertexCount();
-        }
+    int getVertexCount() const
+    {
+        return mVertices->getVertexCount();
+    }
 
-        const BoundingVolume& getBoundingVolume();
+    const BoundingVolume& getBoundingVolume();
 
-        bool hasBones() const
-        {
-            return vertexBoneData_.getNumBones();
-        }
+    bool hasBones() const
+    {
+        return vertexBoneData_.getNumBones();
+    }
 
-        void setBones(std::vector<Bone*>&& bones)
-        {
-            vertexBoneData_.setBones(std::move(bones));
-        }
+    void setBones(std::vector<Bone*>&& bones)
+    {
+        vertexBoneData_.setBones(std::move(bones));
+    }
 
-        VertexBoneData &getVertexBoneData()
-        {
-            return vertexBoneData_;
-        }
-        void add_dirty_flag(const std::shared_ptr<u_short>& dirty_flag);
-        void dirty(DIRTY_BITS bit);
+    VertexBoneData &getVertexBoneData()
+    {
+        return vertexBoneData_;
+    }
 
-    private:
-        Mesh(const Mesh& mesh);
-        Mesh(Mesh&& mesh);
-        Mesh& operator=(const Mesh& mesh);
+    bool isDirty() const { return mVertices->isDirty(); }
+
+private:
+    Mesh(const Mesh& mesh);
+    Mesh(Mesh&& mesh);
+    Mesh& operator=(const Mesh& mesh);
 
 
-    protected:
-        IndexBuffer* mIndices;
-        VertexBuffer* mVertices;
-        bool have_bounding_volume_;
-        BoundingVolume bounding_volume;
+protected:
+    IndexBuffer* mIndices;
+    VertexBuffer* mVertices;
+    bool have_bounding_volume_;
+    BoundingVolume bounding_volume;
 
-        // Bone data for the shader
-        VertexBoneData vertexBoneData_;
-        std::unordered_set<std::shared_ptr<u_short>> dirty_flags_;
-    };
+    // Bone data for the shader
+    VertexBoneData vertexBoneData_;
+    std::unordered_set<std::shared_ptr<u_short>> dirty_flags_;
+};
 }
 #endif

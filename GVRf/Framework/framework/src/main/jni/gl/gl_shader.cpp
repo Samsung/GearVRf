@@ -96,7 +96,7 @@ void modifyShader(std::string& shader)
             mod_shader += ((layout_pos > 0) ? line.substr((0, layout_pos)) : "") + line.substr(it->second) + "\n";
 
         }
-        else if ((it = tokens.find("layout")) != tokens.end() && tokens.find("uniform")==tokens.end()) {
+        else if ((it = tokens.find("layout")) != tokens.end() && tokens.find("uniform")==tokens.end() && tokens.find("num_views") == tokens.end()) {
             it1 = tokens.find("in");
             if (it1 == tokens.end())
                 it1 = tokens.find("out");
@@ -121,13 +121,11 @@ void GLShader::convertToGLShaders()
 
 }
 
-void GLShader::initialize()
+void GLShader::initialize(bool is_multiview)
 {
     convertToGLShaders();
     mProgram = new GLProgram(mVertexShader.c_str(), mFragmentShader.c_str());
-    if (use_multiview && !(strstr(mVertexShader.c_str(), "gl_ViewID_OVR")
-                           && strstr(mVertexShader.c_str(), "GL_OVR_multiview2")
-                           && strstr(mVertexShader.c_str(), "GL_OVR_multiview2")))
+    if (is_multiview && !(strstr(mVertexShader.c_str(), "GL_OVR_multiview2")))
     {
         std::string error = "Your shaders are not multiview";
         LOGE("Your shaders are not multiview");
@@ -137,11 +135,11 @@ void GLShader::initialize()
     mFragmentShader.clear();
 }
 
-bool GLShader::useShader()
+bool GLShader::useShader(bool is_multiview)
 {
     if (nullptr == mProgram)
     {
-        initialize();
+        initialize(is_multiview);
     }
     GLint programID = getProgramId();
     if (programID <= 0)

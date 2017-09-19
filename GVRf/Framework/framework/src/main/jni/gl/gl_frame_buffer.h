@@ -30,7 +30,7 @@ public:
     GLFrameBuffer() {
         glGenFramebuffers(1, &id_);
     }
-
+    GLFrameBuffer(GLuint id): id_(id){}
     ~GLFrameBuffer() {
         GL(glDeleteFramebuffers(1, &id_));
     }
@@ -38,7 +38,6 @@ public:
     GLuint id() const {
         return id_;
     }
-
 private:
     GLFrameBuffer(const GLFrameBuffer& gl_frame_buffer);
     GLFrameBuffer(GLFrameBuffer&& gl_frame_buffer);

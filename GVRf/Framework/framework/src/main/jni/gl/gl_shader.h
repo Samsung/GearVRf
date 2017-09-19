@@ -55,7 +55,7 @@ public:
             const char* fragmentShader);
     virtual ~GLShader();
 
-    virtual bool useShader();
+    virtual bool useShader(bool);
 
     /*
      * Returns the GL program ID for the native shader
@@ -80,7 +80,7 @@ public:
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
 
 protected:
-    void initialize();
+    void initialize(bool);
 
 private:
     GLShader(const GLShader& shader);

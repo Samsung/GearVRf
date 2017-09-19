@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.Log;
+
 /**
  * A render target is a component which allows the scene to be rendered
  * into a texture from the viewpoint of a particular scene object.
@@ -28,16 +30,15 @@ package org.gearvrf;
  */
 public class GVRRenderTarget extends GVRBehavior
 {
-    protected GVRCamera mCamera;
+
     protected GVRMaterial mMaterial;
     protected GVRRenderTexture mTexture;
     protected GVRScene  mScene;
-
+    protected GVRCamera mCamera;
     static public long getComponentType()
     {
         return NativeRenderTarget.getComponentType();
     }
-
     /**
      * Constructs a render target component which renders the given scene to a designated texture.
      * The objects in the scene are rendered from the viewpoint of the scene object
@@ -51,13 +52,56 @@ public class GVRRenderTarget extends GVRBehavior
      */
     public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene)
     {
-        super(texture.getGVRContext(), NativeRenderTarget.ctor(texture.getNative()));
+        this(texture,scene,false);
+    }
+    public GVRRenderTarget(GVRContext gvrContext)
+    {
+        super(gvrContext,NativeRenderTarget.defaultCtr(gvrContext.getMainScene().getNative()));
+        mScene = gvrContext.getMainScene();
+    }
+
+    public GVRCamera getCamera(){
+        return mCamera;
+    }
+    public void setCamera(GVRCamera camera){
+        mCamera = camera;
+        NativeRenderTarget.setCamera(getNative(), camera.getNative());
+    }
+    public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene, GVRRenderTarget renderTarget)
+    {
+        super(texture.getGVRContext(), NativeRenderTarget.ctor(texture.getNative(), renderTarget.getNative()));
         setEnable(false);
         mTexture = texture;
         mScene = scene;
+        setMainScene(scene);
+    }
+    public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene, boolean isMultiview)
+    {
+        super(texture.getGVRContext(), NativeRenderTarget.ctorMultiview(texture.getNative(),isMultiview));
+        setEnable(false);
+        mTexture = texture;
+        mScene = scene;
+        setMainScene(scene);
         setCamera(scene.getMainCameraRig().getCenterCamera());
+
+    }
+    public void beginRendering(GVRCamera camera){
+        NativeRenderTarget.beginRendering(getNative(), camera.getNative());
+    }
+    public void endRendering(){
+        NativeRenderTarget.endRendering(getNative());
+    }
+    public void cullFromCamera(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager){
+        NativeRenderTarget.cullFromCamera(scene.getNative(), getNative(),camera.getNative(), shaderManager.getNative());
+    }
+    public void render(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager, GVRRenderTexture posteffectRenderTextureA, GVRRenderTexture posteffectRenderTextureB){
+        NativeRenderTarget.render(getNative(), camera.getNative(), shaderManager.getNative(), posteffectRenderTextureA.getNative(), posteffectRenderTextureB.getNative(), scene.getNative());
     }
 
+    public void setMainScene(GVRScene scene){
+        mScene = scene;
+        NativeRenderTarget.setMainScene(getNative(),scene.getNative());
+    }
     /**
      * Internal constructor for subclasses.
      * @param ctx
@@ -69,33 +113,6 @@ public class GVRRenderTarget extends GVRBehavior
     }
 
     /**
-     * Sets the camera to use for this render target.
-     * The position and orientation of the render camera is taken
-     * from the transform of the scene object this component is
-     * attached to. The projection matrix which defines the
-     * camera view volume is taken from this camera.
-     * If no camera is provided, the projection matrix from
-     * the scene's main camera is used.
-     * @param camera GVRCamera to use for rendering this render target.
-     * @see #getCamera()
-     */
-    public void setCamera(GVRCamera camera)
-    {
-        mCamera = camera;
-        NativeRenderTarget.setCamera(getNative(), camera.getNative());
-    }
-
-    /**
-     * Gets the camera used to render to this render target.
-     * @return GVRCamera used for rendering
-     * @see #setCamera(GVRCamera)
-     */
-    public GVRCamera getCamera()
-    {
-        return mCamera;
-    }
-
-    /**
      * Sets the texture this render target will render to.
      * If no texture is provided, the render target will
      * not render anything.
@@ -103,6 +120,7 @@ public class GVRRenderTarget extends GVRBehavior
      */
     public void setTexture(GVRRenderTexture texture)
     {
+        mTexture = texture;
         NativeRenderTarget.setTexture(getNative(), texture.getNative());
     }
 
@@ -124,11 +142,15 @@ public class GVRRenderTarget extends GVRBehavior
 
 class NativeRenderTarget
 {
+    static native long defaultCtr(long scene);
     static native long getComponentType();
-
-    static native long ctor(long texture);
-
+    static native void setMainScene(long rendertarget, long scene);
+    static native void beginRendering(long rendertarget, long camera);
+    static native void endRendering(long rendertarget);
+    static native long ctorMultiview(long texture, boolean isMultiview);
     static native void setCamera(long rendertarget, long camera);
-
+    static native long ctor(long texture, long sourceRendertarget);
+    static native void cullFromCamera(long scene, long renderTarget,long camera, long shader_manager );
+    static native void render(long renderTarget, long camera, long shader_manager, long posteffectrenderTextureA, long posteffectRenderTextureB, long scene);
     static native void setTexture(long rendertarget, long texture);
 }

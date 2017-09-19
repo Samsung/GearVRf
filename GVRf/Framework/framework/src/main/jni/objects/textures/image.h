@@ -160,8 +160,8 @@ protected:
     std::mutex mUpdateLock;
     short   mType;
     short   mLevels;
-    short   mWidth;
-    short   mHeight;
+    int   mWidth;
+    int   mHeight;
     short   mDepth;
     short   mState;
     int     mImageSize;

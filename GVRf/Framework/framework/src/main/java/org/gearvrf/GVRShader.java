@@ -302,7 +302,7 @@ public class GVRShader
      * @param scene
      *            list of light sources
      */
-    public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene)
+    public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene, boolean isMultiview)
     {
         String signature = getClass().getSimpleName();
         GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
@@ -312,7 +312,7 @@ public class GVRShader
             int nativeShader = addShader(shaderManager, signature, mtl);
             if (nativeShader > 0)
             {
-                rdata.setShader(nativeShader);
+                rdata.setShader(nativeShader, isMultiview);
             }
             return nativeShader;
         }

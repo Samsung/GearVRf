@@ -26,6 +26,10 @@ namespace gvr {
         return reinterpret_cast<long>(gvrActivity);
     }
 
+    JNIEXPORT long JNICALL Java_org_gearvrf_GVRRenderBundle_getRenderTexture(JNIEnv* jni, jclass clazz, jlong jactivity , jint eye, jint index){
+        GVRActivity* gvrActivity = reinterpret_cast<GVRActivity*>(jactivity);
+        return reinterpret_cast<long>(gvrActivity->createRenderTexture(eye, index));
+    }
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDestroy(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         delete activity;

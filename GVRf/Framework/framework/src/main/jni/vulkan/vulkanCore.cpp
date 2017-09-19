@@ -1036,7 +1036,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                 rdata->getVKPipeline(curr_pass) );
 
                 VulkanShader *shader = reinterpret_cast<VulkanShader *>(shader_manager->getShader(
-                       rdata->get_shader(curr_pass)));
+                       rdata->get_shader(false,curr_pass)));
 
                 VkDescriptorSet descriptorSet = rdata->getDescriptorSet(curr_pass);
                //bind out descriptor set, which handles our uniforms and samplers

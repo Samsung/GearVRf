@@ -36,27 +36,14 @@
 namespace gvr {
 
 class Texture;
+class RenderData;
 
 class ShaderData : public HybridObject
 {
 public:
-    static const int MATERIAL_LOCATION = 20;
-//    static const int MATERIAL_LOCATION = -1;
-
     ShaderData(const char* texture_desc);
 
     virtual ~ShaderData() { }
-
-    int getNativeShader()
-    {
-        return mNativeShader;
-    }
-
-    void setNativeShader(int shader)
-    {
-        mNativeShader = shader;
-        dirty(NATIVE_SHADER);
-    }
 
     const char* getUniformDescriptor() const;
     const char* getTextureDescriptor() const;
@@ -76,12 +63,11 @@ public:
     bool    setVec3(const char* name, const glm::vec3& v);
     bool    setVec4(const char* name, const glm::vec4& v);
     bool    setMat4(const char* name, const glm::mat4& m);
-    void    add_dirty_flag(const std::shared_ptr<u_short>& dirty_flag);
-    void    add_dirty_flags(const std::unordered_set<std::shared_ptr<u_short>>& dirty_flags);
-    void    dirty(DIRTY_BITS bit);
+    void    makeDirty(DIRTY_BITS bit);
+    void    clearDirty();
     bool    hasTexture(const char* key) const;
     bool    hasUniform(const char* key) const;
-    virtual int updateGPU(Renderer* renderer);
+    virtual int updateGPU(Renderer* rendere, RenderData* rdata);
     std::string makeShaderLayout();
     u_int32_t getNumTextures() const { return mTextures.size(); }
     virtual UniformBlock&   uniforms() = 0;
@@ -99,7 +85,7 @@ protected:
     std::vector<std::string> mTextureNames;
     std::vector<Texture*> mTextures;
     mutable std::mutex mLock;
-    std::unordered_set<std::shared_ptr<u_short>> mDirtyFlags;
+    DIRTY_BITS mDirty;
 };
 
 }

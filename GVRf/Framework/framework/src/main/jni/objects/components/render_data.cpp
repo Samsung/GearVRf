@@ -25,9 +25,14 @@ RenderData::~RenderData() {
 }
 
 void RenderData::add_pass(RenderPass* render_pass) {
+    markDirty();
     render_pass_list_.push_back(render_pass);
-    render_pass->add_dirty_flag(dirty_flag_);
-    *dirty_flag_ |= (1 << RENDER_PASS);
+}
+
+void RenderData::remove_pass(int pass)
+{
+    markDirty();
+    render_pass_list_.erase(render_pass_list_.begin() + pass);
 }
 
 RenderPass* RenderData::pass(int pass) {
@@ -36,18 +41,21 @@ RenderPass* RenderData::pass(int pass) {
     }
 }
 
-void RenderData::set_mesh(Mesh* mesh) {
-    mesh_ = mesh;
-    mesh->add_dirty_flag(dirty_flag_);
-    *dirty_flag_ |= (1 << NEW_MESH);
+const RenderPass* RenderData::pass(int pass) const {
+    if (pass >= 0 && pass < render_pass_list_.size()) {
+        return render_pass_list_[pass];
+    }
 }
 
-void RenderData::setDirty(u_short dirty){
-    *dirty_flag_ = dirty;
-}
-    void RenderData::clearDirtyBits(u_short bits){
-        *dirty_flag_ &= bits;
+void RenderData::set_mesh(Mesh* mesh)
+{
+    if (mesh_ != mesh)
+    {
+        mesh_ = mesh;
+        markDirty();
     }
+}
+
 bool RenderData::cull_face(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->cull_face();
@@ -61,30 +69,24 @@ ShaderData* RenderData::material(int pass) const {
     return nullptr;
 }
 
-void RenderData::adjustRenderingOrderForTransparency() {
-    int list_size = render_pass_list_.size();
-
-    for(int i=0;i<list_size;i++) {
-        ShaderData *material_ = material(i);
-        Texture *mainTexture = material_->getTexture("u_texture");
-        Texture *diffuseTexture = material_->getTexture("diffuseTexture");
-
-        if((mainTexture != NULL && !mainTexture->transparency()) ||
-           diffuseTexture != NULL && !diffuseTexture->transparency()) {
-            // had transparency before, but is now opaque
-            if(rendering_order_ > Geometry) {
-                rendering_order_ = Geometry;
-                return;
-            }
-            continue;
+void RenderData::adjustRenderingOrderForTransparency(bool hasAlpha)
+{
+    // had transparency before, but is now opaque
+    if (!hasAlpha)
+    {
+        if (rendering_order_ > Geometry)
+        {
+            rendering_order_ = Geometry;
+            return;
         }
-
-        if(mainTexture != NULL || diffuseTexture != NULL) {
-            // has transparency now, but was opaque before
-            if(rendering_order_ < Transparent) {
-                rendering_order_ = Transparent;
-                return;
-            }
+    }
+        // has transparency now, but was opaque before
+    else
+    {
+        if (rendering_order_ < Transparent)
+        {
+            rendering_order_ = Transparent;
+            return;
         }
     }
 }
@@ -101,7 +103,7 @@ JNIEnv *RenderData::set_java(jobject javaObj, JavaVM *javaVM)
     {
         jclass renderDataClass = env->GetObjectClass(javaObj);
         bindShaderMethod_ = env->GetMethodID(renderDataClass, "bindShaderNative",
-                                             "(Lorg/gearvrf/GVRScene;)V");
+                                             "(Lorg/gearvrf/GVRScene;Z)V");
         if (bindShaderMethod_ == 0)
         {
             LOGE("RenderData::bindShader ERROR cannot find 'GVRRenderData.bindShaderNative()' Java method");
@@ -135,7 +137,7 @@ void RenderData::setStencilTest(bool flag) {
  * Called when the shader for a RenderData needs to be generated on the Java side.
  * This function spawns a Java task on the Framework thread which generates the shader.
  */
-void RenderData::bindShader(Scene *scene)
+void RenderData::bindShader(Scene *scene, bool isMultiview)
 {
     if ((bindShaderMethod_ == NULL) || (javaObj_ == NULL))
     {
@@ -147,7 +149,7 @@ void RenderData::bindShader(Scene *scene)
     if (env && (rc >= 0))
     {
         LOGD("SHADER: Calling GVRRenderData.bindShaderNative(%p)", this);
-        env->CallVoidMethod(javaObj_, bindShaderMethod_, scene->getJavaObj());
+        env->CallVoidMethod(javaObj_, bindShaderMethod_, scene->getJavaObj(), isMultiview);
         if (rc > 0)
         {
             scene->getJavaVM()->DetachCurrentThread();
@@ -249,6 +251,63 @@ std::string RenderData::getHashCode()
 
     }
     return hash_code;
+}
+
+/**
+ * Determine whether this RenderData can be rendered.
+ * To be renderable, a RenderData must have a mesh with vertices,
+ * and a material with a valid shader and all textures loaded.
+ * After validation, this RenderData will have the correct
+ * rendering order based on the texture transparency.
+ * @param renderer  Renderer used to render this RenderData
+ * @param scene     Scene this RenderData is rendered to
+ * @return true if renderable, else false
+ */
+int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
+{
+    Mesh* m = mesh();
+    bool dirty = isDirty();
+
+    if (m == NULL)
+    {
+        return -1;
+    }
+    if ((rstate.render_mask & render_mask()) == 0)
+    {
+        return -1;
+    }
+    dirty |= m->isDirty();
+    for (int p = 0; p < pass_count(); ++p)
+    {
+        RenderPass* rpass = pass(p);
+
+        switch (rpass->isValid(renderer, rstate, this))
+        {
+            case -1: return -1;
+            case 0: dirty = true;
+        }
+    }
+    /*
+     * If any of the render passes are dirty, their shaders
+     * may need rebuilding. bindShader calls a Java function
+     * to regenerate shader sources if necessary. We check
+     * all the render passes to make sure they have valid shaders.
+     */
+    if (dirty)
+    {
+        markDirty();
+        bindShader(rstate.scene, rstate.is_multiview);
+        for (int p = 0; p < pass_count(); ++p)
+        {
+            RenderPass *rpass = pass(p);
+            if (rpass->get_shader(rstate.is_multiview) <= 0)
+            {
+                LOGE("RenderData::isValid shader could not be created");
+                return -1;
+            }
+        }
+    }
+    return dirty ? 0 : 1;
 }
 
 bool RenderData::updateGPU(Renderer* renderer, Shader* shader)

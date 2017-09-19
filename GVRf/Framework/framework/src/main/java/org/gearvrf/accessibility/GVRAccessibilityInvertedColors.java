@@ -12,6 +12,7 @@ package org.gearvrf.accessibility;
  */
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRShaderData;
@@ -19,19 +20,19 @@ import org.gearvrf.GVRShaderId;
 
 public class GVRAccessibilityInvertedColors {
 
-    private GVRShaderData postEffect;
+    private GVRMaterial postEffect;
     private boolean mInverted;
     private GVRContext mGvrContext;
 
     /**
      * Initialize {@link GVRShaderData}
-     * 
+     *
      * @param gvrContext
      */
     public GVRAccessibilityInvertedColors(final GVRContext gvrContext) {
         mGvrContext = gvrContext;
         GVRShaderId shaderId = gvrContext.getMaterialShaderManager().getShaderType(GVRAccessibilityPostEffectShader.class);
-        postEffect = new GVRShaderData(gvrContext, shaderId);
+        postEffect = new GVRMaterial(gvrContext, shaderId);
     }
 
     public void turnOn(final GVRScene... scene) {

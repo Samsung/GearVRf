@@ -60,9 +60,11 @@ protected:
 
     virtual ~GLRenderer()
     {
-        if(transform_ubo_)
-            delete transform_ubo_;
-        transform_ubo_ = NULL;
+        if(transform_ubo_[0])
+            delete transform_ubo_[0];
+        if(transform_ubo_[1])
+            delete transform_ubo_[1];
+
     }
 
 public:
@@ -83,10 +85,8 @@ public:
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount);
 
-    virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
-                        ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
-                        RenderTexture* post_effect_render_texture_a,
-                        RenderTexture* post_effect_render_texture_b);
+    virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
+            RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
     void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
 
     // Specific to GL
@@ -111,24 +111,24 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
-                                               const TextureParameters* texture_parameters);
+                                               const TextureParameters* texture_parameters, int number_views);
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader);
-    GLUniformBlock* getTransformUbo() { return transform_ubo_; }
+    GLUniformBlock* getTransformUbo(int index) { return transform_ubo_[index]; }
+    virtual Mesh* getPostEffectMesh();
+    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
 
 private:
     void updateLights(RenderState &rstate, Shader* shader, int texIndex);
     virtual void renderMesh(RenderState& rstate, RenderData* render_data);
-    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
     virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader);
-    void occlusion_cull(RenderState& rstate,
-                    std::vector<SceneObject*>& scene_objects);
+    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector);
     void clearBuffers(const Camera& camera) const;
     RenderData* post_effect_render_data();
 
-    GLUniformBlock* transform_ubo_;
+    GLUniformBlock* transform_ubo_[2];
 };
 
 }

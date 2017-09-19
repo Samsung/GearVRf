@@ -81,7 +81,6 @@ namespace gvr {
             Shader* shader = it->second;
             long id = shader->getShaderID();
             const std::string& sig = shader->signature();
-            int* data = (int*) shader;
             LOGD("SHADER: #%ld %s", id, sig.c_str());
         }
     }

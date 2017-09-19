@@ -23,13 +23,13 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <engine/renderer/renderer.h>
 
 #include "gl/gl_program.h"
 #include "glm/glm.hpp"
 #include "java_component.h"
 #include "objects/shader_data.h"
 #include "objects/render_pass.h"
-#include "engine/renderer/renderer.h"
 
 typedef unsigned long Long;
 namespace gvr {
@@ -40,7 +40,7 @@ class Light;
 class Batch;
 class TextureCapturer;
 class RenderPass;
-class UniformBlock;
+struct RenderState;
 
 template<typename T>
 std::string to_string(T value) {
@@ -71,15 +71,15 @@ public:
 
     RenderData() :
             JavaComponent(RenderData::getComponentType()), mesh_(0),
-                use_light_(false), use_lightmap_(false), batching_(true),
-                render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
-                rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
-                offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
-                depth_test_(true), depth_mask_(true), alpha_blend_(true), alpha_to_coverage_(false),
-                sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
-                source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
-                draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
-                bones_ubo_(nullptr),dirty_flag_(std::make_shared<u_short>(0))
+            use_light_(false), use_lightmap_(false), batching_(true),
+            render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
+            rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
+            offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
+            depth_test_(true), depth_mask_(true), alpha_blend_(true), alpha_to_coverage_(false),
+            sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
+            source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
+            draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
+            bones_ubo_(nullptr),dirty_(false)
     {
     }
 
@@ -101,6 +101,7 @@ public:
         }
         rendering_order_ = rdata.rendering_order_;
         hash_code_dirty_ = rdata.hash_code_dirty_;
+        dirty_ = rdata.dirty_;
         offset_ = rdata.offset_;
         offset_factor_ = rdata.offset_factor_;
         offset_units_ = rdata.offset_units_;
@@ -114,7 +115,6 @@ public:
         invert_coverage_mask_ = rdata.invert_coverage_mask_;
         draw_mode_ = rdata.draw_mode_;
         texture_capturer = rdata.texture_capturer;
-        dirty_flag_ = rdata.dirty_flag_;
 
         stencilTestFlag_ = rdata.stencilTestFlag_;
         stencilMaskMask_ = rdata.stencilMaskMask_;
@@ -144,8 +144,9 @@ public:
     void set_mesh(Mesh* mesh);
 
     void add_pass(RenderPass* render_pass);
+    void remove_pass(int pass);
     RenderPass* pass(int pass);
-
+    const RenderPass* pass(int pass) const;
     const int pass_count() const {
         return render_pass_list_.size();
     }
@@ -156,11 +157,17 @@ public:
      * Select or generate a shader for this render data.
      * This function executes a Java task on the Framework thread.
      */
-    void bindShader(Scene* scene);
-    void setDirty(u_short dirty);
+    void bindShader(Scene* scene, bool);
+    void markDirty() {
+        dirty_ = true;
+    }
 
-    bool isDirty(u_short bit){
-        return *dirty_flag_ & bit;
+    bool isDirty() const {
+        return dirty_;
+    }
+
+    void clearDirty() {
+        dirty_ = false;
     }
 
     void enable_light() {
@@ -314,7 +321,7 @@ public:
         sample_coverage_ = sample_coverage;
         hash_code_dirty_ = true;
     }
-   
+
     float sample_coverage() const {
         return sample_coverage_;
     }
@@ -347,22 +354,21 @@ public:
         draw_mode_ = draw_mode;
         hash_code_dirty_ = true;
     }
-    void clearDirtyBits(u_short bits);
     bool isHashCodeDirty()  { return hash_code_dirty_; }
     void set_texture_capturer(TextureCapturer *capturer) { texture_capturer = capturer; }
 
     // TODO: need to consider texture_capturer in hash_code ?
     TextureCapturer *get_texture_capturer() { return texture_capturer; }
 
-    void set_shader(int pass, int shaderid)
+    void set_shader(int pass, int shaderid, bool isMultiview)
     {
         LOGD("SHADER: RenderData:setNativeShader %d %p", shaderid, this);
-        render_pass_list_[pass]->set_shader(shaderid);
+        render_pass_list_[pass]->set_shader(shaderid, isMultiview);
     }
 
-    void adjustRenderingOrderForTransparency();
+    int isValid(Renderer* renderer, const RenderState& scene);
 
-    int             get_shader(int pass =0) const { return render_pass_list_[pass]->get_shader(); }
+    int             get_shader(bool useMultiview =false, int pass =0) const { return render_pass_list_[pass]->get_shader(useMultiview); }
     std::string     getHashCode();
     void            setCameraDistanceLambda(std::function<float()> func);
 
@@ -372,17 +378,20 @@ public:
 
     void setStencilMask(unsigned int mask);
 
+    unsigned int getStencilMask() { return stencilMaskMask_; }
+
     bool stencil_test() { return stencilTestFlag_; }
     int stencil_func_func() { return stencilFuncFunc_; }
     int stencil_func_ref() { return stencilFuncRef_; }
     int stencil_func_mask() { return stencilFuncMask_; }
-    unsigned int stencil_mask_mask() { return stencilMaskMask_; }
     int stencil_op_sfail() { return stencilOpSfail_; }
     int stencil_op_dpfail() { return stencilOpDpfail_; }
     int stencil_op_dppass() { return stencilOpDppass_; }
-    UniformBlock* getBonesUbo(){
+    UniformBlock* getBonesUbo() {
         return bones_ubo_;
     }
+    void adjustRenderingOrderForTransparency(bool hasAlpha);
+
 private:
     //  RenderData(const RenderData& render_data);
     RenderData(RenderData&& render_data);
@@ -397,10 +406,9 @@ protected:
     UniformBlock* bones_ubo_;
     Batch* batch_;
     bool hash_code_dirty_;
+    bool dirty_;
     std::string hash_code;
     std::vector<RenderPass*> render_pass_list_;
-    Light* light_;
-    std::shared_ptr<u_short> dirty_flag_;
     int source_alpha_blend_func_;
     int dest_alpha_blend_func_;
     bool use_light_;
