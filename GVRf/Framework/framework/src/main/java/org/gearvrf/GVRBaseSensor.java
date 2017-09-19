@@ -323,9 +323,10 @@ public class GVRBaseSensor {
 
         void updateDepthCache(List<SensorEvent> events) {
             for(SensorEvent sensorEvent: events) {
+                float[] hitLocation = sensorEvent.getPickedObject().getHitLocation();
                 modelMatrix.set(sensorEvent.getPickedObject().getHitObject().getTransform().getModelMatrix());
                 GVRPicker.GVRPickedObject pickedObject = sensorEvent.getPickedObject();
-                hitPoint.set(pickedObject.getHitX(), pickedObject.getHitY(), pickedObject.getHitZ());
+                hitPoint.set(hitLocation[0], hitLocation[1], hitLocation[2]);
                 hitPoint.mulPosition(modelMatrix);
                 float depth = hitPoint.distance(0,0,0);
                 depthCache.put(sensorEvent, depth);

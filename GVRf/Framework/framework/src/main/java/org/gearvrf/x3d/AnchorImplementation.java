@@ -494,13 +494,15 @@ public class AnchorImplementation {
 
             @Override
             public void onSensorEvent(SensorEvent event) {
+                float[] hitLocation = event.getPickedObject().getHitLocation();
+                float hitX = hitLocation[0];
                 if (event.isActive()) {
                     clickDown = !clickDown;
                     if (clickDown) {
                         // only go through once even if object is clicked a long time
                         uiObjectIsActive = !uiObjectIsActive;
                         if (uiObjectIsActive) {
-                            if (event.getPickedObject().getHitX() > cubeUISize.x / 4.0f) {
+                            if (hitX > cubeUISize.x / 4.0f) {
                                 // Delete the WebView page, control currently far right of web page
                                 gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
                                 if (gvrTextScaleObject != null) {
@@ -522,10 +524,10 @@ public class AnchorImplementation {
                                 gvrWebView = null;
                                 webPagePlusUISceneObject = null;
                                 webPageActive = false;
-                            } else if (event.getPickedObject().getHitX() > 0) {
+                            } else if (hitX > 0) {
                                 // TODO: Rotate the web view, control currently right side of control bar
                                 webViewTranslation = false;
-                            } else if (event.getPickedObject().getHitX() > -cubeUISize.x / 4.0f) {
+                            } else if (hitX > -cubeUISize.x / 4.0f) {
                                 // Translate the web view, control currently left side of control bar
                                 TranslationControl(gvrWebViewSceneObjectFinal);
                             }   // end transltion web window, hit between 0 and .25,
@@ -538,16 +540,16 @@ public class AnchorImplementation {
                             if (mOnDrawFrame != null)
                                 // wrap up any lose ends closing the web page.
                                 gvrContext.unregisterDrawFrameListener(mOnDrawFrame);
-                            if (event.getPickedObject().getHitX() > 0) {
+                            if (hitX > 0) {
                                 // TODO: Stop Rotating the web page
-                            } else if (event.getPickedObject().getHitX() > -cubeUISize.x / 4.0f) {
+                            } else if (hitX > -cubeUISize.x / 4.0f) {
                                 // Stop translating the web page
                                 if (gvrTextTranslationObject != null) {
                                     gvrTextTranslationObject.setTextColor(textColorIsOver);
                                 }
                                 webViewTranslation = false;
                             }   // end transltion web window, hit between 0 and .25,
-                            else if (event.getPickedObject().getHitX() < -cubeUISize.x / 4.0f) {
+                            else if (hitX < -cubeUISize.x / 4.0f) {
                                 // Stop scaling the web page
                                 if (gvrTextScaleObject != null) {
                                     gvrTextScaleObject.setTextColor(textColorIsOver);
@@ -558,7 +560,7 @@ public class AnchorImplementation {
                     }
                 } else if (event.isOver() && !uiObjectIsActive) {
                     // highlight the icons to give visual cue to users
-                    if (event.getPickedObject().getHitX() > cubeUISize.x / 4.0f) {
+                    if (hitX > cubeUISize.x / 4.0f) {
                         if (gvrTextExitObject != null)
                             gvrTextExitObject.setTextColor(textColorIsOver);
                         if (gvrTextRotateObject != null)
@@ -569,7 +571,7 @@ public class AnchorImplementation {
                             gvrTextScaleObject.setTextColor(textColorDefault);
                         webViewTranslation = false;
                         webViewScale = false;
-                    } else if (event.getPickedObject().getHitX() > 0) {
+                    } else if (hitX > 0) {
                         if (gvrTextExitObject != null) gvrTextExitObject.setTextColor(textColorDefault);
                         if (gvrTextRotateObject != null) gvrTextRotateObject.setTextColor(textColorIsOver);
                         if (gvrTextTranslationObject != null) gvrTextTranslationObject.setTextColor(textColorDefault);
@@ -577,7 +579,7 @@ public class AnchorImplementation {
                         webViewTranslation = false;
                         webViewScale = false;
                     }  // end scaling web window, hit between 0 and .25,
-                    else if (event.getPickedObject().getHitX() > -cubeUISize.x / 4.0f) {
+                    else if (hitX > -cubeUISize.x / 4.0f) {
                         if (gvrTextExitObject != null) gvrTextExitObject.setTextColor(textColorDefault);
                         if (gvrTextRotateObject != null) gvrTextRotateObject.setTextColor(textColorDefault);
                         if (gvrTextTranslationObject != null) gvrTextTranslationObject.setTextColor(textColorIsOver);
