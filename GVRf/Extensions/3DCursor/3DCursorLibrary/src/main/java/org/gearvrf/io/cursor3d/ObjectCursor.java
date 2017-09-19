@@ -76,12 +76,12 @@ class ObjectCursor extends Cursor {
         }
 
         if (object != null && colliding) {
-            createAndSendCursorEvent(object, true, pickedObject.getHitX(), pickedObject.getHitY(),
-                    pickedObject.getHitZ(), true, event.isActive(),
+            createAndSendCursorEvent(object, true, pickedObject.hitLocation[0], pickedObject.hitLocation[1],
+                    pickedObject.hitLocation[2], true, event.isActive(),
                     event.getCursorController().getKeyEvent(), controller.getMotionEvents());
         } else {
-            createAndSendCursorEvent(object, false, pickedObject.getHitX(), pickedObject.getHitY(),
-                    pickedObject.getHitZ(), event.isOver(), event.isActive(),
+            createAndSendCursorEvent(object, false, pickedObject.hitLocation[0], pickedObject.hitLocation[1],
+                    pickedObject.hitLocation[2], event.isOver(), event.isActive(),
                     event.getCursorController().getKeyEvent(), controller.getMotionEvents());
         }
     }
