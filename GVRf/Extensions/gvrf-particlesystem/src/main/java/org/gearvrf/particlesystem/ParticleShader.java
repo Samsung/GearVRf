@@ -29,7 +29,7 @@ public class ParticleShader extends GVRShader
     public ParticleShader(GVRContext context)
     {
         super("float4 u_color; float3 u_acceleration; float u_particle_age; float u_size_change_rate; " +
-                "float u_time, float u_particle_size; float u_fade", "sampler2D u_texture",
+                "float u_time, float u_particle_size; float u_fade; float u_noise_factor", "sampler2D u_texture",
                 "float3 a_position float2 a_texcoord float3 a_normal", GVRShader.GLSLESVersion.VULKAN);
 
         fragTemplate = TextFile.readTextFile(context.getContext(), R.raw.particle_frag);

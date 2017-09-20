@@ -66,11 +66,16 @@ public class GVRPlaneEmitter extends GVREmitter {
         return positions;
     }
 
-    private float getNextVelocity() {
-        float velocity = minVelocity;
-        velocity += mRandom.nextFloat() * (maxVelocity - minVelocity);
+    private Vector3f getNextVelocity() {
+        float velocityx = minVelocity.x;
+        float velocityy = minVelocity.y;
+        float velocityz = minVelocity.z;
 
-        return velocity;
+        velocityx += mRandom.nextFloat() * (maxVelocity.x - minVelocity.x);
+        velocityy += mRandom.nextFloat() * (maxVelocity.y - minVelocity.y);
+        velocityz += mRandom.nextFloat() * (maxVelocity.z - minVelocity.z);
+
+        return new Vector3f(velocityx, velocityy, velocityz);
     }
 
     /**
@@ -83,10 +88,10 @@ public class GVRPlaneEmitter extends GVREmitter {
         float velocities[] = new float[mEmitRate * 3];
         for ( int i = 0; i < mEmitRate * 3; i +=3 )
         {
-            velocities[i] = 0;
-            velocities[i+1] = getNextVelocity();
-            velocities[i+2] = 0;
-
+            Vector3f nexVel = getNextVelocity();
+            velocities[i] = nexVel.x;
+            velocities[i+1] = nexVel.y;
+            velocities[i+2] = nexVel.z;
         }
         return velocities;
     }

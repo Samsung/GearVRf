@@ -58,11 +58,12 @@ class GVREmitter extends GVRSceneObject {
     //particle properties
     protected float mMaxAge = 1.5f;
     protected float mParticleSize = 50.0f;
-    protected float minVelocity = 1.5f;
-    protected float maxVelocity = 4.5f;
+    protected Vector3f minVelocity = new Vector3f(0,1.5f,0);
+    protected Vector3f maxVelocity = new Vector3f(0,4.5f,0);
     protected Vector3f mEnvironmentAcceleration ;
     private Vector4f mColor;
     private float mParticleSizeRate = 0.0f;
+    private float mNoiseFactor = 0.0f;
     private boolean mFadeWithAge = false;
     private GVRTexture mParticleTexture;
 
@@ -177,7 +178,7 @@ class GVREmitter extends GVRSceneObject {
 
         Particles particleMesh = new Particles(mGVRContext, mMaxAge,
                 mParticleSize, mEnvironmentAcceleration, mParticleSizeRate, mFadeWithAge,
-                mParticleTexture, mColor);
+                mParticleTexture, mColor, mNoiseFactor);
 
 
         GVRSceneObject particleObject = particleMesh.makeParticleMesh(allParticlePositions,
@@ -220,7 +221,9 @@ class GVREmitter extends GVRSceneObject {
                             center.x + width/2, center.y + height/2, center.z + depth/2,
                             center.x - width/2, center.y + height/2, center.z - depth/2};
 
-                    BVSpawnTimes = new float[]{100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0, 100, 0};
+                    BVSpawnTimes = new float[]{Float.MAX_VALUE, 0, Float.MAX_VALUE, 0, Float.MAX_VALUE,
+                            0, Float.MAX_VALUE, 0, Float.MAX_VALUE, 0, Float.MAX_VALUE, 0,
+                            Float.MAX_VALUE, 0, Float.MAX_VALUE, 0};
 
                     BVVelocities = new float[24];
                     for ( int i = 0; i < 24; i ++ )
@@ -288,7 +291,7 @@ class GVREmitter extends GVRSceneObject {
      * @param minV Minimum velocity that a particle can have
      * @param maxV Maximum velocity that a particle can have
      */
-    public void setVelocityRange( final float minV, final float maxV )
+    public void setVelocityRange( final Vector3f minV, final Vector3f maxV )
     {
         if (null != mGVRContext) {
             mGVRContext.runOnGlThread(new Runnable() {
@@ -316,6 +319,8 @@ class GVREmitter extends GVRSceneObject {
      * @param rate The rate at which the particle size should increase or decrease. Lower value
      *             clamped to 1.0f
      */
+
+    //todo: need to vary particle size in v shader wrt this value
     public void setParticleSizeChangeRate( float rate )
     {
         mParticleSizeRate = rate;
@@ -354,6 +359,20 @@ class GVREmitter extends GVRSceneObject {
     public void  setColorMultiplier( Vector4f color )
     {
         mColor = color;
+    }
+
+    /**
+     *
+     * @param noise Noise factor from 0 to 1.
+     */
+    public void setNoiseFactor(float noise)
+    {
+        if ( noise < 0 )
+            noise = 0;
+        if ( noise > 1 )
+            noise = 1;
+
+        mNoiseFactor = noise;
     }
 
     /**
