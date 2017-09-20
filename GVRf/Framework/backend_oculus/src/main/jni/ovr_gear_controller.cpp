@@ -86,23 +86,25 @@ namespace gvr {
             ovrQuatf orientation = tracking.HeadPose.Pose.Orientation;
             const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
             const glm::quat quat = glm::conjugate(glm::inverse(tmp));
-            orientationTrackingReadbackBuffer[5] = quat.w;
-            orientationTrackingReadbackBuffer[6] = quat.x;
-            orientationTrackingReadbackBuffer[7] = quat.y;
-            orientationTrackingReadbackBuffer[8] = quat.z;
+            orientationTrackingReadbackBuffer[6] = quat.w;
+            orientationTrackingReadbackBuffer[7] = quat.x;
+            orientationTrackingReadbackBuffer[8] = quat.y;
+            orientationTrackingReadbackBuffer[9] = quat.z;
 
             ovrInputStateTrackedRemote state;
             state.Header.ControllerType = ovrControllerType_TrackedRemote;
             vrapi_GetCurrentInputState(ovrMobile_, RemoteDeviceID, &state.Header);
 
-            orientationTrackingReadbackBuffer[9] = state.Buttons;
-            orientationTrackingReadbackBuffer[10] = state.TrackpadPosition.x;
-            orientationTrackingReadbackBuffer[11] = state.TrackpadPosition.y;
+            orientationTrackingReadbackBuffer[2] = state.TrackpadStatus;
+
+            orientationTrackingReadbackBuffer[10] = state.Buttons;
+            orientationTrackingReadbackBuffer[11] = state.TrackpadPosition.x;
+            orientationTrackingReadbackBuffer[12] = state.TrackpadPosition.y;
 
             ovrVector3f position = tracking.HeadPose.Pose.Position;
-            orientationTrackingReadbackBuffer[2] = position.x;
-            orientationTrackingReadbackBuffer[3] = position.y;
-            orientationTrackingReadbackBuffer[4] = position.z;
+            orientationTrackingReadbackBuffer[3] = position.x;
+            orientationTrackingReadbackBuffer[4] = position.y;
+            orientationTrackingReadbackBuffer[5] = position.z;
 
         } else {
             // set disconnected

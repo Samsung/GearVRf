@@ -28,6 +28,11 @@ class OvrControllerReader implements GearCursorController.ControllerReader {
     }
 
     @Override
+    public boolean isTouched() {
+        return readbackBuffer.get(INDEX_TOUCHED) == 1.0f;
+    }
+
+    @Override
     public void updateRotation(Quaternionf quat) {
         quat.set(readbackBuffer.get(INDEX_ROTATION + 1),
                 readbackBuffer.get(INDEX_ROTATION + 2),
@@ -68,12 +73,13 @@ class OvrControllerReader implements GearCursorController.ControllerReader {
 
     private static final int INDEX_CONNECTED = 0;
     private static final int INDEX_HANDEDNESS = 1;
-    private static final int INDEX_POSITION = 2;
-    private static final int INDEX_ROTATION = 5;
-    private static final int INDEX_BUTTON = 9;
-    private static final int INDEX_TOUCHPAD = 10;
+    private static final int INDEX_TOUCHED = 2;
+    private static final int INDEX_POSITION = 3;
+    private static final int INDEX_ROTATION = 6;
+    private static final int INDEX_BUTTON = 10;
+    private static final int INDEX_TOUCHPAD = 11;
 
-    private static final int DATA_SIZE = 12;
+    private static final int DATA_SIZE = 13;
     private static final int BYTE_TO_FLOAT = 4;
 }
 
