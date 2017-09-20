@@ -48,21 +48,8 @@ import android.view.View;
  *
  * See {@link GVRWebView} and {@link GVRViewSceneObject}
  */
+@Deprecated
 public interface GVRView {
-    /**
-     * To draw the {@link GVRView} into its {@link GVRViewSceneObject} is necessary override
-     * {@link GVRView#draw(Canvas)} and call the superclass version replacing the given
-     * {@link Canvas} by other one provided by {@link GVRViewSceneObject#lockCanvas()}. After
-     * drawing into the {@link GVRViewSceneObject}'s {@link Canvas}, the caller must invoke
-     * {@link GVRViewSceneObject#unlockCanvasAndPost} to post the new contents to the scene object.
-     * See {@link GVRViewSceneObject#lockCanvas()} and
-     * {@link GVRViewSceneObject#unlockCanvasAndPost(Canvas)}
-     * 
-     * @param canvas Use it to get some dimensions to be applied to the new Canvas given by
-     *            {@link GVRViewSceneObject#lockCanvas()}
-     */
-    void draw(Canvas canvas);
-
     /**
      * {@linkplain GVRViewSceneObject The scene object} created to this {@linkplain GVRView view}
      * will call {@link GVRView#setSceneObject(GVRViewSceneObject)} to set itself to the view.

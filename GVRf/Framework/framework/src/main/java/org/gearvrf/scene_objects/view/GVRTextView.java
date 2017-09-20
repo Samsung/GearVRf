@@ -17,6 +17,7 @@ import android.widget.TextView;
  * Internally this view is added to a {@link LinearLayout}.
  * See {@link GVRView} and {@link GVRViewSceneObject}
  */
+@Deprecated
 public class GVRTextView extends TextView implements GVRView {
     private GVRViewSceneObject mSceneObject = null;
     private ViewGroup mTextViewContainer;
@@ -64,22 +65,6 @@ public class GVRTextView extends TextView implements GVRView {
         mTextViewContainer.measure(viewWidth, viewHeight);
         mTextViewContainer.layout(0, 0, viewWidth, viewHeight);
         setText(text);
-    }
-
-    @Override
-    public void draw(Canvas canvas) {
-        if (mSceneObject == null)
-            return;
-
-        // Canvas attached to GVRViewSceneObject to draw on
-        Canvas attachedCanvas = mSceneObject.lockCanvas();
-        // Clear the canvas to avoid overlapping text when
-        // TextView's background is transparent.
-        attachedCanvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
-        // draw the view to provided canvas
-        super.draw(attachedCanvas);
-
-        mSceneObject.unlockCanvasAndPost(attachedCanvas);
     }
 
     @Override
