@@ -45,7 +45,7 @@ public:
         return half_extents_;
     }
 
-    ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) { return ColliderData(); };
+    ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
 
 private:
     glm::vec3 half_extents_;
