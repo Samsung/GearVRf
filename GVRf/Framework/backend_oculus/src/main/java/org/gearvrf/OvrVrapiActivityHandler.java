@@ -54,6 +54,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     private EGLSurface mMainSurface;
     boolean mVrApiInitialized;
     private OvrViewManager mViewManager;
+    private int mCurrentSurfaceWidth, mCurrentSurfaceHeight;
 
     OvrVrapiActivityHandler(final GVRActivity activity, final OvrActivityNative activityNative) throws VrapiNotAvailableException {
         if (null == activity) {
@@ -109,6 +110,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
             nativeUninitializeVrApi(mPtr);
             mVrApiInitialized = false;
         }
+        mCurrentSurfaceWidth = mCurrentSurfaceHeight = 0;
     }
 
     @Override
@@ -125,7 +127,14 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public boolean onBack() {
-        nativeShowConfirmQuit(mPtr);
+        if (null != mSurfaceView) {
+            mSurfaceView.queueEvent(new Runnable() {
+                @Override
+                public void run() {
+                    nativeShowConfirmQuit(mPtr);
+                }
+            });
+        }
         return true;
     }
 
@@ -373,7 +382,11 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
                 Log.v(TAG, "short-circuiting onSurfaceChanged; surface in portrait");
                 return;
             }
+            if (mCurrentSurfaceWidth == width && mCurrentSurfaceHeight == height) {
+                return;
+            }
 
+            mCurrentSurfaceWidth = width; mCurrentSurfaceHeight = height;
             nativeLeaveVrMode(mPtr);
             destroySurfaceForTimeWarp();
 
