@@ -44,7 +44,9 @@ public class GVRCollider extends GVRComponent
 
             @Override
             public void nativeCleanup(long nativePointer) {
+                synchronized (sColliders) {
                 sColliders.remove(nativePointer);
+            }
             }
         });
         sConcatenations = new CleanupHandlerListManager(sCleanup);
@@ -56,7 +58,9 @@ public class GVRCollider extends GVRComponent
      * @see GVRCollider#lookup(long)
      */
     protected void registerNativePointer(long nativePointer) {
+        synchronized (sColliders) {
         sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
+    }
     }
 
     /**
@@ -82,8 +86,10 @@ public class GVRCollider extends GVRComponent
      */
     static GVRCollider lookup(long nativePointer)
     {
+        synchronized (sColliders) {
         WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
         return weakReference == null ? null : weakReference.get();
+    }
     }
     
     /**
