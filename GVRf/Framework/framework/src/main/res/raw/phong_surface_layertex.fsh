@@ -26,13 +26,13 @@ layout(location = 8) in vec2 lightmap_coord;
 #endif
 
 #ifdef HAS_ambientTexture1
-layout(location = 11) in vec2 ambient_coord1;
-layout(set = 0, binding = 11) uniform sampler2D ambientTexture1;
+layout(location = 12) in vec2 ambient_coord1;
+layout(set = 0, binding = 12) uniform sampler2D ambientTexture1;
 #endif
 
 #ifdef HAS_diffuseTexture1
-layout(location = 12) in vec2 diffuse_coord1;
-layout(set = 0, binding = 12) uniform sampler2D diffuseTexture1;
+layout(location = 11) in vec2 diffuse_coord1;
+layout(set = 0, binding = 11) uniform sampler2D diffuseTexture1;
 #endif
 
 #ifdef HAS_specularTexture1

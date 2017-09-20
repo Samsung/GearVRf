@@ -28,23 +28,35 @@
 namespace gvr {
 
 Camera::Camera() :
-        Component(Camera::getComponentType()), background_color_r_(0.0f), background_color_g_(0.0f), background_color_b_(
-                0.0f), background_color_a_(1.0f), post_effect_data_() {
+        Component(Camera::getComponentType()),
+        background_color_r_(0.0f),
+        background_color_g_(0.0f),
+        background_color_b_(0.0f),
+        background_color_a_(1.0f),
+        render_mask_(3),
+        post_effect_data_(NULL)
+{
 }
 
 Camera::~Camera() {
+    if (post_effect_data_)
+    {
+        delete post_effect_data_;
+        post_effect_data_ = NULL;
+    }
 
 }
 
-void Camera::addPostEffect(ShaderData* post_effect) {
-    post_effect_data_.push_back(post_effect);
+void Camera::setPostEffect(RenderData* post_effects)
+{
+    post_effect_data_ = post_effects;
+    if (post_effects)
+    {
+        Mesh* mesh = Renderer::getInstance()->getPostEffectMesh();
+        post_effects->set_mesh(mesh);
+    }
 }
 
-void Camera::removePostEffect(ShaderData* post_effect) {
-    post_effect_data_.erase(
-            std::remove(post_effect_data_.begin(), post_effect_data_.end(),
-                    post_effect), post_effect_data_.end());
-}
 
 const glm::mat4& Camera::getViewMatrix() {
     if (owner_object() != nullptr) {

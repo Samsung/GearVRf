@@ -16,7 +16,6 @@
 package org.gearvrf;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -299,91 +298,6 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Casts a ray into the scene graph, and returns the GVREyePointeeHolders it intersects.
-     *
-     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
-     * {@code [dx, dy, dz]}.
-     *
-     * <p>
-     * The ray origin may be [0, 0, 0] and the direction components should be
-     * normalized from -1 to 1: Note that the y direction runs from -1 at the
-     * bottom to 1 at the top. To construct a picking ray originating at the
-     * user's head and pointing into the scene along the camera lookat vector,
-     * pass in 0, 0, 0 for the origin and 0, 0, -1 for the direction.
-     *
-     * <p>
-     * Note: this function only returns GVREyePointeeHolder colliders
-     * and is deprecated in favor of pickObject which returns all colliders.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @param ox
-     *            The x coordinate of the ray origin.
-     *
-     * @param oy
-     *            The y coordinate of the ray origin.
-     *
-     * @param oz
-     *            The z coordinate of the ray origin.
-     *
-     * @param dx
-     *            The x vector of the ray direction.
-     *
-     * @param dy
-     *            The y vector of the ray direction.
-     *
-     * @param dz
-     *            The z vector of the ray direction.
-     *
-     * @return The {@linkplain GVRCollider colliders}
-     *         penetrated by the ray, sorted by distance from the camera rig.
-     *         Use {@link GVRCollider#getOwnerObject()} to get the
-     *         corresponding scene objects.
-     * @deprecated use pickObjects instead
-     */
-    public static final GVREyePointeeHolder[] pickScene(GVRScene scene, float ox, float oy, float oz, float dx,
-                                                        float dy, float dz) {
-        sFindObjectsLock.lock();
-        try {
-            final long[] ptrs = NativePicker.pickScene(scene.getNative(), ox, oy, oz, dx, dy, dz);
-            final ArrayList<GVREyePointeeHolder> colliders = new ArrayList<GVREyePointeeHolder>(ptrs.length);
-
-            for (int i = 0, length = ptrs.length; i < length; ++i) {
-                final GVRCollider collider = GVRCollider.lookup(ptrs[i]);
-                if ((null != collider) && GVREyePointeeHolder.class.isAssignableFrom(collider.getClass()))
-                {
-                    colliders.add((GVREyePointeeHolder) collider);
-                }
-            }
-            GVREyePointeeHolder[] holders = new GVREyePointeeHolder[colliders.size()];
-            return colliders.toArray(holders);
-        }
-        finally {
-            sFindObjectsLock.unlock();
-        }
-    }
-
-    /**
-     * Tests the {@link GVRSceneObject}s contained within scene against the
-     * camera rig's lookat vector.
-     * <p/>
-     * Note: this function only returns GVREyePointeeHolder colliders
-     * and is deprecated in favor of pickObject which returns all colliders.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @return the array of {@link GVREyePointeeHolder } objects which are penetrated by the
-     *         picking ray. They are sorted by distance from the camera.
-     *
-     * @deprecated use pickObjects instead
-     */
-    public static final GVREyePointeeHolder[] pickScene(GVRScene scene) {
-        return pickScene(scene, 0, 0, 0, 0, 0, -1.0f);
-    }
-
-    /**
      * Tests the {@link GVRSceneObject} against the ray information passed to the function.
      *
      * @param sceneObject
@@ -416,7 +330,7 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Tests the {@link GVRSceneObject} against the main camera rig's lookat vector.
+     * Tests the {@link GVRSceneObject} against the ray information passed to the function.
      *
      * @param sceneObject
      *            The {@link GVRSceneObject} to be tested.
@@ -626,11 +540,24 @@ public class GVRPicker extends GVRBehavior {
         return Arrays.asList(pickObjects(scene, ox, oy, oz, dx, dy, dz));
     }
 
-
     /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
-    static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz,
+    static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz)
+    {
+        GVRCollider collider = GVRCollider.lookup(colliderPointer);
+        if (collider == null)
+        {
+            Log.d(TAG, "makeHit: cannot find collider for %x", colliderPointer);
+            return null;
+        }
+        return new GVRPicker.GVRPickedObject(collider, new float[] { hitx, hity, hitz }, distance);
+    }
+    /**
+     * Internal utility to help JNI add hit objects to the pick list. Specifically for MeshColliders with picking
+     * for UV, Barycentric, and normal coordinates enabled
+     */
+    static GVRPickedObject makeHitMesh(long colliderPointer, float distance, float hitx, float hity, float hitz,
                                    int faceIndex, float barycentricx, float barycentricy, float barycentricz,
                                    float texu, float texv,  float normalx, float normaly, float normalz)
     {
@@ -645,7 +572,7 @@ public class GVRPicker extends GVRBehavior {
                 new float[]{ texu, texv },
                 new float[]{normalx, normaly, normalz});
     }
-
+    
     /**
      * Tests the {@link GVRSceneObject}s contained within scene against the
      * camera rig's lookat vector.
@@ -660,8 +587,7 @@ public class GVRPicker extends GVRBehavior {
      *
      * @return A list of {@link GVRPickedObject}, sorted by distance from the
      *         camera rig. Each {@link GVRPickedObject} contains the object
-     *         within the {@link GVREyePointeeHolder} along with the hit
-     *         location.
+     *         along with the hit location.
      *
      */
     public static final List<GVRPickedObject> findObjects(GVRScene scene) {
@@ -725,15 +651,26 @@ public class GVRPicker extends GVRBehavior {
             this.normalCoords = normalCoords;
         }
 
+        public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance) {
+            hitObject = hitCollider.getOwnerObject();
+            this.hitDistance = hitDistance;
+            this.hitCollider = hitCollider;
+            this.hitLocation = hitLocation;
+            this.faceIndex = -1;
+            this.barycentricCoords = null;
+            this.textureCoords = null;
+            this.normalCoords = null;
+        }
+
         public GVRPickedObject(GVRSceneObject hitObject, float[] hitLocation) {
             this.hitObject = hitObject;
             this.hitLocation = hitLocation;
             this.hitDistance = -1;
             this.hitCollider = null;
             this.faceIndex = -1;
-            this.barycentricCoords = new float[]{-1.0f, -1.0f, -1.0f};
-            this.textureCoords = new float[]{-1.0f, -1.0f};
-            this.normalCoords = new float[]{0.0f, 0.0f, 0.0f};
+            this.barycentricCoords = null;
+            this.textureCoords = null;
+            this.normalCoords = null;
         }
 
         /**
@@ -760,9 +697,7 @@ public class GVRPicker extends GVRBehavior {
         /**
          * The hit location, as an [x, y, z] array.
          *
-         * @return A copy of the {@link GVREyePointeeHolder#getHit()} result:
-         *         changing the result will not change the
-         *         {@link GVRPickedObject picked object's} hit data.
+         * @return A copy of the hit result
          */
         public float[] getHitLocation() {
             return Arrays.copyOf(hitLocation, hitLocation.length);
@@ -773,21 +708,6 @@ public class GVRPicker extends GVRBehavior {
          */
         public float getHitDistance() {
             return hitDistance;
-        }
-
-        /** The x coordinate of the hit location */
-        public float getHitX() {
-            return hitLocation[0];
-        }
-
-        /** The y coordinate of the hit location */
-        public float getHitY() {
-            return hitLocation[1];
-        }
-
-        /** The z coordinate of the hit location */
-        public float getHitZ() {
-            return hitLocation[2];
         }
 
 
@@ -801,62 +721,35 @@ public class GVRPicker extends GVRBehavior {
 
         /**
          * The barycentric coordinates of the hit location on the collided face
-         * All coordinates will be -1.0f if the coordinates haven't been calculated
+         * Returns null if the coordinates haven't been calculated.
          */
         public float[] getBarycentricCoords() {
-            return Arrays.copyOf(barycentricCoords, barycentricCoords.length);
-        }
-
-        /** The x coordinate of the barycentric hit location */
-        public float getBarycentrictX() {
-            return barycentricCoords[0];
-        }
-
-        /** The y coordinate of the barycentric hit location */
-        public float getBarycentricY() {
-            return barycentricCoords[1];
-        }
-
-        /** The z coordinate of the barycentric hit location */
-        public float getBarycentricZ() {
-            return barycentricCoords[2];
+            if(barycentricCoords != null)
+                return Arrays.copyOf(barycentricCoords, barycentricCoords.length);
+            else
+                return null;
         }
 
         /**
          * The UV texture coordinates of the hit location on the mesh
-         * All coordinates will be -1.0f if the coordinates haven't been calculated
+         * Returns null if the coordinates haven't been calculated.
          */
         public float[] getTextureCoords() {
-            return Arrays.copyOf(textureCoords, textureCoords.length);
+            if(textureCoords != null)
+                return Arrays.copyOf(textureCoords, textureCoords.length);
+            else
+                return null;
         }
-
-        /** The u coordinate of the texture hit location */
-        public float getTextureU(){ return textureCoords[0]; }
-
-        /** The v coordinate of the texture hit location */
-        public float getTextureV(){ return textureCoords[1]; }
 
         /**
-         * The normalized surface normal of the hit location on the mesh (in world coordinates)
-         * All coordinates will be 0.0f if the coordinates haven't been calculated
+         * The normalized surface normal of the hit location on the mesh (in local coordinates).
+         * Returns null if the coordinates haven't been calculated.
          */
         public float[] getNormalCoords() {
-            return normalCoords;
-        }
-
-        /** The x coordinate of the surface normal */
-        public float getNormalX() {
-            return normalCoords[0];
-        }
-
-        /** The y coordinate of the surface normal */
-        public float getNormalY() {
-            return normalCoords[1];
-        }
-
-        /** The z coordinate of the surface normal*/
-        public float getNormalZ() {
-            return normalCoords[2];
+            if(normalCoords != null)
+                return Arrays.copyOf(normalCoords, normalCoords.length);
+            else
+                return null;
         }
     }
 

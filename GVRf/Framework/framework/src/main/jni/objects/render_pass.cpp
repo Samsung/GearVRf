@@ -13,22 +13,62 @@
  * limitations under the License.
  */
 
-#include "objects/render_pass.h"
-#include "objects/shader_data.h"
+#include <memory>
+#include "engine/renderer/renderer.h"
+#include "render_pass.h"
 
 namespace gvr {
 
-void RenderPass::set_material(ShaderData* material) {
-    material_ = material;
-    material->add_dirty_flags(dirty_flags_);
-    dirty(NEW_MATERIAL);
+RenderPass::RenderPass() :
+        material_(0), cull_face_(DEFAULT_CULL_FACE), dirty_(true)
+{
+    memset(shaderID_,0,sizeof(shaderID_));
 }
 
-void RenderPass::add_dirty_flag(const std::shared_ptr<u_short>& dirty_flag) {
-    dirty_flags_.insert(dirty_flag);
-    if (nullptr != material_) {
-        material_->add_dirty_flag(dirty_flag);
+
+void RenderPass::set_material(ShaderData* material)
+{
+    if (material != material_)
+    {
+        material_ = material;
+        markDirty();
     }
 }
+
+void RenderPass::set_cull_face(int cull_face)
+{
+    if (cull_face_ != cull_face)
+    {
+        cull_face_ = cull_face;
+        markDirty();
+    }
+}
+
+void RenderPass::set_shader(int shaderid, bool useMultiview)
+{
+    if (shaderID_[useMultiview] != shaderid)
+    {
+        shaderID_[useMultiview] = shaderid;
+        markDirty();
+    }
+}
+
+int RenderPass::isValid(Renderer* renderer, const RenderState& rstate, RenderData* rdata)
+{
+    ShaderData* mtl = material();
+    int shaderID = get_shader(rstate.is_multiview);
+    bool dirty = dirty_;
+
+    if ((shaderID <= 0) || dirty_)
+    {
+        clearDirty();
+    }
+    if (mtl->updateGPU(renderer, rdata) <= 0)
+    {
+        return -1;
+    }
+    return !dirty;
+}
+
 
 }

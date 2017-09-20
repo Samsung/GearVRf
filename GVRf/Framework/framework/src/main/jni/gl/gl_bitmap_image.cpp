@@ -162,4 +162,5 @@ void GLBitmapImage::loadCompressedMipMaps(jbyte *data, int format)
                                data);
     }
 }
+
 }

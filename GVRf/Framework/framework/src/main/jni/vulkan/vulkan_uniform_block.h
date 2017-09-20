@@ -52,6 +52,8 @@ namespace gvr {
      */
     class VulkanUniformBlock : public UniformBlock
     {
+        int getPaddingSize(short &totaSize, int padSize);
+        void uboPadding();
     public:
         VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName);
         VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName, int maxelems);
@@ -70,6 +72,8 @@ namespace gvr {
         }
 
         char * getUniformData() { return mUniformData; }
+        virtual bool setFloatVec(const char *name, const float *val, int n);
+        virtual bool setIntVec(const char *name, const int *val, int n);
     protected:
         void createBuffer(VulkanCore*);
         void updateBuffer(VulkanCore* vk);

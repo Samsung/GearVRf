@@ -84,6 +84,7 @@ public:
     virtual int getId() = 0;
     virtual bool isReady() = 0;
     virtual void texParamsChanged(const TextureParameters&) = 0;
+    virtual bool transparency() { return false; }
 
     bool hasData() const { return mState == HAS_DATA; }
     short getWidth() const { return mWidth; }
@@ -159,8 +160,8 @@ protected:
     std::mutex mUpdateLock;
     short   mType;
     short   mLevels;
-    short   mWidth;
-    short   mHeight;
+    int   mWidth;
+    int   mHeight;
     short   mDepth;
     short   mState;
     int     mImageSize;

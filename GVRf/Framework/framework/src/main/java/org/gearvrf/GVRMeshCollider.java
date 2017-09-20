@@ -32,7 +32,7 @@ package org.gearvrf;
  * If the scene object that owns the mesh collider does not have a mesh and
  * the mesh collider doesn't have one, the scene object will not be pickable.
  */
-public class GVRMeshCollider extends GVREyePointee {
+public class GVRMeshCollider extends GVRCollider {
     private GVRMesh mMesh;
 
     /**
@@ -103,8 +103,8 @@ public class GVRMeshCollider extends GVREyePointee {
     }
 
     /**
-     * Retrieve the mesh that is held by this GVRMeshEyePointee
-     *
+     * Retrieve the mesh that is held by this GVRMeshCollider
+     * 
      * @return the {@link GVRMesh}
      *
      */
@@ -132,5 +132,5 @@ class NativeMeshCollider {
 
     static native long ctorMeshPicking(long mesh, boolean pickCoordinates);
 
-    static native void setMesh(long meshEyePointee, long mesh);
+    static native void setMesh(long meshCollider, long mesh);
 }

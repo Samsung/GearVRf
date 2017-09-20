@@ -141,6 +141,11 @@ public:
         return mTexParams;
     }
 
+    bool transparency() {
+        Image* image = getImage();
+        return image && image->transparency();
+    }
+
 protected:
     JavaVM* mJava;
     jobject mJavaImage;

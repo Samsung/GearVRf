@@ -14,11 +14,12 @@
  */
 
 #include "bitmap_image.h"
+#include "bitmap_transparency.h"
 
 namespace gvr {
 BitmapImage::BitmapImage(int format) :
             Image(Image::BITMAP, format), mIsCompressed(false),
-            mData(NULL), mBitmap(NULL), mJava(NULL)
+            mData(NULL), mBitmap(NULL), mJava(NULL), mHasTransparency(false)
 {
 }
 
@@ -49,7 +50,7 @@ void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
     }
 }
 
-void BitmapImage::update(JNIEnv* env, jobject bitmap)
+void BitmapImage::update(JNIEnv* env, jobject bitmap, bool hasAlpha)
 {
     std::lock_guard<std::mutex> lock(mUpdateLock);
     env->GetJavaVM(&mJava);
@@ -59,6 +60,13 @@ void BitmapImage::update(JNIEnv* env, jobject bitmap)
         mBitmap = static_cast<jbyteArray>(env->NewGlobalRef(bitmap));
         mIsBuffer = false;
         LOGV("Texture: BitmapImage::update(bitmap)");
+        if( hasAlpha ) {
+            if(bitmap_has_transparency(env, bitmap)) {
+                set_transparency(true);
+            } else {
+                // TODO: warning: bitmap has an alpha channel with no translucent/transparent pixels.
+            }
+        }
         signalUpdate();
     }
 }
@@ -93,6 +101,7 @@ void BitmapImage::update(JNIEnv *env, int width, int height, int imageSize,
     mIsCompressed = true;
     mImageSize = imageSize;
     setDataOffsets(dataOffsets, levels);
+    set_transparency(hasAlpha(mFormat));
     if (data != NULL)
     {
         mData = static_cast<jbyteArray>(env->NewGlobalRef(data));
@@ -115,6 +124,48 @@ void BitmapImage::clearData(JNIEnv* env)
     }
     mIsCompressed = false;
 }
+
+bool BitmapImage::hasAlpha(int format) {
+    switch(format) {
+        case GL_COMPRESSED_RGBA_ASTC_4x4_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_5x4_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_5x5_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_6x5_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_6x6_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_8x5_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_8x6_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_8x8_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_10x5_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_10x6_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_10x8_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_10x10_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_12x10_KHR:
+        case GL_COMPRESSED_RGBA_ASTC_12x12_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+        case GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+        case GL_COMPRESSED_RG11_EAC:
+        case GL_COMPRESSED_SIGNED_RG11_EAC:
+        case GL_COMPRESSED_RGBA8_ETC2_EAC:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+            return true;
+        default:
+            return false;
+    }
+}
+
 
 }
 

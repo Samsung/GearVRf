@@ -296,15 +296,6 @@ namespace gvr
         }
     }
 
-    void Mesh::add_dirty_flag(const std::shared_ptr<u_short> &dirty_flag)
-    {
-        dirty_flags_.insert(dirty_flag);
-    }
-
-    void Mesh::dirty(DIRTY_BITS bit)
-    {
-        dirtyImpl(dirty_flags_, bit);
-    }
 }
 
 

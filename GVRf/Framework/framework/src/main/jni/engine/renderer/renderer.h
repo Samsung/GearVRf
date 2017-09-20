@@ -52,6 +52,7 @@ class VertexBuffer;
 class IndexBuffer;
 class UniformBlock;
 class Image;
+class RenderPass;
 class Texture;
 extern uint8_t *oculusTexData;
 /*
@@ -86,6 +87,8 @@ struct RenderState {
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
     bool                    shadow_map;
+    bool                    is_multiview;
+    Camera*                 camera;
 };
 
 class Renderer {
@@ -126,7 +129,7 @@ public:
      virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
      virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                 int jcolor_format, int jdepth_format, bool resolve_depth,
-                                                const TextureParameters* texture_parameters) = 0;
+                                                const TextureParameters* texture_parameters, int number_views) = 0;
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) = 0;
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
@@ -136,6 +139,8 @@ public:
      virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount) = 0;
      void updateTransforms(RenderState& rstate, UniformBlock* block, Transform* model);
      virtual void initializeStats();
+     virtual void cullFromCamera(Scene *scene, Camera* camera,
+                ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector,bool);
      virtual void set_face_culling(int cull_face) = 0;
      virtual void renderRenderDataVector(RenderState &rstate);
      virtual void cull(Scene *scene, Camera *camera,
@@ -164,18 +169,17 @@ public:
             RenderTexture* render_texture, ShaderManager* shader_manager,
             RenderTexture* post_effect_render_texture_a,
             RenderTexture* post_effect_render_texture_b) = 0;
-    virtual void cullFromCamera(Scene *scene, Camera *camera,
-                                ShaderManager* shader_manager);
+    virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
+                                    RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b)=0;
     virtual void restoreRenderStates(RenderData* render_data) = 0;
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
     virtual Texture* createSharedTexture(int id) = 0;
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int) = 0;
-    virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
-                        ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
-                        RenderTexture* post_effect_render_texture_a,
-                        RenderTexture* post_effect_render_texture_b) = 0;
+
     virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager) = 0;
-    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects) = 0;
+    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) = 0;
+    virtual Mesh* getPostEffectMesh() = 0;
+    void addRenderData(RenderData *render_data, RenderState& rstate, std::vector<RenderData*>& renderList);
 private:
     static bool isVulkan_;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
@@ -197,27 +201,28 @@ protected:
             delete batch_manager;
         batch_manager = NULL;
     }
-    virtual void state_sort();
+
     virtual void renderMesh(RenderState& rstate, RenderData* render_data) = 0;
     virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader) = 0;
-    void addRenderData(RenderData *render_data, Scene* scene);
-    virtual bool occlusion_cull_init(Scene* scene, std::vector<SceneObject*>& scene_objects);
 
-    virtual void renderPostEffectData(RenderState& rstate,
-            Texture* render_texture, ShaderData* post_effect_data);
-    virtual RenderData* post_effect_render_data() = 0;
+    virtual bool occlusion_cull_init(RenderState& , std::vector<SceneObject*>& scene_objects,  std::vector<RenderData*>* render_data_vector);
+
+    virtual void renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass);
 
     std::vector<RenderData*> render_data_vector;
     int numberDrawCalls;
     int numberTriangles;
     bool useStencilBuffer_ = false;
-    RenderData* post_effect_render_data_;
-
+    Mesh* post_effect_mesh_;
 public:
+    virtual void state_sort(std::vector<RenderData*>* render_data_vector) ;
     //to be used only on the rendering thread
     const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
     int numLights;
     void setUseStencilBuffer(bool enable) { useStencilBuffer_ = enable; }
+    bool useStencilBuffer(){
+        return  useStencilBuffer_;
+    }
 };
 extern Renderer* gRenderer;
 }

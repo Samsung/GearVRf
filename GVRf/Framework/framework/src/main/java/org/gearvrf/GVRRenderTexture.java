@@ -50,12 +50,22 @@ public class GVRRenderTexture extends GVRTexture {
      */
     public GVRRenderTexture(GVRContext gvrContext, int width, int height, int sampleCount)
     {
+        this(gvrContext,width,height,sampleCount,1);
+    }
+
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height, int sampleCount, int number_views)
+    {
         super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
-                                                       sampleCount));
+                sampleCount, number_views));
         mWidth = width;
         mHeight = height;
     }
 
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height, long ptr){
+        super(gvrContext,ptr);
+        mWidth = width;
+        mHeight= height;
+    }
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size,
      * with MSAA enabled at the specified sample count, and with specified color
@@ -111,7 +121,13 @@ public class GVRRenderTexture extends GVRTexture {
         return mHeight;
     }
 
+    void beginRendering() {
+        NativeRenderTexture.beginRendering(getNative());
+    }
 
+    void endRendering() {
+        NativeRenderTexture.endRendering(getNative());
+    }
     /**
      * Return the render texture.
      *
@@ -142,7 +158,7 @@ public class GVRRenderTexture extends GVRTexture {
 class NativeRenderTexture {
     static native long ctor(int width, int height);
 
-    static native long ctorMSAA(int width, int height, int sampleCount);
+    static native long ctorMSAA(int width, int height, int sampleCount, int number_views);
 
     static native long ctorWithParameters(int width, int height,
                                           int sampleCount, int colorFormat, int depthFormat,
@@ -151,6 +167,9 @@ class NativeRenderTexture {
     static native long ctorArray(int width, int height, int samples, int layers);
 
 
+    static native void beginRendering(long ptr);
+
+    static native void endRendering(long ptr);
     static native boolean readRenderResult(long ptr, int[] readbackBuffer);
 
     static native void bind(long ptr);

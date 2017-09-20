@@ -141,54 +141,54 @@ namespace gvr
     {
         int index = 0;
         forEach([this, index](const char* name, const char* type, int size) mutable
-        {
-            // check if it is array
-            int array_size = 1;
-            const char* p = name;
-            const char* bracket = strchr(name, '[');
-            size_t namelen = strlen(name);
-
-            if (name == NULL)
-            {
-                LOGE("UniformBlock: SYNTAX ERROR: expecting uniform name\n");
-                return;
-            }
-            if (bracket)                // parse array size in brackets
-            {
-                namelen = bracket - name;
-                array_size = 0;
-                p += (bracket - name) + 1;
-                while (std::isdigit(*p))
                 {
-                    int v = *p - '0';
-                    array_size = array_size * 10 + v;
-                    ++p;
-                }
-            }
-            DataEntry entry;
-            short byteSize = calcSize(type);
+                    // check if it is array
+                    int array_size = 1;
+                    const char* p = name;
+                    const char* bracket = strchr(name, '[');
+                    size_t namelen = strlen(name);
 
-            entry.Type = makeShaderType(type, byteSize);
-            byteSize *= array_size;     // multiply by number of array elements
-            entry.IsSet = false;
-            entry.Count = array_size;
-            entry.NotUsed = false;
-            entry.IsInt = type[0] == 'i';
-            entry.IsMatrix = type[0] == 'm';
-            entry.Index = index++;
-            entry.Offset = mTotalSize;
-            entry.Size = byteSize;
+                    if (name == NULL)
+                    {
+                        LOGE("UniformBlock: SYNTAX ERROR: expecting uniform name\n");
+                        return;
+                    }
+                    if (bracket)                // parse array size in brackets
+                    {
+                        namelen = bracket - name;
+                        array_size = 0;
+                        p += (bracket - name) + 1;
+                        while (std::isdigit(*p))
+                        {
+                            int v = *p - '0';
+                            array_size = array_size * 10 + v;
+                            ++p;
+                        }
+                    }
+                    DataEntry entry;
+                    short byteSize = calcSize(type);
 
-            if (*name == '!')           // ! indicates entry not used by shader
-            {
-                entry.NotUsed = true;
-                ++name;
-            }
-            addName(name, namelen, entry);
-            mLayout.push_back(entry);
-            LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
-            mTotalSize += entry.Size;
-        });
+                    entry.Type = makeShaderType(type, byteSize);
+                    byteSize *= array_size;     // multiply by number of array elements
+                    entry.IsSet = false;
+                    entry.Count = array_size;
+                    entry.NotUsed = false;
+                    entry.IsInt = type[0] == 'i';
+                    entry.IsMatrix = type[0] == 'm';
+                    entry.Index = index++;
+                    entry.Offset = mTotalSize;
+                    entry.Size = byteSize;
+
+                    if (*name == '!')           // ! indicates entry not used by shader
+                    {
+                        entry.NotUsed = true;
+                        ++name;
+                    }
+                    addName(name, namelen, entry);
+                    mLayout.push_back(entry);
+                    LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
+                    mTotalSize += entry.Size;
+                });
     }
 
     std::string DataDescriptor::makeShaderType(const char* type, int byteSize)

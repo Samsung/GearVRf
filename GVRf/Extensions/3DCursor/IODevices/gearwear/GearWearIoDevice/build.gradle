@@ -42,7 +42,15 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile(name: 'framework-debug', ext: 'aar')
+    if(rootProject.useLocalDependencies) {
+        if (findProject(':framework')) {
+            compile project(':framework')
+        } else {
+            compile(name: 'framework-debug', ext: 'aar')
+        }
+    } else {
+        compile "org.gearvrf:framework-debug:$gearvrfVersion"
+    }
     compile (project(':3DCursorLibrary')) {
         transitive = true
     }

@@ -61,8 +61,11 @@ public:
 
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
-    virtual bool readRenderResult(unsigned int *readback_buffer, long capacity) = 0;
-
+    virtual bool readRenderResult(uint8_t*readback_buffer, long capacity) = 0;
+    // Copy data in pixel buffer to client memory. This function is synchronous. When
+    // it returns, the pixels have been copied to PBO and then to the client memory.
+    virtual bool readRenderResult(uint8_t *readback_buffer) = 0;
+    virtual void setLayerIndex(int layer_index) = 0;
     void useStencil(bool useFlag) { mUseStencil = useFlag; }
     void setBackgroundColor(float r, float g, float b, float a)
     {

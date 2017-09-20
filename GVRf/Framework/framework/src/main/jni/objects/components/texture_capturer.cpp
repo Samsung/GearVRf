@@ -149,6 +149,8 @@ void TextureCapturer::endCapture() {
 void TextureCapturer::render(RenderState* rstate, RenderData* render_data) {
 
     ShaderData* material = render_data->pass(0)->material();
+    Renderer* renderer = Renderer::getInstance();
+
     float opacity = 1.0f;
 
     if (material == NULL) {
@@ -158,13 +160,13 @@ void TextureCapturer::render(RenderState* rstate, RenderData* render_data) {
 
     material->getFloat("opacity", opacity);
     mMaterial->setFloat("opacity", opacity);
-    int id = render_data->get_shader();
-    if (id > 0)
+    if (render_data->isValid(renderer, *rstate))
     {
-        Shader* shader = mShaderManager->getShader(id);
-        if (shader != NULL)
+        int id = render_data->get_shader(rstate->is_multiview);
+        if (id > 0)
         {
-            Renderer::getInstance()->renderWithShader(*rstate, shader, render_data, mMaterial,0);
+            Shader* shader = mShaderManager->getShader(id);
+            renderer->renderWithShader(*rstate, shader, render_data, mMaterial, 0);
         }
     }
 }

@@ -39,7 +39,7 @@ namespace gvr {
         activity_ = env.NewGlobalRef(activity);
         activityClass_ = GetGlobalClassReference(env, activityClassName);
 
-        onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(I)V");
+        onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(IIZ)V");
         updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
 
         mainThreadId_ = gettid();
@@ -107,7 +107,16 @@ namespace gvr {
                                                          mMultisamplesConfiguration, mColorTextureFormatConfiguration,
                                                          mResolveDepthConfiguration, mDepthTextureFormatConfiguration);
     }
+RenderTexture*  GVRActivity::createRenderTexture(int eye, int index){
+    // for multiview, eye index would be 2
+    eye = eye % 2;
+    FrameBufferObject fbo = frameBuffer_[eye];
 
+    if(use_multiview)
+        return  new GLMultiviewRenderTexture(fbo.getWidth(),fbo.getHeight(),mMultisamplesConfiguration,2, fbo.getRenderBufferFBOId(index), fbo.getColorTexId(index));
+
+    return new GLNonMultiviewRenderTexture(fbo.getWidth(),fbo.getHeight(),mMultisamplesConfiguration,fbo.getRenderBufferFBOId(index), fbo.getColorTexId(index));
+}
     void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         int maxSamples = MSAA::getMaxSampleCount();
         LOGV("GVRActivityT::onSurfaceChanged");
@@ -208,6 +217,8 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
             const ovrQuatf& orientation = updatedTracking.HeadPose.Pose.Orientation;
             const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
             const glm::quat quat = glm::conjugate(glm::inverse(tmp));
+
+            cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
             cameraRig_->setRotation(quat);
         } else if (nullptr != cameraRig_) {
             cameraRig_->updateRotation();
@@ -221,14 +232,11 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
 
         // Render the eye images.
         for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
-
-            beginRenderingEye(eye);
-
-        oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye);
             int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-            const GLuint colorTexture = vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, textureSwapChainIndex);
+            beginRenderingEye(eye);
+            oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye, textureSwapChainIndex, use_multiview);
             if(gRenderer->isVulkanInstance()){
-                glBindTexture(GL_TEXTURE_2D,colorTexture);
+                glBindTexture(GL_TEXTURE_2D,vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, textureSwapChainIndex));
                 glTexSubImage2D(   GL_TEXTURE_2D,
                                    0,
                                    0,
@@ -256,6 +264,8 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     static const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
 
     void GVRActivity::beginRenderingEye(const int eye) {
+
+       // no n
         frameBuffer_[eye].bind();
 
         GL(glViewport(x, y, width, height));

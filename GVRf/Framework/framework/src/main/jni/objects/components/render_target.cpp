@@ -16,7 +16,6 @@
 #include "render_target.h"
 #include "component.inl"
 #include "objects/textures/render_texture.h"
-
 namespace gvr {
 
 /**
@@ -32,17 +31,35 @@ namespace gvr {
  *
  * @param texture RenderTexture to render to
  */
-RenderTarget::RenderTarget(RenderTexture* tex)
+RenderTarget::RenderTarget(RenderTexture* tex, bool is_multiview)
 : Component(RenderTarget::getComponentType()),
-  mRenderTexture(tex),
-  mCamera(nullptr)
+  mRenderTexture(tex),mRenderDataVector(std::make_shared< std::vector<RenderData*>>())
+  //mCamera(nullptr)
 {
-    mRenderState.viewportY = 0;
-    mRenderState.viewportX = 0;
+ //   mRenderState.viewportY = 0;
+//    mRenderState.viewportX = 0;
+    mRenderState.shadow_map = false;
+    LOGE("Roshan constructor %d", is_multiview);
+    mRenderState.material_override = NULL;
+    mRenderState.is_multiview = is_multiview;
+
+}
+RenderTarget::RenderTarget(Scene* scene)
+: Component(RenderTarget::getComponentType()), mRenderTexture(nullptr),mRenderDataVector(std::make_shared< std::vector<RenderData*>>()){
     mRenderState.shadow_map = false;
     mRenderState.material_override = NULL;
-}
+    mRenderState.is_multiview = false;
+    mRenderState.scene = scene;
 
+}
+RenderTarget::RenderTarget(RenderTexture* tex, const RenderTarget* source)
+        : Component(RenderTarget::getComponentType()),
+          mRenderTexture(tex), mRenderDataVector(source->mRenderDataVector)
+{
+    mRenderState.shadow_map = false;
+    mRenderState.material_override = NULL;
+    mRenderState.is_multiview = false;
+}
 /**
  * Constructs an empty render target without a render texture.
  * This component will not render anything until a RenderTexture
@@ -50,13 +67,20 @@ RenderTarget::RenderTarget(RenderTexture* tex)
  */
 RenderTarget::RenderTarget()
 :   Component(RenderTarget::getComponentType()),
-    mRenderTexture(nullptr),
-    mCamera(nullptr)
+    mRenderTexture(nullptr), mRenderDataVector(std::make_shared< std::vector<RenderData*>>())
+   // mCamera(nullptr)
 {
-    mRenderState.viewportY = 0;
-    mRenderState.viewportX = 0;
+    //mRenderState.viewportY = 0;
+ //   mRenderState.viewportX = 0;
+    mRenderState.is_multiview = false;
     mRenderState.shadow_map = false;
     mRenderState.material_override = NULL;
+}
+ void RenderTarget::cullFromCamera(Scene* scene, Camera* camera, Renderer* renderer, ShaderManager* shader_manager){
+    if(camera == nullptr)
+        LOGE("camera is NULL");
+     renderer->cullFromCamera(scene, camera,shader_manager, mRenderDataVector.get(),mRenderState.is_multiview);
+     renderer->state_sort(mRenderDataVector.get());
 }
 
 
@@ -84,19 +108,20 @@ void RenderTarget::setTexture(RenderTexture* texture)
  * You should not call this function if there is
  * no RenderTexture.
  */
-void  RenderTarget::beginRendering(Renderer* renderer)
+void  RenderTarget::beginRendering(Renderer* renderer )
 {
-    mRenderState.uniforms.u_proj = mCamera->getProjectionMatrix();
-    mRenderState.uniforms.u_view = mCamera->getViewMatrix();
-    mRenderState.render_mask = mCamera->render_mask();
-    mRenderState.uniforms.u_right = mRenderState.render_mask & RenderData::RenderMaskBit::Right;
+ //   mRenderState.render_mask = mRenderState.camera->render_mask();
+ //   mRenderState.uniforms.u_right = mRenderState.render_mask & RenderData::RenderMaskBit::Right;
+ //   mRenderState.uniforms.u_proj = mRenderState.camera->getProjectionMatrix();
+//    mRenderState.uniforms.u_view = mRenderState.camera->getViewMatrix();
+    mRenderTexture->useStencil(renderer->useStencilBuffer());
     mRenderState.viewportWidth = mRenderTexture->width();
     mRenderState.viewportHeight = mRenderTexture->height();
-    if (-1 != mCamera->background_color_r())
+    if (-1 != mRenderState.camera->background_color_r())
     {
-        mRenderTexture->setBackgroundColor(mCamera->background_color_r(),
-                                           mCamera->background_color_g(),
-                                           mCamera->background_color_b(), mCamera->background_color_a());
+        mRenderTexture->setBackgroundColor(mRenderState.camera->background_color_r(),
+                                           mRenderState.camera->background_color_g(),
+                                           mRenderState.camera->background_color_b(), mRenderState.camera->background_color_a());
     }
     mRenderTexture->beginRendering(renderer);
     checkGLError("RenderTarget::beginRendering");

@@ -77,7 +77,6 @@ public class GVRShaderData extends GVRHybridObject
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
         shader.setMaterialDefaults(this);
-        setNativeShader(mShaderId.getNativeShader(shaderManager, this));
     }
 
     protected GVRShaderData(GVRContext gvrContext, GVRShaderId shaderId, long constructor)
@@ -89,17 +88,6 @@ public class GVRShaderData extends GVRHybridObject
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
         shader.setMaterialDefaults(this);
-        setNativeShader(mShaderId.getNativeShader(shaderManager, this));
-    }
-
-    void setNativeShader(int shader)
-    {
-        NativeShaderData.setNativeShader(getNative(), shader);
-    }
-
-    int getNativeShader()
-    {
-        return getShaderType().getNativeShader(getGVRContext().getMaterialShaderManager(), this);
     }
 
     /**
@@ -298,6 +286,18 @@ public class GVRShaderData extends GVRHybridObject
                                  z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 
+    public void setFloatArray(String key, float val[])
+    {
+        checkKeyIsUniform(key);
+        NativeShaderData.setFloatVec(getNative(), key, val, val.length);
+    }
+
+    public void setIntArray(String key, int val[])
+    {
+        checkKeyIsUniform(key);
+        NativeShaderData.setIntVec(getNative(), key, val, val.length);
+    }
+
     private void checkKeyIsTexture(String key)
     {
         checkStringNotNullOrEmpty("key", key);
@@ -381,9 +381,6 @@ public class GVRShaderData extends GVRHybridObject
 class NativeShaderData {
     static native long ctor(String uniformDesc, String textureDesc);
     static native void useGpuBuffer(long shaderData, boolean flag);
-    static native int getNativeShader(long shaderData);
-
-    static native void setNativeShader(long shaderData, int nativeShader);
 
     static native boolean hasUniform(long shaderData, String key);
 
@@ -400,6 +397,8 @@ class NativeShaderData {
     static native void setInt(long shaderData, String key, int value);
 
     static native float[] getFloatVec(long shaderData, String key);
+    static native void setFloatVec(long shaderData, String key, float[] val, int n);
+    static native void setIntVec(long shaderData, String key, int[] val, int n);
 
     static native int[] getIntVec(long shaderData, String key);
 

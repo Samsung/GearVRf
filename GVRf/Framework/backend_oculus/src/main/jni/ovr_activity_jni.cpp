@@ -26,6 +26,10 @@ namespace gvr {
         return reinterpret_cast<long>(gvrActivity);
     }
 
+    JNIEXPORT long JNICALL Java_org_gearvrf_GVRRenderBundle_getRenderTexture(JNIEnv* jni, jclass clazz, jlong jactivity , jint eye, jint index){
+        GVRActivity* gvrActivity = reinterpret_cast<GVRActivity*>(jactivity);
+        return reinterpret_cast<long>(gvrActivity->createRenderTexture(eye, index));
+    }
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDestroy(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         delete activity;
@@ -72,41 +76,34 @@ namespace gvr {
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jobject jViewManager,
                                                                     jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-    activity->onDrawFrame(jViewManager);
+        activity->onDrawFrame(jViewManager);
     }
-
-    JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_nativeInitializeGearController
-            (JNIEnv* jni, jclass clazz, jlong appPtr, jlong controllerPtr) {
-        GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-        GearController *gearController = reinterpret_cast<GearController*>(controllerPtr);
-        activity->setGearController(gearController);
-    }
-
+    
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeShowConfirmQuit(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         activity->showConfirmQuit();
     }
-
+    
     JNIEXPORT jint JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeInitializeVrApi(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         return activity->initializeVrApi();
     }
-
+    
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeUninitializeVrApi(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         activity->uninitializeVrApi();
     }
-
+    
     JNIEXPORT jboolean JNICALL Java_org_gearvrf_OvrConfigurationManager_nativeIsHmtConnected(JNIEnv* jni, jclass clazz, jlong appPtr) {
         const GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         return activity->isHmtConnected();
     }
-
+    
     JNIEXPORT jboolean JNICALL Java_org_gearvrf_GVRConfigurationManager_nativeUsingMultiview(JNIEnv* jni, jclass clazz, jlong appPtr) {
         const GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         return activity->usingMultiview();
     }
-
+    
     } //extern "C" {
-
+    
 } //namespace gvr

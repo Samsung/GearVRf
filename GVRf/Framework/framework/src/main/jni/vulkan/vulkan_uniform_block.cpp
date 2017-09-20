@@ -23,12 +23,14 @@ namespace gvr {
             : UniformBlock(descriptor, bindingPoint, blockName), vk_descriptor(nullptr)
     {
         vk_descriptor = new VulkanDescriptor();
+        uboPadding();
     }
 
     VulkanUniformBlock::VulkanUniformBlock(const char* descriptor, int bindingPoint, const char* blockName, int maxelems)
             : UniformBlock(descriptor, bindingPoint, blockName, maxelems), vk_descriptor(nullptr)
     {
         vk_descriptor = new VulkanDescriptor();
+        uboPadding();
     }
 
     void VulkanUniformBlock::createDescriptorWriteInfo(int binding_index, int stageFlags, bool sampler) {
@@ -66,26 +68,26 @@ namespace gvr {
     std::string VulkanUniformBlock::makeShaderLayout()
     {
         std::ostringstream stream;
-        if (mUseBuffer)
-        {
-            stream << "layout (std140, set = 0, binding = " << getBindingPoint() <<" ) uniform " << getBlockName() << " {" << std::endl;
-            DataDescriptor::forEachEntry([&stream](const DataEntry& entry) mutable
-                                         {
-                                             if(entry.IsSet)
-                                                 stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
-                                         });
+        if (mUseBuffer) {
+            stream << "layout (std140, set = 0, binding = " << getBindingPoint() << " ) uniform "
+                   << getBlockName() << " {" << std::endl;
         }
-        else
-        {
-            stream << "layout (std140, push_constant) uniform PushConstants {" << std::endl;
-            DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
-                                         {
-                                             if (entry.IsSet)
-                                             {
-                                                 stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
-                                             }
-                                         });
+        else {
+                stream << "layout (std140, push_constant) uniform PushConstants {" << std::endl;
         }
+
+        DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
+        {
+            int nelems = entry.Count;
+            if (entry.IsSet)
+            {
+                if(nelems > 1)
+                    stream << " layout(offset=" << entry.Offset << ") " << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
+                else
+                    stream << " layout(offset=" << entry.Offset << ") " << entry.Type << " " << entry.Name << ";" << std::endl;
+            }
+        });
+
         stream << "};" << std::endl;
         return stream.str();
     }
@@ -146,4 +148,105 @@ namespace gvr {
         buffer_init_ = true;
     }
 
+    bool VulkanUniformBlock::setFloatVec(const char* name, const float *val, int n) {
+        DataEntry *u = find(name);
+
+        if (u == NULL)
+            return NULL;
+
+        int bytesize = n * sizeof(float);
+        char *data = getData(name, bytesize);
+
+        // For array of vec3 needs padding for every entry in UBO
+        if ((u->Type[u->Type.length() - 1] == '3') &&
+            (u->Count > 1))
+        {
+            float* dest = (float*) data;
+            for (int i = 0; i < n / 3; i++)
+            {
+                *dest++ = *val++;
+                *dest++ = *val++;
+                *dest++ = *val++;
+                ++dest;
+            }
+            markDirty();
+            return true;
+        }
+
+        if (data != NULL)
+        {
+            memcpy(data, val, bytesize);
+            markDirty();
+            return true;
+        }
+        return false;
+    }
+
+    bool VulkanUniformBlock::setIntVec(const char* name, const int *val, int n) {
+        DataEntry *u = find(name);
+
+        if (u == NULL)
+            return NULL;
+
+        int bytesize = n * sizeof(float);
+        char *data = getData(name, bytesize);
+
+        // For array of vec3 needs padding for every entry in UBO
+        if ((u->Type[u->Type.length() - 1] == '3') &&
+            (u->Count > 1))
+        {
+            int* dest = (int*) data;
+            for (int i = 0; i < n / 3; i++)
+            {
+                *dest++ = *val++;
+                *dest++ = *val++;
+                *dest++ = *val++;
+                ++dest;
+            }
+            markDirty();
+            return true;
+        }
+
+        if (data != NULL)
+        {
+            memcpy(data, val, bytesize);
+            markDirty();
+            return true;
+        }
+        return false;
+    }
+
+    int VulkanUniformBlock::getPaddingSize(short &totaSize, int padSize){
+        int mod = totaSize % padSize;
+        int requiredSize = 0;
+        if(mod != 0) {
+            requiredSize = padSize - mod;
+        }
+        return requiredSize;
+    }
+
+    void VulkanUniformBlock::uboPadding(){
+        for(int i = 0; i < mLayout.size(); i++) {
+            int padType = (mLayout[i].Size / mLayout[i].Count) / 4;
+
+            // For Scalar arrays the base allignemnt should always be vec4
+            if (mLayout[i].Count > 1 && padType < 3)
+                padType = 4;
+
+            int newOffset = 0;
+            switch (padType) {
+                case 2:
+                    newOffset = getPaddingSize(mLayout[i].Offset, 8);
+                    break;
+
+                case 3:
+                case 4:
+                    newOffset += getPaddingSize(mLayout[i].Offset, 16);
+                    break;
+            }
+
+            mLayout[i].Offset += newOffset;
+            mTotalSize += newOffset;
+        }
+    }
 }

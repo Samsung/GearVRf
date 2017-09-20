@@ -79,7 +79,7 @@ public:
         return index_count_;
     }
 private:
-    bool updateMesh(Mesh* render_mesh);
+    void updateMesh(Mesh* render_mesh);
     void clearData();
     bool isRenderModified();
     bool batch_dirty_;

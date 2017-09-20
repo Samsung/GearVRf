@@ -3,6 +3,7 @@
 #include "vulkan/vk_imagebase.h"
 #include "vulkan/vulkan.h"
 #include <unordered_map>
+
 namespace gvr {
 
 class VKFramebuffer {
@@ -14,10 +15,8 @@ class VKFramebuffer {
     VkFramebuffer mFramebuffer;
 public:
 
-    ~VKFramebuffer() {
-        delete mAttachments[COLOR_IMAGE];
-        delete mAttachments[DEPTH_IMAGE];
-    }
+    ~VKFramebuffer();
+
     void setImage(ImageType type, vkImageBase* image){
         mAttachments[type] = image;
     }

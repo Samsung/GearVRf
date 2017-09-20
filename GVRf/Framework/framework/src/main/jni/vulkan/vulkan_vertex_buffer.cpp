@@ -134,6 +134,10 @@ namespace gvr {
         vkQueueWaitIdle(vulkanCore->getVkQueue());
         vkFreeCommandBuffers(device, vulkanCore->getTransientCmdPool(), 1, &trnCmdBuf);
 
+        // Free up the staging buffer
+        vkDestroyBuffer(device, buf_staging_vert, nullptr);
+        vkFreeMemory(device, mem_staging_vert, nullptr);
+
         // The vertices need to be defined so that the pipeline understands how the
         // data is laid out. This is done by providing a VkPipelineVertexInputStateCreateInfo
         // structure with the correct information.

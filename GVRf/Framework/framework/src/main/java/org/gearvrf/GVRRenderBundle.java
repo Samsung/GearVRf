@@ -14,38 +14,100 @@
  */
 package org.gearvrf;
 
+import android.transition.Scene;
+
 import org.gearvrf.utility.VrAppSettings;
 
 /** A container for various services and pieces of data required for rendering. */
 final class GVRRenderBundle implements IRenderBundle {
-    private final GVRContext mGVRContext;
-    private final GVRMaterialShaderManager mMaterialShaderManager;
-    private final GVRRenderTexture mPostEffectRenderTextureA;
-    private final GVRRenderTexture mPostEffectRenderTextureB;
+    private  GVRContext mGVRContext;
+    private  GVRMaterialShaderManager mMaterialShaderManager;
+    private  GVRRenderTexture mPostEffectRenderTextureA = null;
+    private  GVRRenderTexture mPostEffectRenderTextureB = null;
+    private  GVRRenderTarget mEyeCaptureRenderTarget = null;
+
+    private int  mSampleCount;
+    private int mWidth, mHeight;
+    private GVRRenderTarget[] mLeftEyeRenderTarget = new GVRRenderTarget[3];
+    private GVRRenderTarget [] mRightEyeRenderTarget = new GVRRenderTarget[3];
+    private GVRRenderTarget [] mMultiviewRenderTarget = new GVRRenderTarget[3];
+
+
+    private GVRRenderTexture mEyeCapturePostEffectRenderTextureA = null;
+    private GVRRenderTexture mEyeCapturePostEffectRenderTextureB = null;
 
     GVRRenderBundle(GVRContext gvrContext, final int width, final int height) {
         mGVRContext = gvrContext;
         mMaterialShaderManager = new GVRMaterialShaderManager(gvrContext);
 
         final VrAppSettings appSettings = mGVRContext.getActivity().getAppSettings();
-        int sampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
+        mSampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
                 : appSettings.getEyeBufferParams().getMultiSamples();
-        if (sampleCount > 1) {
+        if (mSampleCount > 1) {
             int maxSampleCount = GVRMSAA.getMaxSampleCount();
-            if (sampleCount > maxSampleCount) {
-                sampleCount = maxSampleCount;
+            if (mSampleCount > maxSampleCount) {
+                mSampleCount = maxSampleCount;
             }
         }
-
-        if (sampleCount <= 1) {
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height);
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height);
-        } else {
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, width, height, sampleCount);
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, width, height, sampleCount);
-        }
+        mWidth = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionWidth();
+        mHeight = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionHeight();
     }
 
+
+    public GVRRenderTarget getEyeCaptureRenderTarget() {
+        if(mEyeCaptureRenderTarget == null){
+            mEyeCaptureRenderTarget  = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight, mSampleCount), mGVRContext.getMainScene());
+            mEyeCaptureRenderTarget.setCamera(mGVRContext.getMainScene().getMainCameraRig().getCenterCamera());
+        }
+        return  mEyeCaptureRenderTarget;
+    }
+
+    public GVRRenderTarget getLeftEyeRenderTarget(int index){
+            if(mLeftEyeRenderTarget[index] == null){
+                mLeftEyeRenderTarget[index] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight,
+                        getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.LEFT.ordinal(), index)), mGVRContext.getMainScene());
+                mLeftEyeRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getLeftCamera());
+            }
+            return mLeftEyeRenderTarget[index];
+    }
+
+    public GVRRenderTarget getRightEyeRenderTarget(int index){
+        if(mRightEyeRenderTarget[index]== null) {
+            mRightEyeRenderTarget[index] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight,
+                    getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.RIGHT.ordinal(), index)), mGVRContext.getMainScene(), mLeftEyeRenderTarget[index]);
+            mRightEyeRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getRightCamera());
+        }
+        return mRightEyeRenderTarget[index];
+    }
+
+    public GVRRenderTarget getMultiviewRenderTarget(int index){
+        if(mMultiviewRenderTarget[index]== null) {
+            mMultiviewRenderTarget[index] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext,  mWidth, mHeight,
+                    getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.MULTIVIEW.ordinal(), index)), mGVRContext.getMainScene(), true);
+            mMultiviewRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getLeftCamera());
+        }
+        return mMultiviewRenderTarget[index];
+    }
+    public GVRRenderTarget getRenderTarget(GVRViewManager.EYE eye, int index){
+        if(eye == GVRViewManager.EYE.LEFT)
+            return getLeftEyeRenderTarget(index);
+        if(eye == GVRViewManager.EYE.RIGHT)
+            return getRightEyeRenderTarget(index);
+
+        return getMultiviewRenderTarget(index);
+    }
+    public GVRRenderTexture getEyeCapturePostEffectRenderTextureA(){
+        if(mEyeCapturePostEffectRenderTextureA == null)
+            mEyeCapturePostEffectRenderTextureA  = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, 1);
+        return mEyeCapturePostEffectRenderTextureA;
+    }
+
+    public GVRRenderTexture getEyeCapturePostEffectRenderTextureB(){
+        if(mEyeCapturePostEffectRenderTextureB == null)
+            mEyeCapturePostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, 1);
+
+        return mEyeCapturePostEffectRenderTextureB;
+    }
     public GVRMaterialShaderManager getMaterialShaderManager() {
         return mMaterialShaderManager;
     }
@@ -55,10 +117,16 @@ final class GVRRenderBundle implements IRenderBundle {
     }
 
     public GVRRenderTexture getPostEffectRenderTextureA() {
+        if(mPostEffectRenderTextureA == null)
+            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
         return mPostEffectRenderTextureA;
     }
 
     public GVRRenderTexture getPostEffectRenderTextureB() {
+        if(mPostEffectRenderTextureB == null)
+            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
+
         return mPostEffectRenderTextureB;
     }
+    protected native long getRenderTexture(long activity, int eye, int index);
 }

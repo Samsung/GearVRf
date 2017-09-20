@@ -18,6 +18,7 @@
  * JNI
  ***************************************************************************/
 
+#include <objects/components/mesh_collider.h>
 #include "picker.h"
 #include "objects/scene.h"
 
@@ -72,10 +73,12 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
         jobject obj, jlong jscene, jlong jtransform, jfloat ox, jfloat oy, jfloat oz, jfloat dx,
         jfloat dy, jfloat dz)
 {
-    Scene* scene = reinterpret_cast<Scene*>(jscene);
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHitMesh = env->GetStaticMethodID(pickerClass, "makeHitMesh", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
     std::vector<ColliderData> colliders;
     Transform* t = reinterpret_cast<Transform*>(jtransform);
 
@@ -92,12 +95,22 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
     {
         const ColliderData& data = *it;
         jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
-        jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
-                                                        data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
-                                                        data.FaceIndex,
-                                                        data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
-                                                        data.TextureCoordinates.x, data.TextureCoordinates.y,
-                                                        data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+        jobject hitObject;
+        MeshCollider* meshCollider = (MeshCollider *) data.ColliderHit;
+        if(meshCollider && meshCollider->shape_type() == COLLIDER_SHAPE_MESH && meshCollider->pickCoordinatesEnabled()) {
+            hitObject = env->CallStaticObjectMethod(pickerClass, makeHitMesh, pointerCollider,
+                                                    data.Distance,
+                                                    data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
+                                                    data.FaceIndex,
+                                                    data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
+                                                    data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                    data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+        }
+        else {
+            hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider,
+                                                    data.Distance,
+                                                    data.HitPosition.x, data.HitPosition.y, data.HitPosition.z);
+        }
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);
@@ -114,26 +127,33 @@ Java_org_gearvrf_NativePicker_pickSceneObject(JNIEnv * env,
                                               jobject obj, jlong jscene_object,
                                               jfloat ox, jfloat oy, jfloat oz,
                                               jfloat dx, jfloat dy, jfloat dz) {
-    SceneObject* scene_object =
-            reinterpret_cast<SceneObject*>(jscene_object);
+    jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
+    jmethodID makeHitMesh = env->GetStaticMethodID(pickerClass, "makeHitMesh", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+
     ColliderData data;
     Picker::pickSceneObject(scene_object, ox, oy, oz, dx, dy, dz, data);
-
-    jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
-    jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
-
     jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
-
-    jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
-                                                    data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
-                                                    data.FaceIndex,
-                                                    data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
-                                                    data.TextureCoordinates.x, data.TextureCoordinates.y,
-                                                    data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+    jobject hitObject;
+    MeshCollider* meshCollider = (MeshCollider *) data.ColliderHit;
+    if(meshCollider && meshCollider->shape_type() == COLLIDER_SHAPE_MESH && meshCollider->pickCoordinatesEnabled()) {
+        hitObject = env->CallStaticObjectMethod(pickerClass, makeHitMesh, pointerCollider,
+                                                data.Distance,
+                                                data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
+                                                data.FaceIndex,
+                                                data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
+                                                data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+    }
+    else {
+        hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider,
+                                                data.Distance,
+                                                data.HitPosition.x, data.HitPosition.y, data.HitPosition.z);
+    }
 
     env->DeleteLocalRef(pickerClass);
-    env->DeleteLocalRef(hitClass);
     return hitObject;
 }
 
@@ -166,10 +186,12 @@ JNIEXPORT jobjectArray JNICALL
 Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
         jobject obj, jlong jscene)
 {
-    Scene* scene = reinterpret_cast<Scene*>(jscene);
     jclass pickerClass = env->FindClass("org/gearvrf/GVRPicker");
     jclass hitClass = env->FindClass("org/gearvrf/GVRPicker$GVRPickedObject");
-    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHitMesh = env->GetStaticMethodID(pickerClass, "makeHitMesh", "(JFFFFIFFFFFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+    jmethodID makeHit = env->GetStaticMethodID(pickerClass, "makeHit", "(JFFFF)Lorg/gearvrf/GVRPicker$GVRPickedObject;");
+
+    Scene* scene = reinterpret_cast<Scene*>(jscene);
     std::vector<ColliderData> colliders;
     Transform* t = scene->main_camera_rig()->getHeadTransform();
 
@@ -183,12 +205,22 @@ Java_org_gearvrf_NativePicker_pickVisible(JNIEnv * env,
     {
         const ColliderData& data = *it;
         jlong pointerCollider = reinterpret_cast<jlong>(data.ColliderHit);
-        jobject hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider, data.Distance,
-                                                        data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
-                                                        data.FaceIndex,
-                                                        data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
-                                                        data.TextureCoordinates.x, data.TextureCoordinates.y,
-                                                        data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+        jobject hitObject;
+        MeshCollider* meshCollider = (MeshCollider *) data.ColliderHit;
+        if(meshCollider && meshCollider->shape_type() == COLLIDER_SHAPE_MESH && meshCollider->pickCoordinatesEnabled()) {
+            hitObject = env->CallStaticObjectMethod(pickerClass, makeHitMesh, pointerCollider,
+                                                    data.Distance,
+                                                    data.HitPosition.x, data.HitPosition.y, data.HitPosition.z,
+                                                    data.FaceIndex,
+                                                    data.BarycentricCoordinates.x, data.BarycentricCoordinates.y, data.BarycentricCoordinates.z,
+                                                    data.TextureCoordinates.x, data.TextureCoordinates.y,
+                                                    data.NormalCoordinates.x, data.NormalCoordinates.y, data.NormalCoordinates.z);
+        }
+        else {
+            hitObject = env->CallStaticObjectMethod(pickerClass, makeHit, pointerCollider,
+                                                    data.Distance,
+                                                    data.HitPosition.x, data.HitPosition.y, data.HitPosition.z);
+        }
         if (hitObject != 0)
         {
             env->SetObjectArrayElement(pickList, i++, hitObject);

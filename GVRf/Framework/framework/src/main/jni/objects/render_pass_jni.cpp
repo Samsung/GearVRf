@@ -40,11 +40,11 @@ extern "C" {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderPass_setShader(JNIEnv* env,
-            jobject obj, jlong jrender_pass, jint jshaderid);
+            jobject obj, jlong jrender_pass, jint jshaderid, jboolean jUse_multiview);
 
     JNIEXPORT jint JNICALL
     Java_org_gearvrf_NativeRenderPass_getShader(JNIEnv* env,
-            jobject obj, jlong jrender_pass);
+            jobject obj, jlong jrender_pass, jboolean useMultiview);
 }
 
 JNIEXPORT jlong JNICALL
@@ -72,19 +72,19 @@ Java_org_gearvrf_NativeRenderPass_setCullFace(JNIEnv* env,
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderPass_setShader(JNIEnv* env,
-        jobject obj, jlong jrender_pass, jint jshaderid)
+        jobject obj, jlong jrender_pass, jint jshaderid, jboolean jUse_multiview)
 {
     RenderPass* pass = reinterpret_cast<RenderPass*>(jrender_pass);
     LOGD("SHADER: RenderPass: NativeRenderPass_setShader(%p)", pass);
-    pass->set_shader(jshaderid);
+    pass->set_shader(jshaderid, jUse_multiview);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeRenderPass_getShader(JNIEnv* env,
-     jobject obj, jlong jrender_pass)
+     jobject obj, jlong jrender_pass, jboolean useMultiview)
 {
     RenderPass* pass = reinterpret_cast<RenderPass*>(jrender_pass);
-    return pass->get_shader();
+    return pass->get_shader(useMultiview);
 }
 }
 

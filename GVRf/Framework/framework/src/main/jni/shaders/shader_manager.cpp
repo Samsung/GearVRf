@@ -17,11 +17,11 @@ namespace gvr {
     }
 
     int ShaderManager::addShader(const char* signature,
-          const char* uniformDescriptor,
-          const char* textureDescriptor,
-          const char* vertexDescriptor,
-          const char* vertex_shader,
-          const char* fragment_shader)
+                                 const char* uniformDescriptor,
+                                 const char* textureDescriptor,
+                                 const char* vertexDescriptor,
+                                 const char* vertex_shader,
+                                 const char* fragment_shader)
     {
         Shader* shader = findShader(signature);
         if (shader != NULL)
@@ -81,7 +81,6 @@ namespace gvr {
             Shader* shader = it->second;
             long id = shader->getShaderID();
             const std::string& sig = shader->signature();
-            int* data = (int*) shader;
             LOGD("SHADER: #%ld %s", id, sig.c_str());
         }
     }

@@ -57,7 +57,7 @@ ShaderData* Batch::material(int passIndex)
     return renderdata_->pass(passIndex)->material();
 }
 
-bool Batch::updateMesh(Mesh* render_mesh){
+void Batch::updateMesh(Mesh* render_mesh){
     int nverts = render_mesh->getVertexCount();
 
     render_mesh->forAllVertices("a_position", [this](int iter, const float* pos)
@@ -100,7 +100,7 @@ bool Batch::add(RenderData *render_data) {
     }
     render_data->getHashCode();
 
-    render_data->setDirty(0);
+    render_data->markDirty();
 
     // Store the model matrix and its index into map for update
     matrix_index_map_[render_data] = draw_count_;

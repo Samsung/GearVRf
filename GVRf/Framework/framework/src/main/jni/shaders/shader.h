@@ -132,7 +132,7 @@ public:
         return mUseMaterialGPUBuffer;
     }
 
-    virtual bool useShader() = 0;
+    virtual bool useShader(bool) = 0;
     static int calcSize(const char* type);
     void setJava(jclass shaderClass, JavaVM *javaVM);
     bool calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;

@@ -41,20 +41,25 @@ class Renderer;
 class RenderTarget : public Component
 {
 public:
-    RenderTarget(RenderTexture*);
+    RenderTarget(RenderTexture*, bool is_multiview);
+    RenderTarget(Scene*);
+    RenderTarget(RenderTexture*, const RenderTarget* source);
     RenderTarget();
     ~RenderTarget();
-
-    void            setCamera(Camera* cam) { mCamera = cam; }
-    Camera*         getCamera() const { return mCamera; }
+    void            setMainScene(Scene* scene){mRenderState.scene = scene;}
+    void            setCamera(Camera* cam) { mRenderState.camera= cam; }
+    Camera*         getCamera() const { return mRenderState.camera; }
     bool            hasTexture() const { return (mRenderTexture != nullptr); }\
-    RenderTexture*  getTexture() const { return mRenderTexture; }
+    RenderTexture*  getTexture()  { return mRenderTexture; }
     void            setTexture(RenderTexture* texture);
     RenderState&    getRenderState() { return mRenderState; }
     virtual void    beginRendering(Renderer* renderer);
     virtual void    endRendering(Renderer* renderer);
     static long long getComponentType() { return COMPONENT_TYPE_RENDER_TARGET; }
-
+    std::vector<RenderData*>* getRenderDataVector(){
+        return mRenderDataVector.get();
+    }
+    virtual void cullFromCamera(Scene*, Camera* camera, Renderer* renderer, ShaderManager* shader_manager);
 private:
     RenderTarget(const RenderTarget& render_texture);
     RenderTarget(RenderTarget&& render_texture);
@@ -64,7 +69,8 @@ private:
 protected:
     RenderState     mRenderState;
     RenderTexture*  mRenderTexture;
-    Camera*         mCamera;
+    std::shared_ptr<std::vector<RenderData*>> mRenderDataVector;
+    //Camera*         mCamera;
 };
 
 }

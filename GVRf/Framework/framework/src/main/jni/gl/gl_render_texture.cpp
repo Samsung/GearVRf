@@ -23,14 +23,36 @@
 #include "gl_render_image.h"
 
 namespace gvr {
+extern void texImage3D(int color_format, int width, int height, int depth , GLenum target);
+typedef void (GL_APIENTRY *PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum target,
+                                                                    GLenum attachment,
+                                                                    GLuint texture, GLint level,
+                                                                    GLint baseViewIndex,
+                                                                    GLsizei numViews);
 
+typedef void (GL_APIENTRY *PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(GLenum target,
+                                                                               GLenum attachment,
+                                                                               GLuint texture,
+                                                                               GLint level,
+                                                                               GLsizei samples,
+                                                                               GLint baseViewIndex,
+                                                                               GLsizei numViews);
+GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId):
+        RenderTexture(sample_count),
+        renderTexture_gl_render_buffer_(nullptr),
+        renderTexture_gl_frame_buffer_(nullptr),
+        renderTexture_gl_resolve_buffer_(nullptr),
+        renderTexture_gl_color_buffer_(nullptr){
+
+    mImage = new GLRenderImage(width, height, layers, texId, false);
+    renderTexture_gl_frame_buffer_ = new GLFrameBuffer(fboId);
+}
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format) :
         RenderTexture(sample_count),
         renderTexture_gl_render_buffer_(nullptr),
         renderTexture_gl_frame_buffer_(nullptr),
         renderTexture_gl_resolve_buffer_(nullptr),
-        renderTexture_gl_color_buffer_(nullptr),
-        layer_index_(0)
+        renderTexture_gl_color_buffer_(nullptr)
 {
     mImage = new GLRenderImage(width, height, layers);
     switch (depth_format)
@@ -61,70 +83,9 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
           renderTexture_gl_render_buffer_(nullptr),
           renderTexture_gl_frame_buffer_(new GLFrameBuffer()),
           renderTexture_gl_resolve_buffer_(nullptr),
-          renderTexture_gl_color_buffer_(nullptr),
-          layer_index_(0)
+          renderTexture_gl_color_buffer_(nullptr)
 {
-    GLRenderImage* colorbuffer = new GLRenderImage(width, height, jcolor_format, texparams);
-    GLenum depth_format;
 
-    mImage = colorbuffer;
-    initialize();
-    mImage->isReady();
-    switch (jdepth_format)
-    {
-        case DepthFormat::DEPTH_24:
-        depth_format = GL_DEPTH_COMPONENT24_OES;
-        break;
-
-        case DepthFormat::DEPTH_24_STENCIL_8:
-        depth_format = GL_DEPTH24_STENCIL8_OES;
-        break;
-
-        default:
-        depth_format = GL_DEPTH_COMPONENT16;
-        break;
-    }
-    if (sample_count <= 1)
-    {
-        generateRenderTextureNoMultiSampling(jdepth_format, depth_format,
-                                             width, height);
-    }
-    else if (resolve_depth)
-    {
-        generateRenderTexture(sample_count, jdepth_format, depth_format,
-                              width, height, jcolor_format);
-    }
-    else
-    {
-        generateRenderTextureEXT(sample_count, jdepth_format,
-                                 depth_format, width, height);
-    }
-    if (jdepth_format != DepthFormat::DEPTH_0)
-    {
-        GLenum attachment = DepthFormat::DEPTH_24_STENCIL_8 == jdepth_format ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
-    }
-
-    glScissor(0, 0, width, height);
-    glViewport(0, 0, width, height);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (resolve_depth && sample_count > 1)
-    {
-        delete renderTexture_gl_resolve_buffer_;
-        renderTexture_gl_resolve_buffer_ = new GLFrameBuffer();
-        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               colorbuffer->getTarget(), colorbuffer->getId(), 0);
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE)
-        {
-            LOGE("resolve FBO %i is not complete: 0x%x",
-                 renderTexture_gl_resolve_buffer_->id(), status);
-        }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GLRenderTexture::~GLRenderTexture()
@@ -147,16 +108,6 @@ bool GLRenderTexture::isReady()
     if (!Texture::isReady())
     {
         return false;
-    }
-    GLRenderImage* colorbuffer = static_cast<GLRenderImage*>(mImage);
-    int width = colorbuffer->getWidth();
-    int height = colorbuffer->getHeight();
-
-    if (renderTexture_gl_frame_buffer_ == NULL)
-    {
-        renderTexture_gl_frame_buffer_ = new GLFrameBuffer();
-        generateRenderTextureLayer(depth_format_, width, height);
-        checkGLError("RenderTexture::isReady generateRenderTextureLayer");
     }
     return true;
 }
@@ -182,8 +133,32 @@ void GLRenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
     glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, image->getTarget(), image->getId(), 0);
 }
+ bool GLNonMultiviewRenderTexture::isReady(){
+    bool status = GLRenderTexture::isReady();
+    if (renderTexture_gl_frame_buffer_ == NULL)
+    {
+        renderTexture_gl_frame_buffer_ = new GLFrameBuffer();
+        generateRenderTextureLayer(depth_format_, width(), height());
+        checkGLError("RenderTexture::isReady generateRenderTextureLayer");
+    }
+    return status;
+}
+ void GLNonMultiviewRenderTexture::beginRendering(Renderer* renderer){
+    if (!isReady())
+    {
+        return;
+    }
 
-void GLRenderTexture::generateRenderTextureLayer(GLenum depth_format, int width, int height)
+    bind();
+    if (mImage->getDepth() > 1)
+    {
+        LOGV("GLRenderTexture::beginRendering layer=%d", layer_index_);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, mImage->getId(), 0, layer_index_);
+    }
+    GLRenderTexture::beginRendering(renderer);
+
+}
+void GLNonMultiviewRenderTexture::generateRenderTextureLayer(GLenum depth_format, int width, int height)
 {
     if (depth_format_ && (renderTexture_gl_render_buffer_ == nullptr))
     {
@@ -276,26 +251,23 @@ void GLRenderTexture::generateRenderTexture(int sample_count, int jdepth_format,
 
 void GLRenderTexture::beginRendering(Renderer* renderer)
 {
-    if (!isReady())
-    {
-        return;
-    }
+
     const int width = mImage->getWidth();
     const int height = mImage->getHeight();
 
-    bind();
-    if (mImage->getDepth() > 1)
-    {
-        LOGV("GLRenderTexture::beginRendering layer=%d", layer_index_);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, mImage->getId(), 0, layer_index_);
-    }
     glViewport(0, 0, width, height);
     glScissor(0, 0, width, height);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
     invalidateFrameBuffer(GL_FRAMEBUFFER, true, true, renderTexture_gl_render_buffer_ != NULL);
-    if ((mBackColor[0] + mBackColor[1] + mBackColor[2] + mUseStencil) != 0)
+    glDepthMask(GL_TRUE);
+    GL(glEnable(GL_DEPTH_TEST));
+    GL(glDepthFunc(GL_LEQUAL));
+    GL(glEnable(GL_CULL_FACE));
+    GL(glFrontFace(GL_CCW));
+    GL(glCullFace(GL_BACK));
+    GL(glDisable(GL_POLYGON_OFFSET_FILL));
+    GL(glLineWidth(1.0f));
+
+    if ((mBackColor[0] != -1))
     {
         int mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
         glClearColor(mBackColor[0], mBackColor[1], mBackColor[2], mBackColor[3]);
@@ -340,15 +312,24 @@ void GLRenderTexture::invalidateFrameBuffer(GLenum target, bool is_fbo, const bo
 
 void GLRenderTexture::startReadBack() {
     GLRenderImage* image = static_cast<GLRenderImage*>(mImage);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
-    image->setupReadback(renderTexture_gl_pbo_);
+
     glReadPixels(0, 0, image->getWidth(), image->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     readback_started_ = true;
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-bool GLRenderTexture::readRenderResult(uint32_t *readback_buffer, long capacity) {
+bool GLRenderTexture::readRenderResult(uint8_t* readback_buffer){
+    long neededCapacity = mImage->getWidth() * mImage->getHeight();
+    if (!readback_buffer) {
+        LOGE("GLRenderTexture::readRenderResult: readback_buffer is null");
+        return false;
+    }
+    readRenderResult(readback_buffer,neededCapacity);
+}
+
+bool GLRenderTexture::readRenderResult(uint8_t *readback_buffer, long capacity) {
+
     long neededCapacity = mImage->getWidth() * mImage->getHeight();
     if (!readback_buffer) {
         LOGE("GLRenderTexture::readRenderResult: readback_buffer is null");
@@ -357,39 +338,19 @@ bool GLRenderTexture::readRenderResult(uint32_t *readback_buffer, long capacity)
 
     if (capacity < neededCapacity) {
         LOGE("GLRenderTexture::readRenderResult: buffer capacity too small "
-             "(capacity %ld, needed %ld)", capacity, neededCapacity);
+                     "(capacity %ld, needed %ld)", capacity, neededCapacity);
         return false;
     }
     GLRenderImage* image = static_cast<GLRenderImage*>(mImage);
 
-    image->setupReadback(renderTexture_gl_pbo_);
     if (!readback_started_) {
-        glReadPixels(0, 0, mImage->getWidth(), mImage->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glReadPixels(0, 0, mImage->getWidth(), mImage->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, readback_buffer);
     }
-
-    int *buf = (int *)glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, neededCapacity * 4,
-             GL_MAP_READ_BIT);
-    if (buf) {
-        memcpy(readback_buffer, buf, neededCapacity * 4);
-    }
-
-    readback_started_ = false;
-
-    glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     return true;
 }
 
-/*
- * Bind the framebuffer to the specified layer of the texture array.
- * Create the framebuffer and layered texture if necessary.
- * This function must be called from the GL thread.
- */
-void GLRenderTexture::bindFrameBufferToLayer(int layerIndex)
-{
-    layer_index_ = layerIndex;
-}
+
 
 bool GLRenderTexture::bindTexture(int gl_location, int texIndex)
 {
@@ -404,5 +365,206 @@ bool GLRenderTexture::bindTexture(int gl_location, int texIndex)
         glUniform1i(gl_location, texIndex);
     }
 }
+/*
+ * Bind the framebuffer to the specified layer of the texture array.
+ * Create the framebuffer and layered texture if necessary.
+ * This function must be called from the GL thread.
+ */
+void GLRenderTexture::setLayerIndex(int layerIndex)
+{
+    layer_index_ = layerIndex;
+}
+void GLMultiviewRenderTexture::startReadBack(int layer) {
+    GLRenderImage* image = static_cast<GLRenderImage*>(mImage);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, getReadBufferId());
+    image->setupReadback(renderTexture_gl_pbo_, layer);
+    GLRenderTexture::startReadBack();
+}
+void GLNonMultiviewRenderTexture::startReadBack(int layer) {
+    GLRenderImage* image = static_cast<GLRenderImage*>(mImage);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER,renderTexture_gl_frame_buffer_->id() );
+    image->setupReadback(renderTexture_gl_pbo_, layer);
+    GLRenderTexture::startReadBack();
+}
+GLNonMultiviewRenderTexture::GLNonMultiviewRenderTexture(int width, int height, int sample_count,
+                                     int jcolor_format, int jdepth_format, bool resolve_depth,
+                                     const TextureParameters* texture_parameters):GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
+                                                                                                  resolve_depth, texture_parameters) {
+    GLRenderImage* colorbuffer = new GLRenderImage(width, height, jcolor_format, texture_parameters);
+    GLenum depth_format;
 
+    mImage = colorbuffer;
+    initialize();
+    mImage->isReady();
+    switch (jdepth_format)
+    {
+        case DepthFormat::DEPTH_24:
+            depth_format = GL_DEPTH_COMPONENT24_OES;
+            break;
+
+        case DepthFormat::DEPTH_24_STENCIL_8:
+            depth_format = GL_DEPTH24_STENCIL8_OES;
+            break;
+
+        default:
+            depth_format = GL_DEPTH_COMPONENT16;
+            break;
+    }
+    if (sample_count <= 1)
+    {
+        generateRenderTextureNoMultiSampling(jdepth_format, depth_format,
+                                             width, height);
+    }
+    else if (resolve_depth)
+    {
+        generateRenderTexture(sample_count, jdepth_format, depth_format,
+                              width, height, jcolor_format);
+    }
+    else
+    {
+        generateRenderTextureEXT(sample_count, jdepth_format,
+                                 depth_format, width, height);
+    }
+    if (jdepth_format != DepthFormat::DEPTH_0)
+    {
+        GLenum attachment = DepthFormat::DEPTH_24_STENCIL_8 == jdepth_format ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
+    }
+
+    glScissor(0, 0, width, height);
+    glViewport(0, 0, width, height);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (resolve_depth && sample_count > 1)
+    {
+        delete renderTexture_gl_resolve_buffer_;
+        renderTexture_gl_resolve_buffer_ = new GLFrameBuffer();
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               colorbuffer->getTarget(), colorbuffer->getId(), 0);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE)
+        {
+            LOGE("resolve FBO %i is not complete: 0x%x",
+                 renderTexture_gl_resolve_buffer_->id(), status);
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    checkGLError(" GLNonMultiviewRenderTexture:");
+}
+void createArrayTexture(GLuint &texId, int width, int height, GLenum tex_format) {
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, texId);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, tex_format, width, height, 2);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+}
+
+GLMultiviewRenderTexture::GLMultiviewRenderTexture(int width, int height, int sample_count,
+                                                         int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                         const TextureParameters* texture_parameters, int layers):GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
+                                                                                                                      resolve_depth, texture_parameters), mLayers_(layers) {
+    GLRenderImage* colorbuffer = new GLRenderImage(width, height, layers, jcolor_format, texture_parameters);
+    GLenum depth_format;
+
+    mImage = colorbuffer;
+    initialize();
+    mImage->isReady();
+    switch (jdepth_format)
+    {
+        case DepthFormat::DEPTH_24:
+            depth_format = GL_DEPTH_COMPONENT24_OES;
+            break;
+
+        case DepthFormat::DEPTH_24_STENCIL_8:
+            depth_format = GL_DEPTH24_STENCIL8_OES;
+            break;
+
+        default:
+            depth_format = GL_DEPTH_COMPONENT16;
+            break;
+    }
+
+    PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR =
+            (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC) eglGetProcAddress(
+                    "glFramebufferTextureMultiviewOVR");
+    PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC glFramebufferTextureMultisampleMultiviewOVR =
+            (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC) eglGetProcAddress(
+                    "glFramebufferTextureMultisampleMultiviewOVR");
+    if (jdepth_format != DepthFormat::DEPTH_0)
+        createArrayTexture(frameBufferDepthTextureId, width, height, depth_format);
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
+
+    if (sample_count <= 1 && !resolve_depth) {
+        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                         getId(), 0, 0, 2);
+    }
+    if (sample_count > 1 && !resolve_depth) {
+        if (jdepth_format != DepthFormat::DEPTH_0) {
+            glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                                        frameBufferDepthTextureId, 0, sample_count,
+                                                        0, 2);
+        }
+        glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                                    getId(), 0, sample_count, 0, 2);
+    }
+    if (resolve_depth && sample_count > 1) {
+        if (jdepth_format != DepthFormat::DEPTH_0)
+            glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                             frameBufferDepthTextureId, 0, 0, 2);
+        glGenTextures(1, &render_texture_gl_texture_);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, render_texture_gl_texture_);
+        texImage3D(jcolor_format, width, height,2, GL_TEXTURE_2D_ARRAY);
+        glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                                    render_texture_gl_texture_, 0, sample_count, 0,
+                                                    2);
+    }
+
+/* Check BO is OK. */
+    GLenum result = (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER));
+    if (result != GL_FRAMEBUFFER_COMPLETE) {
+        LOGE("RenderTextureArray::bindFrameBuffer Could not bind framebuffer: %d", result);
+        switch (result) {
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT :
+                LOGE("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                break;
+
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                LOGE("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                break;
+
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                LOGE("GL_FRAMEBUFFER_UNSUPPORTED");
+                break;
+        }
+
+        LOGE("Framebuffer incomplete at %s:%i\n", __FILE__, __LINE__);
+/* Unbind framebuffer. */
+        (glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+
+    }
+    checkGLError("glFramebufferTextureMultiviewOVR 2");
+    glScissor(0, 0, width, height);
+    glViewport(0, 0, width, height);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (resolve_depth && sample_count > 1) {
+        delete renderTexture_gl_resolve_buffer_;
+        renderTexture_gl_resolve_buffer_ = new GLFrameBuffer();
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_resolve_buffer_->id());
+        glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                         colorbuffer->getId(), 0, 0, 2);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            LOGE(
+                    "resolve FBO %i is not complete: 0x%x", renderTexture_gl_resolve_buffer_->id(),
+                    status);
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    ///////////////////////////////////////////////////////////////////
+}
 }

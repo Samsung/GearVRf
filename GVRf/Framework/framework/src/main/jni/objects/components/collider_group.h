@@ -36,8 +36,8 @@ public:
     ColliderGroup();
     ~ColliderGroup();
 
-    void addCollider(Collider* pointee);
-    void removeCollider(Collider* pointee);
+    void addCollider(Collider* collider);
+    void removeCollider(Collider* collider);
     ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
 
     const glm::vec3& hit() const {
@@ -45,10 +45,10 @@ public:
     }
 
 private:
-    ColliderGroup(const ColliderGroup& eye_pointee_holder);
-    ColliderGroup(ColliderGroup&& eye_pointee_holder);
-    ColliderGroup& operator=(const ColliderGroup& eye_pointee_holder);
-    ColliderGroup& operator=(ColliderGroup&& eye_pointee_holder);
+    ColliderGroup(const ColliderGroup& colliderGroup);
+    ColliderGroup(ColliderGroup&& colliderGroup);
+    ColliderGroup& operator=(const ColliderGroup& colliderGroup);
+    ColliderGroup& operator=(ColliderGroup&& colliderGroup);
 
 private:
     glm::vec3 hit_;

@@ -86,7 +86,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
     if(renderdata == nullptr)
         continue;
 
-    int currentShaderType = renderdata->get_shader();
+    int currentShaderType = renderdata->get_shader(rstate.is_multiview);
 
     if (currentShaderType == 0)
         continue;
@@ -199,7 +199,7 @@ void BatchManager::createBatch(int start, int end, std::vector<RenderData*>& ren
              2. if mesh is modified
              3. Material is modified
             ***/
-           if(render_data->batching() && (render_data->isDirty(0xFFFF) || render_data->isHashCodeDirty())){
+           if(render_data->batching() && (render_data->isDirty() || render_data->isHashCodeDirty())){
                   current_batch->removeRenderData(render_data);
                   current_batch = nullptr;
                   getNewBatch(render_data, &current_batch);

@@ -879,7 +879,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
                                                                              &scissor);
     pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                                                                     disable_color_depth_write ? VK_FALSE: VK_TRUE,
+                                                                                     rdata->depth_mask() ? VK_TRUE : VK_FALSE,
                                                                                      VK_COMPARE_OP_LESS_OR_EQUAL,
                                                                                      VK_FALSE,
                                                                                      VK_STENCIL_OP_KEEP,
@@ -896,7 +896,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.stageCount = 2; //vertex and fragment
     VkPipeline pipeline = 0;
     LOGI("Vulkan graphics call before");
-    err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+    err = vkCreateGraphicsPipelines(m_device, m_pipelineCache, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
     GVR_VK_CHECK(!err);
     rdata->setPipeline(pipeline,pass);
@@ -974,30 +974,15 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         LOGI("Vulkan initsync start");
         VkResult ret = VK_SUCCESS;
 
-        ret = vkCreateSemaphore(m_device, gvr::SemaphoreCreateInfo(), nullptr,
-                                &m_backBufferSemaphore);
-        GVR_VK_CHECK(!ret);
-
-        ret = vkCreateSemaphore(m_device, gvr::SemaphoreCreateInfo(), nullptr,
-                                &m_renderCompleteSemaphore);
-        GVR_VK_CHECK(!ret);
-
-        // Fences (Used to check draw command buffer completion)
-        VkFenceCreateInfo fenceCreateInfo = {};
-        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceCreateInfo.flags = 0;
-
         waitFences.resize(SWAP_CHAIN_COUNT);
         for (auto &fence : waitFences) {
             ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
             GVR_VK_CHECK(!ret);
         }
 
-        waitSCBFences.resize(SWAP_CHAIN_COUNT);
-        for (auto &fence : waitSCBFences) {
-            ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
-            GVR_VK_CHECK(!ret);
-        }
+        ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &waitSCBFences);
+        GVR_VK_CHECK(!ret);
+
 
         ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &postEffectFence);
         GVR_VK_CHECK(!ret);
@@ -1051,7 +1036,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                 rdata->getVKPipeline(curr_pass) );
 
                 VulkanShader *shader = reinterpret_cast<VulkanShader *>(shader_manager->getShader(
-                       rdata->get_shader(curr_pass)));
+                       rdata->get_shader(false,curr_pass)));
 
                 VkDescriptorSet descriptorSet = rdata->getDescriptorSet(curr_pass);
                //bind out descriptor set, which handles our uniforms and samplers
@@ -1267,9 +1252,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkCommandBuffer trnCmdBuf;
         createTransientCmdBuffer(trnCmdBuf);
         if(postEffectFlag)
-            mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[index]);
+            mPostEffectTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences);
         else
-            mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences[index]);
+            mRenderTexture[index]->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences);
 
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
     }
@@ -1281,7 +1266,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         poolSize[0].descriptorCount = 5;
 
         poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize[1].descriptorCount = 5;
+        poolSize[1].descriptorCount = 12;
 
         poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         poolSize[2].descriptorCount = 5;
@@ -1340,7 +1325,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         // TODO: add shadowmap descriptor
 
-        vkShader->bindTextures(vkmtl, writes,  descriptorSet, TEXTURE_BIND_START);
+        vkShader->bindTextures(vkmtl, writes,  descriptorSet);
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         vkData->setDescriptorSetNull(false,pass);
         LOGI("Vulkan after update descriptor");
@@ -1395,9 +1380,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     void VulkanCore::createPipelineCache() {
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-        GVR_VK_CHECK(vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
-                                           &m_pipelineCache));
-        LOGE("Pipleline cace faile");
+        VkResult ret = vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
+                                           &m_pipelineCache);
+        GVR_VK_CHECK(!ret);
     }
 
     void VulkanCore::initVulkanDevice(ANativeWindow *newNativeWindow) {
@@ -1421,7 +1406,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
-        //createPipelineCache();
+        createPipelineCache();
+
     }
 
     void VulkanCore::CreateSampler(TextureObject *&textureObject) {
@@ -1619,6 +1605,30 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         CreateSampler(textureObject);
+    }
+
+    VulkanCore::~VulkanCore() {
+        if(swapChainCmdBuffer.capacity() != 0) {
+            for (int i = 0; i < SWAP_CHAIN_COUNT; i++) {
+                delete mRenderTexture[i];
+                vkFreeCommandBuffers(m_device, m_commandPool, 1, swapChainCmdBuffer[i]);
+
+                vkDestroyFence(m_device, waitFences[i], nullptr);
+            }
+        }
+
+        if(postEffectCmdBuffer != nullptr){
+            vkFreeCommandBuffers(m_device, m_commandPool, 1, postEffectCmdBuffer);
+            for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
+                delete mPostEffectTexture[i];
+            }
+
+            vkDestroyFence(m_device, postEffectFence, nullptr);
+        }
+
+        vkDestroyFence(m_device, waitSCBFences, nullptr);
+        vkDestroyDevice(getDevice(), nullptr);
+        vkDestroyInstance(m_instance, nullptr);
     }
 
     void VulkanCore::initVulkanCore() {
