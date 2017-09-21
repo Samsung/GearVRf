@@ -160,6 +160,8 @@ protected:
     std::mutex mUpdateLock;
     short   mType;
     short   mLevels;
+    int   mXOffset;
+    int   mYOffset;
     int   mWidth;
     int   mHeight;
     short   mDepth;
