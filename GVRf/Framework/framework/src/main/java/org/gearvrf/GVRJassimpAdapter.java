@@ -699,7 +699,7 @@ class GVRJassimpAdapter {
             }
         }
         GVRShaderId shaderType = GVRMaterial.GVRShaderType.Phong.ID;
-        if (settings.contains(GVRImportSettings.NO_TEXTURING) || settings.contains(GVRImportSettings.NO_LIGHTING))
+        if (settings.contains(GVRImportSettings.NO_ANIMATION))
         {
             shaderType = GVRMaterial.GVRShaderType.Texture.ID;
         }
