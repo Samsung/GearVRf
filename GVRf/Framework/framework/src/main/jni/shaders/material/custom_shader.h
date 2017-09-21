@@ -108,13 +108,13 @@ private:
     };
 
 private:
-    GLint u_render_mask_;
-    GLint u_mvp_;
-    GLint u_mv_;
-    GLint u_view_;
-    GLint u_mv_it_;
-    GLint u_right_;
-    GLint u_model_;
+    GLint u_render_mask_ = -1;
+    GLint u_mvp_ = -1;
+    GLint u_mv_= -1;
+    GLint u_view_= -1;
+    GLint u_mv_it_= -1;
+    GLint u_right_= -1;
+    GLint u_model_= -1;
     bool textureVariablesDirty_ = false;
     std::mutex textureVariablesLock_;
     std::set<Descriptor<TextureVariable>, DescriptorComparator<TextureVariable>> textureVariables_;
