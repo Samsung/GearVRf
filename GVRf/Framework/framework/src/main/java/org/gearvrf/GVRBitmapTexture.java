@@ -132,9 +132,9 @@ public class GVRBitmapTexture extends GVRImage
      * (and/or post effects that use the texture!
      *
      * @param width
-     *            Texture width, in pixels
+     *            Texture width, in texels
      * @param height
-     *            Texture height, in pixels
+     *            Texture height, in texels
      * @param format
      *            Texture format
      * @param type
@@ -145,7 +145,41 @@ public class GVRBitmapTexture extends GVRImage
      */
     public void setBuffer(final int width, final int height, final int format, final int type, final Buffer pixels)
     {
-        NativeBitmapImage.updateFromBuffer(getNative(), width, height, format, type, pixels);
+        NativeBitmapImage.updateFromBuffer(getNative(), 0, 0, width, height, format, type, pixels);
+    }
+
+    /**
+     * Copy a new texture subimage from a {@link Buffer} to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
+     * totally trivial operation: it does involve some memory management and
+     * some GL hardware handshaking. Reusing the texture reduces this overhead
+     * (primarily by delaying garbage collection). Do be aware that updating a
+     * texture will affect any and all {@linkplain GVRMaterial materials}
+     * (and/or post effects that use the texture!
+     *
+     * @param xoffset
+     *            Subimage texel offset in X direction
+     * @param yoffset
+     *            Subimage texel offset in Y direction
+     * @param width
+     *            Texture subimage width, in texels
+     * @param height
+     *            Texture subimage height, in texels
+     * @param format
+     *            Texture format
+     * @param type
+     *            Texture type
+     * @param pixels
+     *            A NIO Buffer with the texture
+     *
+     */
+    public void setBuffer(final int xoffset, final int yoffset, final int width, final int height,
+                          final int format, final int type, final Buffer pixels)
+    {
+        NativeBitmapImage.updateFromBuffer(getNative(), xoffset, yoffset, width, height, format, type, pixels);
     }
 
     /**
@@ -189,7 +223,7 @@ class NativeBitmapImage {
     static native String getFileName(long pointer);
     static native void updateFromMemory(long pointer, int width, int height, byte[] data);
     static native void updateFromBitmap(long pointer, Bitmap bitmap, boolean hasAlpha);
-    static native void updateFromBuffer(long pointer, int width, int height, int format, int type, Buffer pixels);
+    static native void updateFromBuffer(long pointer, int xoffset, int yoffset, int width, int height, int format, int type, Buffer pixels);
     static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[] data, int levels, int[] offsets);
 
 }

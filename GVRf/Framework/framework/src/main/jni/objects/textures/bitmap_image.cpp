@@ -71,13 +71,15 @@ void BitmapImage::update(JNIEnv* env, jobject bitmap, bool hasAlpha)
     }
 }
 
-void BitmapImage::update(JNIEnv* env, int width, int height, int format, int type, jobject buffer)
+void BitmapImage::update(JNIEnv* env, int xoffset, int yoffset, int width, int height, int format, int type, jobject buffer)
 {
     std::lock_guard<std::mutex> lock(mUpdateLock);
     env->GetJavaVM(&mJava);
     clearData(env);
     if (buffer != NULL)
     {
+        mXOffset = xoffset;
+        mYOffset = yoffset;
         mWidth = width;
         mHeight = height;
         mFormat = format;
