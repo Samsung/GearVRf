@@ -151,11 +151,24 @@ public:
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
     void RenderToOculus(int index, int postEffectFlag);
     void InitPostEffectChain();
+
+    VkPipeline getPipeline(std::string key){
+        std::unordered_map<std::string, VkPipeline >::const_iterator got = pipelineHashMap.find(key);
+        if(got == pipelineHashMap.end())
+            return 0;
+        else
+            return got->second;
+    }
+
+    void addPipeline(std::string key, VkPipeline pipeline){
+        pipelineHashMap[key] = pipeline;
+    }
 private:
     std::vector <VkFence> waitFences;
     VkFence postEffectFence;
     VkFence waitSCBFences;
     static VulkanCore *theInstance;
+    std::unordered_map<std::string, VkPipeline> pipelineHashMap;
 
     bool swap_chain_init_;
     VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL),swap_chain_init_(false) {

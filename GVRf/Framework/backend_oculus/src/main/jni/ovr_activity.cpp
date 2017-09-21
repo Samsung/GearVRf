@@ -247,7 +247,9 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         // Render the eye images.
         for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-            beginRenderingEye(eye);
+            if(!gRenderer->isVulkanInstance()) {
+                beginRenderingEye(eye);
+            }
             oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye, textureSwapChainIndex, use_multiview);
             if(gRenderer->isVulkanInstance()){
                 glBindTexture(GL_TEXTURE_2D,vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, textureSwapChainIndex));
@@ -260,8 +262,12 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
                                    GL_RGBA,
                                    GL_UNSIGNED_BYTE,
                                    oculusTexData);
+
+                frameBuffer_[eye].advance();
             }
-            endRenderingEye(eye);
+            else {
+                endRenderingEye(eye);
+            }
         }
 
         FrameBufferObject::unbind();

@@ -951,7 +951,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                                      mHeight, 1, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
                                                       VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
             depthImage->createImageView(false);
             mAttachments[DEPTH_IMAGE] = depthImage;
@@ -1213,7 +1213,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 swapChainIndx = (swapChainIndx + 2) % SWAP_CHAIN_COUNT;
             }
              if (!found) {
-            err = vkWaitForFences(m_device, 1, &waitFences[swapChainIndx], VK_TRUE,
+            err = vkWaitForFences(m_device, 1, &waitFences[(swapChainIndx+2)%SWAP_CHAIN_COUNT], VK_TRUE,
                                   4294967295U);
              }
         }

@@ -113,9 +113,18 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, false);
 
     if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(pass)) {
-        vkRdata->clearDirty();
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
-        vkRdata->createPipeline(shader, this, pass, false, 0);
+        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
+
+        VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
+        if(pipeline == 0) {
+            vkRdata->createPipeline(shader, this, pass, false, 0);
+            vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
+        }
+        else{
+            vkRdata->setPipeline(pipeline, pass);
+            vkRdata->clearDirty();
+        }
     }
     return true;
 }
@@ -133,10 +142,19 @@ bool VulkanRenderer::renderWithPostEffectShader(RenderState& rstate, Shader* sha
     vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, true);
 
     if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(passNum)) {
-        vkRdata->clearDirty();
         vulkanCore_->InitDescriptorSetForRenderDataPostEffect(this, 0, shader, vkRdata, passNum);
         vkRdata->set_depth_test(0);
-        vkRdata->createPipeline(shader, this, 0, true, passNum);
+        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
+
+        VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
+        if(pipeline == 0) {
+            vkRdata->createPipeline(shader, this, 0, true, passNum);
+            vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(0));
+        }
+        else{
+            vkRdata->setPipeline(pipeline, 0);
+            vkRdata->clearDirty();
+        }
     }
 
     return true;
@@ -202,7 +220,6 @@ void VulkanRenderer::renderCamera(Scene *scene, Camera *camera,
             continue;
 
         for(int curr_pass = 0; curr_pass < rdata->pass_count(); curr_pass++) {
-
             ShaderData *curr_material = rdata->material(curr_pass);
             Shader *shader = rstate.shader_manager->getShader(rdata->get_shader(rstate.is_multiview,curr_pass));
             if (shader == NULL)
