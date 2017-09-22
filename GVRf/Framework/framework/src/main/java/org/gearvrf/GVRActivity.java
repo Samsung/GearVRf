@@ -220,7 +220,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mDockEventReceiver.stop();
         }
 
-        if (!mConfigurationManager.isDockListenerRequired()) {
+        if (null != mConfigurationManager && !mConfigurationManager.isDockListenerRequired()) {
             handleOnUndock();
         }
 
