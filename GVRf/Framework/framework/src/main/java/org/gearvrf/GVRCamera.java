@@ -235,6 +235,9 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
      *            Post-effect to remove.
      */
     public void removePostEffect(GVRMaterial postEffectData) {
+        if(mPostEffects == null)
+            return;
+        
         for (int i = 0; i < mPostEffects.getPassCount(); ++i)
         {
             GVRRenderPass pass = mPostEffects.getPass(i);
