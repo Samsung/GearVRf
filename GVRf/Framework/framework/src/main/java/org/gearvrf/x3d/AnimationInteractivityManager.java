@@ -750,6 +750,15 @@ public class AnimationInteractivityManager {
                 //    to a Boolean such as light on/off
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
                 if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                    interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                            new GVRSceneObject.SceneVisitor()
+                            {
+                                public boolean visit (GVRSceneObject obj)
+                                {
+                                    obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                    return true;
+                                }
+                            });
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         //boolean isRunning;
                         @Override
@@ -776,7 +785,15 @@ public class AnimationInteractivityManager {
                 final Vector<InteractiveObject> interactiveObjectsFinal = interactiveObjects;
 
                 if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
-
+                    interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                            new GVRSceneObject.SceneVisitor()
+                            {
+                                public boolean visit (GVRSceneObject obj)
+                                {
+                                    obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                    return true;
+                                }
+                            });
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         boolean stateChanged = false;
 
