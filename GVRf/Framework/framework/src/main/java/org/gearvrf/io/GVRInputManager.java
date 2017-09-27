@@ -289,7 +289,7 @@ public abstract class GVRInputManager {
             GVRCursorController controller = cache.get(key);
             if (controller == null) {
                 if (controllerType == GVRControllerType.CONTROLLER) {
-                    controller = gearCursorController = new GearCursorController(context, null);
+                    controller = gearCursorController = new GearCursorController(context);
                 }
                 if (controllerType == GVRControllerType.MOUSE) {
                     controller = mouseDeviceManager

@@ -107,13 +107,12 @@ public final class GearCursorController extends GVRCursorController
     private long prevATime;
     private boolean touching = false;
 
-    public GearCursorController(GVRContext context, ControllerReader controllerReader) {
+    public GearCursorController(GVRContext context) {
         super(context, GVRControllerType.CONTROLLER);
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
         position = new Vector3f(0.0f, 0.0f, -1.0f);
-        mControllerReader = controllerReader;
         MotionEvent.PointerProperties properties = new MotionEvent.PointerProperties();
         properties.id = 0;
         properties.toolType = MotionEvent.TOOL_TYPE_FINGER;

@@ -72,8 +72,6 @@ class GVRInputManagerImpl extends GVRInputManager {
     @Override
     public void addCursorController(GVRCursorController controller) {
         controllers.add(controller);
-        controller.setScene(scene);
-        controller.addPickEventListener(GVRBaseSensor.getPickHandler());
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
                 listener.onCursorControllerAdded(controller);
