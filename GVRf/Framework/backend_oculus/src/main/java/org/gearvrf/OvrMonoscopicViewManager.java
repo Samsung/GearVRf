@@ -82,7 +82,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         gvrActivity.setContentView(mView);
 
         DisplayMetrics metrics = new DisplayMetrics();
-        gvrActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        gvrActivity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
 
         final float INCH_TO_METERS = 0.0254f;
         int screenWidthPixels = metrics.widthPixels;
