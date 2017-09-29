@@ -72,7 +72,8 @@ class DaydreamViewManager extends GVRViewManager {
 
         // Prevent screen from dimming/locking.
         gvrActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mGearController = new GearCursorController(this, new DayDreamControllerReader(gvrActivity));
+        mGearController = mInputManager.getGearController();
+        mGearController.attachReader(new DayDreamControllerReader(gvrActivity));
     }
     public long getNativeRenderer(){
         return renderer.getNativeDaydreamRenderer();
