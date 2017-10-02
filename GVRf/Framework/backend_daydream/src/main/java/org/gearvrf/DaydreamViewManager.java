@@ -31,6 +31,7 @@ class DaydreamViewManager extends GVRViewManager {
     private GVRCameraRig cameraRig;
     private boolean sensoredSceneUpdated = false;
     private GearCursorController mGearController;
+    private DayDreamControllerReader mControllerReader;
 
     // This is done on the GL thread because refreshViewerProfile isn't thread-safe.
     private final Runnable refreshViewerProfileRunnable =
@@ -72,9 +73,9 @@ class DaydreamViewManager extends GVRViewManager {
 
         // Prevent screen from dimming/locking.
         gvrActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mGearController = mInputManager.getGearController();
-        mGearController.attachReader(new DayDreamControllerReader(gvrActivity));
+        mControllerReader = new DayDreamControllerReader(gvrActivity);
     }
+
     public long getNativeRenderer(){
         return renderer.getNativeDaydreamRenderer();
     }
@@ -87,6 +88,14 @@ class DaydreamViewManager extends GVRViewManager {
         surfaceView.queueEvent(refreshViewerProfileRunnable);
     }
 
+    @Override
+    void onSurfaceCreated()
+    {
+        super.onSurfaceCreated();
+        mGearController = mInputManager.getGearController();
+        mGearController.attachReader(mControllerReader);
+    }
+    
     @Override
     void onPause() {
         super.onPause();
