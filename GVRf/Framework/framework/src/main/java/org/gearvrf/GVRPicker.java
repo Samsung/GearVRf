@@ -55,8 +55,8 @@ import org.joml.Vector3f;
  * <li>onEnter(GVRSceneObject)  called when the pick ray enters a scene object.</li>
  * <li>onExit(GVRSceneObject)   called when the pick ray exits a scene object.</li>
  * <li>onInside(GVRSceneObject) called while the pick ray penetrates a scene object.</li>
- * <li>onPick(GVRPicker)        called when the set of picked objects changes.</li>
- * <li>onNoPick(GVRPicker)      called once when nothing is picked.</li>
+ * <li>onPick(GVRPicker)        called every frame if something is picked.</li>
+ * <li>onNoPick(GVRPicker)      called every frame if nothing is picked.</li>
  * </ul
  * Each cursor controller has an internal picker that generates pick events
  * from that cursor. When a cursor is used, the pick events contain touch
@@ -431,8 +431,6 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
 
     protected void generatePickEvents(GVRPickedObject[] picked)
     {
-        int changed = 0;
-
         /*
          * Send "onExit" events for colliders that were picked but
          * are not picked anymore.
@@ -452,7 +450,6 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
                     collision.touched = mTouched;
                     collision.motionEvent = mMotionEvent;
                     propagateOnExit(collider.getOwnerObject(), collision);
-                    changed |= 1;   // indicate pick state changed
                 }
             }
         }
@@ -484,9 +481,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
                 if (mTouched)
                 {
                     propagateOnTouch(collision);
-                    changed |= 2;   // indicate touch state changed
                 }
-                changed |= 1;       // indicate pick state changed
             }
             else
             {
@@ -494,33 +489,22 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
                 if (prevHit.touched && !mTouched)
                 {
                     propagateOnNoTouch(collision);
-                    changed |= 2;   // indicate touch state changed
                 }
                 else if (!prevHit.touched && mTouched)
                 {
                     propagateOnTouch(collision);
-                    changed |= 2;   // indicate touch state changed
                 }
             }
         }
-        if (changed != 0)
-        {
             if (pickedCount > 0)
             {
                 mPicked = picked;
-                if ((changed & 1) != 0)
-                {
-                    propagateOnPick(this);
-                }
+                propagateOnPick(this);
             }
             else
             {
                 mPicked = null;
-                if ((changed & 1) != 0)
-                {
-                    propagateOnNoPick(this);
-                }
-            }
+                propagateOnNoPick(this);
         }
     }
 

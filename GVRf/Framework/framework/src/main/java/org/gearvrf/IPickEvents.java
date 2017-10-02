@@ -22,13 +22,14 @@ package org.gearvrf;
  */
 public interface IPickEvents extends IEvents {
     /**
-     * Called when the set of objects picked changes.
+     * Called every frame if any object is picked.
+     * {@link GVRPicker#getPicked()} returns the current list of collisions.
      * @param picker GVRPicker which generated the event.
      */
     void onPick(GVRPicker picker);
     
     /**
-     * Called when the set of objects picked is empty.
+     * Called every frame if the set of objects picked is empty.
      * @param picker GVRPicker which generated the event.
      */    
     void onNoPick(GVRPicker picker);

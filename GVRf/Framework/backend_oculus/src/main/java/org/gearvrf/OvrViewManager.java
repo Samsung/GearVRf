@@ -282,7 +282,10 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         drawEyes(mActivity.getActivityNative().getNative());
 
         // update the gear controller
-        mGearController.onDrawFrame();
+        if (mGearController != null)
+        {
+            mGearController.onDrawFrame();
+        }
 
         afterDrawEyes();
     }
@@ -314,7 +317,11 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         super.onSurfaceCreated();
         mRotationSensor.onResume();
         mGearController = mInputManager.getGearController();
-        mGearController.attachReader(new OvrControllerReader(mActivity.getActivityNative().getNative()));
+        if (mGearController != null)
+        {
+            mGearController.attachReader(
+                    new OvrControllerReader(mActivity.getActivityNative().getNative()));
+        }
     }
 
     /*

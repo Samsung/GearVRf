@@ -93,9 +93,12 @@ class DaydreamViewManager extends GVRViewManager {
     {
         super.onSurfaceCreated();
         mGearController = mInputManager.getGearController();
-        mGearController.attachReader(mControllerReader);
+        if (mGearController != null)
+        {
+            mGearController.attachReader(mControllerReader);
+        }
     }
-    
+
     @Override
     void onPause() {
         super.onPause();
