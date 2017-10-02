@@ -13,7 +13,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-  vec3 v_reflected_position = reflect(v_viewspace_position, normalize(v_viewspace_normal));
+  vec3 v_reflected_position = reflect(viewspace_position, normalize(viewspace_normal));
   vec3 v_tex_coord = (u_view_i * vec4(v_reflected_position, 1.0)).xyz;
   v_tex_coord.z = -v_tex_coord.z;
   vec4 color = texture(u_texture, v_tex_coord.xyz);
