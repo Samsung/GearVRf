@@ -15,10 +15,17 @@ class VkRenderTexture : public RenderTexture
     int mWidth, mHeight;
     std::vector <VkClearValue> clear_values;
 
-    VkRenderPassBeginInfo getRenderPassBeginInfo();
+
 public:
+    VkRenderPassBeginInfo getRenderPassBeginInfo();
     VKFramebuffer* getFBO(){
         return fbo;
+    }
+    virtual int width() const {
+        return mWidth;
+    }
+    virtual int height() const {
+        return mHeight;
     }
     virtual ~VkRenderTexture(){
         delete fbo;
@@ -34,7 +41,7 @@ public:
     virtual void bind();
     virtual void beginRendering(Renderer* renderer);
     virtual void beginRenderingPE(Renderer* renderer);
-    virtual void endRendering(Renderer* renderer);
+    virtual void endRendering(Renderer*){}
     virtual void endRenderingPE(Renderer* renderer);
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.
@@ -52,9 +59,7 @@ public:
     }
     bool readVkRenderResult(uint8_t **readback_buffer, VkCommandBuffer& cmd_buffer,VkFence& fence);
     VkRenderPass getRenderPass(){
-        if(fbo == nullptr)
-            bind();
-
+        bind();
         return fbo->getRenderPass();
     }
 };

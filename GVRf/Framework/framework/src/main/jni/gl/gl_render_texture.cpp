@@ -484,6 +484,8 @@ GLMultiviewRenderTexture::GLMultiviewRenderTexture(int width, int height, int sa
             depth_format = GL_DEPTH_COMPONENT16;
             break;
     }
+    const GLenum depthStencilAttachment =
+            GL_DEPTH24_STENCIL8_OES == depth_format ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
 
     PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR =
             (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC) eglGetProcAddress(
@@ -502,7 +504,7 @@ GLMultiviewRenderTexture::GLMultiviewRenderTexture(int width, int height, int sa
     }
     if (sample_count > 1 && !resolve_depth) {
         if (jdepth_format != DepthFormat::DEPTH_0) {
-            glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+            glFramebufferTextureMultisampleMultiviewOVR(GL_DRAW_FRAMEBUFFER, depthStencilAttachment,
                                                         frameBufferDepthTextureId, 0, sample_count,
                                                         0, 2);
         }
@@ -511,7 +513,7 @@ GLMultiviewRenderTexture::GLMultiviewRenderTexture(int width, int height, int sa
     }
     if (resolve_depth && sample_count > 1) {
         if (jdepth_format != DepthFormat::DEPTH_0)
-            glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+            glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, depthStencilAttachment,
                                              frameBufferDepthTextureId, 0, 0, 2);
         glGenTextures(1, &render_texture_gl_texture_);
         glBindTexture(GL_TEXTURE_2D_ARRAY, render_texture_gl_texture_);

@@ -253,7 +253,6 @@ bool Renderer::occlusion_cull_init(RenderState& renderState, std::vector<SceneOb
         renderState.scene->unlockColliders();
         return false;
     }
-    //LOGE("in occlusion cull %d", render_data_vector.size());
     return true;
 }
 
@@ -366,15 +365,15 @@ void Renderer::renderRenderData(RenderState& rstate, RenderData* render_data) {
     restoreRenderStates(render_data);
 }
 
-void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo, Transform* model)
+void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo, RenderData* renderData)
 {
+    Transform* model = renderData->owner_object() ? renderData->owner_object()->transform() : nullptr;
     rstate.uniforms.u_model = model ? model->getModelMatrix() : glm::mat4();
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
     transform_ubo->setMat4("u_model", rstate.uniforms.u_model);
 
     if (rstate.is_multiview)
     {
-      //  LOGE("multiview is true");
         if (!rstate.shadow_map)
         {
             rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
@@ -394,6 +393,7 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
         transform_ubo->setMat4("u_mv_", rstate.uniforms.u_mv_[0]);
         transform_ubo->setMat4("u_mv_it_", rstate.uniforms.u_mv_it_[0]);
         transform_ubo->setMat4("u_view_i_", rstate.uniforms.u_view_inv_[0]);
+        transform_ubo->setInt("u_render_mask",renderData->render_mask());
     }
     else
     {

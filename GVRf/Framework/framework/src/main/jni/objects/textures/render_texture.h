@@ -26,6 +26,15 @@
 
 namespace gvr {
 class Renderer;
+struct RenderTextureInfo{
+    int fdboWidth;
+    int fboHeight;
+    int multisamples;
+    int views;
+    GLuint fboId;
+    GLuint texId;
+    bool useMultiview;
+};
 class RenderTexture : public Texture
 {
 public:

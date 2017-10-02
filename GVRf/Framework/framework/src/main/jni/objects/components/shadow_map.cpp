@@ -18,7 +18,7 @@
 namespace gvr {
 class Renderer;
     ShadowMap::ShadowMap(ShaderData* mtl)
-            : RenderTarget((RenderTexture*)nullptr, false),
+            : GLRenderTarget((RenderTexture*)nullptr, false),
               mLayerIndex(-1),
               mShadowMaterial(mtl)
     {
@@ -61,7 +61,7 @@ class Renderer;
 
     void  ShadowMap::beginRendering(Renderer* renderer)
     {
-        RenderTarget::beginRendering(renderer);
+        GLRenderTarget::beginRendering(renderer);
         mRenderState.render_mask = 1;
         mRenderState.shadow_map = true;
         mRenderState.material_override = mShadowMaterial;

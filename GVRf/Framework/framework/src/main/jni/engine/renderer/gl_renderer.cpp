@@ -15,6 +15,7 @@
 
 #include <gl/gl_index_buffer.h>
 #include <gl/gl_vertex_buffer.h>
+#include <gl/gl_render_target.h>
 #include "glm/gtc/matrix_inverse.hpp"
 #include "gl/gl_material.h"
 #include "gl/gl_render_data.h"
@@ -44,7 +45,22 @@ namespace gvr
     {
         return new RenderPass();
     }
+   RenderTarget* GLRenderer::createRenderTarget(Scene* scene) {
+        return new GLRenderTarget(scene);
+    }
+    RenderTarget* GLRenderer::createRenderTarget(RenderTexture* renderTexture, bool isMultiview){
+        return new GLRenderTarget(renderTexture, isMultiview);
+    }
+    RenderTarget* GLRenderer::createRenderTarget(RenderTexture* renderTexture, const RenderTarget* renderTarget){
+        return new GLRenderTarget(renderTexture, renderTarget);
+    }
+    RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo){
 
+        if(renderTextureInfo.useMultiview)
+            return  new GLMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,2, renderTextureInfo.fboId, renderTextureInfo.texId);
+
+        return new GLNonMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,renderTextureInfo.fboId, renderTextureInfo.texId);
+    }
     void GLRenderer::clearBuffers(const Camera &camera) const
     {
         GLbitfield mask = GL_DEPTH_BUFFER_BIT;
@@ -121,7 +137,7 @@ namespace gvr
 
     RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers)
     {
-        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, DepthFormat::DEPTH_0);
+        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, DepthFormat::DEPTH_24_STENCIL_8);
         return tex;
     }
 
@@ -159,7 +175,7 @@ namespace gvr
     {
         const char* desc;
 
-        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; float u_right; ";
+        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; float u_right; uint u_render_mask; ";
 
         transform_ubo_[1] = reinterpret_cast<GLUniformBlock*>
         (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
@@ -283,6 +299,9 @@ namespace gvr
         if (!rstate.shadow_map)
         {
             rstate.render_mask = camera->render_mask();
+            if(rstate.is_multiview)
+                rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
+
             rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
             rstate.material_override = NULL;
             GL(glEnable (GL_BLEND));
@@ -681,7 +700,6 @@ namespace gvr
         GLRenderData* rdata = static_cast<GLRenderData*>(render_data);
         int drawMode = render_data->draw_mode();
 
-        Transform* model = render_data->owner_object() ? render_data->owner_object()->transform() : nullptr;
         try
         {
             shader->useShader(rstate.is_multiview);
@@ -713,7 +731,7 @@ namespace gvr
             if (shader->usesMatrixUniforms())
             {
                 UniformBlock* transformBlock = getTransformUbo(rstate.is_multiview ? 1 : 0);
-                updateTransforms(rstate, transformBlock, model);
+                updateTransforms(rstate, transformBlock, rdata);
                 if (!transformBlock->usesGPUBuffer())
                 {
                     static_cast<GLShader*>(shader)->findUniforms(*transformBlock, TRANSFORM_UBO_INDEX);

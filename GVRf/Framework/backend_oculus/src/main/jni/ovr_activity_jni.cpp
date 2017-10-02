@@ -14,10 +14,10 @@
  */
 
 #include <jni.h>
+#include <engine/renderer/renderer.h>
+#include <objects/textures/render_texture.h>
 #include "ovr_activity.h"
-
 namespace gvr {
-
     extern "C" {
 
     JNIEXPORT long JNICALL Java_org_gearvrf_OvrActivityNative_onCreate(JNIEnv* jni, jclass clazz,
@@ -28,7 +28,8 @@ namespace gvr {
 
     JNIEXPORT long JNICALL Java_org_gearvrf_GVRRenderBundle_getRenderTexture(JNIEnv* jni, jclass clazz, jlong jactivity , jint eye, jint index){
         GVRActivity* gvrActivity = reinterpret_cast<GVRActivity*>(jactivity);
-        return reinterpret_cast<long>(gvrActivity->createRenderTexture(eye, index));
+        RenderTextureInfo renderTextureInfo = std::move(gvrActivity->getRenderTextureInfo(eye, index));
+        return reinterpret_cast<long>(Renderer::getInstance()->createRenderTexture(renderTextureInfo));
     }
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDestroy(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);

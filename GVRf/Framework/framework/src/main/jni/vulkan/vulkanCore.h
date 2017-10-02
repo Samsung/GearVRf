@@ -77,12 +77,15 @@ class VKFramebuffer;
 extern uint8_t *oculusTexData;
 class VkRenderTexture;
 class VulkanShader;
+class VkRenderTarget;
+class RenderTarget;
 class VulkanCore {
 public:
     // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
     static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
         if (!theInstance) {
             theInstance = new VulkanCore(newNativeWindow);
+            theInstance->initVulkanCore();
         }
         if (theInstance->m_Vulkan_Initialised)
             return theInstance;
@@ -101,27 +104,21 @@ public:
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
     bool InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData);
-    bool InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData, int postEffectIndx);
+    bool InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData, int postEffectIndx, VkRenderTarget*);
 
 
-    void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*);
+    void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*);
     void BuildCmdBufferForRenderDataPE(Camera*, RenderData* rdata, Shader* shader, int postEffectIndx);
 
-    int DrawFrameForRenderData();
+    VkRenderTexture* DrawFrameForRenderData(VkRenderTarget*);
     int DrawFrameForRenderDataPE();
-    int getCurrentSwapChainIndx(){
-        return imageIndex;
-    }
-    VkCommandBuffer* getCurrentCmdBuffer(){
-        return swapChainCmdBuffer[imageIndex];
-    }
 
     VkCommandBuffer* getCurrentCmdBufferPE(){
         return postEffectCmdBuffer;
     }
     int AcquireNextImage();
 
-    void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, bool poastEffect, int postEffectIndx);
+    void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, VkRenderPass);
 
     bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
                                      uint32_t *typeIndex);
@@ -145,11 +142,9 @@ public:
     }
 
     void initVulkanCore();
-    bool swapChainCreated(){
-        return swap_chain_init_;
-    }
+
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
-    void RenderToOculus(int index, int postEffectFlag);
+    void RenderToOculus(VkRenderTexture*);
     void InitPostEffectChain();
 
     VkPipeline getPipeline(std::string key){
@@ -163,15 +158,24 @@ public:
     void addPipeline(std::string key, VkPipeline pipeline){
         pipelineHashMap[key] = pipeline;
     }
+    void InitCommandPools();
+    VkCommandPool getCommandPool(){
+        return m_commandPool;
+    }
+    VkRenderTexture* getPostEffectRenderTexture(int index){
+        return mPostEffectTexture[index];
+    }
+
 private:
-    std::vector <VkFence> waitFences;
+ //   std::vector <VkFence> waitFences;
     VkFence postEffectFence;
     VkFence waitSCBFences;
     static VulkanCore *theInstance;
     std::unordered_map<std::string, VkPipeline> pipelineHashMap;
 
-    bool swap_chain_init_;
-    VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL),swap_chain_init_(false) {
+
+    VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL), postEffectCmdBuffer(
+            nullptr),mRenderPassMap{0,0} {
         m_Vulkan_Initialised = false;
         initVulkanDevice(newNativeWindow);
 
@@ -188,11 +192,6 @@ private:
     void InitSurface();
 
     void InitSwapchain(uint32_t width, uint32_t height);
-
-
-    void InitCommandbuffers();
-
-    void InitTransientCmdPool();
 
     void InitSync();
 
@@ -223,14 +222,7 @@ private:
     VkQueue m_queue;
     VkSurfaceKHR m_surface;
 
-    std::vector<VkCommandBuffer*> swapChainCmdBuffer;
     VkCommandBuffer * postEffectCmdBuffer;
-
-    uint32_t m_height;
-    uint32_t m_width;
-
-    VkSemaphore m_backBufferSemaphore;
-    VkSemaphore m_renderCompleteSemaphore;
 
     VkCommandPool m_commandPool;
     VkCommandPool m_commandPoolTrans;
@@ -241,7 +233,7 @@ private:
 
     TextureObject * textureObject;
 
-    VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
+   // VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
     VkRenderTexture* mPostEffectTexture[POSTEFFECT_CHAIN_COUNT];
     VkRenderPass mRenderPassMap[2];
 };

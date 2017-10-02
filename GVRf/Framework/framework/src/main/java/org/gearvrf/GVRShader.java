@@ -78,6 +78,7 @@ public class GVRShader
             + "     mat4 u_model;\n"
             + "     mat4 u_view_i;\n"
             + "     float u_right;\n"
+            + "     uint u_render_mask;\n"
             + "};\n";
 
 
@@ -89,11 +90,13 @@ public class GVRShader
             + "     mat4 u_model;\n"
             + "     mat4 u_view_i;\n"
             + "     float u_right;\n"
+            + "     uint u_render_mask;\n"
             + "};\n";
 
 
     protected static String sTransformUniformCode = "// Transform_ubo implemented as uniforms\n"
             + " #ifdef HAS_MULTIVIEW\n"
+            + "    uniform uint u_render_mask;\n"
             + "    uniform mat4 u_view_[2];\n"
             + "    uniform mat4 u_mvp_[2];\n"
             + "    uniform mat4 u_mv_[2];\n"
@@ -107,6 +110,7 @@ public class GVRShader
             + "    uniform mat4 u_model;\n"
             + "    uniform mat4 u_view_i;\n"
             + "    uniform float u_right;\n";
+
 
     /**
      * Construct a shader using GLSL version 100.

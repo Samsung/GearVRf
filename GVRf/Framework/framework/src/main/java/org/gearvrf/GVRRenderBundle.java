@@ -51,9 +51,37 @@ final class GVRRenderBundle implements IRenderBundle {
         }
         mWidth = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionWidth();
         mHeight = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionHeight();
+
+       // createRenderTargetChain(mGVRContext.getActivity().getAppSettings().isMultiviewSet());
     }
 
+    public void createRenderTargetChain(boolean use_multiview){
+        if(use_multiview){
+            for(int i=0; i< 3; i++){
+                mMultiviewRenderTarget[i] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext,  mWidth, mHeight,
+                        getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.MULTIVIEW.ordinal(), i)), mGVRContext.getMainScene(), true);
+            }
+            for(int i=0; i< 3; i++){
+                int index = (i+1) % 3;
+                mMultiviewRenderTarget[i].attachRenderTarget(mMultiviewRenderTarget[index]);
+            }
+        }
+        else {
 
+            for (int i = 0; i < 3; i++) {
+                mLeftEyeRenderTarget[i] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight,
+                        getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.LEFT.ordinal(), i)), mGVRContext.getMainScene());
+
+                mRightEyeRenderTarget[i] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight,
+                        getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.RIGHT.ordinal(), i)), mGVRContext.getMainScene(), mLeftEyeRenderTarget[i]);
+            }
+            for (int i = 0; i < 3; i++) {
+                int index = (i + 1) % 3;
+                mLeftEyeRenderTarget[i].attachRenderTarget(mLeftEyeRenderTarget[index]);
+                mRightEyeRenderTarget[i].attachRenderTarget(mRightEyeRenderTarget[index]);
+            }
+        }
+    }
     public GVRRenderTarget getEyeCaptureRenderTarget() {
         if(mEyeCaptureRenderTarget == null){
             mEyeCaptureRenderTarget  = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight, mSampleCount), mGVRContext.getMainScene());
@@ -64,29 +92,26 @@ final class GVRRenderBundle implements IRenderBundle {
 
     public GVRRenderTarget getLeftEyeRenderTarget(int index){
             if(mLeftEyeRenderTarget[index] == null){
-                mLeftEyeRenderTarget[index] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight,
-                        getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.LEFT.ordinal(), index)), mGVRContext.getMainScene());
-                mLeftEyeRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getLeftCamera());
+                createRenderTargetChain(false);
             }
-            return mLeftEyeRenderTarget[index];
+
+      return mLeftEyeRenderTarget[index];
     }
 
     public GVRRenderTarget getRightEyeRenderTarget(int index){
         if(mRightEyeRenderTarget[index]== null) {
-            mRightEyeRenderTarget[index] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight,
-                    getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.RIGHT.ordinal(), index)), mGVRContext.getMainScene(), mLeftEyeRenderTarget[index]);
-            mRightEyeRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getRightCamera());
+            createRenderTargetChain(false);
         }
-        return mRightEyeRenderTarget[index];
+
+       return mRightEyeRenderTarget[index];
     }
 
     public GVRRenderTarget getMultiviewRenderTarget(int index){
         if(mMultiviewRenderTarget[index]== null) {
-            mMultiviewRenderTarget[index] = new GVRRenderTarget(new GVRRenderTexture(mGVRContext,  mWidth, mHeight,
-                    getRenderTexture(mGVRContext.getActivity().getNative(), GVRViewManager.EYE.MULTIVIEW.ordinal(), index)), mGVRContext.getMainScene(), true);
-            mMultiviewRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getLeftCamera());
+            createRenderTargetChain(true);
         }
-        return mMultiviewRenderTarget[index];
+
+     return mMultiviewRenderTarget[index];
     }
     public GVRRenderTarget getRenderTarget(GVRViewManager.EYE eye, int index){
         if(eye == GVRViewManager.EYE.LEFT)

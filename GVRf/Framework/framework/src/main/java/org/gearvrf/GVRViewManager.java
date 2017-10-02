@@ -129,8 +129,6 @@ abstract class GVRViewManager extends GVRContext {
         NativeScene.setMainScene(scene.getNative());
         getActivity().setCameraRig(scene.getMainCameraRig());
         mInputManager.setScene(scene);
-        //  mRenderBundle.updateMainScene(scene);
-        // Roshan: modify rendlebundle
     }
 
     protected boolean updateSensoredScene() {
@@ -687,7 +685,6 @@ abstract class GVRViewManager extends GVRContext {
         if (null == callback) {
             return;
         }
-        Log.e("RC","Roshan capture eye");
         readRenderResult(renderTarget,eye,useMultiview);
         returnScreenshotToCaller(callback, mReadbackBufferWidth, mReadbackBufferHeight);
     }

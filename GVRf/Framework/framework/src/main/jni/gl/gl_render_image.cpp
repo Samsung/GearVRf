@@ -127,6 +127,7 @@ GLRenderImage::GLRenderImage(int width, int height, int layers, int color_format
             break;
         case GL_TEXTURE_2D_ARRAY:
             texImage3D(color_format,width,height,layers, GL_TEXTURE_2D_ARRAY);
+            break;
         default:
             LOGE("incompatible Target");
     }

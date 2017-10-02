@@ -44,7 +44,7 @@ namespace gvr
   */
     }
 
-    void VulkanRenderData::createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, bool postEffect, int postEffectIndx){
+    void VulkanRenderData::createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, VkRenderPass render_pass){
         if(shader == NULL)
             return;
 
@@ -53,7 +53,7 @@ namespace gvr
         VulkanShader* vk_shader = static_cast<VulkanShader*>(shader);
 
         // TODO: if viewport, vertices, shader, draw_mode, blending or depth state changes, we need to re-create the pipeline
-        renderer->getCore()->InitPipelineForRenderData(vertices,this, vk_shader, pass, postEffect, postEffectIndx);
+        renderer->getCore()->InitPipelineForRenderData(vertices,this, vk_shader,pass, render_pass);
         getHashCode();
         clearDirty();
     }

@@ -54,21 +54,11 @@ namespace {
         return result;
     }
 
-
-    static void CheckGLError(const char *label) {
-        int gl_error = glGetError();
-        if (gl_error != GL_NO_ERROR) {
-            LOGW("GL error @ %s: %d", label, gl_error);
-            // Crash immediately to make OpenGL errors obvious.
-            abort();
-        }
-    }
-
 }  // namespace
 
 DaydreamRenderer::DaydreamRenderer(JNIEnv &env, jclass clazz,
-                                   gvr_context *gvr_context)
-        : gvr_api_(gvr::GvrApi::WrapNonOwned(gvr_context)),
+                                   gvr_context *gvr_context1)
+        : gvr_api_(gvr::GvrApi::WrapNonOwned(gvr_context1)), mUserPrefs(0),
           scratch_viewport_(gvr_api_->CreateBufferViewport()) {
     jclass rendererClass = env.GetObjectClass(clazz);
     rendererObject_ = env.NewGlobalRef(clazz);
@@ -151,7 +141,7 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
     // Submit frame.
     frame.Submit(*viewport_list_, head_view_);
 
-    CheckGLError("onDrawFrame");
+    checkGLError("onDrawFrame");
 }
 
 void DaydreamRenderer::OnPause() {
@@ -170,12 +160,9 @@ void DaydreamRenderer::OnDestroy(JNIEnv &env) {
 
 void DaydreamRenderer::SetViewport(const gvr::BufferViewport &viewport) {
     const gvr::Recti pixel_rect = CalculatePixelSpaceRect(render_size_, viewport.GetSourceUv());
-
     glViewport(pixel_rect.left, pixel_rect.bottom,
                pixel_rect.right - pixel_rect.left,
                pixel_rect.top - pixel_rect.bottom);
-
-    CheckGLError("SetViewport");
 }
 
 void DaydreamRenderer::SetCameraRig(jlong native_camera) {

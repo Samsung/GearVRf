@@ -23,9 +23,9 @@
 #include "objects/components/camera_rig.h"
 #include "util/ovr_configuration_helper.h"
 #include "VrApi_Types.h"
-#include "gl/gl_render_texture.h"
-namespace gvr {
 
+namespace gvr {
+    struct RenderTextureInfo;
     class CameraRig;
 
     class GVRActivity
@@ -39,7 +39,7 @@ namespace gvr {
 
         CameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
         bool sensoredSceneUpdated_ = false;
-        RenderTexture* createRenderTexture(int eye, int index);
+        RenderTextureInfo getRenderTextureInfo(int eye, int index);
     private:
         JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
 

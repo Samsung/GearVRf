@@ -108,6 +108,10 @@ public:
     virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
     virtual Image* createImage(int type, int format);
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
+    virtual RenderTarget* createRenderTarget(Scene*) ;
+    virtual RenderTarget* createRenderTarget(RenderTexture*, bool);
+    virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*);
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,

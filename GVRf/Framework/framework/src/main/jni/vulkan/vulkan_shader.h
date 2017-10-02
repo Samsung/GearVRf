@@ -93,7 +93,7 @@ public:
     int bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet);
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
 private:
-    VkDescriptorSetLayout m_pipelineLayout;
+    VkPipelineLayout m_pipelineLayout;
     VkDescriptorSetLayout m_descriptorLayout;
 
     VulkanShader(const VulkanShader& shader);

@@ -47,7 +47,14 @@ public:
 
     void SetCameraProjectionMatrix(gvr::CustomCamera *camera, const gvr::Rectf &fov, float z_near,
                          float z_far);
-
+    void updateHandedness(){
+        // Needs to be called when user changes its preferences, right now we don't any api to change preferences so we are calling it only once
+        mUserPrefs = gvr_api_->GetUserPrefs();
+        mBuffer[0] = mUserPrefs.GetControllerHandedness();
+    }
+    void setFloatBuffer(float* buffer){
+        mBuffer = buffer;
+    }
 private:
     void PrepareFramebuffer();
 
@@ -59,10 +66,10 @@ private:
     std::unique_ptr <gvr::BufferViewportList> scratch_viewport_list_;
     std::unique_ptr <gvr::SwapChain> swapchain_;
     gvr::BufferViewport scratch_viewport_;
-
+    gvr::UserPrefs mUserPrefs;
     gvr::Sizei render_size_;
     gvr::Mat4f head_view_;
-
+    float* mBuffer;
     jmethodID onDrawEyeMethodId_ = nullptr;
     jobject rendererObject_ = nullptr;
 

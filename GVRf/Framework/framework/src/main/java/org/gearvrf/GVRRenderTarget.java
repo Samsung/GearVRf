@@ -85,6 +85,9 @@ public class GVRRenderTarget extends GVRBehavior
         setCamera(scene.getMainCameraRig().getCenterCamera());
 
     }
+    public void attachRenderTarget(GVRRenderTarget renderTarget){
+        NativeRenderTarget.attachRenderTarget(getNative(),renderTarget.getNative());
+    }
     public void beginRendering(GVRCamera camera){
         NativeRenderTarget.beginRendering(getNative(), camera.getNative());
     }
@@ -153,4 +156,5 @@ class NativeRenderTarget
     static native void cullFromCamera(long scene, long renderTarget,long camera, long shader_manager );
     static native void render(long renderTarget, long camera, long shader_manager, long posteffectrenderTextureA, long posteffectRenderTextureB, long scene);
     static native void setTexture(long rendertarget, long texture);
+    static native void attachRenderTarget(long renderTarget, long nextRenderTarget);
 }

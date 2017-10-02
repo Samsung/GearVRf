@@ -56,8 +56,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj,
                                           jint width, jint height)
 {
-    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 0, 0, DepthFormat::DEPTH_16, 0, NULL,1);
-  //  RenderTexture* tex = new GLRenderTexture(width, height, 0, 0, DepthFormat::DEPTH_16, 0, NULL);
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 0, 0, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL,1);
     return reinterpret_cast<jlong>(tex);
 }
 
@@ -65,7 +64,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv* env, jobject obj,
                                               jint width, jint height, jint sample_count, jint number_views)
 {
-    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, 0, DepthFormat::DEPTH_16, 0, NULL, number_views);
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, 0, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL, number_views);
     return reinterpret_cast<jlong>(tex);
 }
 

@@ -16,14 +16,14 @@
 #include "ovr_activity.h"
 #include "../util/jni_utils.h"
 #include "../eglextension/msaa/msaa.h"
-#include "VrApi.h"
 #include "VrApi_Helpers.h"
+#include "VrApi.h"
 #include "VrApi_SystemUtils.h"
 #include <cstring>
 #include <unistd.h>
-#include <VrApi_Types.h>
+#include <objects/textures/render_texture.h>
 #include "engine/renderer/renderer.h"
-
+#include <VrApi_Types.h>
 
 static const char* activityClassName = "org/gearvrf/GVRActivity";
 static const char* viewManagerClassName = "org/gearvrf/OvrViewManager";
@@ -115,15 +115,23 @@ namespace gvr {
                                                          mMultisamplesConfiguration, mColorTextureFormatConfiguration,
                                                          mResolveDepthConfiguration, mDepthTextureFormatConfiguration);
     }
-RenderTexture*  GVRActivity::createRenderTexture(int eye, int index){
+
+RenderTextureInfo  GVRActivity::getRenderTextureInfo(int eye, int index){
     // for multiview, eye index would be 2
     eye = eye % 2;
     FrameBufferObject fbo = frameBuffer_[eye];
 
-    if(use_multiview)
-        return  new GLMultiviewRenderTexture(fbo.getWidth(),fbo.getHeight(),mMultisamplesConfiguration,2, fbo.getRenderBufferFBOId(index), fbo.getColorTexId(index));
+    RenderTextureInfo renderTextureInfo;
+    renderTextureInfo.fboId = fbo.getRenderBufferFBOId(index);
+    renderTextureInfo.fboHeight = fbo.getHeight();
+    renderTextureInfo.fdboWidth = fbo.getWidth();
+    renderTextureInfo.multisamples = mMultisamplesConfiguration;
+    renderTextureInfo.useMultiview = use_multiview;
+    renderTextureInfo.views = use_multiview ? 2 : 1;
+    renderTextureInfo.texId = fbo.getColorTexId(index);
 
-    return new GLNonMultiviewRenderTexture(fbo.getWidth(),fbo.getHeight(),mMultisamplesConfiguration,fbo.getRenderBufferFBOId(index), fbo.getColorTexId(index));
+    return renderTextureInfo;
+
 }
     void GVRActivity::onSurfaceChanged(JNIEnv& env) {
         int maxSamples = MSAA::getMaxSampleCount();
@@ -262,15 +270,14 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
                                    GL_RGBA,
                                    GL_UNSIGNED_BYTE,
                                    oculusTexData);
-
+                glFlush();
                 frameBuffer_[eye].advance();
             }
             else {
                 endRenderingEye(eye);
+                FrameBufferObject::unbind();
             }
         }
-
-        FrameBufferObject::unbind();
 
         // check if the controller is available
         if (gearController != nullptr && gearController->findConnectedGearController()) {

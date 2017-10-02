@@ -85,14 +85,47 @@ namespace gvr {
                 if (e.IsInt)
                 {
                     elemsize /= sizeof(int);
-                    switch (elemsize)
-                    {
-                        case 1: glUniform1iv(loc, e.Count, (const int*) data); break;
-                        case 2: glUniform2iv(loc, e.Count, (const int*) data); break;
-                        case 3: glUniform3iv(loc, e.Count, (const int*) data); break;
-                        case 4: glUniform4iv(loc, e.Count, (const int*) data); break;
-                        default: LOGE("UniformBlock: ERROR invalid integer vector size %d", elemsize); break;
+                    if(e.Type.compare("uint") == 0){
+                        switch (elemsize) {
+                            case 1:
+                                glUniform1uiv(loc, e.Count, (GLuint *) data);
+                                break;
+                            case 2:
+                                glUniform2uiv(loc, e.Count, (GLuint *) data);
+                                break;
+                            case 3:
+                                glUniform3uiv(loc, e.Count, (GLuint *) data);
+                                break;
+                            case 4:
+                                glUniform4uiv(loc, e.Count,(GLuint *) data);
+                                break;
+                            default:
+                                LOGE("UniformBlock: ERROR invalid integer vector size %d",
+                                     elemsize);
+                                break;
+                        }
                     }
+                    else {
+                        switch (elemsize) {
+                            case 1:
+                                glUniform1iv(loc, e.Count, (const int *) data);
+                                break;
+                            case 2:
+                                glUniform2iv(loc, e.Count, (const int *) data);
+                                break;
+                            case 3:
+                                glUniform3iv(loc, e.Count, (const int *) data);
+                                break;
+                            case 4:
+                                glUniform4iv(loc, e.Count, (const int *) data);
+                                break;
+                            default:
+                                LOGE("UniformBlock: ERROR invalid integer vector size %d",
+                                     elemsize);
+                                break;
+                        }
+                    }
+
                 }
                 else if (e.IsMatrix)
                 {

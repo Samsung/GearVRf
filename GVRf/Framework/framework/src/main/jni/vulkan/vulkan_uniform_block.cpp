@@ -54,7 +54,7 @@ namespace gvr {
         VulkanCore* vk = vkrender->getCore();
         if (!mIsDirty)
         {
-            return false;
+            return true;
         }
         if (!buffer_init_)
         {
