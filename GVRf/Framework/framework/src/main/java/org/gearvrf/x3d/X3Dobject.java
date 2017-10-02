@@ -1347,7 +1347,7 @@ public class X3Dobject {
 
                 gvrRenderData = new GVRRenderData(gvrContext);
                 gvrRenderData.setAlphaToCoverage(true);
-                gvrRenderData.setRenderingOrder(GVRRenderingOrder.TRANSPARENT);
+                gvrRenderData.setRenderingOrder(GVRRenderingOrder.GEOMETRY);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
                 shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID));
 

@@ -71,18 +71,9 @@ ShaderData* RenderData::material(int pass) const {
 
 void RenderData::adjustRenderingOrderForTransparency(bool hasAlpha)
 {
-    // had transparency before, but is now opaque
-    if (!hasAlpha)
+    if (hasAlpha)
     {
-        if (rendering_order_ > Geometry)
-        {
-            rendering_order_ = Geometry;
-            return;
-        }
-    }
         // has transparency now, but was opaque before
-    else
-    {
         if (rendering_order_ < Transparent)
         {
             rendering_order_ = Transparent;
