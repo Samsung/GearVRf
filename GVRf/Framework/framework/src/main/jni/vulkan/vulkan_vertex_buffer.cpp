@@ -156,7 +156,7 @@ namespace gvr {
                 {
                     VkVertexInputAttributeDescription binding;
                     binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
-                    binding.location = entry->Index;
+                    binding.location = e.Index;
                     LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
                     binding.format = getDataType(entry->Type); //float3
                     binding.offset = entry->Offset;
@@ -196,6 +196,9 @@ namespace gvr {
 
         if(type.compare("float4")==0 || type.compare("vec4")==0)
             return VK_FORMAT_R32G32B32A32_SFLOAT;
+
+        if(type.compare("int4")==0 || type.compare("ivec4")==0)
+            return VK_FORMAT_R32G32B32A32_SINT;
 
     }
 } // end gvrf

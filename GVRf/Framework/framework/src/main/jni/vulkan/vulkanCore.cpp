@@ -1295,7 +1295,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             return true;
         }
         VulkanShader* vkShader = reinterpret_cast<VulkanShader*>(shader);
-        bool bones_present = shader->getVertexDescriptor().isSet("a_bone_weights");
+        bool bones_present = shader->hasBones();
 
         std::vector<VkWriteDescriptorSet> writes;
         VkDescriptorPool descriptorPool;

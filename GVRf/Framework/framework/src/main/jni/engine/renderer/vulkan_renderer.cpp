@@ -46,13 +46,15 @@ RenderData* VulkanRenderer::createRenderData()
 RenderPass* VulkanRenderer::createRenderPass(){
     return new VulkanRenderPass();
 }
+
 UniformBlock* VulkanRenderer::createUniformBlock(const char* desc, int binding, const char* name, int maxelems)
 {
-    if (maxelems <= 1)
-    {
-        return new VulkanUniformBlock(desc, binding, name);
-    }
-    return new VulkanUniformBlock(desc, binding, name);
+   if (maxelems <= 1)
+   {
+       return new VulkanUniformBlock(desc, binding, name);
+   }
+
+    return new VulkanUniformBlock(desc, binding, name, maxelems);
 }
 
 Image* VulkanRenderer::createImage(int type, int format)
