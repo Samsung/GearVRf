@@ -51,7 +51,6 @@ namespace gvr
                 GLImageTex* image = static_cast<GLImageTex*>(tex->getImage());
                 int texid = image->getId();
 
-                LOGV("ShaderData::bindTexture index=%d texUnit=%d loc=%d id=%d", index, texUnit, loc, texid);
                 glActiveTexture(GL_TEXTURE0 + texUnit);
                 glBindTexture(image->getTarget(), texid);
                 glUniform1i(loc, texUnit++);

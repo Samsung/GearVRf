@@ -105,7 +105,6 @@ void Scene::bindShaders()
     int rc = get_java_env(&env);
     if (env && (rc >= 0))
     {
-        LOGD("SHADER: Calling GVRRenderData.bindShaderNative(%p)", this);
         env->CallVoidMethod(javaObj_, bindShadersMethod_, getJavaObj());
         if (rc > 0)
         {

@@ -125,13 +125,6 @@ public:
 
     bool checkForUpdate(int texid)
     {
-        const char* fname = getFileName();
-        const char* status = "UNINITIALIZED";
-        int state = mState;
-
-        if (state == UPDATE_PENDING) status = "UPDATE_PENDING";
-        if (state == HAS_DATA) status = "HAS_DATA";
-        LOGV("Texture: Image::checkForUpdate %p %d %s %s", this, texid, fname, status);
         if (texid && updatePending())
         {
             std::lock_guard<std::mutex> lock(mUpdateLock);

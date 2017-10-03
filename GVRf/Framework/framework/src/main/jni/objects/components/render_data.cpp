@@ -19,6 +19,7 @@
 #include "util/jni_utils.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
+
 namespace gvr {
 
 RenderData::~RenderData() {
@@ -139,7 +140,6 @@ void RenderData::bindShader(Scene *scene, bool isMultiview)
     int rc = scene->get_java_env(&env);
     if (env && (rc >= 0))
     {
-        LOGD("SHADER: Calling GVRRenderData.bindShaderNative(%p)", this);
         env->CallVoidMethod(javaObj_, bindShaderMethod_, scene->getJavaObj(), isMultiview);
         if (rc > 0)
         {

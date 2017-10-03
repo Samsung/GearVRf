@@ -227,8 +227,6 @@ int ShaderData::updateGPU(Renderer* renderer, RenderData* rdata)
             if (Shader::LOG_SHADER)
             {
                 const std::string& name = mTextureNames[texIndex];
-                LOGV("ShaderData::updateGPU %s is %s", name.c_str(),
-                     ready ? "ready" : "not ready");
             }
             if (!ready)
             {

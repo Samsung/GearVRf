@@ -76,7 +76,6 @@ namespace gvr {
                 int loc = glshader->getUniformLoc(e.Index, getBindingPoint());
                 if (loc < 0)
                 {
-                    LOGV("UniformBlock: %s not used by shader", e.Name);
                     return;
                 }
                 int elemsize = e.Size / e.Count;
@@ -150,7 +149,6 @@ namespace gvr {
                         default: LOGE("UniformBlock: ERROR invalid float vector size %d", elemsize); break;
                     }
                 }
-                LOGV("SHADER: UniformBlock::bindBuffer %s loc=%d size=%d", e.Name, loc, elemsize);
                 checkGLError("GLUniformBlock::bindBuffer");
             });
         }

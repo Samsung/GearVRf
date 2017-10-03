@@ -22,7 +22,7 @@
 
 namespace gvr {
 
-const bool Shader::LOG_SHADER = true;
+const bool Shader::LOG_SHADER = false;
 
 Shader::Shader(int id,
                const char* signature,

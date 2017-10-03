@@ -75,7 +75,6 @@ Java_org_gearvrf_NativeRenderPass_setShader(JNIEnv* env,
         jobject obj, jlong jrender_pass, jint jshaderid, jboolean jUse_multiview)
 {
     RenderPass* pass = reinterpret_cast<RenderPass*>(jrender_pass);
-    LOGD("SHADER: RenderPass: NativeRenderPass_setShader(%p)", pass);
     pass->set_shader(jshaderid, jUse_multiview);
 }
 

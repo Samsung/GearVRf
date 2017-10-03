@@ -39,7 +39,6 @@ namespace gvr
 
     void DataDescriptor::forEachEntry(std::function<void(DataEntry&)> func)
     {
-        LOGV("DataDescriptor::forEachEntry %s %d entries", mDescriptor.c_str(), mLayout.size());
         for (auto it = mLayout.begin(); it != mLayout.end(); ++it)
         {
             func(*it);
@@ -48,7 +47,6 @@ namespace gvr
 
     void DataDescriptor::forEachEntry(std::function<void(const DataEntry&)> func) const
     {
-        LOGV("DataDescriptor::forEachEntry %s %d entries", mDescriptor.c_str(), mLayout.size());
         for (auto it = mLayout.begin(); it != mLayout.end(); ++it)
         {
             func(*it);
