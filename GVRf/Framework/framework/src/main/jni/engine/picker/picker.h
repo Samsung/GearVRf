@@ -40,7 +40,6 @@ private:
 
 public:
     static void pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& pickList);
-    static void pickScene(Scene* scene, std::vector<ColliderData>& pickList);
     static void pickScene(
             Scene* scene, std::vector<ColliderData>& pickList,
             Transform* t,

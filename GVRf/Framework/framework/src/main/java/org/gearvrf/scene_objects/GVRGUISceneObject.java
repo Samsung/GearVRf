@@ -121,7 +121,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
             }
         };
         this.getEventReceiver().addListener(GUIEventListener);
-        this.setSensor(new GVRBaseSensor(gvrContext));
+        this.attachComponent(new GVRBaseSensor(gvrContext));
 
         MotionEvent.PointerProperties properties = new MotionEvent.PointerProperties();
         properties.id = 0;

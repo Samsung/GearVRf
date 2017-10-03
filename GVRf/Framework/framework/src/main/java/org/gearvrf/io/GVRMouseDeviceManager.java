@@ -15,6 +15,7 @@
 
 package org.gearvrf.io;
 
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
@@ -54,7 +55,7 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
         controllers = new SparseArray<>();
     }
 
-    GVRBaseController getCursorController(GVRContext context, String name, int vendorId, int productId) {
+    GVRCursorController getCursorController(GVRContext context, String name, int vendorId, int productId) {
         Log.d(TAG, "Creating Mouse Device");
         startThread();
         GVRMouseController controller = new GVRMouseController(context,
@@ -66,7 +67,7 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
         return controller;
     }
 
-    void removeCursorController(GVRBaseController controller) {
+    void removeCursorController(GVRCursorController controller) {
         int id = controller.getId();
         synchronized (controllers) {
             controllers.remove(id);
@@ -83,12 +84,11 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
         thread.updatePosition();
     }
 
-    private static class GVRMouseController extends GVRBaseController {
+    private static class GVRMouseController extends GVRCursorController {
         private static final KeyEvent BUTTON_1_DOWN = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_1);
         private static final KeyEvent BUTTON_1_UP = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_1);
 
         private GVRMouseDeviceManager deviceManager;
-        private GVRContext context;
         private final Vector3f position;
         private final Quaternionf rotation;
         private final Matrix4f scratchMatrix = new Matrix4f();
@@ -98,8 +98,7 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
 
         GVRMouseController(GVRContext context, GVRControllerType controllerType, String name, int
                 vendorId, int productId, GVRMouseDeviceManager deviceManager) {
-            super(controllerType, name, vendorId, productId);
-            this.context = context;
+            super(context, controllerType, name, vendorId, productId);
             this.deviceManager = deviceManager;
             position = new Vector3f(0.0f, 0.0f, -1.0f);
             rotation = new Quaternionf();
@@ -113,11 +112,19 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
                 deviceManager.startThread();
                 //set the enabled flag on the handler thread
                 deviceManager.thread.setEnable(getId(), true);
+                connected = true;
+                addPickEventListener(GVRBaseSensor.getPickHandler());
+                context.getInputManager().activateCursorController(this);
+                mPicker.setEnable(true);
             } else if (isEnabled && !enable) {
                 isEnabled = false;
                 //set the disabled flag on the handler thread
                 deviceManager.thread.setEnable(getId(), false);
                 deviceManager.stopThread();
+                connected = false;
+                mPicker.setEnable(false);
+                removePickEventListener(GVRBaseSensor.getPickHandler());
+                context.getInputManager().deactivateCursorController(this);
             }
         }
 
@@ -157,7 +164,7 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
         }
 
         @Override
-        public boolean dispatchKeyEvent(KeyEvent event) {
+        public synchronized boolean dispatchKeyEvent(KeyEvent event) {
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
                 return deviceManager.thread.submitKeyEvent(getId(), event);
             } else {
@@ -166,7 +173,7 @@ final class GVRMouseDeviceManager implements GVRDrawFrameListener {
         }
 
         @Override
-        public boolean dispatchMotionEvent(MotionEvent event) {
+        public synchronized boolean dispatchMotionEvent(MotionEvent event) {
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
                 return deviceManager.thread.submitMotionEvent(getId(), event);
             } else {

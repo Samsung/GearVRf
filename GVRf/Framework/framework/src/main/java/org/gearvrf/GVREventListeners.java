@@ -120,4 +120,38 @@ public class GVREventListeners {
         public void onLoaded() {
         }
     }
+
+    /**
+     * Null implementation of {@link IPickEvents}
+     */
+    public static class PickEvents implements IPickEvents
+    {
+        @Override
+        public void onPick(GVRPicker picker) { }
+        @Override
+        public void onNoPick(GVRPicker picker) { }
+        @Override
+        public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+        @Override
+        public void onExit(GVRSceneObject sceneObj) { }
+        @Override
+        public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+}
+
+    /**
+     * Null implementation of {@link ITouchEvents}
+     */
+    public static class TouchEvents implements ITouchEvents
+    {
+        @Override
+        public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+        @Override
+        public void onExit(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+        @Override
+        public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+        @Override
+        public void onTouchStart(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+        @Override
+        public void onTouchEnd(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
+    }
 }

@@ -126,6 +126,7 @@ abstract class GVRViewManager extends GVRContext {
         mMainScene = scene;
         NativeScene.setMainScene(scene.getNative());
         getActivity().setCameraRig(scene.getMainCameraRig());
+        mInputManager.scanControllers();
         mInputManager.setScene(scene);
     }
 
@@ -809,7 +810,7 @@ abstract class GVRViewManager extends GVRContext {
     protected SplashScreen mSplashScreen;
 
     private final GVREventManager mEventManager;
-    private final GVRInputManagerImpl mInputManager;
+    protected final GVRInputManagerImpl mInputManager;
     protected IRenderBundle mRenderBundle;
 
     protected GVRMain mMain;

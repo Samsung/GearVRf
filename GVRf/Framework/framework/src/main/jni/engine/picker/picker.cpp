@@ -70,11 +70,6 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transf
     scene->unlockColliders();
 }
 
-void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
-    Transform* t = scene->main_camera_rig()->getHeadTransform();
-    pickScene(scene, pickList, t, 0, 0, 0, 0, 0, -1.0f);
-}
-
 /**
  * Picks a single scene object from the scene. If the object has a mesh collider, the picker will calculate the
  * texture coordinates and barycentric coordinates of the corresponding hit-point. Note that this will do nothing

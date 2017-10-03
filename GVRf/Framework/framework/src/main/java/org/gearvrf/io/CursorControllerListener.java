@@ -52,4 +52,21 @@ public interface CursorControllerListener {
      */
     public void onCursorControllerRemoved(GVRCursorController controller);
 
+    /**
+     * Called when the {@link GVRCursorController} previously added
+     * has become active and is generating events.
+     *
+     * @param controller
+     *            the {@link GVRCursorController} removed.
+     */
+    public void onCursorControllerActive(GVRCursorController controller);
+
+    /**
+     * Called when the {@link GVRCursorController} previously added
+     * is no longer generating events.
+     *
+     * @param controller
+     *            the {@link GVRCursorController} removed.
+     */
+    public void onCursorControllerInactive(GVRCursorController controller);
 }

@@ -23,6 +23,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRScene;
@@ -82,7 +83,7 @@ class GVRGamepadDeviceManager {
         controllers = new SparseArray<GVRGamepadController>();
     }
 
-    GVRBaseController getCursorController(GVRContext context, String name,
+    GVRCursorController getCursorController(GVRContext context, String name,
                                           int vendorId, int productId) {
         startThread();
         GVRGamepadController controller = new GVRGamepadController(context,
@@ -92,7 +93,7 @@ class GVRGamepadDeviceManager {
         return controller;
     }
 
-    void removeCursorController(GVRBaseController controller) {
+    void removeCursorController(GVRCursorController controller) {
         int id = controller.getId();
         controllers.remove(id);
 
@@ -103,7 +104,7 @@ class GVRGamepadDeviceManager {
         }
     }
 
-    private static class GVRGamepadController extends GVRBaseController {
+    private static class GVRGamepadController extends GVRCursorController {
         private static final float[] UP_VECTOR = {0.0f, 1.0f, 0.0f, 1.0f};
         private static final float[] RIGHT_VECTOR = {1.0f, 0.0f, 0.0f, 1.0f};
 
@@ -122,8 +123,7 @@ class GVRGamepadDeviceManager {
         public GVRGamepadController(GVRContext context,
                                     GVRControllerType controllerType, String name, int vendorId,
                                     int productId, GVRGamepadDeviceManager deviceManager) {
-            super(controllerType, name, vendorId, productId);
-            this.context = context;
+            super(context, controllerType, name, vendorId, productId);
             internalObject = new GVRSceneObject(context);
             internalObject.getTransform().setPosition(0.0f, 0.0f, -1.0f);
             this.deviceManager = deviceManager;
@@ -137,11 +137,19 @@ class GVRGamepadDeviceManager {
                 deviceManager.startThread();
                 //set the enabled flag on the handler thread
                 deviceManager.thread.setEnable(getId(), true);
+                addPickEventListener(GVRBaseSensor.getPickHandler());
+                mPicker.setEnable(true);
+                connected = true;
+                context.getInputManager().activateCursorController(this);
             } else if (isEnabled && !enable) {
                 isEnabled = false;
                 //set the disabled flag on the handler thread
                 deviceManager.thread.setEnable(getId(), false);
                 deviceManager.stopThread();
+                connected = false;
+                mPicker.setEnable(false);
+                removePickEventListener(GVRBaseSensor.getPickHandler());
+                context.getInputManager().deactivateCursorController(this);
             }
         }
 

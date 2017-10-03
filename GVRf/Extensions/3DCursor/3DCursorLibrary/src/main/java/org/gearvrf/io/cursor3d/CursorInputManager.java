@@ -98,6 +98,16 @@ class CursorInputManager {
                 }
             }
         }
+
+        public void onCursorControllerActive(GVRCursorController gvrCursorController)
+        {
+
+        }
+
+        public void onCursorControllerInactive(GVRCursorController gvrCursorController)
+        {
+
+        }
     };
 
     interface IoDeviceListener {

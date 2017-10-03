@@ -33,7 +33,6 @@ import org.gearvrf.io.GVRInputManager;
  */
 class GVRInputManagerImpl extends GVRInputManager {
     private static final String TAG = GVRInputManagerImpl.class.getSimpleName();
-    private final SensorManager sensorManager;
     private List<CursorControllerListener> listeners;
     private GVRScene scene;
     private List<GVRCursorController> controllers;
@@ -41,15 +40,19 @@ class GVRInputManagerImpl extends GVRInputManager {
     GVRInputManagerImpl(GVRContext gvrContext, boolean useGazeCursorController,
                         boolean useAndroidWearTouchpad) {
         super(gvrContext, useGazeCursorController, useAndroidWearTouchpad);
-        sensorManager = SensorManager.getInstance();
 
         controllers = new ArrayList<GVRCursorController>();
         listeners = new ArrayList<CursorControllerListener>();
 
+     }
+
+    public void scanControllers()
+    {
+        super.scanControllers();
         for (GVRCursorController controller : super.getCursorControllers()) {
             addCursorController(controller);
         }
-     }
+    }
 
     @Override
     public void addCursorControllerListener(CursorControllerListener listener) {
@@ -69,10 +72,27 @@ class GVRInputManagerImpl extends GVRInputManager {
     @Override
     public void addCursorController(GVRCursorController controller) {
         controllers.add(controller);
-        controller.setScene(scene);
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
                 listener.onCursorControllerAdded(controller);
+            }
+        }
+    }
+
+    @Override
+    public void activateCursorController(GVRCursorController controller) {
+        synchronized (listeners) {
+            for (CursorControllerListener listener : listeners) {
+                listener.onCursorControllerActive(controller);
+            }
+        }
+    }
+
+    @Override
+    public void deactivateCursorController(GVRCursorController controller) {
+        synchronized (listeners) {
+            for (CursorControllerListener listener : listeners) {
+                listener.onCursorControllerInactive(controller);
             }
         }
     }
@@ -88,6 +108,7 @@ class GVRInputManagerImpl extends GVRInputManager {
         }
     }
 
+
     /**
      * This method sets a new scene for the {@link GVRInputManagerImpl}
      * 
@@ -96,6 +117,7 @@ class GVRInputManagerImpl extends GVRInputManager {
      */
     void setScene(GVRScene scene) {
         this.scene = scene;
+
         for (GVRCursorController controller : controllers) {
             controller.setScene(scene);
             controller.invalidate();
@@ -104,17 +126,12 @@ class GVRInputManagerImpl extends GVRInputManager {
 
     @Override
     protected void close() {
+        if (controllers.size() > 0)
+        {
+            controllers.get(0).removePickEventListener(GVRBaseSensor.getPickHandler());
+        }
         super.close();
         controllers.clear();
-        sensorManager.clear();
-    }
-
-    void addSensor(GVRBaseSensor sensor) {
-        sensorManager.addSensor(sensor);
-    }
-
-    void removeSensor(GVRBaseSensor sensor) {
-        sensorManager.removeSensor(sensor);
     }
 
     @Override

@@ -71,7 +71,6 @@ class LaserCursor extends Cursor {
         cursorEvent.setMotionEvents(controller.getMotionEvents());
         cursorEvent.setKeyEvent(controller.getKeyEvent());
         isControllerActive = event.isActive();
-        cursorEvent.setEventGroup(event.getEventGroup());
 
         if (event.isActive()) {
             checkAndSetAsset(Action.CLICK);

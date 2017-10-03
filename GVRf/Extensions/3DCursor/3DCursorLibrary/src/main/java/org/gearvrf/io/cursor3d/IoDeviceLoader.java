@@ -15,6 +15,7 @@
 
 package org.gearvrf.io.cursor3d;
 
+import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 
 class IoDeviceLoader {
@@ -80,8 +81,8 @@ class IoDeviceLoader {
         }
     }
 
-    static IoDevice getGearVrIoDevice() {
-        return new IoDevice(GEARVR_DEVICE_ID, SAMSUNG_VENDOR_ID, GEARVR_PRODUCT_ID,
-                GEARVR_NAME, SAMSUNG_VENDOR_NAME, null);
+    static IoDevice getGearVrIoDevice(GVRContext ctx) {
+        return new IoDevice(ctx, GEARVR_DEVICE_ID, SAMSUNG_VENDOR_ID, GEARVR_PRODUCT_ID,
+                GEARVR_NAME, SAMSUNG_VENDOR_NAME, true);
     }
 }
