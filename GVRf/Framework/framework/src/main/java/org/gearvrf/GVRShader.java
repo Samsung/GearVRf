@@ -52,7 +52,7 @@ import android.os.Environment;
  */
 public class GVRShader
 {
-    protected boolean mWriteShadersToDisk = true;
+    protected boolean mWriteShadersToDisk = false;
     protected GLSLESVersion mGLSLVersion = GLSLESVersion.V100;
     protected boolean mHasVariants = false;
     protected boolean mUsesLights = false;
