@@ -16,8 +16,8 @@
 include ':gearwearlibrary'
 project(':gearwearlibrary').projectDir = new File('3DCursor/IODevices/gearwear/PhoneSide/gearwearlibrary')
 
-include ':3DCursorLibrary'
-project(':3DCursorLibrary').projectDir = new File('3DCursor/3DCursorLibrary')
+//include ':3DCursorLibrary'
+//project(':3DCursorLibrary').projectDir = new File('3DCursor/3DCursorLibrary')
 
 include ':debugwebserver'
 project(':debugwebserver').projectDir = new File('DebugWebServer/debugwebserver')
@@ -28,8 +28,8 @@ project(':sceneserializer').projectDir = new File('SceneSerializer/sceneserializ
 include ':widgetplugin'
 project(':widgetplugin').projectDir = new File('WidgetPlugin/widgetplugin')
 
-include ':GearWearIoDevice'
-project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
+//include ':GearWearIoDevice'
+//project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
 
 include ':gvrf-physics'
 project(':gvrf-physics').projectDir = new File('gvrf-physics')
