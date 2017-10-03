@@ -265,6 +265,14 @@ Java_org_gearvrf_NativeRenderData_setRenderMask(JNIEnv * env,
     render_data->set_render_mask(render_mask);
 }
 
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_NativeRenderData_getRenderingOrder(
+        JNIEnv * env, jobject obj, jlong jrender_data)
+{
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->rendering_order();
+}
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setRenderingOrder(
         JNIEnv * env, jobject obj, jlong jrender_data, jint rendering_order) {
