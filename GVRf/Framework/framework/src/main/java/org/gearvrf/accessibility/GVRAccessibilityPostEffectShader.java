@@ -12,19 +12,19 @@
 package org.gearvrf.accessibility;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.GVRShader;
 import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**
  * Shader to invert colors by post processing rendered image from cameras.
  */
-public class GVRAccessibilityPostEffectShader  extends GVRShaderTemplate {
+public class GVRAccessibilityPostEffectShader  extends GVRShader {
     static String fragmentSource;
     static String vertexSource;
 
     public GVRAccessibilityPostEffectShader(GVRContext context) {
-        super("", "sampler2D u_texture", "float3 a_position float2 a_texcoord",GLSLESVersion.V300);
+        super("", "sampler2D u_texture", "float3 a_position float2 a_texcoord", GVRShader.GLSLESVersion.VULKAN);
         if (vertexSource == null)
         {
             vertexSource = TextFile.readTextFile(context.getContext(), R.raw.inverted_colors_vertex);

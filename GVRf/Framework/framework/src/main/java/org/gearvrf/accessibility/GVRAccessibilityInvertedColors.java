@@ -37,38 +37,22 @@ public class GVRAccessibilityInvertedColors {
 
     public void turnOn(final GVRScene... scene) {
         mInverted = true;
-        mGvrContext.runOnGlThread(new Runnable() {
-
-            @Override
-            public void run() {
-                for (GVRScene gvrScene : scene) {
-                    gvrScene.getMainCameraRig().getLeftCamera()
+        for (GVRScene gvrScene : scene) {
+            gvrScene.getMainCameraRig().getLeftCamera()
                             .addPostEffect(postEffect);
-                    gvrScene.getMainCameraRig().getRightCamera()
+            gvrScene.getMainCameraRig().getRightCamera()
                             .addPostEffect(postEffect);
-                }
-            }
-
-        });
-
+        }
     }
 
     public void turnOff(final GVRScene... scene) {
         mInverted = false;
-        mGvrContext.runOnGlThread(new Runnable() {
-
-            @Override
-            public void run() {
-                for (GVRScene gvrScene : scene) {
-                    gvrScene.getMainCameraRig().getLeftCamera()
+        for (GVRScene gvrScene : scene) {
+            gvrScene.getMainCameraRig().getLeftCamera()
                             .removePostEffect(postEffect);
-                    gvrScene.getMainCameraRig().getRightCamera()
+            gvrScene.getMainCameraRig().getRightCamera()
                             .removePostEffect(postEffect);
-                }
-            }
-
-        });
-
+        }
     }
 
     public boolean isInverted() {

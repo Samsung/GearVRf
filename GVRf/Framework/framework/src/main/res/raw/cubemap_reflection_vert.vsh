@@ -2,7 +2,7 @@
 #extension GL_ARB_shading_language_420pack : enable
 precision highp float;
 layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec3 a_normal;
+layout(location = 5) in vec3 a_normal;
 
 @MATRIX_UNIFORMS
 

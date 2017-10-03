@@ -280,6 +280,13 @@ Java_org_gearvrf_NativeRenderData_setRenderingOrder(
     render_data->set_rendering_order(rendering_order);
 }
 
+JNIEXPORT int JNICALL
+Java_org_gearvrf_NativeRenderData_getRenderingOrder(
+    JNIEnv * env, jobject obj, jlong jrender_data) {
+    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
+    return render_data->rendering_order();
+}
+
 JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeRenderData_getOffset(JNIEnv * env,
                                             jobject obj, jlong jrender_data) {

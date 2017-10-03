@@ -412,7 +412,13 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
 void Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass)
 {
     RenderPass* rpass = post_effect->pass(pass);
+    if(rpass == NULL)
+        return;
+
     ShaderData* material = rpass->material();
+
+    if(material == NULL)
+        return;
 
     material->setTexture("u_texture", input_texture);
     int result = rpass->isValid(this, rstate, post_effect);
