@@ -25,6 +25,7 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
@@ -68,6 +69,8 @@ final public class GVRGazeCursorController extends GVRCursorController implement
         forwardDirection = new Vector3f(0, 0, -1);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
+        mPicker.getEventReceiver().addListener(GVRBaseSensor.getPickHandler());
+        mPicker.setEnable(isEnabled);
     }
 
     /*
