@@ -64,7 +64,11 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv* env, jobject obj,
                                               jint width, jint height, jint sample_count, jint number_views)
 {
-    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, 0, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL, number_views);
+    int depth_format = DepthFormat::DEPTH_24_STENCIL_8;
+
+    if(number_views > 1) // multiview doesn't work with stencil attachment
+        depth_format = DepthFormat::DEPTH_16;
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, 0, depth_format , 0, NULL, number_views);
     return reinterpret_cast<jlong>(tex);
 }
 

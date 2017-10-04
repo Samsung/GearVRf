@@ -60,7 +60,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
     private OvrSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
-
+    private GVRRenderTarget mRenderTarget = null;
     /**
      * Constructs OvrMonoscopicViewManager object with GVRMain which controls
      * GL activities
@@ -127,7 +127,12 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         }
 
     }
+    GVRRenderTarget getRenderTarget(){
+        if(mRenderTarget == null)
+            mRenderTarget = new GVRRenderTarget(getActivity().getGVRContext());
 
+        return mRenderTarget;
+    }
     /*
      * GL life cycle
      */
@@ -140,11 +145,12 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     }
 
     private void drawEyes() {
-        // Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().updateRotation();
-        OvrMonoscopicRenderer.renderCamera(mMainScene, mMainScene
-                        .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
-                mViewportWidth, mViewportHeight, mRenderBundle);
+        GVRRenderTarget renderTarget = getRenderTarget();
+        renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getMaterialShaderManager());
+        renderTarget.render(mMainScene,mMainScene
+                        .getMainCameraRig().getLeftCamera(),mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                mRenderBundle.getPostEffectRenderTextureB());
 
     }
 

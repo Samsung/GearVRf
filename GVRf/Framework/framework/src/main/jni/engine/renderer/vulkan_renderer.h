@@ -86,26 +86,7 @@ public:
     VkPhysicalDevice& getPhysicalDevice(){
         return vulkanCore_->getPhysicalDevice();
     }
-    // pure virtual
-     void renderCamera(Scene* scene, Camera* camera,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b);
 
-   void renderCamera(Scene* scene, Camera* camera, int viewportX,
-             int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b){}
-   void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b){}
-   void renderCamera(Scene* scene, Camera* camera,
-             RenderTexture* render_texture, ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b){}
     void restoreRenderStates(RenderData* render_data){}
     void setRenderStates(RenderData* render_data, RenderState& rstate){}
     virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,

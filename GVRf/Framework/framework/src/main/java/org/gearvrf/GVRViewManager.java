@@ -493,7 +493,6 @@ abstract class GVRViewManager extends GVRContext {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
 
-        GVRPerspectiveCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         makeShadowMaps(mMainScene.getNative(), mRenderBundle.getMaterialShaderManager().getNative(),
                 mRenderBundle.getPostEffectRenderTextureA().getWidth(),
                 mRenderBundle.getPostEffectRenderTextureA().getHeight());
@@ -518,15 +517,6 @@ abstract class GVRViewManager extends GVRContext {
         mFrameHandler.afterDrawEyes();
         finalizeUnreachableObjects();
         GVRNotifications.notifyAfterStep();
-    }
-
-    protected void renderCamera(GVRScene scene, GVRCamera camera, IRenderBundle
-            renderBundle) {
-        renderCamera(scene.getNative(), camera.getNative(),
-                renderBundle.getMaterialShaderManager().getNative(),
-                0,
-                renderBundle.getPostEffectRenderTextureA().getNative(),
-                renderBundle.getPostEffectRenderTextureB().getNative());
     }
 
     void cullAndRender(GVRRenderTarget renderTarget, GVRScene scene)
@@ -835,9 +825,6 @@ abstract class GVRViewManager extends GVRContext {
     protected int mReadbackBufferWidth;
     protected int mReadbackBufferHeight;
 
-
-    protected native void renderCamera(long scene, long camera, long shaderManager,
-                                       long postEffectShaderManager, long postEffectRenderTextureA, long postEffectRenderTextureB);
     protected native void cull(long scene, long camera, long shader_manager);
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
     protected native void cullAndRender(long render_target, long scene, long shader_manager, long postEffectRenderTextureA, long postEffectRenderTextureB);

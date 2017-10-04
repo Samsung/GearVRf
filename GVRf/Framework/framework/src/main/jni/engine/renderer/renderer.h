@@ -151,27 +151,7 @@ public:
     virtual RenderTarget* createRenderTarget(Scene*) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, bool) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*) = 0;
-     virtual void renderCamera(Scene* scene, Camera* camera,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b) = 0;
 
-     virtual void renderCamera(Scene* scene, Camera* camera, int viewportX,
-             int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b)=0;
-
-     virtual void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-            ShaderManager* shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) = 0;
-
-     virtual void renderCamera(Scene* scene, Camera* camera,
-            RenderTexture* render_texture, ShaderManager* shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) = 0;
     virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b)=0;
     virtual void restoreRenderStates(RenderData* render_data) = 0;

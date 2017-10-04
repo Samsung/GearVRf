@@ -39,7 +39,7 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, 1);
+    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, 4);
 }
     RenderData* VulkanRenderer::createRenderData()
 {
@@ -129,7 +129,7 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(pass)) {
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
 
-        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,1);
+        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,4);
         std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
@@ -289,83 +289,6 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
 
 
     vulkanCore_->RenderToOculus(renderTexture);
-}
-
-void VulkanRenderer::renderCamera(Scene *scene, Camera *camera,
-                                  ShaderManager *shader_manager,
-                                  RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b) {
-
-#if 0
-    std::vector<RenderData*> render_data_list;
-    vulkanCore_->AcquireNextImage();
-    RenderState rstate;
-    rstate.shadow_map = false;
-    rstate.material_override = NULL;
-    rstate.shader_manager = shader_manager;
-    rstate.scene = scene;
-    rstate.render_mask = camera->render_mask();
-    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
-    rstate.uniforms.u_view = camera->getViewMatrix();
-    rstate.uniforms.u_proj = camera->getProjectionMatrix();
-
-    RenderData* post_effects = camera->post_effect_data();
-    int postEffectCount = post_effects->pass_count();
-
-    for (auto &rdata : render_data_vector)
-    {
-        if (!(rstate.render_mask & rdata->render_mask()))
-            continue;
-
-        for(int curr_pass = 0; curr_pass < rdata->pass_count(); curr_pass++) {
-            ShaderData *curr_material = rdata->material(curr_pass);
-            Shader *shader = rstate.shader_manager->getShader(rdata->get_shader(rstate.is_multiview,curr_pass));
-            if (shader == NULL)
-            {
-                LOGE("SHADER: shader not found");
-                continue;
-            }
-            if (!renderWithShader(rstate, shader, rdata, curr_material, curr_pass))
-                break;
-
-            if(curr_pass == rdata->pass_count()-1)
-                render_data_list.push_back(rdata);
-        }
-    }
-
-    vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager);
-    int index = vulkanCore_->DrawFrameForRenderData();
-
-    if(postEffectCount)
-        vulkanCore_->InitPostEffectChain();
-
-    // Call Post Effect
-    for(int i = 0; i < post_effects->pass_count(); i++) {
-        RenderPass* rp =  post_effects->pass(i);
-        RenderPass* rpass = post_effects->pass(i);
-
-        int result = rpass->isValid(this, rstate, post_effects);
-        if (result < 0)         // something wrong with material or texture
-        {
-            LOGE("Renderer::renderPostEffectData pass %d material or texture not ready", i);
-            return;             // don't render this pass
-        }
-        if ((result == 0) && (post_effects->isValid(this, rstate) < 0))
-        {
-            LOGE("Renderer::renderPostEffectData pass %d shader not available", i);
-            return;             // no shader available
-        }
-        int nativeShader = rpass->get_shader(rstate.is_multiview);
-        Shader* shader = rstate.shader_manager->getShader(nativeShader);
-        renderWithPostEffectShader(rstate, shader, post_effects, i);
-
-        vulkanCore_->BuildCmdBufferForRenderDataPE(camera, post_effects, shader, i);
-        vulkanCore_->DrawFrameForRenderDataPE();
-        index = i % 2;
-    }
-
-    vulkanCore_->RenderToOculus(index, postEffectCount);
-#endif
 }
 
 
