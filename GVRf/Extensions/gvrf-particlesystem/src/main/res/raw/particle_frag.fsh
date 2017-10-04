@@ -1,6 +1,6 @@
 precision mediump float;
 uniform vec4 u_color;
-uniform float u_particle_age;
+uniform highp float u_particle_age;
 uniform sampler2D tex0;
 uniform float u_fade;
 
