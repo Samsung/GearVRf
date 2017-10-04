@@ -184,7 +184,6 @@ namespace gvr
                     }
                     addName(name, namelen, entry);
                     mLayout.push_back(entry);
-                    LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
                     mTotalSize += entry.Size;
                 });
     }

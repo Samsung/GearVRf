@@ -38,7 +38,6 @@ namespace gvr
             mUniformData = new char[mTotalSize];
             memset(mUniformData, 0, mTotalSize);
             mOwnData = true;
-            LOGV("UniformBlock: allocating uniform block %s of %d  bytes", blockName, mTotalSize);
         }
         else
         {
