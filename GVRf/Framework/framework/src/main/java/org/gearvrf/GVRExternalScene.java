@@ -172,7 +172,7 @@ public class GVRExternalScene extends GVRBehavior
 
         if (mReplaceScene)
         {
-            loader.loadScene(getOwnerObject(), mVolume, mImportSettings, getGVRContext().getMainScene(), null);
+            loader.loadScene(getOwnerObject(), mVolume, mImportSettings, getGVRContext().getMainScene(), handler);
         }
         else
         {

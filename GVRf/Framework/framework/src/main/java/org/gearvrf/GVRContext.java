@@ -17,29 +17,21 @@ package org.gearvrf;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.Gravity;
 
-import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
-import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
-import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRHybridObject.NativeCleanupHandler;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRMaterialAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
-import org.gearvrf.asynchronous.GVRCompressedTexture;
-import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
@@ -47,7 +39,6 @@ import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
@@ -60,6 +51,8 @@ import java.util.concurrent.Future;
 /**
  * Like the Android {@link Context} class, {@code GVRContext} provides core
  * services, and global information about an application environment.
+ * {@code GVRContext} also holds the {@linkplain GVRScene main scene} and miscellaneous information
+ * like {@linkplain #getFrameTime() the frame time.}
  * <ul>
  * <li>
  * The application <b>activity</b> resides in the context {@link #getActivity()}.
@@ -73,7 +66,7 @@ import java.util.concurrent.Future;
  * </li>
  * <li>
  * The context allows you to run code on either the Java or rendering thread
- * {@link #runOnGlThread(Runnable)}, {@link #runOnTheFrameworkThread(Runnable)}.
+ * {@link #runOnGlThread(Runnable), {@link #runOnTheFrameworkThread(Runnable)}.
  * </li>
  * <li>
  * The <b>asset loader</b> in the context can load textures and models from a variety of sources
@@ -84,7 +77,6 @@ import java.util.concurrent.Future;
  * </li>
  * <li>
  *  The <b>shader manager</b> in the context lets you create custom shaders.
- * </li>
  * </ul>
  * @see GVRAssetLoader
  * @see GVREventReceiver
@@ -151,7 +143,7 @@ public abstract class GVRContext implements IEventReceiver {
      * The priority used by
      * {@link GVRAssetLoader#loadTexture(GVRAndroidResource)}
      * and
-     * {@link GVRAssetLoader#loadMesh(MeshCallback, GVRAndroidResource, int)}}
+     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
      *
      * @since 1.6.1
      * @deprecated use GVRAssetLoader.DEFAULT_PRIORITY instead
@@ -873,4 +865,5 @@ public abstract class GVRContext implements IEventReceiver {
         }
         return null;
     }
+
 }

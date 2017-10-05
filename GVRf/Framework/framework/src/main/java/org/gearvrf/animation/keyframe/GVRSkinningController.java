@@ -94,7 +94,7 @@ public class GVRSkinningController extends GVRAnimationController {
     protected void setupBone(GVRSceneObject node, SceneAnimNode internalNode) {
         GVRMesh mesh;
         if (node.getRenderData() != null && (mesh = node.getRenderData().getMesh()) != null) {
-            Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertices().length / 3);
+            Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertexBuffer().getVertexCount());
             for (GVRBone bone : mesh.getBones()) {
                 bone.setSceneObject(node);
 

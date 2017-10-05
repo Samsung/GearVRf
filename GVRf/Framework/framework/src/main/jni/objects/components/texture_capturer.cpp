@@ -2,16 +2,19 @@
  * Captures a rendered texture to a buffer.
  ***************************************************************************/
 
+#include <gl/gl_render_texture.h>
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "objects/components/render_data.h"
-#include "objects/components/texture_capturer.h"
-#include "objects/material.h"
-#include "objects/mesh.h"
-#include "util/gvr_log.h"
+#include "component.h"
+#include "render_data.h"
+#include "texture_capturer.h"
+#include "shaders/shader.h"
+#include "gl/gl_render_texture.h"
+#include "component.inl"
+
 #include "util/gvr_time.h"
 
 #define TOL 1e-8
@@ -26,6 +29,7 @@ void Java_org_gearvrf_NativeTextureCapturer_callbackFromNative(
 TextureCapturer::TextureCapturer(ShaderManager *shaderManager)
         : Component(TextureCapturer::getComponentType())
         , mShaderManager(shaderManager)
+        , mMaterial(NULL)
         , mRenderTexture(0)
         , mPendingCapture(false)
         , mHasNewCapture(false)
@@ -34,6 +38,15 @@ TextureCapturer::TextureCapturer(ShaderManager *shaderManager)
         , mJNIEnv(0)
         , mCapturerObject(0)
 {
+    Renderer* renderer = Renderer::getInstance();
+    mMaterial = renderer->createMaterial("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent", "");
+    mMaterial->setTexture("diffuseTexture", mRenderTexture);
+
+    // OpenGL default
+    mMaterial->setVec4("ambient_color", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+    mMaterial->setVec4("diffuse_color", glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+    mMaterial->setVec4("specular_color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    mMaterial->setFloat("specular_exponent", 0.0f);
 }
 
 TextureCapturer::~TextureCapturer() {
@@ -106,7 +119,7 @@ void TextureCapturer::beginCapture() {
 }
 
 void TextureCapturer::startReadBack() {
-    mRenderTexture->startReadBack(0);
+    mRenderTexture->startReadBack();
 }
 
 void TextureCapturer::endCapture() {
@@ -135,26 +148,27 @@ void TextureCapturer::endCapture() {
 
 void TextureCapturer::render(RenderState* rstate, RenderData* render_data) {
 
-    Material* material = render_data->pass(0)->material();
+    ShaderData* material = render_data->pass(0)->material();
+    Renderer* renderer = Renderer::getInstance();
+
+    float opacity = 1.0f;
+
     if (material == NULL) {
         LOGE("No material");
         return;
     }
 
-    // Create the texture material
-    Material textureMaterial(Material::TEXTURE_SHADER);
-    textureMaterial.setTexture("main_texture", mRenderTexture);
-    textureMaterial.setFloat("opacity", material->getFloat("opacity"));
-
-    // OpenGL default
-    textureMaterial.setVec4("ambient_color", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
-    textureMaterial.setVec4("diffuse_color", glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    textureMaterial.setVec4("specular_color", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    textureMaterial.setFloat("specular_exponent", 0.0f);
-
-    TextureShader *textureShader = mShaderManager->getTextureShader();
-
-    textureShader->render(rstate, render_data, &textureMaterial);
+    material->getFloat("opacity", opacity);
+    mMaterial->setFloat("opacity", opacity);
+    if (render_data->isValid(renderer, *rstate))
+    {
+        int id = render_data->get_shader(rstate->is_multiview);
+        if (id > 0)
+        {
+            Shader* shader = mShaderManager->getShader(id);
+            renderer->renderWithShader(*rstate, shader, render_data, mMaterial, 0);
+        }
+    }
 }
 
 glm::mat4 TextureCapturer::getModelViewMatrix() {

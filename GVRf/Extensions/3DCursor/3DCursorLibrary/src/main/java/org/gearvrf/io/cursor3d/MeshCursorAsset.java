@@ -37,9 +37,9 @@ import java.util.concurrent.Future;
 class MeshCursorAsset extends CursorAsset {
     private static final String TAG = MeshCursorAsset.class.getSimpleName();
     private static final int OVERLAY_RENDER_ORDER = 100000;
-    private Future<GVRTexture> futureTexture;
+    private GVRTexture futureTexture;
     private GVRMesh mesh;
-    private Future<GVRMesh> futureMesh;
+    private GVRMesh futureMesh;
     private String texture;
     private float x;
     private float y;
@@ -56,7 +56,7 @@ class MeshCursorAsset extends CursorAsset {
 
         if (mesh != null) {
             try {
-                futureMesh = context.getAssetLoader().loadFutureMesh(new GVRAndroidResource(context, mesh));
+                futureMesh = context.getAssetLoader().loadMesh(new GVRAndroidResource(context, mesh));
             } catch (IOException e) {
                 throw new IllegalArgumentException("Error loading mesh");
             }
@@ -77,7 +77,7 @@ class MeshCursorAsset extends CursorAsset {
      * @param texture the {@link Future<GVRTexture>} to associate with the behavior
      */
 
-    void setTexture(Future<GVRTexture> texture) {
+    void setTexture(GVRTexture texture) {
         this.futureTexture = texture;
     }
 
@@ -93,7 +93,7 @@ class MeshCursorAsset extends CursorAsset {
         if (futureTexture == null && texture != null) {
             try {
                 GVRAndroidResource gvrAndroidResource = new GVRAndroidResource(context, texture);
-                futureTexture = context.getAssetLoader().loadFutureTexture(gvrAndroidResource);
+                futureTexture = context.getAssetLoader().loadTexture(gvrAndroidResource);
             } catch (IOException e) {
                 Log.e(TAG, "Error loading texture", e);
             }

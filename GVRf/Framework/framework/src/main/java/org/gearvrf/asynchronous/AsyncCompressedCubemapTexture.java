@@ -24,6 +24,7 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRCompressedCubemapTexture;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCubemapTexture;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
@@ -33,7 +34,7 @@ import org.gearvrf.utility.FileNameUtils;
 /**
  * Async resource loading: compressed cube map textures.
  *
- * We directly use CompressedTexture.load() in loadResource() to detect
+ * We directly use CompressedImage.load() in loadResource() to detect
  * the format of and load compressed textures.
  *
  * @since 1.6.9

@@ -1,10 +1,13 @@
-precision mediump float;
-uniform vec4 u_color;
-uniform float u_particle_age;
-uniform sampler2D tex0;
-uniform float u_fade;
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
 
-varying float deltaTime;
+precision mediump float;
+layout(set = 0, binding = 4) uniform sampler2D u_texture;
+
+@MATERIAL_UNIFORMS
+
+layout ( location = 0 ) in float deltaTime;
+layout ( location = 0 ) out vec4 outColor;
 
 void main() {
 
@@ -15,8 +18,8 @@ void main() {
         opacity = 1.0 - (deltaTime / u_particle_age);
     }
 
-    vec4 color = texture2D(tex0, gl_PointCoord);
-    gl_FragColor = vec4(color.r * u_color.r * opacity * u_color.a, color.g * u_color.g * opacity * u_color.a,
+    vec4 color = texture(u_texture, gl_PointCoord);
+    outColor = vec4(color.r * u_color.r * opacity * u_color.a, color.g * u_color.g * opacity * u_color.a,
     color.b * u_color.b * opacity * u_color.a, u_color.a * (color.a * opacity));
 
 }

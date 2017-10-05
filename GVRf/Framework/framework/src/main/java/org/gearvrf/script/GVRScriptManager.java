@@ -76,7 +76,7 @@ public class GVRScriptManager {
         sBuiltinTargetMap.put(TARGET_GVRMAIN, new TargetResolver() {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
-                    String name) {
+                                         String name) {
                 return gvrContext.getActivity().getMain();
             }
         });
@@ -85,7 +85,7 @@ public class GVRScriptManager {
         sBuiltinTargetMap.put(TARGET_GVRACTIVITY, new TargetResolver() {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
-                    String name) {
+                                         String name) {
                 return gvrContext.getActivity();
             }
         });
@@ -107,6 +107,10 @@ public class GVRScriptManager {
 
         mGlobalVariables.put(VAR_NAME_GVRF, new GVRContextProxy(mGvrContext));
         initializeEngines();
+    }
+
+    private void initializeGlobalVariables() {
+        mGlobalVariables.put(VAR_NAME_GVRF, mGvrContext);
     }
 
     private void initializeEngines() {
@@ -165,7 +169,7 @@ public class GVRScriptManager {
 
     /**
      * Add a variable to the scripting context.
-     * 
+     *
      * @param varName The variable name.
      * @param value The variable value.
      */
@@ -387,7 +391,6 @@ public class GVRScriptManager {
             }
         }
     }
-
     public void destroy() {
         synchronized (mGlobalVariables) {
             for (final Runnable r : mBindingsClosers) {

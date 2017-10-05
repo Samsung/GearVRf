@@ -16,10 +16,8 @@
 /***************************************************************************
  * JNI
  ***************************************************************************/
-
-#include "shared_texture.h"
-
-#include "util/gvr_jni.h"
+#include <engine/renderer/renderer.h>
+#include <jni.h>
 
 namespace gvr {
 extern "C" {
@@ -32,7 +30,7 @@ Java_org_gearvrf_NativeSharedTexture_ctor(JNIEnv * env,
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeSharedTexture_ctor(JNIEnv * env,
     jobject obj, jint id) {
-return reinterpret_cast<jlong>(new SharedTexture(id));
+return reinterpret_cast<jlong>(Renderer::getInstance()->createSharedTexture(id));
 }
 
 }

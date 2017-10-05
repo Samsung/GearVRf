@@ -41,7 +41,7 @@ public class GVRVersion {
 
     /**
      * Remove deprecated loadMesh() methods; add blocking
-     * {@link GVRAssetLoader#loadTexture(GVRAndroidResource)} method.
+     * {@link GVRContext#loadTexture(GVRAndroidResource)} method.
      */
     public static final String V_1_6_5 = "1.6.5";
 
@@ -58,9 +58,6 @@ public class GVRVersion {
     /**
      * Add API ({@link GVRContext#captureScreen3D(GVRScreenshot3DCallback)}) to
      * capture 3D screenshot.
-     * 
-     * Add high-level GVRSceneObject.GVRSceneObject(GVRContext,
-     * Future<GVRMesh>, Future<GVRTexture>)} constructor.
      * 
      * Add {@link FutureWrapper} to generate required Future<T> for the new
      * constructor.
@@ -80,7 +77,7 @@ public class GVRVersion {
     
     /**
      * Optimize memory management by getting rid of {@code finalize()} method.
-     * Add support for Future<{GVREyePointee}>s. Add
+     * Add support for Future<{@link GVREyePointee}>s. Add
      * {@link GVRContext#getActivity()}.
      */
     public static final String V_2_0_1 = "2.0.1";
@@ -102,5 +99,7 @@ public class GVRVersion {
 
     public static final String V_3_3_0 = "3.3.0";
 
-    public static final String CURRENT = V_3_3_0;
+    public static final String V_4_0_0 = "4.0.0";
+
+    public static final String CURRENT = V_4_0_0;
 }

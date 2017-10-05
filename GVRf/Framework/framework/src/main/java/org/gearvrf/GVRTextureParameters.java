@@ -15,16 +15,15 @@
 
 package org.gearvrf;
 
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 
 /**
  * The class to be used to set and pass texture filter and warp types for
  * loading texture and also to enhance texture even after they are loaded.
- *
- * Also can be used to specify what texture to allocate.
  */
 public class GVRTextureParameters {
-
     private TextureFilterType minFilterType;
     private TextureFilterType magFilterType;
     private TextureWrapType wrapSType;
@@ -32,17 +31,11 @@ public class GVRTextureParameters {
 
     private int anisotropicValue;
 
-    private final GVRContext mGVRContext;
-
-    private int mInternalFormat = -1;
-    private int mWidth = -1;
-    private int mHeight = -1;
-    private int mFormat = -1;
-    private int mType = -1;
+    GVRContext mGVRContext = null;
 
     /**
      * Constructs a texture parameter object with default values for filter and
-     * wrap.
+     * warp.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
@@ -63,9 +56,8 @@ public class GVRTextureParameters {
      *            Basically, a GL constant that represents the type of filter
      *            one want to apply.
      */
-    public GVRTextureParameters setMinFilterType(TextureFilterType minFilterType) {
+    public void setMinFilterType(TextureFilterType minFilterType) {
         this.minFilterType = minFilterType;
-        return this;
     }
 
     /**
@@ -87,9 +79,8 @@ public class GVRTextureParameters {
      *            Basically, a GL constant that represents the type of filter
      *            one want to apply.
      */
-    public GVRTextureParameters setMagFilterType(TextureFilterType magFilterType) {
+    public void setMagFilterType(TextureFilterType magFilterType) {
         this.magFilterType = magFilterType;
-        return this;
     }
 
     /**
@@ -111,9 +102,8 @@ public class GVRTextureParameters {
      *            Basically, a GL constant that represents the type of wrap type
      *            one want to apply.
      */
-    public GVRTextureParameters setWrapSType(TextureWrapType wrapSType) {
+    public void setWrapSType(TextureWrapType wrapSType) {
         this.wrapSType = wrapSType;
-        return this;
     }
 
     /**
@@ -135,9 +125,8 @@ public class GVRTextureParameters {
      *            Basically, a GL constant that represents the type of wrap type
      *            one want to apply.
      */
-    public GVRTextureParameters setWrapTType(TextureWrapType wrapTType) {
+    public void setWrapTType(TextureWrapType wrapTType) {
         this.wrapTType = wrapTType;
-        return this;
     }
 
     /**
@@ -176,12 +165,11 @@ public class GVRTextureParameters {
      * @param value
      *            An integer value from the set {2, 4, 8, 16}
      */
-    public GVRTextureParameters setAnisotropicValue(int value) {
+    public void setAnisotropicValue(int value) {
         if (value > getMaxAnisotropicValue()) {
             value = getMaxAnisotropicValue();
         }
         anisotropicValue = value;
-        return this;
     }
 
     /**
@@ -206,46 +194,22 @@ public class GVRTextureParameters {
     }
 
     /**
-     * @param internalFormat specifies the number of color components in the texture; see
-     *                       https://www.khronos.org/registry/OpenGL-Refpages/es3.0/html/glTexImage2D.xhtml
+     * Returns an integer array that contains the default values for all the
+     * texture parameters.
+     * 
+     * @return an integer array that contains the default values for all the
+     *         texture parameters.
      */
-    public GVRTextureParameters setInternalFormat(final int internalFormat) {
-        mInternalFormat = internalFormat;
-        return this;
-    }
+    public int[] getDefalutValuesArray() {
+        int[] defaultValues = new int[5];
 
-    /**
-     * @param width specifies the width of the texture image
-     */
-    public GVRTextureParameters setWidth(final int width) {
-        mWidth = width;
-        return this;
-    }
+        defaultValues[0] = GLES20.GL_LINEAR; // MIN FILTER
+        defaultValues[1] = GLES20.GL_LINEAR; // MAG FILTER
+        defaultValues[2] = 1; // ANISO FILTER
+        defaultValues[3] = GLES20.GL_CLAMP_TO_EDGE; // WRAP S
+        defaultValues[4] = GLES20.GL_CLAMP_TO_EDGE; // WRAP T
 
-    /**
-     * @param height specifies the width of the texture image
-     */
-    public GVRTextureParameters setHeight(final int height) {
-        mHeight = height;
-        return this;
-    }
-
-    /**
-     * @param format specifies the format of the pixel data; see
-     *               https://www.khronos.org/registry/OpenGL-Refpages/es3.0/html/glTexImage2D.xhtml
-     */
-    public GVRTextureParameters setFormat(final int format) {
-        mFormat = format;
-        return this;
-    }
-
-    /**
-     * @param type specifies the data type of the pixel data; see
-     *             https://www.khronos.org/registry/OpenGL-Refpages/es3.0/html/glTexImage2D.xhtml
-     */
-    public GVRTextureParameters setType(final int type) {
-        mType = type;
-        return this;
+        return defaultValues;
     }
 
     /**
@@ -256,18 +220,13 @@ public class GVRTextureParameters {
      *         texture parameters.
      */
     public int[] getCurrentValuesArray() {
-        int[] currentValues = new int[10];
+        int[] currentValues = new int[5];
 
         currentValues[0] = getMinFilterType().getFilterValue(); // MIN FILTER
         currentValues[1] = getMagFilterType().getFilterValue(); // MAG FILTER
         currentValues[2] = getAnisotropicValue(); // ANISO FILTER
         currentValues[3] = getWrapSType().getWrapValue(); // WRAP S
         currentValues[4] = getWrapTType().getWrapValue(); // WRAP T
-        currentValues[5] = mInternalFormat;
-        currentValues[6] = mWidth;
-        currentValues[7] = mHeight;
-        currentValues[8] = mFormat;
-        currentValues[9] = mType;
 
         return currentValues;
     }
@@ -276,11 +235,12 @@ public class GVRTextureParameters {
      * Enum values for all the filter types along with all its actual values.
      */
     public enum TextureFilterType {
-        GL_LINEAR(GLES20.GL_LINEAR), GL_NEAREST(GLES20.GL_NEAREST), GL_NEAREST_MIPMAP_NEAREST(
-                GLES20.GL_NEAREST_MIPMAP_NEAREST), GL_NEAREST_MIPMAP_LINEAR(
-                GLES20.GL_NEAREST_MIPMAP_LINEAR), GL_LINEAR_MIPMAP_NEAREST(
-                GLES20.GL_LINEAR_MIPMAP_NEAREST), GL_LINEAR_MIPMAP_LINEAR(
-                GLES20.GL_LINEAR_MIPMAP_LINEAR);
+        GL_LINEAR(1),
+        GL_NEAREST(0),
+        GL_NEAREST_MIPMAP_NEAREST(2),
+        GL_NEAREST_MIPMAP_LINEAR(3),
+        GL_LINEAR_MIPMAP_NEAREST(4),
+        GL_LINEAR_MIPMAP_LINEAR(5);
 
         private int filterValue;
 
@@ -297,8 +257,9 @@ public class GVRTextureParameters {
      * Enum values for all the wrap types along with all its actual values.
      */
     public enum TextureWrapType {
-        GL_CLAMP_TO_EDGE(GLES20.GL_CLAMP_TO_EDGE), GL_MIRRORED_REPEAT(
-                GLES20.GL_MIRRORED_REPEAT), GL_REPEAT(GLES20.GL_REPEAT);
+        GL_CLAMP_TO_EDGE(0),
+        GL_MIRRORED_REPEAT(2),
+        GL_REPEAT(1);
 
         private int wrapValue;
 

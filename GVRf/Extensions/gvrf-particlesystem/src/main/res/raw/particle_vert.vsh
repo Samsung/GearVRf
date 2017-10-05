@@ -1,16 +1,16 @@
-precision mediump float;
-attribute vec4 a_position;
-attribute vec3 a_normal;
-attribute vec2 a_texcoord;
-uniform mat4 u_mvp;
-uniform vec3 u_acceleration;
-uniform float u_time;
-uniform float u_particle_size;
-uniform float u_size_change_rate;
-uniform float u_particle_age;
-uniform float u_noise_factor;
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
 
-varying float deltaTime;
+precision mediump float;
+layout ( location = 0 ) in vec3 a_position;
+layout ( location = 2 ) in vec3 a_normal;
+layout ( location = 1 ) in vec2 a_texcoord;
+
+@MATERIAL_UNIFORMS
+
+@MATRIX_UNIFORMS
+
+layout ( location = 0 ) out float deltaTime;
 
 float snoise(vec3);
 
@@ -18,7 +18,7 @@ void main() {
 
     deltaTime = u_time - a_texcoord.x;
 
-    vec4 posn = a_position +
+    vec4 posn = vec4(a_position,1.0) +
                 vec4( (a_normal.x*deltaTime),
                       (a_normal.y*deltaTime),
                       (a_normal.z*deltaTime), 0) +

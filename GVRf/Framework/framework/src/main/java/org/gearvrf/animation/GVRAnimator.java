@@ -75,7 +75,7 @@ public class GVRAnimator extends GVRBehavior
 
     /**
      * Adds an animation to this animator.
-     *
+     * <p>
      * This animation will participate in any subsequent operations
      * but it's state will not be changed when added. For example,
      * if the existing animations in this animator are already running
@@ -92,7 +92,7 @@ public class GVRAnimator extends GVRBehavior
 
     /**
      * Removes an animation from this animator.
-     *
+     * <p>
      * This animation will not participate in any subsequent operations
      * but it's state will not be changed when removed. For example,
      * if the animation is already running it will not be stopped.
@@ -108,10 +108,10 @@ public class GVRAnimator extends GVRBehavior
 
     /**
      * Removes all the animations from this animator.
-     *
+     * <p>
      * The state of the animations are not changed when removed. For example,
      * if the animations are already running they are not be stopped.
-
+     *
      * @see GVRAnimator#removeAnimation(GVRAnimation)
      * @see GVRAnimator#addAnimation(GVRAnimation)
      */
@@ -187,6 +187,7 @@ public class GVRAnimator extends GVRBehavior
 
     /**
      * Resets all animations to their initial state.
+     * <p>
      * If the animations are running, they will start again
      * at the beginning.
      * @see GVRAnimation#reset()

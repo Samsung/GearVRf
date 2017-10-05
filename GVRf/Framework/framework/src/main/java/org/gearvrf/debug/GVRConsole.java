@@ -17,20 +17,18 @@ package org.gearvrf.debug;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
-import org.gearvrf.GVRBaseShaderManager;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCustomPostEffectShaderId;
-import org.gearvrf.GVRPostEffect;
-import org.gearvrf.GVRPostEffectMap;
-import org.gearvrf.GVRPostEffectShaderId;
-import org.gearvrf.GVRPostEffectShaderManager;
+import org.gearvrf.GVRImage;
+import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRShader;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderId;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.R;
 
 import android.graphics.Bitmap;
@@ -39,18 +37,20 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+import org.gearvrf.utility.TextFile;
+
 /**
  * A debugging console for VR apps.
- * 
+ *
  * Lets you put text messages on both or either eye. This can be a useful way to
  * get feedback on your code as you exercise it, instead of having to use
  * {@code logcat} asynchronously.
- * 
+ *
  * <p>
  * You can have multiple consoles. The point of this is to let you write
  * different messages to the left eye than to the right eye: putting multiple
  * consoles on the same eye <em>will</em> make both hard/impossible to read.
- * 
+ *
  * <p>
  * <b>Known Limitations:</b>
  * <ul>
@@ -60,7 +60,29 @@ import android.graphics.Paint;
  * <li>Does not support Java escape characters like \n or \t.
  * </ul>
  */
-public class GVRConsole extends GVRPostEffect {
+public class GVRConsole extends GVRMaterial
+{
+
+    public static class ConsoleShader extends GVRShader
+    {
+        static private String vertexShader;
+        static private String fragmentShader;
+
+        public ConsoleShader(GVRContext ctx)
+        {
+            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord",GLSLESVersion.V300);
+            if (vertexShader == null)
+            {
+                vertexShader = TextFile.readTextFile(ctx.getContext(), R.raw.posteffect_quad);
+            }
+            if (fragmentShader == null)
+            {
+                fragmentShader = TextFile.readTextFile(ctx.getContext(), R.raw.hud_console);
+            }
+            setSegment("FragmentTemplate", fragmentShader);
+            setSegment("VertexTemplate", vertexShader);
+        }
+    }
 
 //    private static final String TAG = Log.tag(GVRConsole.class);
 
@@ -98,7 +120,7 @@ public class GVRConsole extends GVRPostEffect {
     private Canvas canvas = new Canvas(HUD);
     private final Paint paint = new Paint();
     private final float defaultTextSize = paint.getTextSize();
-    private GVRBitmapTexture texture = null;
+    private GVRTexture texture = null;
     private float textXOffset = 0.0f;
     private float textYOffset = TOP_FUDGE;
     private int hudWidth = HUD_WIDTH;
@@ -106,7 +128,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Create a console, specifying the initial eye mode.
-     * 
+     *
      * @param gvrContext
      *            The GVR context.
      * @param startMode
@@ -120,11 +142,11 @@ public class GVRConsole extends GVRPostEffect {
     /**
      * Create a console, specifying the initial eye mode and the
      * {@link GVRScene} to attach it to.
-     * 
+     *
      * This overload is useful when you are using
      * {@link GVRContext#getMainScene()} and creating your debug console in
      * {@link org.gearvrf.GVRMain#onInit(GVRContext)}.
-     * 
+     *
      * @param gvrContext
      *            The GVR context.
      * @param startMode
@@ -133,10 +155,10 @@ public class GVRConsole extends GVRPostEffect {
      * @param gvrScene
      *            The {@link GVRScene} to attach the console to; this is useful
      *            when you want to attach the console to the
-     *            {@linkplain GVRContext#getMainScene() main scene.}
+     *            {@linkplain GVRContext#getMainScene() next main scene.}
      */
     public GVRConsole(GVRContext gvrContext, EyeMode startMode,
-            GVRScene gvrScene) {
+                      GVRScene gvrScene) {
         super(gvrContext, getShaderId(gvrContext));
         setEyeMode(startMode, gvrScene.getMainCameraRig());
         setMainTexture();
@@ -148,7 +170,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Write a message to the console.
-     * 
+     *
      * @param pattern
      *            A {@link String#format(String, Object...)} pattern
      * @param parameters
@@ -158,13 +180,13 @@ public class GVRConsole extends GVRPostEffect {
         String line = (parameters == null || parameters.length == 0) ? pattern
                 : String.format(pattern, parameters);
         lines.add(0, line); // we'll write bottom to top, then purge unwritten
-                            // lines from end
+        // lines from end
         updateHUD();
     }
 
     /**
      * Get the text color.
-     * 
+     *
      * @return The current text color, in Android {@link Color} format
      */
     public int getTextColor() {
@@ -173,7 +195,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Set the text color.
-     * 
+     *
      * @param color
      *            The text color, in Android {@link Color} format. The
      *            {@linkplain Color#alpha(int) alpha component} is ignored.
@@ -185,12 +207,12 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Get the current text size.
-     * 
+     *
      * The default text size is somewhat bigger than the default Android
      * {@link Paint} text size: this method returns the current text as a
      * multiple of this component's default text size, not the standard Android
      * text size.
-     * 
+     *
      * @return The current text size factor.
      */
     public float getTextSize() {
@@ -199,7 +221,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Set the text size.
-     * 
+     *
      * @param newSize
      *            The new text size, as a multiple of the default text size.
      */
@@ -210,11 +232,11 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Get the current eye mode, or where the console messages are displayed.
-     * 
+     *
      * This may be the value passed to
      * {@linkplain #GVRConsole(GVRContext, EyeMode) the constructor,} but you
      * can also change that at any time with {@link #setEyeMode(EyeMode)}.
-     * 
+     *
      * @return The current eye mode.
      */
     public EyeMode getEyeMode() {
@@ -223,11 +245,11 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Set the current eye mode, or where the console messages are displayed.
-     * 
+     *
      * Always 'edits' the list of post-effects; setting the mode to
      * {@link EyeMode#NEITHER_EYE} means this component will not affect render
      * times at all.
-     * 
+     *
      * @param newMode
      *            Left, right, both, or neither.
      */
@@ -286,7 +308,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Get the X offset.
-     * 
+     *
      * @return the text offset in the X direction
      */
     public float getXOffset() {
@@ -295,7 +317,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Get the Y offset.
-     * 
+     *
      * @return the text offset in the Y direction
      */
     public float getYOffset() {
@@ -322,7 +344,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Get the width of the text canvas.
-     * 
+     *
      * @return the width of the text canvas.
      */
     public int getCanvasWidth() {
@@ -331,7 +353,7 @@ public class GVRConsole extends GVRPostEffect {
 
     /**
      * Get the height of the text canvas.
-     * 
+     *
      * @return the height of the text canvas.
      */
     public int getCanvasHeight() {
@@ -371,39 +393,38 @@ public class GVRConsole extends GVRPostEffect {
 
     private void setMainTexture() {
 
-        Future<Boolean> textureUpdated = null;
-        if (texture != null) {
-            textureUpdated = texture.update(HUD);
+        Boolean textureUpdated = false;
+        if (texture == null)
+        {
+            texture = new GVRTexture(getGVRContext());
         }
-
-        try {
-            if (texture == null || (textureUpdated.get() != null && !textureUpdated.get())) {
-                texture = new GVRBitmapTexture(getGVRContext(), HUD);
-                setMainTexture(texture);
+        GVRImage image = texture.getImage();
+        if (image != null)
+        {
+            if (GVRBitmapTexture.class.isAssignableFrom(image.getClass()))
+            {
+                GVRBitmapTexture bmapImage = (GVRBitmapTexture) image;
+                bmapImage.setBitmap(HUD);
+                textureUpdated = true;
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+        }
+        if (!textureUpdated)
+        {
+            image = new GVRBitmapTexture(getGVRContext(), HUD);
+            texture.setImage(image);
+            setTexture("u_overlay", texture);
         }
     }
 
-    private static synchronized GVRPostEffectShaderId getShaderId(
-            GVRContext gvrContext) {
-        if (shaderId == null) {
-            GVRPostEffectShaderManager shaderManager = gvrContext
-                    .getPostEffectShaderManager();
-            shaderId = shaderManager.addShader(R.raw.posteffect_quad,
-                    R.raw.hud_console, GVRBaseShaderManager.GLSLESVersion.V300);
-
-            shaderMap = shaderManager.getShaderMap(shaderId);
-            shaderMap.addTextureKey("u_overlay", MAIN_TEXTURE);
+    private static synchronized GVRShaderId getShaderId(GVRContext gvrContext) {
+        if (shaderId == null)
+        {
+            shaderId = gvrContext.getMaterialShaderManager().getShaderType(ConsoleShader.class);
         }
         return shaderId;
     }
 
-    private static GVRCustomPostEffectShaderId shaderId;
-    private static GVRPostEffectMap shaderMap;
+    private static GVRShaderId shaderId;
 
     static {
         GVRContext.addResetOnRestartHandler(new Runnable() {
@@ -411,7 +432,6 @@ public class GVRConsole extends GVRPostEffect {
             @Override
             public void run() {
                 shaderId = null; // should be enough
-                shaderMap = null; // can't hurt
             }
         });
     }
@@ -425,3 +445,5 @@ public class GVRConsole extends GVRPostEffect {
      */
     private static final float TOP_FUDGE = 20;
 }
+
+

@@ -57,11 +57,13 @@ namespace gvr {
 
         float getBreakingImpulse() const;
 
+        void set_owner_object(SceneObject* obj);
+
         void *getUnderlying() { return mSliderConstraint; }
 
-        void updateConstructionInfo();
-
     private:
+        void onAttach(SceneObject* owner);
+
         btSliderConstraint *mSliderConstraint;
         BulletRigidBody *mRigidBodyB;
 

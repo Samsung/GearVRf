@@ -53,7 +53,7 @@ public class GVRShadowMap extends GVRRenderTarget
     }
 
     /**
-     * Constructs a shadow map using the given material.
+     * Constructs a shadow map using the given camera.
      *
      * @param ctx GVRContext to associate the shadow map with.
      * @param camera GVRCamera used to cast shadow
@@ -66,7 +66,7 @@ public class GVRShadowMap extends GVRRenderTarget
         mTempMtx = new float[16];
         if (sShadowMaps == null)
         {
-            sShadowMaps = new GVRRenderTextureArray(ctx, 1024, 1024, 4);
+            sShadowMaps = new GVRRenderTextureArray(ctx, 1024, 1024, 2, 4);
             sBiasMatrix = new Matrix4f();
             sBiasMatrix.scale(0.5f);
             sBiasMatrix.setTranslation(0.5f, 0.5f, 0.5f);
@@ -86,12 +86,11 @@ public class GVRShadowMap extends GVRRenderTarget
      * @return Orthographic camera to use for shadow casting
      * @see GVRDirectLight
      */
-    static GVRCamera makeOrthoShadowCamera(GVRPerspectiveCamera centerCam)
+    static GVROrthogonalCamera makeOrthoShadowCamera(GVRPerspectiveCamera centerCam)
     {
         GVROrthogonalCamera shadowCam = new GVROrthogonalCamera(centerCam.getGVRContext());
-        GVRMaterial shadowMtl = getShadowMaterial(centerCam.getGVRContext());
-        float near = shadowMtl.hasUniform("shadow_near") ? shadowMtl.getFloat("shadow_near") : centerCam.getNearClippingDistance();
-        float far = shadowMtl.hasUniform("shadow_far") ? shadowMtl.getFloat("shadow_far") : centerCam.getFarClippingDistance();
+        float near = centerCam.getNearClippingDistance();
+        float far = centerCam.getFarClippingDistance();
         float fovy = (float) Math.toRadians(centerCam.getFovY());
         float h = (float) (Math.atan(fovy / 2.0f) * far) / 2.0f;
 
@@ -113,12 +112,11 @@ public class GVRShadowMap extends GVRRenderTarget
      * @return Perspective camera to use for shadow casting
      * @see GVRSpotLight
      */
-    static GVRCamera makePerspShadowCamera(GVRPerspectiveCamera centerCam, float coneAngle)
+    static GVRPerspectiveCamera makePerspShadowCamera(GVRPerspectiveCamera centerCam, float coneAngle)
     {
         GVRPerspectiveCamera camera = new GVRPerspectiveCamera(centerCam.getGVRContext());
-        GVRMaterial shadowMtl = GVRLightBase.getShadowMaterial(centerCam.getGVRContext());
-        float near = shadowMtl.hasUniform("shadow_near") ? shadowMtl.getFloat("shadow_near") : centerCam.getNearClippingDistance();
-        float far = shadowMtl.hasUniform("shadow_far") ? shadowMtl.getFloat("shadow_far") : centerCam.getFarClippingDistance();
+        float near = centerCam.getNearClippingDistance();
+        float far = centerCam.getFarClippingDistance();
 
         camera.setNearClippingDistance(near);
         camera.setFarClippingDistance(far);
@@ -130,10 +128,10 @@ public class GVRShadowMap extends GVRRenderTarget
     /**
      * Sets the shadow matrix for the spot light from the input model/view
      * matrix and the shadow camera projection matrix.
-     * @param modelView light model/view transform
+     * @param modelMtx  light model transform (to world coordinates)
      * @param light     spot light component to update
      */
-    void setPerspShadowMatrix(Matrix4f modelView, GVRLightBase light)
+    void setPerspShadowMatrix(Matrix4f modelMtx, GVRLightBase light)
     {
         GVRPerspectiveCamera camera = (GVRPerspectiveCamera) getCamera();
 
@@ -141,14 +139,17 @@ public class GVRShadowMap extends GVRRenderTarget
         {
             return;
         }
-        float angle = (float) Math.acos(light.getFloat("outer_cone_angle")) * 2.0f;
+        float angle = light.getFloat("outer_cone_angle");
+        float near = camera.getNearClippingDistance();
+        float far = camera.getFarClippingDistance();
 
-        modelView.invert();
-        modelView.get(mTempMtx);
+        angle = (float) Math.acos(angle) * 2.0f;
+        modelMtx.invert();
+        modelMtx.get(mTempMtx);
         camera.setViewMatrix(mTempMtx);
         camera.setFovY((float) Math.toDegrees(angle));
-        mShadowMatrix.setPerspective(angle, 1.0f, camera.getNearClippingDistance(), camera.getFarClippingDistance());
-        mShadowMatrix.mul(modelView);
+        mShadowMatrix.setPerspective(angle, 1.0f, near, far);
+        mShadowMatrix.mul(modelMtx);
         sBiasMatrix.mul(mShadowMatrix, mShadowMatrix);
         mShadowMatrix.getColumn(0, mTemp);
         light.setVec4("sm0", mTemp.x, mTemp.y, mTemp.z, mTemp.w);
@@ -163,10 +164,10 @@ public class GVRShadowMap extends GVRRenderTarget
     /**
      * Sets the direct light shadow matrix for the light from the input model/view
      * matrix and the shadow camera projection matrix.
-     * @param modelView light model/view transform
+     * @param modelMtx  light model transform (to world coordinates)
      * @param light     direct light component to update
      */
-    void setOrthoShadowMatrix(Matrix4f modelView, GVRLightBase light)
+    void setOrthoShadowMatrix(Matrix4f modelMtx, GVRLightBase light)
     {
         GVROrthogonalCamera camera = (GVROrthogonalCamera) getCamera();
         if (camera == null)
@@ -179,11 +180,11 @@ public class GVRShadowMap extends GVRRenderTarget
         float near = camera.getNearClippingDistance();
         float far = camera.getFarClippingDistance();
 
-        modelView.invert();
-        modelView.get(mTempMtx);
+        modelMtx.invert();
+        modelMtx.get(mTempMtx);
         camera.setViewMatrix(mTempMtx);
         mShadowMatrix.setOrthoSymmetric(w, h, near, far);
-        mShadowMatrix.mul(modelView);
+        mShadowMatrix.mul(modelMtx);
         sBiasMatrix.mul(mShadowMatrix, mShadowMatrix);
         mShadowMatrix.getColumn(0, mTemp);
         light.setVec4("sm0", mTemp.x, mTemp.y, mTemp.z, mTemp.w);
@@ -197,16 +198,20 @@ public class GVRShadowMap extends GVRRenderTarget
 
     /**
      * Gets the shadow material used in constructing shadow maps.
-     *
+     * <p>
+     * Adds the shadow mapping depth shaders to the shader manager.
+     * There are two variants - one for skinned and one for non-skinned meshes.
      * @return shadow map material
      */
     static GVRMaterial getShadowMaterial(GVRContext ctx)
     {
         if (sShadowMaterial == null)
         {
-            sShadowMaterial = new GVRMaterial(ctx);
-            GVRShaderTemplate depthShader = ctx.getMaterialShaderManager().retrieveShaderTemplate(GVRDepthShader.class);
-            depthShader.bindShader(ctx, sShadowMaterial);
+            GVRShaderId depthShader = ctx.getMaterialShaderManager().getShaderType(GVRDepthShader.class);
+            sShadowMaterial = new GVRMaterial(ctx, depthShader);
+            GVRShader shaderTemplate = depthShader.getTemplate(ctx);
+            shaderTemplate.bindShader(ctx, sShadowMaterial, "float3 a_position float3 a_normal");
+            shaderTemplate.bindShader(ctx, sShadowMaterial, "float3 a_position float3 a_normal float4 a_bone_weights int4 a_bone_indices");
         }
         return sShadowMaterial;
     }

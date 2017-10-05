@@ -17,6 +17,7 @@
 
 #include "engine/renderer/renderer.h"
 #include "objects/textures/render_texture.h"
+#include "objects/components/render_target.h"
 //#include "objects/components/camera.h"
 
 namespace gvr {
@@ -63,56 +64,28 @@ extern "C" {
         RenderTexture *post_effect_render_texture_b =
                 reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
 
-        gRenderer->cullAndRender(renderTarget, scene, shader_manager,
-                                post_effect_shader_manager, post_effect_render_texture_a,
-                                post_effect_render_texture_b);
-    }
-
-    void Java_org_gearvrf_GVRViewManager_renderCamera(JNIEnv *jni, jclass clazz,
-                                                      jlong jscene, jlong jcamera,
-                                                      jlong jshader_manager,
-                                                      jlong jpost_effect_shader_manager,
-                                                      jlong jpost_effect_render_texture_a,
-                                                      jlong jpost_effect_render_texture_b, jboolean is_multiview_set) {
-        Scene *scene = reinterpret_cast<Scene *>(jscene);
-        Camera *camera = reinterpret_cast<Camera *>(jcamera);
-        ShaderManager *shader_manager =
-                reinterpret_cast<ShaderManager *>(jshader_manager);
-        PostEffectShaderManager *post_effect_shader_manager =
-                reinterpret_cast<PostEffectShaderManager *>(jpost_effect_shader_manager);
-        RenderTexture *post_effect_render_texture_a =
-                reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_a);
-        RenderTexture *post_effect_render_texture_b =
-                reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
-
-        gRenderer->renderCamera(scene, camera, shader_manager,
-                                post_effect_shader_manager, post_effect_render_texture_a,
-                                post_effect_render_texture_b, is_multiview_set);
+        renderTarget->cullFromCamera(scene, renderTarget->getCamera(),gRenderer,shader_manager);
+        renderTarget->beginRendering(gRenderer);
+        gRenderer->renderRenderTarget(scene, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
+        renderTarget->endRendering(gRenderer);
     }
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
-                                                           jobject jreadback_buffer, jint texId, jint layer, jboolean isMultiviewSet);
+                                                           jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview);
 } // extern "C"
 
-JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv * env, jclass clazz, jobject jreadback_buffer,
-                                                                              jint texId, jint layer, jboolean isMultiviewSet) {
+
+JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
+                                                                              jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview){
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
-    GLint viewport[4];
+    RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
+    RenderTexture* renderTexture =    renderTarget->getTexture();
 
-    if(isMultiviewSet){
-        static GLFrameBuffer* fb = new GLFrameBuffer;
-        if (!glIsFramebuffer(fb->id())) {
-            delete fb;
-            fb = new GLFrameBuffer;
-        }
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->id());
-        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texId, 0, layer);
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
+    if(useMultiview){
+            renderTexture->setLayerIndex(eye);
     }
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, readback_buffer);
-
+    renderTexture->readRenderResult(readback_buffer);
 }
 
 }

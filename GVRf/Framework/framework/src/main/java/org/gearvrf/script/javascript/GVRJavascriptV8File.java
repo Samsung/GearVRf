@@ -89,7 +89,7 @@ public class GVRJavascriptV8File {
     /**
      * Access to values modified during invoking of Script file
      * Enables X3D to get values script modifies..
-     * @return The binding of the current ScriptContext
+     * @return
      */
     public Bindings getLocalBindings() {
         return bindings;

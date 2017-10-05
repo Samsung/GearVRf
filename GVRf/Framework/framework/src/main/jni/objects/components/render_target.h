@@ -19,8 +19,8 @@
 
 #include <vector>
 
-#include "objects/components/component.h"
-#include "objects/components/camera.h"
+#include "component.h"
+#include "camera.h"
 #include "engine/renderer/renderer.h"
 
 
@@ -29,7 +29,7 @@ class ShaderManager;
 class Scene;
 class RenderTexture;
 class GLTexture;
-
+class Renderer;
 /**
  * A render target is a component which allows the scene to be rendered
  * into a texture from the viewpoint of a particular scene object.
@@ -41,21 +41,31 @@ class GLTexture;
 class RenderTarget : public Component
 {
 public:
-    RenderTarget(RenderTexture*);
-    RenderTarget(int width, int height, GLTexture* tex);
+    RenderTarget(RenderTexture*, bool is_multiview);
+    RenderTarget(Scene*);
+    RenderTarget(RenderTexture*, const RenderTarget* source);
     RenderTarget();
     ~RenderTarget();
-
-    void            setCamera(Camera* cam) { mCamera = cam; }
-    Camera*         getCamera() const { return mCamera; }
+    void attachNextRenderTarget(RenderTarget* renderTarget){
+        mNextRenderTarget = renderTarget;
+    }
+    RenderTarget*   getNextRenderTarget(){
+        return mNextRenderTarget;
+    }
+    void            setMainScene(Scene* scene){mRenderState.scene = scene;}
+    void            setCamera(Camera* cam) { mRenderState.camera= cam; }
+    Camera*         getCamera() const { return mRenderState.camera; }
     bool            hasTexture() const { return (mRenderTexture != nullptr); }\
-    RenderTexture*  getTexture() const { return mRenderTexture; }
+    RenderTexture*  getTexture()  { return mRenderTexture; }
     void            setTexture(RenderTexture* texture);
     RenderState&    getRenderState() { return mRenderState; }
-    virtual void    beginRendering();
-    virtual void    endRendering();
+    virtual void    beginRendering(Renderer* renderer);
+    virtual void    endRendering(Renderer* renderer);
     static long long getComponentType() { return COMPONENT_TYPE_RENDER_TARGET; }
-
+    std::vector<RenderData*>* getRenderDataVector(){
+        return mRenderDataVector.get();
+    }
+    virtual void cullFromCamera(Scene*, Camera* camera, Renderer* renderer, ShaderManager* shader_manager);
 private:
     RenderTarget(const RenderTarget& render_texture);
     RenderTarget(RenderTarget&& render_texture);
@@ -63,9 +73,10 @@ private:
     RenderTarget& operator=(RenderTarget&& render_texture);
 
 protected:
+    RenderTarget* mNextRenderTarget;
     RenderState     mRenderState;
     RenderTexture*  mRenderTexture;
-    Camera*         mCamera;
+    std::shared_ptr<std::vector<RenderData*>> mRenderDataVector;
 };
 
 }

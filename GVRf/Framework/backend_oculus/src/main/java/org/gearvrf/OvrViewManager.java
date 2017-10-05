@@ -87,8 +87,8 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      * @param gvrMain
      *            {@link GVRMain} which describes
      */
-    OvrViewManager(GVRActivity gvrActivity, GVRMain gvrMain, OvrXMLParser xmlParser, boolean useMultiview) {
-        super(gvrActivity, gvrMain, useMultiview);
+    OvrViewManager(GVRActivity gvrActivity, GVRMain gvrMain, OvrXMLParser xmlParser) {
+        super(gvrActivity, gvrMain);
 
         // Apply view manager preferences
         GVRPreference prefs = GVRPreference.get();
@@ -213,67 +213,79 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      * Called from the native side
      * @param eye
      */
-    void onDrawEye(int eye, int texId) {
+    void onDrawEye(int eye, int swapChainIndex, boolean use_multiview) {
         mCurrentEye = eye;
         if (!(mSensoredScene == null || !mMainScene.equals(mSensoredScene))) {
             GVRCameraRig mainCameraRig = mMainScene.getMainCameraRig();
 
-            if (mUseMultiview) {
+             if (use_multiview) {
+
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.enter(); // this eye is drawn first
                     mTracerDrawEyes2.enter();
                 }
+                 GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.MULTIVIEW, swapChainIndex);
+                 GVRCamera camera = mMainScene.getMainCameraRig().getCenterCamera();
+                 GVRCamera left_camera = mMainScene.getMainCameraRig().getLeftCamera();
+                 renderTarget.cullFromCamera(mMainScene, camera,mRenderBundle.getMaterialShaderManager());
 
-                GVRCamera camera = mainCameraRig.getLeftCamera();
-                renderCamera(mMainScene, camera, mRenderBundle, true);
+                 captureCenterEye(renderTarget, true);
+                 capture3DScreenShot(renderTarget, true);
 
-                captureCenterEye();
-                capture3DScreenShot();
-                captureRightEye(texId);
-                captureLeftEye(texId);
-                captureFinish();
+                renderTarget.render(mMainScene, left_camera, mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                        mRenderBundle.getPostEffectRenderTextureB());
+
+                 captureRightEye(renderTarget, true);
+                 captureLeftEye(renderTarget, true);
+
+                 captureFinish();
 
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.leave();
                     mTracerDrawEyes2.leave();
                 }
 
-            }
-            else {
 
-                if (eye == 1) {
+            } else {
+
+                 if (eye == 1) {
+                     if (DEBUG_STATS) {
+                         mTracerDrawEyes1.enter();
+                     }
+
+                     GVRCamera rightCamera = mainCameraRig.getRightCamera();
+                     GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.RIGHT, swapChainIndex);
+                     renderTarget.render(mMainScene, rightCamera, mRenderBundle.getMaterialShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
+                             mRenderBundle.getPostEffectRenderTextureB());
+
+                     captureRightEye(renderTarget, false);
+
+                     captureFinish();
                     if (DEBUG_STATS) {
-                        mTracerDrawEyes1.enter();
-                    }
+                         mTracerDrawEyes1.leave();
+                         mTracerDrawEyes.leave();
+                     }
+                 } else {
+                     if (DEBUG_STATS) {
+                         mTracerDrawEyes.enter(); // this eye is drawn first
+                         mTracerDrawEyes2.enter();
+                     }
+                     GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.LEFT, swapChainIndex);
+                     GVRCamera leftCamera = mainCameraRig.getLeftCamera();
 
-                    GVRCamera rightCamera = mainCameraRig.getRightCamera();
-                    renderCamera(mMainScene, rightCamera, mRenderBundle, false);
-                    captureRightEye(texId);
+                     capture3DScreenShot(renderTarget, false);
 
-                    if (DEBUG_STATS) {
-                        mTracerDrawEyes1.leave();
-                        mTracerDrawEyes.leave();
-                    }
-                } else {
-                    if (DEBUG_STATS) {
-                        mTracerDrawEyes.enter(); // this eye is drawn first
-                        mTracerDrawEyes2.enter();
-                    }
+                     renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getMaterialShaderManager());
+                     captureCenterEye(renderTarget, false);
+                     renderTarget.render(mMainScene, leftCamera, mRenderBundle.getMaterialShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
 
-                    captureCenterEye();
-                    capture3DScreenShot();
+                     captureLeftEye(renderTarget, false);
 
-                    GVRCamera leftCamera = mainCameraRig.getLeftCamera();
-                    renderCamera(mMainScene, leftCamera, mRenderBundle, false);
-
-                    captureLeftEye(texId);
-                    captureFinish();
-
-                    if (DEBUG_STATS) {
-                        mTracerDrawEyes2.leave();
-                    }
-                }
-            }
+                     if (DEBUG_STATS) {
+                         mTracerDrawEyes2.leave();
+                     }
+                 }
+             }
         }
     }
 

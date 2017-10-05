@@ -14,7 +14,6 @@
  */
 package org.gearvrf.x3d.data_types;
 
-import org.gearvrf.utility.Log;
 /**
  * Defines the X3D SFBool[ean] data type
  */

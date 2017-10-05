@@ -26,29 +26,15 @@ public class GVRRenderTexture extends GVRTexture {
      *            Width of the frame buffer.
      * @param height
      *            Height of the frame buffer.
-     * @param number_views
-     *            number_views of the frame buffer.
      */
-    public GVRRenderTexture(GVRContext gvrContext, int width, int height, int number_views) {
-        super(gvrContext, NativeRenderTexture.ctor(width, height, number_views));
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height)
+    {
+        super(gvrContext, NativeRenderTexture.ctor(width, height));
 
         mWidth = width;
         mHeight = height;
     }
-    /**
-     * Constructs a GVRRenderTexture for a frame buffer of the specified size.
-     *
-     * @param gvrContext
-     *            Current gvrContext
-     * @param width
-     *            Width of the frame buffer.
-     * @param height
-     *            Height of the frame buffer.
-     */
 
-    public GVRRenderTexture(GVRContext gvrContext, int width, int height) {
-        this(gvrContext, width, height, 1);
-    }
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size,
      * with MSAA enabled at the specified sample count.
@@ -62,14 +48,24 @@ public class GVRRenderTexture extends GVRTexture {
      * @param sampleCount
      *            MSAA sample count.
      */
-    public GVRRenderTexture(GVRContext gvrContext, int width, int height,
-            int sampleCount, int number_views) {
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height, int sampleCount)
+    {
+        this(gvrContext,width,height,sampleCount,1);
+    }
+
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height, int sampleCount, int number_views)
+    {
         super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
                 sampleCount, number_views));
         mWidth = width;
         mHeight = height;
     }
 
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height, long ptr){
+        super(gvrContext,ptr);
+        mWidth = width;
+        mHeight= height;
+    }
     /**
      * Constructs a GVRRenderTexture for a frame buffer of the specified size,
      * with MSAA enabled at the specified sample count, and with specified color
@@ -96,11 +92,13 @@ public class GVRRenderTexture extends GVRTexture {
      *
      */
     public GVRRenderTexture(GVRContext gvrContext, int width, int height,
-            int sampleCount, int colorFormat, int depthFormat,
-            boolean resolveDepth, GVRTextureParameters parameters, int number_views) {
+                            int sampleCount, int colorFormat, int depthFormat,
+                            boolean resolveDepth, GVRTextureParameters parameters)
+    {
         super(gvrContext, NativeRenderTexture.ctorWithParameters(width, height,
-                sampleCount, colorFormat, depthFormat, resolveDepth,
-                parameters.getCurrentValuesArray(), number_views));
+                                                                 sampleCount, colorFormat,
+                                                                 depthFormat, resolveDepth,
+                                                                 parameters.getCurrentValuesArray()));
         mWidth = width;
         mHeight = height;
     }
@@ -130,7 +128,6 @@ public class GVRRenderTexture extends GVRTexture {
     void endRendering() {
         NativeRenderTexture.endRendering(getNative());
     }
-
     /**
      * Return the render texture.
      *
@@ -138,19 +135,17 @@ public class GVRRenderTexture extends GVRTexture {
      *        A preallocated IntBuffer to receive the data from the texture. Its capacity should
      *        be width * height. The output pixel format is GPU format GL_RGBA packed as an 32-bit
      *        integer.
-     * @param eye
-     *          if it array texture, specify which layer to read from
-     *
      *
      * @return true if successful.
      */
-    boolean readRenderResult(int[] readbackBuffer, int eye) {
-        return NativeRenderTexture.readRenderResult(getNative(), readbackBuffer, eye);
+    boolean readRenderResult(int[] readbackBuffer)
+    {
+        return NativeRenderTexture.readRenderResult(getNative(), readbackBuffer);
     }
 
     /**
      * Bind the framebuffer for this GVRRenderTexture.
-     *      
+     *
      *      Before calling this, remember to retrieve the currently bound framebuffer (with glGetIntegerv(GL_FRAMEBUFFER_BINDING, int[])) so you can restore it after issuing calls to this GVRRenderTexture.
      */
     public void bind() {
@@ -161,21 +156,21 @@ public class GVRRenderTexture extends GVRTexture {
 }
 
 class NativeRenderTexture {
-    static native long ctor(int width, int height, int number_views);
+    static native long ctor(int width, int height);
 
     static native long ctorMSAA(int width, int height, int sampleCount, int number_views);
 
     static native long ctorWithParameters(int width, int height,
-            int sampleCount, int colorFormat, int depthFormat,
-            boolean resolveDepth, int[] parameters, int number_views);
+                                          int sampleCount, int colorFormat, int depthFormat,
+                                          boolean resolveDepth, int[] parameters);
 
-    static native long ctorArray(int width, int height, int layers);
+    static native long ctorArray(int width, int height, int samples, int layers);
+
 
     static native void beginRendering(long ptr);
 
     static native void endRendering(long ptr);
-
-    static native boolean readRenderResult(long ptr, int[] readbackBuffer, int eye);
+    static native boolean readRenderResult(long ptr, int[] readbackBuffer);
 
     static native void bind(long ptr);
 }

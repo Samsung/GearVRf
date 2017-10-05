@@ -21,7 +21,10 @@ interface IRenderBundle {
     GVRPostEffectShaderManager getPostEffectShaderManager();
 
     GVRRenderTexture getPostEffectRenderTextureA();
-
+    GVRRenderTexture getEyeCapturePostEffectRenderTextureA();
+    GVRRenderTexture getEyeCapturePostEffectRenderTextureB();
     GVRRenderTexture getPostEffectRenderTextureB();
-    GVRRenderTexture getEyeCaptureRenderTexture();
+    GVRRenderTarget getEyeCaptureRenderTarget();
+
+    GVRRenderTarget getRenderTarget(GVRViewManager.EYE eye, int index);
 }

@@ -82,8 +82,7 @@ class GVREmitter extends GVRSceneObject {
 
     private float currTime = 0;
     ArrayList<Integer> idxsToDelete;
-
-
+    
     public GVREmitter(GVRContext gvrContext)
     {
         super(gvrContext);
@@ -135,7 +134,6 @@ class GVREmitter extends GVRSceneObject {
     protected  void emitWithBurstCheck(float[] particlePositions, float[] particleVelocities,
                          float[] particleTimeStamps)
     {
-
         if ( burstMode )
         {
             if ( executeOnce )
@@ -168,7 +166,6 @@ class GVREmitter extends GVRSceneObject {
         System.arraycopy(particlePositions, 0, allParticlePositions, 0, particlePositions.length);
         System.arraycopy(particleBoundingVolume, 0, allParticlePositions,
                         particlePositions.length, particleBoundingVolume.length);
-
 
         float[] allSpawnTimes = new float[particleTimeStamps.length + BVSpawnTimes.length];
         System.arraycopy(particleTimeStamps, 0, allSpawnTimes, 0, particleTimeStamps.length);

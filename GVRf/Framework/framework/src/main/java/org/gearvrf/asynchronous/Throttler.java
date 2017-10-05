@@ -192,6 +192,7 @@ class Throttler implements Scheduler {
                     try {
                         OUTPUT gvrfResource = converter.convert(gvrContext,
                                 loadedResource);
+                        Log.v("ASSET", "Texture: loaded resource %s", resource.getResourceFilename());
                         callback.loaded(gvrfResource, resource);
                     } catch (Throwable t) {
                         // Catch converter errors
@@ -330,6 +331,7 @@ class Throttler implements Scheduler {
                     catch (Exception ex)
                     {
                         callback.failed(ex, request);
+                        return;
                     }
                     pending = new PendingRequest<OUTPUT, INTER>(gvrContext,
                             request, callback, priority, outClass);

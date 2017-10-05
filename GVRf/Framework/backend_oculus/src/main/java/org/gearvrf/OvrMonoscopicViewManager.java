@@ -42,11 +42,11 @@ import android.util.DisplayMetrics;
 
 /**
  * This is the core internal class.
- * 
+ *
  * It implements {@link GVRContext}. It handles Android application callbacks
  * like cycles such as the standard Android {@link Activity#onResume()},
  * {@link Activity#onPause()}, and {@link Activity#onDestroy()}.
- * 
+ *
  * <p>
  * Most importantly, {@link #onDrawFrame()} does the actual rendering, using the
  * current orientation from
@@ -60,11 +60,11 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
     private OvrSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
-
+    private GVRRenderTarget mRenderTarget = null;
     /**
      * Constructs OvrMonoscopicViewManager object with GVRMain which controls
      * GL activities
-     * 
+     *
      * @param gvrActivity
      *            Current activity object
      * @param gvrMain
@@ -72,7 +72,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      */
     OvrMonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
                              OvrXMLParser xmlParser) {
-        super(gvrActivity, gvrMain, xmlParser,false);
+        super(gvrActivity, gvrMain, xmlParser);
 
         /*
          * Sets things with the numbers in the xml.
@@ -127,7 +127,12 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         }
 
     }
+    GVRRenderTarget getRenderTarget(){
+        if(mRenderTarget == null)
+            mRenderTarget = new GVRRenderTarget(getActivity().getGVRContext());
 
+        return mRenderTarget;
+    }
     /*
      * GL life cycle
      */
@@ -140,11 +145,12 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     }
 
     private void drawEyes() {
-        // Log.d(TAG, "drawEyes()");
         mMainScene.getMainCameraRig().updateRotation();
-        OvrMonoscopicRenderer.renderCamera(mMainScene, mMainScene
-                .getMainCameraRig().getLeftCamera(), mViewportX, mViewportY,
-                mViewportWidth, mViewportHeight, mRenderBundle);
+        GVRRenderTarget renderTarget = getRenderTarget();
+        renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getMaterialShaderManager());
+        renderTarget.render(mMainScene,mMainScene
+                        .getMainCameraRig().getLeftCamera(),mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                mRenderBundle.getPostEffectRenderTextureB());
 
     }
 

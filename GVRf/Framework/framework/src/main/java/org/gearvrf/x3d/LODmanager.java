@@ -16,13 +16,6 @@
 package org.gearvrf.x3d;
 
 
-import org.gearvrf.GVRLODGroup;
-import org.gearvrf.GVRSceneObject;
-
-import static org.gearvrf.x3d.X3Dobject.TRANSFORM_ROTATION_;
-import static org.gearvrf.x3d.X3Dobject.TRANSFORM_SCALE_;
-import static org.gearvrf.x3d.X3Dobject.TRANSFORM_TRANSLATION_;
-
 /**
  * 
  * @author m1.williams
@@ -39,21 +32,8 @@ public class LODmanager {
   private int currentRange = -1;
   private boolean active = false;
 
-  private GVRSceneObject root = null;
 
-
-  // If <Shape> a direct child of LOD, a new GVRSceneObject will be created
-  // nd the shape attached to it.  When we get ending </Shape> node
-  // we need to return to the parent of this inserted GVRSceneObject
-  protected GVRSceneObject shapeLODSceneObject = null;
-  // The GVRSceneObject was created to support LOD (level-of-detail) node,
-  // and have the LOD component attached to it.
-  // When we have the ending </LOD> node, be sure to return to the
-  // parent of this inserted GVRSceneObject
-  protected GVRSceneObject transformLODSceneObject = null;
-
-  public LODmanager (GVRSceneObject root) {
-    this.root = root;
+  public LODmanager () {
   }
 
   /**
@@ -63,7 +43,7 @@ public class LODmanager {
    * @param newCenter
    */
 
-  protected void set(float[] newRange, float[] newCenter) {
+  public void set(float[] newRange, float[] newCenter) {
     this.range = new float[newRange.length];
     for (int i = 0; i < newRange.length; i++) {
       this.range[i] = newRange[i];
@@ -76,73 +56,32 @@ public class LODmanager {
     this.active = true;
   }
 
-  private void end() {
+  public void end() {
     this.range = null;
     this.totalRange = -1;
     this.currentRange = -1;
     this.active = false;
   }
 
-  protected int getCurrentRangeIndex() {
+  public int getCurrentRangeIndex() {
     return this.currentRange;
   }
 
-  protected void increment() {
+  public void increment() {
     this.currentRange++;
     if (this.currentRange >= (this.totalRange -1) ) end();
   }
 
-  protected float getMinRange(){
+  public float getMinRange(){
     return range[currentRange];
   }
 
-  protected float getMaxRange() {
+  public float getMaxRange() {
     return range[currentRange+1];
   }
 
-  protected boolean isActive() {
+  public boolean isActive() {
     return this.active;
-  }
-
-
-  // Add the currentSceneObject to an active Level-of-Detail
-  protected void AddLODSceneObject(GVRSceneObject currentSceneObject) {
-    if (this.transformLODSceneObject != null) {
-      GVRSceneObject levelOfDetailSceneObject = null;
-      if ( currentSceneObject.getParent() == this.transformLODSceneObject) {
-        levelOfDetailSceneObject = currentSceneObject;
-      }
-      else {
-        GVRSceneObject lodSceneObj = root.getSceneObjectByName((currentSceneObject.getName() + TRANSFORM_TRANSLATION_));
-        if ( lodSceneObj != null ) {
-          if (lodSceneObj.getParent() == this.transformLODSceneObject) {
-            levelOfDetailSceneObject = lodSceneObj;
-          }
-        }
-        if (levelOfDetailSceneObject == null) {
-          lodSceneObj = root.getSceneObjectByName((currentSceneObject.getName() + TRANSFORM_ROTATION_));
-          if ( lodSceneObj != null ) {
-            if (lodSceneObj.getParent() == this.transformLODSceneObject) {
-              levelOfDetailSceneObject = lodSceneObj;
-            }
-          }
-        }
-        if (levelOfDetailSceneObject == null) {
-          lodSceneObj = root.getSceneObjectByName((currentSceneObject.getName() + TRANSFORM_SCALE_));
-          if ( lodSceneObj != null ) {
-            if (lodSceneObj.getParent() == this.transformLODSceneObject) {
-              levelOfDetailSceneObject = lodSceneObj;
-            }
-          }
-        }
-
-      }
-      if ( levelOfDetailSceneObject != null) {
-        final GVRLODGroup lodGroup = (GVRLODGroup) this.transformLODSceneObject.getComponent(GVRLODGroup.getComponentType());
-        lodGroup.addRange(this.getMinRange(), levelOfDetailSceneObject);
-        this.increment();
-      }
-    }
   }
 
 }

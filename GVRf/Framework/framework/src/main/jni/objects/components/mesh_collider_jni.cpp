@@ -43,7 +43,7 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeMeshCollider_ctorMesh(JNIEnv * env,
-                                             jobject obj, jlong jmesh) {
+        jobject obj, jlong jmesh) {
     Mesh* mesh = reinterpret_cast<Mesh*>(jmesh);
     return reinterpret_cast<jlong>(new MeshCollider(mesh));
 }

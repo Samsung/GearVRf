@@ -59,9 +59,11 @@ namespace gvr {
 
         float getBreakingImpulse() const;
 
-        void updateConstructionInfo();
+        void set_owner_object(SceneObject* obj);
 
     private:
+        void onAttach(SceneObject *owner);
+
         btGeneric6DofConstraint *mGeneric6DofConstraint;
         BulletRigidBody *mRigidBodyB;
 

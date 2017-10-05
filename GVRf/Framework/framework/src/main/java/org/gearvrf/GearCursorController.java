@@ -46,7 +46,7 @@ import org.joml.Vector3f;
  * OvrGearController controller = (OvrGearController) gvrCursorController;
  * </code>
  *
- * Additionally register a {@link org.gearvrf.GVRCursorController.ControllerEventListener} using
+ * Additionally register a {@link ControllerEventListener} using
  * {@link GVRCursorController#addControllerEventListener(ControllerEventListener)} to receive
  * notification whenever the controller information is updated.
  */

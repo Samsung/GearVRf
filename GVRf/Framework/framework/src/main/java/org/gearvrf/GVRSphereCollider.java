@@ -38,7 +38,7 @@ package org.gearvrf;
  * @see GVRPicker
  * @see GVRSphereCollider
  * @see GVRMeshCollider
- * @see GVRSceneObject#attachComponent(GVRComponent)
+ * @see GVRSceneObject#addChildObject(GVRComponent)
  * @see GVRSceneObject#getBoundingVolume()
  */
 public class GVRSphereCollider extends GVRCollider

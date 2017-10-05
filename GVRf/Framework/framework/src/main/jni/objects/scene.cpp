@@ -17,28 +17,100 @@
  * Holds scene objects. Can be used by engines.
  ***************************************************************************/
 
+#include <gl/gl_render_data.h>
 #include "scene.h"
 
 #include "engine/exporter/exporter.h"
+#include "gl/gl_material.h"
 #include "objects/components/shadow_map.h"
 
 namespace gvr {
 
 Scene* Scene::main_scene_ = NULL;
+
 Scene::Scene() :
         HybridObject(),
+        javaVM_(NULL),
+        javaObj_(0),
         main_camera_rig_(),
         frustum_flag_(false),
         dirtyFlag_(0),
         occlusion_flag_(false),
+        bindShadersMethod_(0),
         pick_visible_(true),
         is_shadowmap_invalid(true) {
-    if (main_scene() == NULL) {
-        set_main_scene(this);
-    }
+
 }
 
 Scene::~Scene() {
+    if (javaVM_ && javaObj_)
+    {
+        JNIEnv* env;
+        jint rs = javaVM_->AttachCurrentThread(&env, NULL);
+        if (rs == JNI_OK) {
+            env->DeleteGlobalRef(javaObj_);
+        }
+    }
+}
+
+void Scene::set_java(JavaVM* javaVM, jobject javaScene)
+{
+    JNIEnv *env = getCurrentEnv(javaVM);
+    javaVM_ = javaVM;
+    if (env)
+    {
+        javaObj_ = env->NewGlobalRef(javaScene);
+        jclass sceneClass = env->GetObjectClass(javaScene);
+        bindShadersMethod_ = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
+        if (bindShadersMethod_ == 0)
+        {
+            LOGE("Scene::bindShader ERROR cannot find 'GVRScene.bindShadersNative()' Java method");
+        }
+    }
+}
+
+int Scene::get_java_env(JNIEnv** envptr)
+{
+    JavaVM *javaVM = getJavaVM();
+    int rc = javaVM->GetEnv((void **) envptr, JNI_VERSION_1_6);
+    if (rc == JNI_EDETACHED)
+    {
+        if (javaVM->AttachCurrentThread(envptr, NULL) && *envptr)
+        {
+            return 1;
+        }
+        LOGE("SHADER: RenderData::bindShader Could not attach to Java VM");
+        return -1;
+    }
+    else if (rc == JNI_EVERSION)
+    {
+        LOGE("SHADER: RenderData::bindShader JNI version not supported");
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * Called when the shaders need to be generated on the Java side
+ * (usually because a light is added or removed).
+ * This function spawns a Java task on the Framework thread which generates the shaders.
+ */
+void Scene::bindShaders()
+{
+    if ((bindShadersMethod_ == NULL) || (javaObj_ == NULL))
+    {
+        LOGE("SHADER: Could not call GVRScene::bindShadersNative");
+    }
+    JNIEnv* env = NULL;
+    int rc = get_java_env(&env);
+    if (env && (rc >= 0))
+    {
+        env->CallVoidMethod(javaObj_, bindShadersMethod_, getJavaObj());
+        if (rc > 0)
+        {
+            getJavaVM()->DetachCurrentThread();
+        }
+    }
 }
 
 void Scene::addSceneObject(SceneObject* scene_object) {
@@ -64,15 +136,6 @@ void Scene::clearAllColliders() {
     visibleColliders.clear();
     unlockColliders();
 }
-
-void Scene::gatherColliders() {
-    lockColliders();
-    allColliders.clear();
-    visibleColliders.clear();
-    scene_root_.getAllComponents(allColliders, Collider::getComponentType());
-    unlockColliders();
-}
-
 
 void Scene::pick(SceneObject* sceneobj) {
     if (pick_visible_) {
@@ -101,9 +164,13 @@ void Scene::removeCollider(Collider* collider) {
     }
 }
 
+/**
+ * Called when the main scene is first presented for render.
+ */
 void Scene::set_main_scene(Scene* scene) {
     main_scene_ = scene;
-    scene->gatherColliders();
+    scene->getRoot()->onAddedToScene(scene);
+    scene->bindShaders();
 }
 
 
@@ -121,8 +188,27 @@ bool Scene::addLight(Light* light) {
     auto it = std::find(lightList.begin(), lightList.end(), light);
     if (it != lightList.end())
         return false;
-     lightList.push_back(light);
-     return true;
+    int index = std::distance(lightList.begin(), it);
+    std::ostringstream os;
+    os << "light" << index;
+    if (lightList.size() >= MAX_LIGHTS)
+    {
+        LOGD("SHADER: light %s not added, more than %d lights not allowed", os.str().c_str(), MAX_LIGHTS);
+        return false;
+    }
+    lightList.push_back(light);
+    light->setLightID(os.str());
+    LOGD("SHADER: light %s added to scene", light->getLightID().c_str());
+    return true;
+}
+
+bool Scene::removeLight(Light* light) {
+    auto it = std::find(lightList.begin(), lightList.end(), light);
+    if (it == lightList.end())
+        return false;
+    lightList.erase(it);
+    LOGD("SHADER: light %s removed from scene", light->getLightID().c_str());
+    return true;
 }
 
 void Scene::clearLights() {

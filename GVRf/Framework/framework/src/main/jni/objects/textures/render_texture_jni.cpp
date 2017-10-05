@@ -20,14 +20,12 @@
 
 #include <engine/renderer/renderer.h>
 #include "render_texture.h"
-
-#include "util/gvr_jni.h"
-
+#include "gl/gl_render_texture.h"
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jint width,
-        jint height, jint number_views);
+        jint height);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj,
         jint width, jint height, jint sample_count, jint number_views);
@@ -35,19 +33,19 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv * env,
         jobject obj, jint width, jint height, jint sample_count,
         jint color_format, jint depth_format, jboolean resolve_depth,
-        jintArray parameters, jint number_views);
+        jintArray parameters);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorArray(JNIEnv * env,
-        jobject obj, jint width, jint height, jint numLayers);
+        jobject obj, jint width, jint height, jint samples, jint numLayers);
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderTexture_beginRendering(JNIEnv * env, jobject obj,
-        jlong ptr);
+                                                    jlong ptr);
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderTexture_endRendering(JNIEnv * env, jobject obj,
-        jlong ptr);
+                                                  jlong ptr);
 JNIEXPORT bool JNICALL
 Java_org_gearvrf_NativeRenderTexture_readRenderResult(JNIEnv * env, jobject obj,
-        jlong ptr, jintArray jreadback_buffer, jint eye);
+        jlong ptr, jintArray jreadback_buffer);
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderTexture_bind(JNIEnv * env, jobject obj, jlong ptr);
@@ -55,80 +53,84 @@ Java_org_gearvrf_NativeRenderTexture_bind(JNIEnv * env, jobject obj, jlong ptr);
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jint width,
-        jint height, jint number_views) {
-    GLenum  target = GL_TEXTURE_2D;
-    if(number_views == 2)
-        target = GL_TEXTURE_2D_ARRAY;
-
-    return reinterpret_cast<jlong>(new RenderTexture(width, height, target));
+Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj,
+                                          jint width, jint height)
+{
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 0, 0, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL,1);
+    return reinterpret_cast<jlong>(tex);
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj,
-        jint width, jint height, jint sample_count, jint number_views) {
-    GLenum  target = GL_TEXTURE_2D;
-    if(number_views == 2)
-        target = GL_TEXTURE_2D_ARRAY;
+Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv* env, jobject obj,
+                                              jint width, jint height, jint sample_count, jint number_views)
+{
+    int depth_format = DepthFormat::DEPTH_24_STENCIL_8;
 
-    return reinterpret_cast<jlong>(new RenderTexture(width, height,
-            sample_count, target));
+    if(number_views > 1) // multiview doesn't work with stencil attachment
+        depth_format = DepthFormat::DEPTH_16;
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, 0, depth_format , 0, NULL, number_views);
+    return reinterpret_cast<jlong>(tex);
 }
+
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv * env,
-        jobject obj, jint width, jint height, jint sample_count,
-        jint color_format, jint depth_format, jboolean resolve_depth,
-        jintArray j_parameters, jint number_views) {
+Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv* env, jobject obj,
+                                                        jint width, jint height,
+                                                        jint sample_count, jint color_format,
+                                                        jint depth_format, jboolean resolve_depth,
+                                                        jintArray j_parameters)
+{
     jint* parameters = env->GetIntArrayElements(j_parameters, NULL);
-        jlong result;
-
-    GLenum  target = GL_TEXTURE_2D;
-    if(number_views == 2)
-        target = GL_TEXTURE_2D_ARRAY;
-    result = reinterpret_cast<jlong>(new RenderTexture(width, height,target, sample_count, color_format, depth_format, resolve_depth,
-                                                       parameters));
+    TextureParameters texparams;
+    texparams.setMinFilter(parameters[0]);
+    texparams.setMagFilter(parameters[1]);
+    texparams.setMaxAnisotropy((float) parameters[2]);
+    texparams.setWrapU(parameters[3]);
+    texparams.setWrapV(parameters[2]);
+    Texture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count,
+                                                                color_format, depth_format, resolve_depth, &texparams, 1);
     env->ReleaseIntArrayElements(j_parameters, parameters, 0);
-    return result;
+    return reinterpret_cast<jlong>(tex);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorArray(JNIEnv * env,
-          jobject obj, jint width, jint height, jint numLayers)
+          jobject obj, jint width, jint height, jint samples, jint numLayers)
 {
-    RenderTexture* texarray = new RenderTextureArray(width, height, numLayers);
+    RenderTexture* texarray = Renderer::getInstance()->createRenderTexture(width, height, samples, numLayers);
     return reinterpret_cast<jlong>(texarray);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderTexture_beginRendering(JNIEnv * env, jobject obj,
-        jlong ptr) {
-    RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
-    render_texture->beginRendering();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderTexture_endRendering(JNIEnv * env, jobject obj,
-        jlong ptr) {
-    RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
-    render_texture->endRendering();
-}
 
 JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeRenderTexture_readRenderResult(JNIEnv * env, jobject obj,
-        jlong ptr, jintArray jreadback_buffer, jint eye) {
+Java_org_gearvrf_NativeRenderTexture_readRenderResult(JNIEnv* env, jobject obj,
+                                                      jlong ptr, jintArray jreadback_buffer)
+{
     RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
     jint *readback_buffer = env->GetIntArrayElements(jreadback_buffer, JNI_FALSE);
     jlong buffer_capacity = env->GetArrayLength(jreadback_buffer);
 
-    bool rv = render_texture->readRenderResult((uint32_t*)readback_buffer, buffer_capacity, eye);
+    bool rv = render_texture->readRenderResult((uint8_t*)readback_buffer, buffer_capacity);
 
     env->ReleaseIntArrayElements(jreadback_buffer, readback_buffer, 0);
 
     return rv;
 }
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderTexture_beginRendering(JNIEnv * env, jobject obj,
+                                                    jlong ptr) {
+    RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
+    render_texture->beginRendering(gRenderer->getInstance());
+}
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderTexture_bind(JNIEnv * env, jobject obj, jlong ptr) {
+Java_org_gearvrf_NativeRenderTexture_endRendering(JNIEnv * env, jobject obj,
+                                                  jlong ptr) {
+    RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
+    render_texture->endRendering(gRenderer->getInstance());
+}
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeRenderTexture_bind(JNIEnv * env, jobject obj, jlong ptr)
+{
     RenderTexture *render_texture = reinterpret_cast<RenderTexture*>(ptr);
     render_texture->bind();
 }

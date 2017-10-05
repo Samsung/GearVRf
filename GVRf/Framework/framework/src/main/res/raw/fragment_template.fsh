@@ -1,43 +1,40 @@
-#ifdef HAS_MULTIVIEW
-#extension GL_OVR_multiview2 : enable
-	precision highp float;
-    precision highp sampler2DArray;
-	uniform mat4 u_view_[2];
-#else
-    precision highp float;
-    precision highp sampler2DArray;
-    uniform mat4 u_view; 
-#endif
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
 
-out vec4 fragColor;
+precision highp float;
 
-uniform mat4 u_model;
+@MATRIX_UNIFORMS
 
-in vec3 viewspace_position;
-in vec3 viewspace_normal;
-in vec4 local_position;
-in vec4 proj_position;
-in vec3 view_direction;
-in vec2 diffuse_coord;
+layout(location = 1) in vec3 viewspace_position;
+layout(location = 2) in vec3 viewspace_normal;
+layout(location = 3) in vec4 local_position;
+layout(location = 0) in vec3 view_direction;
+layout(location = 4) in vec2 diffuse_coord;
+layout(location = 0) out vec4 fragColor;
 
 #ifdef HAS_ambientTexture
-out vec2 ambient_coord;
+layout(location = 5) in vec2 ambient_coord;
 #endif
 
 #ifdef HAS_specularTexture
-out vec2 specular_coord;
+layout(location = 6) in vec2 specular_coord;
 #endif
 
 #ifdef HAS_emissiveTexture
-out vec2 emissive_coord;
+layout(location = 7)in vec2 emissive_coord;
+#endif
+
+#ifdef HAS_lightMapTexture
+layout(location = 8)in vec2 lightmap_coord;
 #endif
 
 #ifdef HAS_normalTexture
-out vec2 normal_coord;
+layout(location = 9)in vec2 normal_coord;
 #endif
 
+
 #ifdef HAS_SHADOWS
-uniform sampler2DArray u_shadow_maps;
+layout(set = 0, binding = 3) uniform lowp sampler2DArray u_shadow_maps;
 
 float unpackFloatFromVec4i(const vec4 value)
 {
@@ -67,10 +64,11 @@ void main()
 {
 	Surface s = @ShaderName();
 #if defined(HAS_LIGHTSOURCES)
-	vec4 color = LightPixel(s);
+    vec4 color = LightPixel(s);
 	color = clamp(color, vec4(0), vec4(1));
 	fragColor = color;
 #else
 	fragColor = s.diffuse;
+	//fragColor = vec4(1,0,0,1);
 #endif
 }

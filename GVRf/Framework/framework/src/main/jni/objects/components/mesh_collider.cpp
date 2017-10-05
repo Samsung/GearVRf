@@ -26,11 +26,7 @@
 #include "util/gvr_log.h"
 #include "mesh_collider.h"
 #include "render_data.h"
-#include "objects/mesh.h"
-#include "objects/bounding_volume.h"
-#include "objects/mesh.h"
 #include "objects/scene_object.h"
-#include "sphere_collider.h"
 
 namespace gvr {
 MeshCollider::MeshCollider(Mesh* mesh) :
@@ -63,7 +59,7 @@ MeshCollider::~MeshCollider() { }
  * @param rayStart      origin of the ray in world coordinates
  * @param rayDir        direction of the ray in world coordinates
  *
- * @returns EyePointData structure with hit point and distance from camera
+ * @returns ColliderData structure with collision information
  */
 ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
@@ -119,9 +115,6 @@ ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& ray
     return data;
 }
 
-
-
-
 /**
  * Efficient means of solving Barycentric coordinates by Christer Ericson/John Calsbeek found at
  * https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
@@ -146,52 +139,68 @@ static void calcBarycentric(const glm::vec3 &p, const glm::vec3 &a, const glm::v
 }
 
 /**
- * Sets the Barycentric coordinates corresponding to the HitPoint on the mesh
- * @param mesh          the Mesh of the object that was collided with
- * @param colliderData  the ColliderData holding the HitPoint which will also store the Barycentric
- * coordinates
- */
-static void populateBarycentricCoords(const Mesh& mesh, ColliderData& colliderData) {
-    const std::vector<glm::vec3> &vertices = mesh.vertices();
-
-    glm::vec3 v1(vertices[mesh.triangles()[colliderData.FaceIndex * 3]]);
-    glm::vec3 v2(vertices[mesh.triangles()[colliderData.FaceIndex * 3 + 1]]);
-    glm::vec3 v3(vertices[mesh.triangles()[colliderData.FaceIndex * 3 + 2]]);
-
-    calcBarycentric(colliderData.HitPosition, v1, v2, v3, colliderData.BarycentricCoordinates);
-}
-
-/**
- * Sets the Barycentric coordinates, UV coordinates, and normal corresponding to the HitPoint on the
- * mesh
+ * Sets the Barycentric coordinates, UV coordinates, and normal corresponding to the HitPoint on the mesh
  * @param mesh          the Mesh of the object that was collided with
  * @param colliderData  the ColliderData holding the HitPoint which will also store the UV coordinates
- *                      and the surface normal
  */
-static void populateSurfaceCoords(const Mesh &mesh, ColliderData &colliderData) {
-    populateBarycentricCoords(mesh, colliderData);
-    try{
-        const std::vector<glm::vec2> &texCoords = mesh.getVec2Vector("a_texcoord"); //may not exist
-        glm::vec2 u1(texCoords[mesh.triangles()[colliderData.FaceIndex * 3]]);
-        glm::vec2 u2(texCoords[mesh.triangles()[colliderData.FaceIndex * 3 + 1]]);
-        glm::vec2 u3(texCoords[mesh.triangles()[colliderData.FaceIndex * 3 + 2]]);
+static void populateSurfaceCoords(const Mesh& mesh, ColliderData& colliderData) {
+    VertexBuffer* vBuffer = mesh.getVertexBuffer();
+    IndexBuffer* iBuffer = mesh.getIndexBuffer();
+    int I1;
+    int I2;
+    int I3;
+    if (iBuffer->getIndexSize() == 2) {
+        const unsigned short *intData = reinterpret_cast<const unsigned short *>(iBuffer->getIndexData());
+        intData += 3*colliderData.FaceIndex;
+        I1 = *(intData);
+        I2 = *(intData+1);
+        I3 = *(intData+2);
+    }
+    else {
+        const unsigned int *intData = reinterpret_cast<const unsigned int *>(iBuffer->getIndexData());
+        intData += 3*colliderData.FaceIndex;
+        I1 = *(intData);
+        I2 = *(intData+1);
+        I3 = *(intData+2);
+    }
 
-        glm::vec3 n1(mesh.normals()[mesh.triangles()[colliderData.FaceIndex * 3]]);
-        glm::vec3 n2(mesh.normals()[mesh.triangles()[colliderData.FaceIndex * 3 + 1]]);
-        glm::vec3 n3(mesh.normals()[mesh.triangles()[colliderData.FaceIndex * 3 + 2]]);
+    const float* vertData = vBuffer->getVertexData();
+    const float *V1;
+    const float *V2;
+    const float *V3;
+    int stride = vBuffer->getVertexSize();
+    V1 = vertData + (stride * I1);
+    V2 = vertData + (stride * I2);
+    V3 = vertData + (stride * I3);
+    int index, offset, size;
+    vBuffer->getInfo("a_position", index, offset, size);
+    offset /= sizeof(float);
+    glm::vec3 v1(V1[offset], V1[offset+1], V1[offset+2]);
+    glm::vec3 v2(V2[offset], V2[offset+1], V2[offset+2]);
+    glm::vec3 v3(V3[offset], V3[offset+1], V3[offset+2]);
+
+    calcBarycentric(colliderData.HitPosition, v1, v2, v3, colliderData.BarycentricCoordinates);
+    bool hasTexCoords = vBuffer->getInfo("a_texcoord", index, offset, size);
+    if(hasTexCoords){
+        offset /= sizeof(float);
+        glm::vec2 u1(V1[offset], V1[offset+1]);
+        glm::vec2 u2(V2[offset], V2[offset+1]);
+        glm::vec2 u3(V3[offset], V3[offset+1]);
 
         colliderData.TextureCoordinates =   u1 * colliderData.BarycentricCoordinates.x
                                             + u2 * colliderData.BarycentricCoordinates.y
                                             + u3 * colliderData.BarycentricCoordinates.z;
-        colliderData.NormalCoordinates =    n1 * colliderData.BarycentricCoordinates.x
+    }
+    bool hasNormals = vBuffer->getInfo("a_normal", index, offset, size);
+    if(hasNormals){
+        offset /= sizeof(float);
+        glm::vec3 n1(V1[offset], V1[offset+1], V1[offset+2]);
+        glm::vec3 n2(V2[offset], V2[offset+1], V2[offset+2]);
+        glm::vec3 n3(V3[offset], V3[offset+1], V3[offset+2]);
+
+        colliderData.NormalCoordinates =   n1 * colliderData.BarycentricCoordinates.x
                                             + n2 * colliderData.BarycentricCoordinates.y
                                             + n3 * colliderData.BarycentricCoordinates.z;
-    }
-    catch (const std::string& warning){
-        LOGW("%s", warning.c_str());
-    }
-    catch (...){
-        LOGE("An unexpected error occurred while calculating texture coordinates.");
     }
 }
 
@@ -200,92 +209,93 @@ static void populateSurfaceCoords(const Mesh &mesh, ColliderData &colliderData) 
  * @param mesh  mesh to hit test
  * @param rayStart  start of the pick ray in model coordinates
  * @param rayDir    direction of the pick ray in model coordinates
+ * @param pickCoordinates whether or not coordinate picking info will be generated
  * @return ColliderData with the hit point and distance in model coordinates
  */
-ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir, bool pickCoordinates) {
-    const std::vector<glm::vec3>& vertices = mesh.vertices();
+ColliderData MeshCollider::isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir, bool pickCoordinates)
+{
     ColliderData data;
-    if (vertices.size() > 0) {
-        for (int i = 0; i < mesh.triangles().size(); i += 3) {
-            glm::vec3 V1(vertices[mesh.triangles()[i]]);
-            glm::vec3 V2(vertices[mesh.triangles()[i + 1]]);
-            glm::vec3 V3(vertices[mesh.triangles()[i + 2]]);
-
+    if (mesh.getVertexCount() > 0)
+    {
+        mesh.forAllTriangles([&data, rayStart, rayDir](int iter, const float* v1, const float* v2, const float* v3) mutable
+        {
             /*
              * Compute the point where the ray penetrates the mesh in
              * the coordinate space of the mesh. The hit point will
              * be in mesh coordinates as will the distance.
              */
             glm::vec3 hitPos;
-            float distance = rayTriangleIntersect(hitPos, rayStart, rayDir, V1, V2, V3);
-            if ((distance > 0) && (distance < data.Distance)) {
+            glm::vec3 A(v1[0], v1[1], v1[2]);
+            glm::vec3 B(v2[0], v2[1], v2[2]);
+            glm::vec3 C(v3[0], v3[1], v3[2]);
+            float distance = rayTriangleIntersect(hitPos, rayStart, rayDir, A, B, C);
+            if ((distance > 0) && (distance < data.Distance))
+            {
                 data.IsHit = true;
                 data.HitPosition = hitPos;
                 data.Distance = distance;
-                data.FaceIndex = i/3;
+                data.FaceIndex = iter;
             }
-        }
+        });
         if(pickCoordinates && data.IsHit){
             populateSurfaceCoords(mesh, data);
         }
-
     }
-    return data;
-}
+      return data;
+   }
 
-/*
- * Determine if the ray penetrates an axially aligned bounding box
- * @param bounds    bounding volume (radius ignored, corners of box are used)
- * @param rayStart  origin of ray in model coordinates
- * @param rayDir    direction of ray in model coordinates
- */
-ColliderData MeshCollider::isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir) {
-    ColliderData data;
-    glm::vec3 hitPos;
-    if (bounds.intersect(hitPos, rayStart, rayDir))
+    /*
+     * Determine if the ray penetrates an axially aligned bounding box
+     * @param bounds    bounding volume (radius ignored, corners of box are used)
+     * @param rayStart  origin of ray in model coordinates
+     * @param rayDir    direction of ray in model coordinates
+     */
+    ColliderData MeshCollider::isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir) {
+        ColliderData data;
+        glm::vec3 hitPos;
+        if (bounds.intersect(hitPos, rayStart, rayDir))
+        {
+            data.IsHit = true;
+            data.HitPosition = hitPos;
+            data.Distance = glm::distance(rayStart, hitPos);
+         }
+         return data;
+    }
+
+    float MeshCollider::rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
+                                       const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3)
     {
-        data.IsHit = true;
-        data.HitPosition = hitPos;
-        data.Distance = glm::distance(rayStart, hitPos);
-    }
-    return data;
-}
+        glm::vec3 e1(V2 - V1);
+        glm::vec3 e2(V3 - V1);
+        glm::vec3 P = glm::cross(rayDir, e2);
+        glm::vec3 T(glm::vec3(rayStart) - V1);
+        float det = glm::dot(e1, P);
+        const float EPSILON = 0.00001f;
 
-float MeshCollider::rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
-                                         const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3)
-{
-    glm::vec3 e1(V2 - V1);
-    glm::vec3 e2(V3 - V1);
-    glm::vec3 P = glm::cross(rayDir, e2);
-    glm::vec3 T(glm::vec3(rayStart) - V1);
-    float det = glm::dot(e1, P);
-    const float EPSILON = 0.00001f;
+        if (det > -EPSILON && det < EPSILON) {
+            return -1;
+        }
 
-    if (det > -EPSILON && det < EPSILON) {
+        float inv_det = 1.0f / det;
+        float u = glm::dot(T, P) * inv_det;
+
+        if (u < 0.0f || u > 1.0f) {
+            return -1;
+        }
+
+        glm::vec3 Q = glm::cross(T, e1);
+        float v = glm::dot(glm::vec3(rayDir), Q) * inv_det;
+
+        if (v < 0.0f || (u + v) > 1.0f) {
+            return -1;
+        }
+
+        float t = glm::dot(e2, Q) * inv_det;
+
+        if (t > EPSILON) {
+            hitPos = (1.0f - u - v) * V1 + u * V2 + v * V3;
+            return t;
+        }
         return -1;
     }
-
-    float inv_det = 1.0f / det;
-    float u = glm::dot(T, P) * inv_det;
-
-    if (u < 0.0f || u > 1.0f) {
-        return -1;
-    }
-
-    glm::vec3 Q = glm::cross(T, e1);
-    float v = glm::dot(glm::vec3(rayDir), Q) * inv_det;
-
-    if (v < 0.0f || (u + v) > 1.0f) {
-        return -1;
-    }
-
-    float t = glm::dot(e2, Q) * inv_det;
-
-    if (t > EPSILON) {
-        hitPos = (1.0f - u - v) * V1 + u * V2 + v * V3;
-        return t;
-    }
-    return -1;
-}
-
 }

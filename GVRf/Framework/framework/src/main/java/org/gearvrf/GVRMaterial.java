@@ -15,18 +15,9 @@
 
 package org.gearvrf;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Future;
-
-import org.gearvrf.GVRAndroidResource.TextureCallback;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader.FutureResource;
 import org.gearvrf.utility.Colors;
-import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.Log;
 
-import static org.gearvrf.utility.Assert.*;
 import android.graphics.Color;
 
 /**
@@ -57,110 +48,92 @@ import android.graphics.Color;
  * <p>
  * The simplest way to create a {@link GVRMaterial} is to call the
  * {@linkplain GVRMaterial#GVRMaterial(GVRContext) constructor that takes only a
- * GVRContext.} Then you just {@link GVRMaterial#setTexture(String, GVRTexture)
- * setTexture()} and you're ready to draw with the default shader,
- * which simply drapes the texture over the mesh.
+ * GVRContext.} Then you just {@link GVRMaterial#setMainTexture(GVRTexture)
+ * setMainTexture()} and you're ready to draw with the default shader, which is
+ * called 'unlit' because it simply drapes the texture over the mesh, without
+ * any lighting or reflection effects.
  * 
  * <pre>
+ * {@code}
  * // for example
  * GVRMaterial material = new GVRMaterial(gvrContext);
- * material.setTexture("main_texture", texture);
+ * material.setMainTexture(texture);
+ * }
  * </pre>
  */
-public class GVRMaterial extends GVRHybridObject implements GVRShaders {
-    private static class TextureInfo
-    {
-        public GVRTexture Texture;
-        public String     TexCoordAttr;
-        public String     ShaderVar;
-    };
+public class GVRMaterial extends  GVRShaderData
+{
 
-    private static final String TAG = Log.tag(GVRHybridObject.class);
+    private static final String TAG = Log.tag(GVRMaterial.class);
 
-    private int mShaderFeatureSet;
-    private GVRShaderId shaderId;
-    final private Map<String, TextureInfo> textures = new HashMap();
+    static final String MAIN_TEXTURE = "u_texture";
 
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
-
-        public abstract static class BeingGenerated {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(-1);
+        public abstract static class Color {
+            public static final GVRShaderId ID = new GVRShaderId(GVRColorShader.class);
         }
 
         public abstract static class UnlitHorizontalStereo {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    0);
+            public static final GVRShaderId ID = new GVRShaderId(GVRUnlitHorizontalStereoShader.class);
         }
 
         public abstract static class UnlitVerticalStereo {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    1);
+            public static final GVRShaderId ID = new GVRShaderId(GVRUnlitVerticalStereoShader.class);
         }
 
         public abstract static class OES {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    2);
+            public static final GVRShaderId ID = new GVRShaderId(GVROESShader.class);
         }
 
         public abstract static class OESHorizontalStereo {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    3);
+            public static final GVRShaderId ID = new GVRShaderId(GVROESHorizontalStereoShader.class);
         }
 
         public abstract static class OESVerticalStereo {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    4);
+            public static final GVRShaderId ID = new GVRShaderId(GVROESVerticalStereoShader.class);
         }
 
         public abstract static class Cubemap {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    5);
+            public static final GVRShaderId ID = new GVRShaderId(GVRCubemapShader.class);
         }
 
         public abstract static class CubemapReflection {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    6);
+            public static final GVRShaderId ID = new GVRShaderId(GVRCubemapReflectionShader.class);
         }
 
         public abstract static class Texture {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    7);
+            public static final GVRShaderId ID = new GVRShaderId(GVRTextureShader.class);
         }
 
-        public abstract static class ExternalRenderer {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    8);
+        public abstract static class Phong {
+            public static final GVRShaderId ID = new GVRShaderId(GVRPhongShader.class);
         }
-
-        public abstract static class Assimp {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    9);
-
-                        
-            public static int setBit(int number, int index) {
-                return (number |= 1 << index);
-            }
-
-            public static boolean isSet(int number, int index) {
-                return ((number & (1 << index)) != 0);
-            }
-
-            public static int clearBit(int number, int index) {
-                return (number &= ~(1 << index));
-            }
-        }
-
 
         public abstract static class UnlitFBO {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    20);
-					}
+            public static final GVRShaderId ID = new GVRShaderId(GVRUnlitFBOShader.class);
+        }
 
         public abstract static class LightMap {
-            public static final GVRMaterialShaderId ID = new GVRStockMaterialShaderId(
-                    11);
+            public static final GVRShaderId ID = new GVRShaderId(GVRLightmapShader.class);
         }
+
+        public abstract static class PhongLayered {
+            public static final GVRShaderId ID = new GVRShaderId(GVRPhongLayeredShader.class);
+        }
+
+        public abstract static class VerticalFlip {
+            public static final GVRShaderId ID = new GVRShaderId(GVRVerticalFlipShader.class);
+        }
+
+        public abstract static class HorizontalFlip {
+            public static final GVRShaderId ID = new GVRShaderId(GVRHorizontalFlipShader.class);
+        }
+
+        public abstract static class ColorBlend {
+            public static final GVRShaderId ID = new GVRShaderId(GVRColorBlendShader.class);
+        }
+
     };
 
     /**
@@ -172,18 +145,8 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      *            Id of a {@linkplain GVRShaderType stock} or
      *            {@linkplain GVRMaterialShaderManager custom} shader.
      */
-    public GVRMaterial(GVRContext gvrContext, GVRMaterialShaderId shaderId) {
-        super(gvrContext, NativeMaterial.ctor(shaderId.ID));
-        this.shaderId = shaderId;
-        // set lighting coefficients to OpenGL default values
-        // TODO: Get rid of this - it does not belong here!
-        setAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
-        setDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
-        setFloat("uvIndex", 0);
-        setSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
-        setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
-        setSpecularExponent(0.0f);
-        this.mShaderFeatureSet = 0;
+    public GVRMaterial(GVRContext gvrContext, GVRShaderId shaderId) {
+        super(gvrContext, shaderId);
     }
 
     /**
@@ -197,45 +160,29 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
         this(gvrContext, GVRShaderType.Texture.ID);
     }
 
-    GVRMaterial(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
-        setFloat("uvIndex", 0);
-    }
-
     /**
-     * Gets the type of shader this material uses.
-     * @return GVRShaderId identifying the type of shader.
-     * @see GVRMaterialShaderManager#addShader(String, String)
-     * @see GVRPostEffectShaderManager#addShader(String, String)
+     * The {@link GVRTexture texture} currently bound to the
+     * {@code main_texture} shader uniform.
+     *
+     * With most shaders, this is the texture that is actually displayed.
+     *
+     * @return The {@linkplain GVRTexture main texture}
      */
-    public GVRShaderId getShaderType() {
-        return shaderId;
-    }
-
-    /**
-     * Set the type of shader this material uses.
-     * In future releases this call will be deprecated.
-     * 
-     * @param shaderId
-     *            The new shader id.
-     * @deprecated
-     */
-    public void setShaderType(GVRShaderId shaderId) {
-        this.shaderId = shaderId;
-        NativeMaterial.setShaderType(getNative(), shaderId.ID);
-    }
-
-    public GVRTexture getMainTexture() {
+    public GVRTexture getMainTexture()  {
         return getTexture(MAIN_TEXTURE);
     }
 
-    public void setMainTexture(GVRTexture texture) {
+    /**
+     * Bind a different {@link GVRTexture texture} to the {@code main_texture}
+     * shader uniform.
+     *
+     * @param texture
+     *            The {@link GVRTexture} to bind.
+     */
+    public void setMainTexture(GVRTexture texture)  {
         setTexture(MAIN_TEXTURE, texture);
     }
 
-    public void setMainTexture(Future<GVRTexture> texture) {
-        setTexture(MAIN_TEXTURE, texture);
-    }
 
     /**
      * Set the baked light map texture
@@ -244,16 +191,6 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      *            Texture with baked light map
      */
     public void setLightMapTexture(GVRTexture texture) {
-        setTexture("lightmap_texture", texture);
-    }
-
-    /**
-     * Set the baked light map texture
-     *
-     * @param texture
-     *            Texture with baked light map
-     */
-    public void setLightMapTexture(Future<GVRTexture> texture) {
         setTexture("lightmap_texture", texture);
     }
 
@@ -350,7 +287,7 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      * @return The current {@code vec3 color} as a three-element array
      */
     public float[] getColor() {
-        return getVec3("color");
+        return getVec3("u_color");
     }
 
     /**
@@ -379,7 +316,7 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      *            Blue
      */
     public void setColor(float r, float g, float b) {
-        setVec3("color", r, g, b);
+        setVec3("u_color", r, g, b);
     }
 
     /**
@@ -547,7 +484,7 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      * @return The {@code opacity} uniform used to render this material
      */
     public float getOpacity() {
-        return getFloat("opacity");
+        return getFloat("u_opacity");
     }
 
     /**
@@ -582,139 +519,9 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      *            Value between {@code 0.0f} and {@code 1.0f}, inclusive.
      */
     public void setOpacity(float opacity) {
-        setFloat("opacity", opacity);
+        setFloat("u_opacity", opacity);
     }
 
-    public GVRTexture getTexture(String key) {
-        TextureInfo tinfo = textures.get(key);
-        if (tinfo != null)
-        {
-            return tinfo.Texture;
-        }
-        return null;
-    }
-
-
-    public void setTexture(String key, GVRTexture texture) {
-        checkStringNotNullOrEmpty("key", key);
-        synchronized (textures)
-        {
-            TextureInfo tinfo = textures.get(key);
-            if (tinfo == null)
-            {
-                tinfo = new TextureInfo();
-                textures.put(key, tinfo);
-            }
-            if (texture != null)
-            {
-                tinfo.Texture = texture;
-                NativeMaterial.setTexture(getNative(), key, texture.getNative());
-            }
-        }
-    }
-
-    public void setTexture(final String key, final Future<GVRTexture> texture) {
-        if (texture.isDone()) {
-            try {
-                setTexture(key, texture.get());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            if (texture instanceof FutureResource<?>) {
-                setTexture(key, (GVRTexture) null);
-                TextureCallback callback = new TextureCallback() {
-                    @Override
-                    public void loaded(GVRTexture texture,
-                            GVRAndroidResource ignored) {
-                        setTexture(key, texture);
-                        Log.d(TAG, "Finish loading and setting texture %s",
-                                texture);
-                    }
-
-                @Override
-                public void failed(Throwable t,
-                        GVRAndroidResource androidResource) {
-                    Log.e(TAG, "Error loading texture %s; exception: %s",
-                            texture, t.getMessage());
-                }
-
-                @Override
-                public boolean stillWanted(GVRAndroidResource androidResource) {
-                    return true;
-                }
-            };
-
-                getGVRContext().getAssetLoader().loadTexture(
-                        ((FutureResource<GVRTexture>) texture).getResource(), callback);
-            } else {
-                Threads.spawn(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            setTexture(key, texture.get());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     *  Designate the vertex attribute and shader variable for the texture coordinates
-     *  associated with the named texture.
-     * @param texName name of texture
-     * @param texCoordAttr name of vertex attribute with texture coordinates.
-     * @param shaderVarName name of shader variable to get texture coordinates.
-     */
-    public void setTexCoord(String texName, String texCoordAttr, String shaderVarName)
-    {
-        synchronized (textures)
-        {
-            TextureInfo tinfo = textures.get(texName);
-            if (tinfo == null)
-            {
-                tinfo = new TextureInfo();
-                textures.put(texName, tinfo);
-            }
-            tinfo.TexCoordAttr = texCoordAttr;
-            tinfo.ShaderVar = shaderVarName;
-        }
-    }
-
-    /**
-     * Gets the name of the vertex attribute containing the texture
-     * coordinates for the named texture.
-     * @param texName name of texture
-     * @return name of texture coordinate vertex attribute
-     */
-    public String getTexCoordAttr(String texName)
-    {
-        TextureInfo tinfo = textures.get(texName);
-        if (tinfo != null)
-        {
-            return tinfo.TexCoordAttr;
-        }
-        return null;
-    }
-
-    /**
-     * Gets the name of the shader variable to get the texture
-     * coordinates for the named texture.
-     * @param texName name of texture
-     * @return name of shader variable
-     */
-    public String getTexCoordShaderVar(String texName)
-    {
-        TextureInfo tinfo = textures.get(texName);
-        if (tinfo != null)
-        {
-            return tinfo.ShaderVar;
-        }
-        return null;
-    }
 
     /**
      * Gets the line width for line drawing.
@@ -722,7 +529,7 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      * @see GVRRenderData#setDrawMode(int)
      */
     public float getLineWidth() {
-        return NativeMaterial.getFloat(getNative(), "line_width");
+        return getFloat("line_width");
     }
     
     /**
@@ -735,136 +542,8 @@ public class GVRMaterial extends GVRHybridObject implements GVRShaders {
      * @see GVRRenderData#setDrawMode(int)
      */
     public void setLineWidth(float lineWidth) {
-        NativeMaterial.setFloat(getNative(), "line_width", lineWidth);
-    }
-    
-    public float getFloat(String key) {
-        return NativeMaterial.getFloat(getNative(), key);
-    }
-
-    public void setFloat(String key, float value) {
-        checkStringNotNullOrEmpty("key", key);
-        checkFloatNotNaNOrInfinity("value", value);
-        NativeMaterial.setFloat(getNative(), key, value);
-    }
-
-    public float[] getVec2(String key) {
-        return NativeMaterial.getVec2(getNative(), key);
-    }
-
-    public void setVec2(String key, float x, float y) {
-        checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setVec2(getNative(), key, x, y);
-    }
-
-    public float[] getVec3(String key) {
-        return NativeMaterial.getVec3(getNative(), key);
-    }
-
-    public void setVec3(String key, float x, float y, float z) {
-        checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setVec3(getNative(), key, x, y, z);
-    }
-
-    public float[] getVec4(String key) {
-        return NativeMaterial.getVec4(getNative(), key);
-    }
-
-    public void setVec4(String key, float x, float y, float z, float w) {
-        checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setVec4(getNative(), key, x, y, z, w);
-    }
-
-    /**
-     * Bind a {@code mat4} to the shader uniform {@code key}.
-     * 
-     * @param key
-     *            Name of the shader uniform
-     */
-    public void setMat4(String key, float x1, float y1, float z1, float w1,
-            float x2, float y2, float z2, float w2, float x3, float y3,
-            float z3, float w3, float x4, float y4, float z4, float w4) {
-        checkStringNotNullOrEmpty("key", key);
-        NativeMaterial.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2, z2,
-                w2, x3, y3, z3, w3, x4, y4, z4, w4);
-    }
-    
-    /**
-     * Determine whether a named uniform is defined
-     * by this material.
-     * @param name of uniform in shader and material
-     * @return true if uniform defined, else false
-     */
-    public boolean hasUniform(String name) {
-    	return NativeMaterial.hasUniform(getNative(), name);
-    }
-
-    /**
-     * Return the list of texture keys for this material.
-     * @return set of unique texture names.
-     */
-    public Set<String> getTextureNames() {
-        return textures.keySet();
-    }
-    
-    /**
-     * Set the feature set for pre-built shader's. Pre-built shader could be
-     * written to support all the properties of a material system with
-     * preprocessor macro to On/Off features. feature set would determine which
-     * properties are available for current model. Currently only Assimp shader
-     * has support for feature set.
-     * 
-     * @param featureSet
-     *            Feature set for this material.
-     */
-    public void setShaderFeatureSet(int featureSet) {
-        this.mShaderFeatureSet = featureSet;
-        NativeMaterial.setShaderFeatureSet(getNative(), featureSet);
-    }
-    
-    /**
-     * Get the feature set associated with this material.
-     * 
-     * @return An integer representing the feature set.
-     * 
-     */
-    public int getShaderFeatureSet() {
-        return mShaderFeatureSet;
+        setFloat("line_width", lineWidth);
     }
 
 }
 
-class NativeMaterial {
-    static native long ctor(int shaderType);
-
-    static native void setShaderType(long material, long shaderType);
-
-    static native void setTexture(long material, String key, long texture);
-
-    static native float getFloat(long material, String key);
-
-    static native void setFloat(long material, String key, float value);
-
-    static native float[] getVec2(long material, String key);
-
-    static native void setVec2(long material, String key, float x, float y);
-
-    static native float[] getVec3(long material, String key);
-
-    static native void setVec3(long material, String key, float x, float y,
-            float z);
-
-    static native float[] getVec4(long material, String key);
-
-    static native void setVec4(long material, String key, float x, float y,
-            float z, float w);
-
-    static native void setMat4(long material, String key, float x1, float y1,
-            float z1, float w1, float x2, float y2, float z2, float w2,
-            float x3, float y3, float z3, float w3, float x4, float y4,
-            float z4, float w4);
-
-    static native void setShaderFeatureSet(long material, int featureSet);
-
-    static native boolean hasUniform(long material, String key);
-}

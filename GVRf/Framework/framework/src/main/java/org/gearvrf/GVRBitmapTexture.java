@@ -16,125 +16,67 @@
 package org.gearvrf;
 
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
-import android.opengl.GLUtils;
 
+import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
 
 import java.io.IOException;
 import java.nio.Buffer;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.RunnableFuture;
 
-import static android.opengl.GLES20.GL_LINEAR_MIPMAP_NEAREST;
-import static android.opengl.GLES20.GL_NO_ERROR;
-import static android.opengl.GLES20.GL_TEXTURE_2D;
-import static android.opengl.GLES20.GL_TEXTURE_MIN_FILTER;
-import static android.opengl.GLES20.glBindTexture;
-import static android.opengl.GLES20.glGenerateMipmap;
-import static android.opengl.GLES20.glGetError;
-import static android.opengl.GLES20.glTexParameteri;
+import static android.opengl.GLES20.GL_RGBA;
+import static android.opengl.GLES20.GL_RGB;
+import static android.opengl.GLES20.GL_LUMINANCE;
+
 
 /** Bitmap-based texture. */
-public class GVRBitmapTexture extends GVRTexture {
+public class GVRBitmapTexture extends GVRImage
+{
     /**
      * Constructs a texture using a pre-existing {@link Bitmap}.
-     * 
+     *
      * @param gvrContext
      *            Current {@link GVRContext}
      * @param bitmap
      *            A non-null {@link Bitmap} instance; do *not* call
      *            recycle on the bitmap
      */
-    public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap) {
-        this(gvrContext, bitmap, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
+    public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap)
+    {
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, bitmap.hasAlpha() ? GL_RGBA : GL_RGB));
+        setBitmap(bitmap);
     }
 
-    /**
-     * Constructs a texture using a pre-existing {@link Bitmap} and the user
-     * defined filters {@link GVRTextureParameters}.
-     * 
-     * @param gvrContext
-     *            Current {@link GVRContext}
-     * @param bitmap
-     *            A non-null {@link Bitmap} instance; do *not* call
-     *            recycle on the bitmap
-     * @param textureParameters
-     *            User defined object for {@link GVRTextureParameters} which may
-     *            also contain default values.
-     */
-    public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap,
-            GVRTextureParameters textureParameters) {
-        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters.getCurrentValuesArray()));
-        NativeBaseTexture.setJavaOwner(getNative(), this);
-        mBitmap = bitmap;
-
-        // check for transparency
-        if(mBitmap != null && mBitmap.hasAlpha()) {
-            mHasTransparency = NativeBaseTexture.bitmapHasTransparency(getNative(), bitmap);
-            NativeBaseTexture.setTransparency(getNative(), mHasTransparency);
-            // Warn if the image is actually opaque, but has an alpha channel.
-            if(!mHasTransparency) {
-                Log.i(TAG, "Bitmap " + 
-                        mBitmap.getWidth() + "x" + mBitmap.getHeight() + 
-                        "has an alpha channel with no translucent/transparent pixels.");
-                Log.i(TAG, "It would be better to encode this Bitmap with no alpha channel.  It would be faster to decode and more efficient as well.");
-            }
-        }
+    public GVRBitmapTexture(GVRContext gvrContext)
+    {
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_RGBA));
     }
 
     /**
      * Constructs a texture by loading a bitmap from a PNG file in (or under)
      * the {@code assets} directory.
-     * 
-     * This method uses a native code path to create a texture directly from a
-     * {@code .png} file; it does not create an Android {@link Bitmap}. It may
-     * thus be slightly faster than loading a {@link Bitmap} and creating a
-     * texture with {@link #GVRBitmapTexture(GVRContext, Bitmap)}, and it should
-     * reduce memory pressure, a bit.
-     * 
+     *
      * @param gvrContext
      *            Current {@link GVRContext}
-     * @param pngAssetFilename
-     *            The name of a {@code .png} file, relative to the assets
+     * @param assetFile
+     *            The name of a texture file, relative to the assets
      *            directory. The assets directory may contain an arbitrarily
      *            complex tree of subdirectories; the file name can specify any
      *            location in or under the assets directory.
      */
-    public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename) {
-        this(gvrContext, pngAssetFilename,
-                gvrContext.DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    /**
-     * Constructs a texture by loading a bitmap from a PNG file in (or under)
-     * the {@code assets} directory and the user defined filters
-     * {@link GVRTextureParameters}.
-     * 
-     * @param gvrContext
-     *            Current {@link GVRContext}
-     * @param pngAssetFilename
-     *            The name of a {@code .png} file, relative to the assets
-     *            directory. The assets directory may contain an arbitrarily
-     *            complex tree of subdirectories; the file name can specify any
-     *            location in or under the assets directory.
-     * @param textureParameters
-     *            User defined object for {@link GVRTextureParameters} which may
-     *            also contain default values.
-     */
-    public GVRBitmapTexture(GVRContext gvrContext, String pngAssetFilename,
-            GVRTextureParameters textureParameters) {
-        this(gvrContext, getBitmap(gvrContext, pngAssetFilename), textureParameters);
-        if(mBitmap.hasAlpha() && !mHasTransparency) {
-            Log.i(TAG, "Consider removing the alpha channel from: " + pngAssetFilename);
-        }
+    public GVRBitmapTexture(GVRContext gvrContext, String assetFile) throws IOException
+    {
+        this(gvrContext);
+        GVRAndroidResource resource = new GVRAndroidResource(gvrContext, assetFile);
+        Bitmap bitmap = GVRAsynchronousResourceLoader.decodeStream(resource.getStream(), false);
+        resource.closeStream();
+        setFileName(assetFile);
+        setBitmap(bitmap);
     }
 
     /**
      * Create a new, grayscale texture, from an array of luminance bytes.
-     * 
+     *
      * @param gvrContext
      *            Current {@link GVRContext}
      * @param width
@@ -143,296 +85,145 @@ public class GVRBitmapTexture extends GVRTexture {
      *            Texture height, in pixels
      * @param grayscaleData
      *            {@code width * height} bytes of gray scale data
-     * 
-     * @throws IllegalArgumentException
-     *             If {@code width} or {@code height} is {@literal <= 0,} or if
-     *             {@code grayScaleData} is {@code null}, or if
-     *             {@code grayscaleData.length < height * width}
-     * 
-     * @since 1.6.3
-     */
-    public GVRBitmapTexture(GVRContext gvrContext, int width, int height,
-            byte[] grayscaleData) throws IllegalArgumentException {
-        this(gvrContext, width, height, grayscaleData,
-                gvrContext.DEFAULT_TEXTURE_PARAMETERS);
-    }
-
-    /**
-     * Create a new, grayscale texture, from an array of luminance bytes and the
-     * user defined filters {@link GVRTextureParameters}.
-     * 
-     * @param gvrContext
-     *            Current {@link GVRContext}
-     * @param width
-     *            Texture width, in pixels
-     * @param height
-     *            Texture height, in pixels
-     * @param grayscaleData
-     *            {@code width * height} bytes of gray scale data
-     * @param textureParameters
-     *            User defined object for {@link GVRTextureParameters} which may
-     *            also contain default values.
-     * 
-     * @throws IllegalArgumentException
-     *             If {@code width} or {@code height} is {@literal <= 0,} or if
-     *             {@code grayScaleData} is {@code null}, or if
-     *             {@code grayscaleData.length < height * width}
-     */
-    public GVRBitmapTexture(GVRContext gvrContext, int width, int height,
-            byte[] grayscaleData, GVRTextureParameters textureParameters)
-            throws IllegalArgumentException {
-        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters
-                .getCurrentValuesArray()));
-        NativeBaseTexture.setJavaOwner(getNative(), this);
-        mWidth = width;
-        mHeight = height;
-        mGrayscaleData = grayscaleData;
-    }
-
-    /**
-     * This constructor prepare the texture according to the specified parameters. Use in
-     * conjunction with the postBuffer method to load the texture data.
      *
-     * @param textureParameters this is the only constructor that uses GVRTextureParameter's
-     *                          internalFormat, width, height, format and type fields; hence they
-     *                          must be set to valid values.
-     */
-    public GVRBitmapTexture(GVRContext gvrContext, GVRTextureParameters textureParameters) {
-        super(gvrContext, NativeBaseTexture.bareConstructor(textureParameters.getCurrentValuesArray()));
-
-        getGVRContext().runOnGlThread(new Runnable() {
-            @Override
-            public void run() {
-                mTextureId = NativeTexture.getId(getNative());
-            }
-        });
-    }
-
-    /**
-     * Copy new luminance data to a grayscale texture.
-     * 
-     * Creating a new {@link GVRTexture} is pretty cheap, but it's still not a
-     * totally trivial operation: it does involve some memory management and
-     * some GL hardware handshaking. Reusing the texture reduces this overhead
-     * (primarily by delaying garbage collection). Do be aware that updating a
-     * texture will affect any and all {@linkplain GVRMaterial materials}
-     * (and/or {@link GVRPostEffect post effects)} that use the texture!
-     * 
-     * @param width
-     *            Texture width, in pixels
-     * @param height
-     *            Texture height, in pixels
-     * @param grayscaleData
-     *            {@code width * height} bytes of gray scale data
-     * @return {@code true} if the update succeeded, and {@code false} if it
-     *         failed. Updating a texture requires that the {@code bitmap}
-     *         parameter has the exact same size and {@linkplain Config bit
-     *         depth} as the original bitmap. In particular, you can't update a
-     *         'normal' {@linkplain Config#ARGB_8888 32-bit} texture with
-     *         grayscale data!
      * @throws IllegalArgumentException
      *             If {@code width} or {@code height} is {@literal <= 0,} or if
      *             {@code grayScaleData} is {@code null}, or if
      *             {@code grayscaleData.length < height * width}
-     * 
-     * @since 1.6.3
      */
-    private boolean updateCall(int width, int height, byte[] grayscaleData)
-            throws IllegalArgumentException {
-        if (width <= 0 || height <= 0 || grayscaleData == null
-                || grayscaleData.length < height * width) {
-            throw new IllegalArgumentException();
-        }
-        return NativeBaseTexture.update(getNative(), width, height,
-                grayscaleData);
+    public GVRBitmapTexture(GVRContext gvrContext, int width, int height, byte[] grayscaleData)
+            throws IllegalArgumentException
+    {
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_LUMINANCE));
+        NativeBitmapImage.updateFromMemory(getNative(), width, height, grayscaleData);
     }
 
     /**
-     * Copy new luminance data to a grayscale texture. This is also safe to be
-     * called in a non-GL thread.
-     * 
-     * @param width
-     *            Texture width, in pixels
-     * @param height
-     *            Texture height, in pixels
-     * @param grayscaleData
-     *            {@code width * height} bytes of gray scale data
-     * @return {@link java.util.concurrent.Future} A update request on a non-GL thread will
-     *         finally be forwarded to the GL thread and be executed before main
-     *         rendering happens. So at the time we call the safeUpdate, we can
-     *         only return a Future containing a boolean value to see if it is
-     *         successfully updated later in GL thread.
-     * @since 1.6.3
-     */
-    public Future<Boolean> update(int width, int height, byte[] grayscaleData) {
-        final int widthOnCall = width, heightOnCall = height;
-        final byte[] grayscaleDataOnCall = grayscaleData;
-        RunnableFuture<Boolean> updateTask = new GVRFutureOnGlThread<Boolean>(
-                new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() {
-                        return updateCall(widthOnCall, heightOnCall,
-                                grayscaleDataOnCall);
-                    }
-                });
-        if (getGVRContext().isCurrentThreadGLThread()) {
-            updateTask.run();
-        } else {
-            getGVRContext().runOnGlThread(updateTask);
-        }
-        return updateTask;
-    }
-
-    /**
-     * Copy a new {@link Bitmap} to the GL texture.
-     * 
-     * Creating a new {@link GVRTexture} is pretty cheap, but it's still not a
-     * totally trivial operation: it does involve some memory management and
-     * some GL hardware handshaking. Reusing the texture reduces this overhead
-     * (primarily by delaying garbage collection). Do be aware that updating a
-     * texture will affect any and all {@linkplain GVRMaterial materials}
-     * (and/or {@link GVRPostEffect post effects)} that use the texture!
-     * 
-     * @param bitmap
-     *            A standard Android {@link Bitmap}
-     * @return {@code true} if the update succeeded, and {@code false} if it
-     *         failed. Updating a texture requires that the {@code bitmap}
-     *         parameter has the exact same size and {@linkplain Config bit
-     *         depth} as the original bitmap. In particular, you can't update a
-     *         grayscale texture with 'normal' {@linkplain Config#ARGB_8888
-     *         32-bit} data!
-     * 
-     * @since 1.6.3
-     */
-
-    private boolean updateCall(Bitmap bitmap) {
-        glBindTexture(GL_TEXTURE_2D, getId());
-        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);        
-        return (glGetError() == GL_NO_ERROR);
-    }
-
-    /**
-     * Copy a new {@link Bitmap} to the GL texture. This one is also safe even
-     * in a non-GL thread.
+     * Copy a new {@link Bitmap} to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
      *
-     * Creating a new {@link GVRTexture} is pretty cheap, but it's still not a
+     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
      * totally trivial operation: it does involve some memory management and
      * some GL hardware handshaking. Reusing the texture reduces this overhead
      * (primarily by delaying garbage collection). Do be aware that updating a
      * texture will affect any and all {@linkplain GVRMaterial materials}
-     * (and/or {@link GVRPostEffect post effects)} that use the texture!
-     * 
-     * @param bitmap
-     *            A standard Android {@link Bitmap} gvrContext Current GVR
-     *            context we are running with.
-     * @return {@link Future} A update request on a non-GL thread will
-     *         finally be forwarded to the GL thread and be executed before main
-     *         rendering happens. So at the time we call the safeUpdate, we can
-     *         only return a Future containing a boolean value to see if it is
-     *         successfully updated later in GL thread.
-     * 
+     * (and/or post effects that use the texture!
+     *
+     * @param bmap  An Android Bitmap.
+     *
      * @since 1.6.3
      */
-    public Future<Boolean> update(Bitmap bitmap) {
-        final Bitmap onCallBitmap = bitmap;
-        RunnableFuture<Boolean> updateTask = new GVRFutureOnGlThread<Boolean>(
-                new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() {
-                        return updateCall(onCallBitmap);
-                    }
-                });
-        if (getGVRContext().isCurrentThreadGLThread()) {
-            updateTask.run();
-        } else {
-            getGVRContext().runOnGlThread(updateTask);
-        }
-        return updateTask;
+    public void setBitmap(Bitmap bmap)
+    {
+        NativeBitmapImage.updateFromBitmap(getNative(), bmap, bmap.hasAlpha());
     }
 
-    private static Bitmap getBitmap(GVRContext gvrContext, String pngAssetFilename) {
-        try {
+    /**
+     * Copy a new texture from a {@link Buffer} to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
+     * totally trivial operation: it does involve some memory management and
+     * some GL hardware handshaking. Reusing the texture reduces this overhead
+     * (primarily by delaying garbage collection). Do be aware that updating a
+     * texture will affect any and all {@linkplain GVRMaterial materials}
+     * (and/or post effects that use the texture!
+     *
+     * @param width
+     *            Texture width, in texels
+     * @param height
+     *            Texture height, in texels
+     * @param format
+     *            Texture format
+     * @param type
+     *            Texture type
+     * @param pixels
+     *            A NIO Buffer with the texture
+     *
+     */
+    public void setBuffer(final int width, final int height, final int format, final int type, final Buffer pixels)
+    {
+        NativeBitmapImage.updateFromBuffer(getNative(), 0, 0, width, height, format, type, pixels);
+    }
+
+    /**
+     * Copy a new texture subimage from a {@link Buffer} to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Creating a new {@link GVRImage} is pretty cheap, but it's still not a
+     * totally trivial operation: it does involve some memory management and
+     * some GL hardware handshaking. Reusing the texture reduces this overhead
+     * (primarily by delaying garbage collection). Do be aware that updating a
+     * texture will affect any and all {@linkplain GVRMaterial materials}
+     * (and/or post effects that use the texture!
+     *
+     * @param xoffset
+     *            Subimage texel offset in X direction
+     * @param yoffset
+     *            Subimage texel offset in Y direction
+     * @param width
+     *            Texture subimage width, in texels
+     * @param height
+     *            Texture subimage height, in texels
+     * @param format
+     *            Texture format
+     * @param type
+     *            Texture type
+     * @param pixels
+     *            A NIO Buffer with the texture
+     *
+     */
+    public void setBuffer(final int xoffset, final int yoffset, final int width, final int height,
+                          final int format, final int type, final Buffer pixels)
+    {
+        NativeBitmapImage.updateFromBuffer(getNative(), xoffset, yoffset, width, height, format, type, pixels);
+    }
+
+    /**
+     * Copy new grayscale data to the GPU texture. This one is also safe even
+     * in a non-GL thread. An updateGPU request on a non-GL thread will
+     * be forwarded to the GL thread and be executed before main rendering happens.
+     *
+     * Be aware that updating a texture will affect any and all
+     * {@linkplain GVRMaterial materials} and/or post effects that use the texture!
+     * @param width     width of grayscale image
+     * @param height    height of grayscale image
+     * @param grayscaleData  A byte array containing grayscale data
+     *
+     * @since 1.6.3
+     */
+    public void update(int width, int height, byte[] grayscaleData)
+    {
+        NativeBitmapImage.updateFromMemory(getNative(), width, height, grayscaleData);
+    }
+
+    private static Bitmap loadBitmap(GVRContext gvrContext, String pngAssetFilename)
+    {
+        try
+        {
             return BitmapFactory.decodeStream(
                     gvrContext.getContext().getAssets().open(pngAssetFilename));
-        } catch (final IOException exc) {
+        }
+        catch (final IOException exc)
+        {
             Log.e(TAG, "asset not found", exc);
         }
         return null;
     }
 
-    @SuppressWarnings("unused")
-    protected void idAvailable(final int id) {
-        super.idAvailable(id);
-
-        if (null != mBitmap) {
-            updateCall(mBitmap);
-            mBitmap = null;
-        } else if (null != mGrayscaleData) {
-            updateCall(mWidth, mHeight, mGrayscaleData);
-            mGrayscaleData = null;
-        }
-    }
-
-    /**
-     * Schedule a load for the texture data supplied in pixels. The target is always GL_TEXTURE_2D.
-     * For detailed information see glTexImage2D's internalformat, width, height, format, type,
-     * pixels parameters. The buffer is not copied!
-     *
-     * @param width width of texture
-     * @param height height of texture
-     * @param format specifies the GL format of the pixel data
-     * @param type specifies the GL data type of the pixel data
-     * @param pixels a buffer of the image data
-     */
-    public void postBuffer(final int width, final int height, final int format, final int type, final Buffer pixels) {
-        getGVRContext().runOnGlThread(new Runnable() {
-            @Override
-            public void run() {
-                NativeBaseTexture.updateFromBufferWithOffset(getNative(), 0, 0, width, height, format, type, pixels);
-            }
-        });
-    }
-
-
-    /**
-     * Schedule a subimage load for the texture data supplied in pixels. The target is always GL_TEXTURE_2D.
-     * For detailed information see glTexImage2D's internalformat, width, height, format, type,
-     * pixels parameters. The buffer is not copied!
-     *
-     * @param xOffset texel offset in x-direction
-     * @param yOffset texel offset in y-direction
-     * @param width width of texture subimage
-     * @param height height of texture subimage
-     * @param format specifies the GL format of the pixel data
-     * @param type specifies the GL data type of the pixel data
-     * @param pixels a buffer of the image data
-     */
-    public void postBufferWithOffset(final int xOffset, final int yOffset, final int width, final int height, final int format, final int type, final Buffer pixels) {
-        getGVRContext().runOnGlThread(new Runnable() {
-            @Override
-            public void run() {
-                NativeBaseTexture.updateFromBufferWithOffset(getNative(), xOffset, yOffset, width, height, format, type, pixels);
-            }
-        });
-    }
-
-    private Bitmap mBitmap;
-    private int mWidth;
-    private int mHeight;
-    private byte[] mGrayscaleData;
     private final static String TAG = "GVRBitmapTexture";
 }
 
-final class NativeBaseTexture {
-    static native long bareConstructor(int[] textureParameterValues);
-    static native void setJavaOwner(long pointer, GVRTexture owner);
+class NativeBitmapImage {
+    static native long constructor(int type, int format);
+    static native void setFileName(long pointer, String fname);
+    static native String getFileName(long pointer);
+    static native void updateFromMemory(long pointer, int width, int height, byte[] data);
+    static native void updateFromBitmap(long pointer, Bitmap bitmap, boolean hasAlpha);
+    static native void updateFromBuffer(long pointer, int xoffset, int yoffset, int width, int height, int format, int type, Buffer pixels);
+    static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[] data, int levels, int[] offsets);
 
-    static native boolean update(long pointer, int width, int height,
-            byte[] grayscaleData);
-
-    static native void updateFromBufferWithOffset(long pointer, int xOffset, int yOffset, int width, int height, int format, int type, Buffer pixels);
-    static native boolean bitmapHasTransparency(long pointer, Bitmap bitmap);
-    static native boolean setTransparency(long pointer, boolean hasTransparency);
 }

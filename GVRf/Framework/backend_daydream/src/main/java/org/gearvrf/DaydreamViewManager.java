@@ -28,6 +28,7 @@ class DaydreamViewManager extends GVRViewManager {
     private GLSurfaceView surfaceView;
     private GVRCameraRig cameraRig;
     private boolean sensoredSceneUpdated = false;
+    private  GVRRenderTarget mDaydreamRenderTarget = null;
     private GearCursorController mGearController;
 
     // This is done on the GL thread because refreshViewerProfile isn't thread-safe.
@@ -39,8 +40,9 @@ class DaydreamViewManager extends GVRViewManager {
                 }
             };
 
-    DaydreamViewManager(final GVRActivity gvrActivity, GVRMain gvrMain, boolean useMultiview) {
-        super(gvrActivity, gvrMain, useMultiview);
+    DaydreamViewManager(final GVRActivity gvrActivity, GVRMain gvrMain) {
+        super(gvrActivity, gvrMain);
+
         // Initialize GvrLayout and the native renderer.
         gvrLayout = new GvrLayout(gvrActivity);
 
@@ -75,6 +77,12 @@ class DaydreamViewManager extends GVRViewManager {
     public long getNativeRenderer(){
         return renderer.getNativeDaydreamRenderer();
     }
+    public GVRRenderTarget getRenderTarget(){
+        if(null == mDaydreamRenderTarget){
+            mDaydreamRenderTarget = new GVRRenderTarget(getActivity().getGVRContext());
+        }
+        return mDaydreamRenderTarget;
+    }
     @Override
     void onResume() {
         super.onResume();
@@ -106,19 +114,29 @@ class DaydreamViewManager extends GVRViewManager {
         if (cameraRig == null) {
             return;
         }
-
         if (!sensoredSceneUpdated) {
             sensoredSceneUpdated = updateSensoredScene();
         }
-        if (eye == 0) {
-            captureCenterEye();
-            capture3DScreenShot();
 
-            renderCamera(mMainScene, cameraRig.getLeftCamera(), mRenderBundle, false);
-            captureLeftEye(0);
+        if (eye == 0) {
+            GVRRenderTarget renderTarget = getRenderTarget();
+            GVRCamera leftCamera = cameraRig.getLeftCamera();
+            renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getMaterialShaderManager());
+            captureCenterEye(renderTarget, false);
+            capture3DScreenShot(renderTarget, false);
+
+            renderTarget.render(mMainScene,leftCamera,mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                    mRenderBundle.getPostEffectRenderTextureB());
+
+
+            captureLeftEye(renderTarget, false);
         } else {
-            renderCamera(mMainScene, cameraRig.getRightCamera(), mRenderBundle, false);
-            captureRightEye(0);
+            GVRCamera rightCamera = cameraRig.getRightCamera();
+            GVRRenderTarget renderTarget = getRenderTarget();
+
+            renderTarget.render(mMainScene, rightCamera, mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                    mRenderBundle.getPostEffectRenderTextureB());
+            captureRightEye(renderTarget,false);
         }
         captureFinish();
     }

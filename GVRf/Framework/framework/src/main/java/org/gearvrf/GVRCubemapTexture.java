@@ -19,26 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.graphics.Bitmap;
+import static android.opengl.GLES30.GL_RGBA;
 
 /** Cube map texture. */
-public class GVRCubemapTexture extends GVRTexture {
-    /**
-     * Constructs a cube map texture using six pre-existing {@link Bitmap}s.
-     * 
-     * @param gvrContext
-     *            Current {@link GVRContext}
-     * @param bitmapArray
-     *            A {@link Bitmap} array which contains six {@link Bitmap}s. The
-     *            six bitmaps correspond to +x, -x, +y, -y, +z, and -z faces of
-     *            the cube map texture respectively. The default names of the
-     *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
-     *            "posz.png", and "negz.png", which can be changed by calling
-     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
-     */
-    public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray) {
-        this(gvrContext, bitmapArray, gvrContext.DEFAULT_TEXTURE_PARAMETERS);
-    }
-
+public class GVRCubemapTexture extends GVRImage
+{
     /**
      * Constructs a cube map texture using six pre-existing {@link Bitmap}s and
      * the user defined filters {@link GVRTextureParameters}.
@@ -52,14 +37,16 @@ public class GVRCubemapTexture extends GVRTexture {
      *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
      *            "posz.png", and "negz.png", which can be changed by calling
      *            {@link GVRCubemapTexture#setFaceNames(String[])}.
-     * @param textureParameters
-     *            User defined object for {@link GVRTextureParameters} which may
-     *            also contain default values.
      */
-    public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray,
-            GVRTextureParameters textureParameters) {
-        super(gvrContext, NativeCubemapTexture.bitmapArrayConstructor(
-                bitmapArray, textureParameters.getCurrentValuesArray()));
+    public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray)
+    {
+        super(gvrContext, NativeBitmapImage.constructor(ImageType.CUBEMAP.Value, GL_RGBA));
+        update(bitmapArray);
+    }
+
+    public void update(Bitmap[] bitmapArray)
+    {
+        NativeCubemapImage.update(getNative(), bitmapArray);
     }
 
     /**
@@ -102,7 +89,8 @@ public class GVRCubemapTexture extends GVRTexture {
     }
 }
 
-class NativeCubemapTexture {
-    static native long bitmapArrayConstructor(Bitmap[] bitmapArray,
-            int[] textureParameterValues);
+class NativeCubemapImage
+{
+    static native void update(long pointer, Bitmap[] bitmapArray);
+    static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[][] data, int[] dataOffsets);
 }

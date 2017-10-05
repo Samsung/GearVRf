@@ -1,58 +1,58 @@
+
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+
 #ifdef HAS_MULTIVIEW
 #extension GL_OVR_multiview2 : enable
 layout(num_views = 2) in;
-uniform mat4 u_view_[2];
-uniform mat4 u_mvp_[2];
-uniform mat4 u_mv_[2];
-uniform mat4 u_mv_it_[2];
-#else
-uniform mat4 u_view;
-uniform mat4 u_mvp;
-uniform mat4 u_mv;
-uniform mat4 u_mv_it;
-#endif	
+#endif
+precision highp float;
+@MATRIX_UNIFORMS
 
-uniform mat4 u_model;
-in vec3 a_position;
-in vec2 a_texcoord;
-in vec3 a_normal;
+
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec2 a_texcoord;
+
+#if defined(HAS_a_normal) && defined(HAS_LIGHTSOURCES)
+layout(location = 5) in vec3 a_normal;
+#endif
+
 
 #ifdef HAS_VertexSkinShader
-#ifdef HAS_SHADOWS
-//
-// shadow mapping uses more uniforms
-// so we dont get as many bones
-//
-uniform mat4 u_bone_matrix[50];
-#else
-uniform mat4 u_bone_matrix[60];
+#ifdef HAS_a_bone_weights
+layout(location = 6) in vec4 a_bone_weights;
+layout(location = 7) in ivec4 a_bone_indices;
+
+@BONES_UNIFORMS
+
 #endif
-in vec4 a_bone_weights;
-in ivec4 a_bone_indices;
 #endif
 
 #ifdef HAS_VertexNormalShader
-in vec3 a_tangent;
-in vec3 a_bitangent;
+layout(location = 8) in vec3 a_tangent;
+layout(location = 9) in vec3 a_bitangent;
 #endif
 
-out vec3 view_direction;
-out vec3 viewspace_position;
-out vec3 viewspace_normal;
-out vec4 local_position;
+layout(location = 0) out vec3 view_direction;
+layout(location = 1) out vec3 viewspace_position;
+layout(location = 2) out vec3 viewspace_normal;
+layout(location = 3) out vec4 local_position;
 
-out vec2 diffuse_coord;
-out vec2 opacity_coord;
-out vec2 ambient_coord;
-out vec2 specular_coord;
-out vec2 emissive_coord;
-out vec2 normal_coord;
-out vec2 lightmap_coord;
-out vec2 diffuse_coord1;
-out vec2 ambient_coord1;
-out vec2 specular_coord1;
-out vec2 emissive_coord1;
-out vec2 normal_coord1;
+layout(location = 4) out vec2 diffuse_coord;
+layout(location = 5) out vec2 ambient_coord;
+layout(location = 6) out vec2 specular_coord;
+layout(location = 7) out vec2 emissive_coord;
+layout(location = 8) out vec2 lightmap_coord;
+
+
+
+layout(location = 9) out vec2 opacity_coord;
+layout(location = 10) out vec2 normal_coord;
+layout(location = 11) out vec2 diffuse_coord1;
+layout(location = 12) out vec2 ambient_coord1;
+layout(location = 13) out vec2 specular_coord1;
+layout(location = 14) out vec2 emissive_coord1;
+layout(location = 15) out vec2 normal_coord1;
 
 //
 // The Phong vertex shader supports up to 4 sets of texture coordinates.
@@ -60,15 +60,15 @@ out vec2 normal_coord1;
 // diffuse, specular, emissive or normal components.
 //
 #ifdef HAS_a_texcoord1
-in vec2 a_texcoord1;
+layout(location = 2) in vec2 a_texcoord1;
 #endif
 
 #ifdef HAS_a_texcoord2
-in vec2 a_texcoord2;
+layout(location = 3) in vec2 a_texcoord2;
 #endif
 
 #ifdef HAS_a_texcoord3
-in vec2 a_texcoord3;
+layout(location = 4) in vec2 a_texcoord3;
 #endif
 
 
@@ -120,7 +120,11 @@ void main() {
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
 #ifdef HAS_MULTIVIEW
-	gl_Position = u_mvp_[gl_ViewID_OVR] * vertex.local_position;
+	    bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
+        mat4 mvp = u_mvp_[gl_ViewID_OVR];
+        if(!render_mask)
+            mvp = mat4(0.0);  //  if render_mask is not set for particular eye, dont render that object
+        gl_Position = mvp  * vertex.local_position;
 #else
 	gl_Position = u_mvp * vertex.local_position;	
 #endif	

@@ -31,6 +31,7 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjav8.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_STATIC_LIBRARIES := shaderc
 
 LOCAL_MODULE := gvrf
 
@@ -97,6 +98,7 @@ LOCAL_SRC_FILES += $(FILE_LIST)
 LOCAL_SHARED_LIBRARIES += assimp
 LOCAL_SHARED_LIBRARIES += jnlua
 LOCAL_SHARED_LIBRARIES += jav8
+LOCAL_STATIC_LIBRARIES += shaderc
 
 ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
 #LOCAL_ARM_NEON  := true
@@ -118,3 +120,4 @@ LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 #LOCAL_LDLIBS += -ldl -lbinder -lgui
 
 include $(BUILD_SHARED_LIBRARY)
+$(call import-module, third_party/shaderc)

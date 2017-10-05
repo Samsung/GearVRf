@@ -5,8 +5,6 @@
 #ifndef EXTERNAL_RENDERER_SHADER_H_
 #define EXTERNAL_RENDERER_SHADER_H_
 
-#include "shaderbase.h"
-
 typedef void (*GVRF_ExternalRenderer)(long data,
                                       const float* bounding_volume, int vcount,
                                       const float* projection, int pcount,
@@ -15,11 +13,18 @@ typedef void (*GVRF_ExternalRenderer)(long data,
 extern "C" void GVRF_installExternalRenderer(GVRF_ExternalRenderer renderer);
 
 namespace gvr {
-
-class ExternalRendererShader : public ShaderBase {
+class RenderState;
+class RenderData;
+class ShaderData;
+/*
+ * TODO: Figure out how this fits in now. It is not really a shader.
+ * It doesn't have a program ID. It has logic none of the other shaders have.
+ */
+class ExternalRendererShader
+{
 public:
-    ExternalRendererShader() {}
-    virtual void render(RenderState* rstate, RenderData* render_data, Material* material);
+    ExternalRendererShader(long id) {}
+    virtual void render(RenderState* rstate, RenderData* render_data, ShaderData* material);
 
 private:
     ExternalRendererShader(

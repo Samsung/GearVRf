@@ -246,4 +246,3 @@ class NativeComponent {
     static native boolean isEnabled(long component);
     static native void setEnable(long component, boolean flag);
 }
-

@@ -21,6 +21,7 @@ import org.gearvrf.GVRMaterialShaderManager;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.GVRTexture;
 import org.joml.Vector3f;
@@ -46,6 +47,8 @@ class Particles {
     private GVRTexture mTexture;
     private Vector4f mColorMultiplier;
     private float mNoiseFactor;
+
+    private GVRShaderId particleID;
 
     Particles(GVRContext gvrContext, float age, float particleSize,
                      Vector3f acceleration, float particleSizeRate, boolean fadeWithAge,
@@ -86,8 +89,8 @@ class Particles {
         mParticleMesh.setNormals(velocities);
         mParticleMesh.setTexCoords(particleTimeStamps);
 
-        material = new GVRMaterial(mGVRContext,
-                GVRMaterial.GVRShaderType.BeingGenerated.ID);
+        particleID = new GVRShaderId(ParticleShader.class);
+        material = new GVRMaterial(mGVRContext, particleID);
 
         material.setVec4("u_color", mColorMultiplier.x, mColorMultiplier.y,
                 mColorMultiplier.z, mColorMultiplier.w);
@@ -106,10 +109,6 @@ class Particles {
         GVRSceneObject meshObject = new GVRSceneObject(mGVRContext);
         meshObject.attachRenderData(renderData);
         meshObject.getRenderData().setMaterial(material);
-
-        GVRMaterialShaderManager shaderManager = mGVRContext.getMaterialShaderManager();
-        GVRShaderTemplate shaderTemplate = shaderManager.retrieveShaderTemplate(ParticleShader.class);
-        shaderTemplate.bindShader(mGVRContext, meshObject.getRenderData(), mGVRContext.getMainScene());
 
         // Set the draw mode to GL_POINTS, disable writing to depth buffer, enable depth testing
         // and set the rendering order to transparent.

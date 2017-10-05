@@ -17,23 +17,26 @@
 #ifndef SHADOW_MAP_H_
 #define SHADOW_MAP_H_
 
+#include <gl/gl_render_target.h>
 #include "render_target.h"
 #include "objects/textures/render_texture.h"
 
 namespace gvr {
+class Renderer;
 class GLFrameBuffer;
 
-    class ShadowMap : public RenderTarget
+    class ShadowMap : public GLRenderTarget
     {
     public:
-        ShadowMap(Material* mtl);
+        ShadowMap(ShaderData* mtl);
         ~ShadowMap();
-        virtual void  beginRendering();
+        virtual void  beginRendering(Renderer* renderer);
         void setLayerIndex(int layerIndex);
         void bindTexture(int loc, int texture_index);
 
     protected:
-        int     mLayerIndex;
+        int         mLayerIndex;
+        ShaderData* mShadowMaterial;
     };
 }
 #endif

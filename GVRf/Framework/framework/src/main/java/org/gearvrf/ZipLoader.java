@@ -52,7 +52,7 @@ public abstract class ZipLoader {
          * This call is made for each entry in the zip file. Use this call to provide the
          * convenience function to process the {@link GVRAndroidResource}s obtained from the zip
          * file. For eg. use
-         * {@link GVRAssetLoader#loadFutureTexture(GVRAndroidResource, int, int)} to return
+         * {@link GVRContext#loadFutureTexture(GVRAndroidResource, int)} to return
          * a {@link java.util.concurrent.Future} to the {@link ZipLoader}.
          *
          * @param context  the GVRf context

@@ -649,12 +649,12 @@ public class GVRAndroidResource {
      * Callback for asynchronous texture loads.
      * 
      * Both compressed and bitmapped textures, using the
-     * {@link GVRAssetLoader#loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback)}
+     * {@link GVRContext#loadTexture(GVRAndroidResource.TextureCallback, GVRAndroidResource)}
      * APIs.
      * 
      * @since 1.6.7
      */
-    public interface TextureCallback extends CancelableCallback<GVRTexture> {
+    public interface TextureCallback extends CancelableCallback<GVRImage> {
     }
 
     /** Callback for asynchronous mesh loads */

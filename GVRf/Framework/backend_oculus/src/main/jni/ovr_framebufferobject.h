@@ -18,6 +18,7 @@
 #define _FRAMEBUFFEROBJECT_H_
 
 #include <GLES3/gl3.h>
+#include <VrApi.h>
 #include "VrApi_Types.h"
 
 namespace gvr {
@@ -33,7 +34,11 @@ public:
     static void unbind();
     void resolve();
     void advance();
-
+    int getWidth(){ return  mWidth; }
+    int getHeight() { return mHeight; }
+    int getSamples() { return mMultisamples; }
+    GLuint getColorTexId(int index){   return vrapi_GetTextureSwapChainHandle( mColorTextureSwapChain, index); }
+    GLuint getRenderBufferFBOId(int index) { return mRenderFrameBuffers[index]; }
 public:
     int mWidth = 0;
     int mHeight = 0;

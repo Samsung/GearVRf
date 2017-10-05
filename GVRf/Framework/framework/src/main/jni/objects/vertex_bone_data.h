@@ -36,10 +36,9 @@
 
 namespace gvr {
 class Bone;
-class Mesh;
 class VertexBoneData {
 public:
-    VertexBoneData(Mesh *mesh);
+    VertexBoneData();
     void setBones(std::vector<Bone*>&& bonesVec);
 
     int getNumBones() const {
@@ -50,46 +49,18 @@ public:
         return boneMatrices[boneId];
     }
 
+    std::vector<glm::mat4>& getBoneMatrices() {
+        return boneMatrices;
+    }
+
     void setFinalBoneTransform(int boneId, glm::mat4 &transform) {
         boneMatrices[boneId] = transform;
     }
 
-    int getFreeBoneSlot(int vertexId);
-    void setVertexBoneWeight(int vertexId, int boneSlot, int boneId, float boneWeight);
-    void normalizeWeights();
-
-    struct BoneData {
-        uint32_t ids[BONES_PER_VERTEX];
-        float weights[BONES_PER_VERTEX];
-
-        BoneData() {
-            reset();
-        }
-
-        void reset() {
-            for(int i = 0; i < BONES_PER_VERTEX; i++) {
-                ids[i] = 0;
-                weights[i]=0;
-            }
-        }
-
-        int getFreeBoneSlot() {
-            for (int i = 0; i < sizeof(ids) / sizeof(ids[0]); i++) {
-                if (weights[i] == 0.0) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-    } __attribute__((packed, aligned(4)));
-
 public:
     std::vector<glm::mat4>  boneMatrices;
-    std::vector<BoneData>   boneData;
 
 private:
-    Mesh *mesh;
-
     // Static bone data loaded from model
     std::vector<Bone*> bones;
 };

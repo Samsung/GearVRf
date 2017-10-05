@@ -53,7 +53,7 @@ class BulletWorld : public PhysicsWorld {
 
     void removeRigidBody(PhysicsRigidBody *body);
 
-    void step(float timeStep, int maxSubSteps);
+    void step(float timeStep);
 
     void listCollisions(std::list <ContactPoint> &contactPoints);
 
@@ -62,6 +62,8 @@ class BulletWorld : public PhysicsWorld {
     void setGravity(glm::vec3 gravity);
 
     PhysicsVec3 getGravity() const;
+
+    static std::mutex worldLock;
 
  private:
     void initialize();

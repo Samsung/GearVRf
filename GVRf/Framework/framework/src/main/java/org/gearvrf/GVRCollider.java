@@ -45,8 +45,8 @@ public class GVRCollider extends GVRComponent
             @Override
             public void nativeCleanup(long nativePointer) {
                 synchronized (sColliders) {
-                    sColliders.remove(nativePointer);
-                }
+                sColliders.remove(nativePointer);
+            }
             }
         });
         sConcatenations = new CleanupHandlerListManager(sCleanup);
@@ -59,8 +59,8 @@ public class GVRCollider extends GVRComponent
      */
     protected void registerNativePointer(long nativePointer) {
         synchronized (sColliders) {
-            sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
-        }
+        sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
+    }
     }
 
     /**
@@ -87,9 +87,9 @@ public class GVRCollider extends GVRComponent
     static GVRCollider lookup(long nativePointer)
     {
         synchronized (sColliders) {
-            WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
-            return weakReference == null ? null : weakReference.get();
-        }
+        WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
+        return weakReference == null ? null : weakReference.get();
+    }
     }
     
     /**
@@ -120,7 +120,7 @@ public class GVRCollider extends GVRComponent
      * picked if it is further from the ray origin
      * than the pick distance.
      * 
-     * @see #getPickDistance()
+     * @see #getPickDistance
      */
     public void setPickDistance(float dist)
     {

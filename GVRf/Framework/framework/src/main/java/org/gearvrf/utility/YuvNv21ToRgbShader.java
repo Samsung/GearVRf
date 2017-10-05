@@ -17,7 +17,10 @@
 package org.gearvrf.utility;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.GVRShader;
+
+import android.content.Context;
+import org.gearvrf.utility.TextFile;
 
 /**
  * YUV-NV21-to-RGB shader. Adapted from this excellent post: http://stackoverflow.com/a/22456885.
@@ -31,12 +34,11 @@ import org.gearvrf.GVRShaderTemplate;
  * GVRTexture mYBufferTexture = new GVRBitmapTexture(context, new GVRTextureParameters());
  * GVRTexture mUVBufferTexture = new GVRBitmapTexture(context, new GVRTextureParameters());
  *
- * GVRSceneObject quad = new GVRSceneObject(context, 3f, 1.5f);
- * GVRMaterial material = new GVRMaterial(context, GVRMaterial.GVRShaderType.BeingGenerated.ID);
- * quad.getRenderData().setMaterial(material); *
+ * GVRShaderId yuvShader = new GVRShaderId(context, YuvNv21ToRgbShader.class);
+ * GVRSceneObject quad = new GVRSceneObject(context, 3f, 1.5f, null, yuvShader);
+ * GVRMaterial material = quad.getRenderData().getMaterial();
  * material.setTexture("y_texture", mYBufferTexture);
  * material.setTexture("uv_texture", mUVBufferTexture);
- * quad.getRenderData().setShaderTemplate(YuvNv21ToRgbShader.class);
  * </pre>
  *
  * Whenever there is new image data, post it:
@@ -49,41 +51,14 @@ import org.gearvrf.GVRShaderTemplate;
  * mUVBufferTexture.postBuffer(GLES30.GL_LUMINANCE_ALPHA, width / 2, height / 2, GLES30.GL_LUMINANCE_ALPHA, GLES30.GL_UNSIGNED_BYTE, mYuvBuffer);
  * </pre>
  */
-public class YuvNv21ToRgbShader extends GVRShaderTemplate
+
+public class YuvNv21ToRgbShader extends GVRShader
 {
-    private static final String VERTEX_SHADER =
-            "in vec4 a_position;\n" +
-            "in vec2 a_texcoord;\n" +
-            "out vec2 v_texCoord;\n" +
-            "uniform mat4 u_mvp;\n" +
-            "void main() {\n" +
-            "  gl_Position = u_mvp * a_position;\n" +
-            "  v_texCoord = a_texcoord;\n" +
-            "}\n";
-
-    private static String FRAGMENT_SHADER =
-            "precision highp float;\n" +
-            "in vec2 v_texCoord;\n" +
-            "uniform sampler2D y_texture;\n" +
-            "uniform sampler2D uv_texture;\n" +
-            "out vec4 fragColor;\n" +
-            "  void main (void) {\n" +
-            "  float r, g, b, y, u, v;\n" +
-            "  y = texture(y_texture, v_texCoord).r;\n" +
-            "  vec4 texColor = texture(uv_texture,v_texCoord);\n" +
-            "  u = texColor.a - 0.5;\n" +
-            "  v = texColor.r - 0.5;\n" +
-            "  r = y + 1.13983*v;\n" +
-            "  g = y - 0.39465*u - 0.58060*v;\n" +
-            "  b = y + 2.03211*u;\n" +
-            "  fragColor = vec4(r, g, b, 1.0);\n" +
-            "}\n";
-
-    public YuvNv21ToRgbShader(GVRContext gvrContext)
+    public YuvNv21ToRgbShader(GVRContext ctx)
     {
-        super("sampler2D y_texture, sampler2D uv_texture", 300);
-        setSegment("FragmentTemplate", FRAGMENT_SHADER);
-        setSegment("VertexTemplate", VERTEX_SHADER);
+        super("", "sampler2D y_texture, sampler2D uv_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
+        Context context = ctx.getContext();
+        setSegment("FragmentTemplate", TextFile.readTextFile(context, org.gearvrf.R.raw.yuv_nv21_to_rgb));
+        setSegment("VertexTemplate", TextFile.readTextFile(context, org.gearvrf.R.raw.pos_tex_ubo));
     }
-
 }

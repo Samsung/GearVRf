@@ -28,7 +28,8 @@
 #include "objects/components/component.h"
 
 namespace gvr {
-class PostEffectData;
+class ShaderData;
+class RenderData;
 
 class Camera: public Component {
 public:
@@ -75,12 +76,11 @@ public:
         render_mask_ = render_mask;
     }
 
-    const std::vector<PostEffectData*>& post_effect_data() const {
+    RenderData* post_effect_data() const {
         return post_effect_data_;
     }
 
-    void addPostEffect(PostEffectData* post_effect);
-    void removePostEffect(PostEffectData* post_effect);
+    void setPostEffect(RenderData* post_effects);
     virtual glm::mat4 getProjectionMatrix() const = 0;
     virtual const glm::mat4& getViewMatrix();
     virtual void setViewMatrix(const glm::mat4& viewMtx);
@@ -99,7 +99,7 @@ private:
     float background_color_b_;
     float background_color_a_;
     int render_mask_;
-    std::vector<PostEffectData*> post_effect_data_;
+    RenderData* post_effect_data_;
     glm::mat4 view_matrix_;
 };
 

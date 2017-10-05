@@ -112,7 +112,7 @@ public class TimeSensor {
 
     /**
      * Get the state of the loop property
-     * @return True if the repeat mode is set as REPEATED else false
+     * @return
      */
     public boolean getLoop() {
         return this.loop;
@@ -134,7 +134,7 @@ public class TimeSensor {
 
     /**
      * Return the TimeSensor's cycleInterval value
-     * @return The length of time the animation plays
+     * @return
      */
     public float getCycleInterval() {
         return this.cycleInterval;

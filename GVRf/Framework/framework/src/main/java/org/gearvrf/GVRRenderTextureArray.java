@@ -36,10 +36,11 @@ public class GVRRenderTextureArray extends GVRRenderTexture
      * @param ctx       GVRContext to associate the texture array with.
      * @param width     pixel width of textures in the array.
      * @param height    pixel height of textures in the array.
+     * @param samples   number of MSAA samples
      * @param layers    maximum number of textures in the array.
      */
-    public GVRRenderTextureArray(GVRContext ctx, int width, int height, int layers)
+    public GVRRenderTextureArray(GVRContext ctx, int width, int height, int samples, int layers)
     {
-        super(ctx, NativeRenderTexture.ctorArray(width, height, layers));
+        super(ctx, NativeRenderTexture.ctorArray(width, height, samples, layers));
     }
 }

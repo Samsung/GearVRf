@@ -53,7 +53,7 @@ public class GVRWebViewSceneObject extends GVRSceneObject implements
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param webView
      *            an Android {@link WebView}

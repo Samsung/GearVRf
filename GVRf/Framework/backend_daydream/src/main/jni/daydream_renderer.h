@@ -66,13 +66,13 @@ private:
     std::unique_ptr <gvr::BufferViewportList> scratch_viewport_list_;
     std::unique_ptr <gvr::SwapChain> swapchain_;
     gvr::BufferViewport scratch_viewport_;
-
+    gvr::UserPrefs mUserPrefs;
     gvr::Sizei render_size_;
     gvr::Mat4f head_view_;
     float* mBuffer;
     jmethodID onDrawEyeMethodId_ = nullptr;
     jobject rendererObject_ = nullptr;
-    gvr::UserPrefs mUserPrefs;
+
     gvr::CameraRig *cameraRig_;
 };
 

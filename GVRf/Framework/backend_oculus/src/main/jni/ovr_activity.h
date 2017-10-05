@@ -25,81 +25,81 @@
 #include "VrApi_Types.h"
 
 namespace gvr {
+    struct RenderTextureInfo;
+    class CameraRig;
 
-class CameraRig;
+    class GVRActivity
+    {
+    public:
+        GVRActivity(JNIEnv& jni, jobject activity, jobject vrAppSettings, jobject callbacks);
+        ~GVRActivity();
 
-class GVRActivity
-{
-public:
-    GVRActivity(JNIEnv& jni, jobject activity, jobject vrAppSettings, jobject callbacks);
-    ~GVRActivity();
+        bool updateSensoredScene();
+        void setCameraRig(jlong cameraRig);
 
-    bool updateSensoredScene();
-    void setCameraRig(jlong cameraRig);
+        CameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
+        bool sensoredSceneUpdated_ = false;
+        RenderTextureInfo getRenderTextureInfo(int eye, int index);
+    private:
+        JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
 
-    CameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
-    bool sensoredSceneUpdated_ = false;
+        jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail
 
-private:
-    JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
+        jmethodID onDrawEyeMethodId = nullptr;
+        jmethodID updateSensoredSceneMethodId = nullptr;
 
-    jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail
+        jobject activity_;
 
-    jmethodID onDrawEyeMethodId = nullptr;
-    jmethodID updateSensoredSceneMethodId = nullptr;
+        ConfigurationHelper configurationHelper_;
 
-    jobject activity_;
+        ovrJava oculusJavaMainThread_;
+        ovrJava oculusJavaGlThread_;
+        ovrMobile* oculusMobile_ = nullptr;
+        long long frameIndex = 1;
+        FrameBufferObject frameBuffer_[VRAPI_FRAME_LAYER_EYE_MAX];
+        ovrMatrix4f projectionMatrix_;
+        ovrMatrix4f texCoordsTanAnglesMatrix_;
+        ovrPerformanceParms oculusPerformanceParms_;
+        ovrHeadModelParms oculusHeadModelParms_;
 
-    ConfigurationHelper configurationHelper_;
+        bool mResolveDepthConfiguration = false;
+        int mWidthConfiguration = 0, mHeightConfiguration = 0, mMultisamplesConfiguration = 0;
+        ovrTextureFormat mColorTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
+        ovrTextureFormat mDepthTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
 
-    ovrJava oculusJavaMainThread_;
-    ovrJava oculusJavaGlThread_;
-    ovrMobile* oculusMobile_ = nullptr;
-    long long frameIndex = 1;
-    FrameBufferObject frameBuffer_[VRAPI_FRAME_LAYER_EYE_MAX];
-    ovrMatrix4f projectionMatrix_;
-    ovrMatrix4f texCoordsTanAnglesMatrix_;
-    ovrPerformanceParms oculusPerformanceParms_;
-    ovrHeadModelParms oculusHeadModelParms_;
+        int32_t mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
 
-    bool mResolveDepthConfiguration = false;
-    int mWidthConfiguration = 0, mHeightConfiguration = 0, mMultisamplesConfiguration = 0;
-    ovrTextureFormat mColorTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
-    ovrTextureFormat mDepthTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
+        int x, y, width, height;                // viewport
 
-    int32_t mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
+        void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
+        void beginRenderingEye(const int eye);
+        void endRenderingEye(const int eye);
 
-    int x, y, width, height;                // viewport
+        bool docked_ = false;
+        bool clampToBorderSupported_ = false;
+        GearController *gearController;
+        int mainThreadId_ = 0;
 
-    void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
-    void beginRenderingEye(const int eye);
-    void endRenderingEye(const int eye);
-
-    bool docked_ = false;
-    bool clampToBorderSupported_ = false;
-    GearController *gearController;
-    int mainThreadId_ = 0;
-
-public:
-    void onSurfaceCreated(JNIEnv& env);
-    void onSurfaceChanged(JNIEnv& env);
+    public:
+        void onSurfaceCreated(JNIEnv& env);
+        void onSurfaceChanged(JNIEnv& env);
     void onDrawFrame(jobject jViewManager);
-    int initializeVrApi();
-    void uninitializeVrApi();
-    void leaveVrMode();
+        int initializeVrApi();
+        void uninitializeVrApi();
+        void leaveVrMode();
 
-    void showConfirmQuit();
+        void showConfirmQuit();
 
-    bool isHmtConnected() const;
-    bool usingMultiview() const;
+        bool isHmtConnected() const;
+        bool usingMultiview() const;
 
-    void onDock() { docked_ = true; }
-    void onUndock() { docked_ = false; }
+        void onDock() { docked_ = true; }
+        void onUndock() { docked_ = false; }
 
-    void setGearController(GearController *controller){
-        gearController = controller;
-    }
-};
+        void setGearController(GearController *controller){
+            gearController = controller;
+        }
+    };
 
 }
 #endif

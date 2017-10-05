@@ -14,13 +14,9 @@
  */
 #include "batch.h"
 #include "objects/scene_object.h"
-#include "objects/components/render_data.h"
-#include "batch_manager.h"
-#include "renderer.h"
-#include "shaders/shader_manager.h"
 #include "objects/scene.h"
-#include "objects/scene_object.h"
-#include "objects/components/camera.h"
+#include "shaders/shader.h"
+
 #define BATCH_SIZE 60
 namespace gvr {
 
@@ -85,11 +81,18 @@ void BatchManager::renderBatches(RenderState& rstate) {
         if(rstate.material_override == nullptr)
             continue;
 
+    RenderData* renderdata = batch->get_renderdata();
 
-    int currentShaderType = batch->material(0)->shader_type();
+    if(renderdata == nullptr)
+        continue;
+
+    int currentShaderType = renderdata->get_shader(rstate.is_multiview);
+
+    if (currentShaderType == 0)
+        continue;
      // if shader type is other than texture shader, render it with non-batching mode
      // if the mesh is large, we are not batching it
-    if (currentShaderType != Material::ShaderType::TEXTURE_SHADER || batch->notBatched()) {
+    if (batch->notBatched()) {
 
         rstate.material_override = nullptr;
         const std::unordered_set<RenderData*>& render_data_set = batch->getRenderDataSet();
@@ -104,11 +107,6 @@ void BatchManager::renderBatches(RenderState& rstate) {
             continue;
         }
 
-        RenderData* renderdata = batch->get_renderdata();
-
-        if(renderdata == nullptr)
-            continue;
-
         if (!(rstate.render_mask & renderdata->render_mask()))
             continue;
 
@@ -119,7 +117,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
 
         gRenderer->setRenderStates(renderdata, rstate);
 
-        if(rstate.is_multiview){
+        if(use_multiview){
            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
            rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
         }
@@ -131,13 +129,28 @@ void BatchManager::renderBatches(RenderState& rstate) {
             rstate.material_override = batch->material(passIndex);
             if(rstate.material_override == nullptr)
                 continue;
-
-            rstate.shader_manager->getTextureShader()->render_batch(matrices,
-                        renderdata, rstate, batch->getIndexCount(),
-                        batch->getNumberOfMeshes());
+            Shader *shader = rstate.shader_manager->getShader(currentShaderType);
+            if (shader != NULL)
+            {
+                //TODO: implement this
+                //shader->programInit(&rstate, renderdata, rstate.material_override, matrices, batch->getNumberOfMeshes(), true);
+                render_batch(matrices, renderdata, batch->getIndexCount());
+            }
         }
         gRenderer->restoreRenderStates(renderdata);
     }
+}
+
+void BatchManager::render_batch(const std::vector<glm::mat4>& model_matrix,
+        RenderData* render_data, unsigned int indexCount)
+{
+    if(use_multiview)
+        glDrawElementsInstanced(render_data->draw_mode(),indexCount, GL_UNSIGNED_SHORT, NULL, 2 );
+    else
+        GL(glDrawElements(render_data->draw_mode(), indexCount, GL_UNSIGNED_SHORT,
+            0));
+    GL(glBindVertexArray(0));
+    checkGLError(" TextureShader::render_batch");
 }
 
 void BatchManager::createBatch(int start, int end, std::vector<RenderData*>& render_data_vector) {

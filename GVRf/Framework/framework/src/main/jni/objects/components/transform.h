@@ -29,9 +29,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "objects/lazy.h"
-#include "objects/components/component.h"
+#include "component.h"
 
 namespace gvr {
+
 class Transform: public Component {
 public:
     Transform();
@@ -229,6 +230,10 @@ public:
         return model_matrix_.isValid();
     }
 
+    virtual void onAttach(SceneObject* owner_object);
+    virtual void onDetach(SceneObject* owner_object);
+
+    void invalidate();
     void invalidate(bool rotationUpdated);
     glm::mat4 getModelMatrix(bool forceRecalculate = false);
     glm::mat4 getLocalModelMatrix();

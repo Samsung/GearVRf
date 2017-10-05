@@ -43,8 +43,8 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
-    public GVRViewManager makeViewManager(boolean useMultiview) {
-        return new OvrViewManager(mActivity, mActivity.getMain(), mXmlParser, useMultiview);
+    public GVRViewManager makeViewManager() {
+        return new OvrViewManager(mActivity, mActivity.getMain(), mXmlParser);
     }
 
     @Override

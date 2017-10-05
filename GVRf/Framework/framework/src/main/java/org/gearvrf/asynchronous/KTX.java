@@ -15,16 +15,13 @@
 
 package org.gearvrf.asynchronous;
 
-import static android.opengl.GLES20.*;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import org.gearvrf.GVRCompressedTexture;
 import org.gearvrf.GVRContext;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.RuntimeAssertion;
-
-import android.opengl.GLES30;
 
 class KTX extends GVRCompressedTextureLoader {
 
@@ -163,20 +160,39 @@ class KTX extends GVRCompressedTextureLoader {
 
         @Override
         public GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
-            GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
-                    GVRCompressedTexture.GL_TARGET, levels, quality);
 
             ByteBuffer data = getData();
             ByteOrder defaultOrder = data.order();
             ByteOrder dataOrder = littleEndian ? ByteOrder.LITTLE_ENDIAN
                     : ByteOrder.BIG_ENDIAN;
+            int[]   outOffsets = new int[levels];
 
+            for (int fileLevel = 0; fileLevel < levels; ++fileLevel)
+            {
+                data.order(dataOrder);
+                int imageSize = data.getInt();
+                data.order(defaultOrder);
+                int imagePadding = (4 - (imageSize & 0x03)) & 0x03;
+
+                outOffsets[fileLevel] = data.position();
+                data.position(data.position() + imageSize + imagePadding);
+            }
+            GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
+                    width, height, imageSize, internalformat, data.array(), levels, quality);
+            result.setDataOffsets(outOffsets);
+/*
+            GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
+                    GVRCompressedTexture.GL_TARGET, levels, quality);
             result.rebind();
 
             for (int fileLevel = 0; fileLevel < levels; ++fileLevel) {
                 data.order(dataOrder);
                 int imageSize = data.getInt();
                 data.order(defaultOrder);
+                if (fileLevel == 0)
+                {
+                    outData = new byte[imageSize * 2];
+                }
 
                 int imagePadding = (4 - (imageSize & 0x03)) & 0x03;
 
@@ -186,15 +202,19 @@ class KTX extends GVRCompressedTextureLoader {
                         width >>> fileLevel, height >>> fileLevel, //
                         internalformat, imageSize, imagePadding, //
                         data.position());
-
+                System.arraycopy(data, data.position(), outData, outOffset, imageSize);
+                outOffset += imageSize;
+                outSize += imageSize >> 1;
                 // Note that this call does NOT advance the Buffer position
                 GLES30.glCompressedTexImage2D(GL_TEXTURE_2D, fileLevel,
                         internalformat, Math.max(1, width >> fileLevel),
                         Math.max(1, height >> fileLevel), 0, imageSize, data);
                 data.position(data.position() + imageSize + imagePadding);
             }
-
+            GVRCompressedTexture result2 = new GVRCompressedTexture(gvrContext,
+                    GVRCompressedTexture.GL_TARGET, width, height, outSize, outData, 0, levels, quality);
             result.unbind();
+*/
             return result;
         }
 

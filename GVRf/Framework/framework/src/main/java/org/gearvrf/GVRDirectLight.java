@@ -215,13 +215,53 @@ public class GVRDirectLight extends GVRLightBase
                     owner.attachComponent(shadowMap);
                 }
             }
-            else
-                if (shadowMap != null)
-                {
-                    shadowMap.setEnable(false);
-                }
+            else if (shadowMap != null)
+            {
+                shadowMap.setEnable(false);
+            }
         }
         mCastShadow = enableFlag;
+    }
+
+    /**
+     * Sets the near and far range of the shadow map camera.
+     * <p>
+     * This function enables shadow mapping and sets the shadow map
+     * camera near and far range, controlling which objects affect
+     * the shadow map. To modify other properties of the shadow map
+     * camera's projection, you can call {@link GVRShadowMap#getCamera}
+     * and update them.
+     * @param near near shadow camera clipping plane
+     * @param far far shadow camera clipping plane
+     * @see GVRShadowMap#getCamera()
+     */
+    public void setShadowRange(float near, float far)
+    {
+        GVRSceneObject owner = getOwnerObject();
+        GVROrthogonalCamera shadowCam = null;
+
+        if (owner == null)
+        {
+            throw new UnsupportedOperationException("Light must have an owner to set the shadow range");
+        }
+        GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
+        if (shadowMap != null)
+        {
+            shadowCam = (GVROrthogonalCamera) shadowMap.getCamera();
+            shadowCam.setNearClippingDistance(near);
+            shadowCam.setFarClippingDistance(far);
+            shadowMap.setEnable(true);
+        }
+        else
+        {
+           shadowCam = GVRShadowMap.makeOrthoShadowCamera(
+                    getGVRContext().getMainScene().getMainCameraRig().getCenterCamera());
+            shadowCam.setNearClippingDistance(near);
+            shadowCam.setFarClippingDistance(far);
+            shadowMap = new GVRShadowMap(getGVRContext(), shadowCam);
+            owner.attachComponent(shadowMap);
+        }
+        mCastShadow = true;
     }
 
     /**

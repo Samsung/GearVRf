@@ -81,7 +81,7 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
  * if the scene object doesn't have a collider.
  */
 void Picker::pickSceneObject(const SceneObject *scene_object, float ox, float oy, float oz, float dx, float dy, float dz, ColliderData &colliderData){
-    Collider* collider = scene_object->collider();
+    Collider* collider = (Collider*) scene_object->getComponent(Collider::getComponentType());
     if(collider == nullptr){
         return;
     }

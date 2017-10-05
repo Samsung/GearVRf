@@ -100,11 +100,19 @@ namespace gvr {
         }
     }
 
-    void BulletConeTwistConstraint::updateConstructionInfo() {
-        if (mConeTwistConstraint != 0) {
-            delete (mConeTwistConstraint);
+    void BulletConeTwistConstraint::set_owner_object(SceneObject* obj) {
+        if (obj == owner_object())
+        {
+            return;
         }
+        Component::set_owner_object(obj);
+        if (obj)
+        {
+            onAttach(obj);
+        }
+    }
 
+    void BulletConeTwistConstraint::onAttach(SceneObject *owner) {
         btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(owner_object()
                 ->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 

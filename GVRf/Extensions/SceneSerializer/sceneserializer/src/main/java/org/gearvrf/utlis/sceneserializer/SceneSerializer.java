@@ -152,7 +152,7 @@ public class SceneSerializer {
             environmentSceneObject = new GVRCubeSceneObject(gvrContext, false,
                     cubemapMaterial);
             environmentSceneObject.getTransform().setScale(targetScale, targetScale, targetScale);
-            Future<GVRTexture> futureCubeTexture = gvrContext.getAssetLoader().loadFutureCubemapTexture
+            GVRTexture futureCubeTexture = gvrContext.getAssetLoader().loadCubemapTexture
                     (resource);
             environmentSceneObject.getRenderData().getMaterial().setMainTexture
                     (futureCubeTexture);
@@ -162,7 +162,7 @@ public class SceneSerializer {
             environmentSceneObject = new GVRSphereSceneObject(gvrContext, false,
                     material);
             environmentSceneObject.getTransform().setScale(targetScale, targetScale, targetScale);
-            Future<GVRTexture> futureSphereTexture = gvrContext.getAssetLoader().loadFutureTexture(resource);
+            GVRTexture futureSphereTexture = gvrContext.getAssetLoader().loadTexture(resource);
             environmentSceneObject.getRenderData().getMaterial().setMainTexture(futureSphereTexture);
             gvrScene.addSceneObject(environmentSceneObject);
         }

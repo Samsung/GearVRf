@@ -24,6 +24,7 @@
 #include <mutex>
 
 #include "objects/hybrid_object.h"
+#include "objects/components/component.h"
 #include "objects/components/render_data.h"
 #include "objects/components/transform.h"
 #include "objects/components/camera.h"
@@ -100,21 +101,23 @@ public:
         return (CameraRig*) getComponent(CameraRig::getComponentType());
     }
 
-    Collider* collider() const {
-        return (Collider*) getComponent(Collider::getComponentType());
-    }
-
     SceneObject* parent() const {
         return parent_;
     }
+
     void setTransformUnDirty(){
     	transform_dirty_ = false;
     }
-    void setTransformDirty(){
+    void setTransformDirty() {
     	transform_dirty_ = true;
-
+        Transform* t = transform();
+        if (t)
+        {
+            t->invalidate();
+        }
     }
-    bool isTransformDirty(){
+
+    bool isTransformDirty() {
     	return transform_dirty_;
     }
     void setCullStatus(bool cull){
@@ -145,7 +148,11 @@ public:
 
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
-
+    void onTransformChanged();
+    bool onAddChild(SceneObject* addme, SceneObject* root);
+    bool onRemoveChild(SceneObject* removeme, SceneObject* root);
+    void onAddedToScene(Scene* scene);
+    void onRemovedFromScene(Scene* scene);
     int frustumCull(glm::vec3 camera_position, const float frustum[6][4], int& planeMask);
 
 private:
@@ -186,4 +193,6 @@ private:
 };
 
 }
+#include "components/component.inl"
+
 #endif

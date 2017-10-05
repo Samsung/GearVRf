@@ -81,13 +81,30 @@ public enum GVRImportSettings {
     OPTIMIZE_GRAPH(0x400000),
 
     /**
+     * Causes the animations in the asset to start as soon as the asset is added to the scene.
+     */
+    START_ANIMATIONS(0x100000),
+
+    /**
      * Flip UV mapping in y direction.
      */
     FLIP_UV(0x800000),
+
     /**
-     * Causes the animations in the asset to start as soon as the asset is added to the scene.
+     * Do not include light sources and omit vertex normals from meshes
      */
-    START_ANIMATIONS(0x100000);
+    NO_LIGHTING(0x2000000),
+
+    /**
+     * Do not include animations and omit bone weights and indices from meshes
+     */
+    NO_ANIMATION(0x4000000),
+
+    /**
+     * Do not include textures and omit texture coordinates from meshes
+     */
+    NO_TEXTURING(0x8000000);
+
     
     private int mValue;
     
@@ -104,6 +121,7 @@ public enum GVRImportSettings {
     
     /**
      * This will convert the provided enum settings to assimp bitwise format.
+     * Only flags used by Assimp are processed, others are ignored.
      * It's highly recommended to use one of the predefined settings fuctions lie {@link #getRecommendedSettings() getRecommendedSettings} or
      * if you want additional settings use {@link #getRecommendedSettingsWith(EnumSet)}.
      * 
@@ -113,7 +131,12 @@ public enum GVRImportSettings {
     public static int getAssimpImportFlags(EnumSet<GVRImportSettings> settings) {
         int flags = 0;
         for (GVRImportSettings s : settings) {
-            flags |= s.getValue();
+            long v = s.getValue();
+
+            if (v <= FLIP_UV.getValue())
+            {
+                flags |= s.getValue();
+            }
         }
         flags &= ~START_ANIMATIONS.getValue();
         return flags;

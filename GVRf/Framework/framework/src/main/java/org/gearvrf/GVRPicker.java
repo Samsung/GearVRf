@@ -330,7 +330,7 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Tests the {@link GVRSceneObject} against the main camera rig's lookat vector.
+     * Tests the {@link GVRSceneObject} against the ray information passed to the function.
      *
      * @param sceneObject
      *            The {@link GVRSceneObject} to be tested.
@@ -559,7 +559,7 @@ public class GVRPicker extends GVRBehavior {
      */
     static GVRPickedObject makeHitMesh(long colliderPointer, float distance, float hitx, float hity, float hitz,
                                    int faceIndex, float barycentricx, float barycentricy, float barycentricz,
-                                   float texu, float texv, float normalx, float normaly, float normalz)
+                                   float texu, float texv,  float normalx, float normaly, float normalz)
     {
         GVRCollider collider = GVRCollider.lookup(colliderPointer);
         if (collider == null)
@@ -568,7 +568,8 @@ public class GVRPicker extends GVRBehavior {
             return null;
         }
         return new GVRPicker.GVRPickedObject(collider, new float[] { hitx, hity, hitz }, distance, faceIndex,
-                new float[] {barycentricx, barycentricy, barycentricz}, new float[]{ texu, texv },
+                new float[] {barycentricx, barycentricy, barycentricz},
+                new float[]{ texu, texv },
                 new float[]{normalx, normaly, normalz});
     }
     
@@ -757,17 +758,16 @@ public class GVRPicker extends GVRBehavior {
 
 final class NativePicker {
     static native long[] pickScene(long scene, float ox, float oy, float oz,
-            float dx, float dy, float dz);
+                                   float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject[] pickObjects(long scene, long transform, float ox, float oy, float oz,
-            float dx, float dy, float dz);
+                                                          float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject pickSceneObject(long sceneObject, float ox, float oy, float oz,
-            float dx, float dy, float dz);
+                                                            float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject[] pickVisible(long scene);
 
     static native boolean pickSceneObjectAgainstBoundingBox(long sceneObject,
-            float ox, float oy, float oz, float dx, float dy, float dz, ByteBuffer readbackBuffer);
+                                                            float ox, float oy, float oz, float dx, float dy, float dz, ByteBuffer readbackBuffer);
 }
-

@@ -13,50 +13,59 @@
  * limitations under the License.
  */
 #include "shadow_map.h"
+#include "gl/gl_render_texture.h"
 
 namespace gvr {
-
-ShadowMap::ShadowMap(Material* mtl)
-: RenderTarget(nullptr),
-  mLayerIndex(-1)
-{
-    mRenderState.material_override = mtl;
-}
-
-ShadowMap::~ShadowMap()
-{
-    if (mLayerIndex > 0)
+class Renderer;
+    ShadowMap::ShadowMap(ShaderData* mtl)
+            : GLRenderTarget((RenderTexture*)nullptr, false),
+              mLayerIndex(-1),
+              mShadowMaterial(mtl)
     {
-        mRenderTexture = nullptr;
+
     }
-}
 
-void ShadowMap::setLayerIndex(int layerIndex)
-{
-    mLayerIndex = layerIndex;
-}
-
-void ShadowMap::bindTexture(int loc, int texIndex)
-{
-    RenderTextureArray* texArray = static_cast<RenderTextureArray*>(mRenderTexture);
-
-    if (texArray)
+    ShadowMap::~ShadowMap()
     {
-        texArray->bindTexture(loc, texIndex);
+        /*
+         * All the shadow maps share the same RenderTexture.
+         * We only delete it once for layer 0.
+         */
+        if (mLayerIndex > 0)
+        {
+            mRenderTexture = nullptr;
+        }
     }
-}
 
-void  ShadowMap::beginRendering()
-{
-    RenderTextureArray* texArray = static_cast<RenderTextureArray*>(mRenderTexture);
-
-    if (texArray && (mLayerIndex >= 0))
+    void ShadowMap::setLayerIndex(int layerIndex)
     {
-        texArray->bindFrameBuffer(mLayerIndex);
+        mLayerIndex = layerIndex;
+        GLNonMultiviewRenderTexture* rtex = static_cast<GLNonMultiviewRenderTexture*>(mRenderTexture);
+
+        if (rtex)
+        {
+            LOGV("ShadowMap::setLayerIndex %d", layerIndex);
+            rtex->setLayerIndex(mLayerIndex);
+        }
     }
-    RenderTarget::beginRendering();
-    mRenderState.render_mask = 1;
-    mRenderState.shadow_map = true;
-}
+
+    void ShadowMap::bindTexture(int loc, int texIndex)
+    {
+        GLNonMultiviewRenderTexture* rtex = static_cast<GLNonMultiviewRenderTexture*>(mRenderTexture);
+
+        if (rtex)
+        {
+            rtex->bindTexture(loc, texIndex);
+        }
+    }
+
+    void  ShadowMap::beginRendering(Renderer* renderer)
+    {
+        GLRenderTarget::beginRendering(renderer);
+        mRenderState.render_mask = 1;
+        mRenderState.shadow_map = true;
+        mRenderState.material_override = mShadowMaterial;
+        LOGV("ShadowMap::beginRendering %s", mRenderState.material_override->getUniformDescriptor());
+    }
 
 }

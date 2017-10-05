@@ -17,23 +17,25 @@ package org.gearvrf;
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Illuminates object in the scene with a cone shaped beam.
- * <p>
+ * 
  * The apex of the cone is at the position of the scene object
  * the light is attached to. The direction of the cone is the
  * forward direction of that scene object.
- * </p><p>
+ * 
  * There are two angles for the cone. Beyond the "outer angle"
  * no light is emitted. Inside the "inner angle" the light is
  * at full intensity. Between the two angles the light linearly
  * decreases allowing for soft edges.
- * </p><p>
+ * 
  * The intensity of the light diminishes with distance from the
  * cone apex. Three attenuation factors are provided to specify how
  * the intensity of the light falls off with distance:
  * {@code I = attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2}
- * </p><p>
+ *
  * Spot light uniforms:
  * {@literal
  *   enabled               1 = light is enabled, 0 = light is disabled
@@ -54,10 +56,10 @@ import org.joml.Matrix4f;
  *   sm2                   shadow matrix column 3
  *   sm3                   shadow matrix column 4
  * }
- * </p><p>
+ * 
  * Note: some mobile GPU drivers do not correctly pass a mat4 thru so we currently
  * use 4 vec4's instead.
- * </p>
+ *  
  * @see GVRPointLight
  * @see GVRLightBase
  */
@@ -66,11 +68,12 @@ public class GVRSpotLight extends GVRPointLight
     private static String fragmentShader = null;
     private static String vertexShader = null;
     private boolean useShadowShader = true;
-    private boolean mChanged = true;
+    private AtomicBoolean mChanged = new AtomicBoolean();
 
-    public GVRSpotLight(GVRContext gvrContext, GVRSceneObject owner) {
+    public GVRSpotLight(GVRContext gvrContext, GVRSceneObject owner)
+    {
         super(gvrContext, owner);
-        
+        mChanged.set(true);
         mUniformDescriptor += " float inner_cone_angle; float outer_cone_angle; ";
         if (useShadowShader)
         {
@@ -90,8 +93,10 @@ public class GVRSpotLight extends GVRPointLight
         setOuterConeAngle(90.0f);
     }
     
-    public GVRSpotLight(GVRContext gvrContext) {
+    public GVRSpotLight(GVRContext gvrContext)
+    {
         this(gvrContext, null);
+        mChanged.set(true);
     }
 
     /**
@@ -146,7 +151,7 @@ public class GVRSpotLight extends GVRPointLight
     public void setOuterConeAngle(float angle)
     {
         setFloat("outer_cone_angle", (float) Math.cos(Math.toRadians(angle)));
-        mChanged = true;
+        mChanged.set(true);
     }
 
     /**
@@ -176,6 +181,7 @@ public class GVRSpotLight extends GVRPointLight
                     shadowMap = new GVRShadowMap(getGVRContext(), shadowCam);
                     owner.attachComponent(shadowMap);
                 }
+                mChanged.set(true);
             }
             else if (shadowMap != null)
             {
@@ -183,6 +189,47 @@ public class GVRSpotLight extends GVRPointLight
             }
         }
         mCastShadow = enableFlag;
+    }
+
+    /**
+     * Sets the near and far range of the shadow map camera.
+     * <p>
+     * This function enables shadow mapping and sets the shadow map
+     * camera near and far range, controlling which objects affect
+     * the shadow map. To modify other properties of the shadow map
+     * camera's projection, you can call {@link GVRShadowMap#getCamera}
+     * and update them.
+     * @param near near shadow camera clipping plane
+     * @param far far shadow camera clipping plane
+     * @see GVRShadowMap#getCamera()
+     */
+    public void setShadowRange(float near, float far)
+    {
+        GVRSceneObject owner = getOwnerObject();
+        GVRPerspectiveCamera shadowCam = null;
+
+        if (owner == null)
+        {
+            throw new UnsupportedOperationException("Light must have an owner to set the shadow range");
+        }
+        GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRRenderTarget.getComponentType());
+        if (shadowMap != null)
+        {
+            shadowCam = (GVRPerspectiveCamera) shadowMap.getCamera();
+            shadowCam.setNearClippingDistance(near);
+            shadowCam.setFarClippingDistance(far);
+            shadowMap.setEnable(true);
+        }
+        else
+        {
+            shadowCam = GVRShadowMap.makePerspShadowCamera(
+                    getGVRContext().getMainScene().getMainCameraRig().getCenterCamera(), getOuterConeAngle());
+            shadowCam.setNearClippingDistance(near);
+            shadowCam.setFarClippingDistance(far);
+            shadowMap = new GVRShadowMap(getGVRContext(), shadowCam);
+            owner.attachComponent(shadowMap);
+        }
+        mCastShadow = true;
     }
 
     /**
@@ -194,18 +241,9 @@ public class GVRSpotLight extends GVRPointLight
     public void onDrawFrame(float frameTime)
     {
         if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
-        float[] odir = getVec3("world_direction");
-        float[] opos = getVec3("world_position");
         Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
-        boolean changed = mChanged;
+        boolean changed = mChanged.getAndSet(false);
 
-        mChanged = false;
-        mOldDir.x = odir[0];
-        mOldDir.y = odir[1];
-        mOldDir.z = odir[2];
-        mOldPos.x = opos[0];
-        mOldPos.y = opos[1];
-        mOldPos.z = opos[2];
         mNewDir.x = 0.0f;
         mNewDir.y = 0.0f;
         mNewDir.z = -1.0f;
@@ -217,11 +255,15 @@ public class GVRSpotLight extends GVRPointLight
         {
             changed = true;
             setVec3("world_direction", mNewDir.x, mNewDir.y, mNewDir.z);
+            mOldDir.set(mNewDir);
+            mChanged.set(false);
         }
         if ((mOldPos.x != mNewPos.x) || (mOldPos.y != mNewPos.y) || (mOldPos.z != mNewPos.z))
         {
             changed = true;
             setVec3("world_position", mNewPos.x, mNewPos.y, mNewPos.z);
+            mOldPos.set(mNewPos);
+            mChanged.set(false);
         }
         GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRShadowMap.getComponentType());
         if ((shadowMap != null) && changed && shadowMap.isEnabled())

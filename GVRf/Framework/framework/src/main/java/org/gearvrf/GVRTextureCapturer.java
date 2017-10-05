@@ -100,11 +100,10 @@ public class GVRTextureCapturer extends GVRHybridObject {
         this.width = width;
         this.height = height;
 
-        int number_views = getGVRContext().getActivity().getAppSettings().isMultiviewSet() ? 2 : 1;
         if (sampleCount == 0)
-            captureTexture = new GVRRenderTexture(getGVRContext(), width, height, number_views);
+            captureTexture = new GVRRenderTexture(getGVRContext(), width, height);
         else
-            captureTexture = new GVRRenderTexture(getGVRContext(), width, height, sampleCount, number_views);
+            captureTexture = new GVRRenderTexture(getGVRContext(), width, height, sampleCount);
 
         setRenderTexture(captureTexture);
         readBackBuffer = new int[width * height];
@@ -163,7 +162,7 @@ public class GVRTextureCapturer extends GVRHybridObject {
                     @Override
                     public void run()
                     {
-                        boolean readOk = captureTexture.readRenderResult(readBackBuffer, 0);
+                        boolean readOk = captureTexture.readRenderResult(readBackBuffer);
                         if (!readOk) {
                             synchronized (processingLock) {
                                 processingCapturedTexture = false;

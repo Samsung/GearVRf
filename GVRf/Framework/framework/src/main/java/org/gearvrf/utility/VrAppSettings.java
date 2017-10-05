@@ -584,7 +584,7 @@ public class VrAppSettings {
     boolean useAndroidWearTouchpad;
 
     // Use multiview feature
-    protected boolean useMultiview;
+    boolean useMultiview;
 
     public final ModeParams modeParams;
     public final EyeBufferParams eyeBufferParams;

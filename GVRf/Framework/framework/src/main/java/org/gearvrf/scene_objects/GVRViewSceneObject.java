@@ -124,7 +124,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
      * @param gvrContext current {@link GVRContext}
      * @param view The {@link View} to be shown.
      * @param mesh a {@link GVRMesh} - see
-     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)} and
+     *            {@link GVRContext#getAssetLoader()#loadMesh(org.gearvrf.GVRAndroidResource)} and
      *            {@link GVRContext#createQuad(float, float)}
      */
     public GVRViewSceneObject(final GVRContext gvrContext, final View view, final GVRMesh mesh) {

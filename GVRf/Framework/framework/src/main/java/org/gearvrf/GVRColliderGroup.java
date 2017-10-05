@@ -17,9 +17,6 @@ package org.gearvrf;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
-
-import org.gearvrf.utility.Threads;
 
 /**
  * Holds any number of {@linkplain GVRCollider} instances

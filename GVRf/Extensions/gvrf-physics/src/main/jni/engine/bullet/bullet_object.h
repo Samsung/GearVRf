@@ -19,8 +19,11 @@
 
 class SceneObject;
 namespace gvr {
+
     class BulletObject {
     public:
+        virtual void set_owner_object(SceneObject* obj) = 0;
+        virtual void onAttach(SceneObject* owner) = 0;
     };
 
 }

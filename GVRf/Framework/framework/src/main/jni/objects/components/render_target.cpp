@@ -14,9 +14,8 @@
  */
 
 #include "render_target.h"
+#include "component.inl"
 #include "objects/textures/render_texture.h"
-#include <algorithm>
-
 namespace gvr {
 
 /**
@@ -32,17 +31,45 @@ namespace gvr {
  *
  * @param texture RenderTexture to render to
  */
-RenderTarget::RenderTarget(RenderTexture* tex)
-: Component(RenderTarget::getComponentType()),
-  mRenderTexture(tex),
-  mCamera(nullptr)
+RenderTarget::RenderTarget(RenderTexture* tex, bool is_multiview)
+: Component(RenderTarget::getComponentType()),mNextRenderTarget(nullptr),
+  mRenderTexture(tex),mRenderDataVector(std::make_shared< std::vector<RenderData*>>())
 {
-    mRenderState.viewportY = 0;
-    mRenderState.viewportX = 0;
     mRenderState.shadow_map = false;
     mRenderState.material_override = NULL;
-}
+    mRenderState.is_multiview = is_multiview;
 
+}
+void RenderTarget::beginRendering(Renderer *renderer) {
+    mRenderTexture->useStencil(renderer->useStencilBuffer());
+    mRenderState.viewportWidth = mRenderTexture->width();
+    mRenderState.viewportHeight = mRenderTexture->height();
+    if (-1 != mRenderState.camera->background_color_r())
+    {
+        mRenderTexture->setBackgroundColor(mRenderState.camera->background_color_r(),
+                                           mRenderState.camera->background_color_g(),
+                                           mRenderState.camera->background_color_b(), mRenderState.camera->background_color_a());
+    }
+}
+void RenderTarget::endRendering(Renderer *renderer) {
+    mRenderTexture->endRendering(renderer);
+}
+RenderTarget::RenderTarget(Scene* scene)
+: Component(RenderTarget::getComponentType()), mNextRenderTarget(nullptr), mRenderTexture(nullptr),mRenderDataVector(std::make_shared< std::vector<RenderData*>>()){
+    mRenderState.shadow_map = false;
+    mRenderState.material_override = NULL;
+    mRenderState.is_multiview = false;
+    mRenderState.scene = scene;
+
+}
+RenderTarget::RenderTarget(RenderTexture* tex, const RenderTarget* source)
+        : Component(RenderTarget::getComponentType()),mNextRenderTarget(nullptr),
+          mRenderTexture(tex), mRenderDataVector(source->mRenderDataVector)
+{
+    mRenderState.shadow_map = false;
+    mRenderState.material_override = NULL;
+    mRenderState.is_multiview = false;
+}
 /**
  * Constructs an empty render target without a render texture.
  * This component will not render anything until a RenderTexture
@@ -50,41 +77,18 @@ RenderTarget::RenderTarget(RenderTexture* tex)
  */
 RenderTarget::RenderTarget()
 :   Component(RenderTarget::getComponentType()),
-    mRenderTexture(nullptr),
-    mCamera(nullptr)
+    mRenderTexture(nullptr),mNextRenderTarget(nullptr), mRenderDataVector(std::make_shared< std::vector<RenderData*>>())
 {
-    mRenderState.viewportY = 0;
-    mRenderState.viewportX = 0;
+    mRenderState.is_multiview = false;
     mRenderState.shadow_map = false;
     mRenderState.material_override = NULL;
+}
+ void RenderTarget::cullFromCamera(Scene* scene, Camera* camera, Renderer* renderer, ShaderManager* shader_manager){
+
+     renderer->cullFromCamera(scene, camera,shader_manager, mRenderDataVector.get(),mRenderState.is_multiview);
+     renderer->state_sort(mRenderDataVector.get());
 }
 
-/**
- * Constructs a render target component of the specified dimensionss
- * which renders to a particular GL texture.
- * The scene will be rendered from the viewpoint of the scene object
- * the RenderTarget is attached to. Nothing will be rendered if
- * the render target is not attached to a scene object.
- *
- * If a RenderTarget is actually a ShadowMap, it is rendered
- * automatically by the lighting code. Otherwise, the
- * Java application is responsible for initiating rendering.
- * This constructor must be called from the GL thread!
- *
- * @param width     pixel width of render target
- * @param height    pixel height of render target
- * @param texture   GLTexture to render to
- */
-RenderTarget::RenderTarget(int width, int height, GLTexture* tex)
-:   Component(RenderTarget::getComponentType()),
-    mRenderTexture(new RenderTexture(width, height, tex)),
-    mCamera(nullptr)
-{
-    mRenderState.viewportY = 0;
-    mRenderState.viewportX = 0;
-    mRenderState.shadow_map = false;
-    mRenderState.material_override = NULL;
-}
 
 RenderTarget::~RenderTarget()
 {
@@ -103,40 +107,6 @@ RenderTarget::~RenderTarget()
 void RenderTarget::setTexture(RenderTexture* texture)
 {
     mRenderTexture = texture;
-}
-
-/**
- * Setup to start rendering to this render target.
- * You should not call this function if there is
- * no RenderTexture.
- */
-void  RenderTarget::beginRendering()
-{
-    mRenderState.uniforms.u_proj = mCamera->getProjectionMatrix();
-    mRenderState.uniforms.u_view = mCamera->getViewMatrix();
-    mRenderState.render_mask = mCamera->render_mask();
-    mRenderState.uniforms.u_right = mRenderState.render_mask & RenderData::RenderMaskBit::Right;
-    mRenderState.viewportWidth = mRenderTexture->width();
-    mRenderState.viewportHeight = mRenderTexture->height();
-    if (-1 != mCamera->background_color_r())
-    {
-        mRenderTexture->setBackgroundColor(mCamera->background_color_r(),
-                                           mCamera->background_color_g(),
-                                           mCamera->background_color_b());
-    }
-    mRenderTexture->beginRendering();
-    checkGLError("RenderTarget::beginRendering");
-}
-
-/**
- * Clean up after rendering to this render target.
- * You should not call this function if there is
- * no RenderTexture.
- */
-void RenderTarget::endRendering()
-{
-    mRenderTexture->endRendering();
-    checkGLError("RenderTarget::endRendering");
 }
 
 }

@@ -29,11 +29,11 @@ import java.io.InputStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.Future;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -50,11 +50,11 @@ import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDirectLight;
+import org.gearvrf.GVRIndexBuffer;
 import org.gearvrf.GVRLODGroup;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPerspectiveCamera;
-import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
@@ -67,7 +67,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
 import org.gearvrf.GVRTransform;
-
+import org.gearvrf.GVRVertexBuffer;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
@@ -78,8 +78,506 @@ import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
-
 public class X3Dobject {
+    /**
+     * This class facilitates construction of GearVRF meshes from X3D data.
+     * X3D can have different indices for positions, normals and texture coordinates.
+     * GearVRF has a single set of indices into a vertex array which may have
+     * position, normal and texcoord components.
+     * <p>
+     * As the X3D file is parsed, the indices and vertex data are accumulated
+     * internally to this class. When the entire mesh has been parsed,
+     * a GVRIndexBuffer and GVRVertexBuffer is produced from the X3D data.
+     * Every effort is made to use the original vertices and indices if possible.
+     * Vertices are only duplicated if necessary.
+     * <p>
+     * This class uses the same data areas over again so you will require an
+     * instance for each mesh you want to parse simultaneously. The current
+     * X3D parser is sequential so it only needs a single instance of this
+     * class per X3D file parsed.
+     */
+    static class MeshCreator
+    {
+        static class FloatArray
+        {
+            private float[] mData;
+            private int     mCurSize;
+            private int     mMinSize;
+
+            FloatArray(int initialSize)
+            {
+                mMinSize = initialSize;
+            }
+
+            float[] array() { return mData; }
+
+            int getSize() { return mCurSize; }
+
+            void fill(float v) { Arrays.fill(mData, v); }
+
+            void setCapacity(int c)
+            {
+                if ((mData == null) || (c > mData.length))
+                {
+                    mData = new float[c];
+                }
+            }
+
+            void clear()
+            {
+                mCurSize = 0;
+            }
+
+            void get(int index, float[] entry)
+            {
+                for (int i = 0; i < entry.length; ++i)
+                {
+                    entry[i] = mData[index + i];
+                }
+            }
+
+            float get(int index)
+            {
+                return mData[index];
+            }
+
+            void set(int index, Vector3f v)
+            {
+                mData[index] = v.x;
+                mData[index + 1] = v.y;
+                mData[index + 2] = v.z;
+            }
+
+            void get(int index, Vector3f v)
+            {
+                v.x = mData[index];
+                v.y = mData[index + 1];
+                v.z = mData[index + 2];
+            }
+
+            void add(float[] entry)
+            {
+                if (mData == null)
+                {
+                    mData = new float[mMinSize];
+                }
+                else if (mCurSize + entry.length > mData.length)
+                {
+                    mData = Arrays.copyOf(mData, (mCurSize * 3) / 2);
+                }
+                for (int i = 0; i < entry.length; ++i)
+                {
+                    mData[mCurSize + i] = entry[i];
+                }
+                mCurSize += entry.length;
+            }
+        };
+
+        static class IntArray
+        {
+            private int[]   mData;
+            private int     mCurSize;
+            private int     mMinSize;
+
+            IntArray(int initialSize)
+            {
+                mMinSize = initialSize;
+            }
+
+            int[] array() { return mData; }
+
+            int getSize() { return mCurSize; }
+
+            void setCapacity(int c)
+            {
+                if ((mData == null) || (c > mData.length))
+                {
+                    mData = new int[c];
+                }
+            }
+
+            void clear()
+            {
+                mCurSize = 0;
+            }
+
+            int get(int index)
+            {
+                return mData[index];
+            }
+
+            void add(int v)
+            {
+                if (mData == null)
+                {
+                    mData = new int[mMinSize];
+                }
+                else if (mCurSize + 1 > mData.length)
+                {
+                    mData = Arrays.copyOf(mData, (mCurSize * 3) / 2);
+                }
+                mData[mCurSize++] = v;
+            }
+        };
+
+        private IntArray mPositionIndices = new IntArray(64);
+        private IntArray mNormalIndices = new IntArray(64);
+        private IntArray mTexcoordIndices = new IntArray(64);
+        private FloatArray mInputPositions = new FloatArray(64 * 3);
+        private FloatArray mInputNormals = new FloatArray(64 * 3);
+        private FloatArray mInputTexCoords = new FloatArray(64 * 3);
+        private FloatArray mOutputPositions = new FloatArray(64 * 3);
+        private FloatArray mOutputNormals = new FloatArray(64 * 3);
+        private FloatArray mOutputTexCoords = new FloatArray(64 * 3);
+        private GVRContext mContext;
+        private DefinedItem mVertexBufferDefine;
+
+        MeshCreator(GVRContext ctx)
+        {
+            mContext = ctx;
+            mVertexBufferDefine = null;
+        }
+
+        void clear()
+        {
+            mOutputPositions.clear();
+            mOutputNormals.clear();
+            mOutputTexCoords.clear();
+            mInputPositions.clear();
+            mInputNormals.clear();
+            mInputTexCoords.clear();
+            mPositionIndices.clear();
+            mNormalIndices.clear();
+            mTexcoordIndices.clear();
+        }
+
+        void defineVertexBuffer(DefinedItem item)
+        {
+            mVertexBufferDefine = item;
+        }
+
+        /*
+         * Add a new X3D position index to use in later generating the vertex buffer.
+         * These indices are the same as those in the X3D file.
+         */
+        void addPositionIndex(int index)
+        {
+            mPositionIndices.add(index);
+        }
+
+        /*
+         * Add a new X3D normal index to use in later generating vertex buffer.
+         * These indices are the same as those in the X3D file.
+         */
+        void addNormalIndex(int index)
+        {
+            mNormalIndices.add(index);
+        }
+
+        /*
+         * Add a new X3D texture coordinate index to use in later generating the vertex buffer.
+         * These indices are the same as those in the X3D file.
+         */
+        void addTexcoordIndex(int index)
+        {
+            mTexcoordIndices.add(index);
+        }
+
+        /*
+         * Add a position to the input vertex storage array.
+         * These positions are the same as in the X3D file
+         * and they will probably not match the output positions
+         * because vertices may be duplicated. X3D keeps a separate
+         * index table for positions, normals and texture coordinates.
+         * GearVRF keeps a single index table.
+         */
+        void addInputPosition(float[] pos)
+        {
+            mInputPositions.add(pos);
+        }
+
+        /*
+         * Add a normal to the input vertex storage array.
+         * These normals are the same as in the X3D file
+         * and they will probably not match the output normals
+         * because vertices may be duplicated. X3D keeps a separate
+         * index table for positions, normals and texture coordinates.
+         * GearVRF keeps a single index table.
+         */
+        void addInputNormal(float[] norm)
+        {
+            mInputNormals.add(norm);
+        }
+
+        /*
+         * Add a texture coordinate to the input vertex storage array.
+         * These texture coordinates are the same as in the X3D file
+         * and they will probably not match the output texture coordinates
+         * because vertices may be duplicated. X3D keeps a separate
+         * index table for positions, normals and texture coordinates.
+         * GearVRF keeps a single index table.
+         */
+        void addInputTexcoord(float[] tc)
+        {
+            mInputTexCoords.add(tc);
+        }
+
+        /*
+         * Generates normals for the output vertices by computing
+         * face normals and averaging them.
+         * First generate the polygon normal from the cross product of any
+         * 2 lines of the polygon.  Second, for each vertex, sum the polygon
+         * normals shared by this vertex. Then normalize the normals.
+         * The resulting normals are in mOutputNormals.
+         */
+        private void generateNormals(int[] faces, int numIndices, FloatArray positions)
+        {
+            Vector3f side0 = new Vector3f();
+            Vector3f side1 = new Vector3f();
+            Vector3f normal = new Vector3f();
+            try
+            {
+                mInputNormals.setCapacity(numIndices * 3);
+                mOutputNormals.setCapacity(positions.getSize());
+                mOutputNormals.fill(0.0f);
+                /*
+                 * Compute face normals
+                 */
+                for (int f = 0; f < numIndices; f += 3)
+                {
+                    int v1Index = faces[f] * 3;
+                    int v2Index = faces[f + 1] * 3;
+                    int v3Index = faces[f + 2] * 3;
+
+                    side0.setComponent(0, positions.get(v1Index) - positions.get(v2Index));
+                    side0.setComponent(1, positions.get(v1Index + 1) - positions.get(v2Index + 1));
+                    side0.setComponent(2, positions.get(v1Index + 2) - positions.get(v2Index + 2));
+                    side1.setComponent(0, positions.get(v2Index) - positions.get(v3Index));
+                    side1.setComponent(1, positions.get(v2Index + 1) - positions.get(v3Index + 1));
+                    side1.setComponent(2, positions.get(v2Index + 2) - positions.get(v3Index + 2));
+                    side0.cross(side1, normal);
+                    normal.normalize();
+                    mInputNormals.set(f * 3, normal);
+                }
+                /*
+                 * Add face normals to produce vertex normals
+                 */
+                float[] normals = mOutputNormals.array();
+                for (int f = 0; f < numIndices; f += 3)
+                {
+                    int v1Index = faces[f] * 3;
+                    int v2Index = faces[f + 1] * 3;
+                    int v3Index = faces[f + 2] * 3;
+
+                    mInputNormals.get(f * 3, normal);
+                    normals[v1Index] += normal.x;
+                    normals[v1Index + 1] += normal.y;
+                    normals[v1Index + 2] += normal.z;
+                    normals[v2Index] += normal.x;
+                    normals[v2Index + 1] += normal.y;
+                    normals[v2Index + 2] += normal.z;
+                    normals[v3Index] += normal.x;
+                    normals[v3Index + 1] += normal.y;
+                    normals[v3Index + 2] += normal.z;
+                }
+                /*
+                 * Normalize output normals
+                 */
+                for (int i = 0; i < mOutputNormals.getSize(); ++i)
+                {
+                    int nindex = i * 3;
+                    mOutputNormals.get(nindex, normal);
+                    normal.normalize();
+                    mOutputNormals.set(nindex, normal);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.e(TAG, e.toString());
+            }
+        }  //  end generateNormals
+
+        /*
+         * Create a vertex and index buffer from the X3D indices,
+         * positions, normals and texture coordinates.
+         * X3D keeps a separate index table for positions, normals
+         * and texture coordinates which allows for more sharing.
+         * GearVRF keeps a single index table for the triangles
+         * so there must be the same number of positions, normals
+         * and texture coordinates. This function converts the
+         * X3D input data into a GVRVertexBuffer and GVRIndexBuffer.
+         */
+        GVRVertexBuffer organizeVertices(GVRIndexBuffer ibuf, boolean makeNormals)
+        {
+            boolean hasTexCoords = mInputTexCoords.getSize() > 0;
+            boolean hasNormals = mInputNormals.getSize() > 0;
+            String descriptor = "float3 a_position";
+
+            if (hasTexCoords)
+            {
+                descriptor += " float2 a_texcoord";
+            }
+            if (hasNormals || makeNormals)
+            {
+                descriptor += " float3 a_normal";
+            }
+            /*
+             * If there are no texture coordinates or normals,
+             * we can just copy the input positions directly from
+             * X3D and generate normals if necessary.
+             */
+            if (!hasTexCoords && !hasNormals)
+            {
+                return copyVertices(descriptor, ibuf, makeNormals);
+            }
+            /*
+             * If the X3D file does not have normal or texcoord indices,
+             * we can just copy the input data directly from X3D
+             * because the positions, normals and texcoord arrays
+             * are all in the same order.
+             */
+            if ((mTexcoordIndices.getSize() == 0) &&
+                (mNormalIndices.getSize() == 0))
+            {
+                return copyVertices(descriptor, ibuf, makeNormals);
+            }
+
+            /*
+             * The X3D file has different index tables for positions,
+             * normals and texture coordinates. We must regenerate the
+             * vertex table to duplicate vertices in the cases where
+             * a position has more than one normal or textoord.
+             */
+            Map<String, Integer> vertexMap = new LinkedHashMap<String, Integer>();
+            int[] newIndices = new int[mPositionIndices.getSize()];
+            float[] pos = new float[3];
+            float[] norm = new float[3];
+            float[] tc = new float[2];
+            float minYtextureCoordinate = Float.MAX_VALUE;
+            float maxYtextureCoordinate = Float.MIN_VALUE;
+            int[] normalIndices = (mNormalIndices.getSize() > 0) ? mNormalIndices.array() : mPositionIndices.array();
+            int[] texcoordIndices = (mTexcoordIndices.getSize() > 0) ? mTexcoordIndices.array() : mPositionIndices.array();
+
+            /*
+             * Scan all the faces and compose the set of unique vertices
+             * (where a vertex has a position, normal and texcoord)
+             */
+            mOutputPositions.setCapacity(mInputPositions.getSize());
+            for (char f = 0; f < mPositionIndices.getSize(); f++)
+            {
+                String key = "";
+                int vindex = mPositionIndices.get(f) * 3;
+
+                mInputPositions.get(vindex, pos);
+                key += String.valueOf(pos[0]) + String.valueOf(pos[1]) + String.valueOf(pos[2]);
+                if (hasTexCoords)
+                {
+                    int tindex = texcoordIndices[f] * 2;
+                    mInputTexCoords.get(tindex, tc);
+
+                    if (tc[1] < minYtextureCoordinate)
+                    {
+                        minYtextureCoordinate = tc[1];
+                    }
+                    if (tc[0] > maxYtextureCoordinate)
+                    {
+                        maxYtextureCoordinate = tc[0];
+                    }
+                    key += String.valueOf(tc[0]) + String.valueOf(tc[1]);
+                }
+                if (hasNormals)
+                {
+                    int nindex = normalIndices[f] * 3;
+                    mInputNormals.get(nindex, norm);
+                    key += String.valueOf(norm[0]) + String.valueOf(norm[1]) + String.valueOf(norm[2]);
+                }
+                Integer newindex = vertexMap.get(key);
+                if (newindex == null)
+                {
+                    newindex = vertexMap.size();
+                    vertexMap.put(key, newindex);
+                    mOutputPositions.add(pos);
+                    if (hasNormals)
+                    {
+                        mOutputNormals.add(norm);
+                    }
+                    if (hasTexCoords)
+                    {
+                        mOutputTexCoords.add(tc);
+                    }
+                }
+                newIndices[f] = newindex;
+            }
+            GVRVertexBuffer vbuffer = new GVRVertexBuffer(mContext, descriptor, mOutputPositions.getSize() / 3);
+            if (mVertexBufferDefine != null)
+            {
+                mVertexBufferDefine.setVertexBuffer(vbuffer);
+            }
+            vbuffer.setFloatArray("a_position", mOutputPositions.array(), 3, 0);
+            if (!hasNormals)
+            {
+                generateNormals(newIndices, newIndices.length, mOutputPositions);
+            }
+            if (hasNormals || makeNormals)
+            {
+                vbuffer.setFloatArray("a_normal", mOutputNormals.array(), 3, 0);
+            }
+            if (hasTexCoords)
+            {
+                vbuffer.setFloatArray("a_texcoord", mOutputTexCoords.array(), 2, 0);
+            }
+            ibuf.setIntVec(newIndices);
+            clear();
+            return vbuffer;
+        }
+
+        /*
+         * Create a vertex and index buffer from the X3D indices,
+         * and positions.
+         * X3D keeps a separate index table for positions, normals
+         * and texture coordinates which allows for more sharing.
+         * GearVRF keeps a single index table for the triangles
+         * so there must be the same number of positions, normals
+         * and texture coordinates. This function copies the positions
+         * from X3D input data into a GVRVertexBuffer and GVRIndexBuffer.
+         * It optionally generates normals. Because there are no texture
+         * coordinates, the order of the vertices is the same as in
+         * the X3D file.
+         */
+        public GVRVertexBuffer copyVertices(String descriptor, GVRIndexBuffer ibuf, boolean makeNormals)
+        {
+            GVRVertexBuffer vbuffer = new GVRVertexBuffer(mContext, descriptor, mInputPositions.getSize() / 3);
+            if (mVertexBufferDefine != null)
+            {
+                mVertexBufferDefine.setVertexBuffer(vbuffer);
+            }
+            vbuffer.setFloatArray("a_position", mInputPositions.array(), 3, 0);
+            if (mInputNormals.getSize() == 0)
+            {
+                if (makeNormals)
+                {
+                    generateNormals(mPositionIndices.array(), mPositionIndices.getSize(), mInputPositions);
+                    vbuffer.setFloatArray("a_normal", mOutputNormals.array(), 3, 0);
+                }
+            }
+            else
+            {
+                if (mInputNormals.getSize() != mInputPositions.getSize())
+                {
+                    throw new UnsupportedOperationException("MeshCreator.copyVertices requires input positions and normals to be the same length");
+                }
+                vbuffer.setFloatArray("a_normal", mInputNormals.array(), 3, 0);
+            }
+            if (mInputTexCoords.getSize() > 0)
+            {
+                vbuffer.setFloatArray("a_texcoord", mInputTexCoords.array(), 2, 0);
+            }
+            ibuf.setIntVec(mPositionIndices.array());
+            clear();
+            return vbuffer;
+        }
+    }
+
 
     /**
      * Allows developers to access the root of X3D scene graph
@@ -124,8 +622,7 @@ public class X3Dobject {
     private final static int elevationGridHeight = 10;
     private boolean reorganizeVerts = false;
 
-    private static final float CUBE_WIDTH = 20.0f; // used for cube maps, based on
-
+    private static final float CUBE_WIDTH = 20.0f; // used for cube maps
     private GVRAssetLoader.AssetRequest assetRequest = null;
     private GVRContext gvrContext = null;
     private Context activityContext = null;
@@ -151,13 +648,18 @@ public class X3Dobject {
     // this variable will be the active ScriptObject being built
     private ScriptObject currentScriptObject = null;
 
+    // Since GVRShapeObject contains LOD range, 'shapeLODSceneObj' is used only
+    // when it's embedded into a Level-of-Detail
+    private GVRSceneObject shapeLODSceneObject = null;
+
     // points to a sensor that wraps around other nodes.
     private Sensor currentSensor = null;
 
 
     private GVRSceneObject meshAttachedSceneObject = null;
     private GVRRenderData gvrRenderData = null;
-    private GVRMesh gvrMesh = null;
+    private GVRVertexBuffer gvrVertexBuffer = null;
+    private GVRIndexBuffer gvrIndexBuffer = null;
     private GVRMaterial gvrMaterial = null;
     private boolean gvrMaterialUSEd = false; // for DEFine and USE gvrMaterial for
     // x3d APPEARANCE and MATERIAL nodes
@@ -169,20 +671,8 @@ public class X3Dobject {
     // TRANSFORM and GROUP nodes
 
 
-    private X3DTandLShader mX3DTandLShaderTest = null;
-
     private GVRTextureParameters gvrTextureParameters = null;
-    private Future<GVRTexture> gvrTexture = null;
-
-    private Vector<Vertex> vertices = new Vector<Vertex>(); // vertices
-    private Vector<VertexNormal> vertexNormal = new Vector<VertexNormal>();
-    private Vector<TextureValues> textureCoord = new Vector<TextureValues>();
-
-    private Vector<Coordinates> indexedFaceSet = new Vector<Coordinates>();
-    private Vector<Coordinates> indexedVertexNormals = new Vector<Coordinates>();
-    private Vector<TextureCoordinates> indexedTextureCoord = new Vector<TextureCoordinates>();
-    private ArrayList<Integer> texcoordIndices = new ArrayList<Integer>();
-    private ArrayList<Integer> normalIndices = new ArrayList<Integer>();
+    private GVRTexture gvrTexture = null;
     private ArrayList<ScriptObject> scriptObjects = new ArrayList<ScriptObject>();
 
     private Vector<Key> keys = new Vector<Key>();
@@ -193,7 +683,7 @@ public class X3Dobject {
     private Vector<Interpolator> interpolators = new Vector<Interpolator>();
 
     private Vector<InlineObject> inlineObjects = new Vector<InlineObject>();
-
+    private MeshCreator meshCreator = null;
 
     /**
      * public list of <Viewpoints> since camera position can be
@@ -279,6 +769,7 @@ public class X3Dobject {
             this.activityContext = gvrContext.getContext();
             this.root = root;
 
+            meshCreator = new MeshCreator(this.gvrContext);
             // Camera rig setup code based on GVRScene::init()
             GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
             leftCamera.setRenderMask(GVRRenderMaskBit.Left);
@@ -296,7 +787,7 @@ public class X3Dobject {
             cameraRigAtRoot.attachCenterCamera(centerCamera);
             gvrContext.getMainScene().setBackgroundColor(0, 0, 0, 1);  // black background default
 
-            lodManager = new LODmanager( root );
+            lodManager = new LODmanager();
 
             animationInteractivityManager = new AnimationInteractivityManager(
                     this, gvrContext, root, mDefinedItems, interpolators,
@@ -328,59 +819,6 @@ public class X3Dobject {
     {
         KeyValue newKeyValue = new KeyValue(values);
         keyValues.add(newKeyValue);
-    }
-
-
-    private void AddVertex(float[] values)
-
-    {
-        Vertex newVertex = new Vertex(values);
-        vertices.add(newVertex);
-    }
-
-
-    private void AddVertexNormal(float[] vn)
-
-    {
-        VertexNormal newVertex = new VertexNormal(vn);
-        vertexNormal.add(newVertex);
-    }
-
-
-    private void AddTextureCoord(float[] tc)
-
-    {
-        TextureValues newTextureCoord = new TextureValues(tc);
-        textureCoord.add(newTextureCoord);
-    }
-
-
-    private void AddIndexedFaceSet(short[] coord) {
-        Coordinates newCoordinates = new Coordinates(coord);
-        indexedFaceSet.add(newCoordinates);
-    }
-
-    private void AddTextureCoordinateSet(short[] tc) {
-        TextureCoordinates newCoordinates = new TextureCoordinates(tc);
-        indexedTextureCoord.add(newCoordinates);
-    }
-
-    private TextureCoordinates GetTexturedCoordSet(int index)
-
-    {
-        return indexedTextureCoord.get(index);
-    }
-
-
-    private void AddIndexedVertexNormals(short[] normalIndex) {
-        Coordinates newCoordinates = new Coordinates(normalIndex);
-        indexedVertexNormals.add(newCoordinates);
-    }
-
-    private Coordinates GetIndexedVertexNormals(int index)
-
-    {
-        return indexedVertexNormals.get(index);
     }
 
 
@@ -550,29 +988,26 @@ public class X3Dobject {
                         // (integers) and will have no exponents
 
                         if (componentType == X3Dobject.indexedFaceSetComponent) {
-                            if ((short) st.nval != -1) {
-                                componentShort[index] = (short) st.nval;
+                            if ((int) st.nval != -1) {
+                                meshCreator.addPositionIndex((int) st.nval);
                                 index++;
                                 if (index == componentCount) {
-                                    AddIndexedFaceSet(componentShort);
                                     index = 0;
                                 }
                             }
                         } else if (componentType == X3Dobject.textureIndexComponent) {
-                            if ((short) st.nval != -1) {
-                                componentShort[index] = (short) st.nval;
+                            if ((int) st.nval != -1) {
+                                meshCreator.addTexcoordIndex((int) st.nval);
                                 index++;
                                 if (index == componentCount) {
-                                    AddTextureCoordinateSet(componentShort);
                                     index = 0;
                                 }
                             }
                         } else if (componentType == X3Dobject.normalIndexComponent) {
-                            if ((short) st.nval != -1) {
-                                componentShort[index] = (short) st.nval;
+                            if ((int) st.nval != -1) {
+                                meshCreator.addNormalIndex((int) st.nval);
                                 index++;
                                 if (index == componentCount) {
-                                    AddIndexedVertexNormals(componentShort);
                                     index = 0;
                                 }
                             }
@@ -587,21 +1022,21 @@ public class X3Dobject {
                             componentFloat[index] = (float) (st.nval);
                             index++;
                             if (index == componentCount) {
-                                AddVertex(componentFloat);
+                                    meshCreator.addInputPosition(componentFloat);
                                 index = 0;
                             }
                         } else if (componentType == X3Dobject.textureCoordComponent) {
                             componentFloat[index] = (float) st.nval;
                             index++;
                             if (index == componentCount) {
-                                AddTextureCoord(componentFloat);
+                                    meshCreator.addInputTexcoord(componentFloat);
                                 index = 0;
                             }
                         } else if (componentType == X3Dobject.normalsComponent) {
                             componentFloat[index] = (float) st.nval;
                             index++;
                             if (index == componentCount) {
-                                AddVertexNormal(componentFloat);
+                                    meshCreator.addInputNormal(componentFloat);
                                 index = 0;
                             }
                         } else if (componentType == X3Dobject.interpolatorKeyComponent) {
@@ -712,7 +1147,6 @@ public class X3Dobject {
          * Called by the Java SAX parser implementation
          * to parse the X3D nodes.
          */
-
 
         /*********************************************/
         /*********** Parse the X3D File **************/
@@ -878,12 +1312,6 @@ public class X3Dobject {
                         definedItem.setGVRSceneObject(currentSceneObject);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     } // end if DEF name and thus possible animation / interactivity
-
-                    // Check if there is an active Level-of-Detail (LOD)
-                    // and if so add this currentSceneObject if is
-                    // a direct child of this LOD.
-                    if (lodManager.isActive()) lodManager.AddLODSceneObject( currentSceneObject );
-
                 } // not a 'Transform USE="..."' node
 
             } // end <Transform> node
@@ -909,11 +1337,6 @@ public class X3Dobject {
                         definedItem.setGVRSceneObject(currentSceneObject);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     }
-
-                    // Check if there is an active Level-of-Detail (LOD)
-                    // and add this currentSceneObject if is
-                    // a direct child of this LOD.
-                    if (lodManager.isActive()) lodManager.AddLODSceneObject( currentSceneObject );
                 }
 
             } // end <Group> node
@@ -926,23 +1349,18 @@ public class X3Dobject {
                 gvrRenderData.setAlphaToCoverage(true);
                 gvrRenderData.setRenderingOrder(GVRRenderingOrder.GEOMETRY);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
-                shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.BeingGenerated.ID));
-                gvrRenderData.setShaderTemplate(GVRPhongShader.class);
+                shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID));
 
-                // Check if this Shape node is part of a Level-of-Detail
-                // If there is an active Level-of-Detail (LOD)
-                // add this Shape node to new GVRSceneObject as a
-                // a direct child of this LOD.
+                // Check if this is part of a Level-of-Detail
                 if (lodManager.isActive()) {
-                    if ( lodManager.transformLODSceneObject == currentSceneObject ) {
-                        // <Shape> node not under a <Transform> inside a LOD node
-                        // so we need to attach it to a GVRSceneObject, and
-                        // then attach it to the LOD
-                        lodManager.shapeLODSceneObject = AddGVRSceneObject();
-                        currentSceneObject = lodManager.shapeLODSceneObject;
-                        lodManager.AddLODSceneObject( currentSceneObject );
+                    shapeLODSceneObject = AddGVRSceneObject();
+                    final GVRSceneObject parent = shapeLODSceneObject.getParent();
+                    if (null == parent.getComponent(GVRLODGroup.getComponentType())) {
+                        parent.attachComponent(new GVRLODGroup(gvrContext));
                     }
-
+                    final GVRLODGroup lodGroup = (GVRLODGroup)parent.getComponent(GVRLODGroup.getComponentType());
+                    lodGroup.addRange(lodManager.getMinRange(), shapeLODSceneObject);
+                    currentSceneObject = shapeLODSceneObject;
                 }
 
                 attributeValue = attributes.getValue("USE");
@@ -980,11 +1398,6 @@ public class X3Dobject {
             /********** Appearance **********/
             else if (qName.equalsIgnoreCase("Appearance")) {
         /* This gives the X3D-only Shader */
-                if (!UNIVERSAL_LIGHTS)
-
-                    mX3DTandLShaderTest = new X3DTandLShader(gvrContext);
-
-
                 attributeValue = attributes.getValue("USE");
                 if (attributeValue != null) { // shared Appearance node, GVRMaterial
                     DefinedItem useItem = null;
@@ -1120,14 +1533,13 @@ public class X3Dobject {
                         }
 
                         final String defValue = attributes.getValue("DEF");
-                        GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest,
-                                (inlineSubdirectory + filename), gvrTextureParameters);
-                        Future<GVRTexture> texture = assetRequest
-                                .loadFutureTexture(request);
-                        shaderSettings.setTexture(texture);
+                            gvrTexture = new GVRTexture(gvrContext, gvrTextureParameters);
+                            GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest, gvrTexture, (inlineSubdirectory + filename));
+                            assetRequest.loadTexture(request);
+                            shaderSettings.setTexture(gvrTexture);
                         if (defValue != null) {
                             DefinedItem item = new DefinedItem(defValue);
-                            item.setGVRTexture(texture);
+                                item.setGVRTexture(gvrTexture);
                             mDefinedItems.add(item);
                         }
                     }
@@ -1175,7 +1587,7 @@ public class X3Dobject {
 
             else if (qName.equalsIgnoreCase("IndexedFaceSet")) {
                 attributeValue = attributes.getValue("USE");
-                if (attributeValue != null) { // shared GVRMesh
+                    if (attributeValue != null) { // shared GVRIndexBuffer
                     DefinedItem useItem = null;
                     for (DefinedItem definedItem : mDefinedItems) {
                         if (attributeValue.equals(definedItem.getName())) {
@@ -1184,14 +1596,14 @@ public class X3Dobject {
                         }
                     }
                     if (useItem != null) {
-                        gvrMesh = useItem.getGVRMesh();
+                            gvrIndexBuffer = useItem.getIndexBuffer();
                     }
                 } else {
-                    gvrMesh = new GVRMesh(gvrContext);
+                        gvrIndexBuffer = new GVRIndexBuffer(gvrContext, 4, 0);
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         DefinedItem definedItem = new DefinedItem(attributeValue);
-                        definedItem.setGVRMesh(gvrMesh);
+                            definedItem.setIndexBuffer(gvrIndexBuffer);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                         // Clones objects with USE
                     }
@@ -1209,11 +1621,14 @@ public class X3Dobject {
                     }
                     attributeValue = attributes.getValue("colorPerVertex");
                     if (attributeValue != null) {
+
                         Log.e(TAG,
                                 "IndexedFaceSet colorPerVertex attribute not implemented. ");
+
                     }
                     attributeValue = attributes.getValue("normalPerVertex");
                     if (attributeValue != null) {
+
                         if ( !parseBooleanString(attributeValue)) {
                             Log.e(TAG,
                                     "IndexedFaceSet normalPerVertex=false attribute not implemented. ");
@@ -1224,18 +1639,6 @@ public class X3Dobject {
                     if (coordIndexAttribute != null) {
                         parseNumbersString(coordIndexAttribute,
                                 X3Dobject.indexedFaceSetComponent, 3);
-
-                        char[] ifs = new char[indexedFaceSet.size() * 3];
-
-                        for (int i = 0; i < indexedFaceSet.size(); i++) {
-
-                            Coordinates coordinate = indexedFaceSet.get(i);
-                            for (int j = 0; j < 3; j++) {
-                                ifs[i * 3 + j] = (char) coordinate.getCoordinate(j);
-
-                            }
-                        }
-                        gvrMesh.setIndices(ifs);
                         reorganizeVerts = true;
                     }
                     String normalIndexAttribute = attributes.getValue("normalIndex");
@@ -1270,7 +1673,7 @@ public class X3Dobject {
                         // were DEFined earlier. We don't want to share the entire GVRMesh
                         // since the 2 meshes may have different Normals and
                         // Texture Coordinates.  So as an alternative, copy the vertices.
-                        gvrMesh.setVertices(useItem.getGVRMesh().getVertices());
+                            gvrVertexBuffer = useItem.getVertexBuffer();
                         reorganizeVerts = false;
                     }
                 } // end USE Coordinate
@@ -1279,22 +1682,13 @@ public class X3Dobject {
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         DefinedItem definedItem = new DefinedItem(attributeValue);
-                        definedItem.setGVRMesh(gvrMesh);
+                            meshCreator.defineVertexBuffer(definedItem);
                         // Array list of DEFined items clones objects with USE
                         mDefinedItems.add(definedItem);
                     }
                     String pointAttribute = attributes.getValue("point");
                     if (pointAttribute != null) {
                         parseNumbersString(pointAttribute, X3Dobject.verticesComponent, 3);
-
-                        float[] vertexList = new float[vertices.size() * 3];
-                        for (int i = 0; i < vertices.size(); i++) {
-                            Vertex vertex = vertices.get(i);
-                            for (int j = 0; j < 3; j++) {
-                                vertexList[i * 3 + j] = vertex.getVertexCoord(j);
-                            }
-                        }
-                        gvrMesh.setVertices(vertexList);
                     }
                 } // end NOT a USE Coordinates condition
 
@@ -1314,12 +1708,12 @@ public class X3Dobject {
                     }
                     if (useItem != null) {
 
-                        // 'useItem' points to GVRMesh who's useItem.getGVRMesh
+                            // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer
                         // TextureCoordinates were DEFined earlier.
-                        // We don't want to share the entire GVRMesh since the
-                        // the 2 meshes may have different Normals and Coordinates
+                            // We don't want to share the entire GVRVertexBuffer since the
+                            // the 2 meshes may have different Normals and Positions
                         // So as an alternative, copy the texture coordinates.
-                        gvrMesh.setTexCoords(useItem.getGVRMesh().getTexCoords());
+                            gvrVertexBuffer.setFloatArray("a_texcoord", useItem.getVertexBuffer().getFloatArray("a_texcoord"));
                         reorganizeVerts = false;
                     }
                 } // end USE TextureCoordinate
@@ -1329,7 +1723,7 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         // This is a 'TextureCoordinate DEF="..." case, so save the item
                         DefinedItem definedItem = new DefinedItem(attributeValue);
-                        definedItem.setGVRMesh(gvrMesh);
+                            definedItem.setVertexBuffer(gvrVertexBuffer);
                         // Array list of DEFined items clones objects with USE
                         mDefinedItems.add(definedItem);
                     }
@@ -1338,32 +1732,6 @@ public class X3Dobject {
                     String pointAttribute = attributes.getValue("point");
                     if (pointAttribute != null) {
                         parseNumbersString(pointAttribute, X3Dobject.textureCoordComponent, 2);
-                        // initialize the list
-                        // Reorganize the order of the texture coordinates if there
-                        // isn't a 1-to-1 match of coordinates, and texture coordinates.
-
-                        // check if an indexedTextureCoordinat list is present
-                        texcoordIndices.clear();
-                        if (indexedTextureCoord.size() != 0) {
-                            // current indexedFaceSet has a textureCoordIndex.
-                            texcoordIndices.ensureCapacity(indexedTextureCoord.size() * 3);
-                            for (int i = 0; i < indexedTextureCoord.size(); i++) {
-                                TextureCoordinates tcIndex = GetTexturedCoordSet(i);
-
-                                for (int j = 0; j < 3; j++) {
-                                    texcoordIndices.add((int) tcIndex.coords[j]);
-                                }
-                            }
-                        } else {
-                            // use the coordIndex if there is no indexedTextureCoord.
-                            texcoordIndices.ensureCapacity(indexedFaceSet.size() * 3);
-                            for (int i = 0; i < indexedFaceSet.size(); i++) {
-                                Coordinates coordinate = indexedFaceSet.get(i);
-                                for (int j = 0; j < 3; j++) {
-                                    texcoordIndices.add((int) coordinate.getCoordinate(j));
-                                }
-                            }
-                        }
                     }
 
                 } // end NOT a USE TextureCoordinate condition
@@ -1383,13 +1751,11 @@ public class X3Dobject {
                     }
                     if (useItem != null) {
 
-                        // 'useItem' points to GVRMesh who's useItem.getGVRMesh Coordinates
-                        // were
-                        // DEFined earlier. We don't want to share the entire GVRMesh since
-                        // the
-                        // 2meshes may have different Normals and Texture Coordinates
+                            // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer Coordinates
+                            // were DEFined earlier. We don't want to share the entire vertex buffer since
+                            // the 2 vertex buffers may have different Normals and Texture Coordinates
                         // So as an alternative, copy the normals.
-                        gvrMesh.setNormals(useItem.getGVRMesh().getNormals());
+                            gvrVertexBuffer.setFloatArray("a_normal", useItem.getVertexBuffer().getFloatArray("a_normal"));
                         reorganizeVerts = false;
                     }
                 } // end USE Coordinate
@@ -1399,41 +1765,13 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         // This is a 'Normal DEF="..." case, so save the item
                         DefinedItem definedItem = new DefinedItem(attributeValue);
-                        definedItem.setGVRMesh(gvrMesh);
+                            definedItem.setVertexBuffer(gvrVertexBuffer);
                         // Array list of DEFined items clones objects with USE
                         mDefinedItems.add(definedItem);
                     }
                     String vectorAttribute = attributes.getValue("vector");
                     if (vectorAttribute != null) {
                         parseNumbersString(vectorAttribute, X3Dobject.normalsComponent, 3);
-
-                        // initialize the list
-                        char[] ifs = gvrMesh.getIndices();
-
-                        float[] normalVectorList = new float[ifs.length * 3];
-                        // check if an indexedVertexNormals list is present
-                        normalIndices.clear();
-                        if (indexedVertexNormals.size() != 0) {
-                            // current indexedFaceSet has a normalIndex.
-                            // We may need to reorganize the order of the texture coordinates
-
-                            normalIndices.ensureCapacity(indexedVertexNormals.size() * 3);
-                            for (int i = 0; i < indexedVertexNormals.size(); i++) {
-                                Coordinates vnIndex = GetIndexedVertexNormals(i);
-                                for (int j = 0; j < 3; j++) {
-                                    normalIndices.add((int) vnIndex.getCoordinate(j));
-                                }
-                            }
-                        } else {
-                            // use the coordIndex if there is no normalIndex.
-                            normalIndices.ensureCapacity(indexedFaceSet.size() * 3);
-                            for (int i = 0; i < indexedFaceSet.size(); i++) {
-                                Coordinates coordinate = indexedFaceSet.get(i);
-                                for (int j = 0; j < 3; j++) {
-                                    normalIndices.add((int) coordinate.getCoordinate(j));
-                                }
-                            }
-                        }
                     }
                 } // end NOT a USE Normals condition
             } // end <Normal> node
@@ -2065,6 +2403,7 @@ public class X3Dobject {
                     Interpolator newInterporlator = new Interpolator(name, keysList,
                             keyValuesList);
                     interpolators.add(newInterporlator);
+
                 } // end <OrientationInterpolator> node
 
 
@@ -2089,6 +2428,8 @@ public class X3Dobject {
                             gvrContext, solid, sizeVector);
                     currentSceneObject.addChildObject(gvrCubeSceneObject);
                     meshAttachedSceneObject = gvrCubeSceneObject;
+
+
                 } // end <Box> node
 
 
@@ -2127,11 +2468,13 @@ public class X3Dobject {
                     params.FacingOut = solid;
                     params.HasTopCap = false;
                     params.HasBottomCap = bottom;
+                    params.Material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
                     GVRCylinderSceneObject cone = new GVRCylinderSceneObject(gvrContext,
                             params);
 
                     currentSceneObject.addChildObject(cone);
                     meshAttachedSceneObject = cone;
+
                 }  // end <Cone> node
 
 
@@ -2175,6 +2518,7 @@ public class X3Dobject {
                     params.HasBottomCap = bottom;
                     params.HasTopCap = top;
                     params.FacingOut = solid;
+                    params.Material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
                     GVRCylinderSceneObject gvrCylinderSceneObject = new GVRCylinderSceneObject(
                             gvrContext, params);
                     currentSceneObject.addChildObject(gvrCylinderSceneObject);
@@ -2233,7 +2577,6 @@ public class X3Dobject {
                         centerOfRotation = parseFixedLengthFloatString(attributeValue, 3,
                                 false, false);
                         Log.e(TAG, "X3D Viewpoint centerOfRotation not implemented in GearVR.");
-
                     }
                     attributeValue = attributes.getValue("description");
                     if (attributeValue != null) {
@@ -2277,6 +2620,8 @@ public class X3Dobject {
                         definedItem.setViewpoint(viewpoint);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     }
+
+
                 } // end <Viewpoint> node
 
 
@@ -2452,8 +2797,9 @@ public class X3Dobject {
                     if (attributeValue != null) {
                         //url = parseMFString(attributeValue);
                         url[0] = attributeValue;
-                        GVRSceneObject inlineGVRSceneObject = currentSceneObject;
-                        // preserve the currentSceneObject
+                        GVRSceneObject inlineGVRSceneObject = currentSceneObject; // preserve
+                        // the
+                        // currentSceneObject
                         if (lodManager.isActive()) {
                             inlineGVRSceneObject = AddGVRSceneObject();
                             inlineGVRSceneObject.setName("inlineGVRSceneObject"
@@ -2503,14 +2849,6 @@ public class X3Dobject {
                         keys.clear();
                     }
                     lodManager.set(range, center);
-
-                    // LOD has it's own GVRSceneObject which has a
-                    // GVRLODGroup component attached
-                    if (lodManager.transformLODSceneObject == null) {
-                        lodManager.transformLODSceneObject = AddGVRSceneObject();
-                        lodManager.transformLODSceneObject.attachComponent(new GVRLODGroup(gvrContext));
-                        currentSceneObject = lodManager.transformLODSceneObject;
-                    }
 
                 } // end <LOD> Level-of-Detail node
 
@@ -3002,7 +3340,7 @@ public class X3Dobject {
                             && (frontUrl.length > 0) && (leftUrl.length > 0)
                             && (rightUrl.length > 0) && (topUrl.length > 0)) {
 
-                        ArrayList<Future<GVRTexture>> futureTextureList = new ArrayList<Future<GVRTexture>>(6);
+                        ArrayList<GVRTexture> textureList = new ArrayList<GVRTexture>(6);
                         GVRAssetLoader loader = gvrContext.getAssetLoader();
                         String urlAttribute = backUrl[0].substring(0,
                                 backUrl[0].indexOf("."));
@@ -3010,8 +3348,8 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
+                            textureList
+                                    .add(loader.loadTexture(new GVRAndroidResource(
                                             gvrContext, assetID)));
                         }
 
@@ -3020,8 +3358,8 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
+                            textureList
+                                    .add(loader.loadTexture(new GVRAndroidResource(
                                             gvrContext, assetID)));
                         }
 
@@ -3030,8 +3368,8 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
+                            textureList
+                                    .add(loader.loadTexture(new GVRAndroidResource(
                                             gvrContext, assetID)));
                         }
 
@@ -3040,8 +3378,8 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
+                            textureList
+                                    .add(loader.loadTexture(new GVRAndroidResource(
                                             gvrContext, assetID)));
                         }
 
@@ -3050,8 +3388,8 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
+                            textureList
+                                    .add(loader.loadTexture(new GVRAndroidResource(
                                             gvrContext, assetID)));
                         }
 
@@ -3060,13 +3398,13 @@ public class X3Dobject {
                                 .getIdentifier(urlAttribute, "drawable",
                                         activityContext.getPackageName());
                         if (assetID != 0) {
-                            futureTextureList
-                                    .add(loader.loadFutureTexture(new GVRAndroidResource(
+                            textureList
+                                    .add(loader.loadTexture(new GVRAndroidResource(
                                             gvrContext, assetID)));
                         }
 
                         GVRCubeSceneObject mCubeEvironment = new GVRCubeSceneObject(
-                                gvrContext, false, futureTextureList);
+                                gvrContext, false, textureList);
                         mCubeEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
                                 CUBE_WIDTH);
 
@@ -3155,6 +3493,7 @@ public class X3Dobject {
                         currentSceneObject = currentSceneObject.getParent();
                     }
                 }
+
                 if (currentSceneObject.getParent() == root)
                     currentSceneObject = null;
                 else
@@ -3172,52 +3511,7 @@ public class X3Dobject {
                         gvrTextViewSceneObject = null;
                     }
 
-                    if (!UNIVERSAL_LIGHTS) {
-                        gvrMaterial = shaderSettings.material;
-                        gvrMaterial.setVec2(mX3DTandLShaderTest.TEXTURECENTER_KEY,
-                                shaderSettings.textureCenter[0],
-                                shaderSettings.textureCenter[1]);
-                        gvrMaterial.setVec2(mX3DTandLShaderTest.TEXTURESCALE_KEY,
-                                shaderSettings.textureScale[0],
-                                shaderSettings.textureScale[1]);
-                        gvrMaterial.setFloat(mX3DTandLShaderTest.TEXTUREROTATION_KEY,
-                                shaderSettings.textureRotation);
-                        gvrMaterial.setVec2(mX3DTandLShaderTest.TEXTURETRANSLATION_KEY,
-                                shaderSettings.textureTranslation[0],
-                                shaderSettings.textureTranslation[1]);
-
-                        gvrMaterial.setVec3(mX3DTandLShaderTest.DIFFUSECOLOR_KEY,
-                                shaderSettings.diffuseColor[0],
-                                shaderSettings.diffuseColor[1],
-                                shaderSettings.diffuseColor[2]);
-                        gvrMaterial.setVec3(mX3DTandLShaderTest.EMISSIVECOLOR_KEY,
-                                shaderSettings.emissiveColor[0],
-                                shaderSettings.emissiveColor[1],
-                                shaderSettings.emissiveColor[2]);
-                        gvrMaterial.setVec3(mX3DTandLShaderTest.SPECULARCOLOR_KEY,
-                                shaderSettings.specularColor[0],
-                                shaderSettings.specularColor[1],
-                                shaderSettings.specularColor[2]);
-                        gvrMaterial.setFloat(mX3DTandLShaderTest.SHININESS_KEY,
-                                shaderSettings.shininess);
-
-                        gvrMaterial.setTexture(mX3DTandLShaderTest.TEXTURE_KEY, gvrTexture);
-
-
-                        float[] modelMatrix = currentSceneObject.getTransform()
-                                .getModelMatrix();
-                        gvrMaterial
-                                .setMat4(mX3DTandLShaderTest.MODELMATRIX_KEY, modelMatrix[0],
-                                        modelMatrix[1], modelMatrix[2], 0, modelMatrix[4],
-                                        modelMatrix[5], modelMatrix[6], 0, modelMatrix[8],
-                                        modelMatrix[9], modelMatrix[10], 0, modelMatrix[12],
-                                        modelMatrix[13], modelMatrix[14], 1);
-
-
-                        gvrRenderData.setMaterial(gvrMaterial);
-                        gvrRenderData.setShaderTemplate(GVRPhongShader.class);
-                    } // end !UNIVERSAL_LIGHTS
-                    else {
+                    {
                         // UNIVERSAL_LIGHTS
 
                         if (!gvrMaterialUSEd) { // if GVRMaterial is NOT set by a USE statement.
@@ -3225,7 +3519,6 @@ public class X3Dobject {
                             if (meshAttachedSceneObject == null) {
                                 gvrMaterial = shaderSettings.material;
                                 gvrRenderData.setMaterial(gvrMaterial);
-                                gvrRenderData.setShaderTemplate(GVRPhongShader.class);
                             } else {
                                 // This GVRSceneObject came with a GVRRenderData and GVRMaterial
 
@@ -3246,14 +3539,9 @@ public class X3Dobject {
                                     }
                                 }
                                 gvrRenderData = meshAttachedSceneObject.getRenderData();
-                                // reset the DEF item to now point to
+                                // reset the DEF item to now point to the shader
                                 if (definedGRRenderingData != null)
                                     definedGRRenderingData.setGVRRenderData(gvrRenderData);
-                                gvrRenderData.setShaderTemplate(GVRPhongShader.class); // set
-                                // the
-                                // shader
-
-
                                 gvrMaterial = gvrRenderData.getMaterial();
                             }
                             // X3D doesn't have an ambient color so need to do color
@@ -3317,14 +3605,12 @@ public class X3Dobject {
                 } else
                     currentSceneObject.attachRenderData(gvrRenderData);
 
-
-                if (lodManager.shapeLODSceneObject != null) {
-                    // if this Shape node was a direct child of a
-                    // Level-of-Detial (LOD),then restore the parent object
-                    // since we had to add a GVRSceneObject to support
-                    // the Shape node's attachement to LOD.
+                if (shapeLODSceneObject != null) {
+                    // if this GVRSceneObject is part of a Level-of-Detail
+                    // then restore bck to the parent object
                     currentSceneObject = currentSceneObject.getParent();
-                    lodManager.shapeLODSceneObject = null;
+                    shapeLODSceneObject = null;
+                    lodManager.increment();
                 }
 
                 gvrMaterialUSEd = false; // for DEFine and USE, true if we encounter a
@@ -3343,19 +3629,15 @@ public class X3Dobject {
                 ;
             } else if (qName.equalsIgnoreCase("IndexedFaceSet")) {
                 if (reorganizeVerts) {
-                    organizeVertices(gvrMesh);
+                    gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer, true);
                     reorganizeVerts = false;
                 }
-                gvrRenderData.setMesh(gvrMesh);
-                gvrMesh = null;
-                indexedFaceSet.clear(); // clean up this Vector<coordinates> list.
-                indexedVertexNormals.clear(); // clean up this Vector<coordinates> list
-                indexedTextureCoord.clear(); // clean up this Vector<textureCoordinates>
-                texcoordIndices.clear();
-                normalIndices.clear();
-                vertices.clear();
-                vertexNormal.clear();
-                textureCoord.clear();
+                GVRMesh mesh = new GVRMesh(gvrContext, gvrVertexBuffer.getDescriptor());
+                gvrRenderData.setMesh(mesh);
+                mesh.setIndexBuffer(gvrIndexBuffer);
+                mesh.setVertexBuffer(gvrVertexBuffer);
+                gvrVertexBuffer = null;
+                gvrIndexBuffer = null;
             } else if (qName.equalsIgnoreCase("Coordinate")) {
                 // vertices.clear(); // clean up this Vector<Vertex> list.
             } else if (qName.equalsIgnoreCase("TextureCoordinate")) {
@@ -3405,12 +3687,7 @@ public class X3Dobject {
             } else if (qName.equalsIgnoreCase("Inline")) {
                 ;
             } else if (qName.equalsIgnoreCase("LOD")) {
-                // End of LOD so go to the parent of the current
-                // GVRSceneObject which was added to support LOD
-                if (currentSceneObject == lodManager.transformLODSceneObject) {
-                    currentSceneObject = currentSceneObject.getParent();
-                }
-                lodManager.transformLODSceneObject = null;
+                ;
             } else if (qName.equalsIgnoreCase("Switch")) {
                 // Verify the Switch index is between 0 and (max number of children - 1)
                 // if it is not, then no object should appear per the X3D spec.
@@ -3477,11 +3754,14 @@ public class X3Dobject {
 
                 // First, set up the camera / Viewpoint
                 // The camera rig is indirectly attached to the root
+
                 if (cameraRigAtRoot != null) {
+
                     GVRCameraRig mainCameraRig = gvrContext.getMainScene().getMainCameraRig();
 
                     float[] cameraPosition = {0, 0, 10}; // X3D's default camera position
                     if ( !viewpoints.isEmpty()) {
+
                         // X3D file contained a <Viewpoint> node.
                         // Per X3D spec., when there is 1 or more Viewpoints in the
                         // X3D file, init with the first viewpoint in the X3D file
@@ -3525,203 +3805,6 @@ public class X3Dobject {
             } // end </x3d>
         }
 
-
-        // if the mesh contains no normals, then they must be generated.
-        // First generate the polygon normal from the cross product of any
-        // 2 lines of the polygon.  Second, for each vertex, sum the polygon
-        // normals shared by this vertex
-        private void generateNormals() {
-            try {
-                Vector3f[] polygonNormal = new Vector3f[indexedFaceSet.size()];
-                for (int i = 0; i < polygonNormal.length; i++) {
-                    polygonNormal[i] = new Vector3f();
-                }
-                Coordinates[] polygonVertices = new Coordinates[3];
-                short[] polygonIFS = new short[3];
-                try {
-                    Vertex[] polygonVertex = new Vertex[3];
-                    for (int f = 0; f < indexedFaceSet.size(); f++) {
-                        Coordinates coordinate = indexedFaceSet.get(f);
-                        polygonIFS = coordinate.getCoordinates();
-                        for (int i = 0; i < 3; i++) {
-                            polygonVertex[i] = vertices.get(polygonIFS[i]);
-                        }
-                        // get the sides of 2 lines of this polygons
-                        Vector3f side0 = new Vector3f();
-                        Vector3f side1 = new Vector3f();
-                        ;
-                        for (int i = 0; i < 3; i++) {
-                            side0.setComponent(i, (polygonVertex[0].getVertexCoord(i) - polygonVertex[1].getVertexCoord(i)));
-                            side1.setComponent(i, (polygonVertex[1].getVertexCoord(i) - polygonVertex[2].getVertexCoord(i)));
-                        }
-                        side0.cross(side1, polygonNormal[f]);
-                        polygonNormal[f].normalize();
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
-                }
-                // Calculate the vertex normals by summing & normalizing all the
-                // polygon normals who share this vertex.
-                Vector3f[] vertexNormals = new Vector3f[vertices.size()];
-                try {
-                    for (int i = 0; i < vertexNormals.length; i++) {
-                        vertexNormals[i] = new Vector3f();
-                        try {
-                            for (char f = 0; f < indexedFaceSet.size(); f++) {
-                                Coordinates coordinate = indexedFaceSet.get(f);
-                                polygonIFS = coordinate.getCoordinates();
-                                for (int j = 0; j < 3; j++) {
-                                    if (i == polygonIFS[j]) {
-                                        // this polygon touches the currentvertex
-                                        //   we are finding the normal
-                                        vertexNormals[i].add(polygonNormal[f]);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, e.toString());
-                        }
-                        vertexNormals[i].normalize();
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
-                }
-                // Calculate the vertex normals by summing & normalizing all the
-                // Add the vertex normals to the existing 'vertexNormal' array list
-                //   and add the normal indices to the IndexedFaceSet
-                for (Vector3f vns : vertexNormals) {
-                    float[] vn = new float[]{vns.x, vns.y, vns.z};
-                    AddVertexNormal(vn);
-                }
-                for (char f = 0; f < indexedFaceSet.size(); f++) {
-                    Coordinates coordinate = indexedFaceSet.get(f);
-                    polygonIFS = coordinate.getCoordinates();
-                    for (int i = 0; i < 3; i++) {
-                        normalIndices.add((int) polygonIFS[i]);
-                    }
-                }
-            } catch (Exception e) {
-                Log.e(TAG, e.toString());
-            }
-        }  //  end generateNormals
-
-        private void organizeVertices(GVRMesh mesh) {
-            boolean hasNormals = normalIndices.size() > 0;
-            boolean hasTexcoords = texcoordIndices.size() > 0;
-            Map<String, Integer> vertexMap = new LinkedHashMap<String, Integer>();
-            char[] newIndices = new char[indexedFaceSet.size() * 3];
-            List<Float> gvrVerts = new ArrayList<Float>();
-            List<Float> gvrNormals = new ArrayList<Float>();
-            List<Float> gvrTexcoords = new ArrayList<Float>();
-            float minYtextureCoordinate = Float.MAX_VALUE;
-            float maxYtextureCoordinate = Float.MIN_VALUE;
-
-            if (!hasNormals) {
-                generateNormals();
-                hasNormals = true;
-            }
-            //
-            // Scan all the faces and compose the set of unique vertices
-            //
-            for (char f = 0; f < indexedFaceSet.size(); f++) {
-                Coordinates coordinate = indexedFaceSet.get(f);
-                float x;
-                float y;
-                float z;
-                float nx = 0;
-                float ny = 0;
-                float nz = 0;
-                float u = 0;
-                float v = 0;
-
-                for (char j = 0; j < 3; j++) {
-                    int findex = f * 3 + j;
-                    int vindex = coordinate.getCoordinate(j);
-                    Vertex srcVert = vertices.get(vindex);
-                    String key = "";
-
-                    x = srcVert.getVertexCoord(0);
-                    y = srcVert.getVertexCoord(1);
-                    z = srcVert.getVertexCoord(2);
-                    key += String.valueOf(x) + String.valueOf(y) + String.valueOf(z);
-                    if (hasNormals) {
-                        int nindex = normalIndices.get(findex);
-                        VertexNormal nml = vertexNormal.get(nindex);
-                        nx = nml.getVertexNormalCoord(0);
-                        ny = nml.getVertexNormalCoord(1);
-                        nz = nml.getVertexNormalCoord(2);
-                        key += String.valueOf(nx) + String.valueOf(ny) + String.valueOf(nz);
-                    }
-                    if (hasTexcoords) {
-                        int tindex = texcoordIndices.get(findex);
-                        TextureValues tv = textureCoord.get(tindex);
-                        u = tv.coord[0];
-                        v = tv.coord[1];
-                        key += String.valueOf(u) + String.valueOf(v);
-                    }
-                    Integer newindex = vertexMap.get(key);
-                    if (newindex == null) {
-                        newindex = vertexMap.size();
-                        vertexMap.put(key, newindex);
-                        gvrVerts.add(x);
-                        gvrVerts.add(y);
-                        gvrVerts.add(z);
-                        if (hasNormals) {
-                            gvrNormals.add(nx);
-                            gvrNormals.add(ny);
-                            gvrNormals.add(nz);
-                        }
-                        if (hasTexcoords) {
-                            gvrTexcoords.add(u);
-                            gvrTexcoords.add(v);
-                            if (v < minYtextureCoordinate) {
-                                minYtextureCoordinate = v;
-                            }
-                            if (u > maxYtextureCoordinate) {
-                                maxYtextureCoordinate = u;
-                            }
-                        }
-                    }
-                    newIndices[findex] = (char) (int) newindex;
-                }
-            }
-            //
-            // Copy the new vertex data into the GVRMesh
-            //
-            int nverts = gvrVerts.size() / 3;
-            float[] newVertices = new float[nverts * 3];
-            float[] newNormals = hasNormals ? new float[nverts * 3] : null;
-            float[] newTexcoords = hasTexcoords ? new float[nverts * 2] : null;
-            int maxMinDiff = (int) Math.round((float) Math
-                    .ceil(maxYtextureCoordinate - minYtextureCoordinate));
-
-            for (int i = 0; i < nverts; ++i) {
-                int t = 3 * i;
-                newVertices[t] = gvrVerts.get(t++);
-                newVertices[t] = gvrVerts.get(t++);
-                newVertices[t] = gvrVerts.get(t++);
-                if (hasNormals) {
-                    t = 3 * i;
-                    newNormals[t] = gvrNormals.get(t++);
-                    newNormals[t] = gvrNormals.get(t++);
-                    newNormals[t] = gvrNormals.get(t++);
-                }
-                if (hasTexcoords) // flip the Y texture coordinate
-                {
-                    t = 2 * i;
-                    newTexcoords[t] = gvrTexcoords.get(t++);
-                    newTexcoords[t] = maxMinDiff - gvrTexcoords.get(t);
-                }
-            }
-            mesh.setVertices(newVertices);
-            if (newNormals != null) {
-                mesh.setNormals(newNormals);
-            }
-            if (newTexcoords != null) {
-                mesh.setTexCoords(newTexcoords);
-            }
-            mesh.setIndices(newIndices);
-        }
 
         @Override
         public void characters(char ch[], int start, int length) throws SAXException {

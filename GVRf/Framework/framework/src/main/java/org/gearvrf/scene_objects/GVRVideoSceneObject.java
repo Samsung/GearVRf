@@ -24,7 +24,7 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMaterialShaderId;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 
@@ -52,7 +52,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -77,7 +77,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -121,7 +121,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            a wrapper for a media player
@@ -136,7 +136,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                                final GVRVideoSceneObjectPlayer mediaPlayer, final GVRExternalTexture texture,
                                int videoType) {
         super(gvrContext, mesh);
-        GVRMaterialShaderId materialType;
+        GVRShaderId materialType;
 
         switch (videoType) {
             case GVRVideoType.MONO:
@@ -158,7 +158,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         gvrContext.runOnGlThread(new Runnable() {
             @Override
             public void run() {
-                // Because texture.getId() is called, this needs to run in GL thread
+                // Because texture.id() is called, this needs to run in GL thread
                 mVideo = new GVRVideo(gvrContext, mediaPlayer, texture);
             }
         });
@@ -172,7 +172,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            a wrapper for a media player

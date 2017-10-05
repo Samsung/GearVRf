@@ -136,7 +136,7 @@ class BulletRigidBody : public PhysicsRigidBody,
 
     const float getCcdSweptSphereRadius() const;
 
-    void updateConstructionInfo();
+    virtual void set_owner_object(SceneObject* obj);
 
  private:
     void initialize();
@@ -144,6 +144,8 @@ class BulletRigidBody : public PhysicsRigidBody,
     void finalize();
 
     void updateColisionShapeLocalScaling();
+
+    void onAttach(SceneObject* owner);
 
 private:
     btRigidBody *mRigidBody;

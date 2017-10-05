@@ -40,75 +40,78 @@
 #include "gl/gl_program.h"
 #include <unordered_map>
 #include "renderer.h"
+#include "gl/gl_uniform_block.h"
 
 typedef unsigned long Long;
 namespace gvr {
 class Camera;
 class Scene;
 class SceneObject;
-class PostEffectData;
-class PostEffectShaderManager;
+class ShaderData;
+class RenderTexture;
 class RenderData;
 class RenderTexture;
-class ShaderManager;
 class Light;
 
 class GLRenderer: public Renderer {
     friend class Renderer;
 protected:
-    GLRenderer(){}
-    virtual ~GLRenderer(){}
+    GLRenderer();
+
+    virtual ~GLRenderer()
+    {
+        if(transform_ubo_[0])
+            delete transform_ubo_[0];
+        if(transform_ubo_[1])
+            delete transform_ubo_[1];
+
+    }
+
 public:
-    // pure virtual
-     void renderCamera(Scene* scene, Camera* camera,
-             ShaderManager* shader_manager,
-             PostEffectShaderManager* post_effect_shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b, bool);
-     void renderCamera(Scene* scene, Camera* camera, int viewportX,
-             int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             PostEffectShaderManager* post_effect_shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b, bool);
+
 
     void restoreRenderStates(RenderData* render_data);
     void setRenderStates(RenderData* render_data, RenderState& rstate);
-    virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
-                        ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
-                        RenderTexture* post_effect_render_texture_a,
-                        RenderTexture* post_effect_render_texture_b);
+    Texture* createSharedTexture(int id);
+    virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
+    virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount);
+
+    virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
+            RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
     void makeShadowMaps(Scene* scene, ShaderManager* shader_manager);
 
-
-    // Specific to GL
-     void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-            ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b, bool);
-
-     void renderCamera(Scene* scene, Camera* camera,
-            RenderTexture* render_texture, ShaderManager* shader_manager,
-            PostEffectShaderManager* post_effect_shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b, bool);
-
-     void set_face_culling(int cull_face);
+    void set_face_culling(int cull_face);
+    virtual RenderPass* createRenderPass();
+    virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc);
+    virtual RenderData* createRenderData();
+    virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
+    virtual Image* createImage(int type, int format);
+    virtual Texture* createTexture(int target = GL_TEXTURE_2D);
+    virtual RenderTarget* createRenderTarget(Scene*) ;
+    virtual RenderTarget* createRenderTarget(RenderTexture*, bool);
+    virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*);
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const TextureParameters* texture_parameters, int number_views);
+    virtual Shader* createShader(int id, const char* signature,
+                                 const char* uniformDescriptor, const char* textureDescriptor,
+                                 const char* vertexDescriptor, const char* vertexShader,
+                                 const char* fragmentShader);
+    GLUniformBlock* getTransformUbo(int index) { return transform_ubo_[index]; }
+    virtual Mesh* getPostEffectMesh();
+    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
 
 private:
-    // this is specific to GL
-    bool checkTextureReady(Material* material);
-
-    // Pure Virtual
+    void updateLights(RenderState &rstate, Shader* shader, int texIndex);
     virtual void renderMesh(RenderState& rstate, RenderData* render_data);
-    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, Material *material) ;
-    void occlusion_cull(Scene* scene,
-                    std::vector<SceneObject*>& scene_objects,
-                    ShaderManager *shader_manager, glm::mat4 vp_matrix);
-
+    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader);
+    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector);
     void clearBuffers(const Camera& camera) const;
+    RenderData* post_effect_render_data();
+
+    GLUniformBlock* transform_ubo_[2];
 };
 
 }

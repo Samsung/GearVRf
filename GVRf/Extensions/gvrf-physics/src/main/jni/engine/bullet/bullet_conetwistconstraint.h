@@ -46,6 +46,8 @@ namespace gvr {
 
         float getTwistLimit() const;
 
+        void set_owner_object(SceneObject* obj);
+
         void* getUnderlying() {
             return this->mConeTwistConstraint;
         }
@@ -54,9 +56,8 @@ namespace gvr {
 
         float getBreakingImpulse() const;
 
-        void updateConstructionInfo();
-
     private:
+        void onAttach(SceneObject* owner);
 
         btConeTwistConstraint *mConeTwistConstraint;
         BulletRigidBody *mRigidBodyB;

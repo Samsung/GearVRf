@@ -17,12 +17,13 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "configuration_manager.h"
 #include "util/gvr_jni.h"
 
 namespace gvr {
     extern "C" {
-
+    JNIEXPORT bool JNICALL Java_org_gearvrf_GVRShader_isVulkanInstance(JNIEnv *env, jobject obj);
     JNIEXPORT jlong JNICALL Java_org_gearvrf_NativeConfigurationManager_ctor(JNIEnv *env,
                                                                              jobject obj);
 
@@ -57,11 +58,15 @@ namespace gvr {
         return configuration_manager->getMaxLights();
     }
 
+
     JNIEXPORT void JNICALL Java_org_gearvrf_NativeConfigurationManager_delete(JNIEnv *env,
                                                                               jobject obj,
                                                                               jlong jConfigurationManager) {
         delete reinterpret_cast<ConfigurationManager *>(jConfigurationManager);
     }
-
+    JNIEXPORT bool JNICALL Java_org_gearvrf_GVRShader_isVulkanInstance(JNIEnv *env, jobject obj){
+        Renderer* renderer = Renderer::getInstance();
+        return renderer->isVulkanInstance();
+    }
     }
 }

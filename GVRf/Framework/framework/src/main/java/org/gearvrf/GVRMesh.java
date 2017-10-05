@@ -17,6 +17,9 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import java.nio.CharBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +31,7 @@ import org.gearvrf.utility.Log;
 /**
  * Describes an indexed triangle mesh as a set of shared vertices with integer
  * indices for each triangle.
- * 
+ *
  * Usually each mesh vertex may have a positions, normal and texture coordinate.
  * Skinned mesh vertices will also have bone weights and indices.
  * If the mesh uses a normal map for lighting, it will have tangents
@@ -36,18 +39,27 @@ import org.gearvrf.utility.Log;
  * attributes in the OpenGL vertex shader.
  */
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
+    static public final int MAX_BONES = 60;
+    static public final int BONES_PER_VERTEX = 4;
     private static final String TAG = GVRMesh.class.getSimpleName();
 
+    protected GVRVertexBuffer mVertices;
+    protected GVRIndexBuffer mIndices;
+    protected List<GVRBone> mBones = new ArrayList<GVRBone>();
+
     public GVRMesh(GVRContext gvrContext) {
-        this(gvrContext, NativeMesh.ctor());
-        mAttributeKeys = new HashSet<String>();
+        this(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal ");
     }
 
-    GVRMesh(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
-        setBones(new ArrayList<GVRBone>());
-        mVertexBoneData = new GVRVertexBoneData(gvrContext, this);
-        mAttributeKeys = new HashSet<String>();
+    public GVRMesh(GVRVertexBuffer vbuffer, GVRIndexBuffer ibuffer)
+    {
+        super(vbuffer.getGVRContext(), NativeMesh.ctorBuffers(vbuffer.getNative(), (ibuffer != null) ? ibuffer.getNative() : 0L));
+        mVertices = vbuffer;
+        mIndices = ibuffer;
+    }
+
+    public GVRMesh(GVRContext gvrContext, String vertexDescriptor) {
+        this(new GVRVertexBuffer(gvrContext, vertexDescriptor, 0), null);
     }
 
     /**
@@ -57,11 +69,11 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * <code>
      *     { x0, y0, z0, x1, y1, z1, x2, y2, z2, ... }
      * </code>
-     * 
+     *
      * @return Array with the packed vertex data.
      */
     public float[] getVertices() {
-        return NativeMesh.getVertices(getNative());
+        return mVertices.getFloatVec("a_position").array();
     }
 
     /**
@@ -69,14 +81,32 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * {@code float} triplet:
      * <p>
      * <code>{ x0, y0, z0, x1, y1, z1, x2, y2, z2, ...}</code>
-     * 
+     *
      * @param vertices
      *            Array containing the packed vertex data.
      */
     public void setVertices(float[] vertices) {
-        checkValidFloatArray("vertices", vertices, 3);
-        mAttributeKeys.add("a_position");
-        NativeMesh.setVertices(getNative(), vertices);
+        mVertices.setFloatArray("a_position", vertices);
+    }
+
+    public GVRVertexBuffer getVertexBuffer() { return mVertices; }
+
+    public GVRIndexBuffer getIndexBuffer() { return mIndices; }
+
+    public void setVertexBuffer(GVRVertexBuffer vbuf)
+    {
+        if (vbuf == null)
+        {
+            throw new IllegalArgumentException("Vertex buffer cannot be null");
+        }
+        mVertices = vbuf;
+        NativeMesh.setVertexBuffer(getNative(), vbuf.getNative());
+    }
+
+    public void setIndexBuffer(GVRIndexBuffer ibuf)
+    {
+        mIndices = ibuf;
+        NativeMesh.setIndexBuffer(getNative(), (ibuf != null) ? ibuf.getNative() : 0L);
     }
 
     /**
@@ -84,11 +114,11 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * a packed {@code float} triplet:
      * <p>
      * <code>{ x0, y0, z0, x1, y1, z1, x2, y2, z2, ...}</code>
-     * 
+     *
      * @return Array with the packed normal data.
      */
     public float[] getNormals() {
-        return NativeMesh.getNormals(getNative());
+        return mVertices.getFloatArray("a_normal");
     }
 
     /**
@@ -96,14 +126,12 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * a packed {@code float} triplet:
      * <p>
      * <code>{ x0, y0, z0, x1, y1, z1, x2, y2, z2, ...}</code>
-     * 
+     *
      * @param normals
      *            Array containing the packed normal data.
      */
     public void setNormals(float[] normals) {
-        checkValidFloatArray("normals", normals, 3);
-        mAttributeKeys.add("a_normal");
-        NativeMesh.setNormals(getNative(), normals);
+        mVertices.setFloatArray("a_normal", normals);
     }
 
     /**
@@ -111,11 +139,11 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * represented as a packed {@code float} pair:
      * <p>
      * <code>{ u0, v0, u1, v1, u2, v2, ...}</code>
-     * 
+     *
      * @return Array with the packed texture coordinate data.
      */
     public float[] getTexCoords() {
-        return NativeMesh.getTexCoords(getNative());
+        return mVertices.getFloatArray("a_texcoord");
     }
 
     /**
@@ -123,21 +151,19 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * represented as a packed {@code float} pair:
      * <p>
      * <code>{ u0, v0, u1, v1, u2, v2, ...}</code>
-     * 
+     *
      * @param texCoords
      *            Array containing the packed texture coordinate data.
      */
-    public void setTexCoords(float[] texCoords) {
+    public void setTexCoords(float[] texCoords)
+    {
         setTexCoords(texCoords, 0);
     }
 
-
-    public void setTexCoords(float [] texCoords, int index){
-
-        String key = (index > 0) ? ("a_texcoord" +index) : "a_texcoord";
-        checkValidFloatArray(key, texCoords, 2);
-        mAttributeKeys.add(key);
-        NativeMesh.setVec2Vector(getNative(),key,texCoords);
+    public void setTexCoords(float [] texCoords, int index)
+    {
+        String key = (index > 0) ? ("a_texcoord" + index) : "a_texcoord";
+        mVertices.setFloatArray(key, texCoords);
     }
 
     /**
@@ -148,13 +174,12 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * <code>
      * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
      * </code>
-     * 
-     * @return Array with the packed triangle index data.
      *
-     * @deprecated use {@link #getIndices()} instead.
+     * @return char array with the packed triangle index data.
+     *
      */
     public char[] getTriangles() {
-        return NativeMesh.getTriangles(getNative());
+        return (mIndices != null) ? mIndices.asCharArray() : null;
     }
 
     /**
@@ -165,171 +190,191 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * <code>
      * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
      * </code>
-     * 
+     *
      * @param triangles
      *            Array containing the packed triangle index data.
-     * @deprecated use {@link #setIndices(char[])} instead.
      */
-    public void setTriangles(char[] triangles) {
-        checkDivisibleDataLength("triangles", triangles, 3);
-        NativeMesh.setTriangles(getNative(), triangles);
+    public void setTriangles(char[] triangles)
+    {
+        if ((mIndices == null) && (triangles != null))
+        {
+            mIndices = new GVRIndexBuffer(getGVRContext(), 2, triangles.length);
+            NativeMesh.setIndexBuffer(getNative(), mIndices.getNative());
+        }
+        mIndices.setShortVec(triangles);
+    }
+
+    public void setTriangles(int[] triangles)
+    {
+        if ((mIndices == null) && (triangles != null))
+        {
+            mIndices = new GVRIndexBuffer(getGVRContext(), 4, triangles.length);
+            NativeMesh.setIndexBuffer(getNative(), mIndices.getNative());
+        }
+        mIndices.setIntVec(triangles);
     }
 
     /**
      * Get the vertex indices of the mesh. The indices for each
      * vertex to be referenced.
-     * 
-     * @return Array with the packed index data.
+     *
+     * @return int array with the packed index data.
      */
-    public char[] getIndices() {
-        return NativeMesh.getIndices(getNative());
+    public int[] getIndices() {
+        return (mIndices != null) ? mIndices.asIntArray() : null;
     }
 
     /**
      * Sets the vertex indices of the mesh. The indices for each
      * vertex.
-     * 
+     *
      * @param indices
-     *            Array containing the packed index data.
+     *            int array containing the packed index data.
      */
-    public void setIndices(char[] indices) {
-        NativeMesh.setIndices(getNative(), indices);
-    }
-
-    /**
-     * Get the array of {@code float} scalars bound to the shader attribute
-     * {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @return Array of {@code float} scalars.
-     */
-    public float[] getFloatVector(String key) {
-        return NativeMesh.getFloatVector(getNative(), key);
-    }
-
-    /**
-     * Bind an array of {@code float} scalars to the shader attribute
-     * {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @param floatVector
-     *            Data to bind to the shader attribute.
-     */
-    public void setFloatVector(String key, float[] floatVector) {
-        checkValidFloatVector("key", key, "floatVector", floatVector, 1);
-        mAttributeKeys.add(key);
-        NativeMesh.setFloatVector(getNative(), key, floatVector);
-    }
-
-    /**
-     * Get the array of two-component {@code float} vectors bound to the shader
-     * attribute {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @return Array of two-component {@code float} vectors.
-     */
-    public float[] getVec2Vector(String key) {
-        return NativeMesh.getVec2Vector(getNative(), key);
-    }
-
-    /**
-     * Bind an array of two-component {@code float} vectors to the shader
-     * attribute {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @param vec2Vector
-     *            Two-component {@code float} vector data to bind to the shader
-     *            attribute.
-     */
-    public void setVec2Vector(String key, float[] vec2Vector) {
-        checkValidFloatVector("key", key, "vec2Vector", vec2Vector, 2);
-        mAttributeKeys.add(key);
-        NativeMesh.setVec2Vector(getNative(), key, vec2Vector);
-    }
-
-    /**
-     * Get the array of three-component {@code float} vectors bound to the
-     * shader attribute {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @return Array of three-component {@code float} vectors.
-     */
-    public float[] getVec3Vector(String key) {
-        return NativeMesh.getVec3Vector(getNative(), key);
-    }
-
-    /**
-     * Bind an array of three-component {@code float} vectors to the shader
-     * attribute {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @param vec3Vector
-     *            Three-component {@code float} vector data to bind to the
-     *            shader attribute.
-     */
-    public void setVec3Vector(String key, float[] vec3Vector) {
-        checkValidFloatVector("key", key, "vec3Vector", vec3Vector, 3);
-        mAttributeKeys.add(key);
-        NativeMesh.setVec3Vector(getNative(), key, vec3Vector);
-    }
-
-    /**
-     * Get the array of four-component {@code float} vectors bound to the shader
-     * attribute {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @return Array of four-component {@code float} vectors.
-     */
-    public float[] getVec4Vector(String key) {
-        return NativeMesh.getVec4Vector(getNative(), key);
-    }
-
-    /**
-     * Bind an array of four-component {@code float} vectors to the shader
-     * attribute {@code key}.
-     * 
-     * @param key
-     *            Name of the shader attribute
-     * @param vec4Vector
-     *            Four-component {@code float} vector data to bind to the shader
-     *            attribute.
-     */
-    public void setVec4Vector(String key, float[] vec4Vector) {
-        checkValidFloatVector("key", key, "vec4Vector", vec4Vector, 4);
-        mAttributeKeys.add(key);
-        NativeMesh.setVec4Vector(getNative(), key, vec4Vector);
-    }
-    
-    /**
-     * Get the names of all the vertex attributes on this mesh.
-     * @return array of string names
-     */
-    public Set<String> getAttributeNames() {
-        if(mAttributeKeys.size() > 0)
-            return mAttributeKeys;
-        
-        String[] attribKeys = NativeMesh.getAttribNames(getNative());
-        
-        for(String i : attribKeys){
-            mAttributeKeys.add(i);
+    public void setIndices(int[] indices)
+    {
+        if (indices != null)
+        {
+            if (mIndices == null)
+            {
+                setIndexBuffer(new GVRIndexBuffer(getGVRContext(), 4, indices.length));
+            }
+            mIndices.setIntVec(indices);
         }
-        return mAttributeKeys;    
+        else
+        {
+            mIndices = null;
+            NativeMesh.setIndexBuffer(getNative(), 0L);
+        }
     }
-    
+
+    public void setIndices(char[] indices)
+    {
+        if (indices != null)
+        {
+            if (mIndices == null)
+            {
+                setIndexBuffer(new GVRIndexBuffer(getGVRContext(), 2, indices.length));
+            }
+            mIndices.setShortVec(indices);
+        }
+        else
+        {
+            mIndices = null;
+            NativeMesh.setIndexBuffer(getNative(), 0L);
+        }
+    }
+
+    public void setIndices(CharBuffer indices)
+    {
+        if (indices != null)
+        {
+            if (mIndices == null)
+            {
+                setIndexBuffer(new GVRIndexBuffer(getGVRContext(), 2, indices.capacity() / 2));
+            }
+            mIndices.setShortVec(indices);
+         }
+        else
+        {
+            NativeMesh.setIndexBuffer(getNative(), 0L);
+        }
+    }
+
+    /**
+     * Get the array of {@code float} values associated with the vertex attribute
+     * {@code key}.
+     *
+     * @param key   Name of the shader attribute
+     * @return Array of {@code float} values containing the vertex data for the named channel.
+     */
+    public float[] getFloatArray(String key)
+    {
+        return mVertices.getFloatArray(key);
+    }
+
+    /**
+     * Get the array of {@code integer} values associated with the vertex attribute
+     * {@code key}.
+     *
+     * @param key   Name of the shader attribute
+     * @return Array of {@code integer} values containing the vertex data for the named channel.
+     */
+    public int[] getIntArray(String key)
+    {
+        return mVertices.getIntArray(key);
+    }
+
+    /**
+     * Bind an array of {@code int} values to the vertex attribute
+     * {@code key}.
+     *
+     * @param key      Name of the vertex attribute
+     * @param arr      Data to bind to the shader attribute.
+     * @throws IllegalArgumentException if int array is wrong size
+     */
+    public void setIntArray(String key, int[] arr)
+    {
+        mVertices.setIntArray(key, arr);
+    }
+
+    /**
+     * Bind a buffer of {@code float} values to the vertex attribute
+     * {@code key}.
+     *
+     * @param key   Name of the vertex attribute
+     * @param buf   Data buffer to bind to the shader attribute.
+     * @throws IllegalArgumentException if attribute name not in descriptor or float buffer is wrong size
+     */
+    public void setIntVec(String key, IntBuffer buf)
+    {
+        mVertices.setIntVec(key, buf);
+    }
+
+    /**
+     * Bind an array of {@code float} values to the vertex attribute
+     * {@code key}.
+     *
+     * @param key   Name of the vertex attribute
+     * @param arr   Data to bind to the shader attribute.
+     * @throws IllegalArgumentException if attribute name not in descriptor or float array is wrong size
+     */
+    public void setFloatArray(String key, float[] arr)
+    {
+        mVertices.setFloatArray(key, arr);
+    }
+
+    /**
+     * Bind a buffer of {@code float} values to the vertex attribute
+     * {@code key}.
+     *
+     * @param key   Name of the vertex attribute
+     * @param buf   Data buffer to bind to the shader attribute.
+     * @throws IllegalArgumentException if attribute name not in descriptor or float buffer is wrong size
+     */
+    public void setFloatVec(String key, FloatBuffer buf)
+    {
+        mVertices.setFloatVec(key, buf);
+    }
+
     /**
      * Calculate a bounding sphere from the mesh vertices.
      * @param sphere        float[4] array to get center of sphere and radius;
      *                      sphere[0] = center.x, sphere[1] = center.y, sphere[2] = center.z, sphere[3] = radius
      */
-    public void getSphereBound(float[] sphere) {
-        NativeMesh.getSphereBound(getNative(), sphere);
+    public void getSphereBound(float[] sphere)
+    {
+        mVertices.getSphereBound(sphere);
+    }
+
+    /**
+     * Calculate a bounding box from the mesh vertices.
+     * @param bounds        float[6] array to get corners of box;
+     *                      bounds[0,1,2] = minimum X,Y,Z and bounds[3,4,6] = maximum X,Y,Z
+     */
+    public void getBoxBound(float[] bounds)
+    {
+        mVertices.getBoxBound(bounds);
     }
 
     /**
@@ -338,12 +383,11 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return true if attribute exists, false if not
      */
     public boolean hasAttribute(String key) {
-    	return NativeMesh.hasAttribute(getNative(), key);
+    	return mVertices.hasAttribute(key);
     }
-    
+
     /**
      * Constructs a {@link GVRMesh mesh} that contains this mesh.
-     * 
      * <p>
      * This is primarily useful with the {@link GVRPicker}, which does
      * "ray casting" to detect which scene object you're pointing to. Ray
@@ -355,9 +399,87 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * 
      * @return A {@link GVRMesh} of the bounding box.
      */
-    public GVRMesh getBoundingBox() {
-        return new GVRMesh(getGVRContext(),
-                NativeMesh.getBoundingBox(getNative()));
+    public GVRMesh getBoundingBox()
+    {
+        GVRMesh meshbox = new GVRMesh(getGVRContext(), "float3 a_position");
+        float[] bbox = new float[6];
+
+        getBoxBound(bbox);
+        float min_x = bbox[0];
+        float min_y = bbox[1];
+        float min_z = bbox[2];
+        float max_x = bbox[3];
+        float max_y = bbox[4];
+        float max_z = bbox[5];
+        float[] positions = {
+                min_x, min_y, min_z,
+                max_x, min_y, min_z,
+                min_x, max_y, min_z,
+                max_x, max_y, min_z,
+                min_x, min_y, max_z,
+                max_x, min_y, max_z,
+                min_x, max_y, max_z,
+                max_x, max_y, max_z
+        };
+        char indices[] = {
+                0, 2, 1, 1, 2, 3, 1, 3, 7, 1, 7, 5, 4, 5, 6, 5, 7, 6, 0, 6, 2, 0, 4, 6, 0, 1, 5, 0,
+                5, 4, 2, 7, 3, 2, 6, 7
+        };
+        meshbox.setVertices(positions);
+        meshbox.setTriangles(indices);
+        return meshbox;
+    }
+
+    /**
+     * Sets the contents of this mesh to be a quad consisting of two triangles,
+     * with the specified width and height. If the mesh descriptor allows for
+     * normals and/or texture coordinates, they are added.
+     *
+     * @param width
+     *            the quad's width
+     * @param height
+     *            the quad's height
+     */
+    public void createQuad(float width, float height)
+    {
+        String vertexDescriptor = getVertexBuffer().getDescriptor();
+        float[] vertices = { width * -0.5f, height * 0.5f, 0.0f, width * -0.5f,
+                height * -0.5f, 0.0f, width * 0.5f, height * 0.5f, 0.0f,
+                width * 0.5f, height * -0.5f, 0.0f };
+        setVertices(vertices);
+
+        if (vertexDescriptor.contains("normal"))
+        {
+            final float[] normals = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+            setNormals(normals);
+        }
+
+        if (vertexDescriptor.contains("texcoord"))
+        {
+            final float[] texCoords = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
+            setTexCoords(texCoords);
+        }
+
+        char[] triangles = { 0, 1, 2, 1, 3, 2 };
+        setTriangles(triangles);
+    }
+
+    /**
+     * Creates a mesh whose vertices describe a quad consisting of two triangles,
+     * with the specified width and height. If the vertex descriptor allows for
+     * normals and/or texture coordinates, they are added.
+     *
+     * @param ctx         GVRContext to use for creating mesh.
+     * @param vertexDesc  String describing vertex format of {@link GVRVertexBuffer}
+     * @param width       the quad's width
+     * @param height      the quad's height
+     * @return A 2D, rectangular mesh with four vertices and two triangles
+     */
+    public static GVRMesh createQuad(GVRContext ctx, String vertexDesc, float width, float height)
+    {
+        GVRMesh mesh = new GVRMesh(ctx, vertexDesc);
+        mesh.createQuad(width, height);
+        return mesh;
     }
 
     /**
@@ -368,59 +490,27 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     public List<GVRBone> getBones() {
         return mBones;
     }
+
     /**
      * Sets bones of this mesh.
      *
      * @param bones a list of bones
      */
-    public void setBones(List<GVRBone> bones) {
+    public void setBones(List<GVRBone> bones)
+    {
         mBones.clear();
         mBones.addAll(bones);
-
-        NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(mBones));
-
-        // Process bones
-        int boneId = -1;
-        for (GVRBone bone : mBones) {
-            boneId++;
-
-            List<GVRBoneWeight> boneWeights = bone.getBoneWeights();
-            for (GVRBoneWeight weight : boneWeights) {
-                int vid = weight.getVertexId();
-                int boneSlot = getVertexBoneData().getFreeBoneSlot(vid);
-                if (boneSlot >= 0) {
-                    getVertexBoneData().setVertexBoneWeight(vid, boneSlot, boneId, weight.getWeight());
-                } else {
-                    Log.w(TAG, "Vertex %d (total %d) has too many bones", vid, getVertices().length / 3);
-                }
-            }
-        }
-        if (getVertexBoneData() != null) {
-            mAttributeKeys.add("a_bone_indices");
-            mAttributeKeys.add("a_bone_weights");
-            getVertexBoneData().normalizeWeights();
-        }
+        NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(bones));
     }
 
-    /**
-     * Gets the vertex bone data.
-     *
-     * @return the vertex bone data.
-     */
-    public GVRVertexBoneData getVertexBoneData() {
-        return mVertexBoneData;
-    }
 
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
-        sb.append(getVertices() == null ? 0 : Integer.toString(getVertices().length / 3));
-        sb.append(" vertices, ");
-        sb.append(getIndices() == null ? 0 : Integer.toString(getIndices().length / 3));
-        sb.append(" triangles, ");
-        sb.append(getTexCoords() == null ? 0 : Integer.toString(getTexCoords().length / 2));
-        sb.append(" tex-coords, ");
-        sb.append(getNormals() == null ? 0 : Integer.toString(getNormals().length / 3));
-        sb.append(" normals, ");
+        mVertices.prettyPrint(sb, indent);
+        if (mIndices != null)
+        {
+            mIndices.prettyPrint(sb, indent);
+        }
         sb.append(getBones() == null ? 0 : Integer.toString(getBones().size()));
         sb.append(" bones");
         sb.append(System.lineSeparator());
@@ -449,7 +539,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @param height        a number representing the height
      * @param centralAngle  the central angle of the arc
      * @param radius        the radius of the circle
-     * @return An object of GVRMesh
+     * @return
      */
     public static GVRMesh createCurvedMesh(GVRContext gvrContext, int width, int height, float centralAngle, float radius){
         GVRMesh mesh = new GVRMesh(gvrContext);
@@ -540,82 +630,14 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         prettyPrint(sb, 0);
         return sb.toString();
     }
-
-    private void checkValidFloatVector(String keyName, String key,
-            String vectorName, float[] vector, int expectedComponents) {
-        checkStringNotNullOrEmpty(keyName, key);
-        checkDivisibleDataLength(vectorName, vector, expectedComponents);
-        checkVectorLengthWithVertices(vectorName, vector.length,
-                expectedComponents);
-    }
-
-    private void checkValidFloatArray(String parameterName, float[] data,
-            int expectedComponents) {
-        checkDivisibleDataLength(parameterName, data, expectedComponents);
-    }
-
-    private void checkVectorLengthWithVertices(String parameterName,
-            int dataLength, int expectedComponents) {
-        int verticesNumber = getVertices().length / 3;
-        int numberOfElements = dataLength / expectedComponents;
-        if (dataLength / expectedComponents != verticesNumber) {
-            throw Exceptions
-                    .IllegalArgument(
-                            "The input array %s should be an array of %d-component elements and the number of elements should match the number of vertices. The current number of elements is %d, but the current number of vertices is %d.",
-                            parameterName, expectedComponents,
-                            numberOfElements, verticesNumber);
-        }
-    }
-
-    private List<GVRBone> mBones = new ArrayList<GVRBone>();
-    private GVRVertexBoneData mVertexBoneData;
-    private Set<String> mAttributeKeys;
 }
 
 class NativeMesh {
-    static native long ctor();
-    
-    static native String[] getAttribNames(long mesh);
-    
-    static native float[] getVertices(long mesh);
-
-    static native void setVertices(long mesh, float[] vertices);
-
-    static native float[] getNormals(long mesh);
-
-    static native void setNormals(long mesh, float[] normals);
-
-    static native float[] getTexCoords(long mesh);
-
-    static native char[] getTriangles(long mesh);
-
-    static native void setTriangles(long mesh, char[] triangles);
-
-    static native char[] getIndices(long mesh);
-
-    static native void setIndices(long mesh, char[] indices);
-
-    static native float[] getFloatVector(long mesh, String key);
-
-    static native void setFloatVector(long mesh, String key, float[] floatVector);
-
-    static native float[] getVec2Vector(long mesh, String key);
-
-    static native void setVec2Vector(long mesh, String key, float[] vec2Vector);
-
-    static native float[] getVec3Vector(long mesh, String key);
-
-    static native void setVec3Vector(long mesh, String key, float[] vec3Vector);
-
-    static native float[] getVec4Vector(long mesh, String key);
-
-    static native void setVec4Vector(long mesh, String key, float[] vec4Vector);
-
-    static native long getBoundingBox(long mesh);
+    static native long ctorBuffers(long vertexBuffer, long indexBuffer);
 
     static native void setBones(long mesh, long[] bonePtrs);
-    
-    static native void getSphereBound(long mesh, float[] sphere);
-    
-    static native boolean hasAttribute(long mesh, String key);
+
+    static native void setIndexBuffer(long mesh, long ibuf);
+
+    static native void setVertexBuffer(long mesh, long vbuf);
 }
