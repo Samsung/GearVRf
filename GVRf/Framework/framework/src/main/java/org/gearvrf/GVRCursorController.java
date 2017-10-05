@@ -381,7 +381,6 @@ public abstract class GVRCursorController {
      *                    {@link GVRCursorController}.
      */
     protected void setMotionEvent(MotionEvent motionEvent) {
-        Log.d(TAG, "setting motion event; motionEvent " + (null != motionEvent));
         synchronized (eventLock) {
             this.motionEvent.add(motionEvent);
         }

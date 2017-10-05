@@ -235,8 +235,12 @@ abstract class GVRConfigurationManager {
         NativeConfigurationManager.delete(mPtr);
     }
 
+    void configureForExpectedHeadset() {
+        final String DEFAULT_HEADSET_MODEL = "R322";
+        configureForHeadset(DEFAULT_HEADSET_MODEL);
+    }
+
     private String mHeadsetModel;
-    static final String DEFAULT_HEADSET_MODEL = "R322";
     private static final String TAG = "GVRConfigurationManager";
 }
 

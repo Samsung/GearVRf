@@ -150,7 +150,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     private void onConfigure(final String dataFilename) {
         mConfigurationManager = mDelegate.makeConfigurationManager(this);
         mConfigurationManager.addDockListener(this);
-        mConfigurationManager.configureForHeadset(GVRConfigurationManager.DEFAULT_HEADSET_MODEL);
+        mConfigurationManager.configureForExpectedHeadset();
         mDelegate.parseXmlSettings(getAssets(), dataFilename);
 
         onInitAppSettings(mAppSettings);
