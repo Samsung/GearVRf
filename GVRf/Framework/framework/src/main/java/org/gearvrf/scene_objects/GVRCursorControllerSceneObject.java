@@ -62,6 +62,10 @@ public class GVRCursorControllerSceneObject extends GVRSceneObject
      */
     public void setCursor(GVRSceneObject obj)
     {
+        final GVRSceneObject parent = obj.getParent();
+        if (null != parent) {
+            parent.removeChildObject(obj);
+        }
         cursor = obj;
         cursor.getTransform().setPosition(0, 0, -rayDepth);
         addChildObject(cursor);
