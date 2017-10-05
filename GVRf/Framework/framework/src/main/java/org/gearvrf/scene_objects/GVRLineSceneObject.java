@@ -73,6 +73,7 @@ public class GVRLineSceneObject extends GVRSceneObject {
         renderData.setShaderTemplate(GVRVertexColorShader.class);
         renderData.disableLight();
         renderData.setMaterial(material);
+        renderData.getMesh().setVec4Vector("a_color", colors);
 
         GVRMaterialShaderManager shadermanager = gvrContext.getMaterialShaderManager();
         GVRShaderTemplate gvrShaderTemplate = shadermanager.retrieveShaderTemplate(GVRVertexColorShader.class);

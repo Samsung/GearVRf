@@ -51,6 +51,8 @@ public class GVRCursorControllerSceneObject extends GVRSceneObject
         super(gvrContext);
         ray = new GVRLineSceneObject(gvrContext, rayDepth,
                                      new Vector4f(1, 0, 0, 1),
+                                     new Vector4f(1, 0, 0, 0.02f));
+
         final GVRRenderData renderData = ray.getRenderData();
 
         renderData.getMaterial().setLineWidth(2.0f);
