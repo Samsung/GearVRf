@@ -69,7 +69,6 @@ protected:
 
 public:
 
-
     void restoreRenderStates(RenderData* render_data);
     void setRenderStates(RenderData* render_data, RenderState& rstate);
     Texture* createSharedTexture(int id);
@@ -100,7 +99,7 @@ public:
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader);
     GLUniformBlock* getTransformUbo(int index) { return transform_ubo_[index]; }
-    virtual Mesh* getPostEffectMesh();
+    virtual void updatePostEffectMesh(Mesh*);
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
 
 private:
@@ -109,7 +108,6 @@ private:
     virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader);
     virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector);
     void clearBuffers(const Camera& camera) const;
-    RenderData* post_effect_render_data();
 
     GLUniformBlock* transform_ubo_[2];
 };

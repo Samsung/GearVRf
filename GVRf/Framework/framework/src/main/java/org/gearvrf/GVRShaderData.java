@@ -135,7 +135,7 @@ public class GVRShaderData extends GVRHybridObject
      */
     public boolean hasTexture(String name)
     {
-        return textures.containsKey(name);
+        return NativeShaderData.hasTexture(getNative(),name);
     }
 
     /**

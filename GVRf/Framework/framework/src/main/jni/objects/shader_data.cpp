@@ -52,7 +52,6 @@ namespace gvr {
         }
         return NULL;
     }
-
     void ShaderData::setTexture(const char* key, Texture* texture)
     {
         std::lock_guard<std::mutex> lock(mLock);
@@ -192,7 +191,7 @@ bool ShaderData::hasTexture(const char* key) const
 {
     for (auto it = mTextureNames.begin(); it < mTextureNames.end(); ++it)
     {
-        if (*it == key)
+        if (*it == key && getTexture(key))
         {
             return true;
         }

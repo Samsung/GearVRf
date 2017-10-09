@@ -119,7 +119,7 @@ public:
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual bool renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, int passNum, VkRenderTarget*);
-    virtual Mesh* getPostEffectMesh();
+    virtual void updatePostEffectMesh(Mesh*);
 private:
     VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}

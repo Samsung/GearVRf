@@ -673,12 +673,8 @@ namespace gvr
         }
         checkGLError("GLRenderer::updateLights");
     }
-Mesh* GLRenderer::getPostEffectMesh()
+void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
-    if (post_effect_mesh_)
-    {
-        return post_effect_mesh_;
-    }
     float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
     float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
     unsigned short faces[] = { 0, 2, 1, 1, 2, 3 };
@@ -688,11 +684,9 @@ Mesh* GLRenderer::getPostEffectMesh()
     const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
     const int faces_size = sizeof(faces)/ sizeof(faces[0]);
 
-    mesh->setVertices(positions, position_size);
-    mesh->setFloatVec("a_texcoord", uvs, uv_size);
-    mesh->setTriangles(faces, faces_size);
-    post_effect_mesh_ = mesh;
-    return mesh;
+    copy_mesh->setVertices(positions, position_size);
+    copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
+    copy_mesh->setTriangles(faces, faces_size);
 }
 }
 

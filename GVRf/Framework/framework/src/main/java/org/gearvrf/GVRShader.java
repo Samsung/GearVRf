@@ -96,7 +96,6 @@ public class GVRShader
 
     protected static String sTransformUniformCode = "// Transform_ubo implemented as uniforms\n"
             + " #ifdef HAS_MULTIVIEW\n"
-            + "    uniform uint u_render_mask;\n"
             + "    uniform mat4 u_view_[2];\n"
             + "    uniform mat4 u_mvp_[2];\n"
             + "    uniform mat4 u_mv_[2];\n"
@@ -109,7 +108,8 @@ public class GVRShader
             + " #endif\n"
             + "    uniform mat4 u_model;\n"
             + "    uniform mat4 u_view_i;\n"
-            + "    uniform float u_right;\n";
+            + "    uniform float u_right;\n"
+            + "    uniform uint u_render_mask;\n";
 
 
     /**

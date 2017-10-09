@@ -39,7 +39,7 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, 4);
+    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, 1);
 }
     RenderData* VulkanRenderer::createRenderData()
 {
@@ -129,7 +129,7 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(pass)) {
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
 
-        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,4);
+        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,1);
         std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
@@ -177,12 +177,8 @@ bool VulkanRenderer::renderWithPostEffectShader(RenderState& rstate, Shader* sha
     return true;
 }
 
-Mesh* VulkanRenderer::getPostEffectMesh()
+void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
-    if (post_effect_mesh_)
-    {
-        return post_effect_mesh_;
-    }
     float positions[] = { -1.0f, 1.0f,  1.0f,
                           -1.0f, -1.0f,  1.0f,
                           1.0f,  -1.0f,  1.0f,
@@ -200,11 +196,9 @@ Mesh* VulkanRenderer::getPostEffectMesh()
     const int position_size = sizeof(positions)/ sizeof(positions[0]);
     const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
 
-    Mesh* mesh = new Mesh("float3 a_position float2 a_texcoord");
-    mesh->setVertices(positions, position_size);
-    mesh->setFloatVec("a_texcoord", uvs, uv_size);
-    post_effect_mesh_ = mesh;
-    return mesh;
+    copy_mesh->setVertices(positions, position_size);
+    copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
+
 }
 void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                 RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){

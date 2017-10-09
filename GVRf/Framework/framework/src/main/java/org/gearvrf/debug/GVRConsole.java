@@ -28,6 +28,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRShader;
 import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRShaderId;
+import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.R;
 
@@ -63,7 +64,7 @@ import org.gearvrf.utility.TextFile;
 public class GVRConsole extends GVRMaterial
 {
 
-    public static class ConsoleShader extends GVRShader
+    public static class ConsoleShader extends GVRShaderTemplate
     {
         static private String vertexShader;
         static private String fragmentShader;
@@ -83,8 +84,6 @@ public class GVRConsole extends GVRMaterial
             setSegment("VertexTemplate", vertexShader);
         }
     }
-
-//    private static final String TAG = Log.tag(GVRConsole.class);
 
     /**
      * Specify where the message(s) are displayed. You pass an {@code EyeMode}

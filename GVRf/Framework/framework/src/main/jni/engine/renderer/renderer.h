@@ -144,9 +144,7 @@ public:
      virtual void cullFromCamera(Scene *scene, Camera* camera,
                 ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector,bool);
      virtual void set_face_culling(int cull_face) = 0;
-     virtual void renderRenderDataVector(RenderState &rstate);
-     virtual void cull(Scene *scene, Camera *camera,
-            ShaderManager* shader_manager);
+
      virtual void renderRenderData(RenderState& rstate, RenderData* render_data);
     virtual RenderTarget* createRenderTarget(Scene*) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, bool) = 0;
@@ -161,7 +159,7 @@ public:
 
     virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager) = 0;
     virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) = 0;
-    virtual Mesh* getPostEffectMesh() = 0;
+    virtual void updatePostEffectMesh(Mesh*) = 0;
     void addRenderData(RenderData *render_data, RenderState& rstate, std::vector<RenderData*>& renderList);
 private:
     static bool isVulkan_;
@@ -192,15 +190,12 @@ protected:
 
     virtual void renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass);
 
-    std::vector<RenderData*> render_data_vector;
     int numberDrawCalls;
     int numberTriangles;
     bool useStencilBuffer_ = false;
     Mesh* post_effect_mesh_;
 public:
     virtual void state_sort(std::vector<RenderData*>* render_data_vector) ;
-    //to be used only on the rendering thread
-    const std::vector<RenderData*>& getRenderDataVector() const { return render_data_vector; }
     int numLights;
     void setUseStencilBuffer(bool enable) { useStencilBuffer_ = enable; }
     bool useStencilBuffer(){

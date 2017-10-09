@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
  
-
+#ifdef HAS_MULTIVIEW
+#extension GL_OVR_multiview2 : enable
+#endif
 precision mediump float;
-
+#ifdef HAS_MULTIVIEW
+uniform sampler2DArray u_texture;
+#else
 uniform sampler2D u_texture;
+#endif
 uniform sampler2D u_overlay;
 
 in vec2 diffuse_coord;
@@ -23,8 +28,14 @@ in vec2 v_overlay_coord;
 out vec4 OutColor;
 
 void main() {
-  vec4 rendered = texture(u_texture, diffuse_coord);
-  vec4 overlay = texture(u_overlay, v_overlay_coord);
 
+#ifdef HAS_MULTIVIEW
+  vec3 tex_cord = vec3(diffuse_coord, float(gl_ViewID_OVR));
+  vec4 rendered = texture(u_texture, tex_cord);
+#else
+    vec4 rendered = texture(u_texture, diffuse_coord);
+#endif
+
+  vec4 overlay = texture(u_overlay, v_overlay_coord);
   OutColor = mix(rendered, overlay, overlay.a);
 }

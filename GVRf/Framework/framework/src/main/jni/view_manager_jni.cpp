@@ -26,15 +26,6 @@ class Camera;
 class Scene;
 
 extern "C" {
-    void Java_org_gearvrf_GVRViewManager_cull(JNIEnv *jni, jclass clazz,
-                                              jlong jscene, jlong jcamera, jlong jshader_manager) {
-        Scene *scene = reinterpret_cast<Scene *>(jscene);
-        Camera *camera = reinterpret_cast<Camera *>(jcamera);
-        ShaderManager *shader_manager = reinterpret_cast<ShaderManager *>(jshader_manager);
-        gRenderer = Renderer::getInstance();
-        gRenderer->cull(scene, camera, shader_manager);
-    }
-
 
     void Java_org_gearvrf_GVRViewManager_makeShadowMaps(JNIEnv *jni, jclass clazz,
                                                         jlong jscene, jlong jshader_manager,
