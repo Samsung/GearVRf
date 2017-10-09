@@ -133,33 +133,25 @@ namespace gvr {
         }
     }
 
-    void BulletSliderConstraint::set_owner_object(SceneObject* obj) {
-        if (obj == owner_object())
-        {
-            return;
-        }
-        Component::set_owner_object(obj);
-        if (obj)
-        {
-            onAttach(obj);
-        }
+void BulletSliderConstraint::updateConstructionInfo() {
+    if (mSliderConstraint != 0) {
+        delete (mSliderConstraint);
     }
 
-    void BulletSliderConstraint::onAttach(SceneObject* owner) {
-        btRigidBody* rbA = ((BulletRigidBody*)this->owner_object()->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
+    btRigidBody* rbA = ((BulletRigidBody*)this->owner_object()->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 
-        btTransform frameInA, frameInB;
-        frameInA = btTransform::getIdentity();
-        frameInB = btTransform::getIdentity();
+    btTransform frameInA, frameInB;
+    frameInA = btTransform::getIdentity();
+    frameInB = btTransform::getIdentity();
 
-        mSliderConstraint = new btSliderConstraint(*rbA, *mRigidBodyB->getRigidBody(), frameInA,
-                                                   frameInB, true);
+    mSliderConstraint = new btSliderConstraint(*rbA, *mRigidBodyB->getRigidBody(), frameInA,
+                                               frameInB, true);
 
-        mSliderConstraint->setLowerAngLimit(mLowerAngularLimit);
-        mSliderConstraint->setUpperAngLimit(mUpperAngularLimit);
-        mSliderConstraint->setLowerLinLimit(mLowerLinearLimit);
-        mSliderConstraint->setUpperLinLimit(mUpperLinearLimit);
-        mSliderConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
-    }
+    mSliderConstraint->setLowerAngLimit(mLowerAngularLimit);
+    mSliderConstraint->setUpperAngLimit(mUpperAngularLimit);
+    mSliderConstraint->setLowerLinLimit(mLowerLinearLimit);
+    mSliderConstraint->setUpperLinLimit(mUpperLinearLimit);
+    mSliderConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
+}
 
 }

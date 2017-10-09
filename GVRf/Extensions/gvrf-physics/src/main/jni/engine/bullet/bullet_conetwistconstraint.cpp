@@ -100,41 +100,33 @@ namespace gvr {
         }
     }
 
-    void BulletConeTwistConstraint::set_owner_object(SceneObject* obj) {
-        if (obj == owner_object())
-        {
-            return;
-        }
-        Component::set_owner_object(obj);
-        if (obj)
-        {
-            onAttach(obj);
-        }
+void BulletConeTwistConstraint::updateConstructionInfo() {
+    if (mConeTwistConstraint != 0) {
+        delete (mConeTwistConstraint);
     }
 
-    void BulletConeTwistConstraint::onAttach(SceneObject *owner) {
-        btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(owner_object()
-                ->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
+    btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(owner_object()
+            ->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 
-        // Original pivot is relative to body A (the one that swings)
-        btVector3 p(mPivot.x, mPivot.y, mPivot.z);
+    // Original pivot is relative to body A (the one that swings)
+    btVector3 p(mPivot.x, mPivot.y, mPivot.z);
 
-        btMatrix3x3 m(mBodyRotation.vec[0], mBodyRotation.vec[1], mBodyRotation.vec[2],
-                      mBodyRotation.vec[3], mBodyRotation.vec[4], mBodyRotation.vec[5],
-                      mBodyRotation.vec[6], mBodyRotation.vec[7], mBodyRotation.vec[8]);
-        btTransform fA(m, p);
+    btMatrix3x3 m(mBodyRotation.vec[0], mBodyRotation.vec[1], mBodyRotation.vec[2],
+                  mBodyRotation.vec[3], mBodyRotation.vec[4], mBodyRotation.vec[5],
+                  mBodyRotation.vec[6], mBodyRotation.vec[7], mBodyRotation.vec[8]);
+    btTransform fA(m, p);
 
-        m.setValue(mConeRotation.vec[0], mConeRotation.vec[1], mConeRotation.vec[2],
-                   mConeRotation.vec[3], mConeRotation.vec[4], mConeRotation.vec[5],
-                   mConeRotation.vec[6], mConeRotation.vec[7], mConeRotation.vec[8]);
+    m.setValue(mConeRotation.vec[0], mConeRotation.vec[1], mConeRotation.vec[2],
+               mConeRotation.vec[3], mConeRotation.vec[4], mConeRotation.vec[5],
+               mConeRotation.vec[6], mConeRotation.vec[7], mConeRotation.vec[8]);
 
-        // Pivot for body B must be calculated
-        p = rbA->getWorldTransform().getOrigin() + p;
-        p -= mRigidBodyB->getRigidBody()->getWorldTransform().getOrigin();
-        btTransform fB(m, p);
+    // Pivot for body B must be calculated
+    p = rbA->getWorldTransform().getOrigin() + p;
+    p -= mRigidBodyB->getRigidBody()->getWorldTransform().getOrigin();
+    btTransform fB(m, p);
 
-        mConeTwistConstraint = new btConeTwistConstraint(*rbA, *mRigidBodyB->getRigidBody(), fA, fB);
-        mConeTwistConstraint->setLimit(mSwingLimit, mSwingLimit, mTwistLimit);
-        mConeTwistConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
-    }
+    mConeTwistConstraint = new btConeTwistConstraint(*rbA, *mRigidBodyB->getRigidBody(), fA, fB);
+    mConeTwistConstraint->setLimit(mSwingLimit, mSwingLimit, mTwistLimit);
+    mConeTwistConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
+}
 }

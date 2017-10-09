@@ -35,8 +35,6 @@ namespace gvr {
 
         ~BulletFixedConstraint();
 
-        void set_owner_object(SceneObject* obj);
-
         void* getUnderlying() {
             return this->mFixedConstraint;
         }
@@ -45,8 +43,7 @@ namespace gvr {
 
         float getBreakingImpulse() const;
 
-    private:
-        void onAttach(SceneObject* owner);
+        void updateConstructionInfo();
 
     private:
         btFixedConstraint *mFixedConstraint;

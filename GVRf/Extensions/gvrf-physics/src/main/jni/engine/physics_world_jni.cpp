@@ -55,7 +55,7 @@ extern "C" {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_NativePhysics3DWorld_step(JNIEnv * env, jobject obj,
-            jlong jworld, jfloat jtime_step);
+            jlong jworld, jfloat jtime_step, int maxSubSteps);
 
     JNIEXPORT jobjectArray JNICALL
     Java_org_gearvrf_physics_NativePhysics3DWorld_listCollisions(JNIEnv * env, jobject obj,
@@ -127,10 +127,10 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_removeRigidBody(JNIEnv * env, jobj
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_physics_NativePhysics3DWorld_step(JNIEnv * env, jobject obj,
-        jlong jworld, jfloat jtime_step) {
+        jlong jworld, jfloat jtime_step, int maxSubSteps) {
     PhysicsWorld *world = reinterpret_cast<PhysicsWorld*>(jworld);
 
-    world->step((float)jtime_step);
+    world->step((float)jtime_step, maxSubSteps);
 }
 
 JNIEXPORT jobjectArray JNICALL
