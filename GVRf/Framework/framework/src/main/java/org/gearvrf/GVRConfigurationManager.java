@@ -105,12 +105,12 @@ abstract class GVRConfigurationManager {
         final GVRViewManager viewManager = activity.getViewManager();
 
         //must determine the default fov
-        if (model.contains("R323")) {
+        if (model.contains("R323") || model.contains("R324")) {
             fovY = 93;
         } else {
             fovY = 90;
         }
-        Log.i(TAG, "set the default fov-y to " + fovY);
+        Log.i(TAG, "set the default fov-y to " + fovY + "; headset model: " + model);
 
         setFovY(fovY);
     }
@@ -201,7 +201,7 @@ abstract class GVRConfigurationManager {
         final GVRActivity activity = mActivity.get();
         if (null != activity) {
             final String model = getHmtModel();
-            if (null != model && model.contains("R323")) {
+            if (null != model && (model.contains("R323") || model.contains("R324"))) {
                 return true;
             }
         }
