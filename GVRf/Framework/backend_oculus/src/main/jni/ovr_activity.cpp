@@ -91,7 +91,7 @@ namespace gvr {
         parms.PerformanceParms = oculusPerformanceParms_;
         vrapi_SubmitFrame(oculusMobile_, &parms);
 
-        vrapi_ShowSystemUI(&oculusJavaMainThread_, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
+        vrapi_ShowSystemUI(&oculusJavaGlThread_, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
     }
 
     bool GVRActivity::updateSensoredScene() {
