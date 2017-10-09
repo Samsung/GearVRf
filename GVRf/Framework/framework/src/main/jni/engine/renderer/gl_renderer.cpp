@@ -175,13 +175,13 @@ namespace gvr
     {
         const char* desc;
 
-        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; float u_right; uint u_render_mask; ";
+        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_view_i_[2]; mat4 u_model; float u_right; uint u_render_mask; ";
 
         transform_ubo_[1] = reinterpret_cast<GLUniformBlock*>
         (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
         transform_ubo_[1]->useGPUBuffer(false);
 
-        desc = " mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; float u_right;";
+        desc = " mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_view_i; mat4 u_model; float u_right;";
         transform_ubo_[0] = reinterpret_cast<GLUniformBlock*>
                             (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
         transform_ubo_[0]->useGPUBuffer(false);
