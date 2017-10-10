@@ -49,7 +49,7 @@ dependencies {
             compile(name: 'framework-debug', ext: 'aar')
         }
     } else {
-        compile "org.gearvrf:framework-debug:$gearvrfVersion"
+        compile "org.gearvrf:framework:$gearvrfVersion"
     }
     compile (project(':3DCursorLibrary')) {
         transitive = true
