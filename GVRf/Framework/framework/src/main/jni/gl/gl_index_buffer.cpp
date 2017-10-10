@@ -4,6 +4,8 @@
  * colors and texcoords.
  *
  ****/
+#define VERBOSE_LOGGING 0
+
 #include "gl_index_buffer.h"
 #include "gl_shader.h"
 
