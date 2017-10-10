@@ -42,7 +42,7 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    if(rootProject.useLocalDependencies) {
+    if(project.hasProperty("useLocalDependencies") && project.useLocalDependencies) {
         if (findProject(':framework')) {
             compile project(':framework')
         } else {
