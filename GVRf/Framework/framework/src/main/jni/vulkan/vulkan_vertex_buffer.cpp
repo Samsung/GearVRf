@@ -8,6 +8,10 @@
 #include "vulkan_vertex_buffer.h"
 #include "vulkan_shader.h"
 
+//comment out to enable verbose logging
+#undef LOGV
+#define LOGV
+
 namespace gvr {
     VulkanVertexBuffer::VulkanVertexBuffer(const char* layout_desc, int vertexCount)
     : VertexBuffer(layout_desc, vertexCount)

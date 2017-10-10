@@ -22,6 +22,10 @@
 #include "gl_imagetex.h"
 #include "gl_render_image.h"
 
+//comment out to enable verbose logging
+#undef LOGV
+#define LOGV
+
 namespace gvr {
 extern void texImage3D(int color_format, int width, int height, int depth , GLenum target);
 typedef void (GL_APIENTRY *PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum target,

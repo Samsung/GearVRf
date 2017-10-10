@@ -7,6 +7,10 @@
 #include "gl_index_buffer.h"
 #include "gl_shader.h"
 
+//comment out to enable verbose logging
+#undef LOGV
+#define LOGV
+
 namespace gvr {
     GLIndexBuffer::GLIndexBuffer(int bytesPerIndex, int vertexCount)
     : IndexBuffer(bytesPerIndex, vertexCount),
