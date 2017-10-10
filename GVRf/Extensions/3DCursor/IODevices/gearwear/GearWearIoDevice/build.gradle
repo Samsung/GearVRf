@@ -37,9 +37,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
+ext.gearvrfVersion='4.0.0-SNAPSHOT'
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     if(project.hasProperty("useLocalDependencies") && project.useLocalDependencies) {
