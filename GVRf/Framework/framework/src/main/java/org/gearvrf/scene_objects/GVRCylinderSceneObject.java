@@ -1119,7 +1119,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         if (vertexDesc == null) {
             vertexDesc = "float3 a_position float2 a_texcoord float3 a_normal";
         }
-        GVRMesh mesh = new GVRMesh(gvrContext, vertexDesc);
+
         float difference = params.BottomRadius - params.TopRadius;
         float length = (float) Math.sqrt(difference*difference + params.Height * params.Height);
         float ratio = params.Height / length;
@@ -1281,6 +1281,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                     }
                 }
 
+                GVRMesh mesh = new GVRMesh(gvrContext, vertexDesc);
                 mesh.setVertices(vertices);
                 if (hasNormals)
                 {
