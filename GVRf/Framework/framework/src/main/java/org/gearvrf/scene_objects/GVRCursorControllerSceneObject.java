@@ -58,6 +58,8 @@ public class GVRCursorControllerSceneObject extends GVRSceneObject
         renderData.getMaterial().setLineWidth(2.0f);
         renderData.setRenderingOrder(GVRRenderData.GVRRenderingOrder.OVERLAY);
         renderData.setAlphaBlend(true);
+        setName("cursor_controller_group");
+        ray.setName("gearvr_controller_ray");
         addChildObject(ray);
     }
 
