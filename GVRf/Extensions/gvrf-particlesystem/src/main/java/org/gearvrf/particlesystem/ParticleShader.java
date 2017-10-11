@@ -21,7 +21,7 @@ import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.utility.TextFile;
 
-public class ParticleShader extends GVRShader
+public class ParticleShader extends GVRShaderTemplate
 {
     private static String fragTemplate;
     private static String vtxTemplate;

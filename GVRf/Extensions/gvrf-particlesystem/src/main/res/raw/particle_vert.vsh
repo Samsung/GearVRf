@@ -1,5 +1,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#ifdef HAS_MULTIVIEW
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+#endif
 
 precision mediump float;
 layout ( location = 0 ) in vec3 a_position;
@@ -30,7 +34,13 @@ void main() {
             snoise(posn.xyz + vec3(43.0, 17.0, deltaTime)),
         	snoise(posn.xyz + vec3(-17.0, -43.0, deltaTime))), 0);
 
-    gl_Position = u_mvp * posn;
+    #ifdef HAS_MULTIVIEW
+           bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
+           mat4 mvp = u_mvp_[gl_ViewID_OVR];
+           gl_Position = mvp  * posn;
+    #else
+       	    gl_Position =  u_mvp * posn;
+    #endif
 
     gl_PointSize = clamp((u_particle_size + u_size_change_rate * deltaTime), 0.1, 100.0);
 
