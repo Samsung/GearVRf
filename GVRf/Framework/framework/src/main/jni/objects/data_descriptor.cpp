@@ -18,6 +18,8 @@
 #include "objects/data_descriptor.h"
 #include "util/gvr_log.h"
 
+#define VERBOSE_LOGGING 0
+
 namespace gvr
 {
 
