@@ -89,6 +89,8 @@ public final class GearCursorController extends GVRCursorController
     private boolean initialized;
     private boolean isEnabled;
     private ControllerReader mControllerReader;
+    private final Vector3f FORWARD = new Vector3f(0, 0, -1);
+
 
     public interface ControllerReader {
         boolean isConnected();
@@ -112,7 +114,7 @@ public final class GearCursorController extends GVRCursorController
         pivot = new GVRSceneObject(context);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
-        position = new Vector3f(0.0f, 0.0f, -1.0f);
+        position = new Vector3f(0, 0, -1);
         MotionEvent.PointerProperties properties = new MotionEvent.PointerProperties();
         properties.id = 0;
         properties.toolType = MotionEvent.TOOL_TYPE_FINGER;
@@ -129,7 +131,7 @@ public final class GearCursorController extends GVRCursorController
         if (pivot.getParent() != context.getMainScene().getRoot()) {
             context.getMainScene().addSceneObject(pivot);
         }
-        object.getTransform().setPosition(position.x, position.y, position.z);
+        object.getTransform().setPosition(0, 0, 0);
         pivot.addChildObject(object);
     }
     @Override
@@ -314,7 +316,6 @@ public final class GearCursorController extends GVRCursorController
 
     private class EventHandlerThread extends HandlerThread {
         private static final String THREAD_NAME = "GVREventHandlerThread";
-        private final Vector3f FORWARD = new Vector3f(0.0f, 0.0f, -1.0f);
         private Handler handler;
         private Vector3f result = new Vector3f();
         private int prevButtonEnter = KeyEvent.ACTION_UP;
@@ -378,23 +379,20 @@ public final class GearCursorController extends GVRCursorController
 
             this.currentControllerEvent = event;
             Quaternionf q = event.rotation;
-            Vector3f position = event.position;
+            Vector3f pos = event.position;
             int key = event.key;
-
-            event.rotation.normalize();
-            pivot.getTransform().setRotation(q.w, q.x, q.y, q.z);
-            q.transform(FORWARD, result);
-
             GVRTransform camTrans = context.getMainScene().getMainCameraRig().getTransform();
-            Vector3f rayOrigin = new Vector3f(position.x, position.y, position.z);
+            Vector3f rayOrigin = new Vector3f(pos.x, pos.y, pos.z);
             float cameraX = camTrans.getPositionX();
             float cameraY = camTrans.getPositionY();
             float cameraZ = camTrans.getPositionZ();
 
+            event.rotation.normalize();
+            pivot.getTransform().setRotation(q.w, q.x, q.y, q.z);
+            q.transform(FORWARD, result);
             rayOrigin.mulPosition(camTrans.getModelMatrix4f());
-            pivot.getTransform().setPosition(cameraX + position.x, cameraY + position.y, cameraZ + position.z);
-
-            setOrigin(cameraX + position.x + result.x, cameraY + position.y + result.y, cameraZ + position.z + result.z);
+            pivot.getTransform().setPosition(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
+            setOrigin(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
 
             int handleResult = handleEnterButton(key, event.pointF, event.touched);
             prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
@@ -454,56 +452,63 @@ public final class GearCursorController extends GVRCursorController
         }
     }
 
-    private int handleEnterButton(int key, PointF pointF, boolean touched){
+    private int handleEnterButton(int key, PointF pointF, boolean touched)
+    {
         long time = SystemClock.uptimeMillis();
         int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_ENTER, thread.prevButtonEnter, KeyEvent.KEYCODE_ENTER);
-        if(handled == KeyEvent.ACTION_UP || touching && !touched){
+        if (handled == KeyEvent.ACTION_UP || touching && !touched)
+        {
             pointerCoords.x = pointF.x;
             pointerCoords.y = pointF.y;
             MotionEvent motionEvent = MotionEvent.obtain(prevEnterTime, time,
                     MotionEvent.ACTION_UP, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0,0,1f,1f,0,0, InputDevice.SOURCE_TOUCHPAD, 0);
+                    0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             prevEnterTime = time;
             touching = touched;
         }
-        else if(handled == KeyEvent.ACTION_DOWN || !touching && touched){
+        else if (handled == KeyEvent.ACTION_DOWN || !touching && touched)
+        {
             pointerCoords.x = pointF.x;
             pointerCoords.y = pointF.y;
             MotionEvent motionEvent = MotionEvent.obtain(time, time,
                     MotionEvent.ACTION_DOWN, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0,0,1f,1f,0,0, InputDevice.SOURCE_TOUCHPAD, 0);
+                    0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             touching = touched;
         }
-        else if(thread.prevButtonEnter == KeyEvent.ACTION_UP && touching){
+        else if (thread.prevButtonEnter == KeyEvent.ACTION_UP && touching)
+        {
             pointerCoords.x = pointF.x;
             pointerCoords.y = pointF.y;
             MotionEvent motionEvent = MotionEvent.obtain(prevEnterTime, time,
                     MotionEvent.ACTION_MOVE, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
+                    0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
         }
         return handled;
     }
 
-    private int handleAButton(int key){
+    private int handleAButton(int key)
+    {
         long time = SystemClock.uptimeMillis();
         int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A, thread.prevButtonA, KeyEvent.KEYCODE_A);
-        if(handled == KeyEvent.ACTION_UP){
+        if (handled == KeyEvent.ACTION_UP)
+        {
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(prevATime, time,
                     MotionEvent.ACTION_UP, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0,0,1f,1f,0,0, InputDevice.SOURCE_TOUCHPAD, 0);
+                    0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
         }
-        else if(handled == KeyEvent.ACTION_DOWN){
+        else if (handled == KeyEvent.ACTION_DOWN)
+        {
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(time, time,
                     MotionEvent.ACTION_DOWN, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0,0,1f,1f,0,0, InputDevice.SOURCE_TOUCHPAD, 0);
+                    0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             prevATime = time;
         }

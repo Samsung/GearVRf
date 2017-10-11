@@ -40,7 +40,7 @@ import org.joml.Vector3f;
 
 import java.util.concurrent.CountDownLatch;
 
-final public class GVRGazeCursorController extends GVRCursorController implements GVRDrawFrameListener {
+final public class GVRGazeCursorController extends GVRCursorController {
     private static final int TAP_TIMEOUT = 60;
     private static float TOUCH_SQUARE = 8.0f * 8.0f;
     private static final float DEPTH_SENSITIVITY = 0.1f;
@@ -53,7 +53,6 @@ final public class GVRGazeCursorController extends GVRCursorController implement
     private boolean isEnabled;
 
     // Used to calculate the gaze-direction
-    private final Vector3f gazeDirection;
     private final Object lock = new Object();
     
     // Saves the relative position of the cursor with respect to the camera.
@@ -65,7 +64,6 @@ final public class GVRGazeCursorController extends GVRCursorController implement
                             int productId) {
         super(context, controllerType, name, vendorId, productId);
         this.context = context;
-        gazeDirection = new Vector3f();
         forwardDirection = new Vector3f(0, 0, -1);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
@@ -91,7 +89,6 @@ final public class GVRGazeCursorController extends GVRCursorController implement
         }
         connected = true;
         context.getInputManager().activateCursorController(this);
-        context.registerDrawFrameListener(this);
         context.getActivity().getEventReceiver().addListener(activityHandler);
     }
 
@@ -99,7 +96,6 @@ final public class GVRGazeCursorController extends GVRCursorController implement
     {
         connected = false;
         context.getInputManager().deactivateCursorController(this);
-        context.unregisterDrawFrameListener(this);
         context.getActivity().getEventReceiver().removeListener(activityHandler);
     }
 
@@ -122,6 +118,7 @@ final public class GVRGazeCursorController extends GVRCursorController implement
 
     @Override
     protected synchronized void setScene(GVRScene scene) {
+        mPicker.setScene(scene);
         if (!thread.isAlive()) {
             super.setScene(scene);
         } else {
@@ -195,6 +192,7 @@ final public class GVRGazeCursorController extends GVRCursorController implement
 
     @Override
     public synchronized void setEnable(boolean enable) {
+        mPicker.setEnable(enable);
         if (!isEnabled && enable) {
             isEnabled = true;
             if (referenceCount > 0) {
@@ -217,23 +215,9 @@ final public class GVRGazeCursorController extends GVRCursorController implement
         thread.setPosition(x, y, z);
     }
 
-    @Override
-    public void onDrawFrame(float frameTime) {
-        synchronized (lock) {
-            GVRTransform headTrans = context.getMainScene().getMainCameraRig().getTransform();
-            origin.x = headTrans.getPositionX();
-            origin.y = headTrans.getPositionY();
-            origin.z = headTrans.getPositionZ();
-
-            forwardDirection.mulDirection(headTrans.getModelMatrix4f(), gazeDirection);
-        }
-        thread.setPosition(gazeDirection.x, gazeDirection.y, gazeDirection.z);
-    }
-
     void close() {
         if (referenceCount > 0) {
             context.getInputManager().deactivateCursorController(this);
-            context.unregisterDrawFrameListener(this);
             referenceCount = 0;
         }
         if (thread.isAlive()) {

@@ -5,11 +5,14 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
+import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IPickEvents;
 import org.gearvrf.io.GVRControllerType;
 
 import org.joml.Vector3f;
+import org.joml.Vector4f;
+
 import java.util.Arrays;
 
 /**
@@ -46,11 +49,17 @@ public class GVRCursorControllerSceneObject extends GVRSceneObject
     public GVRCursorControllerSceneObject(GVRContext gvrContext)
     {
         super(gvrContext);
-        ray = new GVRLineSceneObject(gvrContext, rayDepth);
-        //ray.getTransform().rotateByAxis(90.0f, 0, 1, 0);
-        final GVRMaterial rayMaterial = ray.getRenderData().getMaterial();
-        rayMaterial.setDiffuseColor(0.5f, 0.5f, 0.5f, 1);
-        rayMaterial.setLineWidth(2.0f);
+        ray = new GVRLineSceneObject(gvrContext, rayDepth,
+                                     new Vector4f(1, 0, 0, 1),
+                                     new Vector4f(1, 0, 0, 0.02f));
+
+        final GVRRenderData renderData = ray.getRenderData();
+
+        renderData.getMaterial().setLineWidth(2.0f);
+        renderData.setRenderingOrder(GVRRenderData.GVRRenderingOrder.OVERLAY);
+        renderData.setAlphaBlend(true);
+        setName("cursor_controller_group");
+        ray.setName("gearvr_controller_ray");
         addChildObject(ray);
     }
 

@@ -16,7 +16,10 @@ import org.gearvrf.R;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.GVRControllerType;
 
+import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
+
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -46,17 +49,17 @@ public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
     public GVRGearControllerSceneObject(GVRContext gvrContext)
     {
         super(gvrContext);
+        setName("gear_vr_controller_group");
         ray.getTransform().reset();
-        controller = new GVRSceneObject(gvrContext, gvrContext.getAssetLoader().loadMesh(new GVRAndroidResource(gvrContext, R.raw.gear_vr_controller)));
-        GVRTexture tex = (gvrContext.getAssetLoader().loadTexture(new GVRAndroidResource(gvrContext, R.drawable.gear_vr_controller_color_1024)));
-        GVRMaterial mat = new GVRMaterial(gvrContext);
-        mat.setMainTexture(tex);
-        GVRRenderData rdata = controller.getRenderData();
-        rdata.setMaterial(mat);
-        rdata.getTransform().setScale(0.05f,0.05f,0.05f);
-        rdata.getTransform().rotateByAxis(270f, 1, 0, 0);
-        rdata.getTransform().rotateByAxis(180f, 0, 1,0);
-        addChildObject(controller);
+        try
+        {
+            controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj");
+            addChildObject(controller);
+        }
+        catch (IOException ex)
+        {
+            Log.e("GVRGearControllerSceneObject", "ERROR: cannot load GearVR controller model gear_vr_controller.obj");
+        }
     }
 
     /**
