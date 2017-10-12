@@ -13,13 +13,14 @@ package org.gearvrf.accessibility;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRShader;
+import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**
  * Shader to invert colors by post processing rendered image from cameras.
  */
-public class GVRAccessibilityPostEffectShader  extends GVRShader {
+public class GVRAccessibilityPostEffectShader  extends GVRShaderTemplate {
     static String fragmentSource;
     static String vertexSource;
 

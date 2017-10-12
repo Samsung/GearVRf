@@ -13,14 +13,27 @@
 // limitations under the License.
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
+#ifdef HAS_MULTIVIEW
+#extension GL_OVR_multiview2 : enable
+#endif
 
-precision mediump float;
+#ifdef HAS_MULTIVIEW
+layout ( set = 0, binding = 4 )uniform sampler2DArray u_texture;
+#else
 layout ( set = 0, binding = 4 )uniform sampler2D u_texture;
+#endif
+precision mediump float;
+
 layout ( location = 0 ) in vec2 diffuse_coord;
 layout ( location = 0 ) out vec4 outColor;
 
 void main() {
-  vec4 tex = texture(u_texture, diffuse_coord);
+#ifdef HAS_MULTIVIEW
+  vec3 tex_cord = vec3(diffuse_coord, float(gl_ViewID_OVR));
+  vec4 tex = texture(u_texture, tex_cord);
+#else
+    vec4 tex = texture(u_texture, diffuse_coord);
+#endif
   tex = vec4(1.0-tex.x,1.0-tex.y,1.0-tex.z,1.0-tex.w);
   outColor = tex;
 }
