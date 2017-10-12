@@ -678,7 +678,6 @@ void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
     float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
     float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
     unsigned short faces[] = { 0, 2, 1, 1, 2, 3 };
-    Mesh* mesh = new Mesh("float3 a_position float2 a_texcoord");
 
     const int position_size = sizeof(positions)/ sizeof(positions[0]);
     const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
@@ -688,7 +687,6 @@ void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
     copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
     copy_mesh->setTriangles(faces, faces_size);
 }
+
 }
-
-
 

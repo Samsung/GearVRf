@@ -37,8 +37,7 @@ void Renderer::initializeStats() {
 Renderer::Renderer() : numberDrawCalls(0),
                        numberTriangles(0),
                        numLights(0),
-                       batch_manager(nullptr),
-                       post_effect_mesh_(nullptr){
+                       batch_manager(nullptr) {
     if(do_batching && !gRenderer->isVulkanInstance()) {
         batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
     }
