@@ -33,7 +33,7 @@ bool Renderer::isVulkan_ = false;
 Renderer* Renderer::getInstance(std::string type){
     if( nullptr == instance ) {
         // Debug setting selecting Vulkan renderer:
-        //     setprop debug.gvrf.vulkan <value>
+        //     setprop debug.gearvrf.vulkan <value>
         //     <property not present>, <empty>, not recognized, or 0
         //                            - use setting from gvr.xml (not implemented yet. Select OpenGL ES.)
         //     1                      - pretend gvr.xml asked for Vulkan (not implemented yet. Select Vulkan.)
