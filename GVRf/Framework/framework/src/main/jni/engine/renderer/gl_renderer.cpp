@@ -266,7 +266,7 @@ namespace gvr
             }
             GL(glDisable(GL_DEPTH_TEST));
             GL(glDisable(GL_CULL_FACE));
-            for (int i = 0; i < npost - 1; ++i)
+            for (int i = 0; i < npost; ++i)
             {
                 if (i % 2 == 0)
                 {
