@@ -176,7 +176,8 @@ void GLNonMultiviewRenderTexture::generateRenderTextureLayer(GLenum depth_format
     {
         if (depth_format_)
         {
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, depth_format_, GL_RENDERBUFFER,
+            GLenum attachment =  GL_DEPTH24_STENCIL8_OES == depth_format_ ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER,
                                       renderTexture_gl_render_buffer_->id());
         }
         return;
