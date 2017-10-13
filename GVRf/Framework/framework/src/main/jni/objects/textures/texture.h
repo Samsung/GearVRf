@@ -98,8 +98,8 @@ protected:
     {
         struct
         {
-            unsigned int MinFilter : 2;
-            unsigned int MagFilter : 2;
+            unsigned int MinFilter : 3;
+            unsigned int MagFilter : 1;
             unsigned int WrapU : 2;
             unsigned int WrapV : 2;
         } BitFields;

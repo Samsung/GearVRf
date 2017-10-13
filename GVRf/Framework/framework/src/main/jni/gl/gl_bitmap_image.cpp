@@ -65,6 +65,7 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
         }
         glTexImage2D(target, 0, internalFormat, info.width, info.height, 0, pixelFormat,
                      dataFormat, pixels);
+        glGenerateMipmap(target);
         AndroidBitmap_unlockPixels(env, bitmap);
         return internalFormat;
     }

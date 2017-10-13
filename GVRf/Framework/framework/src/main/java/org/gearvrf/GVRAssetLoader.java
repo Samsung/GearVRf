@@ -203,13 +203,19 @@ public final class GVRAssetLoader {
                 }
                 catch (IOException ex)
                 {
-                    GVRAndroidResource r = new GVRAndroidResource(mContext, R.drawable.white_texture);
+                    resource = new GVRAndroidResource(mContext, R.drawable.white_texture);
                     GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                                                              request, r, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                                                              request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
 
                     GVRImage whiteTex = getDefaultImage(mContext);
                     request.loaded(whiteTex, null);
                     onTextureError(mContext, ex.getMessage(), request.TextureFile);
+                }
+                // change the filtering mode for non mipmap filters
+                if(resource.getCompressedLoader() == null) {
+                    GVRTexture texture = request.Texture;
+                    texture.mTextureParams.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+                    texture.updateTextureParameters(texture.mTextureParams);
                 }
             }
         }
@@ -266,6 +272,13 @@ public final class GVRAssetLoader {
                     bmap = Bitmap.createBitmap(aitex.getWidth(), aitex.getHeight(), Bitmap.Config.ARGB_8888);
                     bmap.setPixels(aitex.getIntData(), 0, aitex.getWidth(), 0, 0, aitex.getWidth(), aitex.getHeight());
                 }
+                // change the filtering mode for non mipmap filters
+                if(resource.getCompressedLoader() == null) {
+                    GVRTexture texture = request.Texture;
+                    texture.mTextureParams.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+                    texture.updateTextureParameters(texture.mTextureParams);
+                }
+
                 GVRBitmapTexture bmaptex = new GVRBitmapTexture(mContext);
                 bmaptex.setFileName(resource.getResourceFilename());
                 bmaptex.setBitmap(bmap);
@@ -660,6 +673,8 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadTexture(GVRAndroidResource resource)
     {
+        if(resource.getCompressedLoader() == null)
+            mDefaultTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
@@ -730,14 +745,19 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadTexture(GVRAndroidResource resource, TextureCallback callback, GVRTextureParameters texparams, int priority, int quality)
     {
-        if (texparams == null)
-        {
-            texparams = mDefaultTextureParameters;
-        }
-        GVRTexture texture = new GVRTexture(mContext, texparams);
+        GVRTexture texture = new GVRTexture(mContext);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
                 request, resource, priority, quality);
+
+        // if its not compressed texture, enable mipmapping by default
+        if(resource.getCompressedLoader() == null && texparams == null)
+            mDefaultTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+
+        if (texparams == null)
+            texparams = mDefaultTextureParameters;
+
+        texture.updateTextureParameters(texparams);
         return texture;
     }
 
@@ -783,10 +803,16 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadTexture(GVRAndroidResource resource, TextureCallback callback)
     {
-        GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
+        GVRTexture texture = new GVRTexture(mContext);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
                 request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+
+        // if its not compressed texture, enable mipmapping by default
+        if(resource.getCompressedLoader() == null)
+            mDefaultTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+
+        texture.updateTextureParameters(mDefaultTextureParameters);
         return texture;
     }
 
@@ -826,6 +852,9 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadCubemapTexture(GVRAndroidResource resource, TextureCallback callback)
     {
+        if(resource.getCompressedLoader() == null)
+            mDefaultTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
@@ -871,6 +900,9 @@ public final class GVRAssetLoader {
      */
     public GVRTexture loadCubemapTexture(GVRAndroidResource resource)
     {
+        if(resource.getCompressedLoader() == null)
+            mDefaultTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
+
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
