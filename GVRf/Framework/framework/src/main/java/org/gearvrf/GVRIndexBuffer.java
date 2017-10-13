@@ -21,24 +21,49 @@ import java.nio.CharBuffer;
 import java.nio.IntBuffer;
 
 /**
- * Describes an interleaved vertex buffer containing vertex data for a mesh.
- *
- * Usually each vertex may have a positions, normal and texture coordinate.
- * Skinned mesh vertices will also have bone weights and indices.
- * If the mesh uses a normal map for lighting, it will have tangents
- * and bitangents as well. These vertex components correspond to vertex
- * attributes in the OpenGL vertex shader.
+ * Contains face indices for an indexed triangle mesh.
+ * <p>
+ * Each entry references a vertex in the {@link GVRVertexBuffer}
+ * associated with the mesh. The indices may be either <i>char</i>
+ * or <i>int</i>. The size and type of the indices are established
+ * when the buffer is constructed and cannot be subsequently changed.
+ * @see GVRMesh
+ * @see GVRVertexBuffer
  */
 public class GVRIndexBuffer extends GVRHybridObject implements PrettyPrint
 {
     private static final String TAG = GVRIndexBuffer.class.getSimpleName();
     private String mDescriptor;
 
+    /**
+     * Constructs an index buffer of a give size and type.
+     * @param gvrContext        GVRContext to associate index buffer with.
+     * @param bytesPerIndex     Number of bytes per index: may be 2 or 4.
+     * @param indexCount        Number of indices in the buffer.
+     * @throws IllegalArgumentException if <i>bytesPerIndex</i> is not 2 or 4.
+     */
     public GVRIndexBuffer(GVRContext gvrContext, int bytesPerIndex, int indexCount)
     {
         super(gvrContext, NativeIndexBuffer.ctor(bytesPerIndex, indexCount));
     }
 
+    /**
+     * Get the triangle vertex indices of the mesh as a CharBuffer.
+     * <p>
+     * The indices for each
+     * triangle are represented as a packed {@code char} triplet, where
+     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
+     * <p>
+     * <code>
+     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
+     * </code>
+     * <p>
+     * Face indices may also be {@code int}. If you have specified
+     * char indices, this function will throw an exception.
+     * @return CharBuffer with the packed triangle index data.
+     * @see #asIntBuffer()
+     * @throws IllegalArgumentException if index buffer is not <i>char</i>
+     */
     public CharBuffer asCharBuffer()
     {
         int n = getIndexCount();
@@ -58,6 +83,23 @@ public class GVRIndexBuffer extends GVRHybridObject implements PrettyPrint
         return data;
     }
 
+    /**
+     * Get the triangle vertex indices of the mesh as a IntBuffer.
+     * <p>
+     * The indices for each
+     * triangle are represented as a packed {@code int} triplet, where
+     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
+     * <p>
+     * <code>
+     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
+     * </code>
+     * <p>
+     * Face indices may also be {@code char}. If you have specified
+     * char indices, this function will throw an exception.
+     * @return IntBuffer with the packed triangle index data.
+     * @see #asCharBuffer()
+     * @throws IllegalArgumentException if index buffer is not <i>int</i>
+     */
     public IntBuffer asIntBuffer()
     {
         int n = getIndexCount();
@@ -77,6 +119,23 @@ public class GVRIndexBuffer extends GVRHybridObject implements PrettyPrint
         return data;
     }
 
+    /**
+     * Get the triangle vertex indices of the mesh as an integer array.
+     * <p>
+     * The indices for each
+     * triangle are represented as a packed {@code int} triplet, where
+     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
+     * <p>
+     * <code>
+     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
+     * </code>
+     * <p>
+     * Face indices may also be {@code char}. If you have specified
+     * char indices, this function will throw an exception.
+     * @return integer array with the packed triangle index data.
+     * @see #asCharArray()
+     * @throws IllegalArgumentException if index buffer is not <i>int</i>
+     */
     public int[] asIntArray()
     {
         int n = getIndexCount();
@@ -91,6 +150,23 @@ public class GVRIndexBuffer extends GVRHybridObject implements PrettyPrint
         return NativeIndexBuffer.getIntArray(getNative());
     }
 
+    /**
+     * Get the triangle vertex indices of the mesh as a char array.
+     * <p>
+     * The indices for each
+     * triangle are represented as a packed {@code char} triplet, where
+     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
+     * <p>
+     * <code>
+     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
+     * </code>
+     * <p>
+     * Face indices may also be {@code int}. If you have specified
+     * char indices, this function will throw an exception.
+     * @return char array with the packed triangle index data.
+     * @see #asIntArray()
+     * @throws IllegalArgumentException if index buffer is not <i>char</i>
+     */
     public char[] asCharArray()
     {
         int n = getIndexCount();
@@ -230,11 +306,27 @@ public class GVRIndexBuffer extends GVRHybridObject implements PrettyPrint
         }
     }
 
+    /**
+     * Get the number of indices in this index buffer.
+     * <p>
+     * This value is established when the index buffer
+     * is constructed and cannot be subsequently changed.
+     * If no data has been provided, the index count is 0.
+     * @return number of indices in the buffer.
+     */
     public int getIndexCount()
     {
         return NativeIndexBuffer.getIndexCount(getNative());
     }
 
+    /**
+     * Get the number of bytes per index.
+     * <p>
+     * This value is established when the index buffer
+     * is constructed and cannot be subsequently changed.
+     * It will be eithr 2 or 4.
+     * @return number of bytes per index.
+     */
     public int getIndexSize()
     {
         return NativeIndexBuffer.getIndexSize(getNative());

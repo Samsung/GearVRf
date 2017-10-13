@@ -24,30 +24,82 @@ import java.nio.IntBuffer;
 import java.nio.channels.IllegalBlockingModeException;
 
 /**
- * Describes an interleaved vertex buffer containing vertex data for a mesh.
- *
- * Usually each vertex may have a positions, normal and texture coordinate.
+ * Describes a set of vertices used by an indexed triangle mesh.
+ * <p>
+ * Usually each vertex may have a position, normal and texture coordinate.
  * Skinned mesh vertices will also have bone weights and indices.
  * If the mesh uses a normal map for lighting, it will have tangents
  * and bitangents as well. These vertex components correspond to vertex
  * attributes in the OpenGL vertex shader.
+ * Multiple meshes may share a single vertex buffer.
+ * <p>
+ * When a vertex buffer is constructed, a string descriptor is
+ * supplied which describes the format of the vertices (the name and
+ * type of each vertex component). Once the format has been established,
+ * it cannot be subsequently changed - you cannot add new vertex
+ * components. You can change the vertex or index buffer associated
+ * with a mesh at any time.
+ * <p>
+ * Skinned meshes have bone weights and bone indices which designate
+ * which bones affect each vertex and how much. The bones are supplied
+ * as a list of {@link GVRBone} objects which have the name of the bone
+ * and its associated matrices. The asset loader handles constructing
+ * skinned meshes and their associated bones. GearVRF keeps the bones
+ * for each mesh in a uniform buffer and skinning is performed by\
+ * shaders on the GPU.
+ * @see GVRMesh
+ * @see GVRIndexBuffer
+ * @see GVRBone
+ * @see GVRAssetLoader
+ * @see org.gearvrf.animation.keyframe.GVRSkinningController
  */
 public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
 {
     private static final String TAG = GVRVertexBuffer.class.getSimpleName();
     private String mDescriptor;
 
+    /**
+     * Construct a vertex buffer with the specified vertex layout.
+     * @param gvrContext  GVRContext to associate vertex buffer with.
+     * @param descriptor  string describing vertex layout.
+     *                    Each vertex component has a name and a type.
+     *                    The types may be "int", "float" or "mat"
+     *                    followed by an integer indicating vector size.
+     * @param vertexCount number of vertices in the buffer.
+     *                    The vertex count cannot be changed once the
+     *                    vertex buffer is constructed.
+     * Vertex Descriptor Examples:
+     * <ul>
+     * <li>float3 a_position float2 a_texcoord float3 a_normal</li>
+     * <li>float3 a_position, int4 a_bone_indices, float4 a_bone_weights</li>
+     * </ul>
+     */
     public GVRVertexBuffer(GVRContext gvrContext, String descriptor, int vertexCount)
     {
         super(gvrContext, NativeVertexBuffer.ctor(descriptor, vertexCount));
         mDescriptor = descriptor;
     }
 
+    /**
+     * Check if a vertex attribute is present in this buffer'
+     * and has data.
+     * @param attributeName name of vertex attribute
+     * @return true if this vertex buffer has been populated with data.
+     */
     public boolean hasAttribute(String attributeName)
     {
         return NativeVertexBuffer.isSet(getNative(), attributeName);
     }
 
+    /**
+     * Retrieves a vertex attribute as a float buffer.
+     * The attribute name must be one of the
+     * attributes named in the descriptor passed to the constructor.
+     * @param attributeName name of the attribute to update
+     * @throws IllegalArgumentException if attribute name not in descriptor vertex attribute is not <i>float</i>
+     * @see #setFloatArray(String, float[])
+     * @see #getFloatVec(String)
+     */
     public FloatBuffer getFloatVec(String attributeName)
     {
         int size = getAttributeSize(attributeName);
@@ -65,6 +117,15 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
         return data;
     }
 
+    /**
+     * Retrieves a vertex attribute as a float array.
+     * The attribute name must be one of the
+     * attributes named in the descriptor passed to the constructor.
+     * @param attributeName name of the attribute to update
+     * @throws IllegalArgumentException if attribute name not in descriptor vertex attribute is not <i>float</i>
+     * @see #setFloatVec(String, FloatBuffer)
+     * @see #getFloatArray(String)
+     */
     public float[] getFloatArray(String attributeName)
     {
         float[] array = NativeVertexBuffer.getFloatArray(getNative(), attributeName);
@@ -75,6 +136,15 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
         return array;
     }
 
+    /**
+     * Retrieves a vertex attribute as an integer buffer.
+     * The attribute name must be one of the
+     * attributes named in the descriptor passed to the constructor.
+     * @param attributeName name of the attribute to update
+     * @throws IllegalArgumentException if attribute name not in descriptor vertex attribute is not <i>int</i>
+     * @see #setIntArray(String, int[])
+     * @see #getIntVec(String)
+     */
     public IntBuffer getIntVec(String attributeName)
     {
         int size = getAttributeSize(attributeName);
@@ -92,6 +162,15 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
         return data;
     }
 
+    /**
+     * Retrieves a vertex attribute as an integer array.
+     * The attribute name must be one of the
+     * attributes named in the descriptor passed to the constructor.
+     * @param attributeName name of the attribute to update
+     * @throws IllegalArgumentException if attribute name not in descriptor vertex attribute is not <i>int</i>
+     * @see #setIntVec(String, IntBuffer)
+     * @see #getIntArray(String)
+     */
     public int[] getIntArray(String attributeName)
     {
         int[] array = NativeVertexBuffer.getIntArray(getNative(), attributeName);
@@ -370,11 +449,31 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
         }
     }
 
+    /**
+     * Get the number of vertices in this vertex buffer.
+     * <p>
+     * This value is established when the vertex buffer
+     * is constructed and cannot be subsequently changed.
+     * If no data has been provided, the vertex count is 0.
+     * @return number of vertices in the buffer.
+     */
     public int getVertexCount()
     {
         return NativeVertexBuffer.getVertexCount(getNative());
     }
 
+    /**
+     * Get the vertex descriptor with the names and types of vertex attributes.
+     * The types may be "int", "float" or "mat"
+     * followed by an integer indicating vector size.
+     * <br>
+     * Vertex Descriptor Examples:
+     * <ul>
+     * <li>float3 a_position float2 a_texcoord float3 a_normal</li>
+     * <li>float3 a_position, int4 a_bone_indices, float4 a_bone_weights</li>
+     * </ul>
+     * @return string descriptor for vertex layout.
+     */
     public String getDescriptor()
     {
         return mDescriptor;

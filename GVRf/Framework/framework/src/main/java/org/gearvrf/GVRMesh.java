@@ -31,12 +31,36 @@ import org.gearvrf.utility.Log;
 /**
  * Describes an indexed triangle mesh as a set of shared vertices with integer
  * indices for each triangle.
- *
- * Usually each mesh vertex may have a positions, normal and texture coordinate.
+ * <p>
+ * Usually each mesh vertex may have a position, normal and texture coordinate.
  * Skinned mesh vertices will also have bone weights and indices.
  * If the mesh uses a normal map for lighting, it will have tangents
  * and bitangents as well. These vertex components correspond to vertex
  * attributes in the OpenGL vertex shader.
+ * <p>
+ * The vertices for the mesh are stored in a {@link GVRVertexBuffer}
+ * object and the indices for the faces are in a {@link GVRIndexBuffer}
+ * object. Multiple meshes may share a single vertex or index buffer.
+ * <p>
+ * When a vertex buffer is constructed, a string descriptor is
+ * supplied which describes the format of the vertices (the name and
+ * type of each vertex attribute). Once the format has been established,
+ * it cannot be subsequently changed - you cannot add new vertex
+ * attributes. You can change the vertex or index buffer associated
+ * with a mesh at any time.
+ * <p>
+ * Skinned meshes have bone weights and bone indices which designate
+ * which bones affect each vertex and how much. The bones are supplied
+ * as a list of {@link GVRBone} objects which have the name of the bone
+ * and its associated matrices. The asset loader handles constructing
+ * skinned meshes and their associated bones. GearVRF keeps the bones
+ * for each mesh in a uniform buffer and skinning is performed by\
+ * shaders on the GPU.
+ * @see GVRVertexBuffer
+ * @see GVRIndexBuffer
+ * @see GVRBone
+ * @see GVRAssetLoader
+ * @see org.gearvrf.animation.keyframe.GVRSkinningController
  */
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     static public final int MAX_BONES = 60;
@@ -47,10 +71,22 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     protected GVRIndexBuffer mIndices;
     protected List<GVRBone> mBones = new ArrayList<GVRBone>();
 
+    /**
+     * Construct a mesh with default vertex layout
+     * <i>float3 a_position float2 a_texcoord float3 a_normal</i>
+     * @param gvrContext GVRContext to associate mesh with
+     */
     public GVRMesh(GVRContext gvrContext) {
         this(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal ");
     }
 
+    /**
+     * Construct a mesh with a specified vertex and index buffer.
+     * @param vbuffer   {@link GVRVertexBuffer} with vertices for mesh.
+     * @param ibuffer   {@link GVRIndexBuffer} with indices for mesh.
+     * @see #setVertexBuffer(GVRVertexBuffer)
+     * @see #setIndexBuffer(GVRIndexBuffer)
+     */
     public GVRMesh(GVRVertexBuffer vbuffer, GVRIndexBuffer ibuffer)
     {
         super(vbuffer.getGVRContext(), NativeMesh.ctorBuffers(vbuffer.getNative(), (ibuffer != null) ? ibuffer.getNative() : 0L));
@@ -58,6 +94,19 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         mIndices = ibuffer;
     }
 
+    /**
+     * Construct a mesh with specified vertex layout.
+     * @param gvrContext GVRContext to associate mesh with
+     * @param vertexDescriptor string describing vertex layout.
+     *                         Each vertex attribute has a name and a type.
+     *                         The types may be "int", "float" or "mat"
+     *                         followed by an integer indicating vector size.
+     * Vertex Descriptor Examples:
+     * <ul>
+     * <li>float3 a_position float2 a_texcoord float3 a_normal</li>
+     * <li>float3 a_position, int4 a_bone_indices, float4 a_bone_weights</li>
+     * </ul>
+     */
     public GVRMesh(GVRContext gvrContext, String vertexDescriptor) {
         this(new GVRVertexBuffer(gvrContext, vertexDescriptor, 0), null);
     }
@@ -69,8 +118,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * <code>
      *     { x0, y0, z0, x1, y1, z1, x2, y2, z2, ... }
      * </code>
-     *
+     * This function retrieves the <i>a_position</i> vertex attribute.
      * @return Array with the packed vertex data.
+     * @see GVRVertexBuffer#getFloatVec(String)
      */
     public float[] getVertices() {
         return mVertices.getFloatVec("a_position").array();
@@ -81,18 +131,44 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * {@code float} triplet:
      * <p>
      * <code>{ x0, y0, z0, x1, y1, z1, x2, y2, z2, ...}</code>
-     *
+     * This function updates the <i>a_position</i> vertex attribute.
      * @param vertices
      *            Array containing the packed vertex data.
+     * @see GVRVertexBuffer#setFloatArray(String, float[])
      */
     public void setVertices(float[] vertices) {
         mVertices.setFloatArray("a_position", vertices);
     }
 
+    /**
+     * Get the vertex buffer object with the vertices for this mesh.
+     * <p>
+     * Vertex buffers may be shared across meshes. You can change which
+     * vertex buffer a mesh uses at any time with {@link #setVertexBuffer(GVRVertexBuffer)}
+     * </p>
+     * @returns GVRVertexBuffer used by this mesh
+     * @see #getVertices()
+     */
     public GVRVertexBuffer getVertexBuffer() { return mVertices; }
 
+    /**
+     * Get the index buffer object with the face indices for this mesh.
+     * <p>
+     * Index buffers may be shared across meshes. You can change which
+     * index buffer a mesh uses at any time with {@link #setIndexBuffer(GVRIndexBuffer)}.
+     * </p>
+     * @returns GVRIndexBuffer used by this mesh
+     * @see #getIndices()
+     */
     public GVRIndexBuffer getIndexBuffer() { return mIndices; }
 
+    /**
+     * Changes the vertex buffer associated with this mesh.
+     * @param vbuf new vertex buffer to use
+     * @see #setVertices(float[])
+     * @see #getVertexBuffer()
+     * @see #getVertices()
+     */
     public void setVertexBuffer(GVRVertexBuffer vbuf)
     {
         if (vbuf == null)
@@ -103,6 +179,13 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         NativeMesh.setVertexBuffer(getNative(), vbuf.getNative());
     }
 
+    /**
+     * Changes the index buffer associated with this mesh.
+     * @param ibuf new index buffer to use
+     * @see #setIndices(int[])
+     * @see #getIndexBuffer()
+     * @see #getIndices()
+     */
     public void setIndexBuffer(GVRIndexBuffer ibuf)
     {
         mIndices = ibuf;
@@ -114,8 +197,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * a packed {@code float} triplet:
      * <p>
      * <code>{ x0, y0, z0, x1, y1, z1, x2, y2, z2, ...}</code>
-     *
+     * This function retrieves the <i>a_normal</i> vertex attribute.
      * @return Array with the packed normal data.
+     * @see GVRVertexBuffer#getFloatArray(String)
      */
     public float[] getNormals() {
         return mVertices.getFloatArray("a_normal");
@@ -126,12 +210,34 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * a packed {@code float} triplet:
      * <p>
      * <code>{ x0, y0, z0, x1, y1, z1, x2, y2, z2, ...}</code>
-     *
+     * This function updates the <i>a_normal</i> vertex attribute.
      * @param normals
      *            Array containing the packed normal data.
+     * @see GVRVertexBuffer#setFloatArray(String, float[])
      */
     public void setNormals(float[] normals) {
         mVertices.setFloatArray("a_normal", normals);
+    }
+
+    /**
+     * Retrieves a set of texture coordinates from the mesh.
+     * <p>
+     * A mesh may have multiple sets of texture coordinates
+     * Each texture coordinate is represented as a packed {@code float} pair:
+     * <p>
+     * <code>{ u0, v0, u1, v1, u2, v2, ...}</code>
+     * This function retrieves the <i>a_texcoordN</i> vertex attribute where N is
+     * the value of the <i>index</i> argument.
+     * @param index
+     *          0-based index indicating which set of texture coordinates to get.
+     * @see #getTexCoords()
+     * @see GVRVertexBuffer#getFloatArray(String)
+     */
+    public float[] getTexCoords(int index)
+    {
+        String key = (index > 0) ? ("a_texcoord" + index) : "a_texcoord";
+
+        return mVertices.getFloatArray(key);
     }
 
     /**
@@ -139,27 +245,45 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * represented as a packed {@code float} pair:
      * <p>
      * <code>{ u0, v0, u1, v1, u2, v2, ...}</code>
-     *
+     * This function retrieves the <i>a_texcoord</i> vertex attribute.
      * @return Array with the packed texture coordinate data.
+     * @see GVRVertexBuffer#getFloatArray(String)
      */
     public float[] getTexCoords() {
         return mVertices.getFloatArray("a_texcoord");
     }
 
     /**
-     * Sets the texture coordinates for the mesh. Each texture coordinate is
+     * Sets the first set of texture coordinates for the mesh. Each texture coordinate is
      * represented as a packed {@code float} pair:
      * <p>
      * <code>{ u0, v0, u1, v1, u2, v2, ...}</code>
-     *
+     * <p>This function updates the <i>a_texcoord</i> vertex attribute.
      * @param texCoords
      *            Array containing the packed texture coordinate data.
+     * @see GVRVertexBuffer#setFloatArray(String, float[])
      */
     public void setTexCoords(float[] texCoords)
     {
         setTexCoords(texCoords, 0);
     }
 
+    /**
+     * Populates a set of texture coordinates for the mesh.
+     * <p>
+     * A mesh may have multiple sets of texture coordinates
+     * Each texture coordinate is represented as a packed {@code float} pair:
+     * <p>
+     * <code>{ u0, v0, u1, v1, u2, v2, ...}</code>
+     * This function updates the <i>a_texcoordN</i> vertex attribute where N is
+     * the value of the <i>index</i> argument.
+     * @param texCoords
+     *          Array containing the packed texture coordinate data.
+     * @param index
+     *          0-based index indicating which set of texture coordinates to update.
+     * @see #getTexCoords()
+     * @see GVRVertexBuffer#setFloatArray(String, float[])
+     */
     public void setTexCoords(float [] texCoords, int index)
     {
         String key = (index > 0) ? ("a_texcoord" + index) : "a_texcoord";
@@ -174,9 +298,13 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * <code>
      * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
      * </code>
-     *
+     * <p>
+     * Face indices may also be {@code int}. If you have specified
+     * integer indices, this function will throw an exception.
      * @return char array with the packed triangle index data.
-     *
+     * @see #setTriangles(char[])
+     * @see #getIndices()
+     * @throws IllegalArgumentException if index buffer is not <i>char</i>
      */
     public char[] getTriangles() {
         return (mIndices != null) ? mIndices.asCharArray() : null;
@@ -184,15 +312,18 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
     /**
      * Sets the triangle vertex indices of the mesh. The indices for each
-     * triangle are represented as a packed {@code int} triplet, where
+     * triangle are represented as a packed {@code char} triplet, where
      * {@code t0} is the first triangle, {@code t1} is the second, etc.:
      * <p>
      * <code>
      * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
      * </code>
+     * Indices may also be {@code int} values - see {@link #setTriangles(int[])}.
      *
      * @param triangles
-     *            Array containing the packed triangle index data.
+     *            char array containing the packed triangle index data.
+     * @see #setTriangles(int[])
+     * @see #getTriangles()
      */
     public void setTriangles(char[] triangles)
     {
@@ -204,6 +335,19 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         mIndices.setShortVec(triangles);
     }
 
+    /**
+     * Sets the triangle vertex indices of the mesh. The indices for each
+     * triangle are represented as a packed {@code int} triplet, where
+     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
+     * <p>
+     * <code>
+     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
+     * </code>
+     * Indices may also be {@code char} values - see {@link #setTriangles(char[])}.
+     *
+     * @param triangles
+     *            int array containing the packed triangle index data.
+     */
     public void setTriangles(int[] triangles)
     {
         if ((mIndices == null) && (triangles != null))
@@ -215,21 +359,42 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     }
 
     /**
-     * Get the vertex indices of the mesh. The indices for each
-     * vertex to be referenced.
-     *
-     * @return int array with the packed index data.
+     * Get the triangle vertex indices of the mesh. The indices for each
+     * triangle are represented as a packed {@code int} triplet, where
+     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
+     * <p>
+     * <code>
+     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
+     * </code>
+     * <p>
+     * Face indices may also be {@code char}. If you have specified
+     * char indices, this function will throw an exception.
+     * @return int array with the packed triangle index data.
+     * @see #setTriangles(char[])
+     * @see #getTriangles()
+     * @throws IllegalArgumentException if index buffer is not <i>int</i>
      */
     public int[] getIndices() {
         return (mIndices != null) ? mIndices.asIntArray() : null;
     }
 
     /**
-     * Sets the vertex indices of the mesh. The indices for each
-     * vertex.
-     *
+     * Sets the vertex indices of the mesh as {@code int} values.
+     * <p>
+     * If no index buffer exists, a new {@link GVRIndexBuffer} is
+     * constructed with {@code int} indices. Otherwise, the existing
+     * index buffer is updated. If that index buffer has been
+     * already constructed with {@code char} indices, this function
+     * will throw an exception.
      * @param indices
-     *            int array containing the packed index data.
+     *            int array containing the packed index data or null.
+     *            If null is specified, the index buffer is destroyed
+     *            and the mesh will have only vertices.
+     * @see #setTriangles(char[])
+     * @see #setIndexBuffer(GVRIndexBuffer)
+     * @see #getIndices()
+     * @see #getIndexBuffer()
+     *@throws IllegalArgumentException if index buffer is not <i>int</i>
      */
     public void setIndices(int[] indices)
     {
@@ -248,6 +413,24 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         }
     }
 
+    /**
+     * Sets the vertex indices of the mesh as {@code char} values.
+     * <p>
+     * If no index buffer exists, a new {@link GVRIndexBuffer} is
+     * constructed with {@code char} indices. Otherwise, the existing
+     * index buffer is updated. If that index buffer has been
+     * already constructed with {@code int} indices, this function
+     * will throw an exception.
+     * @param indices
+     *            char array containing the packed index data or null.
+     *            If null is specified, the index buffer is destroyed
+     *            and the mesh will have only vertices.
+     * @see #setTriangles(int[])
+     * @see #setIndexBuffer(GVRIndexBuffer)
+     * @see #getIndices()
+     * @see #getIndexBuffer()
+     * @throws IllegalArgumentException if index buffer is not <i>char</i>
+     */
     public void setIndices(char[] indices)
     {
         if (indices != null)
@@ -265,6 +448,24 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         }
     }
 
+    /**
+     * Sets the vertex indices of the mesh as {@code char} values.
+     * <p>
+     * If no index buffer exists, a new {@link GVRIndexBuffer} is
+     * constructed with {@code char} indices. Otherwise, the existing
+     * index buffer is updated. If that index buffer has been
+     * already constructed with {@code int} indices, this function
+     * will throw an exception.
+     * @param indices
+     *            CharBuffer containing the packed index data or null.
+     *            If null is specified, the index buffer is destroyed
+     *            and the mesh will have only vertices.
+     * @see #setTriangles(int[])
+     * @see #setIndexBuffer(GVRIndexBuffer)
+     * @see #getIndices()
+     * @see #getIndexBuffer()
+     * @throws IllegalArgumentException if index buffer is not <i>char</i>
+     */
     public void setIndices(CharBuffer indices)
     {
         if (indices != null)
@@ -284,9 +485,10 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     /**
      * Get the array of {@code float} values associated with the vertex attribute
      * {@code key}.
-     *
+     * <p>
      * @param key   Name of the shader attribute
      * @return Array of {@code float} values containing the vertex data for the named channel.
+     * @throws IllegalArgumentException if vertex attribute is not <i>float</i>
      */
     public float[] getFloatArray(String key)
     {
