@@ -716,6 +716,9 @@ public class X3Dobject {
     // references to texture map file names (plus their own sub-directory.
     private String inlineSubdirectory = "";
 
+    private String indexedSetDEFName = "";
+    private String indexedSetUSEName = "";
+
 
 
     // The Text_Font Params class and Reset() function handle
@@ -786,7 +789,7 @@ public class X3Dobject {
             cameraRigAtRoot.attachCenterCamera(centerCamera);
             gvrContext.getMainScene().setBackgroundColor(0, 0, 0, 1);  // black background default
 
-            lodManager = new LODmanager();
+            lodManager = new LODmanager(root);
 
             animationInteractivityManager = new AnimationInteractivityManager(
                     this, gvrContext, root, mDefinedItems, interpolators,
@@ -1311,6 +1314,12 @@ public class X3Dobject {
                         definedItem.setGVRSceneObject(currentSceneObject);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     } // end if DEF name and thus possible animation / interactivity
+
+                    // Check if there is an active Level-of-Detail (LOD)
+                    // and if so add this currentSceneObject if is
+                    // a direct child of this LOD.
+                    if (lodManager.isActive()) lodManager.AddLODSceneObject( currentSceneObject );
+
                 } // not a 'Transform USE="..."' node
 
             } // end <Transform> node
@@ -1336,6 +1345,11 @@ public class X3Dobject {
                         definedItem.setGVRSceneObject(currentSceneObject);
                         mDefinedItems.add(definedItem); // Array list of DEFined items
                     }
+
+                    // Check if there is an active Level-of-Detail (LOD)
+                    // and add this currentSceneObject if is
+                    // a direct child of this LOD.
+                    if (lodManager.isActive()) lodManager.AddLODSceneObject( currentSceneObject );
                 }
 
             } // end <Group> node
@@ -1350,16 +1364,19 @@ public class X3Dobject {
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
                 shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID));
 
-                // Check if this is part of a Level-of-Detail
+                // Check if this Shape node is part of a Level-of-Detail
+                // If there is an active Level-of-Detail (LOD)
+                // add this Shape node to new GVRSceneObject as a
+                // a direct child of this LOD.
                 if (lodManager.isActive()) {
-                    shapeLODSceneObject = AddGVRSceneObject();
-                    final GVRSceneObject parent = shapeLODSceneObject.getParent();
-                    if (null == parent.getComponent(GVRLODGroup.getComponentType())) {
-                        parent.attachComponent(new GVRLODGroup(gvrContext));
+                    if ( lodManager.transformLODSceneObject == currentSceneObject ) {
+                        // <Shape> node not under a <Transform> inside a LOD node
+                        // so we need to attach it to a GVRSceneObject, and
+                        // then attach it to the LOD
+                        lodManager.shapeLODSceneObject = AddGVRSceneObject();
+                        currentSceneObject = lodManager.shapeLODSceneObject;
+                        lodManager.AddLODSceneObject( currentSceneObject );
                     }
-                    final GVRLODGroup lodGroup = (GVRLODGroup)parent.getComponent(GVRLODGroup.getComponentType());
-                    lodGroup.addRange(lodManager.getMinRange(), shapeLODSceneObject);
-                    currentSceneObject = shapeLODSceneObject;
                 }
 
                 attributeValue = attributes.getValue("USE");
@@ -1379,6 +1396,9 @@ public class X3Dobject {
                         gvrRenderData.setMaterial(gvrRenderDataDEFined.getMaterial());
                         gvrRenderData.setMesh(gvrRenderDataDEFined.getMesh());
                         gvrRenderingDataUSEd = true;
+                    }
+                    else {
+                        Log.e(TAG, "Error: Shape USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
                     }
                 } else {
 
@@ -1412,6 +1432,9 @@ public class X3Dobject {
                         gvrMaterialUSEd = true; // for DEFine and USE, we encounter a USE,
                         // and thus have set the material
                     }
+                    else {
+                        Log.e(TAG, "Error: Appearance USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                    }
                 } else {
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
@@ -1439,6 +1462,10 @@ public class X3Dobject {
                         gvrMaterialUSEd = true; // for DEFine and USE, we encounter a USE,
                         // and thus have set the material
                     }
+                    else {
+                        Log.e(TAG, "Error: Material USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                    }
+
                 } else {
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
@@ -1502,6 +1529,10 @@ public class X3Dobject {
                     }
                     if (useItem != null) {
                         gvrTexture = useItem.getGVRTexture();
+                        shaderSettings.setTexture(gvrTexture);
+                    }
+                    else {
+                        Log.e(TAG, "Error: ImageTexture USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
                     }
                 } else {
                     gvrTextureParameters = new GVRTextureParameters(gvrContext);
@@ -1586,25 +1617,13 @@ public class X3Dobject {
 
             else if (qName.equalsIgnoreCase("IndexedFaceSet")) {
                 attributeValue = attributes.getValue("USE");
-                    if (attributeValue != null) { // shared GVRIndexBuffer
-                    DefinedItem useItem = null;
-                    for (DefinedItem definedItem : mDefinedItems) {
-                        if (attributeValue.equals(definedItem.getName())) {
-                            useItem = definedItem;
-                            break;
-                        }
-                    }
-                    if (useItem != null) {
-                            gvrIndexBuffer = useItem.getIndexBuffer();
-                    }
+                if (attributeValue != null) { // shared GVRIndexBuffer / GVRMesh
+                    indexedSetUSEName = attributeValue;
                 } else {
-                        gvrIndexBuffer = new GVRIndexBuffer(gvrContext, 4, 0);
+                    gvrIndexBuffer = new GVRIndexBuffer(gvrContext, 4, 0);
                     attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
-                        DefinedItem definedItem = new DefinedItem(attributeValue);
-                            definedItem.setIndexBuffer(gvrIndexBuffer);
-                        mDefinedItems.add(definedItem); // Array list of DEFined items
-                        // Clones objects with USE
+                        indexedSetDEFName = attributeValue;
                     }
                     attributeValue = attributes.getValue("solid");
                     if (attributeValue != null) {
@@ -1822,6 +1841,9 @@ public class X3Dobject {
                                             definedPtLight.getAttenuationQuadratic());
                             newPtLight.enable();
                         }
+                        else {
+                            Log.e(TAG, "Error: PointLight USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                        }
                     } // end reuse a PointLight
                     else {
                         // add a new PointLight
@@ -1964,6 +1986,9 @@ public class X3Dobject {
                                     attribute[2], 1);
                             newDirectLight.enable();
                         }
+                        else {
+                            Log.e(TAG, "Error: DirectionalLight USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                        }
                     } // end reuse a DirectionalLight
                     else {
                         // add a new DirectionalLight
@@ -2101,6 +2126,9 @@ public class X3Dobject {
                             newSpotLight
                                     .setOuterConeAngle(definedSpotLight.getOuterConeAngle());
                             newSpotLight.enable();
+                        }
+                        else {
+                            Log.e(TAG, "Error: SpotLight USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
                         }
                     } // end reuse a SpotLight
                     else {
@@ -2684,6 +2712,9 @@ public class X3Dobject {
                             Text_FontParams.size = gvrTextViewSceneObject.getSize();
                             Text_FontParams.style = gvrTextViewSceneObject.getStyleType();
                         }
+                        else {
+                            Log.e(TAG, "Error: FontStyle USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                        }
                     }
                     else {
                         attributeValue = attributes.getValue("DEF");
@@ -2799,7 +2830,8 @@ public class X3Dobject {
                         GVRSceneObject inlineGVRSceneObject = currentSceneObject; // preserve
                         // the
                         // currentSceneObject
-                        if (lodManager.isActive()) {
+                        if (lodManager.isActive()  &&
+                                (inlineGVRSceneObject.getComponent(GVRLODGroup.getComponentType()) != null)) {
                             inlineGVRSceneObject = AddGVRSceneObject();
                             inlineGVRSceneObject.setName("inlineGVRSceneObject"
                                     + lodManager.getCurrentRangeIndex());
@@ -2816,6 +2848,13 @@ public class X3Dobject {
                         inlineObjects.add(inlineObject);
                     }
 
+                    // LOD has it's own GVRSceneObject which has a
+                    // GVRLODGroup component attached
+                    if (lodManager.transformLODSceneObject == null) {
+                        lodManager.transformLODSceneObject = AddGVRSceneObject();
+                        lodManager.transformLODSceneObject.attachComponent(new GVRLODGroup(gvrContext));
+                        currentSceneObject = lodManager.transformLODSceneObject;
+                    }
                 } // end <Inline> node
 
 
@@ -2848,6 +2887,14 @@ public class X3Dobject {
                         keys.clear();
                     }
                     lodManager.set(range, center);
+
+                    // LOD has it's own GVRSceneObject which has a
+                    // GVRLODGroup component attached
+                    if (lodManager.transformLODSceneObject == null) {
+                        lodManager.transformLODSceneObject = AddGVRSceneObject();
+                        lodManager.transformLODSceneObject.attachComponent(new GVRLODGroup(gvrContext));
+                        currentSceneObject = lodManager.transformLODSceneObject;
+                    }
 
                 } // end <LOD> Level-of-Detail node
 
@@ -3604,12 +3651,13 @@ public class X3Dobject {
                 } else
                     currentSceneObject.attachRenderData(gvrRenderData);
 
-                if (shapeLODSceneObject != null) {
-                    // if this GVRSceneObject is part of a Level-of-Detail
-                    // then restore bck to the parent object
+                if (lodManager.shapeLODSceneObject != null) {
+                    // if this Shape node was a direct child of a
+                    // Level-of-Detial (LOD),then restore the parent object
+                    // since we had to add a GVRSceneObject to support
+                    // the Shape node's attachement to LOD.
                     currentSceneObject = currentSceneObject.getParent();
-                    shapeLODSceneObject = null;
-                    lodManager.increment();
+                    lodManager.shapeLODSceneObject = null;
                 }
 
                 gvrMaterialUSEd = false; // for DEFine and USE, true if we encounter a
@@ -3627,16 +3675,42 @@ public class X3Dobject {
             } else if (qName.equalsIgnoreCase("TextureTransform")) {
                 ;
             } else if (qName.equalsIgnoreCase("IndexedFaceSet")) {
-                if (reorganizeVerts) {
-                    gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer, true);
-                    reorganizeVerts = false;
+                if (indexedSetUSEName.length() > 0) {
+                    //Using previously defined mesh
+                    DefinedItem useItem = null;
+                    for (DefinedItem definedItem : mDefinedItems) {
+                        if (indexedSetUSEName.equals(definedItem.getName())) {
+                            useItem = definedItem;
+                            break;
+                        }
+                    }
+                    if (useItem != null) {
+                        gvrRenderData.setMesh( useItem.getGVRMesh() );
+                    }
+                    else {
+                        Log.e(TAG, "Error: IndexedFaceSet USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                    }
                 }
-                GVRMesh mesh = new GVRMesh(gvrContext, gvrVertexBuffer.getDescriptor());
-                gvrRenderData.setMesh(mesh);
-                mesh.setIndexBuffer(gvrIndexBuffer);
-                mesh.setVertexBuffer(gvrVertexBuffer);
+                else {
+                    if (reorganizeVerts) {
+                        gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer, true);
+                        reorganizeVerts = false;
+                    }
+                    GVRMesh mesh = new GVRMesh(gvrContext, gvrVertexBuffer.getDescriptor());
+                    if (indexedSetDEFName.length() > 0) {
+                        // Save GVRMesh since it may be reused later.
+                        DefinedItem definedItem = new DefinedItem(indexedSetDEFName);
+                        definedItem.setGVRMesh(mesh);
+                        mDefinedItems.add(definedItem); // Array list of DEFined items
+                    }
+                    gvrRenderData.setMesh(mesh);
+                    mesh.setIndexBuffer(gvrIndexBuffer);
+                    mesh.setVertexBuffer(gvrVertexBuffer);
+                }
                 gvrVertexBuffer = null;
                 gvrIndexBuffer = null;
+                indexedSetDEFName = "";
+                indexedSetUSEName = "";
             } else if (qName.equalsIgnoreCase("Coordinate")) {
                 // vertices.clear(); // clean up this Vector<Vertex> list.
             } else if (qName.equalsIgnoreCase("TextureCoordinate")) {
@@ -3686,7 +3760,12 @@ public class X3Dobject {
             } else if (qName.equalsIgnoreCase("Inline")) {
                 ;
             } else if (qName.equalsIgnoreCase("LOD")) {
-                ;
+                // End of LOD so go to the parent of the current
+                // GVRSceneObject which was added to support LOD
+                if (currentSceneObject == lodManager.transformLODSceneObject) {
+                    currentSceneObject = currentSceneObject.getParent();
+                }
+                lodManager.transformLODSceneObject = null;
             } else if (qName.equalsIgnoreCase("Switch")) {
                 // Verify the Switch index is between 0 and (max number of children - 1)
                 // if it is not, then no object should appear per the X3D spec.
