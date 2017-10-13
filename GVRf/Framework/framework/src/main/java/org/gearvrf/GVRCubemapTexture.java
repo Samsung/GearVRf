@@ -21,7 +21,19 @@ import java.util.Map;
 import android.graphics.Bitmap;
 import static android.opengl.GLES30.GL_RGBA;
 
-/** Cube map texture. */
+/**
+ * Describes an uncompressed cubemap texture with bitmaps for 6 faces.
+ * <p>
+ * A cubemap texture supplies individual textures for
+ * each of the 6 faces of a cube. It is typically used
+ * as a skybox or environment map.
+ * <p>
+ * The bitmaps for each face must be the same size and they
+ * should contain uncompressed data. This type of texture is inefficient because
+ * it wastes GPU memory. Mobile GPUs can directly render from
+ * compressed textures which use far less memory.
+ * @see GVRCompressedCubemapTexture
+ */
 public class GVRCubemapTexture extends GVRImage
 {
     /**

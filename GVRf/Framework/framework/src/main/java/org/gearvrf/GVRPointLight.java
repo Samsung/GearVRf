@@ -27,19 +27,19 @@ import org.gearvrf.utility.TextFile;
  * light. Three attenuation factors are provided to specify how
  * the intensity of the light falls off with distance:
  * {@code 1 / (attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2)}
- *
- * Point light uniforms:
- * {@literal
- *   enabled               1 = light is enabled, 0 = light is disabled
- *   world_position        position of light in world coordinates
- *                         derived from scene object position
- *   ambient_intensity     intensity of ambient light emitted
- *   diffuse_intensity     intensity of diffuse light emitted
- *   specular_intensity    intensity of specular light emitted
- *   attenuation_constant  constant attenuation factor
- *   attenuation_linear    linear attenuation factor
- *   attenuation_quadratic quadratic attenuation factor
- * }
+ * <p>
+ * <b>Point light uniforms:</b>
+ * <table>
+ * <tr><td>enabled</td><td>1 = light is enabled, 0 = light is disabled</td></tr>
+ * <tr><td>world_position</td><td>position of spot light in world coordinates/td></tr>
+ *  derived from scene object position</td></tr>
+ * <tr><td>ambient_intensity</td><td>intensity of ambient light emitted/td></tr>
+ * <tr><td>diffuse_intensity</td><td>intensity of diffuse light emitted/td></tr>
+ * <tr><td>specular_intensity</td><td>intensity of specular light emitted</td></tr>
+ * <tr><td>attenuation_constant</td><td>constant attenuation factor</td></tr>
+ * <tr><td>attenuation_linear</td><td>linear attenuation factor</td></tr>
+ * <tr><td>attenuation_quadratic</td><td>quadratic attenuation factor</td></tr>
+ * </table>
  * 
  * Point lights currently cannot cast shadows. Enabling shadows for
  * this light type will waste resources.

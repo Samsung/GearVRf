@@ -35,28 +35,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * cone apex. Three attenuation factors are provided to specify how
  * the intensity of the light falls off with distance:
  * {@code I = attenuation_constant + attenuation_linear * D * attenuation_quadratic * D ** 2}
- *
- * Spot light uniforms:
- * {@literal
- *   enabled               1 = light is enabled, 0 = light is disabled
- *   world_position        position of spot light in world coordinates
- *                         derived from scene object position
- *   world_direction       direction of spot light in world coordinates
- *                         derived from scene object orientation
- *   ambient_intensity     intensity of ambient light emitted
- *   diffuse_intensity     intensity of diffuse light emitted
- *   specular_intensity    intensity of specular light emitted
- *   attenuation_constant  constant attenuation factor
- *   attenuation_linear    linear attenuation factor
- *   attenuation_quadratic quadratic attenuation factor
- *   inner_cone_angle      cosine of inner cone angle
- *   outer_cone_angle      cosine of outer cone angle
- *   sm0                   shadow matrix column 1
- *   sm1                   shadow matrix column 2
- *   sm2                   shadow matrix column 3
- *   sm3                   shadow matrix column 4
- * }
- * 
+ * <p>
+ * <b>Spot light uniforms:</b>
+ * <table>
+ * <tr><td>enabled</td><td>1 = light is enabled, 0 = light is disabled</td></tr>
+ * <tr><td>world_position</td><td>position of spot light in world coordinates</td></tr>
+ *  derived from scene object position</td></tr>
+ * <tr><td>world_direction</td><td>direction of spot light in world coordinates</td></tr>
+ *  derived from scene object orientation</td></tr>
+ * <tr><td>ambient_intensity</td><td>intensity of ambient light emitted</td></tr>
+ * <tr><td>diffuse_intensity</td><td>intensity of diffuse light emitted</td></tr>
+ * <tr><td>specular_intensity</td><td>intensity of specular light emitted</td></tr>
+ * <tr><td>attenuation_constant</td><td>constant attenuation factor</td></tr>
+ * <tr><td>attenuation_linear</td><td>linear attenuation factor</td></tr>
+ * <tr><td>attenuation_quadratic</td><td>quadratic attenuation factor</td></tr>
+ * <tr><td>inner_cone_angle</td><td>cosine of inner cone angle</td></tr>
+ * <tr><td>outer_cone_angle</td><td>cosine of outer cone angle</td></tr>
+ * <tr><td>sm0</td><td>shadow matrix column 1</td></tr>
+ * <tr><td>sm1</td><td>shadow matrix column 2</td></tr>
+ * <tr><td>sm2</td><td>shadow matrix column 3</td></tr>
+ * <tr><td>sm3</td><td>shadow matrix column 4</td></tr>
+ * </table>
  * Note: some mobile GPU drivers do not correctly pass a mat4 thru so we currently
  * use 4 vec4's instead.
  *  

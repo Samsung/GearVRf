@@ -20,14 +20,13 @@ import static android.opengl.GLES20.*;
 import org.gearvrf.utility.Log;
 
 /**
- * A GL compressed texture; you get it from
- * {@linkplain GVRAssetLoader#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, org.gearvrf.GVRAndroidResource)
- * GVRContext.loadCompressedTexture()}.
- * 
- * This is mostly an internal, implementation class: You <em>may</em> find
- * {@link #mLevels} and/or {@link #mQuality} useful.
- * 
- * @since 1.6.1
+ * Describes a compressed bitmap texture.
+ * <p>
+ * A compressed texture contains 2D compressed pixel data.
+ * This type of texture is very efficient because
+ * it uses less memory. Mobile GPUs can directly render from
+ * compressed textures.
+ * @see GVRBitmapeTexture
  */
 public class GVRCompressedTexture extends GVRImage
 {
@@ -35,8 +34,7 @@ public class GVRCompressedTexture extends GVRImage
 
     /**
      * The speed/quality parameter passed to
-     * {@link GVRAssetLoader#loadTexture(org.gearvrf.GVRAndroidResource.TextureCallback, org.gearvrf.GVRAndroidResource, int)
-     * GVRContext.loadCompressedTexture()}.
+     * {@link GVRAssetLoader#loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback, GVRTextureParameters, int, int)}
      * 
      * This copy has been 'clamped' to one of the
      * {@linkplain GVRCompressedTexture#SPEED public constants} in
@@ -49,7 +47,17 @@ public class GVRCompressedTexture extends GVRImage
     private int mLevels;
     private int mImageSize;
 
-    // Texture parameters
+    /**
+     * Create a compressed texture.
+     * @param gvrContext    GVRContext to use for texture.
+     * @param width         pixel width of image.
+     * @param height        pixel height of image.
+     * @param imageSize     number of bytes in compressed image data.
+     * @param format        image format (GL_RGB, GL_RGBA, ...)
+     * @param data          image data bytes
+     * @param levels        number of mip-map levels
+     * @param quality       compression quality
+     */
     public GVRCompressedTexture(GVRContext gvrContext, int width, int height,  int imageSize, int format, byte[] data, int levels, int quality)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, format));
@@ -61,7 +69,10 @@ public class GVRCompressedTexture extends GVRImage
         mImageSize = imageSize;
     }
 
-
+    /**
+     * Set the offsets in the compressed data area for each mip-map level.
+     * @param offsets array of offsets
+     */
     public void setDataOffsets(int[] offsets)
     {
         assert(mLevels == offsets.length);
@@ -69,6 +80,10 @@ public class GVRCompressedTexture extends GVRImage
         mData = null;
     }
 
+    /**
+     * Get compression quality
+     * @return compression quality
+     */
     public int getQuality()         { return mQuality; }
 
      /*

@@ -38,7 +38,7 @@ import android.os.Environment;
 
 /**
  * Generates a set of native vertex and fragment shaders from source code segments.
- *
+ * <p>
  * Each shader template keeps a set of named source code segments which are used
  * to compose the shaders. The code in the "FragmentTemplate" slot is the master
  * template for the fragment shader, the one attached as "VertexTemplate" is the
@@ -48,17 +48,16 @@ import android.os.Environment;
  * replaced with vertex shader segments. This permits multiple segments to be
  * combined into a single fragment or vertex shader. The segment names are also
  * #defined in the shader for conditional compilation.
- * 
+ * <p>
  * To generate different variants from the same source we use #ifdef creatively.
  * Any shader variable name starting with a "HAS_" is assumed to be a #ifdef
  * that affects the generated code. These names typically correspond to
  * uniforms, textures or vertex buffer attributes. If these parameters are
  * defined by the material or mesh, that name will be #defined to 1 in the
  * shader. Otherwise, it will not be defined.
- * 
+ * <p>
  * Each shader variant generated has a unique signature so that the same variant
  * will not be generated twice.
- *
  * The shader also defines descriptors that define the
  * names and types of all the uniforms, textures and vertex attributes
  * used by the shader. For uniforms and attributes, each entry is a
@@ -66,7 +65,7 @@ import android.os.Environment;
  * uniform (e.g. "float3 diffuse_color, float specular_exponent, int is_enabled".
  * For textures, the descriptor contains the sampler type followed by the name:
  * (e.g. "sampler2D u_texture; samplerCube u_cubemap")
- * 
+ * <p>
  * Multiple lights are supported by specifying light shader source code segments
  * in GVRLightBase. You can define different light implementations with
  * their own data structures and these will be included in the generated

@@ -27,14 +27,13 @@ import android.os.Environment;
 
 /**
  * Generates a vertex and fragment shader from the sources provided.
- *
+ * <p>
  * This class allows you to define your own custom shader and introduce
  * it into GearVRF.
- *
  * Each shader generated has a unique signature so that the same shader
  * will not be generated twice. For shaders derived directly from
  * GVRShader, the signature is the simple Java class name.
- *
+ * <p>
  * The shader also defines descriptors that define the
  * names and types of all the uniforms, textures and vertex attributes
  * used by the shader. For uniforms and attributes, each entry is a
@@ -42,7 +41,7 @@ import android.os.Environment;
  * uniform (e.g. "float3 diffuse_color, float specular_exponent, int is_enabled".
  * For textures, the descriptor contains the sampler type followed by the name:
  * (e.g. "sampler2D u_texture; samplerCube u_cubemap")
- *
+ * <p>
  * Shaders derived from GVRShader cannot have variants and they ignore
  * light sources in the scene. To generate a more complex shader which
  * has multiple variants depending on what meshes, materials and

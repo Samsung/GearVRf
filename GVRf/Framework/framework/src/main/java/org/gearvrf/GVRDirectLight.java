@@ -27,19 +27,20 @@ import org.joml.Matrix4f;
  *
  * The intensity of the light remains constant and does not fall
  * off with distance from the light.
- *
- * Dlrect light uniforms:
- * {@literal
- *   world_direction       direction of light in world coordinates
- *                         derived from scene object orientation
- *   ambient_intensity     intensity of ambient light emitted
- *   diffuse_intensity     intensity of diffuse light emitted
- *   specular_intensity    intensity of specular light emitted
- *   sm0                   shadow matrix column 1
- *   sm1                   shadow matrix column 2
- *   sm2                   shadow matrix column 3
- *   sm3                   shadow matrix column 4
- * }
+ * <p>
+ * <b>Dlrect light uniforms:</b>
+ * <table>
+ * <tr><td>enabled</td><td>1 = light is enabled, 0 = light is disabled/td></tr>
+ * <tr><td>world_direction</td><td>direction of spot light in world coordinates</td></tr>
+ *  derived from scene object orientation<td></tr>
+ * <tr><td>ambient_intensity</td><td>intensity of ambient light emitted</td></tr>
+ * <tr><td>diffuse_intensity</td><td>intensity of diffuse light emitted</td></tr>
+ * <tr><td>specular_intensity</td><td>intensity of specular light emitted</td></tr>
+ * <tr><td>sm0</td><td>shadow matrix column 1</td></tr>
+ * <tr><td>sm1</td><td>shadow matrix column 2</td></tr>
+ * <tr><td>sm2</td><td>shadow matrix column 3</td></tr>
+ * <tr><td>sm3</td><td>shadow matrix column 4</td></tr>
+ * </table>
  * 
  * Note: some mobile GPU drivers do not correctly pass a mat4 thru so we currently
  * use 4 vec4's instead.

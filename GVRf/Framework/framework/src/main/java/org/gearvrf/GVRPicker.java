@@ -49,7 +49,7 @@ import org.joml.Vector3f;
  * the picker generates one or more pick events (IPickEvents interface)
  * which are sent the event receiver of the scene. These events can be
  * observed by listeners.
- * <ul>>
+ * <ul>
  * <li>onEnter(GVRSceneObject)  called when the pick ray enters a scene object.</li>
  * <li>onExit(GVRSceneObject)   called when the pick ray exits a scene object.</li>
  * <li>onInside(GVRSceneObject) called while the pick ray penetrates a scene object.</li>

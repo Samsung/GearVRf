@@ -41,7 +41,45 @@ import static android.opengl.GLES20.glGenerateMipmap;
 import static android.opengl.GLES20.glGetError;
 import static android.opengl.GLES20.glTexParameteri;
 
-/** Wrapper for a GL texture. */
+/**
+ * Describes a texture mapped onto a 3D object by a shader.
+ * <p>
+ * A texture is a 2D array of data, usually representing an image,
+ * that is provided to the GPU shader at run-time to modify
+ * the appearance of rendered objects. Usually it determines the
+ * base color of the object. Textures are also used to enhance
+ * illumination.
+ * <p>
+ * A texture has two parts - the 2D bitmap data and the texture
+ * filtering parameters which determine how the texture is applied.
+ * The texture parameters are in a {@link GVRTextureParameters} object.
+ * The bitmap data is kept in a {@link GVRImage} object. There are
+ * different types of images depending on the internal data
+ * format. Each data format is represented by a different GearVRF class.
+ * <table>
+ *  <tr>
+ *      <td>GVRBitmapTexture</td>
+ *      <td>uncompressed RGB or RGBA bitmap data</td>
+ *  </tr>
+ * <tr>
+ *      <td>GVRCompressedTexture</td>
+ *      <td>compressed bitmap data</td>
+ * </tr>
+ *  <tr>
+ *      <td>GVRCubemapTexture</td>
+ *      <td>uncompressed cubemap data (6 bitmaps)</td>
+ *  </tr>
+ * <tr>
+ *      <td>GVRCompressedCubemapTexture</td>
+ *      <td>compressed cubemmap data (6 compressed bitmaps)</td>
+ * </tr>
+ * <tr>
+ *     <td>GVRFloatTexture</td>
+ *     <td>uncompressed floating point bitmap data</td>
+ * </tr>
+ * </table>
+ * </p>
+ */
 public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.TextureCallback
 {
     protected static final String TAG = "GVRTexture";
@@ -52,6 +90,14 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
     public String mTexCoordAttr;
     public String mShaderVar;
 
+    /**
+     * Constructs an empty texture.
+     * <p>
+     * Objects rendered with this texture
+     * will not be displayed until the texture is given an image.
+     * @param gvrContext context for the texture.
+     * @see #setImage(GVRImage)
+     */
     public GVRTexture(GVRContext gvrContext)
     {
         super(gvrContext, NativeTexture.constructor());
@@ -70,6 +116,14 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
         mTextureId = 0;
     }
 
+    /**
+     * Constructs an empty texture with specified parameters.
+     * <p>
+     * Objects rendered with this texture
+     * will not be displayed until the texture is given an image.
+     * @param gvrContext context for the texture.
+     * @see #setImage(GVRImage)
+     */
     public GVRTexture(GVRContext gvrContext, GVRTextureParameters texparams)
     {
         super(gvrContext, NativeTexture.constructor());
@@ -96,6 +150,16 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
 
     public void failed(Throwable ex, GVRAndroidResource resource) { }
 
+    /**
+     * Gets the GPU ID for the texture.
+     * <p>
+     * This function will wait until the texture is ready and
+     * loaded into the GPU before returning. It is not efficient
+     * but will allow you to wait until a texture has been loaded.
+     * The ID it returns is platform-dependent.
+     * </p>
+     * @return GPU texture ID
+     */
     public int getId()
     {
         if (mTextureId != 0)
@@ -198,6 +262,11 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
             NativeTexture.setImage(getNative(), null, 0);
     }
 
+    /**
+     * Get the {@link GVRImage} which contains the texture data.
+     * @return image associated with texture or null if none.
+     * @see #setImage(GVRImage)
+     */
     public GVRImage getImage()
     {
         return mImage;

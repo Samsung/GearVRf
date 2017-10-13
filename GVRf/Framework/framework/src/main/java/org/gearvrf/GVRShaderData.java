@@ -34,14 +34,14 @@ import static org.gearvrf.utility.Assert.checkStringNotNullOrEmpty;
  * It contains a list of key / value pairs which can specify arbitrary length
  * float or int vectors. It also has key / value pairs for the texture
  * samplers to be used with the shader.
- *
+ * <p>
  * GVRShaderData can be used for a "post-effect" to update the
  * framebuffer after main rendering but before lens distortion.
  * A post effect shader can, for example, apply the same shader to each
  * eye, using different parameters for each eye.
- *
- * It is important to fully initialize your material before
  * @see GVRMaterial
+ * @see GVRCamera#addPostEffect(GVRMaterial)
+ * @see GVRRenderData#setMaterial(GVRMaterial)
  */
 public class GVRShaderData extends GVRHybridObject
 {
@@ -51,21 +51,21 @@ public class GVRShaderData extends GVRHybridObject
     protected String mUniformDescriptor = null;
     protected String mTextureDescriptor = null;
 
-    protected static class TextureInfo
-    {
-        public GVRTexture Texture;
-        public String TexCoordAttr;
-        public String ShaderVar;
-    }
-
     final protected Map<String, GVRTexture> textures = new HashMap();
 
     /**
-     * Initialize a post effect, with a shader id.
-     *
+     * Initialize shader data for a specific shader.
+     * <p>
+     * The names and types of the data required by the shader
+     * are encapsulated in the <i>uniform descriptor</i> and
+     * the <i>texture descriptor</i>. These are inherited from
+     * the shader and describe the uniforms and texture
+     * samplers used by the shader.
      * @param gvrContext Current {@link GVRContext}
      * @param shaderId   Shader ID from {@link org.gearvrf.GVRMaterial.GVRShaderType} or
      *                   {@link GVRContext#getMaterialShaderManager()}.
+     * @see GVRShader
+     * @see GVRShaderTemplate
      */
     public GVRShaderData(GVRContext gvrContext, GVRShaderId shaderId)
     {
@@ -101,22 +101,36 @@ public class GVRShaderData extends GVRHybridObject
 
     /**
      * Gets the string describing the uniforms allowed in this material.
+     * <p>
+     * This descriptor contains a name and a type for each uniform
+     * required by the shader. The types may be <i>int, float</i> or <i>mat</i>.
+     * A type can be followed by an integer between 2 and 4 giving the vector length.
+     * Any entry may be an array of values.
+     * <p>
+     * Uniform descriptor examples:
+     * <ull>
+     *  <li>float4 u_color float u_opacity</li>
+     *  <li>mat4 u_bones[60]</li>
+     *  <li>float4 diffuse, float4 specular, int blend_ops[3]</li>
+     * </ull>
      * @return string with uniform descriptor from shader
      */
     public String getUniformDescriptor() { return mUniformDescriptor; }
 
     /**
      * Gets the string describing the textures allowed in this material.
+     * <p>
+     * This descriptor contains a name and a sampler type for each
+     * texture used by the material (e.g. "sampler2D diffuseTex, samplerCube cubeMap")
+     * </p>
      * @return string with texture descriptor from shader
      */
     public String getTextureDescriptor() { return mTextureDescriptor; }
 
     /**
-     * Determine whether a named uniform is defined
-     * by this material.
-     *
+     * Determine whether a named uniform has been set in this material.
      * @param name of uniform in shader and material
-     * @return true if uniform defined, else false
+     * @return true if uniform has been assigned a value, else false
      */
     public boolean hasUniform(String name)
     {
@@ -126,7 +140,7 @@ public class GVRShaderData extends GVRHybridObject
     /**
      * Determine whether a named texture has been set.
      * This function will return true if the texture
-     * has been set even if it is NULL.
+     * has been set even if it is null.
      *
      * @param name of texture
      * @return true if texture has been set, else false
@@ -139,9 +153,11 @@ public class GVRShaderData extends GVRHybridObject
     }
 
     /**
-     * Return the names of all the textures used by this post effect.
+     * Return the names of all the textures used by this material.
      *
-     * @return list of texture names
+     * @return names of textures which have been set by {@link #setTexture(String, GVRTexture)}
+     * @see #getTexture(String)
+     * @see #hasTexture(String)
      */
     public Set<String> getTextureNames()
     {
@@ -228,6 +244,12 @@ public class GVRShaderData extends GVRHybridObject
         NativeShaderData.setInt(getNative(), key, value);
     }
 
+    /**
+     * Get the value for a floating point uniform vector.
+     * @param key name of uniform to get.
+     * @return float array with value of named uniform.
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
     public float[] getFloatVec(String key)
     {
         float[] vec = NativeShaderData.getFloatVec(getNative(), key);
@@ -236,6 +258,12 @@ public class GVRShaderData extends GVRHybridObject
         return vec;
     }
 
+    /**
+     * Get the value for an integer uniform vector.
+     * @param key name of uniform to get.
+     * @return int array with value of named uniform.
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
     public int[] getIntVec(String key)
     {
         int[] vec = NativeShaderData.getIntVec(getNative(), key);
@@ -244,39 +272,89 @@ public class GVRShaderData extends GVRHybridObject
         return vec;
     }
 
+    /**
+     * Get the value for a floating point vector of length 2 (type float2).
+     * @param key name of uniform to get.
+     * @return float array with two values
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
     public float[] getVec2(String key)
     {
         return getFloatVec(key);
     }
 
+    /**
+     * Set the value for a floating point vector of length 2.
+     * @param key name of uniform to set.
+     * @param x new X value
+     * @param y new Y value
+     * @see #getVec2
+     * @see #getFloatVec(String)
+     */
     public void setVec2(String key, float x, float y)
     {
         checkKeyIsUniform(key);
         NativeShaderData.setVec2(getNative(), key, x, y);
     }
 
+    /**
+     * Get the value for a floating point vector of length 3 (type float3).
+     * @param key name of uniform to get.
+     * @return float array with three values
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
     public float[] getVec3(String key)
     {
         return getFloatVec(key);
     }
 
+    /**
+     * Set the value for a floating point vector of length 3.
+     * @param key name of uniform to set.
+     * @param x new X value
+     * @param y new Y value
+     * @param z new Z value
+     * @see #getVec3
+     * @see #getFloatVec(String)
+     */
     public void setVec3(String key, float x, float y, float z)
     {
         checkKeyIsUniform(key);
         NativeShaderData.setVec3(getNative(), key, x, y, z);
     }
 
+    /**
+     * Get the value for a floating point vector of length 4 (type float4).
+     * @param key name of uniform to get.
+     * @return float array with four values
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
     public float[] getVec4(String key)
     {
         return getFloatVec(key);
     }
 
+    /**
+     * Set the value for a floating point vector of length 4.
+     * @param key name of uniform to set.
+     * @param x new X value
+     * @param y new Y value
+     * @param z new Z value
+     * @param w new W value
+     * @see #getVec4
+     * @see #getFloatVec(String)
+     */
     public void setVec4(String key, float x, float y, float z, float w)
     {
         checkKeyIsUniform(key);
         NativeShaderData.setVec4(getNative(), key, x, y, z, w);
     }
 
+    /**
+     * Set the value for a floating point 4x4 matrix.
+     * @param key name of uniform to set.
+     * @see #getFloatVec(String)
+     */
     public void setMat4(String key, float x1, float y1, float z1, float w1,
                         float x2, float y2, float z2, float w2, float x3, float y3,
                         float z3, float w3, float x4, float y4, float z4, float w4)
@@ -286,12 +364,30 @@ public class GVRShaderData extends GVRHybridObject
                                  z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 
+    /**
+     * Set the value for a floating point vector uniform.
+     * <p>
+     * @param key name of uniform to set.
+     * @param val floating point array with new data. The size of the array must be
+     *            at least as large as the uniform being updated.
+     * @throws IllegalArgumentException if key is not in uniform descriptor or array is wrong length.
+     * @see #getFloatVec(String)
+     */
     public void setFloatArray(String key, float val[])
     {
         checkKeyIsUniform(key);
         NativeShaderData.setFloatVec(getNative(), key, val, val.length);
     }
 
+    /**
+     * Set the value for an integer vector uniform.
+     * <p>
+     * @param key name of uniform to set.
+     * @param val integer array with new data. The size of the array must be
+     *            at least as large as the uniform being updated.
+     * @throws IllegalArgumentException if key is not in uniform descriptor or array is wrong length.
+     * @see #getIntVec(String)
+     */
     public void setIntArray(String key, int val[])
     {
         checkKeyIsUniform(key);

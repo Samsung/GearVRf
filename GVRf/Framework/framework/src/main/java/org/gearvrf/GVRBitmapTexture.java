@@ -29,7 +29,15 @@ import static android.opengl.GLES20.GL_RGB;
 import static android.opengl.GLES20.GL_LUMINANCE;
 
 
-/** Bitmap-based texture. */
+/**
+ * Describes an uncompressed bitmap texture.
+ * <p>
+ * A bitmap texture contains 2D uncompressed pixel data in RGB
+ * or RGBA format. This type of texture is inefficient because
+ * it wastes GPU memory. Mobile GPUs can directly render from
+ * compressed textures which use far less memory.
+ * @see GVRCompressedTexture
+ */
 public class GVRBitmapTexture extends GVRImage
 {
     /**
