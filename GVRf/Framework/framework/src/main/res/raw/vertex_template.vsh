@@ -11,7 +11,10 @@ precision highp float;
 @MATRIX_UNIFORMS
 
 layout(location = 0) in vec3 a_position;
+
+#ifdef HAS_a_texcoord
 layout(location = 1) in vec2 a_texcoord;
+#endif
 
 #if defined(HAS_a_normal) && defined(HAS_LIGHTSOURCES)
 layout(location = 2) in vec3 a_normal;

@@ -11,7 +11,10 @@ precision highp float;
 
 
 layout(location = 0) in vec3 a_position;
+
+#ifdef HAS_a_texcoord
 layout(location = 1) in vec2 a_texcoord;
+#endif
 
 #if defined(HAS_a_normal) && defined(HAS_LIGHTSOURCES)
 layout(location = 5) in vec3 a_normal;
@@ -43,16 +46,12 @@ layout(location = 5) out vec2 ambient_coord;
 layout(location = 6) out vec2 specular_coord;
 layout(location = 7) out vec2 emissive_coord;
 layout(location = 8) out vec2 lightmap_coord;
-
-
-
 layout(location = 9) out vec2 opacity_coord;
 layout(location = 10) out vec2 normal_coord;
 layout(location = 11) out vec2 diffuse_coord1;
 layout(location = 12) out vec2 ambient_coord1;
 layout(location = 13) out vec2 specular_coord1;
 layout(location = 14) out vec2 emissive_coord1;
-layout(location = 15) out vec2 normal_coord1;
 
 //
 // The Phong vertex shader supports up to 4 sets of texture coordinates.
