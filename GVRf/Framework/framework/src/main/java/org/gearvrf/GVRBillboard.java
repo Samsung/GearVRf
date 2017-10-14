@@ -76,14 +76,16 @@ public class GVRBillboard extends GVRBehavior
     private void faceObjectToCamera()
     {
         GVRSceneObject ownerObject = getOwnerObject();
-
+        GVRTransform ownerTrans = ownerObject.getTransform();
         float camX = mMainCameraRig.getTransform().getPositionX();
         float camY = mMainCameraRig.getTransform().getPositionY();
         float camZ = mMainCameraRig.getTransform().getPositionZ();
-
-        float ownerX = ownerObject.getTransform().getPositionX();
-        float ownerY = ownerObject.getTransform().getPositionY();
-        float ownerZ = ownerObject.getTransform().getPositionZ();
+        float ownerX = ownerTrans.getPositionX();
+        float ownerY = ownerTrans.getPositionY();
+        float ownerZ = ownerTrans.getPositionZ();
+        float scaleX = ownerTrans.getScaleX();
+        float scaleY = ownerTrans.getScaleY();
+        float scaleZ = ownerTrans.getScaleZ();
 
         lookat.set(camX - ownerX, camY - ownerY, camZ - ownerZ);
         lookat = lookat.normalize();
@@ -94,10 +96,11 @@ public class GVRBillboard extends GVRBehavior
         lookat.cross(ownerXaxis.x, ownerXaxis.y, ownerXaxis.z, ownerYaxis);
         ownerYaxis = ownerYaxis.normalize();
 
-        ownerObject.getTransform().setModelMatrix(new float[]{ownerXaxis.x, ownerXaxis.y, ownerXaxis.z, 0.0f,
+        ownerTrans.setModelMatrix(new float[]{ownerXaxis.x, ownerXaxis.y, ownerXaxis.z, 0.0f,
                 ownerYaxis.x, ownerYaxis.y, ownerYaxis.z, 0.0f,
                 lookat.x, lookat.y, lookat.z, 0.0f,
                 ownerX, ownerY, ownerZ, 1.0f});
+        ownerTrans.setScale(scaleX, scaleY, scaleZ);
     }
 
     /**
@@ -108,30 +111,30 @@ public class GVRBillboard extends GVRBehavior
 
     private void faceObjectToCameraWithCustomUp()
     {
-        customUp = customUp.normalize();
         GVRSceneObject ownerObject = getOwnerObject();
-
+        GVRTransform ownerTrans = ownerObject.getTransform();
         float camX = mMainCameraRig.getTransform().getPositionX();
         float camY = mMainCameraRig.getTransform().getPositionY();
         float camZ = mMainCameraRig.getTransform().getPositionZ();
-
-        float ownerX = ownerObject.getTransform().getPositionX();
-        float ownerY = ownerObject.getTransform().getPositionY();
-        float ownerZ = ownerObject.getTransform().getPositionZ();
+        float ownerX = ownerTrans.getPositionX();
+        float ownerY = ownerTrans.getPositionY();
+        float ownerZ = ownerTrans.getPositionZ();
+        float scaleX = ownerTrans.getScaleX();
+        float scaleY = ownerTrans.getScaleY();
+        float scaleZ = ownerTrans.getScaleZ();
 
         lookat.set(camX - ownerX, camY - ownerY, camZ - ownerZ);
         lookat = lookat.normalize();
-
+        customUp = customUp.normalize();
         customUp.cross(lookat.x, lookat.y, lookat.z, ownerXaxis);
         ownerXaxis = ownerXaxis.normalize();
-
         ownerXaxis.cross(customUp.x, customUp.y, customUp.z, ownerZaxis);
 
-        ownerObject.getTransform().setModelMatrix(new float[]{ownerXaxis.x, ownerXaxis.y, ownerXaxis.z, 0.0f,
+        ownerTrans.setModelMatrix(new float[]{ownerXaxis.x, ownerXaxis.y, ownerXaxis.z, 0.0f,
                 customUp.x, customUp.y, customUp.z, 0.0f,
                 ownerZaxis.x, ownerZaxis.y, ownerZaxis.z, 0.0f,
                 ownerX, ownerY, ownerZ, 1.0f});
-
+        ownerTrans.setScale(scaleX, scaleY, scaleZ);
     }
 }
 
