@@ -425,9 +425,14 @@ public class GVRShaderData extends GVRHybridObject
         synchronized (textures)
         {
             GVRTexture tex = textures.get(texName);
+
             if (tex != null)
             {
                 tex.setTexCoord(texCoordAttr, shaderVarName);
+            }
+            else
+            {
+                throw new UnsupportedOperationException("Texture must be set before updating texture coordinate information");
             }
         }
     }
