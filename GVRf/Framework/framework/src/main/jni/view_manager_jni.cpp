@@ -55,15 +55,20 @@ extern "C" {
         RenderTexture *post_effect_render_texture_b =
                 reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
 
+
         renderTarget->cullFromCamera(scene, renderTarget->getCamera(),gRenderer,shader_manager);
-        renderTarget->beginRendering(gRenderer);
+        if(!gRenderer->isVulkanInstance())
+            renderTarget->beginRendering(gRenderer);
         gRenderer->renderRenderTarget(scene, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
-        renderTarget->endRendering(gRenderer);
+        if(!gRenderer->isVulkanInstance())
+            renderTarget->endRendering(gRenderer);
     }
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
                                                            jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview);
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_GVRViewManager_shutdown(JNIEnv *env, jclass clazz);
 } // extern "C"
 
 
@@ -77,6 +82,12 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
             renderTexture->setLayerIndex(eye);
     }
     renderTexture->readRenderResult(readback_buffer);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_GVRViewManager_shutdown(JNIEnv *env, jclass clazz)
+{
+    Renderer::resetInstance();
 }
 
 }

@@ -72,6 +72,7 @@ abstract class GVRViewManager extends GVRContext {
     void onResume() {}
 
     void onDestroy() {
+        shutdown();
         mInputManager.close();
         mScriptManager.destroy();
 
@@ -828,6 +829,7 @@ abstract class GVRViewManager extends GVRContext {
     protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
     protected native void cullAndRender(long render_target, long scene, long shader_manager, long postEffectRenderTextureA, long postEffectRenderTextureB);
     private native static void readRenderResultNative(Object readbackBuffer, long renderTarget, int eye, boolean useMultiview);
+    private native static void shutdown();
 
     private static final String TAG = "GVRViewManager";
 }
