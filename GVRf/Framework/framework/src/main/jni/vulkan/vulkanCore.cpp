@@ -643,8 +643,8 @@ void VulkanCore::InitCommandPools(){
         attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL ;
 
         attachmentDescriptions[1] = {};
         attachmentDescriptions[1].flags = 0;
@@ -654,7 +654,7 @@ void VulkanCore::InitCommandPools(){
         attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         // We have references to the attachment offsets, stating the layout type.
@@ -800,18 +800,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
     }
 
-    VkViewport viewport = {};
-    viewport.height = (float) VIEWPORT_HEIGHT;
-    viewport.width = (float) VIEWPORT_WIDTH;
-    viewport.minDepth = (float) 0.0f;
-    viewport.maxDepth = (float) 1.0f;
-
-    VkRect2D scissor = {};
-    scissor.extent.width = VIEWPORT_WIDTH;
-    scissor.extent.height = VIEWPORT_HEIGHT;
-    scissor.offset.x = 0;
-    scissor.offset.y = 0;
-
 #if  0
     std::vector<uint32_t> result_vert = CompileShader("VulkanVS", VERTEX_SHADER,
                                                           vertexShaderData);//vs;//
@@ -851,8 +839,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
             VK_SAMPLE_COUNT_1_BIT, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
             VK_NULL_HANDLE, VK_NULL_HANDLE);
-    pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
+   /* pipelineCreateInfo.pViewportState = gvr::PipelineViewportStateCreateInfo(1, &viewport, 1,
                                                                              &scissor);
+    */
     pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
                                                                                      rdata->depth_mask() ? VK_TRUE : VK_FALSE,
                                                                                      VK_COMPARE_OP_LESS_OR_EQUAL,
@@ -868,6 +857,20 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     pipelineCreateInfo.pDynamicState = nullptr;
     pipelineCreateInfo.stageCount = 2; //vertex and fragment
+    std::vector<VkDynamicState> dynamic_states = {
+            VK_DYNAMIC_STATE_VIEWPORT,
+            VK_DYNAMIC_STATE_SCISSOR,
+    };
+
+    VkPipelineDynamicStateCreateInfo dynamic_state_create_info = {
+            VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,         // VkStructureType                                sType
+            nullptr,                                                      // const void                                    *pNext
+            0,                                                            // VkPipelineDynamicStateCreateFlags              flags
+            static_cast<uint32_t>(dynamic_states.size()),                 // uint32_t                                       dynamicStateCount
+            &dynamic_states[0]                                            // const VkDynamicState                          *pDynamicStates
+    };
+
+    pipelineCreateInfo.pDynamicState = &dynamic_state_create_info;
     VkPipeline pipeline = 0;
     LOGI("Vulkan graphics call before");
     err = vkCreateGraphicsPipelines(m_device, m_pipelineCache, 1, &pipelineCreateInfo, nullptr,
@@ -916,7 +919,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if(image_type & COLOR_IMAGE && mAttachments[COLOR_IMAGE]== nullptr) {
             vkImageBase *colorImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
-                                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+                                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
             colorImage->createImageView(true);
             mAttachments[COLOR_IMAGE] = colorImage;
@@ -969,6 +972,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkResult err;
         err = vkResetCommandBuffer(cmdBuffer, 0);
         GVR_VK_CHECK(!err);
+
 
         VkCommandBufferInheritanceInfo cmd_buf_hinfo = {};
         cmd_buf_hinfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -1141,11 +1145,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         imageIndex = (imageIndex + 1) % SWAP_CHAIN_COUNT;
         return imageIndex;
     }
+    void VulkanCore::submitCmdBuffer(VkRenderTarget* renderTarget){
 
-    VkRenderTexture* VulkanCore::DrawFrameForRenderData(VkRenderTarget* renderTarget) {
-
-
-        VkFence fence = (renderTarget)->getFenceObject();
+        VkFence fence = reinterpret_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
         vkResetFences(m_device, 1, &fence);
@@ -1163,8 +1165,14 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         err = vkQueueSubmit(m_queue, 1, &submitInfo,fence);
         GVR_VK_CHECK(!err);
-        VkRenderTarget* renderTarget1 = renderTarget ;
 
+    }
+    VkRenderTexture* VulkanCore::getRenderTexture(VkRenderTarget* renderTarget) {
+
+
+        VkFence fence =  reinterpret_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
+        VkRenderTarget* renderTarget1 = renderTarget ;
+        VkResult err;
         err = vkGetFenceStatus(m_device, fence);
 
         bool found = false;
@@ -1173,7 +1181,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if (err != VK_SUCCESS) {
             renderTarget1 = reinterpret_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
             while (renderTarget1!= nullptr && renderTarget1 != renderTarget) {
-                VkFence fence1 = renderTarget1->getFenceObject();
+                VkFence fence1 = reinterpret_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
                 status = vkGetFenceStatus(m_device, fence1);
                 if (VK_SUCCESS == status) {
                     found = true;
@@ -1183,7 +1191,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             }
              if (!found) {
                  renderTarget1 = reinterpret_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
-                 VkFence fence1 = renderTarget1->getFenceObject();
+                 VkFence fence1 = reinterpret_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
                 err = vkWaitForFences(m_device, 1, &fence1 , VK_TRUE,
                                   4294967295U);
              }
@@ -1217,14 +1225,26 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                         4294967295U);
         //GVR_VK_CHECK(!err);
     }
+    void VulkanCore::renderToOculus(RenderTarget* renderTarget){
+        Camera* camera = renderTarget->getCamera();
+        RenderData* post_effects = camera->post_effect_data();
+        int posteffectCount = 0;
+        if(post_effects)
+            posteffectCount = post_effects->pass_count();
 
-    void VulkanCore::RenderToOculus(VkRenderTexture* renderTexture){
+        VkRenderTexture* renderTexture;
+        if(posteffectCount)
+            renderTexture = getPostEffectRenderTexture((posteffectCount - 1)%2);
+        else
+            renderTexture = getRenderTexture(reinterpret_cast<VkRenderTarget*>(renderTarget));
+
         VkCommandBuffer trnCmdBuf;
         createTransientCmdBuffer(trnCmdBuf);
 
         renderTexture->readVkRenderResult(&oculusTexData,trnCmdBuf,waitSCBFences);
 
         vkFreeCommandBuffers(m_device, m_commandPoolTrans, 1, &trnCmdBuf);
+
     }
 
     void VulkanCore::GetDescriptorPool(VkDescriptorPool& descriptorPool){

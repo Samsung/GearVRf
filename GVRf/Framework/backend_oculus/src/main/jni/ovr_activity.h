@@ -82,6 +82,7 @@ namespace gvr {
 
     public:
         void onSurfaceCreated(JNIEnv& env);
+        void copyVulkanTexture(int texSwapChainIndex, int eye);
         void onSurfaceChanged(JNIEnv& env);
     void onDrawFrame(jobject jViewManager);
         int initializeVrApi();

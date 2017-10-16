@@ -90,7 +90,7 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const TextureParameters* texture_parameters, int number_views)
 {
-    return NULL;
+    return new VkRenderTexture(width, height, 1);
 }
 
 Shader* VulkanRenderer::createShader(int id, const char* signature,
@@ -244,17 +244,15 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
                 render_data_list.push_back((*rdata));
         }
     }
-    VkRenderTexture* renderTexture;
     VkRenderTarget* vk_renderTarget = reinterpret_cast<VkRenderTarget*>(renderTarget);
     vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, renderTarget);
-    renderTexture = vulkanCore_->DrawFrameForRenderData(vk_renderTarget);
+    vulkanCore_->submitCmdBuffer(vk_renderTarget);
 
     if(post_effects!= NULL && post_effects->pass_count()) {
         postEffectCount = post_effects->pass_count();
         vulkanCore_->InitPostEffectChain();
     }
 
-    int index = 0;
     // Call Post Effect
     for(int i = 0; i < postEffectCount; i++) {
         RenderPass* rpass = post_effects->pass(i);
@@ -276,13 +274,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
 
         vulkanCore_->BuildCmdBufferForRenderDataPE(camera, post_effects, shader, i);
         vulkanCore_->DrawFrameForRenderDataPE();
-        index = i % 2;
     }
-    if(postEffectCount)
-        renderTexture = vulkanCore_->getPostEffectRenderTexture(index);
-
-
-    vulkanCore_->RenderToOculus(renderTexture);
 }
 
 

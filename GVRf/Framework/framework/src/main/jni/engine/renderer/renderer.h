@@ -26,7 +26,7 @@
 
 #include "glm/glm.hpp"
 #include "batch.h"
-#include "objects/eye_type.h"
+//#include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
 #include "shaders/shader_manager.h"
@@ -55,6 +55,7 @@ class UniformBlock;
 class Image;
 class RenderPass;
 class Texture;
+class RenderTarget;
 extern uint8_t *oculusTexData;
 /*
  * These uniforms are commonly used in shaders.
@@ -91,7 +92,9 @@ struct RenderState {
     bool                    is_multiview;
     Camera*                 camera;
 };
-
+enum EYE{
+    LEFT, RIGHT, MULTIVIEW
+};
 class Renderer {
 public:
     void resetStats() {
@@ -161,7 +164,37 @@ public:
     virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) = 0;
     virtual void updatePostEffectMesh(Mesh*) = 0;
     void addRenderData(RenderData *render_data, RenderState& rstate, std::vector<RenderData*>& renderList);
+    void addRenderTarget(RenderTarget* renderTarget, EYE eye, int index){
+        switch (eye) {
+            case LEFT:
+                mLeftRenderTarget[index] = renderTarget;
+                break;
+            case RIGHT:
+                mRightRenderTarget[index] = renderTarget;
+                break;
+            case MULTIVIEW:
+                mMultiviewRenderTarget[index] = renderTarget;
+                break;
+            default:
+                LOGE("invalid Eye");
+        }
+    }
+    RenderTarget* getRenderTarget(int index, int eye){
+        switch (eye) {
+            case LEFT:
+                return mLeftRenderTarget[index];
+            case RIGHT:
+                return mRightRenderTarget[index];
+            case MULTIVIEW:
+                return mMultiviewRenderTarget[index];
+            default:
+                LOGE("invalid Eye");
+        }
+    }
 private:
+    RenderTarget* mLeftRenderTarget[3];
+    RenderTarget* mRightRenderTarget[3];
+    RenderTarget* mMultiviewRenderTarget[3];
     static bool isVulkan_;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
     virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,

@@ -24,6 +24,7 @@
 #include <shaderc/shaderc.hpp>
 #include <glslang/Include/Common.h>
 #include "vulkan/vulkan_render_data.h"
+#include "vulkan/vk_render_to_texture.h"
 namespace gvr {
 
 VulkanShader::VulkanShader(int id,
@@ -109,7 +110,10 @@ int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDesc
         write.dstSet = descriptorSet;
         write.descriptorCount = 1;
         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        write.pImageInfo = &(tex->getDescriptorImage());
+        if(!t->getImage())
+            write.pImageInfo = &(reinterpret_cast<VkRenderTexture*>(tex)->getDescriptorImage());
+        else
+            write.pImageInfo = &(tex->getDescriptorImage());
         writes.push_back(write);
     });
     if (!fail)
