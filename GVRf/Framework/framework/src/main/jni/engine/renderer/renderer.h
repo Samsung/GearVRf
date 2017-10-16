@@ -122,8 +122,11 @@ public:
      }
      static Renderer* getInstance(std::string type =  " ");
      static void resetInstance(){
-        delete instance;
-         instance = NULL;
+         //@todo fix for vulkan
+         if (!isVulkan_) {
+             delete instance;
+             instance = NULL;
+         }
      }
      virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
      virtual RenderData* createRenderData() = 0;
