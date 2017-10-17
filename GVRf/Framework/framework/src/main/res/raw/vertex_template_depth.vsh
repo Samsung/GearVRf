@@ -2,12 +2,13 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-uniform mat4 shadow_matrix;
-
 #ifdef HAS_MULTIVIEW
 #extension GL_OVR_multiview2 : enable
 layout(num_views = 2) in;
 #endif
+precision highp float;
+
+uniform mat4 shadow_matrix;
 
 @MATRIX_UNIFORMS
 

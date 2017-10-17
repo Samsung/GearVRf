@@ -5,6 +5,7 @@
 #extension GL_OVR_multiview2 : enable
 #endif
 precision highp float;
+precision lowp int;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -17,7 +18,7 @@ layout(location = 0) in vec3 view_direction;
 layout(location = 4) in vec2 diffuse_coord;
 
 #ifdef HAS_SHADOWS
-layout(set = 0, binding = 3) uniform lowp sampler2DArray u_shadow_maps;
+layout(set = 0, binding = 3) uniform highp sampler2DArray u_shadow_maps;
 #endif
 
 struct Radiance

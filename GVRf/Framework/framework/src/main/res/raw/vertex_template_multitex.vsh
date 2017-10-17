@@ -7,6 +7,7 @@
 layout(num_views = 2) in;
 #endif
 precision highp float;
+precision lowp int;
 @MATRIX_UNIFORMS
 
 

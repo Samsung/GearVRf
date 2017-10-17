@@ -8,6 +8,7 @@
 layout(num_views = 2) in;
 #endif
 precision highp float;
+precision lowp int;
 @MATRIX_UNIFORMS
 
 layout(location = 0) in vec3 a_position;

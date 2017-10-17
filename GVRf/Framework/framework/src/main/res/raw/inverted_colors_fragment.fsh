@@ -16,13 +16,14 @@
 #ifdef HAS_MULTIVIEW
 #extension GL_OVR_multiview2 : enable
 #endif
+precision highp float;
 
 #ifdef HAS_MULTIVIEW
-layout ( set = 0, binding = 4 )uniform sampler2DArray u_texture;
+layout ( set = 0, binding = 4 )uniform lowp sampler2DArray u_texture;
 #else
-layout ( set = 0, binding = 4 )uniform sampler2D u_texture;
+layout ( set = 0, binding = 4 )uniform lowp sampler2D u_texture;
 #endif
-precision mediump float;
+
 
 layout ( location = 0 ) in vec2 diffuse_coord;
 layout ( location = 0 ) out vec4 outColor;
