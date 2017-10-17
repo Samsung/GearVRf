@@ -211,8 +211,6 @@ namespace gvr
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-
-        RenderTexture* saveRenderTexture = renderTarget->getTexture();
         std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
 
         if (!rstate.shadow_map)
@@ -248,6 +246,10 @@ namespace gvr
         }
         else
         {
+            static GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT,viewport);
+            GLint drawFboId = 0;
+            glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
             int npost = post_effects->pass_count() - 1;
             RenderTexture* renderTexture = post_effect_render_texture_a;
             RenderTexture* input_texture = renderTexture;
@@ -282,8 +284,8 @@ namespace gvr
                 renderPostEffectData(rstate, input_texture, post_effects, i);
                 input_texture = renderTexture;
             }
-            GL(glBindFramebuffer(GL_FRAMEBUFFER, saveRenderTexture->getFrameBufferId()));
-            GL(glViewport(0, 0, saveRenderTexture->width(), saveRenderTexture->height()));
+            GL(glBindFramebuffer(GL_FRAMEBUFFER, drawFboId));
+            GL(glViewport(viewport[0], viewport[1], viewport[2], viewport[3]));
             GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
             renderPostEffectData(rstate, input_texture, post_effects, npost);
         }
