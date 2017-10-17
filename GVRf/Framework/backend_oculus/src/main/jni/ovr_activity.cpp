@@ -50,7 +50,7 @@ namespace gvr {
     GVRActivity::~GVRActivity() {
         LOGV("GVRActivity::~GVRActivity");
         uninitializeVrApi();
-
+        Renderer::resetInstance();
         envMainThread_->DeleteGlobalRef(activityClass_);
         envMainThread_->DeleteGlobalRef(activity_);
     }
@@ -360,7 +360,7 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
 
     void GVRActivity::leaveVrMode() {
         LOGV("GVRActivity::leaveVrMode");
-        Renderer::resetInstance();
+
         if (nullptr != oculusMobile_) {
             for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
                 frameBuffer_[eye].destroy();
