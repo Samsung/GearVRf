@@ -27,7 +27,7 @@ bool do_batching = false;
 
 namespace gvr {
 
-Renderer* gRenderer = nullptr;
+Renderer* Renderer::gRenderer = nullptr;
 bool use_multiview= false;
 
 void Renderer::initializeStats() {

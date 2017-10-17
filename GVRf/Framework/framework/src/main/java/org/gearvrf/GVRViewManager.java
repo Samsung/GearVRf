@@ -200,7 +200,6 @@ abstract class GVRViewManager extends GVRContext {
         mRenderBundle = makeRenderBundle();
         final DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
         getActivity().getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
-
         final GVRScene scene = null == mMainScene ? new GVRScene(GVRViewManager.this) : mMainScene;
         setMainSceneImpl(scene);
     }
@@ -492,10 +491,7 @@ abstract class GVRViewManager extends GVRContext {
     protected void beforeDrawEyes() {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
-
-        makeShadowMaps(mMainScene.getNative(), mRenderBundle.getMaterialShaderManager().getNative(),
-                mRenderBundle.getPostEffectRenderTextureA().getWidth(),
-                mRenderBundle.getPostEffectRenderTextureA().getHeight());
+        mRenderBundle.getRenderer().makeShadowMaps(mMainScene);
     }
 
     protected void afterDrawEyes() {
@@ -521,10 +517,10 @@ abstract class GVRViewManager extends GVRContext {
 
     void cullAndRender(GVRRenderTarget renderTarget, GVRScene scene)
     {
-        cullAndRender(renderTarget.getNative(), scene.getNative(),
-                mRenderBundle.getMaterialShaderManager().getNative(),
-                mRenderBundle.getPostEffectRenderTextureA().getNative(),
-                mRenderBundle.getPostEffectRenderTextureB().getNative());
+        mRenderBundle.getRenderer().
+                cullAndRender(scene, renderTarget,
+                mRenderBundle.getPostEffectRenderTextureA(),
+                mRenderBundle.getPostEffectRenderTextureB());
     }
 
     @Override
@@ -825,8 +821,6 @@ abstract class GVRViewManager extends GVRContext {
     protected int mReadbackBufferWidth;
     protected int mReadbackBufferHeight;
 
-    protected native void makeShadowMaps(long scene, long shader_manager, int width, int height);
-    protected native void cullAndRender(long render_target, long scene, long shader_manager, long postEffectRenderTextureA, long postEffectRenderTextureB);
     private native static void readRenderResultNative(Object readbackBuffer, long renderTarget, int eye, boolean useMultiview);
 
     private static final String TAG = "GVRViewManager";

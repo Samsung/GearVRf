@@ -82,6 +82,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
             continue;
 
     RenderData* renderdata = batch->get_renderdata();
+    Renderer* r = Renderer::getInstance();
 
     if(renderdata == nullptr)
         continue;
@@ -102,7 +103,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
 
             // this check is needed as we are not removing render data from batches
             if(!it3->owner_object()->isCulled() && it3->enabled() && it3->owner_object()->enabled())
-                    gRenderer->renderRenderData(rstate, it3);
+                    r->renderRenderData(rstate, it3);
             }
             continue;
         }
@@ -115,7 +116,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
         if(!batch->setupMesh(batch->isBatchDirty()))
             continue;
 
-        gRenderer->setRenderStates(renderdata, rstate);
+        r->setRenderStates(renderdata, rstate);
 
         if(use_multiview){
            rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
@@ -125,7 +126,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
         const std::vector<glm::mat4>& matrices = batch->get_matrices();
 
         for(int passIndex =0; passIndex< renderdata->pass_count(); passIndex++){
-            gRenderer->set_face_culling(renderdata->pass(passIndex)->cull_face());
+            r->set_face_culling(renderdata->pass(passIndex)->cull_face());
             rstate.material_override = batch->material(passIndex);
             if(rstate.material_override == nullptr)
                 continue;
@@ -137,7 +138,7 @@ void BatchManager::renderBatches(RenderState& rstate) {
                 render_batch(matrices, renderdata, batch->getIndexCount());
             }
         }
-        gRenderer->restoreRenderStates(renderdata);
+        r->restoreRenderStates(renderdata);
     }
 }
 

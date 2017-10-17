@@ -27,43 +27,6 @@ class Scene;
 
 extern "C" {
 
-    void Java_org_gearvrf_GVRViewManager_makeShadowMaps(JNIEnv *jni, jclass clazz,
-                                                        jlong jscene, jlong jshader_manager,
-                                                        jint width, jint height) {
-        Scene *scene = reinterpret_cast<Scene *>(jscene);
-
-        ShaderManager *shader_manager = reinterpret_cast<ShaderManager *>(jshader_manager);
-        gRenderer = Renderer::getInstance();
-        gRenderer->makeShadowMaps(scene, shader_manager);
-    }
-
-    void Java_org_gearvrf_GVRViewManager_cullAndRender(JNIEnv *jni, jclass clazz,
-                                                      jlong jrenderTarget, jlong jscene,
-                                                      jlong jshader_manager,
-                                                      jlong jpost_effect_shader_manager,
-                                                      jlong jpost_effect_render_texture_a,
-                                                      jlong jpost_effect_render_texture_b)
-    {
-        Scene *scene = reinterpret_cast<Scene *>(jscene);
-        RenderTarget *renderTarget = reinterpret_cast<RenderTarget *>(jrenderTarget);
-        ShaderManager *shader_manager =
-                reinterpret_cast<ShaderManager *>(jshader_manager);
-        PostEffectShaderManager *post_effect_shader_manager =
-                reinterpret_cast<PostEffectShaderManager *>(jpost_effect_shader_manager);
-        RenderTexture *post_effect_render_texture_a =
-                reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_a);
-        RenderTexture *post_effect_render_texture_b =
-                reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
-
-
-        renderTarget->cullFromCamera(scene, renderTarget->getCamera(),gRenderer,shader_manager);
-        if(!gRenderer->isVulkanInstance())
-            renderTarget->beginRendering(gRenderer);
-        gRenderer->renderRenderTarget(scene, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
-        if(!gRenderer->isVulkanInstance())
-            renderTarget->endRendering(gRenderer);
-    }
-
     JNIEXPORT void JNICALL
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
                                                            jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview);

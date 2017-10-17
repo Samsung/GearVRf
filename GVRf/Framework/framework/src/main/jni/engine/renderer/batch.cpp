@@ -180,7 +180,7 @@ void Batch::resetBatch(){
     clearData();
     delete renderdata_;
     renderdata_ = nullptr;
-    gRenderer->freeBatch(this);
+    Renderer::getInstance()->freeBatch(this);
 }
 
 void Batch::meshInit(){

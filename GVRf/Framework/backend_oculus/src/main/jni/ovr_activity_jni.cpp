@@ -33,7 +33,7 @@ namespace gvr {
     }
     JNIEXPORT void JNICALL Java_org_gearvrf_GVRRenderBundle_addRenderTarget(JNIEnv* jni, jclass clazz, jlong jrenderTarget , jint eye, jint index){
         RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
-        gRenderer->addRenderTarget(renderTarget, EYE(eye), index);
+        Renderer::getInstance()->addRenderTarget(renderTarget, EYE(eye), index);
     }
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDestroy(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);

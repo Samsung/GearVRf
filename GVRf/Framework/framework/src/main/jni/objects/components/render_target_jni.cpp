@@ -52,7 +52,7 @@ Java_org_gearvrf_NativeRenderTarget_render(JNIEnv *env, jobject obj, jlong rende
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     // Do not remote this: need it for screenshot capturer, center camera rendering
     target->setCamera(reinterpret_cast<Camera*>(camera));
-    gRenderer->getInstance()->renderRenderTarget(scene, target, reinterpret_cast<ShaderManager*>(shader_manager),
+    Renderer::getInstance()->renderRenderTarget(scene, target, reinterpret_cast<ShaderManager*>(shader_manager),
                                                  reinterpret_cast<RenderTexture*>(posteffectrenderTextureA), reinterpret_cast<RenderTexture*>(posteffectRenderTextureB));
 }
 
@@ -93,13 +93,13 @@ Java_org_gearvrf_NativeRenderTarget_beginRendering(JNIEnv *env, jobject obj, jlo
     RenderTarget* target = reinterpret_cast<RenderTarget*>(ptr);
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     target->setCamera(camera);
-    target->beginRendering(gRenderer->getInstance());
+    target->beginRendering(Renderer::getInstance());
 }
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderTarget_endRendering(JNIEnv *env, jobject obj, jlong ptr){
     RenderTarget* target = reinterpret_cast<RenderTarget*>(ptr);
-    target->endRendering(gRenderer->getInstance());
+    target->endRendering(Renderer::getInstance());
 }
 
 
@@ -110,7 +110,7 @@ Java_org_gearvrf_NativeRenderTarget_cullFromCamera(JNIEnv *env, jobject obj, jlo
     Camera* camera = reinterpret_cast<Camera*>(jcamera);
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     ShaderManager* shaderManager = reinterpret_cast<ShaderManager*> (jshaderManager);
-    target->cullFromCamera(scene, camera,gRenderer->getInstance(), shaderManager);
+    target->cullFromCamera(scene, camera, Renderer::getInstance(), shaderManager);
 }
 
 JNIEXPORT void JNICALL

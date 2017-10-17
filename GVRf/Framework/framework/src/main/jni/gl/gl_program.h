@@ -105,7 +105,7 @@ public:
 
         GLuint program = glCreateProgram();
         if (program) {
-            LOGW("createProgram attaching shaders");
+            LOGW("createProgram %d attaching shaders", program);
             GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
             if (status != GL_FRAMEBUFFER_COMPLETE) {
                 LOGW("createProgram glCheckFramebufferStatus not complete, status %d", status);

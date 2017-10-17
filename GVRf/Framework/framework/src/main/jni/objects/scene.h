@@ -86,19 +86,31 @@ public:
      */
     void bindShaders();
 
-    void resetStats() {
-        gRenderer = Renderer::getInstance();
-        gRenderer->resetStats();
-
-    }
-    int getNumberDrawCalls() {
-        if(nullptr!= gRenderer){
-            return gRenderer->getNumberDrawCalls();
+    void resetStats()
+    {
+        Renderer* r = Renderer::getInstance();
+        if (r)
+        {
+            r->resetStats();
         }
     }
-    int getNumberTriangles() {
-        if(nullptr!= gRenderer) {
-            return gRenderer->getNumberTriangles();
+
+    int getNumberDrawCalls()
+    {
+        Renderer* r = Renderer::getInstance();
+        if (r)
+        {
+            return r->getNumberDrawCalls();
+        }
+    }
+
+    int getNumberTriangles()
+    {
+        Renderer* r = Renderer::getInstance();
+
+        if (r)
+        {
+            return r->getNumberTriangles();
         }
     }
 

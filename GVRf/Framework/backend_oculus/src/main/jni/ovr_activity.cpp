@@ -154,8 +154,6 @@ void GVRActivity::onSurfaceChanged(JNIEnv &env) {
 
         //@todo backend specific fix, generalize; ensures there is a renderer instance after pause/
         //resume
-        gRenderer = Renderer::getInstance();
-
         oculusMobile_ = vrapi_EnterVrMode(&parms);
         if (gearController != nullptr) {
             gearController->setOvrMobile(oculusMobile_);
@@ -213,9 +211,10 @@ void GVRActivity::onSurfaceChanged(JNIEnv &env) {
     }
 }
 void GVRActivity::copyVulkanTexture(int texSwapChainIndex, int eye){
-    RenderTarget* renderTarget = gRenderer->getRenderTarget(texSwapChainIndex, use_multiview ? 2 : eye);
+    Renderer* r = Renderer::getInstance();
+    RenderTarget* renderTarget = r->getRenderTarget(texSwapChainIndex, use_multiview ? 2 : eye);
     if(renderTarget)
-        reinterpret_cast<VulkanRenderer*>(gRenderer)->renderToOculus(renderTarget);
+        reinterpret_cast<VulkanRenderer*>(r)->renderToOculus(renderTarget);
 
     glBindTexture(GL_TEXTURE_2D,vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, texSwapChainIndex));
     glTexSubImage2D(   GL_TEXTURE_2D,
@@ -280,14 +279,15 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         }
 
         // Render the eye images.
+        Renderer* r = Renderer::getInstance();
         for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-            if(!gRenderer->isVulkanInstance()) {
+            if(!r->isVulkanInstance()) {
                 beginRenderingEye(eye);
             }
             oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye, textureSwapChainIndex, use_multiview);
 
-            if(gRenderer->isVulkanInstance()){
+            if(r->isVulkanInstance()){
                 copyVulkanTexture(textureSwapChainIndex,eye);
             }
             else {
@@ -360,7 +360,6 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
 
     void GVRActivity::leaveVrMode() {
         LOGV("GVRActivity::leaveVrMode");
-        Renderer::resetInstance();
         if (nullptr != oculusMobile_) {
             for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
                 frameBuffer_[eye].destroy();

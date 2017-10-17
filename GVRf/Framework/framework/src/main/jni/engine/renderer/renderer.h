@@ -92,10 +92,10 @@ struct RenderState {
     bool                    is_multiview;
     Camera*                 camera;
 };
-enum EYE{
-    LEFT, RIGHT, MULTIVIEW
-};
-class Renderer {
+
+enum EYE { LEFT, RIGHT, MULTIVIEW };
+
+class Renderer : public HybridObject {
 public:
     void resetStats() {
         numberDrawCalls = 0;
@@ -120,16 +120,13 @@ public:
      int incrementDrawCalls(){
         return ++numberDrawCalls;
      }
-     static Renderer* getInstance(std::string type =  " ");
-     static void resetInstance(){
-        delete instance;
-         instance = NULL;
-     }
+     static Renderer* createRenderer();
+     static Renderer* getInstance() { return gRenderer; }
      virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
      virtual RenderData* createRenderData() = 0;
      virtual UniformBlock* createUniformBlock(const char* desc, int, const char* name, int) = 0;
      virtual Image* createImage(int type, int format) = 0;
-        virtual RenderPass* createRenderPass() = 0;
+     virtual RenderPass* createRenderPass() = 0;
      virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
      virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                 int jcolor_format, int jdepth_format, bool resolve_depth,
@@ -196,6 +193,7 @@ private:
     RenderTarget* mRightRenderTarget[3];
     RenderTarget* mMultiviewRenderTarget[3];
     static bool isVulkan_;
+    static Renderer* gRenderer;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
     virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
@@ -206,11 +204,11 @@ private:
     Renderer& operator=(const Renderer& render_engine);
     Renderer& operator=(Renderer&& render_engine);
     BatchManager* batch_manager;
-    static Renderer* instance;
 
 protected:
     Renderer();
     virtual ~Renderer(){
+        gRenderer = NULL;
         if(batch_manager)
             delete batch_manager;
         batch_manager = NULL;
@@ -234,6 +232,5 @@ public:
         return  useStencilBuffer_;
     }
 };
-extern Renderer* gRenderer;
 }
 #endif

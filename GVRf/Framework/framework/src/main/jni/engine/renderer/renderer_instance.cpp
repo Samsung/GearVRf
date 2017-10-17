@@ -24,49 +24,57 @@
 #include <cstring>
 
 namespace gvr {
-Renderer* Renderer::instance = nullptr;
 bool Renderer::isVulkan_ = false;
 
 /***
     We are implementing Vulkan. Enable through system properties.
 ***/
-Renderer* Renderer::getInstance(std::string type){
-    if( nullptr == instance ) {
-        // Debug setting selecting Vulkan renderer:
-        //     setprop debug.gearvrf.vulkan <value>
-        //     <property not present>, <empty>, not recognized, or 0
-        //                            - use setting from gvr.xml (not implemented yet. Select OpenGL ES.)
-        //     1                      - pretend gvr.xml asked for Vulkan (not implemented yet. Select Vulkan.)
-        //     2                      - always use Vulkan.
-        bool useVulkan = false; // TODO: obtain setting from gvr.xml
-        const prop_info *pi = __system_property_find("debug.gearvrf.vulkan");
-        char buffer[PROP_VALUE_MAX];
-        int len = 0;
-        if( pi ) {
-            len = __system_property_read(pi,0,buffer);
-        }
-        if( len ) {
-            if( strcmp(buffer,"1") == 0 || // TODO: "1" should check if Vulkan is supported
-                strcmp(buffer,"2") == 0
-                    ) {
+Renderer* Renderer::createRenderer()
+{
+    if (gRenderer) {
+        LOGE("ERROR: Cannot create more than one renderer");
+        return gRenderer;
+    }
+    // Debug setting selecting Vulkan renderer:
+    //     setprop debug.gearvrf.vulkan <value>
+    //     <property not present>, <empty>, not recognized, or 0
+    //                            - use setting from gvr.xml (not implemented yet. Select OpenGL ES.)
+    //     1                      - pretend gvr.xml asked for Vulkan (not implemented yet. Select Vulkan.)
+    //     2                      - always use Vulkan.
+    bool useVulkan = false; // TODO: obtain setting from gvr.xml
+    const prop_info *pi = __system_property_find("debug.gearvrf.vulkan");
+    char buffer[PROP_VALUE_MAX];
+    int len = 0;
+    if (pi)
+    {
+        len = __system_property_read(pi,0,buffer);
+        if (len)
+        {
+            if (strcmp(buffer, "1") == 0 || // TODO: "1" should check if Vulkan is supported
+                strcmp(buffer, "2") == 0)
+            {
                 useVulkan = true;
-                LOGI("Vulkan renderer: debug.gearvrf.vulkan is \"%s\".", buffer );
-            } else {
-                LOGI("OpenGL ES renderer: debug.gearvrf.vulkan is \"%s\".", buffer );
+                LOGI("Vulkan renderer: debug.gearvrf.vulkan is \"%s\".", buffer);
+            }
+            else
+            {
+                LOGI("OpenGL ES renderer: debug.gearvrf.vulkan is \"%s\".", buffer);
             }
         }
-        if( useVulkan ) {
-            instance = new VulkanRenderer();
-            if(reinterpret_cast<VulkanRenderer*>(instance)->getCore() != NULL)
-                isVulkan_ = true;
-            else
-                LOGE("Vulkan is not supported on your device");
-
-        } else {
-            instance = new GLRenderer();
-        }
     }
-    return instance;
+    if (useVulkan)
+    {
+        VulkanRenderer* r = new VulkanRenderer();
+        if (r->getCore() != NULL)
+        {
+            isVulkan_ = true;
+            gRenderer = r;
+            return r;
+        }
+        LOGE("Vulkan is not supported on your device");
+    }
+    gRenderer = new GLRenderer();
+    return gRenderer;
 }
 
 }

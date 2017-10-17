@@ -15,11 +15,8 @@
 package org.gearvrf;
 
 interface IRenderBundle {
-
+    GVRRenderer getRenderer();
     GVRMaterialShaderManager getMaterialShaderManager();
-
-    GVRPostEffectShaderManager getPostEffectShaderManager();
-
     GVRRenderTexture getPostEffectRenderTextureA();
     GVRRenderTexture getEyeCapturePostEffectRenderTextureA();
     GVRRenderTexture getEyeCapturePostEffectRenderTextureB();
