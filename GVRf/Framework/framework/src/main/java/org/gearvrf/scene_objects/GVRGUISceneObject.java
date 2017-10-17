@@ -63,7 +63,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param gvrContext    current {@link GVRContext}
      * @param gvrView       the {@link GVRView} to be displayed on the GVRGUISceneObject
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, T gvrView) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, T gvrView) {
         this(gvrContext, gvrView, planarMesh(gvrContext, gvrView));
     }
 
@@ -78,7 +78,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param radius        the radius of the circle to use to create the arc
      * @param centralAngle  the central angle of the arc
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius, float centralAngle) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius, float centralAngle) {
         this(gvrContext, gvrView, curvedMesh(gvrContext, gvrView, radius, centralAngle));
     }
 
@@ -92,7 +92,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param gvrView       the {@link GVRView} to be displayed on the GVRGUISceneObject
      * @param radius        the radius of the circle to use to create the arc
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius) {
         this(gvrContext, gvrView, curvedMesh(gvrContext, gvrView, radius, 45f));
     }
 
@@ -103,10 +103,10 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param gvrView       the {@link GVRView} to be displayed on the GVRGUISceneObject
      * @param mesh          the mesh that the {@link GVRView} will be displayed on
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, final T gvrView, GVRMesh mesh) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, final T gvrView, GVRMesh mesh) {
         super(gvrContext, gvrView, mesh);
-        this.frameWidth = gvrView.getView().getWidth();
-        this.frameHeight = gvrView.getView().getHeight();
+        this.frameWidth = gvrView.getWidth();
+        this.frameHeight = gvrView.getHeight();
         this.attachCollider(new GVRMeshCollider(gvrContext, mesh, true));
         this.mainThreadHandler = new Handler(gvrContext.getActivity().getMainLooper()){
             @Override
@@ -129,16 +129,14 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
         pointerProperties = new MotionEvent.PointerProperties[]{properties};
     }
 
-    private static GVRMesh planarMesh(GVRContext gvrContext, GVRView gvrView){
-        View view = gvrView.getView();
+    private static GVRMesh planarMesh(GVRContext gvrContext, View view){
         int w = view.getWidth();
         int h = view.getHeight();
         int largest = w > h ? w : h;
         return gvrContext.createQuad((float)w/largest*1.0f, (float)h/largest*1.0f);
     }
 
-    private static GVRMesh curvedMesh(GVRContext gvrContext, GVRView gvrView, float radius, float centralAngle){
-        View view = gvrView.getView();
+    private static GVRMesh curvedMesh(GVRContext gvrContext, View view, float radius, float centralAngle){
         int w = view.getWidth();
         int h = view.getHeight();
         return GVRMesh.createCurvedMesh(gvrContext, w, h, centralAngle, radius);
