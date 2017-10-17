@@ -43,6 +43,14 @@ public:
         mTexParams = texparams;
         mTexParamsDirty = true;
     }
+    void updateTexParams() {
+        int min_filter = mTexParams.getMinFilter();
+
+        if(mIsCompressed && mLevels <=1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)
+            mTexParams.setMinFilter(GL_LINEAR);
+
+        GLImage::updateTexParams(mTexParams);
+    }
 protected:
     virtual void update(int texid);
 

@@ -37,6 +37,10 @@ public:
         mTexParams = texparams;
         mTexParamsDirty = true;
     }
+    void updateTexParams() {
+        mTexParams.setMinFilter(GL_LINEAR);
+        GLImage::updateTexParams(mTexParams);
+    }
 private:
     GLExternalImage(const GLExternalImage&e);
     GLExternalImage(GLExternalImage&&);

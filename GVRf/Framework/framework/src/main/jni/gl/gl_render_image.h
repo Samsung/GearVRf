@@ -48,7 +48,7 @@ public:
         mTexParams = texparams;
         mTexParamsDirty = true;
     }
-
+    virtual void updateTexParams();
     void setupReadback(GLuint buffer, int);
 
 protected:

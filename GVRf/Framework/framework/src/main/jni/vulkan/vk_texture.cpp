@@ -69,11 +69,10 @@ void VkTexture::createSampler(int maxLod) {
     VkSampler sampler = getSampler(index);
     if(sampler != 0)
         return;
-
-
+    
     // Sets the new MIN FILTER
-    VkFilter min_filter_type_ = MapFilter[mTexParams.getMinFilter()];
-
+    int min_filter = mTexParams.getMinFilter();
+    VkFilter min_filter_type_ = min_filter <= 1 ? MapFilter[min_filter] : VK_FILTER_LINEAR;
     // Sets the MAG FILTER
     VkFilter mag_filter_type_ = MapFilter[mTexParams.getMagFilter()];
 

@@ -20,10 +20,9 @@
 #include <android/bitmap.h>
 #include <gvr_gl.h>
 #include "gl/gl_bitmap_image.h"
-
 namespace gvr {
 
-int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
+int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool mipmap)
 {
     AndroidBitmapInfo info;
     void *pixels;
@@ -65,6 +64,9 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap)
         }
         glTexImage2D(target, 0, internalFormat, info.width, info.height, 0, pixelFormat,
                      dataFormat, pixels);
+        if(mipmap)
+            glGenerateMipmap(target);
+
         AndroidBitmap_unlockPixels(env, bitmap);
         return internalFormat;
     }
@@ -143,7 +145,10 @@ void GLBitmapImage::updateFromBitmap(int texid)
     {
         updateFromBuffer(env, mGLTarget, mBitmap);
     } else {
-        mFormat = updateFromBitmap(env, mGLTarget, mBitmap);
+        bool mipmap = false;
+        if(!mIsCompressed && mTexParams.getMinFilter() >=  TextureParameters::NEAREST_MIPMAP_NEAREST)
+            mipmap = true;
+        mFormat = updateFromBitmap(env, mGLTarget, mBitmap, mipmap);
     }
     checkGLError("GLBitmapImage::updateFromBitmap");
 }

@@ -58,6 +58,7 @@ public:
     virtual int     getId() { return mId; }
     virtual bool    updateGPU();
     void            updateTexParams(const TextureParameters&);
+    virtual void    updateTexParams() = 0;
     GLenum          getTarget() const { return mGLTarget; }
     void            setTexId(GLuint id) { mId = id; }
     void            setTexParamsDirty(bool flag) {mTexParamsDirty = flag; }

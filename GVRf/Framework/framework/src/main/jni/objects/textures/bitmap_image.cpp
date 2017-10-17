@@ -18,8 +18,8 @@
 
 namespace gvr {
 BitmapImage::BitmapImage(int format) :
-            Image(Image::BITMAP, format), mIsCompressed(false),
-            mData(NULL), mBitmap(NULL), mJava(NULL), mHasTransparency(false)
+            Image(Image::BITMAP, format),mData(NULL),
+            mBitmap(NULL), mJava(NULL), mHasTransparency(false)
 {
 }
 

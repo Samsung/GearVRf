@@ -32,7 +32,7 @@ namespace gvr {
                 BitmapImage(format), GLImage(GL_TEXTURE_2D)
         { }
 
-        static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap);
+        static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool);
 
         virtual int getId() { return mId; }
 
@@ -46,7 +46,14 @@ namespace gvr {
             mTexParams = texparams;
             mTexParamsDirty = true;
         }
+        void updateTexParams() {
+            int min_filter = mTexParams.getMinFilter();
 
+            if(mIsCompressed && mLevels <= 1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)
+                mTexParams.setMinFilter(GL_LINEAR);
+
+            GLImage::updateTexParams(mTexParams);
+        }
     protected:
         virtual void update(int texid);
         void updateFromMemory(int texid);
