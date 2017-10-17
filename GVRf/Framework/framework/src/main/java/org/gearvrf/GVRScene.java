@@ -315,7 +315,8 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      *            Flag to indicate whether to enable display of stats.
      */
     public void setStatsEnabled(boolean enabled) {
-        pendingStats = enabled;
+        //@todo posteffect bug
+//        pendingStats = enabled;
     }
 
     void updateStatsEnabled() {
