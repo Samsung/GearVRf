@@ -6,8 +6,10 @@ import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.IPickEvents;
@@ -54,12 +56,14 @@ public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
         try
         {
             controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj");
-            addChildObject(controller);
         }
         catch (IOException ex)
         {
-            Log.e("GVRGearControllerSceneObject", "ERROR: cannot load GearVR controller model gear_vr_controller.obj");
+            Log.e("GearController", "cannot load gear_vr_controller.obj");
+            return;
         }
+        addChildObject(controller);
+        gvrContext.getMainScene().bindShaders(this);
     }
 
     /**

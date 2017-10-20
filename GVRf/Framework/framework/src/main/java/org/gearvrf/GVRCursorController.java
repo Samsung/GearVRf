@@ -226,7 +226,9 @@ public abstract class GVRCursorController {
      * one.
      */
     public void resetSceneObject() {
-        setSceneObject(null);
+        synchronized (sceneObjectLock) {
+            sceneObject = null;
+        }
     }
 
     /**
