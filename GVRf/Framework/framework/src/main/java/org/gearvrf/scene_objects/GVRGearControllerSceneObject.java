@@ -23,6 +23,7 @@ import org.joml.Vector3f;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * A {@link GVRSceneObject} that respresents a GearVR controller in the scene.
@@ -53,11 +54,21 @@ public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
         super(gvrContext);
         setName("gear_vr_controller_group");
         ray.getTransform().reset();
-        GVRSceneObject controller = new GVRSceneObject(gvrContext);
+        try
+        {
+            controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj");
+        }
+        catch (IOException ex)
+        {
+            Log.e("GearController", "cannot load gear_vr_controller.obj");
+        }
+        List<GVRRenderData> rdatas = controller.getAllComponents(GVRRenderData.getComponentType());
+        for (GVRRenderData rd : rdatas)
+        {
+            rd.disableLight();
+        }
+        gvrContext.getMainScene().bindShaders(controller);
         addChildObject(controller);
-        gvrContext.getAssetLoader().loadModel(controller,
-                                              new GVRResourceVolume(gvrContext, "gear_vr_controller.obj"),
-                                              gvrContext.getMainScene());
     }
 
     /**
