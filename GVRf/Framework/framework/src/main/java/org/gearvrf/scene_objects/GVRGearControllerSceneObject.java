@@ -53,17 +53,11 @@ public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
         super(gvrContext);
         setName("gear_vr_controller_group");
         ray.getTransform().reset();
-        try
-        {
-            controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj");
-        }
-        catch (IOException ex)
-        {
-            Log.e("GearController", "cannot load gear_vr_controller.obj");
-            return;
-        }
+        GVRSceneObject controller = new GVRSceneObject(gvrContext);
         addChildObject(controller);
-        gvrContext.getMainScene().bindShaders(this);
+        gvrContext.getAssetLoader().loadModel(controller,
+                                              new GVRResourceVolume(gvrContext, "gear_vr_controller.obj"),
+                                              gvrContext.getMainScene());
     }
 
     /**
