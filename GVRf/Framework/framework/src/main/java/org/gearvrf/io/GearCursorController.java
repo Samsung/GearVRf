@@ -435,7 +435,8 @@ public final class GearCursorController extends GVRCursorController
 
         public void setEnabled(boolean enable) {
             handler.removeMessages(MSG_SET_ENABLE);
-            Message msg = Message.obtain(handler, MSG_SET_ENABLE, enable ? ENABLE : DISABLE);
+            Message msg = Message.obtain(handler, MSG_SET_ENABLE);
+            msg.arg1 = enable ? ENABLE : DISABLE;
             msg.sendToTarget();
         }
 

@@ -429,24 +429,19 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
         doPick();
     }
 
-    protected void generatePickEvents(GVRPickedObject[] picked)
-    {
+    protected void generatePickEvents(GVRPickedObject[] picked) {
         /*
          * Send "onExit" events for colliders that were picked but
          * are not picked anymore.
          */
-        if (mPicked != null)
-        {
-            for (GVRPickedObject collision : mPicked)
-            {
-                if (collision == null)
-                {
+        if (mPicked != null) {
+            for (GVRPickedObject collision : mPicked) {
+                if (collision == null) {
                     continue;
                 }
                 GVRCollider collider = collision.hitCollider;
                 GVRPickedObject temp = findCollider(picked, collider);
-                if (temp == null)
-                {
+                if (temp == null) {
                     collision.touched = mTouched;
                     collision.motionEvent = mMotionEvent;
                     propagateOnExit(collider.getOwnerObject(), collision);
@@ -462,10 +457,8 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
          * Send "onTouchEnd" events for colliders that are no longer touched.
          * Send "onInside" events for colliders that were already picked.
          */
-        for (GVRPickedObject collision : picked)
-        {
-            if (collision == null)
-            {
+        for (GVRPickedObject collision : picked) {
+            if (collision == null) {
                 continue;
             }
             pickedCount++;
@@ -475,37 +468,35 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
             collision.picker = this;
             collision.touched = mTouched;
             collision.motionEvent = mMotionEvent;
-            if (prevHit == null)
-            {
+            if (prevHit == null) {
                 propagateOnEnter(collision);
-                if (mTouched)
-                {
+                if (mTouched) {
                     propagateOnTouch(collision);
                 }
-            }
-            else
-            {
+            } else {
                 propagateOnInside(collision);
-                if (prevHit.touched && !mTouched)
-                {
+                if (prevHit.touched && !mTouched) {
                     propagateOnNoTouch(collision);
-                }
-                else if (!prevHit.touched && mTouched)
-                {
+                } else if (!prevHit.touched && mTouched) {
                     propagateOnTouch(collision);
                 }
             }
         }
-            if (pickedCount > 0)
-            {
-                mPicked = picked;
-                propagateOnPick(this);
-            }
-            else
-            {
-                mPicked = null;
-                propagateOnNoPick(this);
+        if (pickedCount > 0) {
+            mPicked = picked;
+            propagateOnPick(this);
+        } else {
+            mPicked = null;
+            propagateOnNoPick(this);
         }
+    }
+
+    //@todo anything that sets nativePointer to 0 needs this otherwise GVRHybridObject's hashCode
+    //method breaks; this should go to GVRBehavior but I rather make this change gradually;  i am
+    //very much against mutable nativePointers and using the magic value of 0 btw.
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
     }
 
     /**

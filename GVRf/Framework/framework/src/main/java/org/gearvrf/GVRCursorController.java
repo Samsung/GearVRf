@@ -15,7 +15,6 @@
 
 package org.gearvrf;
 
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
