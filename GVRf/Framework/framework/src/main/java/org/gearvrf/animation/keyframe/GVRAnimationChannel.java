@@ -21,7 +21,7 @@ import org.joml.Vector3f;
  */
 public final class GVRAnimationChannel implements PrettyPrint {
     private static final String TAG = GVRAnimationChannel.class.getSimpleName();
-    protected static interface ValueInterpolator<T> {
+    protected interface ValueInterpolator<T> {
         T interpolate(T begin, T end, float factor);
     }
 
@@ -37,13 +37,13 @@ public final class GVRAnimationChannel implements PrettyPrint {
         }
     };
 
-    protected class KeyFrameInterplator<T> {
+    protected static final class KeyFrameInterpolator<T> {
         GVRKeyFrame<T>[] keys;
         ValueInterpolator<T> interpolator;
 
         private int lastKeyIndex;
 
-        KeyFrameInterplator(GVRKeyFrame<T>[] keys, ValueInterpolator<T> interpolator) {
+        KeyFrameInterpolator(GVRKeyFrame<T>[] keys, ValueInterpolator<T> interpolator) {
             this.keys = keys;
             this.interpolator = interpolator;
             lastKeyIndex = -1;
@@ -125,7 +125,6 @@ public final class GVRAnimationChannel implements PrettyPrint {
                 return lastKeyIndex = low + 1;
             }
 
-            Log.v(TAG, "Warning: interpolation failed at time " + time);
             return lastKeyIndex = -1;
         }
     }
@@ -150,9 +149,9 @@ public final class GVRAnimationChannel implements PrettyPrint {
         mPreState = preBehavior;
         mPostState = postBehavior;
 
-        mPositionInterpolator = new KeyFrameInterplator<Vector3f>(mPositionKeys, sInterpolatorVector3f);
-        mRotationInterpolator = new KeyFrameInterplator<Quaternionf>(mRotationKeys, sInterpolatorQuaternion);
-        mScaleInterpolator = new KeyFrameInterplator<Vector3f>(mScaleKeys, sInterpolatorVector3f);
+        mPositionInterpolator = new KeyFrameInterpolator<Vector3f>(mPositionKeys, sInterpolatorVector3f);
+        mRotationInterpolator = new KeyFrameInterpolator<Quaternionf>(mRotationKeys, sInterpolatorQuaternion);
+        mScaleInterpolator = new KeyFrameInterpolator<Vector3f>(mScaleKeys, sInterpolatorVector3f);
 
         mCurrentTransform = new Matrix4f();
     }
@@ -387,9 +386,9 @@ public final class GVRAnimationChannel implements PrettyPrint {
     private final GVRRotationKey[] mRotationKeys;
     private final GVRScaleKey[] mScaleKeys;
 
-    private final KeyFrameInterplator<Vector3f> mPositionInterpolator;
-    private final KeyFrameInterplator<Quaternionf> mRotationInterpolator;
-    private final KeyFrameInterplator<Vector3f> mScaleInterpolator;
+    private final KeyFrameInterpolator<Vector3f> mPositionInterpolator;
+    private final KeyFrameInterpolator<Quaternionf> mRotationInterpolator;
+    private final KeyFrameInterpolator<Vector3f> mScaleInterpolator;
 
     protected Matrix4f mCurrentTransform;
 

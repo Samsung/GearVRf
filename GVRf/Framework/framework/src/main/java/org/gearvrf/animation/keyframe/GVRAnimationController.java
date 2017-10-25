@@ -24,7 +24,7 @@ public abstract class GVRAnimationController {
         }
         timeInTicks = timeInSeconds * ticksPerSecond;
 
-        float animationTick = timeInTicks % (animation.mDurationTicks + TOL); // auto-repeat
+        float animationTick = timeInTicks;
         animateImpl(animationTick);
     }
 
