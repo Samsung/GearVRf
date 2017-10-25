@@ -956,8 +956,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *         {@link GVRSceneObject}s hierarchical bounding volume,
      *         <code>false</code> otherwise.
      */
-    boolean intersectsBoundingVolume(float ox, float oy, float oz, float dx,
-                                     float dy, float dz) {
+    public boolean intersectsBoundingVolume(float ox, float oy, float oz, float dx,
+                                            float dy, float dz) {
         return NativeSceneObject.rayIntersectsBoundingVolume(getNative(), ox, oy,
                 oz, dx, dy, dz);
     }
