@@ -34,7 +34,7 @@ public:
                     1.0f) {
     }
 
-    ~OrthogonalCamera() {
+    virtual ~OrthogonalCamera() {
     }
 
     float left_clipping_distance() const {

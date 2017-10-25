@@ -57,6 +57,8 @@ public:
     {
     }
 
+    virtual ~Light() {}
+
     static long long getComponentType() {
         return COMPONENT_TYPE_LIGHT;
     }

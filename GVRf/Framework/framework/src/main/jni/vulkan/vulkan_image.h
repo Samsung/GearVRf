@@ -29,6 +29,8 @@ namespace gvr
 
         VulkanImage(ImageType type, int format, short width, short height);
 
+        virtual ~VulkanImage() {}
+
         virtual bool isReady()
         {
             return checkForUpdate(true);

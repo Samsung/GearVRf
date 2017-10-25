@@ -40,6 +40,9 @@ namespace gvr
         {
             copy(rdata);
         }
+
+        virtual ~GLRenderData() {}
+
         virtual void render(Shader*, Renderer*);
 
     private:

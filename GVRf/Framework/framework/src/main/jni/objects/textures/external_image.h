@@ -15,6 +15,7 @@ class ExternalImage : public Image
 public:
     ExternalImage() : Image(Image::ImageType::NONE, 0), mData(0)
     { }
+    virtual ~ExternalImage() {}
 
     virtual void setData(long data)
     {

@@ -33,7 +33,7 @@ public:
                     default_aspect_ratio_) {
     }
 
-    ~PerspectiveCamera() {
+    virtual ~PerspectiveCamera() {
     }
 
     static float default_aspect_ratio() {

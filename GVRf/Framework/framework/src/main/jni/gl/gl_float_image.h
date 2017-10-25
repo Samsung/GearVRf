@@ -29,6 +29,7 @@ namespace gvr {
     public:
         GLFloatImage() : FloatImage(), GLImage(GL_TEXTURE_2D)
         { }
+        virtual ~GLFloatImage() {}
         virtual int getId() { return mId; }
         virtual bool isReady()
         {

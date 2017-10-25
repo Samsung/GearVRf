@@ -23,7 +23,7 @@ public:
     }
     explicit GLRenderTarget(RenderTexture* renderTexture, const RenderTarget* source): RenderTarget(renderTexture, source){}
     explicit  GLRenderTarget(){}
-    ~GLRenderTarget(){}
+    virtual ~GLRenderTarget(){}
     virtual void beginRendering(Renderer *renderer);
 };
 }

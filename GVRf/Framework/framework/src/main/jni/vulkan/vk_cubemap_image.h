@@ -25,6 +25,7 @@ namespace gvr {
     {
     public:
         VkCubemapImage(int format);
+        virtual ~VkCubemapImage() {}
         virtual int getId() { return 1; }
         virtual void texParamsChanged(const TextureParameters&) { }
 

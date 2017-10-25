@@ -41,6 +41,9 @@ namespace gvr {
             mTexParams.setMinFilter(GL_LINEAR); // if created with external texture
             mState = HAS_DATA;
         }
+
+        virtual ~GLImageTex() {}
+
         void updateTexParams() {
             int min_filter = mTexParams.getMinFilter();
             if(mIsCompressed && mLevels <= 1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)

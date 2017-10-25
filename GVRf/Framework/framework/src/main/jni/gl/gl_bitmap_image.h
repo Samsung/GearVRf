@@ -32,6 +32,8 @@ namespace gvr {
                 BitmapImage(format), GLImage(GL_TEXTURE_2D)
         { }
 
+        virtual ~GLBitmapImage() {}
+
         static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool);
 
         virtual int getId() { return mId; }

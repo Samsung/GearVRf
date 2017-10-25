@@ -34,7 +34,7 @@ public:
     MeshCollider(Mesh* mesh = NULL);
     MeshCollider(Mesh* mesh, bool pickCoordinates);
     MeshCollider(bool useMeshBounds);
-    ~MeshCollider();
+    virtual ~MeshCollider();
 
     long shape_type() {
         return COLLIDER_SHAPE_MESH;

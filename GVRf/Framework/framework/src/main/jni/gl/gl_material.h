@@ -39,6 +39,8 @@ namespace gvr
             uniforms_.useGPUBuffer(false);
         }
 
+        virtual ~GLMaterial() {}
+
         virtual UniformBlock& uniforms()
         {
             return uniforms_;

@@ -27,6 +27,7 @@ class GLExternalImage: public GLImage, public ExternalImage
 public:
     GLExternalImage() : GLImage(GL_TEXTURE_EXTERNAL_OES)
     { }
+    virtual ~GLExternalImage() {}
     virtual int getId() { return mId; }
     virtual bool isReady()
     {

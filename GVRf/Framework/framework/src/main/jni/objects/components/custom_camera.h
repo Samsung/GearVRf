@@ -31,6 +31,8 @@ public:
             Camera(), projection_matrix_() {
     }
 
+    virtual ~CustomCamera() {}
+
     glm::mat4 projection_matrix() {
         return projection_matrix_;
     }

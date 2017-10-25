@@ -24,6 +24,7 @@ namespace gvr {
     {
     public:
         VkBitmapImage(int format);
+        virtual ~VkBitmapImage() {}
         virtual int getId() { return 1; }
         int updateFromBitmap(JNIEnv *env, VkImageViewType target, jobject bitmap);
         virtual void texParamsChanged(const TextureParameters&) { }

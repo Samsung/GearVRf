@@ -38,6 +38,7 @@ public:
     };
 
     RenderPass();
+    virtual ~RenderPass() {}
 
     ShaderData* material() const {
         return material_;

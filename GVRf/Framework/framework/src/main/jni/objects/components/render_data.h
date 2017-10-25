@@ -130,7 +130,7 @@ public:
         copy(rdata);
     }
 
-    ~RenderData();
+    virtual ~RenderData();
 
     static long long getComponentType() {
         return COMPONENT_TYPE_RENDER_DATA;

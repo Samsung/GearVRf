@@ -44,7 +44,7 @@ public:
             latest_shader_id_(0)
     { }
 
-    ~ShaderManager();
+    virtual ~ShaderManager();
 
 /*
  * Add a native shader to this shader manager.

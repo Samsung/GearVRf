@@ -36,6 +36,7 @@ public:
     explicit GLRenderImage(int width, int height, int layers, GLuint texId, bool marktexParamsDirty);
     explicit GLRenderImage(int width, int height, int color_format, const TextureParameters* texture_parameters);
     explicit GLRenderImage(int width, int height, int color_format, int layers, const TextureParameters* texture_parameters);
+    virtual ~GLRenderImage() {}
     virtual int getId() { return mId; }
 
     virtual bool isReady()

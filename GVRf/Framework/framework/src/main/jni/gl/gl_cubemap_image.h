@@ -33,6 +33,7 @@ public:
             : GLImage(GL_TEXTURE_CUBE_MAP),
               CubemapImage(format)
     { }
+    virtual ~GLCubemapImage() {}
     virtual int getId() { return mId; }
     virtual bool isReady()
     {

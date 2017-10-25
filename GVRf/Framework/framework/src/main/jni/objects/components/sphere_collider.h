@@ -34,7 +34,7 @@ public:
         center_(0, 0, 0),
         radius_(0) { }
 
-    ~SphereCollider() { }
+    virtual ~SphereCollider() { }
 
     long shape_type() {
         return COLLIDER_SHAPE_SPHERE;

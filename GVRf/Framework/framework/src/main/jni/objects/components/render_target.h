@@ -45,7 +45,7 @@ public:
     RenderTarget(Scene*);
     RenderTarget(RenderTexture*, const RenderTarget* source);
     RenderTarget();
-    ~RenderTarget();
+    virtual ~RenderTarget();
     void attachNextRenderTarget(RenderTarget* renderTarget){
         mNextRenderTarget = renderTarget;
     }

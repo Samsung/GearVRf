@@ -30,6 +30,8 @@ namespace gvr {
         VkFloatImage() : FloatImage(), vkImageBase(VK_IMAGE_VIEW_TYPE_2D)
         { }
 
+        virtual ~VkFloatImage() {}
+
         virtual int getId() { return 0; }
         virtual void texParamsChanged(const TextureParameters&) { }
         virtual bool isReady()

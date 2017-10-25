@@ -40,7 +40,7 @@ class CameraRig;
 class SceneObject: public HybridObject {
 public:
     SceneObject();
-    ~SceneObject();
+    virtual ~SceneObject();
 
     std::string name() const {
         return name_;

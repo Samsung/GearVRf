@@ -44,6 +44,7 @@ class Mesh: public HybridObject {
 public:
     Mesh(const char* descriptor);
     Mesh(VertexBuffer& vbuf);
+    virtual ~Mesh() {}
 
     VertexBuffer* getVertexBuffer() const { return mVertices; }
     IndexBuffer* getIndexBuffer() const { return mIndices; }

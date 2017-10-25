@@ -34,7 +34,7 @@ namespace gvr {
 class ColliderGroup: public Collider {
 public:
     ColliderGroup();
-    ~ColliderGroup();
+    virtual ~ColliderGroup();
 
     void addCollider(Collider* collider);
     void removeCollider(Collider* collider);
