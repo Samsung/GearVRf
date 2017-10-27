@@ -38,7 +38,7 @@ inline Component::Component(long long type, SceneObject* owner_object) :
 }
 
 inline Component::~Component() {
-    set_owner_object(NULL);
+    owner_object_ = nullptr;
 }
 
 inline SceneObject *Component::owner_object() const {
