@@ -44,7 +44,7 @@ public:
     RenderTarget(RenderTexture*);
     RenderTarget(int width, int height, GLTexture* tex);
     RenderTarget();
-    ~RenderTarget();
+    virtual ~RenderTarget();
 
     void            setCamera(Camera* cam) { mCamera = cam; }
     Camera*         getCamera() const { return mCamera; }

@@ -25,10 +25,8 @@ ShadowMap::ShadowMap(Material* mtl)
 
 ShadowMap::~ShadowMap()
 {
-    if (mLayerIndex > 0)
-    {
-        mRenderTexture = nullptr;
-    }
+    //@todo somebody else owns the render texture..
+    mRenderTexture = nullptr;
 }
 
 void ShadowMap::setLayerIndex(int layerIndex)
