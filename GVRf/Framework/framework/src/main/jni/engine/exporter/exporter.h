@@ -23,12 +23,8 @@
 #include "objects/scene.h"
 
 namespace gvr {
-class Exporter {
-private:
-    Exporter() = delete;
-
-public:
-    static int writeToFile(Scene *scene, const std::string filename);
-};
+    namespace Exporter {
+        int writeToFile(Scene *scene, const std::string filename);
+    };
 }
 #endif

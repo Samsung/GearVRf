@@ -32,12 +32,6 @@
 
 namespace gvr {
 
-Picker::Picker() {
-}
-
-Picker::~Picker() {
-}
-
 /*
  * Intersects all the colliders in the scene with the input ray
  * and returns the list of collisions.

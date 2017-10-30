@@ -25,53 +25,48 @@
 
 namespace gvr {
 
-typedef void (*PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
-typedef void (*PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
-typedef void (GL_APIENTRYP PFNGLRENDERBUFFERSTORAGEMULTISAMPLE)(GLenum target,
-        GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+    using PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG = void (*) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+    using PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG = void (*) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
+    using PFNGLRENDERBUFFERSTORAGEMULTISAMPLE = void (GL_APIENTRYP)(GLenum target,
+                                                                    GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 
-class MSAA {
-private:
-    MSAA() = delete;
+    namespace MSAA {
+        static int getMaxSampleCount() {
+            GLint max_sample_count;
+            const int MAX_SAMPLES_EXT = 0x8D57;
+            glGetIntegerv(MAX_SAMPLES_EXT, &max_sample_count);
+            return max_sample_count;
+        }
 
-public:
-    static int getMaxSampleCount() {
-        GLint max_sample_count;
-        const int MAX_SAMPLES_EXT = 0x8D57;
-        glGetIntegerv(MAX_SAMPLES_EXT, &max_sample_count);
-        return max_sample_count;
+        static void glRenderbufferStorageMultisampleIMG(GLenum target, GLsizei samples,
+                GLenum internalformat, GLsizei width, GLsizei height) {
+            PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG pGlRenderbufferStorageMultisampleIMG =
+                    reinterpret_cast<PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG>(eglGetProcAddress(
+                            "glRenderbufferStorageMultisampleEXT"));
+            pGlRenderbufferStorageMultisampleIMG(target, samples, internalformat,
+                                                 width, height);
+        }
+
+        static void glRenderbufferStorageMultisample(GLenum target,
+                GLsizei samples, GLenum internalformat, GLsizei width,
+                GLsizei height) {
+            PFNGLRENDERBUFFERSTORAGEMULTISAMPLE pGlRenderBufferStorageMultisample =
+                    reinterpret_cast<PFNGLRENDERBUFFERSTORAGEMULTISAMPLE>(eglGetProcAddress(
+                            "glRenderbufferStorageMultisample"));
+            pGlRenderBufferStorageMultisample(target, samples, internalformat, width,
+                                              height);
+        }
+
+        static void glFramebufferTexture2DMultisample(GLenum target,
+                GLenum attachment, GLenum textarget, GLuint texture, GLint level,
+                GLsizei samples) {
+            PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG pGlFramebufferTexture2DMultisampleIMG =
+                    reinterpret_cast<PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG>(eglGetProcAddress(
+                            "glFramebufferTexture2DMultisampleEXT"));
+            pGlFramebufferTexture2DMultisampleIMG(target, attachment, textarget,
+                                                  texture, level, samples);
+        }
     }
-
-    static void glRenderbufferStorageMultisampleIMG(GLenum target, GLsizei samples,
-            GLenum internalformat, GLsizei width, GLsizei height) {
-        PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG glRenderbufferStorageMultisampleIMG =
-                reinterpret_cast<PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG>(eglGetProcAddress(
-                        "glRenderbufferStorageMultisampleEXT"));
-        glRenderbufferStorageMultisampleIMG(target, samples, internalformat,
-                width, height);
-    }
-
-    static void glRenderbufferStorageMultisample(GLenum target,
-            GLsizei samples, GLenum internalformat, GLsizei width,
-            GLsizei height) {
-        PFNGLRENDERBUFFERSTORAGEMULTISAMPLE glRenderBufferStorageMultisample =
-                reinterpret_cast<PFNGLRENDERBUFFERSTORAGEMULTISAMPLE>(eglGetProcAddress(
-                        "glRenderbufferStorageMultisample"));
-        glRenderBufferStorageMultisample(target, samples, internalformat, width,
-                height);
-    }
-
-    static void glFramebufferTexture2DMultisample(GLenum target,
-            GLenum attachment, GLenum textarget, GLuint texture, GLint level,
-            GLsizei samples) {
-        PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG glFramebufferTexture2DMultisampleIMG =
-                reinterpret_cast<PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG>(eglGetProcAddress(
-                        "glFramebufferTexture2DMultisampleEXT"));
-        glFramebufferTexture2DMultisampleIMG(target, attachment, textarget,
-                texture, level, samples);
-    }
-};
-
 }
 
 #endif
