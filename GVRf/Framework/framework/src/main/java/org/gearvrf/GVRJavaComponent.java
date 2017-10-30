@@ -17,8 +17,6 @@ package org.gearvrf;
 
 import java.util.List;
 
-import org.gearvrf.utility.Exceptions;
-
 /**
  * Base class for defining Java components to extend the scene object.
  *
@@ -29,7 +27,7 @@ import org.gearvrf.utility.Exceptions;
  * during rendering.
 
  */
-public class GVRJavaComponent extends GVRComponent {
+class GVRJavaComponent extends GVRComponent {
     /**
      * Constructor for a component that is not attached to a scene object.
      *
@@ -38,7 +36,7 @@ public class GVRJavaComponent extends GVRComponent {
      */
     protected GVRJavaComponent(GVRContext gvrContext, long nativePointer) {
         super(gvrContext, nativePointer);
-        NativeJavaComponent.setJava(nativePointer, this);
+        setJava(nativePointer);
     }
 
     /**
@@ -61,13 +59,12 @@ public class GVRJavaComponent extends GVRComponent {
      * whose keys are descendant lists and whose values are unique
      * concatenated lists - see {@link GVRCollider} for an example.
      */
+    @SuppressWarnings("unused")
     protected GVRJavaComponent(GVRContext gvrContext, long nativePointer,
-                           List<NativeCleanupHandler> cleanupHandlers) {
+                               List<NativeCleanupHandler> cleanupHandlers) {
         super(gvrContext, nativePointer, cleanupHandlers);
-        NativeJavaComponent.setJava(nativePointer, this);
+        setJava(nativePointer);
     }
-}
 
-class NativeJavaComponent {
-    static native void setJava(long component, Object javaObj);
+    native void setJava(long component);
 }

@@ -48,7 +48,7 @@ class ShadowMap;
 
 //#define DEBUG_LIGHT 1
 
-class Light: public JavaComponent {
+class Light final : public JavaComponent {
 public:
 
     explicit Light()
@@ -67,7 +67,6 @@ public:
         enabled_ = enable;
         setDirty();
     }
-    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
     float getFloat(std::string key) {
         auto it = floats_.find(key);

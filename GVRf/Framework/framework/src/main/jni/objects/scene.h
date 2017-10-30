@@ -180,7 +180,10 @@ public:
 
     JavaVM* getJavaVM() const { return javaVM_; }
 
-    jobject getJavaObj() const  { return javaObj_; }
+    /**
+     * @return new local reference to the java object or nullptr if the object has been collected
+     */
+    jobject getJavaObj(JNIEnv& env) const { env.NewLocalRef(javaObj_); }
 
     int get_java_env(JNIEnv** envptr);
 
@@ -190,12 +193,15 @@ public:
 
     static void set_main_scene(Scene* scene);
 
+    void detach_java_env() {
+        javaVM_->DetachCurrentThread();
+    }
+
 private:
     Scene(const Scene& scene) = delete;
     Scene(Scene&& scene) = delete;
     Scene& operator=(const Scene& scene) = delete;
     Scene& operator=(Scene&& scene) = delete;
-    void gatherColliders();
     void clearAllColliders();
 
 

@@ -236,8 +236,10 @@ JNIEXPORT jobjectArray JNICALL
     int i = 0;
     for (auto it = lights.begin(); it != lights.end(); ++it)
     {
-        jobject obj = (*it)->get_java();
-        env->SetObjectArrayElement(jlights, i++, obj);
+        jobject obj = (*it)->get_java(env);
+        if (nullptr != obj) {
+            env->SetObjectArrayElement(jlights, i++, obj);
+        }
     }
     env->DeleteLocalRef(elemClass);
     return jlights;

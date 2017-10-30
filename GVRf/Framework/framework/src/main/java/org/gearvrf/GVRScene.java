@@ -457,22 +457,10 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * have been added or removed. Will possibly regenerate
      * all shaders which use light sources.
      */
+    @SuppressWarnings("unused") //called from native
     void bindShadersNative()
     {
         bindShaders(getRoot());
-        /*
-        if (sBindShadersFromNative == null)
-        {
-            sBindShadersFromNative = new Runnable()
-            {
-                public void run()
-                {
-                    bindShaders(getRoot());
-                }
-            };
-        }
-        getGVRContext().runOnTheFrameworkThread(sBindShadersFromNative);
-        */
     }
 
     /**

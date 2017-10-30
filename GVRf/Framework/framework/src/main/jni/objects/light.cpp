@@ -133,11 +133,6 @@ namespace gvr {
         }
     }
 
-    JNIEnv* Light::set_java(jobject javaObj, JavaVM *javaVM)
-    {
-        JNIEnv *env = JavaComponent::set_java(javaObj, javaVM);
-    }
-
     void Light::onAddedToScene(Scene *scene)
     {
         scene->addLight(this);

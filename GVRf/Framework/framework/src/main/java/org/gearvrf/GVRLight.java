@@ -14,10 +14,7 @@
  */
 package org.gearvrf;
 
-import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.utility.TextFile;
-
-public class GVRLight extends GVRPointLight 
+public class GVRLight extends GVRPointLight
 {
     public GVRLight (GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext, owner);

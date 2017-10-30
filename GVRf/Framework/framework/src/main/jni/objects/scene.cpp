@@ -46,9 +46,10 @@ Scene::~Scene() {
     if (javaVM_ && javaObj_)
     {
         JNIEnv* env;
+        //@todo strictly speaking if you attach you must detach
         jint rs = javaVM_->AttachCurrentThread(&env, NULL);
         if (rs == JNI_OK) {
-            env->DeleteGlobalRef(javaObj_);
+            env->DeleteWeakGlobalRef(javaObj_);
         }
     }
 }
@@ -59,7 +60,7 @@ void Scene::set_java(JavaVM* javaVM, jobject javaScene)
     javaVM_ = javaVM;
     if (env)
     {
-        javaObj_ = env->NewGlobalRef(javaScene);
+        javaObj_ = env->NewWeakGlobalRef(javaScene);
         jclass sceneClass = env->GetObjectClass(javaScene);
         bindShadersMethod_ = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
         if (bindShadersMethod_ == 0)
@@ -79,12 +80,11 @@ int Scene::get_java_env(JNIEnv** envptr)
         {
             return 1;
         }
-        LOGE("SHADER: RenderData::bindShader Could not attach to Java VM");
-        return -1;
+        FAIL("SHADER: RenderData::bindShader Could not attach to Java VM");
     }
     else if (rc == JNI_EVERSION)
     {
-        LOGE("SHADER: RenderData::bindShader JNI version not supported");
+        FAIL("SHADER: RenderData::bindShader JNI version not supported");
         return -1;
     }
     return 0;
@@ -97,15 +97,20 @@ int Scene::get_java_env(JNIEnv** envptr)
  */
 void Scene::bindShaders()
 {
-    if ((bindShadersMethod_ == NULL) || (javaObj_ == NULL))
+    JNIEnv* env = NULL;
+    int rc = get_java_env(&env);
+
+    jobject localJavaObject = getJavaObj(*env);
+
+    if ((bindShadersMethod_ == NULL) || (localJavaObject == NULL))
     {
         LOGE("SHADER: Could not call GVRScene::bindShadersNative");
     }
-    JNIEnv* env = NULL;
-    int rc = get_java_env(&env);
     if (env && (rc >= 0))
     {
-        env->CallVoidMethod(javaObj_, bindShadersMethod_, getJavaObj());
+        if (nullptr != localJavaObject) {
+            env->CallVoidMethod(localJavaObject, bindShadersMethod_, localJavaObject);
+        }
         if (rc > 0)
         {
             getJavaVM()->DetachCurrentThread();
