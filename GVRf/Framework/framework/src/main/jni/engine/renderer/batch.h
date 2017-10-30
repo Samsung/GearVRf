@@ -32,10 +32,10 @@ namespace gvr{
 class RenderData;
 class ShaderData;
 class Mesh;
-class Batch {
+class Batch final {
 public:
     Batch();
-    Batch(int,int);
+    explicit Batch(int,int);
     ~Batch();
     bool add(RenderData *render_data);
     bool setupMesh(bool);

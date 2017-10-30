@@ -393,10 +393,9 @@ public:
     void adjustRenderingOrderForTransparency(bool hasAlpha);
 
 private:
-    //  RenderData(const RenderData& render_data);
-    RenderData(RenderData&& render_data);
-    RenderData& operator=(const RenderData& render_data);
-    RenderData& operator=(RenderData&& render_data);
+    RenderData(RenderData&& render_data) = delete;
+    RenderData& operator=(const RenderData& render_data) = delete;
+    RenderData& operator=(RenderData&& render_data) = delete;
 
 protected:
     static const int DEFAULT_RENDER_MASK = Left | Right;

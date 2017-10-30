@@ -63,10 +63,10 @@ public:
     void            setTexId(GLuint id) { mId = id; }
     void            setTexParamsDirty(bool flag) {mTexParamsDirty = flag; }
 private:
-    GLImage(const GLImage& gl_texture);
-    GLImage(GLImage&& gl_texture);
-    GLImage& operator=(const GLImage& gl_texture);
-    GLImage& operator=(GLImage&& gl_texture);
+    GLImage(const GLImage& gl_texture) = delete;
+    GLImage(GLImage&& gl_texture) = delete;
+    GLImage& operator=(const GLImage& gl_texture) = delete;
+    GLImage& operator=(GLImage&& gl_texture) = delete;
 
 protected:
 

@@ -40,6 +40,8 @@ class PhysicsWorld : public Component {
  public:
 	PhysicsWorld() : Component(PhysicsWorld::getComponentType()){}
 
+	virtual ~PhysicsWorld() {}
+
 	static long long getComponentType() {
 	        return COMPONENT_TYPE_PHYSICS_WORLD;
 	}

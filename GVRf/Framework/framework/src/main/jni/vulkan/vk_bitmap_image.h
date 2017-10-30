@@ -23,7 +23,7 @@ namespace gvr {
     class VkBitmapImage : public vkImageBase, public BitmapImage
     {
     public:
-        VkBitmapImage(int format);
+        explicit VkBitmapImage(int format);
         virtual ~VkBitmapImage() {}
         virtual int getId() { return 1; }
         int updateFromBitmap(JNIEnv *env, VkImageViewType target, jobject bitmap);

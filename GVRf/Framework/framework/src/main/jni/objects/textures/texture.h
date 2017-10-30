@@ -124,7 +124,7 @@ public:
     };
 
 
-    Texture(int type = TEXTURE_2D);
+    explicit Texture(int type = TEXTURE_2D);
     virtual ~Texture();
     virtual void clearData(JNIEnv* env);
     virtual void setImage(Image* image);
@@ -155,10 +155,10 @@ protected:
     TextureParameters   mTexParams;
 
 private:
-    Texture(const Texture& texture);
-    Texture(Texture&& texture);
-    Texture& operator=(const Texture& texture);
-    Texture& operator=(Texture&& texture);
+    Texture(const Texture& texture) = delete;
+    Texture(Texture&& texture) = delete;
+    Texture& operator=(const Texture& texture) = delete;
+    Texture& operator=(Texture&& texture) = delete;
 };
 
 }

@@ -33,11 +33,11 @@ namespace gvr {
                                   BulletObject {
 
     public:
-        BulletHingeConstraint(PhysicsRigidBody *rigidBodyB, float const pivotInA[],
-                              float const pivotInB[], float const axisInA[],
-                              float const axisInB[]);
+        explicit BulletHingeConstraint(PhysicsRigidBody *rigidBodyB, float const pivotInA[],
+                                       float const pivotInB[], float const axisInA[],
+                                       float const axisInB[]);
 
-        ~BulletHingeConstraint();
+        virtual ~BulletHingeConstraint();
 
         void setLimits(float lower, float upper);
 

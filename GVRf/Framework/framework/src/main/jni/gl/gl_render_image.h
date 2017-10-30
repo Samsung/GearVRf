@@ -56,10 +56,10 @@ protected:
     virtual GLuint createTexture();
 
 private:
-    GLRenderImage(const GLRenderImage&);
-    GLRenderImage(GLRenderImage&&);
-    GLRenderImage& operator=(const GLRenderImage&);
-    GLRenderImage& operator=(GLRenderImage&&);
+    GLRenderImage(const GLRenderImage&) = delete;
+    GLRenderImage(GLRenderImage&&) = delete;
+    GLRenderImage& operator=(const GLRenderImage&) = delete;
+    GLRenderImage& operator=(GLRenderImage&&) = delete;
 };
 
 }

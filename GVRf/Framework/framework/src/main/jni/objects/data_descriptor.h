@@ -52,7 +52,7 @@ namespace gvr {
         };
 
     public:
-        DataDescriptor(const char* descriptor);
+        explicit DataDescriptor(const char* descriptor);
         virtual ~DataDescriptor() { }
 
         /**

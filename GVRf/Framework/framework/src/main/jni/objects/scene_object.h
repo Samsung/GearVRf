@@ -176,10 +176,10 @@ private:
     bool query_currently_issued_;
     GLuint *queries_ = nullptr;
 
-    SceneObject(const SceneObject& scene_object);
-    SceneObject(SceneObject&& scene_object);
-    SceneObject& operator=(const SceneObject& scene_object);
-    SceneObject& operator=(SceneObject&& scene_object);
+    SceneObject(const SceneObject& scene_object) = delete;
+    SceneObject(SceneObject&& scene_object) = delete;
+    SceneObject& operator=(const SceneObject& scene_object) = delete;
+    SceneObject& operator=(SceneObject&& scene_object) = delete;
 
     bool checkSphereVsFrustum(float frustum[6][4], BoundingVolume &sphere);
 

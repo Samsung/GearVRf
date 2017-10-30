@@ -33,7 +33,7 @@ class SceneObject;
 class CameraRig;
 class Transform;
 
-class Picker {
+class Picker final {
 private:
     Picker();
     ~Picker();

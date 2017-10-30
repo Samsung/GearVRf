@@ -56,10 +56,10 @@ protected:
     virtual void update(int texid);
 
 private:
-    GLCubemapImage(const GLCubemapImage&);
-    GLCubemapImage(GLCubemapImage&&);
-    GLCubemapImage& operator=(const GLCubemapImage&);
-    GLCubemapImage& operator=(GLCubemapImage&&);
+    GLCubemapImage(const GLCubemapImage&) = delete;
+    GLCubemapImage(GLCubemapImage&&) = delete;
+    GLCubemapImage& operator=(const GLCubemapImage&) = delete;
+    GLCubemapImage& operator=(GLCubemapImage&&) = delete;
 
     void updateFromBitmap(int texid);
     void updateFromMemory(int texid);

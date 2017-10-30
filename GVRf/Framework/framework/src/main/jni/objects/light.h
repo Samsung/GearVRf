@@ -194,10 +194,10 @@ public:
     virtual void onRemovedFromScene(Scene* scene);
 
 private:
-    Light(const Light& light);
-    Light(Light&& light);
-    Light& operator=(const Light& light);
-    Light& operator=(Light&& light);
+    Light(const Light& light) = delete;
+    Light(Light&& light) = delete;
+    Light& operator=(const Light& light) = delete;
+    Light& operator=(Light&& light) = delete;
 
 
     /*

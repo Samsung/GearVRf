@@ -41,9 +41,9 @@ class Renderer;
 class RenderTarget : public Component
 {
 public:
-    RenderTarget(RenderTexture*, bool is_multiview);
-    RenderTarget(Scene*);
-    RenderTarget(RenderTexture*, const RenderTarget* source);
+    explicit RenderTarget(RenderTexture*, bool is_multiview);
+    explicit RenderTarget(Scene*);
+    explicit RenderTarget(RenderTexture*, const RenderTarget* source);
     RenderTarget();
     virtual ~RenderTarget();
     void attachNextRenderTarget(RenderTarget* renderTarget){
@@ -67,10 +67,10 @@ public:
     }
     virtual void cullFromCamera(Scene*, Camera* camera, Renderer* renderer, ShaderManager* shader_manager);
 private:
-    RenderTarget(const RenderTarget& render_texture);
-    RenderTarget(RenderTarget&& render_texture);
-    RenderTarget& operator=(const RenderTarget& render_texture);
-    RenderTarget& operator=(RenderTarget&& render_texture);
+    RenderTarget(const RenderTarget& render_texture) = delete;
+    RenderTarget(RenderTarget&& render_texture) = delete;
+    RenderTarget& operator=(const RenderTarget& render_texture) = delete;
+    RenderTarget& operator=(RenderTarget&& render_texture) = delete;
 
 protected:
     RenderTarget* mNextRenderTarget;

@@ -60,12 +60,12 @@ public:
  * @param fragmentShader    String with GLSL source for fragment shader
  * @see ShaderManager::addShader
  */
-    Shader(int id, const char* signature,
-            const char* uniformDescriptor,
-            const char* textureDescriptor,
-            const char* vertexDescriptor,
-            const char* vertexShader,
-            const char* fragmentShader);
+    explicit Shader(int id, const char* signature,
+                    const char* uniformDescriptor,
+                    const char* textureDescriptor,
+                    const char* vertexDescriptor,
+                    const char* vertexShader,
+                    const char* fragmentShader);
 
     virtual ~Shader() { };
 
@@ -138,10 +138,10 @@ public:
     bool calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;
 
 private:
-    Shader(const Shader& shader);
-    Shader(Shader&& shader);
-    Shader& operator=(const Shader& shader);
-    Shader& operator=(Shader&& shader);
+    Shader(const Shader& shader) = delete;
+    Shader(Shader&& shader) = delete;
+    Shader& operator=(const Shader& shader) = delete;
+    Shader& operator=(Shader&& shader) = delete;
 
 protected:
     bool shaderDirty = true;

@@ -63,10 +63,10 @@ namespace gvr {
         }
 
     private:
-        GLFloatImage(const GLFloatImage&);
-        GLFloatImage(GLFloatImage&&);
-        GLFloatImage& operator=(const GLFloatImage&);
-        GLFloatImage& operator=(GLFloatImage&&);
+        GLFloatImage(const GLFloatImage&) = delete;
+        GLFloatImage(GLFloatImage&&) = delete;
+        GLFloatImage& operator=(const GLFloatImage&) = delete;
+        GLFloatImage& operator=(GLFloatImage&&) = delete;
     };
 
 }

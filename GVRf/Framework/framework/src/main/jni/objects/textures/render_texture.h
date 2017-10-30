@@ -46,7 +46,7 @@ public:
               readback_started_(false)
     { }
 
-    RenderTexture(Image* image)
+    explicit RenderTexture(Image* image)
     : Texture(image->getType()),
       mSampleCount(1),
       mUseStencil(false),
@@ -85,10 +85,10 @@ public:
 
     }
 private:
-    RenderTexture(const RenderTexture&);
-    RenderTexture(RenderTexture&&);
-    RenderTexture& operator=(const RenderTexture&);
-    RenderTexture& operator=(RenderTexture&&);
+    RenderTexture(const RenderTexture&) = delete;
+    RenderTexture(RenderTexture&&) = delete;
+    RenderTexture& operator=(const RenderTexture&) = delete;
+    RenderTexture& operator=(RenderTexture&&) = delete;
 
 protected:
     float   mBackColor[4];

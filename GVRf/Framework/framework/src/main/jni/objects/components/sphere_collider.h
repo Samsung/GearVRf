@@ -55,10 +55,10 @@ public:
     static ColliderData isHit(const glm::mat4& model_matrix, const glm::vec3& center, float radius, const glm::vec3& rayStart, const glm::vec3& rayDir);
 
 private:
-    SphereCollider(const SphereCollider& mesh_collider);
-    SphereCollider(SphereCollider&& mesh_collider);
-    SphereCollider& operator=(const SphereCollider& mesh_collider);
-    SphereCollider& operator=(SphereCollider&& mesh_collider);
+    SphereCollider(const SphereCollider& mesh_collider) = delete;
+    SphereCollider(SphereCollider&& mesh_collider) = delete;
+    SphereCollider& operator=(const SphereCollider& mesh_collider) = delete;
+    SphereCollider& operator=(SphereCollider&& mesh_collider) = delete;
 
 private:
     glm::vec3   center_;

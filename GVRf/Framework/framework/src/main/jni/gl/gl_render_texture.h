@@ -50,7 +50,7 @@ public:
         return renderTexture_gl_frame_buffer_->id();
     }
 
-        virtual void bind() {
+    virtual void bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     }
 
@@ -70,10 +70,10 @@ public:
     void setLayerIndex(int layerIndex);
 
 private:
-    GLRenderTexture(const GLRenderTexture&);
-    GLRenderTexture(GLRenderTexture&&);
-    GLRenderTexture& operator=(const GLRenderTexture&);
-    GLRenderTexture& operator=(GLRenderTexture&&);
+    GLRenderTexture(const GLRenderTexture&) = delete;
+    GLRenderTexture(GLRenderTexture&&) = delete;
+    GLRenderTexture& operator=(const GLRenderTexture&) = delete;
+    GLRenderTexture& operator=(GLRenderTexture&&) = delete;
 
 
     void invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer);
@@ -94,6 +94,8 @@ protected:
                                      // when resolveDepth is on.
     GLuint renderTexture_gl_pbo_ = 0;
 };
+
+
 class GLMultiviewRenderTexture: public GLRenderTexture
 {
 public:

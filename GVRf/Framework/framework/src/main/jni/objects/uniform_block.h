@@ -57,8 +57,8 @@ namespace gvr
     class UniformBlock : public DataDescriptor
     {
     public:
-        UniformBlock(const char *descriptor, int binding_point, const char *blockName);
-        UniformBlock(const char *descriptor, int binding_point, const char *blockName, int maxElems);
+        explicit UniformBlock(const char *descriptor, int binding_point, const char *blockName);
+        explicit UniformBlock(const char *descriptor, int binding_point, const char *blockName, int maxElems);
 
         /**
          * Gets the OpenGL binding point for this uniform block.

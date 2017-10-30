@@ -27,7 +27,7 @@ namespace gvr {
 
 class TiledRenderingEnhancer {
 private:
-    TiledRenderingEnhancer();
+    TiledRenderingEnhancer() = delete;
 
 public:
     static void start(GLuint x, GLuint y, GLuint width, GLuint height,

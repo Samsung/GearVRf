@@ -30,10 +30,10 @@ public:
     }
 
 private:
-    GLExternalRendererTexture(const GLExternalRendererTexture&e);
-    GLExternalRendererTexture(GLExternalRendererTexture&&);
-    GLExternalRendererTexture& operator=(const GLExternalRendererTexture&);
-    GLExternalRendererTexture& operator=(GLExternalRendererTexture&&);
+    GLExternalRendererTexture(const GLExternalRendererTexture&e) = delete;
+    GLExternalRendererTexture(GLExternalRendererTexture&&) = delete;
+    GLExternalRendererTexture& operator=(const GLExternalRendererTexture&) = delete;
+    GLExternalRendererTexture& operator=(GLExternalRendererTexture&&) = delete;
 };
 
 }

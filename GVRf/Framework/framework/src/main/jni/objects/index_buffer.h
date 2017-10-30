@@ -21,7 +21,7 @@ namespace gvr {
     class IndexBuffer : public HybridObject
     {
     public:
-        IndexBuffer(int bytesPerIndex, int indexCount);
+        explicit IndexBuffer(int bytesPerIndex, int indexCount);
         virtual ~IndexBuffer();
 
         /**

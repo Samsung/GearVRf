@@ -88,10 +88,10 @@ public:
         return COMPONENT_TYPE_CAMERA;
     }
 private:
-    Camera(const Camera& camera);
-    Camera(Camera&& camera);
-    Camera& operator=(const Camera& camera);
-    Camera& operator=(Camera&& camera);
+    Camera(const Camera& camera) = delete;
+    Camera(Camera&& camera) = delete;
+    Camera& operator=(const Camera& camera) = delete;
+    Camera& operator=(Camera&& camera) = delete;
 
 private:
     float background_color_r_;

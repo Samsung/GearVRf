@@ -34,9 +34,9 @@ class Mesh;
 class Batch;
 struct RenderState;
 extern bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2);
-class BatchManager{
+class BatchManager final {
 public:
-    BatchManager(int batch_size, int max_indices);
+    explicit BatchManager(int batch_size, int max_indices);
     ~BatchManager();
     Batch* getNewBatch();
     void freeBatch(Batch* batch){

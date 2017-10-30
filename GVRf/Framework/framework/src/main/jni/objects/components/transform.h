@@ -248,10 +248,10 @@ public:
     void setModelMatrix(glm::mat4 mat);
 
 private:
-    Transform(const Transform& transform);
-    Transform(Transform&& transform);
-    Transform& operator=(const Transform& transform);
-    Transform& operator=(Transform&& transform);
+    Transform(const Transform& transform) = delete;
+    Transform(Transform&& transform) = delete;
+    Transform& operator=(const Transform& transform) = delete;
+    Transform& operator=(Transform&& transform) = delete;
 
 private:
     glm::vec3 position_;

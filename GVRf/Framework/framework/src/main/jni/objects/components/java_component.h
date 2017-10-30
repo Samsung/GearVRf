@@ -31,7 +31,7 @@ namespace gvr {
 
     class JavaComponent : public Component {
     public:
-        JavaComponent(long long type) : Component(type), javaObj_(0L), javaVM_(NULL) { }
+        explicit JavaComponent(long long type) : Component(type), javaObj_(0L), javaVM_(NULL) { }
         JavaComponent() : Component(), javaObj_(0L), javaVM_(NULL) { }
 
         virtual ~JavaComponent();
@@ -40,10 +40,10 @@ namespace gvr {
         void free_java();
 
     private:
-        JavaComponent(const JavaComponent &component);
-        JavaComponent(JavaComponent &&component);
-        JavaComponent &operator=(const JavaComponent &component);
-        JavaComponent &operator=(JavaComponent &&component);
+        JavaComponent(const JavaComponent &component) = delete;
+        JavaComponent(JavaComponent &&component) = delete;
+        JavaComponent &operator=(const JavaComponent &component) = delete;
+        JavaComponent &operator=(JavaComponent &&component) = delete;
 
     protected:
         jobject javaObj_;

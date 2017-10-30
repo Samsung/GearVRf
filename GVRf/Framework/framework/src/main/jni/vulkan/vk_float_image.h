@@ -78,10 +78,10 @@ namespace gvr {
         }
 
     private:
-        VkFloatImage(const VkFloatImage&);
-        VkFloatImage(VkFloatImage&&);
-        VkFloatImage& operator=(const VkFloatImage&);
-        VkFloatImage& operator=(VkFloatImage&&);
+        VkFloatImage(const VkFloatImage&) = delete;
+        VkFloatImage(VkFloatImage&&) = delete;
+        VkFloatImage& operator=(const VkFloatImage&) = delete;
+        VkFloatImage& operator=(VkFloatImage&&) = delete;
     };
 
 }

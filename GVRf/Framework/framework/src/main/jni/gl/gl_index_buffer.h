@@ -24,7 +24,7 @@ namespace gvr {
     class GLIndexBuffer : public IndexBuffer
     {
     public:
-        GLIndexBuffer(int bytesPerIndex, int vertexCount);
+        explicit GLIndexBuffer(int bytesPerIndex, int vertexCount);
         virtual ~GLIndexBuffer();
 
         virtual bool    bindBuffer(Shader*);

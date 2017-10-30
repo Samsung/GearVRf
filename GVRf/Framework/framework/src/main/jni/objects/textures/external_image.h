@@ -28,10 +28,10 @@ public:
     }
 
 private:
-    ExternalImage(const ExternalImage& render_texture);
-    ExternalImage(ExternalImage&& render_texture);
-    ExternalImage& operator=(const ExternalImage& render_texture);
-    ExternalImage& operator=(ExternalImage&& render_texture);
+    ExternalImage(const ExternalImage& render_texture) = delete;
+    ExternalImage(ExternalImage&& render_texture) = delete;
+    ExternalImage& operator=(const ExternalImage& render_texture) = delete;
+    ExternalImage& operator=(ExternalImage&& render_texture) = delete;
 
 private:
     long mData;

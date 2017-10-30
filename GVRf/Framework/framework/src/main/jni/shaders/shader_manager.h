@@ -90,10 +90,10 @@ public:
     void dump();
 
 private:
-    ShaderManager(const ShaderManager& shader_manager);
-    ShaderManager(ShaderManager&& shader_manager);
-    ShaderManager& operator=(const ShaderManager& shader_manager);
-    ShaderManager& operator=(ShaderManager&& shader_manager);
+    ShaderManager(const ShaderManager& shader_manager) = delete;
+    ShaderManager(ShaderManager&& shader_manager) = delete;
+    ShaderManager& operator=(const ShaderManager& shader_manager) = delete;
+    ShaderManager& operator=(ShaderManager&& shader_manager) = delete;
 
 private:
     int latest_shader_id_ = 0;

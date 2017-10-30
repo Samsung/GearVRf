@@ -43,10 +43,10 @@ public:
         GLImage::updateTexParams(mTexParams);
     }
 private:
-    GLExternalImage(const GLExternalImage&e);
-    GLExternalImage(GLExternalImage&&);
-    GLExternalImage& operator=(const GLExternalImage&);
-    GLExternalImage& operator=(GLExternalImage&&);
+    GLExternalImage(const GLExternalImage&e) = delete;
+    GLExternalImage(GLExternalImage&&) = delete;
+    GLExternalImage& operator=(const GLExternalImage&) = delete;
+    GLExternalImage& operator=(GLExternalImage&&) = delete;
 };
 
 }

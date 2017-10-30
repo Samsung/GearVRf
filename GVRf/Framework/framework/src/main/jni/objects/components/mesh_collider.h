@@ -31,9 +31,9 @@ class BoundingVolume;
 
 class MeshCollider: public Collider {
 public:
-    MeshCollider(Mesh* mesh = NULL);
-    MeshCollider(Mesh* mesh, bool pickCoordinates);
-    MeshCollider(bool useMeshBounds);
+    explicit MeshCollider(Mesh* mesh = NULL);
+    explicit MeshCollider(Mesh* mesh, bool pickCoordinates);
+    explicit MeshCollider(bool useMeshBounds);
     virtual ~MeshCollider();
 
     long shape_type() {
@@ -56,10 +56,10 @@ public:
     static ColliderData isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir);
 
 private:
-    MeshCollider(const MeshCollider& mesh_collider);
-    MeshCollider(MeshCollider&& mesh_collider);
-    MeshCollider& operator=(const MeshCollider& mesh_collider);
-    MeshCollider& operator=(MeshCollider&& mesh_collider);
+    MeshCollider(const MeshCollider& mesh_collider) = delete;
+    MeshCollider(MeshCollider&& mesh_collider) = delete;
+    MeshCollider& operator=(const MeshCollider& mesh_collider) = delete;
+    MeshCollider& operator=(MeshCollider&& mesh_collider) = delete;
     static ColliderData isHit(const Mesh& mesh, const glm::vec3& rayStart, const glm::vec3& rayDir, bool pickCoordinates);
     static float rayTriangleIntersect(glm::vec3& hitPos, const glm::vec3& rayStart, const glm::vec3& rayDir,
                                const glm::vec3& V1, const glm::vec3& V2, const glm::vec3& V3);

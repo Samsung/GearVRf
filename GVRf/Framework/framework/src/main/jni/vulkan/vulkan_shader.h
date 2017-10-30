@@ -55,7 +55,7 @@ public:
             const char* vertexShader,
             const char* fragmentShader);
 
-    ~VulkanShader();
+    virtual ~VulkanShader();
 
     virtual bool useShader(bool) { return true; }
 
@@ -95,10 +95,10 @@ private:
     VkPipelineLayout m_pipelineLayout;
     VkDescriptorSetLayout m_descriptorLayout;
 
-    VulkanShader(const VulkanShader& shader);
-    VulkanShader(VulkanShader&& shader);
-    VulkanShader& operator=(const VulkanShader& shader);
-    VulkanShader& operator=(VulkanShader&& shader);
+    VulkanShader(const VulkanShader& shader) = delete;
+    VulkanShader(VulkanShader&& shader) = delete;
+    VulkanShader& operator=(const VulkanShader& shader) = delete;
+    VulkanShader& operator=(VulkanShader&& shader) = delete;
     std::vector<uint32_t> compiledVS;
     std::vector<uint32_t> compiledFS;
 

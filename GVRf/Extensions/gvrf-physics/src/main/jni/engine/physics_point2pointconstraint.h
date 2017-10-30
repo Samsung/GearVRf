@@ -26,6 +26,8 @@ class PhysicsRigidBody;
 class PhysicsPoint2pointConstraint : public PhysicsConstraint {
 public:
 
+    virtual ~PhysicsPoint2pointConstraint() {}
+
     virtual void setPivotInA(PhysicsVec3 pivot) = 0;
 
     virtual PhysicsVec3 getPivotInA() const = 0;

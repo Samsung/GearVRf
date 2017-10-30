@@ -26,6 +26,8 @@ namespace gvr {
 
     class PhysicsConeTwistConstraint : public PhysicsConstraint {
     public:
+        virtual ~PhysicsConeTwistConstraint() {}
+
         virtual void setSwingLimit(float limit) = 0;
 
         virtual float getSwingLimit() const = 0;

@@ -20,7 +20,7 @@
 
 namespace gvr {
 
-class VKFramebuffer {
+class VKFramebuffer final{
     vkImageBase *mAttachments[3];
 
     VkRenderPass mRenderpass;

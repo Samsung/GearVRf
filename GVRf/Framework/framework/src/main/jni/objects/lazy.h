@@ -23,7 +23,7 @@
 
 namespace gvr {
 template<class T>
-class Lazy {
+class Lazy final {
 public:
     explicit Lazy(T element, bool valid = false) :
             element_(element), valid_(valid) {
@@ -58,8 +58,8 @@ public:
     }
 
 private:
-    Lazy& operator=(const Lazy& lazy);
-    Lazy& operator=(Lazy&& lazy);
+    Lazy& operator=(const Lazy& lazy) = delete;
+    Lazy& operator=(Lazy&& lazy) = delete;
 
 private:
     T element_;

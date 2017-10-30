@@ -30,7 +30,7 @@ namespace gvr {
     class VulkanIndexBuffer : public IndexBuffer
     {
     public:
-        VulkanIndexBuffer(int bytesPerIndex, int vertexCount);
+        explicit VulkanIndexBuffer(int bytesPerIndex, int vertexCount);
         virtual ~VulkanIndexBuffer();
 
         virtual bool    updateGPU(Renderer*);

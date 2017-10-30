@@ -111,47 +111,47 @@ public:
         return numberDrawCalls;
     }
 
-     int getNumberTriangles() {
+    int getNumberTriangles() {
         return numberTriangles;
-     }
-     int incrementTriangles(int number=1){
+    }
+    int incrementTriangles(int number=1){
         return numberTriangles += number;
-     }
-     int incrementDrawCalls(){
+    }
+    int incrementDrawCalls(){
         return ++numberDrawCalls;
-     }
-     static Renderer* getInstance(std::string type =  " ");
-     static void resetInstance(){
-         //@todo fix for vulkan
-         if (!isVulkan_) {
-             delete instance;
-             instance = NULL;
-         }
-     }
-     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
-     virtual RenderData* createRenderData() = 0;
-     virtual UniformBlock* createUniformBlock(const char* desc, int, const char* name, int) = 0;
-     virtual Image* createImage(int type, int format) = 0;
-        virtual RenderPass* createRenderPass() = 0;
-     virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
-     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
-                                                int jcolor_format, int jdepth_format, bool resolve_depth,
-                                                const TextureParameters* texture_parameters, int number_views) = 0;
+    }
+    static Renderer* getInstance(std::string type =  " ");
+    static void resetInstance(){
+        //@todo fix for vulkan
+        if (!isVulkan_) {
+            delete instance;
+            instance = NULL;
+        }
+    }
+    virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
+    virtual RenderData* createRenderData() = 0;
+    virtual UniformBlock* createUniformBlock(const char* desc, int, const char* name, int) = 0;
+    virtual Image* createImage(int type, int format) = 0;
+    virtual RenderPass* createRenderPass() = 0;
+    virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const TextureParameters* texture_parameters, int number_views) = 0;
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) = 0;
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&)=0;
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader) = 0;
-     virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount) = 0;
-     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount) = 0;
-     void updateTransforms(RenderState& rstate, UniformBlock* block, RenderData*);
-     virtual void initializeStats();
-     virtual void cullFromCamera(Scene *scene, Camera* camera,
-                ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector,bool);
-     virtual void set_face_culling(int cull_face) = 0;
+    virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount) = 0;
+    virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount) = 0;
+    void updateTransforms(RenderState& rstate, UniformBlock* block, RenderData*);
+    virtual void initializeStats();
+    virtual void cullFromCamera(Scene *scene, Camera* camera,
+                                ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector,bool);
+    virtual void set_face_culling(int cull_face) = 0;
 
-     virtual void renderRenderData(RenderState& rstate, RenderData* render_data);
+    virtual void renderRenderData(RenderState& rstate, RenderData* render_data);
     virtual RenderTarget* createRenderTarget(Scene*) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, bool) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*) = 0;
@@ -204,10 +204,10 @@ private:
             float frustum[6][4], std::vector<SceneObject*>& scene_objects,
             bool continue_cull, int planeMask);
 
-    Renderer(const Renderer& render_engine);
-    Renderer(Renderer&& render_engine);
-    Renderer& operator=(const Renderer& render_engine);
-    Renderer& operator=(Renderer&& render_engine);
+    Renderer(const Renderer& render_engine) = delete;
+    Renderer(Renderer&& render_engine) = delete;
+    Renderer& operator=(const Renderer& render_engine) = delete;
+    Renderer& operator=(Renderer&& render_engine) = delete;
     BatchManager* batch_manager;
     static Renderer* instance;
 

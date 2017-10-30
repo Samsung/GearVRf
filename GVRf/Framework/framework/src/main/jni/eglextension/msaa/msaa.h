@@ -32,7 +32,7 @@ typedef void (GL_APIENTRYP PFNGLRENDERBUFFERSTORAGEMULTISAMPLE)(GLenum target,
 
 class MSAA {
 private:
-    MSAA();
+    MSAA() = delete;
 
 public:
     static int getMaxSampleCount() {

@@ -27,6 +27,7 @@ namespace gvr {
 
     class PhysicsHingeConstraint : public PhysicsConstraint {
     public:
+        virtual ~PhysicsHingeConstraint() {}
 
         virtual void setLimits(float lower, float upper) = 0;
 

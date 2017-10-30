@@ -25,9 +25,9 @@ namespace gvr
     class VulkanImage : public vkImageBase, public Image
     {
     public:
-        VulkanImage(int target);
+        explicit VulkanImage(int target);
 
-        VulkanImage(ImageType type, int format, short width, short height);
+        explicit VulkanImage(ImageType type, int format, short width, short height);
 
         virtual ~VulkanImage() {}
 

@@ -191,10 +191,10 @@ public:
     static void set_main_scene(Scene* scene);
 
 private:
-    Scene(const Scene& scene);
-    Scene(Scene&& scene);
-    Scene& operator=(const Scene& scene);
-    Scene& operator=(Scene&& scene);
+    Scene(const Scene& scene) = delete;
+    Scene(Scene&& scene) = delete;
+    Scene& operator=(const Scene& scene) = delete;
+    Scene& operator=(Scene&& scene) = delete;
     void gatherColliders();
     void clearAllColliders();
 

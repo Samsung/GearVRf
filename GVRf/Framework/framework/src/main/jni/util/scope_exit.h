@@ -24,7 +24,7 @@
  * "finally" block but follows C++ RAII (resource allocation
  * is initialization) principle.
  */
-class ScopeExit {
+class ScopeExit final {
 public:
     ScopeExit (const std::function<void()> &func)
     : m_func(func)

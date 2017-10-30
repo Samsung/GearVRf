@@ -32,6 +32,8 @@ namespace gvr {
     public:
         PhysicsConstraint() : Component(PhysicsConstraint::getComponentType()){}
 
+        virtual ~PhysicsConstraint() {}
+
         static long long getComponentType() {
             return COMPONENT_TYPE_PHYSICS_CONSTRAINT;
         }

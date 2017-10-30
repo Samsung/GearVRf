@@ -42,8 +42,8 @@ namespace gvr {
 
 class Mesh: public HybridObject {
 public:
-    Mesh(const char* descriptor);
-    Mesh(VertexBuffer& vbuf);
+    explicit Mesh(const char* descriptor);
+    explicit Mesh(VertexBuffer& vbuf);
     virtual ~Mesh() {}
 
     VertexBuffer* getVertexBuffer() const { return mVertices; }
@@ -105,9 +105,9 @@ public:
     bool isDirty() const { return mVertices->isDirty(); }
 
 private:
-    Mesh(const Mesh& mesh);
-    Mesh(Mesh&& mesh);
-    Mesh& operator=(const Mesh& mesh);
+    Mesh(const Mesh& mesh) = delete;
+    Mesh(Mesh&& mesh) = delete;
+    Mesh& operator=(const Mesh& mesh) = delete;
 
 
 protected:

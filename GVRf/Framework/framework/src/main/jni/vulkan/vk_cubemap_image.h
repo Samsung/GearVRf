@@ -24,7 +24,7 @@ namespace gvr {
     class VkCubemapImage : public vkImageBase, public CubemapImage
     {
     public:
-        VkCubemapImage(int format);
+        explicit VkCubemapImage(int format);
         virtual ~VkCubemapImage() {}
         virtual int getId() { return 1; }
         virtual void texParamsChanged(const TextureParameters&) { }
@@ -38,10 +38,10 @@ namespace gvr {
         virtual void update(int texid);
 
     private:
-        VkCubemapImage(const VkCubemapImage&);
-        VkCubemapImage(VkCubemapImage&&);
-        VkCubemapImage& operator=(const VkCubemapImage&);
-        VkCubemapImage& operator=(VkCubemapImage&&);
+        VkCubemapImage(const VkCubemapImage&) = delete;
+        VkCubemapImage(VkCubemapImage&&) = delete;
+        VkCubemapImage& operator=(const VkCubemapImage&) = delete;
+        VkCubemapImage& operator=(VkCubemapImage&&) = delete;
 
         void updateFromBitmap(int texid);
         void updateFromMemory(int texid);

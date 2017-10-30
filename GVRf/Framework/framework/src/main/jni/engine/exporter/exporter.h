@@ -25,7 +25,7 @@
 namespace gvr {
 class Exporter {
 private:
-    Exporter();
+    Exporter() = delete;
 
 public:
     static int writeToFile(Scene *scene, const std::string filename);

@@ -33,7 +33,7 @@ public:
             time_stamp_(0), quaterion_(), gyro_() {
     }
 
-    RotationSensorData(long long time_stamp, float w, float x, float y, float z,
+    explicit RotationSensorData(long long time_stamp, float w, float x, float y, float z,
             float gyro_x, float gyro_y, float gyro_z) :
             time_stamp_(time_stamp), quaterion_(w, x, y, z), gyro_(gyro_x,
                     gyro_y, gyro_z) {
@@ -82,10 +82,10 @@ public:
     }
 
 private:
-    RotationSensorData(const RotationSensorData& rotation_sensor_data);
-    RotationSensorData(RotationSensorData&& rotation_sensor_data);
+    RotationSensorData(const RotationSensorData& rotation_sensor_data) = delete;
+    RotationSensorData(RotationSensorData&& rotation_sensor_data) = delete;
     RotationSensorData& operator=(
-            const RotationSensorData& rotation_sensor_data);
+            const RotationSensorData& rotation_sensor_data) = delete;
 
 private:
     long long time_stamp_;

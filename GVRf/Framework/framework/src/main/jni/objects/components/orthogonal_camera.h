@@ -88,10 +88,10 @@ public:
     glm::mat4 getProjectionMatrix() const;
 
 private:
-    OrthogonalCamera(const OrthogonalCamera& camera);
-    OrthogonalCamera(OrthogonalCamera&& camera);
-    OrthogonalCamera& operator=(const OrthogonalCamera& camera);
-    OrthogonalCamera& operator=(OrthogonalCamera&& camera);
+    OrthogonalCamera(const OrthogonalCamera& camera) = delete;
+    OrthogonalCamera(OrthogonalCamera&& camera) = delete;
+    OrthogonalCamera& operator=(const OrthogonalCamera& camera) = delete;
+    OrthogonalCamera& operator=(OrthogonalCamera&& camera) = delete;
 
 private:
     float left_clipping_distance_;

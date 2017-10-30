@@ -52,7 +52,7 @@ struct VulkanRenderPass : public RenderPass
         {
         }
 
-        VulkanRenderData(const RenderData &rdata) : RenderData(rdata), ubo(
+        explicit VulkanRenderData(const RenderData &rdata) : RenderData(rdata), ubo(
         "mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_model; mat4 u_view_i; float u_right;", TRANSFORM_UBO_INDEX, "Transform_ubo")
         {
         }
