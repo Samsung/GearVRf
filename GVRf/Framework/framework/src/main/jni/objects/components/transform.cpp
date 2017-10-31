@@ -34,7 +34,9 @@ Transform::Transform() :
 }
 
 Transform::~Transform() {
-    owner_object_->onTransformChanged();
+    if(owner_object_) {
+        owner_object_->onTransformChanged();
+    }
 }
 
 void Transform::invalidate()
