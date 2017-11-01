@@ -45,6 +45,12 @@ RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& rend
 {
     return new VulkanRenderData();
 }
+
+    RenderData* VulkanRenderer::createRenderData(RenderData* data)
+    {
+        return new VulkanRenderData(*data);
+    }
+
 RenderTarget* VulkanRenderer::createRenderTarget(Scene* scene) {
     return new VkRenderTarget(scene);
 }

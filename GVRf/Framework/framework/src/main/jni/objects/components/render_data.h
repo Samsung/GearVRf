@@ -85,8 +85,8 @@ public:
 
     virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
 
-    void copy(const RenderData& rdata) {
-        Component(rdata.getComponentType());
+    RenderData(const RenderData& rdata) : JavaComponent(rdata.getComponentType())
+    {
         hash_code = rdata.hash_code;
         mesh_ = rdata.mesh_;
         use_light_ = rdata.use_light_;
@@ -124,10 +124,6 @@ public:
         stencilOpSfail_ = rdata.stencilOpSfail_;
         stencilOpDpfail_ = rdata.stencilOpDpfail_;
         stencilOpDppass_ = rdata.stencilOpDppass_;
-    }
-
-    RenderData(const RenderData& rdata) {
-        copy(rdata);
     }
 
     virtual ~RenderData();

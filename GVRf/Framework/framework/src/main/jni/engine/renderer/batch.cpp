@@ -136,8 +136,7 @@ bool Batch::add(RenderData *render_data) {
     // Copy all renderData properties
     if (draw_count_ == 0) {
         if (!renderdata_) {
-            renderdata_ = Renderer::getInstance()->createRenderData();
-            renderdata_->copy(*render_data);
+            renderdata_ = Renderer::getInstance()->createRenderData(render_data);
             renderdata_->set_batching(true);
        }
     }

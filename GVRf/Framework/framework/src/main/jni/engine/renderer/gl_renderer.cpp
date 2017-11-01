@@ -41,6 +41,11 @@ namespace gvr
         return new GLRenderData();
     }
 
+    RenderData *GLRenderer::createRenderData(RenderData* copy)
+    {
+        return new GLRenderData(*copy);
+    }
+
     RenderPass* GLRenderer::createRenderPass()
     {
         return new RenderPass();

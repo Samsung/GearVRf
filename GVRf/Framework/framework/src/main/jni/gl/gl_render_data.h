@@ -36,9 +36,8 @@ namespace gvr
 
         GLRenderData() : RenderData() { }
 
-        GLRenderData(const RenderData &rdata)
+        GLRenderData(const RenderData &rdata) : RenderData(rdata)
         {
-            copy(rdata);
         }
 
         virtual ~GLRenderData() {}

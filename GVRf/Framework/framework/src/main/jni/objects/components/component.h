@@ -56,8 +56,11 @@ private:
 
 protected:
     SceneObject* owner_object_;
-    long long    type_;
     bool         enabled_;
+
+private:
+    long long    type_;
+
 };
 
 }
