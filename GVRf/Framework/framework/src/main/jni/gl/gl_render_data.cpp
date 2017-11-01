@@ -20,7 +20,7 @@ namespace gvr
 {
     void GLRenderData::render(Shader* shader, Renderer* renderer)
     {
-        GLShader*   glshader = reinterpret_cast<GLShader*>(shader);
+        GLShader*   glshader = static_cast<GLShader*>(shader);
         int         programId = glshader->getProgramId();
         int         indexCount = mesh_->getIndexCount();
         int         vertexCount = mesh_->getVertexCount();

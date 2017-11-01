@@ -115,11 +115,11 @@ const VkImageView& VkTexture::getVkImageView()
     switch(mImage->getType()){
 
         case Image::ImageType::CUBEMAP:
-            cubemapImage = reinterpret_cast<VkCubemapImage*>(mImage);
+            cubemapImage = static_cast<VkCubemapImage*>(mImage);
             return cubemapImage->getVkImageView();
 
         case Image::ImageType::BITMAP:
-            bitmapImage = reinterpret_cast<VkBitmapImage*>(mImage);
+            bitmapImage = static_cast<VkBitmapImage*>(mImage);
             return bitmapImage->getVkImageView();
     }
 }

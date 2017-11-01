@@ -40,7 +40,7 @@ namespace gvr {
 
     bool VulkanVertexBuffer::updateGPU(Renderer* renderer, IndexBuffer* ibuf, Shader* shader)
     {
-        VulkanRenderer* vkrender = reinterpret_cast<VulkanRenderer*>(renderer);
+        VulkanRenderer* vkrender = static_cast<VulkanRenderer*>(renderer);
         generateVKBuffers(vkrender->getCore(),shader);
         if (ibuf)
         {

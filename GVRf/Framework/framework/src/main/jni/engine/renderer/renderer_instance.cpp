@@ -57,7 +57,7 @@ Renderer* Renderer::getInstance(std::string type){
         }
         if( useVulkan ) {
             instance = new VulkanRenderer();
-            if(reinterpret_cast<VulkanRenderer*>(instance)->getCore() != NULL)
+            if(static_cast<VulkanRenderer*>(instance)->getCore() != NULL)
                 isVulkan_ = true;
             else
                 LOGE("Vulkan is not supported on your device");

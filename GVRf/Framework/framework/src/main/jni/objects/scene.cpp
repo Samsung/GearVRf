@@ -139,7 +139,7 @@ void Scene::clearAllColliders() {
 
 void Scene::pick(SceneObject* sceneobj) {
     if (pick_visible_) {
-         Collider* collider = reinterpret_cast<Collider*>(sceneobj->getComponent(Collider::getComponentType()));
+         Collider* collider = static_cast<Collider*>(sceneobj->getComponent(Collider::getComponentType()));
         if (collider) {
             visibleColliders.push_back(collider);
         }

@@ -22,15 +22,15 @@ namespace gvr
     void VulkanRenderData::bindToShader(Shader* shader, Renderer* renderer)
     {
 /*
-    VulkanShader* vkshader = reinterpret_cast<VulkanShader*>(shader);
-    VulkanRenderer* vkrender = reinterpret_cast<VulkanRenderer*>(renderer);
+    VulkanShader* vkshader = static_cast<VulkanShader*>(shader);
+    VulkanRenderer* vkrender = static_cast<VulkanRenderer*>(renderer);
     VulkanCore* vkcore = vkrender->getCore();
     VkDevice& device = vkcore->getDevice();
 
     getTransformUbo().bindBuffer(shader, renderer);
     if (uniform_dirty)
     {
-        VulkanVertexBuffer* vbuf = reinterpret_cast<VulkanVertexBuffer*>(mesh()->getVertexBuffer());
+        VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(mesh()->getVertexBuffer());
         GVR_VK_Vertices& vkverts = *(vbuf->getVKVertices());
         ShaderData* mtl = material(0);
         VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(mtl);

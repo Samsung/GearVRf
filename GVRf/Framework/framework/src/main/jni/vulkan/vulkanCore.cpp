@@ -524,7 +524,7 @@ void VulkanCore::InitCommandPools(){
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
         bool transformUboPresent = shader->usesMatrixUniforms();
-        VulkanShader* vk_shader = reinterpret_cast<VulkanShader*>(shader);
+        VulkanShader* vk_shader = static_cast<VulkanShader*>(shader);
         if (!shader->isShaderDirty()) {
             return;
         }
@@ -551,7 +551,7 @@ void VulkanCore::InitCommandPools(){
         else
         vk_shader->makeLayout(vkMtl, uniformAndSamplerBinding,  index, vkdata);
 
-        VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
 
         ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
                                                                                        uniformAndSamplerBinding.size(),
@@ -566,7 +566,7 @@ void VulkanCore::InitCommandPools(){
         pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
         pushConstantRange.stageFlags                    = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
+        VkPipelineLayout &pipelineLayout = static_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
                                      gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 1, &pushConstantRange),
                                      nullptr, &pipelineLayout);
@@ -965,7 +965,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                  Camera *camera, ShaderManager* shader_manager, RenderTarget* renderTarget) {
         // For the triangle sample, we pre-record our command buffer, as it is static.
         // We have a buffer per swap chain image, so loop over the creation process.
-        VkCommandBuffer &cmdBuffer = (reinterpret_cast<VkRenderTarget*>(renderTarget))->getCommandBuffer();
+        VkCommandBuffer &cmdBuffer = (static_cast<VkRenderTarget*>(renderTarget))->getCommandBuffer();
 
         // vkBeginCommandBuffer should reset the command buffer, but Reset can be called
         // to make it more explicit.
@@ -997,14 +997,14 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         for (int j = 0; j < render_data_vector.size(); j++) {
 
-            VulkanRenderData *rdata = reinterpret_cast<VulkanRenderData *>(render_data_vector[j]);
+            VulkanRenderData *rdata = static_cast<VulkanRenderData *>(render_data_vector[j]);
 
             for(int curr_pass =0 ;curr_pass < rdata->pass_count(); curr_pass++) {
 
                vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 rdata->getVKPipeline(curr_pass) );
 
-                VulkanShader *shader = reinterpret_cast<VulkanShader *>(shader_manager->getShader(
+                VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(
                        rdata->get_shader(false,curr_pass)));
 
                 VkDescriptorSet descriptorSet = rdata->getDescriptorSet(curr_pass);
@@ -1027,8 +1027,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                // Bind our vertex buffer, with a 0 offset.
                VkDeviceSize offsets[1] = {0};
                const Mesh *mesh = rdata->mesh();
-                VulkanVertexBuffer *vbuf = reinterpret_cast< VulkanVertexBuffer *>(mesh->getVertexBuffer());
-               const VulkanIndexBuffer *ibuf = reinterpret_cast<const VulkanIndexBuffer *>(mesh->getIndexBuffer());
+                VulkanVertexBuffer *vbuf = static_cast< VulkanVertexBuffer *>(mesh->getVertexBuffer());
+               const VulkanIndexBuffer *ibuf = static_cast<const VulkanIndexBuffer *>(mesh->getIndexBuffer());
                const GVR_VK_Vertices *vert = (vbuf->getVKVertices(shader));
 
                vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &(vert->buf), offsets);
@@ -1096,7 +1096,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                               vkRdata->getVKPipeline(0));
 
-            VkPipelineLayout &pipelineLayout = reinterpret_cast<VulkanShader *>(shader)->getPipelineLayout();
+            VkPipelineLayout &pipelineLayout = static_cast<VulkanShader *>(shader)->getPipelineLayout();
 
             VkDescriptorSet descriptorSet1 = vkRdata->getDescriptorSet(0);
             VulkanMaterial *vkmtl = (VulkanMaterial *)static_cast<VulkanMaterial *>(vkRdata->material(
@@ -1122,7 +1122,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             // Issue a draw command, with our vertices. Full screen quad
             const Mesh *mesh = vkRdata->mesh();
 
-        const VulkanIndexBuffer *ibuf = reinterpret_cast<const VulkanIndexBuffer *>(mesh->getIndexBuffer());
+        const VulkanIndexBuffer *ibuf = static_cast<const VulkanIndexBuffer *>(mesh->getIndexBuffer());
         if(ibuf && ibuf->getIndexCount()) {
             const GVR_VK_Indices &ind = ibuf->getVKIndices();
             VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
@@ -1147,7 +1147,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
     void VulkanCore::submitCmdBuffer(VkRenderTarget* renderTarget){
 
-        VkFence fence = reinterpret_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
+        VkFence fence = static_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
         vkResetFences(m_device, 1, &fence);
@@ -1170,7 +1170,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     VkRenderTexture* VulkanCore::getRenderTexture(VkRenderTarget* renderTarget) {
 
 
-        VkFence fence =  reinterpret_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
+        VkFence fence =  static_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
         VkRenderTarget* renderTarget1 = renderTarget ;
         VkResult err;
         err = vkGetFenceStatus(m_device, fence);
@@ -1179,25 +1179,25 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkResult status;
         // check the status of current fence, if not ready take the previous one, we are incrementing with 2 for left and right frames.
         if (err != VK_SUCCESS) {
-            renderTarget1 = reinterpret_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
+            renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
             while (renderTarget1!= nullptr && renderTarget1 != renderTarget) {
-                VkFence fence1 = reinterpret_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
+                VkFence fence1 = static_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
                 status = vkGetFenceStatus(m_device, fence1);
                 if (VK_SUCCESS == status) {
                     found = true;
                     break;
                 }
-                renderTarget1 = reinterpret_cast<VkRenderTarget*>(renderTarget1->getNextRenderTarget());
+                renderTarget1 = static_cast<VkRenderTarget*>(renderTarget1->getNextRenderTarget());
             }
              if (!found) {
-                 renderTarget1 = reinterpret_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
-                 VkFence fence1 = reinterpret_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
+                 renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
+                 VkFence fence1 = static_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
                 err = vkWaitForFences(m_device, 1, &fence1 , VK_TRUE,
                                   4294967295U);
              }
         }
 
-        return reinterpret_cast<VkRenderTexture*>(renderTarget1->getTexture());
+        return static_cast<VkRenderTexture*>(renderTarget1->getTexture());
     }
 
     int VulkanCore::DrawFrameForRenderDataPE() {
@@ -1236,7 +1236,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if(posteffectCount)
             renderTexture = getPostEffectRenderTexture((posteffectCount - 1)%2);
         else
-            renderTexture = getRenderTexture(reinterpret_cast<VkRenderTarget*>(renderTarget));
+            renderTexture = getRenderTexture(static_cast<VkRenderTarget*>(renderTarget));
 
         VkCommandBuffer trnCmdBuf;
         createTransientCmdBuffer(trnCmdBuf);
@@ -1282,13 +1282,13 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         //    vkData->setDescriptorSetNull(true,pass);
             return true;
         }
-        VulkanShader* vkShader = reinterpret_cast<VulkanShader*>(shader);
+        VulkanShader* vkShader = static_cast<VulkanShader*>(shader);
         bool bones_present = shader->hasBones();
 
         std::vector<VkWriteDescriptorSet> writes;
         VkDescriptorPool descriptorPool;
         GetDescriptorPool(descriptorPool);
-        VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
@@ -1323,7 +1323,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     bool VulkanCore::InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData, int postEffectIndx, VkRenderTarget* renderTarget) {
         VkDescriptorPool descriptorPool;
         GetDescriptorPool(descriptorPool);
-        VkDescriptorSetLayout &descriptorLayout = reinterpret_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
@@ -1339,7 +1339,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorImageInfo descriptorImageInfoPass2[1] = {};
              descriptorImageInfoPass2[0].sampler = VK_NULL_HANDLE;
 
-        VkRenderTexture* renderTexture = reinterpret_cast<VkRenderTexture*>(renderTarget->getTexture());
+        VkRenderTexture* renderTexture = static_cast<VkRenderTexture*>(renderTarget->getTexture());
         renderTexture->getRenderPass();
         if(postEffectIndx == 0) {
             descriptorImageInfoPass2[0].imageView = renderTexture->getFBO()->getImageView(

@@ -107,7 +107,7 @@ struct VulkanRenderPass : public RenderPass
         void generateVbos(const std::string& descriptor, VulkanRenderer* renderer, Shader* shader){
             VulkanVertexBuffer* vbuf = static_cast<VulkanVertexBuffer*>(mesh_->getVertexBuffer());
             vbuf->generateVKBuffers(renderer->getCore(),shader);
-             VulkanIndexBuffer* ibuf = reinterpret_cast< VulkanIndexBuffer*>(mesh_->getIndexBuffer());
+            VulkanIndexBuffer* ibuf = static_cast< VulkanIndexBuffer*>(mesh_->getIndexBuffer());
             ibuf->generateVKBuffers(renderer->getCore());
         }
 

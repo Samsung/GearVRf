@@ -79,7 +79,7 @@ namespace gvr {
                     return;
                 }
                 int elemsize = e.Size / e.Count;
-                const char* data = reinterpret_cast<const char*>(getData());
+                const char* data = static_cast<const char*>(getData());
                 data += e.Offset;
                 if (e.IsInt)
                 {

@@ -36,7 +36,7 @@ namespace gvr{
 
      vkCmdSetScissor(mCmdBuffer,0,1, &scissor);
      vkCmdSetViewport(mCmdBuffer,0,1,&viewport);
-     VkRenderPassBeginInfo rp_begin =  (reinterpret_cast<VkRenderTexture*>(mRenderTexture))->getRenderPassBeginInfo();
+     VkRenderPassBeginInfo rp_begin =  (static_cast<VkRenderTexture*>(mRenderTexture))->getRenderPassBeginInfo();
      vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
  }
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview): RenderTarget(renderTexture, is_multiview){
@@ -54,11 +54,11 @@ void VkRenderTarget::createCmdBuffer(VkDevice device, VkCommandPool commandPool)
     GVR_VK_CHECK(!ret);
 }
 void VkRenderTarget::initVkData() {
-    VulkanRenderer* renderer = reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
+    VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
     VkDevice device = renderer->getDevice();
     VkCommandPool commandPool = renderer->getCore()->getCommandPool();
     createCmdBuffer(device,commandPool);
-    reinterpret_cast<VkRenderTexture*>(mRenderTexture)->createFenceObject(device);
+    static_cast<VkRenderTexture*>(mRenderTexture)->createFenceObject(device);
 }
 VkRenderTarget::VkRenderTarget(Scene* scene): RenderTarget(scene){
     initVkData();

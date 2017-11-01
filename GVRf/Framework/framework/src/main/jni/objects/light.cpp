@@ -33,7 +33,7 @@ namespace gvr {
  */
     void Light::render(Shader *shader)
     {
-        GLShader *glshader = reinterpret_cast<GLShader *>(shader);
+        GLShader *glshader = static_cast<GLShader *>(shader);
         int program = glshader->getProgramId();
 
         auto it = dirty_.find(program);
