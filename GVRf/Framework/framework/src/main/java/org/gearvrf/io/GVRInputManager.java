@@ -215,9 +215,11 @@ public abstract class GVRInputManager {
         int vendorId = device.getVendorId();
         int productId = device.getProductId();
 
-        if (sources == (InputDevice.SOURCE_TOUCHSCREEN | InputDevice.SOURCE_KEYBOARD)) {
+        if ((sources & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN
+                && (sources & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
             return GVRControllerType.CONTROLLER;
         }
+
         if ((sources & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD ||
             (sources & InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
             // Allow gpio keyboard to be a gaze controller if enabled, also allow
