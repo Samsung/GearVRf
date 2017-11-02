@@ -64,6 +64,9 @@ protected:
     }
 
 public:
+    void renderToOculus(RenderTarget* renderTarget){
+        vulkanCore_->renderToOculus(renderTarget);
+    }
     Texture* createSharedTexture( int id) {};
 
     VulkanRenderer() : vulkanCore_(nullptr) {

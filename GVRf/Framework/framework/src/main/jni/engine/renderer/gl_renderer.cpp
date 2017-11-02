@@ -405,6 +405,7 @@ namespace gvr
      */
     void GLRenderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
     {
+        checkGLError("makeShadowMaps");
         const std::vector<Light*> lights = scene->getLightList();
         GLint drawFB, readFB;
         int texIndex = 0;

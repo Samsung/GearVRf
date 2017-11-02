@@ -110,7 +110,7 @@ public:
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*);
     void BuildCmdBufferForRenderDataPE(Camera*, RenderData* rdata, Shader* shader, int postEffectIndx);
 
-    VkRenderTexture* DrawFrameForRenderData(VkRenderTarget*);
+    VkRenderTexture* getRenderTexture(VkRenderTarget*);
     int DrawFrameForRenderDataPE();
 
     VkCommandBuffer* getCurrentCmdBufferPE(){
@@ -119,7 +119,7 @@ public:
     int AcquireNextImage();
 
     void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, VkRenderPass);
-
+    void submitCmdBuffer(VkRenderTarget* renderTarget);
     bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
                                      uint32_t *typeIndex);
 
@@ -144,7 +144,6 @@ public:
     void initVulkanCore();
 
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
-    void RenderToOculus(VkRenderTexture*);
     void InitPostEffectChain();
 
     VkPipeline getPipeline(std::string key){
@@ -165,7 +164,7 @@ public:
     VkRenderTexture* getPostEffectRenderTexture(int index){
         return mPostEffectTexture[index];
     }
-
+    void renderToOculus(RenderTarget* renderTarget);
 private:
  //   std::vector <VkFence> waitFences;
     VkFence postEffectFence;

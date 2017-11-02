@@ -1,8 +1,22 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 #include "../engine/renderer/renderer.h"
 #include "vk_render_to_texture.h"
 #include "../engine/renderer/vulkan_renderer.h"
-#include "vulkan.h"
-#include "vulkanCore.h"
 
 namespace gvr{
 void VkRenderTexture::bind() {
@@ -15,6 +29,15 @@ void VkRenderTexture::bind() {
     }
 
 }
+const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
+    LOGE("inside VkRenderTexture::getDescriptorImage");
+    mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    mImageInfo.imageView = fbo->getImageView(COLOR_IMAGE);
+    uint64_t index = TextureParameters().getHashCode();
+    index = (index << 32) | 1;
+    mImageInfo.sampler = getSampler(index);
+    return  mImageInfo;
+}
 
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
@@ -23,7 +46,22 @@ void VkRenderTexture::createRenderPass(){
     clear_values.resize(2);
     fbo->addRenderPass(renderPass);
 }
+bool VkRenderTexture::isReady(){
+    VkResult err;
+    VulkanRenderer* renderer = reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
+    VkDevice device = renderer->getDevice();
+    err = vkWaitForFences(device, 1, &mWaitFence , VK_TRUE,
+                          4294967295U);
+    if(err == VK_SUCCESS)
+        return true;
 
+    return false;
+}
+void VkRenderTexture::createFenceObject(VkDevice device){
+    VkResult ret = VK_SUCCESS;
+    ret = vkCreateFence(device, gvr::FenceCreateInfo(), nullptr, &mWaitFence);
+    GVR_VK_CHECK(!ret);
+}
     void VkRenderTexture::endRenderingPE(Renderer* renderer) {
         VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
         vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()));

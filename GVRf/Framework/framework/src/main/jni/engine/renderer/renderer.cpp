@@ -37,7 +37,9 @@ void Renderer::initializeStats() {
 Renderer::Renderer() : numberDrawCalls(0),
                        numberTriangles(0),
                        numLights(0),
-                       batch_manager(nullptr) {
+                       batch_manager(nullptr), mLeftRenderTarget{nullptr, nullptr, nullptr},
+                       mRightRenderTarget{nullptr, nullptr, nullptr},
+                       mMultiviewRenderTarget{nullptr, nullptr, nullptr}{
     if(do_batching && !gRenderer->isVulkanInstance()) {
         batch_manager = new BatchManager(BATCH_SIZE, MAX_INDICES);
     }

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #ifndef VULKAN_SHADER_H_
 #define VULKAN_SHADER_H_
 #include <sstream>

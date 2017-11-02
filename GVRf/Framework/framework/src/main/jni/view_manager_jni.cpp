@@ -55,10 +55,13 @@ extern "C" {
         RenderTexture *post_effect_render_texture_b =
                 reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_b);
 
+
         renderTarget->cullFromCamera(scene, renderTarget->getCamera(),gRenderer,shader_manager);
-        renderTarget->beginRendering(gRenderer);
+        if(!gRenderer->isVulkanInstance())
+            renderTarget->beginRendering(gRenderer);
         gRenderer->renderRenderTarget(scene, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
-        renderTarget->endRendering(gRenderer);
+        if(!gRenderer->isVulkanInstance())
+            renderTarget->endRendering(gRenderer);
     }
 
     JNIEXPORT void JNICALL

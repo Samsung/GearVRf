@@ -67,23 +67,23 @@ public class GVRDirectLight extends GVRLightBase
                 + " vec4 specular_intensity"
                 + " float shadow_map_index"
                 + " vec4 sm0 vec4 sm1 vec4 sm2 vec4 sm3";
-         if (useShadowShader)
-         {
-             if (fragmentShader == null)
-                 fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
-             if (vertexShader == null)
-                 vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
-             mVertexDescriptor = "vec4 shadow_position";
-             mVertexShaderSource = vertexShader;
-         }
-         else if (fragmentShader == null)
-         {
-             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
-         }
-         mFragmentShaderSource = fragmentShader;
-         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
-         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
-         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
+        if (useShadowShader)
+        {
+            if (fragmentShader == null)
+                fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
+            if (vertexShader == null)
+                vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
+            mVertexDescriptor = "vec4 shadow_position";
+            mVertexShaderSource = vertexShader;
+        }
+        else if (fragmentShader == null)
+        {
+            fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
+        }
+        mFragmentShaderSource = fragmentShader;
+        setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
+        setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
+        setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
     }
     
     /**
