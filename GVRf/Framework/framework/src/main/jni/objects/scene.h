@@ -183,7 +183,7 @@ public:
     /**
      * @return new local reference to the java object or nullptr if the object has been collected
      */
-    jobject getJavaObj(JNIEnv& env) const { env.NewLocalRef(javaObj_); }
+    jobject getJavaObj(JNIEnv& env) const { return env.NewLocalRef(javaObj_); }
 
     int get_java_env(JNIEnv** envptr);
 
