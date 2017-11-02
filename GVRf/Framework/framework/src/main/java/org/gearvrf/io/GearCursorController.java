@@ -147,9 +147,6 @@ public final class GearCursorController extends GVRCursorController
     @Override
     public void setPosition(float x, float y, float z) {
         position.set(x, y, z);
-        for (GVRSceneObject child : pivot.getChildren()) {
-            child.getTransform().setPosition(x, y, z);
-        }
         invalidate();
     }
 
@@ -206,7 +203,14 @@ public final class GearCursorController extends GVRCursorController
                 }
                 thread.initialize();
                 initialized = true;
-                context.getInputManager().activateCursorController(GearCursorController.this);
+                Runnable task = new Runnable()
+                {
+                    public void run()
+                    {
+                        context.getInputManager().activateCursorController(GearCursorController.this);
+                    }
+                };
+                context.runOnTheFrameworkThread(task);
             }
             ControllerEvent event = ControllerEvent.obtain();
 

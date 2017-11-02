@@ -6,8 +6,10 @@ import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.IPickEvents;
@@ -21,6 +23,7 @@ import org.joml.Vector3f;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * A {@link GVRSceneObject} that respresents a GearVR controller in the scene.
@@ -54,12 +57,18 @@ public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
         try
         {
             controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj");
-            addChildObject(controller);
         }
         catch (IOException ex)
         {
-            Log.e("GVRGearControllerSceneObject", "ERROR: cannot load GearVR controller model gear_vr_controller.obj");
+            Log.e("GearController", "cannot load gear_vr_controller.obj");
         }
+        List<GVRRenderData> rdatas = controller.getAllComponents(GVRRenderData.getComponentType());
+        for (GVRRenderData rd : rdatas)
+        {
+            rd.disableLight();
+        }
+        gvrContext.getMainScene().bindShaders(controller);
+        addChildObject(controller);
     }
 
     /**
