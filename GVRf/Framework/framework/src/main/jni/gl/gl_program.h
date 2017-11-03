@@ -20,11 +20,10 @@
 #ifndef GL_PROGRAM_H_
 #define GL_PROGRAM_H_
 
-#include <string>
 #include "gl/gl_headers.h"
-
 #include "util/gvr_log.h"
 #include "util/gvr_gl.h"
+#include <string.h>
 
 namespace gvr {
 class GLProgram {
