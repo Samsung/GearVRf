@@ -392,7 +392,14 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
         return false;             // no shader available
     }
     if(shader == NULL){
-        post_effect->bindShader(rstate.scene,rstate.is_multiview);
+        //@todo implementation details leaked; unify common JNI reqs of Scene and RenderData
+        //@todo duped in render_data.cpp
+        JNIEnv* env = nullptr;
+        int rc = rstate.scene->get_java_env(&env);
+        post_effect->bindShader(env, rstate.scene->getJavaObj(*env), rstate.is_multiview);
+        if (rc > 0) {
+            rstate.scene->detach_java_env();
+        }
         return false;
     }
     renderWithShader(rstate, shader, post_effect, material, pass);
