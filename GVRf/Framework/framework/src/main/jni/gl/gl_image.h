@@ -58,14 +58,15 @@ public:
     virtual int     getId() { return mId; }
     virtual bool    updateGPU();
     void            updateTexParams(const TextureParameters&);
+    virtual void    updateTexParams() = 0;
     GLenum          getTarget() const { return mGLTarget; }
     void            setTexId(GLuint id) { mId = id; }
     void            setTexParamsDirty(bool flag) {mTexParamsDirty = flag; }
 private:
-    GLImage(const GLImage& gl_texture);
-    GLImage(GLImage&& gl_texture);
-    GLImage& operator=(const GLImage& gl_texture);
-    GLImage& operator=(GLImage&& gl_texture);
+    GLImage(const GLImage& gl_texture) = delete;
+    GLImage(GLImage&& gl_texture) = delete;
+    GLImage& operator=(const GLImage& gl_texture) = delete;
+    GLImage& operator=(GLImage&& gl_texture) = delete;
 
 protected:
 

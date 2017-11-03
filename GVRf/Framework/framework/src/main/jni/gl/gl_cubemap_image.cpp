@@ -20,9 +20,8 @@
 #include <gvr_gl.h>
 #include "gl/gl_cubemap_image.h"
 #include "gl_bitmap_image.h"
-
 namespace gvr {
-
+class TextureParameters;
 void GLCubemapImage::update(int texid)
 {
     if (mJava == NULL)
@@ -56,13 +55,16 @@ void GLCubemapImage::updateFromBitmap(int texid)
     // to avoid duplicated code in the throw case and normal
     // case.
     SCOPE_EXIT( clearData(env); );
+
     for (int i = 0; i < 6; i++)
     {
         jobject bitmap = env->GetObjectArrayElement(bmapArray, i);
         jobject bmapref = env->NewLocalRef(bitmap);
-        mFormat = GLBitmapImage::updateFromBitmap(env, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, bitmap);
+        mFormat = GLBitmapImage::updateFromBitmap(env, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, bitmap, false);
         env->DeleteLocalRef(bmapref);
     }
+    if(!mIsCompressed && mTexParams.getMinFilter() >=  TextureParameters::NEAREST_MIPMAP_NEAREST)
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
 void GLCubemapImage::updateFromMemory(int texid)

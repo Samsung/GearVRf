@@ -27,9 +27,9 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-class GLProgram {
+class GLProgram final {
 public:
-    GLProgram(const char* pVertexSourceStrings,
+    explicit GLProgram(const char* pVertexSourceStrings,
             const char* pFragmentSourceStrings) {
         GLint vertex_shader_string_lengths[1] = { (GLint) strlen(
                 pVertexSourceStrings) };
@@ -41,7 +41,7 @@ public:
                 fragment_shader_string_lengths);
     }
 
-    GLProgram(const char** pVertexSourceStrings,
+    explicit GLProgram(const char** pVertexSourceStrings,
             const GLint* pVertexSourceStringLengths,
             const char** pFragmentSourceStrings,
             const GLint* pFragmentSourceStringLengths, int count) :

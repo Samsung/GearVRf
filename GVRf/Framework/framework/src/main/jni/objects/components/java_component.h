@@ -31,19 +31,24 @@ namespace gvr {
 
     class JavaComponent : public Component {
     public:
-        JavaComponent(long long type) : Component(type), javaObj_(0L), javaVM_(NULL) { }
+        explicit JavaComponent(long long type) : Component(type), javaObj_(0L), javaVM_(NULL) { }
         JavaComponent() : Component(), javaObj_(0L), javaVM_(NULL) { }
 
         virtual ~JavaComponent();
         virtual JNIEnv* set_java(jobject javaObj, JavaVM *javaVM);
-        jobject get_java() { return javaObj_; }
-        void free_java();
+
+        /**
+         * @return nullptr if the Java object is not around anymore or a local reference to it
+         */
+        jobject get_java(JNIEnv* env) {
+            return env->NewLocalRef(javaObj_);
+        }
 
     private:
-        JavaComponent(const JavaComponent &component);
-        JavaComponent(JavaComponent &&component);
-        JavaComponent &operator=(const JavaComponent &component);
-        JavaComponent &operator=(JavaComponent &&component);
+        JavaComponent(const JavaComponent &component) = delete;
+        JavaComponent(JavaComponent &&component) = delete;
+        JavaComponent &operator=(const JavaComponent &component) = delete;
+        JavaComponent &operator=(JavaComponent &&component) = delete;
 
     protected:
         jobject javaObj_;
@@ -55,30 +60,22 @@ inline JNIEnv* JavaComponent::set_java(jobject javaObj, JavaVM *javaVM)
 {
     JNIEnv *env = getCurrentEnv(javaVM);
     javaVM_ = javaVM;
-    if (env)
-    {
-        javaObj_ = env->NewGlobalRef(javaObj);
-        return env;
-    }
-    return NULL;
+    javaObj_ = env->NewWeakGlobalRef(javaObj);
+    return env;
 }
 
-inline void JavaComponent::free_java()
+inline JavaComponent::~JavaComponent()
 {
     if (javaVM_ && javaObj_)
     {
         JNIEnv* env;
         jint rs = javaVM_->AttachCurrentThread(&env, NULL);
         if (rs == JNI_OK) {
-            env->DeleteGlobalRef(javaObj_);
+            env->DeleteWeakGlobalRef(javaObj_);
         }
     }
 }
 
-inline JavaComponent::~JavaComponent()
-{
-    free_java();
-}
 }
 #endif
 

@@ -41,7 +41,7 @@ class RenderData;
 class ShaderData : public HybridObject
 {
 public:
-    ShaderData(const char* texture_desc);
+    explicit ShaderData(const char* texture_desc);
 
     virtual ~ShaderData() { }
 
@@ -74,10 +74,10 @@ public:
     virtual const UniformBlock& uniforms() const = 0;
     virtual void useGPUBuffer(bool flag) = 0;
 private:
-    ShaderData(const ShaderData&);
-    ShaderData(ShaderData&&);
-    ShaderData& operator=(const ShaderData&);
-    ShaderData& operator=(ShaderData&&);
+    ShaderData(const ShaderData&) = delete;
+    ShaderData(ShaderData&&) = delete;
+    ShaderData& operator=(const ShaderData&) = delete;
+    ShaderData& operator=(ShaderData&&) = delete;
 
 protected:
     int mNativeShader;

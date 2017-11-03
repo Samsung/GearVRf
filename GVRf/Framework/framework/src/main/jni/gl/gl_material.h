@@ -32,12 +32,14 @@ namespace gvr
     class GLMaterial : public ShaderData
     {
     public:
-        GLMaterial(const char* uniform_desc, const char* texture_desc)
+        explicit GLMaterial(const char* uniform_desc, const char* texture_desc)
         : ShaderData(texture_desc),
           uniforms_(uniform_desc, MATERIAL_UBO_INDEX, "Material_ubo")
         {
             uniforms_.useGPUBuffer(false);
         }
+
+        virtual ~GLMaterial() {}
 
         virtual UniformBlock& uniforms()
         {

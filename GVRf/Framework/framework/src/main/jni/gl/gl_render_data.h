@@ -40,13 +40,15 @@ namespace gvr
         {
             copy(rdata);
         }
+
+        virtual ~GLRenderData() {}
+
         virtual void render(Shader*, Renderer*);
 
     private:
-        //  GLRenderData(const GLRenderData& render_data);
-        GLRenderData(GLRenderData &&render_data);
-        GLRenderData &operator=(const GLRenderData &render_data);
-        GLRenderData &operator=(GLRenderData &&render_data);
+        GLRenderData(GLRenderData &&render_data) = delete;
+        GLRenderData &operator=(const GLRenderData &render_data) = delete;
+        GLRenderData &operator=(GLRenderData &&render_data) = delete;
     };
 }
 #endif

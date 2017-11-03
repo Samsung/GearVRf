@@ -177,12 +177,12 @@ namespace gvr
 
         desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_view_i_[2]; mat4 u_model; float u_right; uint u_render_mask; ";
 
-        transform_ubo_[1] = reinterpret_cast<GLUniformBlock*>
+        transform_ubo_[1] = static_cast<GLUniformBlock*>
         (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
         transform_ubo_[1]->useGPUBuffer(false);
 
         desc = " mat4 u_view; mat4 u_mvp; mat4 u_mv; mat4 u_mv_it; mat4 u_view_i; mat4 u_model; float u_right;";
-        transform_ubo_[0] = reinterpret_cast<GLUniformBlock*>
+        transform_ubo_[0] = static_cast<GLUniformBlock*>
                             (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
         transform_ubo_[0]->useGPUBuffer(false);
     }
@@ -211,8 +211,6 @@ namespace gvr
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
-
-        RenderTexture* saveRenderTexture = renderTarget->getTexture();
         std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
 
         if (!rstate.shadow_map)
@@ -248,6 +246,10 @@ namespace gvr
         }
         else
         {
+            static GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT,viewport);
+            GLint drawFboId = 0;
+            glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
             int npost = post_effects->pass_count() - 1;
             RenderTexture* renderTexture = post_effect_render_texture_a;
             RenderTexture* input_texture = renderTexture;
@@ -282,8 +284,8 @@ namespace gvr
                 renderPostEffectData(rstate, input_texture, post_effects, i);
                 input_texture = renderTexture;
             }
-            GL(glBindFramebuffer(GL_FRAMEBUFFER, saveRenderTexture->getFrameBufferId()));
-            GL(glViewport(0, 0, saveRenderTexture->width(), saveRenderTexture->height()));
+            GL(glBindFramebuffer(GL_FRAMEBUFFER, drawFboId));
+            GL(glViewport(viewport[0], viewport[1], viewport[2], viewport[3]));
             GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
             renderPostEffectData(rstate, input_texture, post_effects, npost);
         }
@@ -472,7 +474,7 @@ namespace gvr
                 Mesh *bounding_box_mesh = render_data->mesh()->createBoundingBox();
                 ShaderData *bbox_material = new GLMaterial("", "");
                 RenderPass *pass = Renderer::getInstance()->createRenderPass();
-                GLShader *bboxShader = reinterpret_cast<GLShader *>(rstate.shader_manager
+                GLShader *bboxShader = static_cast<GLShader *>(rstate.shader_manager
                         ->findShader("GVRBoundingBoxShader"));
                 pass->set_shader(bboxShader->getProgramId(), false);
                 pass->set_material(bbox_material);

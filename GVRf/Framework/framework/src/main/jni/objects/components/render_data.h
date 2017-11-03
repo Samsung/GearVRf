@@ -130,7 +130,7 @@ public:
         copy(rdata);
     }
 
-    ~RenderData();
+    virtual ~RenderData();
 
     static long long getComponentType() {
         return COMPONENT_TYPE_RENDER_DATA;
@@ -157,7 +157,7 @@ public:
      * Select or generate a shader for this render data.
      * This function executes a Java task on the Framework thread.
      */
-    void bindShader(Scene* scene, bool);
+    void bindShader(JNIEnv* env, jobject localSceneObject, bool);
     void markDirty() {
         dirty_ = true;
     }
@@ -393,10 +393,9 @@ public:
     void adjustRenderingOrderForTransparency(bool hasAlpha);
 
 private:
-    //  RenderData(const RenderData& render_data);
-    RenderData(RenderData&& render_data);
-    RenderData& operator=(const RenderData& render_data);
-    RenderData& operator=(RenderData&& render_data);
+    RenderData(RenderData&& render_data) = delete;
+    RenderData& operator=(const RenderData& render_data) = delete;
+    RenderData& operator=(RenderData&& render_data) = delete;
 
 protected:
     static const int DEFAULT_RENDER_MASK = Left | Right;

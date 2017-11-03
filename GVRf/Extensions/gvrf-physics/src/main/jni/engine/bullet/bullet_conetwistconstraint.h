@@ -32,11 +32,11 @@ namespace gvr {
 
     class BulletConeTwistConstraint : public PhysicsConeTwistConstraint, BulletObject {
     public:
-        BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyB, PhysicsVec3 pivot,
-                                  PhysicsMat3x3 const &bodyRotation,
-                                  PhysicsMat3x3 const &coneRotation);
+        explicit BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyB, PhysicsVec3 pivot,
+                                           PhysicsMat3x3 const &bodyRotation,
+                                           PhysicsMat3x3 const &coneRotation);
 
-        ~BulletConeTwistConstraint();
+        virtual ~BulletConeTwistConstraint();
 
         void setSwingLimit(float limit);
 

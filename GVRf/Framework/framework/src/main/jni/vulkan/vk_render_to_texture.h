@@ -51,13 +51,13 @@ public:
     virtual ~VkRenderTexture(){
         delete fbo;
     }
-    VkRenderTexture(int width, int height, int sample_count = 1):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height){}
+    explicit VkRenderTexture(int width, int height, int sample_count = 1):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height){}
     virtual unsigned int getFrameBufferId() const {
-
+        return 0;
     }
 
     virtual unsigned int getDepthBufferId() const {
-
+        return 0;
     }
     virtual void bind();
     virtual void beginRendering(Renderer* renderer);

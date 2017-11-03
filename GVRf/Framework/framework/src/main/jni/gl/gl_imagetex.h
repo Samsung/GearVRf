@@ -38,9 +38,19 @@ namespace gvr {
                 GLImage(target,id)
 
         {
+            mTexParams.setMinFilter(GL_LINEAR); // if created with external texture
             mState = HAS_DATA;
         }
 
+        virtual ~GLImageTex() {}
+
+        void updateTexParams() {
+            int min_filter = mTexParams.getMinFilter();
+            if(mIsCompressed && mLevels <= 1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)
+                mTexParams.setMinFilter(GL_LINEAR);
+
+            GLImage::updateTexParams(mTexParams);
+        }
         explicit GLImageTex(ImageType type, int format, short width, short height) :
                 Image(type, format),
                 GLImage(GL_TEXTURE_2D)

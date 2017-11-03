@@ -46,7 +46,10 @@ GLRenderImage::GLRenderImage(int width, int height, int layers)
     mType = (layers > 1) ? Image::ImageType::ARRAY : Image::ImageType::BITMAP;
     mState = HAS_DATA;
 }
-
+void GLRenderImage::updateTexParams() {
+    mTexParams.setMinFilter(GL_LINEAR);
+    GLImage::updateTexParams(mTexParams);
+}
 void texImage3D(int color_format, int width, int height, int depth , GLenum target) {
     switch (color_format) {
         case ColorFormat::COLOR_565:
@@ -118,7 +121,7 @@ GLRenderImage::GLRenderImage(int width, int height, int layers, int color_format
 
     if (texparams)
     {
-        updateTexParams(mTexParams);
+        updateTexParams();
     }
     updateGPU();
     switch (target){
@@ -145,7 +148,7 @@ GLRenderImage::GLRenderImage(int width, int height, int color_format, const Text
 
     if (texparams)
     {
-        updateTexParams(mTexParams);
+        updateTexParams();
     }
     updateGPU();
     texImage2D(color_format,width,height,GL_TEXTURE_2D);

@@ -31,7 +31,7 @@ public:
         Collider(),
         half_extents_(0, 0, 0) { }
 
-    ~BoxCollider() { }
+    virtual ~BoxCollider() { }
 
     long shape_type() {
         return COLLIDER_SHAPE_BOX;

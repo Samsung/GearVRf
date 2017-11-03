@@ -244,7 +244,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
                 render_data_list.push_back((*rdata));
         }
     }
-    VkRenderTarget* vk_renderTarget = reinterpret_cast<VkRenderTarget*>(renderTarget);
+    VkRenderTarget* vk_renderTarget = static_cast<VkRenderTarget*>(renderTarget);
     vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, renderTarget);
     vulkanCore_->submitCmdBuffer(vk_renderTarget);
 

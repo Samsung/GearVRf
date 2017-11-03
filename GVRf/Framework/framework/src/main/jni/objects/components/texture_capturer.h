@@ -25,7 +25,7 @@ struct RenderState;
 
 class TextureCapturer : public Component {
 public:
-    TextureCapturer(ShaderManager *shaderManager);
+    explicit TextureCapturer(ShaderManager *shaderManager);
     virtual ~TextureCapturer();
 
     void setCapturerObject(JNIEnv *env, jobject capturer);
@@ -51,10 +51,10 @@ public:
     }
 
 private:
-    TextureCapturer(const TextureCapturer& capturer);
-    TextureCapturer(TextureCapturer&& capturer);
-    TextureCapturer& operator=(const TextureCapturer& capturer);
-    TextureCapturer& operator=(TextureCapturer&& capturer);
+    TextureCapturer(const TextureCapturer& capturer) = delete;
+    TextureCapturer(TextureCapturer&& capturer) = delete;
+    TextureCapturer& operator=(const TextureCapturer& capturer) = delete;
+    TextureCapturer& operator=(TextureCapturer&& capturer) = delete;
 
 private:
     ShaderManager *mShaderManager;

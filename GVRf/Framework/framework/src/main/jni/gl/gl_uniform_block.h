@@ -33,8 +33,8 @@ namespace gvr
     class GLUniformBlock : public UniformBlock
     {
     public:
-        GLUniformBlock(const char *descriptor, int bindingPoint, const char *blockName);
-        GLUniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxelems);
+        explicit GLUniformBlock(const char *descriptor, int bindingPoint, const char *blockName);
+        explicit GLUniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxelems);
 
         virtual ~GLUniformBlock();
 

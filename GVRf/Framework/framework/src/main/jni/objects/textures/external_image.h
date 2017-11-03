@@ -15,6 +15,7 @@ class ExternalImage : public Image
 public:
     ExternalImage() : Image(Image::ImageType::NONE, 0), mData(0)
     { }
+    virtual ~ExternalImage() {}
 
     virtual void setData(long data)
     {
@@ -27,10 +28,10 @@ public:
     }
 
 private:
-    ExternalImage(const ExternalImage& render_texture);
-    ExternalImage(ExternalImage&& render_texture);
-    ExternalImage& operator=(const ExternalImage& render_texture);
-    ExternalImage& operator=(ExternalImage&& render_texture);
+    ExternalImage(const ExternalImage& render_texture) = delete;
+    ExternalImage(ExternalImage&& render_texture) = delete;
+    ExternalImage& operator=(const ExternalImage& render_texture) = delete;
+    ExternalImage& operator=(ExternalImage&& render_texture) = delete;
 
 private:
     long mData;

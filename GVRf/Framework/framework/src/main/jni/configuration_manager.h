@@ -29,13 +29,13 @@ namespace gvr {
         int getMaxLights();
 
     private:
-        ConfigurationManager(const ConfigurationManager &configuration_manager);
+        ConfigurationManager(const ConfigurationManager &configuration_manager) = delete;
 
-        ConfigurationManager(ConfigurationManager &&configuration_manager);
+        ConfigurationManager(ConfigurationManager &&configuration_manager) = delete;
 
-        ConfigurationManager &operator=(const ConfigurationManager &configuration_manager);
+        ConfigurationManager &operator=(const ConfigurationManager &configuration_manager) = delete;
 
-        ConfigurationManager &operator=(ConfigurationManager &&configuration_manager);
+        ConfigurationManager &operator=(ConfigurationManager &&configuration_manager) = delete;
 
         void calculateMaxLights();
 

@@ -34,7 +34,7 @@ namespace gvr {
 
     bool VulkanIndexBuffer::updateGPU(Renderer* renderer)
     {
-        VulkanRenderer* vkrender = reinterpret_cast<VulkanRenderer*>(renderer);
+        VulkanRenderer* vkrender = static_cast<VulkanRenderer*>(renderer);
         generateVKBuffers(vkrender->getCore());
         return true;
     }

@@ -22,7 +22,7 @@ namespace gvr {
     class VulkanUniformBlock;
     class VulkanCore;
 
-    class VulkanDescriptor
+    class VulkanDescriptor final
     {
     public:
         VulkanDescriptor();
@@ -55,8 +55,9 @@ namespace gvr {
         int getPaddingSize(short &totaSize, int padSize);
         void uboPadding();
     public:
-        VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName);
-        VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName, int maxelems);
+        explicit VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName);
+        explicit VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName, int maxelems);
+        virtual ~VulkanUniformBlock() {}
         bool bindBuffer(Shader*, Renderer*) {}
         virtual bool updateGPU(Renderer*);
         virtual std::string makeShaderLayout();

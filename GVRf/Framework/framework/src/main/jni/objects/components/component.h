@@ -31,9 +31,9 @@ class Scene;
 class Component: public HybridObject {
 public:
     Component();
-    Component(long long type);
-    Component(SceneObject* owner_object);
-    Component(long long type, SceneObject* owner_object);
+    explicit Component(long long type);
+    explicit Component(SceneObject* owner_object);
+    explicit Component(long long type, SceneObject* owner_object);
     virtual ~Component();
 
     SceneObject* owner_object() const;
@@ -49,10 +49,10 @@ public:
     virtual void set_enable(bool enable);
 
 private:
-    Component(const Component& component);
-    Component(Component&& component);
-    Component& operator=(const Component& component);
-    Component& operator=(Component&& component);
+    Component(const Component& component) = delete;
+    Component(Component&& component) = delete;
+    Component& operator=(const Component& component) = delete;
+    Component& operator=(Component&& component) = delete;
 
 protected:
     SceneObject* owner_object_;

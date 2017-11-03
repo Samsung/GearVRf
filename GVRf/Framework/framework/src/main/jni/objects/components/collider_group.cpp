@@ -43,7 +43,7 @@ void ColliderGroup::removeCollider(Collider* collider) {
 }
 
 ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) {
-    ColliderData finalHit(reinterpret_cast<Collider*>(this));
+    ColliderData finalHit(this);
     SceneObject* ownerObject = owner_object();
 
     hit_ = glm::vec3(std::numeric_limits<float>::infinity());

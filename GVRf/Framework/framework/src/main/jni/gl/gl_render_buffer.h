@@ -26,7 +26,7 @@
 
 namespace gvr {
 
-class GLRenderBuffer {
+class GLRenderBuffer final {
 public:
     GLRenderBuffer() {
         glGenRenderbuffers(1, &id_);
@@ -41,10 +41,10 @@ public:
     }
 
 private:
-    GLRenderBuffer(const GLRenderBuffer& gl_render_buffer);
-    GLRenderBuffer(GLRenderBuffer&& gl_render_buffer);
-    GLRenderBuffer& operator=(const GLRenderBuffer& gl_render_buffer);
-    GLRenderBuffer& operator=(GLRenderBuffer&& gl_render_buffer);
+    GLRenderBuffer(const GLRenderBuffer& gl_render_buffer) = delete;
+    GLRenderBuffer(GLRenderBuffer&& gl_render_buffer) = delete;
+    GLRenderBuffer& operator=(const GLRenderBuffer& gl_render_buffer) = delete;
+    GLRenderBuffer& operator=(GLRenderBuffer&& gl_render_buffer) = delete;
 
 private:
     GLuint id_;

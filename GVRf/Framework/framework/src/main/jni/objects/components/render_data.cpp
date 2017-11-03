@@ -91,16 +91,14 @@ void RenderData::setCameraDistanceLambda(std::function<float()> func)
 JNIEnv *RenderData::set_java(jobject javaObj, JavaVM *javaVM)
 {
     JNIEnv *env = JavaComponent::set_java(javaObj, javaVM);
-    if (env)
+
+    jclass renderDataClass = env->GetObjectClass(javaObj);
+    bindShaderMethod_ = env->GetMethodID(renderDataClass, "bindShaderNative", "(Lorg/gearvrf/GVRScene;Z)V");
+    if (bindShaderMethod_ == 0)
     {
-        jclass renderDataClass = env->GetObjectClass(javaObj);
-        bindShaderMethod_ = env->GetMethodID(renderDataClass, "bindShaderNative",
-                                             "(Lorg/gearvrf/GVRScene;Z)V");
-        if (bindShaderMethod_ == 0)
-        {
-            LOGE("RenderData::bindShader ERROR cannot find 'GVRRenderData.bindShaderNative()' Java method");
-        }
+        FAIL("RenderData::bindShader ERROR cannot find 'GVRRenderData.bindShaderNative()' Java method");
     }
+
     return env;
 }
 
@@ -129,22 +127,16 @@ void RenderData::setStencilTest(bool flag) {
  * Called when the shader for a RenderData needs to be generated on the Java side.
  * This function spawns a Java task on the Framework thread which generates the shader.
  */
-void RenderData::bindShader(Scene *scene, bool isMultiview)
+void RenderData::bindShader(JNIEnv* env, jobject localSceneObject, bool isMultiview)
 {
-    if ((bindShaderMethod_ == NULL) || (javaObj_ == NULL))
+    jobject localJavaObject = get_java(env);
+    if ((bindShaderMethod_ == NULL) || (localJavaObject == NULL))
     {
         LOGE("SHADER: RenderData::bindShader could not call bindShaderNative");
     }
 
-    JNIEnv* env = NULL;
-    int rc = scene->get_java_env(&env);
-    if (env && (rc >= 0))
-    {
-        env->CallVoidMethod(javaObj_, bindShaderMethod_, scene->getJavaObj(), isMultiview);
-        if (rc > 0)
-        {
-            scene->getJavaVM()->DetachCurrentThread();
-        }
+    if (nullptr != localJavaObject && nullptr != localSceneObject) {
+        env->CallVoidMethod(localJavaObject, bindShaderMethod_, localSceneObject, isMultiview);
     }
 }
 
@@ -287,7 +279,15 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
     if (dirty)
     {
         markDirty();
-        bindShader(rstate.scene, rstate.is_multiview);
+
+        //@todo implementation details leaked; unify common JNI reqs of Scene and RenderData
+        JNIEnv* env = nullptr;
+        int rc = rstate.scene->get_java_env(&env);
+        bindShader(env, rstate.scene->getJavaObj(*env), rstate.is_multiview);
+        if (rc > 0) {
+            rstate.scene->detach_java_env();
+        }
+
         for (int p = 0; p < pass_count(); ++p)
         {
             RenderPass *rpass = pass(p);

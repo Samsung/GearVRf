@@ -26,6 +26,8 @@ namespace gvr {
 
     class PhysicsSliderConstraint : public PhysicsConstraint {
     public:
+        virtual ~PhysicsSliderConstraint() {}
+
         virtual void setAngularLowerLimit(float limit) = 0;
 
         virtual float getAngularLowerLimit() const = 0;

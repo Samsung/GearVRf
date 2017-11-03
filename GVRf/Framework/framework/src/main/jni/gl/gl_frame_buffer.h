@@ -39,10 +39,10 @@ public:
         return id_;
     }
 private:
-    GLFrameBuffer(const GLFrameBuffer& gl_frame_buffer);
-    GLFrameBuffer(GLFrameBuffer&& gl_frame_buffer);
-    GLFrameBuffer& operator=(const GLFrameBuffer& gl_frame_buffer);
-    GLFrameBuffer& operator=(GLFrameBuffer&& gl_frame_buffer);
+    GLFrameBuffer(const GLFrameBuffer& gl_frame_buffer) = delete;
+    GLFrameBuffer(GLFrameBuffer&& gl_frame_buffer) = delete;
+    GLFrameBuffer& operator=(const GLFrameBuffer& gl_frame_buffer) = delete;
+    GLFrameBuffer& operator=(GLFrameBuffer&& gl_frame_buffer) = delete;
 
 private:
     GLuint id_;

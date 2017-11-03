@@ -33,6 +33,7 @@ public:
             : GLImage(GL_TEXTURE_CUBE_MAP),
               CubemapImage(format)
     { }
+    virtual ~GLCubemapImage() {}
     virtual int getId() { return mId; }
     virtual bool isReady()
     {
@@ -43,14 +44,22 @@ public:
         mTexParams = texparams;
         mTexParamsDirty = true;
     }
+    void updateTexParams() {
+        int min_filter = mTexParams.getMinFilter();
+
+        if(mIsCompressed && mLevels <=1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)
+            mTexParams.setMinFilter(GL_LINEAR);
+
+        GLImage::updateTexParams(mTexParams);
+    }
 protected:
     virtual void update(int texid);
 
 private:
-    GLCubemapImage(const GLCubemapImage&);
-    GLCubemapImage(GLCubemapImage&&);
-    GLCubemapImage& operator=(const GLCubemapImage&);
-    GLCubemapImage& operator=(GLCubemapImage&&);
+    GLCubemapImage(const GLCubemapImage&) = delete;
+    GLCubemapImage(GLCubemapImage&&) = delete;
+    GLCubemapImage& operator=(const GLCubemapImage&) = delete;
+    GLCubemapImage& operator=(GLCubemapImage&&) = delete;
 
     void updateFromBitmap(int texid);
     void updateFromMemory(int texid);

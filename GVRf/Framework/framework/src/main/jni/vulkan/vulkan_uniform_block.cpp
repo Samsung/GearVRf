@@ -50,7 +50,7 @@ namespace gvr {
 
     bool VulkanUniformBlock::updateGPU(Renderer* renderer)
     {
-        VulkanRenderer* vkrender = reinterpret_cast<VulkanRenderer *>(renderer);
+        VulkanRenderer* vkrender = static_cast<VulkanRenderer *>(renderer);
         VulkanCore* vk = vkrender->getCore();
         if (!mIsDirty)
         {

@@ -45,6 +45,7 @@ namespace gvr {
         mWidth = width;
         mHeight = height;
         mImageSize = imageSize;
+        mIsCompressed = true;
         setDataOffsets(textureOffset, 6);
         clearData(env);
         mTextures = env->NewGlobalRef(textureArray);

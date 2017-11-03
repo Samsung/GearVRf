@@ -36,7 +36,7 @@
 
 namespace gvr {
 class Bone;
-class VertexBoneData {
+class VertexBoneData final {
 public:
     VertexBoneData();
     void setBones(std::vector<Bone*>&& bonesVec);

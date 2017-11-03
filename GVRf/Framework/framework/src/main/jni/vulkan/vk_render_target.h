@@ -32,7 +32,7 @@ public:
     explicit VkRenderTarget(Scene* scene);
     explicit VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source);
     explicit  VkRenderTarget(){}
-    ~VkRenderTarget(){}
+    virtual ~VkRenderTarget(){}
     virtual void    beginRendering(Renderer* renderer);
     virtual void    endRendering(Renderer*);
     VkCommandBuffer& getCommandBuffer(){

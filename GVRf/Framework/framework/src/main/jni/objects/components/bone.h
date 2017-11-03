@@ -52,10 +52,10 @@ public:
     }
 
 private:
-    Bone(const Bone& bone);
-    Bone(Bone&& bone);
-    Bone& operator=(const Bone& bone);
-    Bone& operator=(Bone&& bone);
+    Bone(const Bone& bone) = delete;
+    Bone(Bone&& bone) = delete;
+    Bone& operator=(const Bone& bone) = delete;
+    Bone& operator=(Bone&& bone) = delete;
 
 private:
     static glm::mat4 identityMatrix_;

@@ -32,7 +32,7 @@ namespace gvr {
     {
     public:
 
-        VertexBuffer(const char* layout_desc, int vertexCount);
+        explicit VertexBuffer(const char* layout_desc, int vertexCount);
         virtual ~VertexBuffer();
 
         /**

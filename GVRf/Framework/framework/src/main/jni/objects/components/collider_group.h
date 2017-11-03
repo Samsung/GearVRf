@@ -34,7 +34,7 @@ namespace gvr {
 class ColliderGroup: public Collider {
 public:
     ColliderGroup();
-    ~ColliderGroup();
+    virtual ~ColliderGroup();
 
     void addCollider(Collider* collider);
     void removeCollider(Collider* collider);
@@ -45,10 +45,10 @@ public:
     }
 
 private:
-    ColliderGroup(const ColliderGroup& colliderGroup);
-    ColliderGroup(ColliderGroup&& colliderGroup);
-    ColliderGroup& operator=(const ColliderGroup& colliderGroup);
-    ColliderGroup& operator=(ColliderGroup&& colliderGroup);
+    ColliderGroup(const ColliderGroup& colliderGroup) = delete;
+    ColliderGroup(ColliderGroup&& colliderGroup) = delete;
+    ColliderGroup& operator=(const ColliderGroup& colliderGroup) = delete;
+    ColliderGroup& operator=(ColliderGroup&& colliderGroup) = delete;
 
 private:
     glm::vec3 hit_;

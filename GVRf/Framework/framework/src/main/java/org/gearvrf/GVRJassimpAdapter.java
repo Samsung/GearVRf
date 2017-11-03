@@ -732,13 +732,13 @@ class GVRJassimpAdapter {
             shaderKey += texIndex;
             gvrmtl.setInt(textureKey + "_blendop", blendop);
         }
-        gvrmtl.setTexCoord(textureKey, texCoordKey, shaderKey);
         GVRTextureParameters texParams = new GVRTextureParameters(mContext);
         texParams.setWrapSType(wrapModeMap.get(aimtl.getTextureMapModeU(texType, texIndex)));
         texParams.setWrapTType(wrapModeMap.get(aimtl.getTextureMapModeV(texType, texIndex)));
         GVRTexture gvrTex = new GVRTexture(mContext, texParams);
         GVRAssetLoader.TextureRequest texRequest;
 
+        gvrTex.setTexCoord(texCoordKey, shaderKey);
         gvrmtl.setTexture(textureKey, gvrTex);
         if (texFileName.startsWith("*"))
         {

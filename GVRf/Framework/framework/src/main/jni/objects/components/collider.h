@@ -59,7 +59,7 @@ public:
 class Collider: public Component {
 public:
     Collider() : Component(Collider::getComponentType()), pick_distance_(0) {}
-    Collider(long long type) : Component(type), pick_distance_(0) {}
+    explicit Collider(long long type) : Component(type), pick_distance_(0) {}
 
     virtual ~Collider() {}
 
@@ -98,10 +98,10 @@ public:
 protected:
     float pick_distance_;
 
-    Collider(const Collider& collider);
-    Collider(Collider&& collider);
-    Collider& operator=(const Collider& collider);
-    Collider& operator=(Collider&& collider);
+    Collider(const Collider& collider) = delete;
+    Collider(Collider&& collider) = delete;
+    Collider& operator=(const Collider& collider) = delete;
+    Collider& operator=(Collider&& collider) = delete;
 };
 
 inline ColliderData::ColliderData(Collider* collider) :

@@ -31,7 +31,7 @@
 #include "glm/geometric.hpp"
 
 namespace gvr {
-class BoundingVolume {
+class BoundingVolume final {
 public:
     BoundingVolume();
 

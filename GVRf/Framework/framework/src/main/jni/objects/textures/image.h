@@ -58,23 +58,23 @@ public:
     virtual ~Image() { }
 
     Image() :
-            HybridObject(), mState(UNINITIALIZED), mType(NONE), mFormat(0),
+            HybridObject(), mState(UNINITIALIZED), mType(NONE), mFormat(0), mIsCompressed(false),
             mXOffset(0), mYOffset(0), mWidth(0), mHeight(0), mDepth(1), mImageSize(0), mUpdateLock(),
             mLevels(0)
     {
         mFileName[0] = 0;
     }
 
-    Image(ImageType type, int format) :
-            HybridObject(), mState(UNINITIALIZED), mType(type), mFormat(format),
+    explicit Image(ImageType type, int format) :
+            HybridObject(), mState(UNINITIALIZED), mType(type), mFormat(format),mIsCompressed(false),
             mXOffset(0), mYOffset(0), mWidth(0), mHeight(0), mDepth(1), mImageSize(0), mUpdateLock(),
             mLevels(0)
     {
         mFileName[0] = 0;
     }
 
-    Image(ImageType type, short width, short height, int imagesize, int format, short levels) :
-            HybridObject(), mType(type), mState(UNINITIALIZED), mUpdateLock(),
+    explicit Image(ImageType type, short width, short height, int imagesize, int format, short levels) :
+            HybridObject(), mType(type), mState(UNINITIALIZED), mUpdateLock(), mIsCompressed(false),
             mXOffset(0), mYOffset(0), mWidth(width), mHeight(height), mDepth(1), mImageSize(imagesize),
             mFormat(format), mLevels(levels)
     {
@@ -160,15 +160,16 @@ protected:
     short   mDepth;
     short   mState;
     int     mImageSize;
+    bool    mIsCompressed;
     int     mFormat;
     char    mFileName[64];
     std::vector<int>    mDataOffsets;
 
 private:
-    Image(const Image& image);
-    Image(Image&& image);
-    Image& operator=(const Image& image);
-    Image& operator=(Image&& image);
+    Image(const Image& image) = delete;
+    Image(Image&& image) = delete;
+    Image& operator=(const Image& image) = delete;
+    Image& operator=(Image&& image) = delete;
 };
 
 }

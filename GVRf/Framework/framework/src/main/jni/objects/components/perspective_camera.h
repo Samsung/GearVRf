@@ -33,7 +33,7 @@ public:
                     default_aspect_ratio_) {
     }
 
-    ~PerspectiveCamera() {
+    virtual ~PerspectiveCamera() {
     }
 
     static float default_aspect_ratio() {
@@ -91,10 +91,10 @@ public:
     glm::mat4 getProjectionMatrix() const;
 
 private:
-    PerspectiveCamera(const PerspectiveCamera& camera);
-    PerspectiveCamera(PerspectiveCamera&& camera);
-    PerspectiveCamera& operator=(const PerspectiveCamera& camera);
-    PerspectiveCamera& operator=(PerspectiveCamera&& camera);
+    PerspectiveCamera(const PerspectiveCamera& camera) = delete;
+    PerspectiveCamera(PerspectiveCamera&& camera) = delete;
+    PerspectiveCamera& operator=(const PerspectiveCamera& camera) = delete;
+    PerspectiveCamera& operator=(PerspectiveCamera&& camera) = delete;
 
 private:
     static float default_fov_y_; // in radians

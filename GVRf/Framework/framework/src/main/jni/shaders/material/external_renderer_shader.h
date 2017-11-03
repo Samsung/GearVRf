@@ -23,18 +23,19 @@ class ShaderData;
 class ExternalRendererShader
 {
 public:
-    ExternalRendererShader(long id) {}
+    explicit ExternalRendererShader(long id) {}
+    virtual ~ExternalRendererShader() {}
     virtual void render(RenderState* rstate, RenderData* render_data, ShaderData* material);
 
 private:
     ExternalRendererShader(
-            const ExternalRendererShader& shader);
+            const ExternalRendererShader& shader) = delete;
     ExternalRendererShader(
-            ExternalRendererShader&& shader);
+            ExternalRendererShader&& shader) = delete;
     ExternalRendererShader& operator=(
-            const ExternalRendererShader& shader);
+            const ExternalRendererShader& shader) = delete;
     ExternalRendererShader& operator=(
-            ExternalRendererShader&& shader);
+            ExternalRendererShader&& shader) = delete;
 
     float scratchBuffer[6];
 };

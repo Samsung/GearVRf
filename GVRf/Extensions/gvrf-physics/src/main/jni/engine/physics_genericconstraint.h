@@ -12,6 +12,8 @@ namespace gvr {
 
     class PhysicsGenericConstraint : public PhysicsConstraint {
     public:
+        virtual ~PhysicsGenericConstraint() {}
+
         virtual void setLinearLowerLimits(float limitX, float limitY, float limitZ) = 0;
 
         virtual PhysicsVec3 getLinearLowerLimits() const = 0;

@@ -33,9 +33,9 @@ namespace gvr {
     class BulletSliderConstraint : public PhysicsSliderConstraint,
                                           BulletObject {
     public:
-        BulletSliderConstraint(PhysicsRigidBody *rigidBodyB);
+        explicit BulletSliderConstraint(PhysicsRigidBody *rigidBodyB);
 
-        ~BulletSliderConstraint();
+        virtual ~BulletSliderConstraint();
 
         void setAngularLowerLimit(float limit);
 

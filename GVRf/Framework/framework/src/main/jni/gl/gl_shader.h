@@ -83,10 +83,10 @@ protected:
     void initialize(bool);
 
 private:
-    GLShader(const GLShader& shader);
-    GLShader(GLShader&& shader);
-    GLShader& operator=(const GLShader& shader);
-    GLShader& operator=(GLShader&& shader);
+    GLShader(const GLShader& shader) = delete;
+    GLShader(GLShader&& shader) = delete;
+    GLShader& operator=(const GLShader& shader) = delete;
+    GLShader& operator=(GLShader&& shader) = delete;
 
     GLProgram* mProgram;
     bool mIsReady;

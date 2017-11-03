@@ -31,7 +31,7 @@ class BulletRigidBody : public PhysicsRigidBody,
  public:
     BulletRigidBody();
 
-    ~BulletRigidBody();
+    virtual ~BulletRigidBody();
 
     btRigidBody *getRigidBody() const {
         return mRigidBody;

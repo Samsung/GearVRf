@@ -27,6 +27,7 @@ class GLExternalImage: public GLImage, public ExternalImage
 public:
     GLExternalImage() : GLImage(GL_TEXTURE_EXTERNAL_OES)
     { }
+    virtual ~GLExternalImage() {}
     virtual int getId() { return mId; }
     virtual bool isReady()
     {
@@ -37,11 +38,15 @@ public:
         mTexParams = texparams;
         mTexParamsDirty = true;
     }
+    void updateTexParams() {
+        mTexParams.setMinFilter(GL_LINEAR);
+        GLImage::updateTexParams(mTexParams);
+    }
 private:
-    GLExternalImage(const GLExternalImage&e);
-    GLExternalImage(GLExternalImage&&);
-    GLExternalImage& operator=(const GLExternalImage&);
-    GLExternalImage& operator=(GLExternalImage&&);
+    GLExternalImage(const GLExternalImage&e) = delete;
+    GLExternalImage(GLExternalImage&&) = delete;
+    GLExternalImage& operator=(const GLExternalImage&) = delete;
+    GLExternalImage& operator=(GLExternalImage&&) = delete;
 };
 
 }

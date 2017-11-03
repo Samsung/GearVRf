@@ -41,7 +41,7 @@ class BulletWorld : public PhysicsWorld {
  public:
     BulletWorld();
 
-    ~BulletWorld();
+    virtual ~BulletWorld();
 
     void addConstraint(PhysicsConstraint *constraint);
 

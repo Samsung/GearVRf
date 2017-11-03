@@ -44,10 +44,10 @@ namespace gvr {
                     jobjectArray textureArray, const int* textureOffset);
 
     private:
-        CubemapImage(const CubemapImage& base_texture);
-        CubemapImage(CubemapImage&& base_texture);
-        CubemapImage& operator=(const CubemapImage& base_texture);
-        CubemapImage& operator=(CubemapImage&& base_texture);
+        CubemapImage(const CubemapImage& base_texture) = delete;
+        CubemapImage(CubemapImage&& base_texture) = delete;
+        CubemapImage& operator=(const CubemapImage& base_texture) = delete;
+        CubemapImage& operator=(CubemapImage&& base_texture) = delete;
 
     protected:
         void clearData(JNIEnv* env);

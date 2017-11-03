@@ -36,6 +36,7 @@ public:
     explicit GLRenderImage(int width, int height, int layers, GLuint texId, bool marktexParamsDirty);
     explicit GLRenderImage(int width, int height, int color_format, const TextureParameters* texture_parameters);
     explicit GLRenderImage(int width, int height, int color_format, int layers, const TextureParameters* texture_parameters);
+    virtual ~GLRenderImage() {}
     virtual int getId() { return mId; }
 
     virtual bool isReady()
@@ -48,17 +49,17 @@ public:
         mTexParams = texparams;
         mTexParamsDirty = true;
     }
-
+    virtual void updateTexParams();
     void setupReadback(GLuint buffer, int);
 
 protected:
     virtual GLuint createTexture();
 
 private:
-    GLRenderImage(const GLRenderImage&);
-    GLRenderImage(GLRenderImage&&);
-    GLRenderImage& operator=(const GLRenderImage&);
-    GLRenderImage& operator=(GLRenderImage&&);
+    GLRenderImage(const GLRenderImage&) = delete;
+    GLRenderImage(GLRenderImage&&) = delete;
+    GLRenderImage& operator=(const GLRenderImage&) = delete;
+    GLRenderImage& operator=(GLRenderImage&&) = delete;
 };
 
 }

@@ -29,6 +29,7 @@ namespace gvr {
     public:
         GLFloatImage() : FloatImage(), GLImage(GL_TEXTURE_2D)
         { }
+        virtual ~GLFloatImage() {}
         virtual int getId() { return mId; }
         virtual bool isReady()
         {
@@ -38,6 +39,14 @@ namespace gvr {
         {
             mTexParams = texparams;
             mTexParamsDirty = true;
+        }
+        void updateTexParams() {
+            int min_filter = mTexParams.getMinFilter();
+
+            if(mIsCompressed && mLevels <= 1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)
+                mTexParams.setMinFilter(GL_LINEAR);
+
+            GLImage::updateTexParams(mTexParams);
         }
     protected:
         virtual void update(int texid)
@@ -54,10 +63,10 @@ namespace gvr {
         }
 
     private:
-        GLFloatImage(const GLFloatImage&);
-        GLFloatImage(GLFloatImage&&);
-        GLFloatImage& operator=(const GLFloatImage&);
-        GLFloatImage& operator=(GLFloatImage&&);
+        GLFloatImage(const GLFloatImage&) = delete;
+        GLFloatImage(GLFloatImage&&) = delete;
+        GLFloatImage& operator=(const GLFloatImage&) = delete;
+        GLFloatImage& operator=(GLFloatImage&&) = delete;
     };
 
 }

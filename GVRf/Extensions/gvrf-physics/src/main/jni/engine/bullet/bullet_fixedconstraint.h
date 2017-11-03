@@ -31,9 +31,9 @@ namespace gvr {
                                          BulletObject  {
 
     public:
-        BulletFixedConstraint(PhysicsRigidBody* rigidBodyB);
+        explicit BulletFixedConstraint(PhysicsRigidBody* rigidBodyB);
 
-        ~BulletFixedConstraint();
+        virtual ~BulletFixedConstraint();
 
         void* getUnderlying() {
             return this->mFixedConstraint;

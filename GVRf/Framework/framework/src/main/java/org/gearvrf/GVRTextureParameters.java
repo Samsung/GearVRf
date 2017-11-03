@@ -42,7 +42,7 @@ public class GVRTextureParameters {
      */
     public GVRTextureParameters(GVRContext gvrContext) {
         mGVRContext = gvrContext;
-        minFilterType = TextureFilterType.GL_LINEAR;
+        minFilterType = TextureFilterType.GL_LINEAR_MIPMAP_NEAREST;
         magFilterType = TextureFilterType.GL_LINEAR;
         wrapSType = TextureWrapType.GL_CLAMP_TO_EDGE;
         wrapTType = TextureWrapType.GL_CLAMP_TO_EDGE;
@@ -203,7 +203,7 @@ public class GVRTextureParameters {
     public int[] getDefalutValuesArray() {
         int[] defaultValues = new int[5];
 
-        defaultValues[0] = GLES20.GL_LINEAR; // MIN FILTER
+        defaultValues[0] = GLES20.GL_LINEAR_MIPMAP_NEAREST; // MIN FILTER
         defaultValues[1] = GLES20.GL_LINEAR; // MAG FILTER
         defaultValues[2] = 1; // ANISO FILTER
         defaultValues[3] = GLES20.GL_CLAMP_TO_EDGE; // WRAP S

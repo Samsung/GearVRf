@@ -57,7 +57,7 @@ void Texture::clearData(JNIEnv* env)
 {
     if (mJavaImage)
     {
-        env->DeleteGlobalRef(mJavaImage);
+        env->DeleteWeakGlobalRef(mJavaImage);
         mJavaImage = NULL;
     }
     mImage = NULL;
@@ -80,7 +80,7 @@ void Texture::setImage(JNIEnv* env, jobject javaImage, Image* image)
         return;
     }
     clearData(env);
-    mJavaImage = env->NewGlobalRef(javaImage);
+    mJavaImage = env->NewWeakGlobalRef(javaImage);
     mImage = image;
     if (mImage)
     {

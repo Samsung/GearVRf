@@ -31,9 +31,9 @@ int write_truecolor_tga( int width, int height, GLubyte* valRGBA, char* fileName
 // Reads back in RGBA format.
 // Images are saved to /sdcard/image-xx.tga
 
-class GVRImageCapture {
+class GVRImageCapture final {
 public:
-    GVRImageCapture(uint width = 0, uint height = 0); // Default width and height for PBOs.
+    explicit GVRImageCapture(uint width = 0, uint height = 0); // Default width and height for PBOs.
     ~GVRImageCapture();
     void captureImage(int startX, int startY, uint width, uint height, char* msg = NULL);
     void captureImage(int startX, int startY, char* msg = NULL);

@@ -31,6 +31,8 @@ public:
             Camera(), projection_matrix_() {
     }
 
+    virtual ~CustomCamera() {}
+
     glm::mat4 projection_matrix() {
         return projection_matrix_;
     }
@@ -44,10 +46,10 @@ public:
     }
 
 private:
-    CustomCamera(const CustomCamera& camera);
-    CustomCamera(CustomCamera&& camera);
-    CustomCamera& operator=(const CustomCamera& camera);
-    CustomCamera& operator=(CustomCamera&& camera);
+    CustomCamera(const CustomCamera& camera) = delete;
+    CustomCamera(CustomCamera&& camera) = delete;
+    CustomCamera& operator=(const CustomCamera& camera) = delete;
+    CustomCamera& operator=(CustomCamera&& camera) = delete;
 
 protected:
     glm::mat4 projection_matrix_;

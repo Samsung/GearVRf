@@ -37,19 +37,19 @@ namespace gvr {
 class vkImageBase
 {
     public:
-    vkImageBase(VkImageViewType type) : outBuffer(new VkBuffer),imageType(type), size(0), format_(VK_FORMAT_R8G8B8A8_UNORM), usage_flags_(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT),mSampleCount(1)
-    { }
-    vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout)
-    : mLayers(1),imageType(type), outBuffer(new VkBuffer), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(1)
-    { }
+        explicit vkImageBase(VkImageViewType type) : outBuffer(new VkBuffer),imageType(type), size(0), format_(VK_FORMAT_R8G8B8A8_UNORM), usage_flags_(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT),mSampleCount(1)
+        { }
+        explicit vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout)
+        : mLayers(1),imageType(type), outBuffer(new VkBuffer), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(1)
+        { }
 
-    vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout, int sample_count)
-    :mLayers(1), imageType(type), outBuffer(new VkBuffer), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
-    { }
-    vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout, int layers, int sample_count )
-    :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
-    { }
-    ~vkImageBase();
+        explicit vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout, int sample_count)
+        :mLayers(1), imageType(type), outBuffer(new VkBuffer), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
+        { }
+        explicit vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageUsageFlags flags, VkImageLayout imageLayout, int layers, int sample_count )
+        :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
+        { }
+        virtual ~vkImageBase();
         void createImageView(bool host_accessible);
         int updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
 

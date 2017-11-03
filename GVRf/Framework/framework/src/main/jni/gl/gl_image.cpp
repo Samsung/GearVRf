@@ -55,7 +55,7 @@ bool GLImage::updateGPU()
     if (mId && mTexParamsDirty)
     {
         mTexParamsDirty = false;
-        updateTexParams(mTexParams);
+        updateTexParams();
     }
     return (mId != 0);
 }
@@ -90,6 +90,7 @@ void GLImage::updateTexParams(const TextureParameters& texparams)
     {
         glTexParameterf(mGLTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, texparams.getMaxAnisotropy());
     }
+
     glTexParameteri(mGLTarget, GL_TEXTURE_WRAP_S, wrap_s_type_);
     glTexParameteri(mGLTarget, GL_TEXTURE_WRAP_T, wrap_t_type_);
     glTexParameteri(mGLTarget, GL_TEXTURE_MIN_FILTER, min_filter_type_);

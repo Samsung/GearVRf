@@ -57,7 +57,7 @@ public:
     TextureParameters() : MaxAnisotropy(1.0f)
     {
         Params.HashCode = 0;
-        Params.BitFields.MinFilter = LINEAR;
+        Params.BitFields.MinFilter = LINEAR_MIPMAP_NEAREST;
         Params.BitFields.MagFilter = LINEAR;
         Params.BitFields.WrapU = CLAMP;
         Params.BitFields.WrapV = CLAMP;
@@ -86,7 +86,7 @@ public:
     int getWrapU() const { return Params.BitFields.WrapU; }
     int getWrapV() const { return Params.BitFields.WrapV; }
     float getMaxAnisotropy() const { return MaxAnisotropy; }
-    unsigned char getHashCode() const { return Params.HashCode; }
+    unsigned short getHashCode() const { return Params.HashCode; }
     void setMinFilter(int f) { Params.BitFields.MinFilter = f; }
     void setMagFilter(int f) { Params.BitFields.MagFilter = f; }
     void setWrapU(int wrap) { Params.BitFields.WrapU = wrap; }
@@ -98,12 +98,12 @@ protected:
     {
         struct
         {
-            unsigned int MinFilter : 2;
-            unsigned int MagFilter : 2;
+            unsigned int MinFilter : 3;
+            unsigned int MagFilter : 3;
             unsigned int WrapU : 2;
             unsigned int WrapV : 2;
         } BitFields;
-        unsigned char HashCode;
+        unsigned short HashCode;
     } Params;
     float MaxAnisotropy;
 };
@@ -124,7 +124,7 @@ public:
     };
 
 
-    Texture(int type = TEXTURE_2D);
+    explicit Texture(int type = TEXTURE_2D);
     virtual ~Texture();
     virtual void clearData(JNIEnv* env);
     virtual void setImage(Image* image);
@@ -155,10 +155,10 @@ protected:
     TextureParameters   mTexParams;
 
 private:
-    Texture(const Texture& texture);
-    Texture(Texture&& texture);
-    Texture& operator=(const Texture& texture);
-    Texture& operator=(Texture&& texture);
+    Texture(const Texture& texture) = delete;
+    Texture(Texture&& texture) = delete;
+    Texture& operator=(const Texture& texture) = delete;
+    Texture& operator=(Texture&& texture) = delete;
 };
 
 }

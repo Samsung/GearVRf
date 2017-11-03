@@ -29,7 +29,8 @@ namespace gvr {
     class VulkanMaterial : public ShaderData
     {
     public:
-        VulkanMaterial(const char* uniform_desc, const char* texture_desc);
+        explicit VulkanMaterial(const char* uniform_desc, const char* texture_desc);
+        virtual ~VulkanMaterial() {}
         void useGPUBuffer(bool flag){
             uniforms_.useGPUBuffer(flag);
         }

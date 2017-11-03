@@ -28,8 +28,8 @@ class GLFrameBuffer;
     class ShadowMap : public GLRenderTarget
     {
     public:
-        ShadowMap(ShaderData* mtl);
-        ~ShadowMap();
+        explicit ShadowMap(ShaderData* mtl);
+        virtual ~ShadowMap();
         virtual void  beginRendering(Renderer* renderer);
         void setLayerIndex(int layerIndex);
         void bindTexture(int loc, int texture_index);

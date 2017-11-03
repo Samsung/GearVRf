@@ -21,20 +21,15 @@
 #include "java_component.h"
 
 namespace gvr {
-extern "C" {
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeJavaComponent_setJava(JNIEnv* env, jobject clz, jlong nativeComponent, jobject javaComponent);
-};
 
+extern "C" {
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeJavaComponent_setJava(JNIEnv* env, jobject clz, jlong nativeComponent, jobject javaComponent)
-{
+Java_org_gearvrf_GVRJavaComponent_setJava(JNIEnv *env, jobject instance, jlong nativeComponent) {
     JavaComponent* component = reinterpret_cast<JavaComponent*>(nativeComponent);
     JavaVM *jvm;
     env->GetJavaVM(&jvm);
-    component->set_java(javaComponent, jvm);
+    component->set_java(instance, jvm);
 }
-
+};
 
 }
-

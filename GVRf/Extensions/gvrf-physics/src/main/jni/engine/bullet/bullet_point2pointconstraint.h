@@ -31,10 +31,10 @@ namespace gvr {
                                                BulletObject {
 
     public:
-        BulletPoint2PointConstraint(PhysicsRigidBody* rigidBodyB, float pivotInA[],
-                                    float pivotInB[]);
+        explicit BulletPoint2PointConstraint(PhysicsRigidBody* rigidBodyB, float pivotInA[],
+                                             float pivotInB[]);
 
-        ~BulletPoint2PointConstraint();
+        virtual ~BulletPoint2PointConstraint();
 
         virtual void* getUnderlying() {
             return this->mPoint2PointConstraint;

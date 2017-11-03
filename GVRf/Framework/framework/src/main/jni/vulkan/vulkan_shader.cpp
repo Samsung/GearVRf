@@ -57,7 +57,7 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     samplerBinding.push_back(dummy_binding);
 
     if(vkdata->mesh()->hasBones() && hasBones()){
-       VkDescriptorSetLayoutBinding &bones_uniformBinding = reinterpret_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
+       VkDescriptorSetLayoutBinding &bones_uniformBinding = static_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
        samplerBinding.push_back(bones_uniformBinding);
    }
     else{
@@ -111,7 +111,7 @@ int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDesc
         write.descriptorCount = 1;
         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         if(!t->getImage())
-            write.pImageInfo = &(reinterpret_cast<VkRenderTexture*>(tex)->getDescriptorImage());
+            write.pImageInfo = &(static_cast<VkRenderTexture*>(t)->getDescriptorImage());
         else
             write.pImageInfo = &(tex->getDescriptorImage());
         writes.push_back(write);

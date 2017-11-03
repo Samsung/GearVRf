@@ -23,7 +23,7 @@ void VkRenderTexture::bind() {
     if(fbo == nullptr){
         fbo = new VKFramebuffer(mWidth,mHeight);
         createRenderPass();
-        VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
         fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSampleCount);
     }
@@ -40,7 +40,7 @@ const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
 }
 
 void VkRenderTexture::createRenderPass(){
-    VulkanRenderer* vk_renderer= reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
+    VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
     VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, 1);
 
     clear_values.resize(2);
@@ -48,7 +48,7 @@ void VkRenderTexture::createRenderPass(){
 }
 bool VkRenderTexture::isReady(){
     VkResult err;
-    VulkanRenderer* renderer = reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
+    VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
     VkDevice device = renderer->getDevice();
     err = vkWaitForFences(device, 1, &mWaitFence , VK_TRUE,
                           4294967295U);
@@ -63,7 +63,7 @@ void VkRenderTexture::createFenceObject(VkDevice device){
     GVR_VK_CHECK(!ret);
 }
     void VkRenderTexture::endRenderingPE(Renderer* renderer) {
-        VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
+        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(renderer);
         vkCmdEndRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()));
     }
 
@@ -93,7 +93,7 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
 
 void VkRenderTexture::beginRendering(Renderer* renderer){
 
-    VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
+    VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(renderer);
     VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
 
    // vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBuffer()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
@@ -101,7 +101,7 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
 
     void VkRenderTexture::beginRenderingPE(Renderer* renderer){
 
-        VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(renderer);
+        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(renderer);
         VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
 
         vkCmdBeginRenderPass(*(vk_renderer->getCore()->getCurrentCmdBufferPE()), &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
@@ -111,7 +111,7 @@ bool VkRenderTexture::readVkRenderResult(uint8_t **readback_buffer, VkCommandBuf
     if(!fbo)
         return true;
     VkResult err;
-    VulkanRenderer* vk_renderer = reinterpret_cast<VulkanRenderer*>(Renderer::getInstance());
+    VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
     VkDevice device = vk_renderer->getDevice();
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

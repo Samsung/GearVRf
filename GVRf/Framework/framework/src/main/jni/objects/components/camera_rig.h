@@ -160,10 +160,10 @@ public:
     void setRotation(const glm::quat& transform_rotation);
 
 private:
-    CameraRig(const CameraRig& camera_rig);
-    CameraRig(CameraRig&& camera_rig);
-    CameraRig& operator=(const CameraRig& camera_rig);
-    CameraRig& operator=(CameraRig&& camera_rig);
+    CameraRig(const CameraRig& camera_rig) = delete;
+    CameraRig(CameraRig&& camera_rig) = delete;
+    CameraRig& operator=(const CameraRig& camera_rig) = delete;
+    CameraRig& operator=(CameraRig&& camera_rig) = delete;
 
 private:
     static const CameraRigType DEFAULT_CAMERA_RIG_TYPE = FREE;
