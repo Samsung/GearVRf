@@ -17,6 +17,7 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
+#include <string.h>
 #include <mutex>
 #include <vector>
 #include "objects/hybrid_object.h"
