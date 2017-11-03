@@ -28,8 +28,6 @@
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
-#define SWAP_CHAIN_COUNT 4
-#define POSTEFFECT_CHAIN_COUNT 2
 
 namespace gvr {
 class VulkanUniformBlock;
@@ -100,27 +98,22 @@ public:
 
     ~VulkanCore();
 
-    void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*, bool postEffectFlag);
+    void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*);
 
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
     bool InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData);
-    bool InitDescriptorSetForRenderDataPostEffect(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData, int postEffectIndx, VkRenderTarget*);
-
-
-    void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*);
-    void BuildCmdBufferForRenderDataPE(Camera*, RenderData* rdata, Shader* shader, int postEffectIndx);
+    void beginCmdBuffer(VkCommandBuffer cmdBuffer);
+    void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*,VkRenderTexture*, bool);
+    void BuildCmdBufferForRenderDataPE(VkCommandBuffer &cmdBuffer, ShaderManager*, Camera*, RenderData* rdata, VkRenderTexture*, int);
 
     VkRenderTexture* getRenderTexture(VkRenderTarget*);
-    int DrawFrameForRenderDataPE();
+    int waitForFence(VkFence fence);
 
-    VkCommandBuffer* getCurrentCmdBufferPE(){
-        return postEffectCmdBuffer;
-    }
-    int AcquireNextImage();
-
+    VkFence createFenceObject();
+    VkCommandBuffer createCommandBuffer(VkCommandBufferLevel level);
     void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, VkRenderPass);
-    void submitCmdBuffer(VkRenderTarget* renderTarget);
+    void submitCmdBuffer(VkFence fence, VkCommandBuffer cmdBuffer);
     bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
                                      uint32_t *typeIndex);
 
@@ -145,7 +138,6 @@ public:
     void initVulkanCore();
 
     VkRenderPass createVkRenderPass(RenderPassType render_pass_type, int sample_count = 1);
-    void InitPostEffectChain();
 
     VkPipeline getPipeline(std::string key){
         std::unordered_map<std::string, VkPipeline >::const_iterator got = pipelineHashMap.find(key);
@@ -162,20 +154,15 @@ public:
     VkCommandPool getCommandPool(){
         return m_commandPool;
     }
-    VkRenderTexture* getPostEffectRenderTexture(int index){
-        return mPostEffectTexture[index];
-    }
+
     void renderToOculus(RenderTarget* renderTarget);
 private:
- //   std::vector <VkFence> waitFences;
-    VkFence postEffectFence;
-    VkFence waitSCBFences;
+
     static VulkanCore *theInstance;
     std::unordered_map<std::string, VkPipeline> pipelineHashMap;
 
 
-    explicit VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL), postEffectCmdBuffer(
-            nullptr),mRenderPassMap{0,0} {
+    explicit VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL), mRenderPassMap{0,0} {
         m_Vulkan_Initialised = false;
         initVulkanDevice(newNativeWindow);
 
@@ -191,13 +178,9 @@ private:
 
     void InitSurface();
 
-    void InitSwapchain(uint32_t width, uint32_t height);
-
     void InitSync();
 
     void createPipelineCache();
-    void InitTexture();
-    VkCommandBuffer textureCmdBuffer;
 
     bool m_Vulkan_Initialised;
 
@@ -206,7 +189,7 @@ private:
                                          const std::string &shaderContents);
     void InitShaders(VkPipelineShaderStageCreateInfo shaderStages[],
                      std::vector<uint32_t>& result_vert, std::vector<uint32_t>& result_frag);
-    void CreateSampler(TextureObject * &textureObject);
+
     void GetDescriptorPool(VkDescriptorPool& descriptorPool);
 
     ANativeWindow *m_androidWindow;
@@ -221,20 +204,11 @@ private:
     uint32_t m_queueFamilyIndex;
     VkQueue m_queue;
     VkSurfaceKHR m_surface;
-
-    VkCommandBuffer * postEffectCmdBuffer;
-
     VkCommandPool m_commandPool;
     VkCommandPool m_commandPoolTrans;
 
-    int imageIndex = 0;
-
     VkPipelineCache m_pipelineCache;
 
-    TextureObject * textureObject;
-
-   // VkRenderTexture* mRenderTexture[SWAP_CHAIN_COUNT];
-    VkRenderTexture* mPostEffectTexture[POSTEFFECT_CHAIN_COUNT];
     VkRenderPass mRenderPassMap[2];
 };
 }

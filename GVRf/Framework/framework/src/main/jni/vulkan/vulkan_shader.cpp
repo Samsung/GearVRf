@@ -42,7 +42,7 @@ void VulkanShader::initialize()
 
 int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata)
 {
-    VkDescriptorSetLayoutBinding dummy_binding =vkdata->getTransformUbo().getVulkanDescriptor()->getLayoutBinding() ;
+    VkDescriptorSetLayoutBinding dummy_binding ={} ;
     if (usesMatrixUniforms()) {
         VkDescriptorSetLayoutBinding &transform_uniformBinding = vkdata->getTransformUbo().getVulkanDescriptor()->getLayoutBinding();
         samplerBinding.push_back(transform_uniformBinding);

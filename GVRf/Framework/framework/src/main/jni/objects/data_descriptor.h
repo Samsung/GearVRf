@@ -148,7 +148,7 @@ namespace gvr {
         static short calcSize(const char* type);
 
     protected:
-
+        void removePunctuations(const char*);
         /**
          * Parse the descriptor string to create the map
          * which contains the name, offset and size of all uniforms.

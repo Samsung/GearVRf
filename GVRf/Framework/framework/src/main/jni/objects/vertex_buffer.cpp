@@ -19,6 +19,7 @@ namespace gvr {
         mVertexData = NULL;
         mBoneFlags == 0;
         setVertexCount(vertexCount);
+        removePunctuations(layout_desc);
     }
 
     VertexBuffer::~VertexBuffer()

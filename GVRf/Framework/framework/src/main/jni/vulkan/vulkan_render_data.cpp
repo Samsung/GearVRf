@@ -16,9 +16,55 @@
 
 #include "vulkan/vulkan_render_data.h"
 #include "vulkan/vulkan_material.h"
-
+#define VERTEX_BUFFER_BIND_ID 0
 namespace gvr
 {
+void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int curr_pass){
+
+    if(shader == NULL)
+        LOGE("Shader is NULL");
+
+    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      getVKPipeline(curr_pass) );
+
+    VulkanShader *Vkshader = reinterpret_cast<VulkanShader *>(shader);
+
+    VkDescriptorSet descriptorSet = getDescriptorSet(curr_pass);
+    //bind out descriptor set, which handles our uniforms and samplers
+    if (!isDescriptorSetNull(curr_pass)) {
+        VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(material(
+                curr_pass));
+
+        vkCmdPushConstants(cmdBuffer, Vkshader->getPipelineLayout(),
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0,
+                           (uint32_t) vkmtl->uniforms().getTotalSize(),
+                           vkmtl->uniforms().getUniformData());
+
+        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                Vkshader->getPipelineLayout(), 0, 1,
+                                &descriptorSet, 0, NULL);
+    }
+
+    // Bind our vertex buffer, with a 0 offset.
+    VkDeviceSize offsets[1] = {0};
+    VulkanVertexBuffer *vbuf = reinterpret_cast< VulkanVertexBuffer *>(mesh_->getVertexBuffer());
+    const VulkanIndexBuffer *ibuf = reinterpret_cast<const VulkanIndexBuffer *>(mesh_->getIndexBuffer());
+    const GVR_VK_Vertices *vert = (vbuf->getVKVertices(shader));
+
+    vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &(vert->buf), offsets);
+
+    if(ibuf && ibuf->getIndexCount()) {
+        const GVR_VK_Indices &ind = ibuf->getVKIndices();
+        VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
+                                                            : VK_INDEX_TYPE_UINT32;
+        vkCmdBindIndexBuffer(cmdBuffer, ind.buffer, 0, indexType);
+        vkCmdDrawIndexed(cmdBuffer, ind.count, 1, 0, 0, 1);
+    }
+    else
+        vkCmdDraw(cmdBuffer, mesh_->getVertexCount(), 1, 0, 1);
+
+}
     void VulkanRenderData::bindToShader(Shader* shader, Renderer* renderer)
     {
 /*

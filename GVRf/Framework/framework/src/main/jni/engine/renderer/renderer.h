@@ -224,7 +224,7 @@ protected:
 
     virtual bool occlusion_cull_init(RenderState& , std::vector<SceneObject*>& scene_objects,  std::vector<RenderData*>* render_data_vector);
 
-    virtual void renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass);
+    virtual bool renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass);
 
     int numberDrawCalls;
     int numberTriangles;

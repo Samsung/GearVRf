@@ -372,34 +372,32 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
     transform_ubo->updateGPU(this);
 }
 
-void Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass)
+bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass)
 {
     RenderPass* rpass = post_effect->pass(pass);
     if(rpass == NULL)
-        return;
+        return false;
 
     ShaderData* material = rpass->material();
 
     if(material == NULL)
-        return;
+        return false;
 
     material->setTexture("u_texture", input_texture);
-    int result = rpass->isValid(this, rstate, post_effect);
-    if (result < 0)         // something wrong with material or texture
-    {
-        LOGE("Renderer::renderPostEffectData pass %d material or texture not ready", pass);
-        return;             // don't render this pass
-    }
-    if ((result == 0) && (post_effect->isValid(this, rstate) < 0))
-    {
-        LOGE("Renderer::renderPostEffectData pass %d shader not available", pass);
-        return;             // no shader available
-    }
     int nativeShader = rpass->get_shader(rstate.is_multiview);
     Shader* shader = rstate.shader_manager->getShader(nativeShader);
-
-    renderWithShader(rstate, shader, post_effect, material, 0);
+    if(post_effect->isValid(this, rstate) < 0)
+    {
+        LOGE("Renderer::renderPostEffectData is dirty");
+        return false;             // no shader available
+    }
+    if(shader == NULL){
+        post_effect->bindShader(rstate.scene,rstate.is_multiview);
+        return false;
+    }
+    renderWithShader(rstate, shader, post_effect, material, pass);
     post_effect->clearDirty();
+    return true;
 }
 
 }

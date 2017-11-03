@@ -112,7 +112,10 @@ struct VulkanRenderPass : public RenderPass
         }
 
         void bindToShader(Shader* shader, Renderer* renderer);
-
+        bool isDirty(int pass){
+            return isHashCodeDirty() || RenderData::isDirty() || isDescriptorSetNull(pass);
+        }
+        void render(Shader* shader, VkCommandBuffer cmdBuffer, int curr_pass);
     private:
         //  VulkanRenderData(const VulkanRenderData& render_data);
         VulkanRenderData(VulkanRenderData&&);
