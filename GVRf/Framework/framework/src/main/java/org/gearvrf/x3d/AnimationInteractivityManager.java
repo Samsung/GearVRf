@@ -90,6 +90,7 @@ public class AnimationInteractivityManager {
 
     private X3Dobject x3dObject = null;
     private GVRContext gvrContext = null;
+    private GVRScriptManager gvrScriptManager = null;
     private GVRSceneObject root = null;
     private Vector<DefinedItem> definedItems = null;
     private Vector<Interpolator> interpolators = null;
@@ -122,6 +123,7 @@ public class AnimationInteractivityManager {
     ) {
         this.x3dObject = x3dObject;
         this.gvrContext = gvrContext;
+        this.gvrScriptManager = gvrContext.getScriptManager();
         this.root = root; // helps search for GVRSCeneObjects by name
         this.definedItems = definedItems;
         this.interpolators = interpolators;
@@ -898,10 +900,15 @@ public class AnimationInteractivityManager {
                     final GVRJavascriptV8File gvrJavascriptV8FileFinal = gvrJavascriptV8File;
                     final Object[] parametersFinal = parameters;
                     final String paramStringFinal = paramString;
-                    gvrContext.runOnGlThread(new Runnable() {
+                    //gvrContext.runOnGlThread(new Runnable() {
+
+                    GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+                    //gvrScriptManager.runOnJSThread(new Runnable() {
                         @Override
                         public void run() {
-                            RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
+                        //run() {
+                            Log.e("X3DDBG", "AminIntMgr run INitScript");
+                            RunInitializeScriptThread(gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
                             firstFrameRun_MustInitalize = false;
                         }
                     });
@@ -1231,9 +1238,14 @@ public class AnimationInteractivityManager {
                             final InteractiveObject interactiveObjectFinal = interactiveObject;
                             final Object[] parametersFinal = parameters;
                             final String paramStringFinal = paramString;
-                            gvrContext.runOnGlThread(new Runnable() {
+                            //gvrContext.runOnGlThread(new Runnable() {
+                            //GVRScriptManager.JSThread.run() {
+                            //GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+                            gvrScriptManager.jsThread.runOnJSThread(new Runnable() {
+                            //gvrScriptManager.runOnJSThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    Log.e("X3DDBG", "InitializeScript(), runOnJSThread()");
                                     RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
                                 }
                             });
@@ -1339,9 +1351,12 @@ public class AnimationInteractivityManager {
             final String functionNameFinal = functionName;
             final Object[] parametersFinal = parameters;
             final String paramStringFinal = paramString;
-            gvrContext.runOnGlThread(new Runnable() {
+            //gvrContext.runOnGlThread(new Runnable() {
+            GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+            //gvrScriptManager.runOnJSThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.e("X3DDBG", "RunScriptThread(), runOnJSThread()");
                     RunScriptThread (gvrJavascriptV8FileFinal, interactiveObjectFinal, functionNameFinal, parametersFinal, paramStringFinal);
                 }
             });

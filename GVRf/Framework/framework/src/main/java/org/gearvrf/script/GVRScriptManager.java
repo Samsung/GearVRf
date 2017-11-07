@@ -66,8 +66,12 @@ public class GVRScriptManager {
     public static final String TARGET_GVRACTIVITY = "@GVRActivity";
 
     private GVRJavascriptV8File gvrJavascriptV8File = null;
-    private boolean waitHere = true;
 
+    //protected RunOnJSThread rJS = new RunOnJSThread();
+    //protected Thread tJS = new Thread(rJS);
+
+    //RunOnJSThread runner = new RunOnJSThread();
+    public JSThread jsThread = new JSThread();
 
     interface TargetResolver {
         IScriptable getTarget(GVRContext gvrContext, String name);
@@ -112,22 +116,68 @@ public class GVRScriptManager {
         Thread.currentThread().setContextClassLoader(
                 gvrContext.getActivity().getClassLoader());
 
+        //tJS.start();
+        jsThread.start();
+
         mGlobalVariables.put(VAR_NAME_GVRF, new GVRContextProxy(mGvrContext));
         initializeEngines();
     }
+
+    public static class JSThread extends Thread {
+
+        JSThread(Runnable runnable) {
+            Log.e("X3DDBG", "JSThread runnable constructor");
+
+        }
+
+        public JSThread() {
+            Log.e("X3DDBG", "JSThread NON-runnable constructor");
+
+        }
+
+        public void run() {
+            Log.e("X3DDBG", "JSThread run");
+        }
+
+        public static void runOnJSThread(Runnable runnable) {
+            Log.e("X3DDBG", "JSThread::runOnJSThread");
+            //run();
+            //Thread t = new Thread(RunOnJSThread);
+            //tJS.
+        }
+    }
+
+    /*
+    public class RunOnJSThread implements Runnable {
+        public void run() {
+            Log.e("X3DDBG", "runOnJSThread Runnable: " + this.toString());
+
+        }
+    }
+    */
+/*
+    public void runOnJSThread(Runnable runnable) {
+        Log.e("X3DDBG", "rungOnJSThread this: " + this.toString());
+        //Thread t = new Thread(RunOnJSThread);
+        //tJS.
+    }
+    */
+
+
+
 
     private void initializeEngines() {
         mEngines = new TreeMap<String, ScriptEngine>();
 
         // Add languages
-        mGvrContext.runOnGlThread(new Runnable() {
+        //mGvrContext.runOnGlThread(new Runnable() {
+        jsThread.runOnJSThread(new Runnable() {
             @Override
             public void run() {
                 gvrJavascriptV8File = new GVRJavascriptV8File(mGvrContext);
                 // Lua is now deprecated since v4.1
                 //mEngines.put(LANG_LUA, new LuaScriptEngineFactory().getScriptEngine());
                 mEngines.put(LANG_JAVASCRIPT, gvrJavascriptV8File.getScriptEngine() );
-                waitHere = false;
                 // Add variables to engine(s)
                 refreshGlobalBindings();
             }
@@ -141,7 +191,8 @@ public class GVRScriptManager {
     }
 
     protected void addGlobalBindings(final ScriptEngine engine) {
-        mGvrContext.runOnGlThread(new Runnable() {
+        //mGvrContext.runOnGlThread(new Runnable() {
+        jsThread.runOnJSThread(new Runnable() {
             @Override
             public void run() {
                     Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
@@ -186,7 +237,8 @@ public class GVRScriptManager {
     public void addVariable(String varName, Object value) {
         final String varNameFinal = varName;
         final Object valueFinal = value;
-        mGvrContext.runOnGlThread(new Runnable() {
+        //mGvrContext.runOnGlThread(new Runnable() {
+        jsThread.runOnJSThread(new Runnable() {
             @Override
             public void run() {
                     ScriptEngine engine = getEngine(LANG_JAVASCRIPT);
@@ -282,11 +334,6 @@ public class GVRScriptManager {
                 try {
                     Log.e("X3DDBG", "before getV8Engine.wait()");
                     //getV8Engine.wait();
-                    while (waitHere) {
-                        Log.e("X3DDBG", "before sleep " + waitHere);
-                        sleep(1000);
-                        //Log.e("X3DDBG", "after sleep ");
-                    }
                     //ScriptEngine engine = getEngine(LANG_JAVASCRIPT);
                     Log.e("X3DDBG", "after getV8Engine.wait()");
                     InputStream inputStream = resource.getStream();
