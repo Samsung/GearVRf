@@ -101,6 +101,7 @@ public class AnimationInteractivityManager {
 
     private AnchorImplementation anchorImplementation = null;
     private GVRAnimator gvrAnimator = null;
+    private GVRScriptManager.JSThread jsThread = null;
 
 
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
@@ -124,6 +125,7 @@ public class AnimationInteractivityManager {
         this.x3dObject = x3dObject;
         this.gvrContext = gvrContext;
         this.gvrScriptManager = gvrContext.getScriptManager();
+        jsThread = this.gvrScriptManager.getJSThread();
         this.root = root; // helps search for GVRSCeneObjects by name
         this.definedItems = definedItems;
         this.interpolators = interpolators;
@@ -902,7 +904,10 @@ public class AnimationInteractivityManager {
                     final String paramStringFinal = paramString;
                     //gvrContext.runOnGlThread(new Runnable() {
 
-                    GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+                    //GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+                    //jsThread.
+                    jsThread.runOnJSThread(new Runnable() {
+
                     //gvrScriptManager.runOnJSThread(new Runnable() {
                         @Override
                         public void run() {
@@ -1352,7 +1357,8 @@ public class AnimationInteractivityManager {
             final Object[] parametersFinal = parameters;
             final String paramStringFinal = paramString;
             //gvrContext.runOnGlThread(new Runnable() {
-            GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+            //GVRScriptManager.JSThread.runOnJSThread(new Runnable() {
+            jsThread.runOnJSThread(new Runnable() {
             //gvrScriptManager.runOnJSThread(new Runnable() {
                 @Override
                 public void run() {

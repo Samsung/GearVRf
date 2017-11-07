@@ -35,7 +35,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Queue;
 import java.util.TreeMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -102,6 +104,10 @@ public class GVRScriptManager {
         });
     }
 
+    public JSThread getJSThread() {
+        return jsThread;
+    }
+
     /**
      * Constructor.
      *
@@ -125,10 +131,12 @@ public class GVRScriptManager {
 
     public static class JSThread extends Thread {
 
-        JSThread(Runnable runnable) {
-            Log.e("X3DDBG", "JSThread runnable constructor");
+        protected final LinkedBlockingQueue<Runnable> mRunnables = new LinkedBlockingQueue<Runnable>();
 
-        }
+//        JSThread(Runnable runnable) {
+//            Log.e("X3DDBG", "JSThread runnable constructor");
+//            runnable.run();
+//        }
 
         public JSThread() {
             Log.e("X3DDBG", "JSThread NON-runnable constructor");
@@ -136,11 +144,22 @@ public class GVRScriptManager {
         }
 
         public void run() {
+
             Log.e("X3DDBG", "JSThread run");
+            Runnable runnable = null;
+            try {
+                while ((runnable = mRunnables.take()) != null) {
+                    runnable.run();
+                }
+            } catch (final Exception exc) {
+                Log.e(TAG, "Runnable-on-GL %s threw %s", runnable, exc.toString());
+                exc.printStackTrace();
+            }
         }
 
-        public static void runOnJSThread(Runnable runnable) {
+        public void runOnJSThread(Runnable runnable) {
             Log.e("X3DDBG", "JSThread::runOnJSThread");
+            mRunnables.add(runnable);
             //run();
             //Thread t = new Thread(RunOnJSThread);
             //tJS.
