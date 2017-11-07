@@ -1,3 +1,17 @@
+/* Copyright 2017 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gearvrf.scene_objects;
 
 
@@ -9,13 +23,14 @@ import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.R;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.GVRControllerType;
-
 import org.joml.Vector3f;
+
 import java.util.Arrays;
 
 /**
@@ -67,9 +82,10 @@ public class GVRGearControllerSceneObject extends GVRSceneObject {
         addChildObject(controller);
 
         ray = new GVRLineSceneObject(gvrContext, rayDepth);
-        final GVRMaterial rayMaterial = ray.getRenderData().getMaterial();
+        final GVRMaterial rayMaterial = new GVRMaterial(gvrContext, new GVRShaderId(GVRPhongShader.class));
         rayMaterial.setDiffuseColor(0.5f,0.5f,0.5f,1);
         rayMaterial.setLineWidth(2.0f);
+        ray.getRenderData().setMaterial(rayMaterial);
         addChildObject(ray);
     }
 
