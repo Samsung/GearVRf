@@ -25,22 +25,13 @@ class VkRenderTexture;
 class VkRenderTarget: public  RenderTarget
 {
 public:
-
-    void createCmdBuffer(VkDevice device, VkCommandPool commandPool);
-    void initVkData();
     explicit VkRenderTarget(RenderTexture* renderTexture, bool is_multiview);
     explicit VkRenderTarget(Scene* scene);
     explicit VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source);
     explicit  VkRenderTarget(){}
     virtual ~VkRenderTarget(){}
     virtual void    beginRendering(Renderer* renderer);
-    virtual void    endRendering(Renderer*);
-    VkCommandBuffer& getCommandBuffer(){
-        return mCmdBuffer;
-    }
-
-private:
-    VkCommandBuffer mCmdBuffer;
+    VkCommandBuffer& getCommandBuffer();
 };
 }
 #endif //FRAMEWORK_VK_RENDER_TARGET_H

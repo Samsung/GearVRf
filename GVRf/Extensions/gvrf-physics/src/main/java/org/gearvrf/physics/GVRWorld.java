@@ -20,9 +20,10 @@ import android.util.LongSparseArray;
 
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSceneObject.ComponentVisitor;
-import org.gearvrf.ISceneObjectEvents;
+import org.gearvrf.IActivityEvents;
 
 /**
  * Represents a physics world where all {@link GVRSceneObject} with {@link GVRRigidBody} component
@@ -30,8 +31,7 @@ import org.gearvrf.ISceneObjectEvents;
  * <p>
  * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
-public class GVRWorld extends GVRComponent {
-    private boolean mInitialized;
+public final class GVRWorld extends GVRComponent {
     private final GVRPhysicsContext mPhysicsContext;
     private GVRWorldTask mWorldTask;
     private static final long DEFAULT_INTERVAL = 15;
@@ -71,6 +71,7 @@ public class GVRWorld extends GVRComponent {
      */
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix) {
         this(gvrContext, collisionMatrix, DEFAULT_INTERVAL);
+        gvrContext.getActivity().getEventReceiver().addListener(mActivityEvents);
     }
 
     /**
@@ -82,7 +83,7 @@ public class GVRWorld extends GVRComponent {
      */
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix, long interval) {
         super(gvrContext, NativePhysics3DWorld.ctor());
-        mInitialized = false;
+
         mCollisionMatrix = collisionMatrix;
         mWorldTask = new GVRWorldTask(interval);
         mPhysicsContext = GVRPhysicsContext.getInstance();
@@ -197,7 +198,6 @@ public class GVRWorld extends GVRComponent {
                 sendCollisionEvent(info, onExit);
             }
         }
-
     }
 
     private void sendCollisionEvent(GVRCollisionInfo info, String eventName) {
@@ -211,27 +211,6 @@ public class GVRWorld extends GVRComponent {
                 bodyB, bodyA, info.normal, info.distance);
     }
 
-    private void doPhysicsAttach(GVRSceneObject rootSceneObject) {
-        rootSceneObject.forAllComponents(mComponentVisitor, GVRRigidBody.getComponentType());
-
-        if (!mInitialized) {
-            rootSceneObject.getEventReceiver().addListener(mSceneEventsHandler);
-        } else if (isEnabled()){
-            startSimulation();
-        }
-    }
-
-    private void doPhysicsDetach(GVRSceneObject rootSceneObject) {
-        rootSceneObject.forAllComponents(mComponentVisitor, GVRRigidBody.getComponentType());
-
-        if (!mInitialized) {
-            rootSceneObject.getEventReceiver().removeListener(mSceneEventsHandler);
-        }
-        if (isEnabled()) {
-            stopSimulation();
-        }
-    }
-
     @Override
     public void onAttach(GVRSceneObject newOwner) {
         super.onAttach(newOwner);
@@ -241,21 +220,25 @@ public class GVRWorld extends GVRComponent {
             throw new RuntimeException("GVRWold must be attached to the scene's root object!");
         }
 
-        doPhysicsAttach(newOwner);
+        newOwner.forAllComponents(mComponentVisitor, GVRRigidBody.getComponentType());
+        if (isEnabled()) {
+            startSimulation();
+        }
     }
 
     @Override
     public void onDetach(GVRSceneObject oldOwner) {
         super.onDetach(oldOwner);
 
-        doPhysicsDetach(oldOwner);
+        oldOwner.forAllComponents(mComponentVisitor, GVRRigidBody.getComponentType());
+        stopSimulation();
     }
 
     @Override
     public void onEnable() {
         super.onEnable();
 
-        if (getOwnerObject() != null && mInitialized) {
+        if (getOwnerObject() != null) {
             startSimulation();
         }
     }
@@ -280,76 +263,73 @@ public class GVRWorld extends GVRComponent {
         NativePhysics3DWorld.getGravity(getNative(), gravity);
     }
 
-    private class GVRWorldTask implements Runnable {
-        private boolean running = false;
-        private final long intervalMillis;
-        private float timeStep;
-        private int maxSubSteps;
-        private long simulationTime;
-        private long lastSimulTime;
+    private final class GVRWorldTask implements Runnable {
+        private boolean mRunning;
+        private final long mIntervalMillis;
+        private float mTimeStep;
+        private int mMaxSubSteps;
+        private long mSimulationTime;
+        private long mLastSimulTime;
 
 
-        public GVRWorldTask(long milliseconds) {
-            intervalMillis = milliseconds;
+        GVRWorldTask(long milliseconds) {
+            mIntervalMillis = milliseconds;
         }
 
         @Override
         public void run() {
-            if (!running) {
+            if (!mRunning) {
                 return;
             }
 
-
-            simulationTime = SystemClock.uptimeMillis();
+            mSimulationTime = SystemClock.uptimeMillis();
 
             /* To debug physics step
-            if (BuildConfig.DEBUG && timeStep != simulationTime - lastSimulTime) {
-                Log.v("GVRPhysicsWorld", "onStep " + timeStep + "ms" + ", subSteps " + maxSubSteps);
+            if (BuildConfig.DEBUG && mTimeStep != mSimulationTime - mLastSimulTime) {
+                Log.v("GVRPhysicsWorld", "onStep " + mTimeStep + "ms" + ", subSteps " + mMaxSubSteps);
             }*/
 
-            timeStep  = simulationTime - lastSimulTime;
-            maxSubSteps = (int) (timeStep * 60) / 1000 + 1;
+            mTimeStep = mSimulationTime - mLastSimulTime;
+            mMaxSubSteps = (int) (mTimeStep * 60) / 1000 + 1;
 
-            NativePhysics3DWorld.step(getNative(), timeStep, maxSubSteps);
+            NativePhysics3DWorld.step(getNative(), mTimeStep, mMaxSubSteps);
 
             generateCollisionEvents();
 
-            lastSimulTime = simulationTime;
+            mLastSimulTime = mSimulationTime;
 
-            simulationTime = intervalMillis + simulationTime - SystemClock.uptimeMillis();
-            if (simulationTime < 0) {
-                simulationTime += intervalMillis;
+            mSimulationTime = mIntervalMillis + mSimulationTime - SystemClock.uptimeMillis();
+            if (mSimulationTime < 0) {
+                mSimulationTime += mIntervalMillis;
             }
             // Time of the next simulation;
-            simulationTime = simulationTime + SystemClock.uptimeMillis();
+            mSimulationTime = mSimulationTime + SystemClock.uptimeMillis();
 
-            mPhysicsContext.runAtTimeOnPhysicsThread(this, simulationTime);
-
-
+            mPhysicsContext.runAtTimeOnPhysicsThread(this, mSimulationTime);
         }
 
-        public void start() {
+        void start() {
             // To avoid concurrency
             mPhysicsContext.runOnPhysicsThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (!running) {
-                        running = true;
-                        lastSimulTime = SystemClock.uptimeMillis();
+                    if (!mRunning) {
+                        mRunning = true;
+                        mLastSimulTime = SystemClock.uptimeMillis();
                         mPhysicsContext.runDelayedOnPhysicsThread(GVRWorldTask.this,
-                                intervalMillis);
+                                mIntervalMillis);
                     }
                 }
             });
         }
 
-        public void stop() {
+        void stop() {
             // To avoid concurrency
             mPhysicsContext.runOnPhysicsThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (running) {
-                        running = false;
+                    if (mRunning) {
+                        mRunning = false;
                         mPhysicsContext.removeTask(GVRWorldTask.this);
                     }
                 }
@@ -357,29 +337,23 @@ public class GVRWorld extends GVRComponent {
         }
     }
 
-    private ISceneObjectEvents mSceneEventsHandler = new ISceneObjectEvents() {
+    private final IActivityEvents mActivityEvents = new GVREventListeners.ActivityEvents() {
+        @Override
+        public void onPause() {
+            stopSimulation();
+        }
 
         @Override
-        public void onInit(GVRContext gvrContext, GVRSceneObject sceneObject) {
-            if (mInitialized)
-                return;
-
-            mInitialized = true;
-            getOwnerObject().getEventReceiver().removeListener(this);
-
+        public void onResume() {
             if (isEnabled()) {
                 startSimulation();
             }
         }
 
         @Override
-        public void onLoaded() {}
-
-        @Override
-        public void onAfterInit() {}
-
-        @Override
-        public void onStep() {}
+        public void onDestroy() {
+            getGVRContext().getActivity().getEventReceiver().removeListener(mActivityEvents);
+        }
     };
 
     private ComponentVisitor mComponentVisitor = new ComponentVisitor() {

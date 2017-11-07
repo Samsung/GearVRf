@@ -19,51 +19,22 @@
 
 
 namespace gvr{
+VkCommandBuffer& VkRenderTarget::getCommandBuffer(){
+    return static_cast<VkRenderTexture*>(mRenderTexture)->getCommandBuffer();
+}
  void VkRenderTarget::beginRendering(Renderer* renderer){
      mRenderTexture->bind();
      RenderTarget::beginRendering(renderer);
-     VkViewport viewport = {};
-     viewport.height = (float) mRenderTexture->height() ;
-     viewport.width = (float) mRenderTexture->width();
-     viewport.minDepth = (float) 0.0f;
-     viewport.maxDepth = (float) 1.0f;
-
-     VkRect2D scissor = {};
-     scissor.extent.width = mRenderTexture->width();
-     scissor.extent.height = mRenderTexture->height();
-     scissor.offset.x = 0;
-     scissor.offset.y = 0;
-
-     vkCmdSetScissor(mCmdBuffer,0,1, &scissor);
-     vkCmdSetViewport(mCmdBuffer,0,1,&viewport);
-     VkRenderPassBeginInfo rp_begin =  (static_cast<VkRenderTexture*>(mRenderTexture))->getRenderPassBeginInfo();
-     vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
+     mRenderTexture->beginRendering(renderer);
  }
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview): RenderTarget(renderTexture, is_multiview){
-    initVkData();
-}
-void VkRenderTarget::endRendering(Renderer *) {
-    vkCmdEndRenderPass(mCmdBuffer);
+    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 
-void VkRenderTarget::createCmdBuffer(VkDevice device, VkCommandPool commandPool){
-    VkResult ret = VK_SUCCESS;
-    ret = vkAllocateCommandBuffers(device, gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, commandPool),
-                                   &mCmdBuffer
-    );
-    GVR_VK_CHECK(!ret);
-}
-void VkRenderTarget::initVkData() {
-    VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
-    VkDevice device = renderer->getDevice();
-    VkCommandPool commandPool = renderer->getCore()->getCommandPool();
-    createCmdBuffer(device,commandPool);
-    static_cast<VkRenderTexture*>(mRenderTexture)->createFenceObject(device);
-}
 VkRenderTarget::VkRenderTarget(Scene* scene): RenderTarget(scene){
-    initVkData();
+    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source): RenderTarget(renderTexture, source){
-    initVkData();
+    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 }

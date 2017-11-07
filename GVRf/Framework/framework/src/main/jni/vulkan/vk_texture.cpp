@@ -55,15 +55,15 @@ void VkTexture::updateSampler()
     {
         numlod = mImage->getLevels();
     }
-    createSampler(numlod);
+    createSampler(mTexParams, numlod);
 }
 VkSampler VkTexture::getVkSampler(){
     uint64_t index = mTexParams.getHashCode();
     index = (index << 32) | mImage->getLevels();
     return getSampler(index);
 }
-void VkTexture::createSampler(int maxLod) {
-    uint64_t index = mTexParams.getHashCode();
+void VkTexture::createSampler(TextureParameters& textureParameters, int maxLod) {
+    uint64_t index = textureParameters.getHashCode();
     index = (index << 32) | maxLod;
 
     VkSampler sampler = getSampler(index);
@@ -71,16 +71,16 @@ void VkTexture::createSampler(int maxLod) {
         return;
     
     // Sets the new MIN FILTER
-    int min_filter = mTexParams.getMinFilter();
+    int min_filter = textureParameters.getMinFilter();
     VkFilter min_filter_type_ = min_filter <= 1 ? MapFilter[min_filter] : VK_FILTER_LINEAR;
     // Sets the MAG FILTER
-    VkFilter mag_filter_type_ = MapFilter[mTexParams.getMagFilter()];
+    VkFilter mag_filter_type_ = MapFilter[textureParameters.getMagFilter()];
 
     // Sets the wrap parameter for texture coordinate S
-    VkSamplerAddressMode wrap_s_type_ = MapWrap[mTexParams.getWrapU()];
+    VkSamplerAddressMode wrap_s_type_ = MapWrap[textureParameters.getWrapU()];
 
     // Sets the wrap parameter for texture coordinate S
-    VkSamplerAddressMode wrap_t_type_ = MapWrap[mTexParams.getWrapV()];
+    VkSamplerAddressMode wrap_t_type_ = MapWrap[textureParameters.getWrapV()];
 
     VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
 

@@ -16,6 +16,7 @@
 #include <sys/syscall.h>
 #include<stdlib.h>
 #include<unistd.h>
+#include <cstring>
 #include "gvr_log.h"
 #include "gvr_thread.h"
 

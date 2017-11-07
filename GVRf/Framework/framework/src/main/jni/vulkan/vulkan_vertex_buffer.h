@@ -44,7 +44,6 @@ namespace gvr {
         void    freeGPUResources();
         VkFormat getDataType(const std::string& type);
         std::unordered_map<Shader*,std::shared_ptr<GVR_VK_Vertices>> mVerticesMap;
-     //   GVR_VK_Vertices m_vertices;
     };
 
 } // end gvrf

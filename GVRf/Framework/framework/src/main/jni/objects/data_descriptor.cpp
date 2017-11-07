@@ -38,6 +38,21 @@ namespace gvr
             LOGE("DataDescriptor: Error: missing descriptor string");
         }
     }
+    void DataDescriptor::removePunctuations(const char* descriptor){
+        std::string modified_descriptor = "";
+        const char* curr = descriptor;
+        while(*curr != 0){
+
+            while(*curr != 0 && std::isalnum(*curr) || *curr == '_')
+                modified_descriptor.push_back(*curr++);
+
+            while(*curr != 0 && !std::isalnum(*curr))
+                curr++;
+
+            modified_descriptor.push_back(' ');
+        }
+        std::swap(mDescriptor,modified_descriptor);
+    }
 
     void DataDescriptor::forEachEntry(std::function<void(DataEntry&)> func)
     {

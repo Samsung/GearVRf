@@ -6,6 +6,7 @@
  ****/
 #include <string>
 #include <sstream>
+#include <cstring>
 #include "index_buffer.h"
 #include "../util/gvr_log.h"
 

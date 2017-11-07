@@ -23,15 +23,11 @@ import android.os.HandlerThread;
  * with its own main loop.
  */
 public class GVRPhysicsContext {
-    private static GVRPhysicsContext mInstance;
+    private static final GVRPhysicsContext mInstance = new GVRPhysicsContext();
     private final HandlerThread mHandlerThread;
     private final Handler mHandler;
 
     public static GVRPhysicsContext getInstance() {
-        if (mInstance == null) {
-            mInstance = new GVRPhysicsContext();
-        }
-
         return mInstance;
     }
 
@@ -55,11 +51,5 @@ public class GVRPhysicsContext {
 
     public void removeTask(Runnable r) {
         mHandler.removeCallbacks(r);
-    }
-
-    void onDestroy() {
-        if (null != mHandlerThread) {
-            mHandlerThread.getLooper().quitSafely();
-        }
     }
 }

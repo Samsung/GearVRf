@@ -113,7 +113,7 @@ IndexBuffer* VulkanRenderer::createIndexBuffer(int bytesPerIndex, int icount)
 
 bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
 {
-    Transform* const t = rdata->owner_object()->transform();
+
     VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
     UniformBlock& transformUBO = vkRdata->getTransformUbo();
     VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
@@ -124,13 +124,13 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     }
     rdata->updateGPU(this,shader);
 
-    vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, false);
+    vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader);
 
-    if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(pass)) {
+    if(vkRdata->isDirty(pass)) {
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
 
         VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,1);
-        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
+        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader->getShaderID()) + rdata->mesh()->getVertexBuffer()->getDescriptor() ;
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
@@ -144,39 +144,6 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     }
     return true;
 }
-
-bool VulkanRenderer::renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, int passNum, VkRenderTarget* renderTarget)
-{
-    // Updates its vertex buffer
-    rdata->updateGPU(this,shader);
-
-    // For its layout (uniforms and samplers)
-    VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
-    VulkanRenderPass* rpass = static_cast<VulkanRenderPass*>(rdata->pass(passNum));
-    VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(rpass->material());
-
-    vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, true);
-
-    if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(passNum)) {
-        vulkanCore_->InitDescriptorSetForRenderDataPostEffect(this, 0, shader, vkRdata, passNum, renderTarget);
-        vkRdata->set_depth_test(0);
-        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,1);
-        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader) + to_string(render_pass);
-
-        VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
-        if(pipeline == 0) {
-            vkRdata->createPipeline(shader, this, 0, render_pass);
-            vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(0));
-        }
-        else{
-            vkRdata->setPipeline(pipeline, 0);
-            vkRdata->clearDirty();
-        }
-    }
-
-    return true;
-}
-
 void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
     float positions[] = { -1.0f, 1.0f,  1.0f,
@@ -200,6 +167,28 @@ void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
     copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
 
 }
+void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>& render_data_list){
+    for (auto rdata = render_data_vector.begin(); rdata != render_data_vector.end(); ++rdata)
+    {
+        if (!(rstate.render_mask & (*rdata)->render_mask()))
+            continue;
+
+        for(int curr_pass = 0; curr_pass < (*rdata)->pass_count(); curr_pass++) {
+            ShaderData *curr_material = (*rdata)->material(curr_pass);
+            Shader *shader = rstate.shader_manager->getShader((*rdata)->get_shader(rstate.is_multiview,curr_pass));
+            if (shader == NULL)
+            {
+                LOGE("SHADER: shader not found");
+                continue;
+            }
+            if (!renderWithShader(rstate, shader, (*rdata), curr_material, curr_pass))
+                break;
+
+            if(curr_pass == (*rdata)->pass_count()-1)
+                render_data_list.push_back((*rdata));
+        }
+    }
+}
 void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                 RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
 
@@ -222,58 +211,59 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;
     }
-    for (auto rdata = render_data_vector->begin();
-         rdata != render_data_vector->end();
-         ++rdata)
-    {
-        if (!(rstate.render_mask & (*rdata)->render_mask()))
-            continue;
+    renderRenderDataVector(rstate,*render_data_vector,render_data_list);
+    VkRenderTarget *vk_renderTarget = static_cast<VkRenderTarget *>(renderTarget);
 
-        for(int curr_pass = 0; curr_pass < (*rdata)->pass_count(); curr_pass++) {
-            ShaderData *curr_material = (*rdata)->material(curr_pass);
-            Shader *shader = rstate.shader_manager->getShader((*rdata)->get_shader(rstate.is_multiview,curr_pass));
-            if (shader == NULL)
-            {
-                LOGE("SHADER: shader not found");
-                continue;
-            }
-            if (!renderWithShader(rstate, shader, (*rdata), curr_material, curr_pass))
-                break;
+    if ((post_effects != NULL) &&
+        (post_effect_render_texture_a != nullptr) &&
+        (post_effects->pass_count() >= 0)) {
 
-            if(curr_pass == (*rdata)->pass_count()-1)
-                render_data_list.push_back((*rdata));
-        }
-    }
-    VkRenderTarget* vk_renderTarget = static_cast<VkRenderTarget*>(renderTarget);
-    vulkanCore_->BuildCmdBufferForRenderData(render_data_list,camera, shader_manager, renderTarget);
-    vulkanCore_->submitCmdBuffer(vk_renderTarget);
+        VkRenderTexture* renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_a);
+        VkRenderTexture* input_texture = renderTexture;
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager,
+                                                 nullptr, renderTexture, false);
+        vulkanCore_->submitCmdBuffer(renderTexture->getFenceObject(), renderTexture->getCommandBuffer());
+        vulkanCore_->waitForFence(renderTexture->getFenceObject());
 
-    if(post_effects!= NULL && post_effects->pass_count()) {
         postEffectCount = post_effects->pass_count();
-        vulkanCore_->InitPostEffectChain();
+        // Call Post Effect
+        for (int i = 0; i < postEffectCount-1; i++) {
+
+            if (i % 2 == 0)
+            {
+                renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_b);
+            }
+            else
+            {
+                renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_a);
+            }
+
+            if(!renderPostEffectData(rstate,input_texture,post_effects,i))
+                return;
+
+            VkCommandBuffer cmdbuffer = renderTexture->getCommandBuffer();
+            vulkanCore_->BuildCmdBufferForRenderDataPE(cmdbuffer, rstate.shader_manager,camera, post_effects, renderTexture, i);
+            vulkanCore_->submitCmdBuffer(renderTexture->getFenceObject(),cmdbuffer);
+            vulkanCore_->waitForFence(renderTexture->getFenceObject());
+            input_texture = renderTexture;
+        }
+        render_data_list.clear();
+        render_data_list.push_back(post_effects);
+
+        if(!renderPostEffectData(rstate,input_texture,post_effects,postEffectCount - 1))
+            return;
+
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager, renderTarget, nullptr, true);
+        vulkanCore_->submitCmdBuffer(
+                static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject(),
+                vk_renderTarget->getCommandBuffer());
     }
-
-    // Call Post Effect
-    for(int i = 0; i < postEffectCount; i++) {
-        RenderPass* rpass = post_effects->pass(i);
-
-        int result = rpass->isValid(this, rstate, post_effects);
-        if (result < 0)         // something wrong with material or texture
-        {
-            LOGE("Renderer::renderPostEffectData pass %d material or texture not ready", i);
-            return;             // don't render this pass
-        }
-        if ((result == 0) && (post_effects->isValid(this, rstate) < 0))
-        {
-            LOGE("Renderer::renderPostEffectData pass %d shader not available", i);
-            return;             // no shader available
-        }
-        int nativeShader = rpass->get_shader(rstate.is_multiview);
-        Shader* shader = rstate.shader_manager->getShader(nativeShader);
-        renderWithPostEffectShader(rstate, shader, post_effects, i, vk_renderTarget);
-
-        vulkanCore_->BuildCmdBufferForRenderDataPE(camera, post_effects, shader, i);
-        vulkanCore_->DrawFrameForRenderDataPE();
+    else {
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager,
+                                                 renderTarget, nullptr, false);
+        vulkanCore_->submitCmdBuffer(
+                static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject(),
+                vk_renderTarget->getCommandBuffer());
     }
 }
 
