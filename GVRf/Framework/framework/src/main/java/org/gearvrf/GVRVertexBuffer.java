@@ -22,6 +22,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.channels.IllegalBlockingModeException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Describes a set of vertices used by an indexed triangle mesh.
@@ -78,6 +80,52 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
     {
         super(gvrContext, NativeVertexBuffer.ctor(descriptor, vertexCount));
         mDescriptor = descriptor;
+    }
+
+    /**
+     * Clone an existing vertex buffer with a specified layout.
+     * <p>
+     * The vertex attribute data in the source vertex buffer is copied
+     * into the new vertex buffer if that attribute is present in the descriptor.
+     * Attributes in the descriptor but not in the source vertex buffer
+     * remain uninitialized.
+     * @param srcVerts    GVRVertexBuffer to clone.
+     * @param descriptor  string describing vertex layout of new vertex buffer.
+     *                    Each vertex component has a name and a type.
+     *                    The types may be "int", "float" or "mat"
+     *                    followed by an integer indicating vector size.
+     * Vertex Descriptor Examples:
+     * <ul>
+     * <li>float3 a_position float2 a_texcoord float3 a_normal</li>
+     * <li>float3 a_position, int4 a_bone_indices, float4 a_bone_weights</li>
+     * </ul>
+     */
+    public GVRVertexBuffer(GVRVertexBuffer srcVerts, String descriptor)
+    {
+        super(srcVerts.getGVRContext(), NativeVertexBuffer.ctor(descriptor, srcVerts.getVertexCount()));
+        Pattern pattern = Pattern.compile("([a-zA-Z0-9]+)[ \t]+([a-zA-Z0-9_]+)[^ ]*");
+        final String srcDesc = srcVerts.getDescriptor();
+        Matcher matcher = pattern.matcher(srcDesc);
+
+        while (matcher.find())
+        {
+            String srcName = matcher.group(2);
+            String srcType = matcher.group(1).toLowerCase();
+
+            if (descriptor.contains(srcName))
+            {
+                if (srcType.charAt(0) == 'i')
+                {
+                    final int[] tempArray = srcVerts.getIntArray(srcName);
+                    setIntArray(srcName, tempArray);
+                }
+                else
+                {
+                    final float[] tempArray = srcVerts.getFloatArray(srcName);
+                    setFloatArray(srcName, tempArray);
+                }
+            }
+        }
     }
 
     /**
