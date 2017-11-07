@@ -501,9 +501,8 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
      */
     public float getSphereBound(float[] sphere)
     {
-        int rc;
         if ((sphere == null) || (sphere.length != 4) ||
-            ((rc = NativeVertexBuffer.getBoundingVolume(getNative(), FloatBuffer.wrap(sphere))) < 0))
+            ((NativeVertexBuffer.getBoundingVolume(getNative(), sphere)) < 0))
         {
             throw new IllegalArgumentException("Cannot copy sphere bound into array provided");
         }
@@ -521,7 +520,7 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
     {
         int rc;
         if ((corners == null) || (corners.length != 6) ||
-            ((rc = NativeVertexBuffer.getBoundingVolume(getNative(), FloatBuffer.wrap(corners))) < 0))
+            ((rc = NativeVertexBuffer.getBoundingVolume(getNative(), corners)) < 0))
         {
             throw new IllegalArgumentException("Cannot copy box bound into array provided");
         }
@@ -565,7 +564,7 @@ class NativeVertexBuffer {
 
     static native int  getAttributeSize(long vbuf, String name);
 
-    static native int getBoundingVolume(long vbuf, FloatBuffer bv);
+    static native int getBoundingVolume(long vbuf, float[] bv);
 
     static native void dump(long vbuf, String attrName);
 }

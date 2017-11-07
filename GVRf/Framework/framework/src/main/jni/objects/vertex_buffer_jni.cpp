@@ -78,7 +78,7 @@ namespace gvr {
 
     JNIEXPORT int JNICALL
     Java_org_gearvrf_NativeVertexBuffer_getBoundingVolume(JNIEnv* env, jobject obj,
-                                                         jlong jvbuf, jobject floatbuf);
+                                                         jlong jvbuf, jfloatArray outputArray);
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeVertexBuffer_dump(JNIEnv* env, jobject obj,
                                                           jlong jvbuf, jstring attrName);
@@ -263,21 +263,20 @@ Java_org_gearvrf_NativeVertexBuffer_getAttributeSize(JNIEnv* env, jobject obj,
 }
 
 JNIEXPORT int JNICALL
-Java_org_gearvrf_NativeVertexBuffer_getBoundingVolume(JNIEnv* env, jobject obj,
-                                                      jlong jvbuf, jobject jfloatbuf)
+Java_org_gearvrf_NativeVertexBuffer_getBoundingVolume(JNIEnv* env, jobject,
+                                                      jlong jvbuf, jfloatArray outputArray)
 {
     VertexBuffer* vbuf = reinterpret_cast<VertexBuffer*>(jvbuf);
-    void* bufptr = env->GetDirectBufferAddress(jfloatbuf);
-    if (bufptr)
+
     {
-        int capacity = env->GetDirectBufferCapacity(jfloatbuf);
+        int capacity = env->GetArrayLength(outputArray);
         if (capacity < 4)
         {
             LOGE("VertexBuffer::getBoundingVolume destination buffer must hold at least 4 floats");
             return -1;
         }
         BoundingVolume bv;
-        float* f = (float*) bufptr;
+        jfloat* f = env->GetFloatArrayElements(outputArray, 0);
         vbuf->getBoundingVolume(bv);
         if (capacity == 4)
         {
@@ -308,6 +307,8 @@ Java_org_gearvrf_NativeVertexBuffer_getBoundingVolume(JNIEnv* env, jobject obj,
             f[8] = bv.max_corner().z;
             f[9] = bv.radius();
         }
+
+        env->ReleaseFloatArrayElements(outputArray, f, 0);
         return (bv.radius() > 0) ? 1 : 0;
     }
     return -1;
