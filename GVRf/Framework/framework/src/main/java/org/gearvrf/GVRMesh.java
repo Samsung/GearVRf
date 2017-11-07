@@ -94,6 +94,12 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         mIndices = ibuffer;
     }
 
+    public GVRMesh(final GVRMesh srcMesh)
+    {
+        this(srcMesh.getVertexBuffer(), srcMesh.getIndexBuffer());
+        mBones = srcMesh.getBones();
+    }
+
     /**
      * Construct a mesh with specified vertex layout.
      * @param gvrContext GVRContext to associate mesh with
@@ -123,7 +129,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see GVRVertexBuffer#getFloatVec(String)
      */
     public float[] getVertices() {
-        return mVertices.getFloatVec("a_position").array();
+        return mVertices.getFloatArray("a_position");
     }
 
     /**
