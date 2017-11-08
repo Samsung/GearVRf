@@ -99,6 +99,7 @@ private:
     float background_color_b_;
     float background_color_a_;
     int render_mask_;
+    //post_effect_data is owned by someone else
     RenderData* post_effect_data_;
     glm::mat4 view_matrix_;
 };

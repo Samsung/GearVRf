@@ -39,12 +39,6 @@ Camera::Camera() :
 }
 
 Camera::~Camera() {
-    if (post_effect_data_)
-    {
-        delete post_effect_data_;
-        post_effect_data_ = NULL;
-    }
-
 }
 
 void Camera::setPostEffect(RenderData* post_effects)
