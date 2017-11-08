@@ -59,7 +59,11 @@ int RenderPass::isValid(Renderer* renderer, const RenderState& rstate, RenderDat
     int shaderID = get_shader(rstate.is_multiview);
     bool dirty = dirty_;
 
-    if ((shaderID <= 0) || dirty_)
+    if (mtl->isDirty(ShaderData::NEW_TEXTURE))
+    {
+        dirty = true;
+    }
+    if ((shaderID <= 0) || dirty)
     {
         clearDirty();
     }

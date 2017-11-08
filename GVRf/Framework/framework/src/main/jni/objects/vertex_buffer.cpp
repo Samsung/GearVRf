@@ -47,9 +47,6 @@ namespace gvr {
             v.z = *src;
             bv.expand(v);
         }
-        LOGV("VertexBuffer::getBoundingVolume (%f, %f, %f) (%f, %f, %f) %d verts",
-            bv.min_corner().x, bv.min_corner().y, bv.min_corner().z,
-            bv.max_corner().x, bv.max_corner().y, bv.max_corner().z, mVertexCount);
     }
 
     const void*  VertexBuffer::getData(int index, int& size) const
