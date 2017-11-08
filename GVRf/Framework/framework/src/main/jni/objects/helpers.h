@@ -19,18 +19,12 @@
 #include <memory>
 #include <unordered_set>
 enum DIRTY_BITS {
-    STD_ATTRIBS = 0,
-    CUSTOM_ATTRIBS,
-    NEW_MATERIAL,
-    MOD_CULL_FACE,
-    MOD_SHADER_ID,
-    NEW_TEXTURE,
-    MOD_TEXTURE,
-    MAT_DATA,
-    NATIVE_SHADER,
-    RENDER_PASS,
-    NEW_MESH
+    STD_ATTRIBS = 1,
+    NEW_TEXTURE = 2,
+    MOD_TEXTURE = 4,
+    MAT_DATA = 8,
 };
+
 namespace gvr {
 
 static void dirtyImpl(std::unordered_set<std::shared_ptr<u_short>>& dirty_flags,DIRTY_BITS bit) {

@@ -26,8 +26,6 @@
 #include <string>
 #include <functional>
 
-#include "helpers.h"
-
 #include "objects/hybrid_object.h"
 #include "objects/textures/texture.h"
 #include "objects/uniform_block.h"
@@ -41,6 +39,14 @@ class RenderData;
 class ShaderData : public HybridObject
 {
 public:
+    enum DIRTY_BITS
+    {
+        NONE = 0,
+        NEW_TEXTURE = 2,
+        MOD_TEXTURE = 4,
+        MAT_DATA = 8,
+    };
+
     explicit ShaderData(const char* texture_desc);
 
     virtual ~ShaderData() { }
@@ -63,8 +69,9 @@ public:
     bool    setVec3(const char* name, const glm::vec3& v);
     bool    setVec4(const char* name, const glm::vec4& v);
     bool    setMat4(const char* name, const glm::mat4& m);
-    void    makeDirty(DIRTY_BITS bit);
+    void    makeDirty(DIRTY_BITS bits);
     void    clearDirty();
+    bool    isDirty(DIRTY_BITS bits);
     bool    hasTexture(const char* key) const;
     bool    hasUniform(const char* key) const;
     virtual int updateGPU(Renderer* rendere, RenderData* rdata);
