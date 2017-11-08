@@ -77,7 +77,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @param gvrContext GVRContext to associate mesh with
      */
     public GVRMesh(GVRContext gvrContext) {
-        this(gvrContext, "float3 a_position float2 a_texcoord float3 a_normal ");
+        this(gvrContext, "float3 " + KEY_POSITION + " float2 " + KEY_TEXCOORD + " float3 " + KEY_NORMAL);
     }
 
     /**
@@ -123,7 +123,14 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see GVRVertexBuffer#getFloatVec(String)
      */
     public float[] getVertices() {
-        return mVertices.getFloatVec("a_position").array();
+        return mVertices.getFloatArray(KEY_POSITION);
+    }
+
+    /**
+     * @see GVRMesh#getVertices()
+     */
+    public FloatBuffer getVerticesAsFloatBuffer() {
+        return mVertices.getFloatVec(KEY_POSITION).asReadOnlyBuffer();
     }
 
     /**
@@ -137,7 +144,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see GVRVertexBuffer#setFloatArray(String, float[])
      */
     public void setVertices(float[] vertices) {
-        mVertices.setFloatArray("a_position", vertices);
+        mVertices.setFloatArray(KEY_POSITION, vertices);
     }
 
     /**
@@ -202,7 +209,14 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see GVRVertexBuffer#getFloatArray(String)
      */
     public float[] getNormals() {
-        return mVertices.getFloatArray("a_normal");
+        return mVertices.getFloatArray(KEY_NORMAL);
+    }
+
+    /**
+     * @see GVRMesh#getNormals()
+     */
+    public FloatBuffer getNormalsAsFloatBuffer() {
+        return mVertices.getFloatVec(KEY_NORMAL).asReadOnlyBuffer();
     }
 
     /**
@@ -216,7 +230,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see GVRVertexBuffer#setFloatArray(String, float[])
      */
     public void setNormals(float[] normals) {
-        mVertices.setFloatArray("a_normal", normals);
+        mVertices.setFloatArray(KEY_NORMAL, normals);
     }
 
     /**
@@ -235,9 +249,16 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public float[] getTexCoords(int index)
     {
-        String key = (index > 0) ? ("a_texcoord" + index) : "a_texcoord";
-
+        final String key = (index > 0) ? (KEY_TEXCOORD + index) : KEY_TEXCOORD;
         return mVertices.getFloatArray(key);
+    }
+
+    /**
+     * @see GVRMesh#getTexCoords(int)
+     */
+    public FloatBuffer getTexCoordsAsFloatBuffer(int index) {
+        final String key = (index > 0) ? (KEY_TEXCOORD + index) : KEY_TEXCOORD;
+        return mVertices.getFloatVec(key).asReadOnlyBuffer();
     }
 
     /**
@@ -250,7 +271,14 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see GVRVertexBuffer#getFloatArray(String)
      */
     public float[] getTexCoords() {
-        return mVertices.getFloatArray("a_texcoord");
+        return mVertices.getFloatArray(KEY_TEXCOORD);
+    }
+
+    /**
+     * @see GVRMesh#getTexCoords()
+     */
+    public FloatBuffer getTexCoordsAsFloatBuffer() {
+        return mVertices.getFloatVec(KEY_TEXCOORD).asReadOnlyBuffer();
     }
 
     /**
@@ -286,7 +314,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setTexCoords(float [] texCoords, int index)
     {
-        String key = (index > 0) ? ("a_texcoord" + index) : "a_texcoord";
+        String key = (index > 0) ? (KEY_TEXCOORD + index) : KEY_TEXCOORD;
         mVertices.setFloatArray(key, texCoords);
     }
 
@@ -374,8 +402,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @see #getTriangles()
      * @throws IllegalArgumentException if index buffer is not <i>int</i>
      */
-    public int[] getIndices() {
-        return (mIndices != null) ? mIndices.asIntArray() : null;
+    public char[] getIndices() {
+        return (mIndices != null) ? mIndices.asCharArray() : null;
     }
 
     /**
@@ -603,7 +631,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public GVRMesh getBoundingBox()
     {
-        GVRMesh meshbox = new GVRMesh(getGVRContext(), "float3 a_position");
+        GVRMesh meshbox = new GVRMesh(getGVRContext(), "float3 " + KEY_POSITION);
         float[] bbox = new float[6];
 
         getBoxBound(bbox);
@@ -832,6 +860,10 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         prettyPrint(sb, 0);
         return sb.toString();
     }
+
+    final static String KEY_TEXCOORD = "a_texcoord";
+    final static String KEY_NORMAL = "a_normal";
+    final static String KEY_POSITION = "a_position";
 }
 
 class NativeMesh {
