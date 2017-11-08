@@ -33,6 +33,7 @@ import org.gearvrf.utility.VrAppSettings;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.provider.Settings;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.media.AudioManager;
@@ -61,7 +62,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         System.loadLibrary("gvrf");
     }
     protected static final String TAG = "GVRActivity";
-
+    public static final String SETTINGS_GLOBAL_VR_DEVELOPER_MODE = "vrmode_developer_mode";
     private GVRViewManager mViewManager;
     private volatile GVRConfigurationManager mConfigurationManager;
     private GVRMain mGVRMain;
@@ -220,9 +221,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             mDockEventReceiver.stop();
         }
 
-        if (null != mConfigurationManager && !mConfigurationManager.isDockListenerRequired()) {
+//        if (null != mConfigurationManager && !mConfigurationManager.isDockListenerRequired()) {
             handleOnUndock();
-        }
+//        }
 
         if (null != mActivityNative) {
             mActivityNative.onDestroy();
@@ -662,7 +663,13 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 }, new Runnable() {
                     @Override
                     public void run() {
-                        handleOnUndock();
+                        if(Settings.Global.getInt(mViewManager.getActivity().getContentResolver(), SETTINGS_GLOBAL_VR_DEVELOPER_MODE, 0) == 1) {
+                            Log.i(TAG, "receiver called handleOnUndock");
+                            handleOnUndock();
+                        } else {
+                            Log.i(TAG, "receiver calls finish instead of handleOnUndock");
+                            mViewManager.getActivity().finish();
+                        }
                     }
                 });
         if (null != mDockEventReceiver) {
