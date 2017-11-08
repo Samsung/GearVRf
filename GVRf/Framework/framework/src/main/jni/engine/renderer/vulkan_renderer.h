@@ -106,6 +106,7 @@ public:
     void set_face_culling(int cull_face){}
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc);
     virtual RenderData* createRenderData();
+    virtual RenderData* createRenderData(RenderData*);
     virtual RenderPass* createRenderPass();
     virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
     Image* createImage(int type, int format);
