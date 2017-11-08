@@ -20,6 +20,10 @@ import org.gearvrf.utility.Log;
 
 import android.graphics.Color;
 
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Encapculates data to be sent to a vertex or fragment shader.
  * It contains a list of key / value pairs which can specify arbitrary length
@@ -60,8 +64,7 @@ public class GVRMaterial extends  GVRShaderData
 {
 
     private static final String TAG = Log.tag(GVRMaterial.class);
-
-    static final String MAIN_TEXTURE = "u_texture";
+    private String mMainTextureName = null;
 
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
@@ -163,8 +166,14 @@ public class GVRMaterial extends  GVRShaderData
      *
      * @return The {@linkplain GVRTexture main texture}
      */
-    public GVRTexture getMainTexture()  {
-        return getTexture(MAIN_TEXTURE);
+    public GVRTexture getMainTexture()
+    {
+        String mainTexName = findFirstTexture();
+        if (mainTexName != null)
+        {
+            return getTexture(mainTexName);
+        }
+        throw new IllegalArgumentException("Cannot get main texture if shader has no textures");
     }
 
     /**
@@ -174,8 +183,15 @@ public class GVRMaterial extends  GVRShaderData
      * @param texture
      *            The {@link GVRTexture} to bind.
      */
-    public void setMainTexture(GVRTexture texture)  {
-        setTexture(MAIN_TEXTURE, texture);
+    public void setMainTexture(GVRTexture texture)
+    {
+        String mainTexName = findFirstTexture();
+        if (mainTexName != null)
+        {
+            setTexture(mainTexName, texture);
+            return;
+        }
+        throw new IllegalArgumentException("Cannot set main texture if shader has no textures");
     }
 
 
@@ -534,6 +550,20 @@ public class GVRMaterial extends  GVRShaderData
      */
     public void setLineWidth(float lineWidth) {
         setFloat("line_width", lineWidth);
+    }
+
+    private String findFirstTexture()
+    {
+        if (mMainTextureName == null)
+        {
+            Pattern pattern = Pattern.compile("([a-zA-Z0-9]+) ([a-zA-Z0-9_]+)");
+            Matcher matcher = pattern.matcher(getTextureDescriptor());
+            if (matcher.find(0))
+            {
+                mMainTextureName = matcher.group(2);
+            }
+        }
+        return mMainTextureName;
     }
 
 }
