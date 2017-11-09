@@ -88,7 +88,7 @@ namespace gvr {
 
         ovrFrameParms parms = vrapi_DefaultFrameParms(&oculusJavaGlThread_, VRAPI_FRAME_INIT_BLACK_FINAL, vrapi_GetTimeInSeconds(), nullptr);
         parms.FrameIndex = ++frameIndex;
-        parms.MinimumVsyncs = 1;
+        parms.SwapInterval = 1;
         parms.PerformanceParms = oculusPerformanceParms_;
         vrapi_SubmitFrame(oculusMobile_, &parms);
 
@@ -167,11 +167,9 @@ void GVRActivity::onSurfaceChanged(JNIEnv &env) {
         oculusPerformanceParms_.MainThreadTid = mainThreadId_;
         oculusPerformanceParms_.RenderThreadTid = gettid();
 
-        oculusHeadModelParms_ = vrapi_DefaultHeadModelParms();
-        configurationHelper_.getHeadModelConfiguration(env, oculusHeadModelParms_);
-        if (mMultisamplesConfiguration > maxSamples)
+        if (mMultisamplesConfiguration > maxSamples) {
             mMultisamplesConfiguration = maxSamples;
-
+        }
 
         bool multiview;
         configurationHelper_.getMultiviewConfiguration(env, multiview);
@@ -235,14 +233,11 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         ovrFrameParms parms = vrapi_DefaultFrameParms(&oculusJavaGlThread_, VRAPI_FRAME_INIT_DEFAULT, vrapi_GetTimeInSeconds(),
                                                       NULL);
         parms.FrameIndex = ++frameIndex;
-        parms.MinimumVsyncs = 1;
+        parms.SwapInterval = 1;
         parms.PerformanceParms = oculusPerformanceParms_;
 
         const double predictedDisplayTime = vrapi_GetPredictedDisplayTime(oculusMobile_, frameIndex);
-        const ovrTracking baseTracking = vrapi_GetPredictedTracking(oculusMobile_, predictedDisplayTime);
-
-        const ovrHeadModelParms headModelParms = vrapi_DefaultHeadModelParms();
-        const ovrTracking tracking = vrapi_ApplyHeadModel(&headModelParms, &baseTracking);
+        const ovrTracking tracking = vrapi_GetPredictedTracking(oculusMobile_, predictedDisplayTime);
 
         ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_, tracking.HeadPose.TimeInSeconds);
         updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;

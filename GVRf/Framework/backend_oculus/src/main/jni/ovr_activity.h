@@ -60,7 +60,6 @@ namespace gvr {
         ovrMatrix4f projectionMatrix_;
         ovrMatrix4f texCoordsTanAnglesMatrix_;
         ovrPerformanceParms oculusPerformanceParms_;
-        ovrHeadModelParms oculusHeadModelParms_;
 
         bool mResolveDepthConfiguration = false;
         int mWidthConfiguration = 0, mHeightConfiguration = 0, mMultisamplesConfiguration = 0;

@@ -157,57 +157,6 @@ void ConfigurationHelper::getPerformanceConfiguration(JNIEnv& env, ovrPerformanc
     LOGV("ConfigurationHelper: --------------------------");
 }
 
-void ConfigurationHelper::getHeadModelConfiguration(JNIEnv& env, ovrHeadModelParms& parmsInOut) {
-    LOGV("ConfigurationHelper: --- head model configuration ---");
-
-    jfieldID fid = env.GetFieldID(vrAppSettingsClass_, "headModelParams", "Lorg/gearvrf/utility/VrAppSettings$HeadModelParams;");
-    jobject parms = env.GetObjectField(vrAppSettings_, fid);
-    jclass parmsClass = env.GetObjectClass(parms);
-
-    fid = env.GetFieldID(parmsClass, "interpupillaryDistance", "F");
-    float interpupillaryDistance = env.GetFloatField(parms, fid);
-    if (interpupillaryDistance != interpupillaryDistance) {
-        //Value not set in Java side, current Value is NaN
-        //Need to copy the system settings to java side.
-        env.SetFloatField(parms, fid, parmsInOut.InterpupillaryDistance);
-    } else {
-        parmsInOut.InterpupillaryDistance = interpupillaryDistance;
-    }
-    LOGV("ConfigurationHelper: --- interpupillaryDistance: %f", parmsInOut.InterpupillaryDistance);
-
-    fid = env.GetFieldID(parmsClass, "eyeHeight", "F");
-    float eyeHeight = env.GetFloatField(parms, fid);
-    if (eyeHeight != eyeHeight) {
-        //same as interpupilaryDistance
-        env.SetFloatField(parms, fid, parmsInOut.EyeHeight);
-    }else{
-        parmsInOut.EyeHeight = eyeHeight;
-    }
-    LOGV("ConfigurationHelper: --- eyeHeight: %f", parmsInOut.EyeHeight);
-
-    fid = env.GetFieldID(parmsClass, "headModelDepth", "F");
-    float headModelDepth = env.GetFloatField(parms, fid);
-    if (headModelDepth != headModelDepth) {
-        //same as interpupilaryDistance
-        env.SetFloatField(parms, fid, parmsInOut.HeadModelDepth);
-    } else {
-        parmsInOut.HeadModelDepth = headModelDepth;
-    }
-    LOGV("ConfigurationHelper: --- headModelDepth: %f", parmsInOut.HeadModelDepth);
-
-    fid = env.GetFieldID(parmsClass, "headModelHeight", "F");
-    float headModelHeight = env.GetFloatField(parms, fid);
-    if (headModelHeight != headModelHeight) {
-        //same as interpupilaryDistance
-        env.SetFloatField(parms, fid, parmsInOut.HeadModelHeight);
-    } else {
-        parmsInOut.HeadModelHeight = headModelHeight;
-    }
-    LOGV("ConfigurationHelper: --- headModelHeight: %f", parmsInOut.HeadModelHeight);
-
-    LOGV("ConfigurationHelper: --------------------------------");
-}
-
 void ConfigurationHelper::getSceneViewport(JNIEnv& env, int& viewport_x, int& viewport_y, int& viewport_width, int& viewport_height) {
 
     LOGV("ConfigurationHelper: --- viewport configuration ---");
