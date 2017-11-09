@@ -77,7 +77,7 @@ private:
 
     bool docked_ = false;
     bool clampToBorderSupported_ = false;
-    GearController *gearController;
+    GearController *gearController = nullptr;
     int mainThreadId_ = 0;
 
 public:
