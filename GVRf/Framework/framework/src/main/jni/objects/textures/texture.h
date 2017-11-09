@@ -126,9 +126,9 @@ public:
 
     explicit Texture(int type = TEXTURE_2D);
     virtual ~Texture();
-    virtual void clearData(JNIEnv* env);
-    virtual void setImage(Image* image);
-    virtual void setImage(JNIEnv* env, jobject javaImage, Image* image);
+    void clearData(JNIEnv* env);
+    void setImage(Image* image);
+    void setImage(JNIEnv* env, jobject javaImage, Image* image);
     void updateTextureParameters(const int* texture_parameters, int n);
 
     int getType() const { return mType; }

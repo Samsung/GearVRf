@@ -153,7 +153,7 @@ namespace gvr {
          * Parse the descriptor string to create the map
          * which contains the name, offset and size of all uniforms.
          */
-        virtual void parseDescriptor();
+        void parseDescriptor();
 
         const char* addName(const char* name, int len, DataEntry& entry);
         int findName(const char* name) const;

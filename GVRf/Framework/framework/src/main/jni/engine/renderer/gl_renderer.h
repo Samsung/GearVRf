@@ -84,7 +84,7 @@ public:
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc);
     virtual RenderData* createRenderData();
     virtual RenderData* createRenderData(RenderData*);
-    virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
+    virtual GLUniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
     virtual Image* createImage(int type, int format);
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
     virtual RenderTarget* createRenderTarget(Scene*) ;

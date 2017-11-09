@@ -25,16 +25,10 @@
 namespace gvr {
 
 GLRenderImage::GLRenderImage(int width, int height, int layers, GLuint texId, bool marktexParamsDirty)
-        : GLImage((layers > 1) ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D)
+        : GLRenderImage(width, height, layers)
 {
-    mWidth = width;
-    mHeight = height;
-    mDepth = layers;
-    mType = (layers > 1) ? Image::ImageType::ARRAY : Image::ImageType::BITMAP;
-    mState = HAS_DATA;
     setTexId(texId);
     setTexParamsDirty(marktexParamsDirty);
-
 }
 
 GLRenderImage::GLRenderImage(int width, int height, int layers)
@@ -46,10 +40,12 @@ GLRenderImage::GLRenderImage(int width, int height, int layers)
     mType = (layers > 1) ? Image::ImageType::ARRAY : Image::ImageType::BITMAP;
     mState = HAS_DATA;
 }
+
 void GLRenderImage::updateTexParams() {
     mTexParams.setMinFilter(GL_LINEAR);
     GLImage::updateTexParams(mTexParams);
 }
+
 void texImage3D(int color_format, int width, int height, int depth , GLenum target) {
     switch (color_format) {
         case ColorFormat::COLOR_565:
@@ -76,6 +72,7 @@ void texImage3D(int color_format, int width, int height, int depth , GLenum targ
             break;
     }
 }
+
 void texImage2D(int color_format, int width, int height, GLenum target){
     switch (color_format)
     {
@@ -110,20 +107,17 @@ void texImage2D(int color_format, int width, int height, GLenum target){
 
 }
 GLRenderImage::GLRenderImage(int width, int height, int layers, int color_format,  const TextureParameters* texparams)
-        : GLImage((layers > 1) ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D)
+        : GLRenderImage(width, height, layers)
 {
     GLenum target = GLImage::getTarget();
-    mWidth = width;
-    mHeight = height;
-    mDepth = layers;
-    mType = Image::ImageType::BITMAP;
-    mState = HAS_DATA;
 
     if (texparams)
     {
-        updateTexParams();
+        GLRenderImage::updateTexParams();
     }
-    updateGPU();
+
+    GLRenderImage::updateGPU();
+
     switch (target){
         case GL_TEXTURE_2D:
             texImage2D(color_format,width,height,GL_TEXTURE_2D);
@@ -136,22 +130,10 @@ GLRenderImage::GLRenderImage(int width, int height, int layers, int color_format
     }
 
 }
-GLRenderImage::GLRenderImage(int width, int height, int color_format, const TextureParameters* texparams)
-    : GLImage(GL_TEXTURE_2D)
-{
-    GLenum target = GLImage::getTarget();
-    mWidth = width;
-    mHeight = height;
-    mDepth = 1;
-    mType = Image::ImageType::BITMAP;
-    mState = HAS_DATA;
 
-    if (texparams)
-    {
-        updateTexParams();
-    }
-    updateGPU();
-    texImage2D(color_format,width,height,GL_TEXTURE_2D);
+GLRenderImage::GLRenderImage(int width, int height, int color_format, const TextureParameters* texparams)
+    : GLRenderImage(width, height, 1, color_format, texparams)
+{
 }
 
 GLuint GLRenderImage::createTexture()
