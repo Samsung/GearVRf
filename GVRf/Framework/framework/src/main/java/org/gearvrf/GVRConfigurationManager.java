@@ -105,7 +105,7 @@ abstract class GVRConfigurationManager {
         final GVRViewManager viewManager = activity.getViewManager();
 
         //must determine the default fov
-        if (model.contains("R323") || model.contains("R324")) {
+        if (model.contains("R323") || model.contains("R324") || model.contains("R325")) {
             fovY = 93;
         } else {
             fovY = 90;
@@ -201,7 +201,7 @@ abstract class GVRConfigurationManager {
         final GVRActivity activity = mActivity.get();
         if (null != activity) {
             final String model = getHmtModel();
-            if (null != model && (model.contains("R323") || model.contains("R324"))) {
+            if (null != model && (model.contains("R323") || model.contains("R324") || model.contains("R325"))) {
                 return true;
             }
         }
