@@ -48,7 +48,6 @@ class GVRInputManagerImpl extends GVRInputManager {
 
     public void scanControllers()
     {
-        super.scanControllers();
         for (GVRCursorController controller : super.getCursorControllers()) {
             addCursorController(controller);
         }
