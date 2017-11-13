@@ -91,6 +91,7 @@ struct RenderState {
     bool                    shadow_map;
     bool                    is_multiview;
     Camera*                 camera;
+    int                     sampleCount;
 };
 enum EYE{
     LEFT, RIGHT, MULTIVIEW

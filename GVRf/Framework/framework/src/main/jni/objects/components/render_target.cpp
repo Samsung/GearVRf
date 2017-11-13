@@ -38,12 +38,13 @@ RenderTarget::RenderTarget(RenderTexture* tex, bool is_multiview)
     mRenderState.shadow_map = false;
     mRenderState.material_override = NULL;
     mRenderState.is_multiview = is_multiview;
-
+    mRenderState.sampleCount = mRenderTexture->getSampleCount();
 }
 void RenderTarget::beginRendering(Renderer *renderer) {
     mRenderTexture->useStencil(renderer->useStencilBuffer());
     mRenderState.viewportWidth = mRenderTexture->width();
     mRenderState.viewportHeight = mRenderTexture->height();
+    mRenderState.sampleCount = mRenderTexture->getSampleCount();
     if (-1 != mRenderState.camera->background_color_r())
     {
         mRenderTexture->setBackgroundColor(mRenderState.camera->background_color_r(),

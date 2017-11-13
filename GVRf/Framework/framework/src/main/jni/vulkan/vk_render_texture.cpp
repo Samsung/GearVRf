@@ -46,9 +46,8 @@ const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
 
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
-    VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, 1);
-
-    clear_values.resize(2);
+    VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+    clear_values.resize(3);
     fbo->addRenderPass(renderPass);
 }
 bool VkRenderTexture::isReady(){
@@ -74,13 +73,23 @@ void VkRenderTexture::initVkData(){
 }
 
 VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
-    clear_values[0].color.float32[0] = mBackColor[0];
-    clear_values[0].color.float32[1] = mBackColor[1];
-    clear_values[0].color.float32[2] = mBackColor[2];
-    clear_values[0].color.float32[3] = mBackColor[3];
+    VkClearValue clear_color;
+    VkClearValue clear_depth;
 
-    clear_values[1].depthStencil.depth = 1.0f;
-    clear_values[1].depthStencil.stencil = 0;
+    clear_color.color.float32[0] = mBackColor[0];
+    clear_color.color.float32[1] = mBackColor[1];
+    clear_color.color.float32[2] = mBackColor[2];
+    clear_color.color.float32[3] = mBackColor[3];
+
+    clear_depth.depthStencil.depth = 1.0f;
+    clear_depth.depthStencil.stencil = 0;
+
+    clear_values[0] = clear_color;
+    if(mSampleCount > 1) {
+        clear_values[1] = clear_color;
+        clear_values[2] = clear_depth;
+    } else
+        clear_values[1] = clear_depth;
 
     VkRenderPassBeginInfo rp_begin = {};
     rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

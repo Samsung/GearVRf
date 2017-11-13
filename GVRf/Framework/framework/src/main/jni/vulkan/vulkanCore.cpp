@@ -530,47 +530,74 @@ void VulkanCore::InitCommandPools(){
     VkRenderPass VulkanCore::createVkRenderPass(RenderPassType render_pass_type, int sample_count){
 
 
-        if(mRenderPassMap[render_pass_type])
-            return mRenderPassMap[render_pass_type];
+        if(mRenderPassMap[render_pass_type + sample_count])
+            return mRenderPassMap[render_pass_type + sample_count];
 
         if(render_pass_type == SHADOW_RENDERPASS){
             VkRenderPass render_pass = getShadowRenderPass(m_device);
-            mRenderPassMap[SHADOW_RENDERPASS] = render_pass;
+            mRenderPassMap.insert(std::make_pair(render_pass_type, render_pass));
             return render_pass;
         }
 
         VkRenderPass renderPass;
-        VkAttachmentDescription attachmentDescriptions[2] = {};
-        attachmentDescriptions[0] = {};
-        attachmentDescriptions[0].flags = 0;
-        attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
-        attachmentDescriptions[0].samples = getVKSampleBit(sample_count);
-        attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL ;
+        std::vector<VkAttachmentDescription> attachmentDescriptions = {};
+        VkAttachmentDescription attachment;
 
-        attachmentDescriptions[1] = {};
-        attachmentDescriptions[1].flags = 0;
-        attachmentDescriptions[1].format = VK_FORMAT_D16_UNORM;
-        attachmentDescriptions[1].samples = getVKSampleBit(sample_count);
-        attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // Multisampled Attachment
+        if(sample_count > 1) {
+            attachment = {};
+            attachment.flags = 0;
+            attachment.format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
+            attachment.samples = getVKSampleBit(sample_count);
+            attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            attachmentDescriptions.push_back(attachment);
+        }
+
+        // Color Attachment
+        attachment = {};
+        attachment.flags = 0;
+        attachment.format = VK_FORMAT_R8G8B8A8_UNORM;//.format;
+        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+
+        attachmentDescriptions.push_back(attachment);
+
+        // Depth Attachment
+        attachment = {};
+        attachment.flags = 0;
+        attachment.format = VK_FORMAT_D16_UNORM;
+        attachment.samples = getVKSampleBit(sample_count);
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        attachmentDescriptions.push_back(attachment);
 
         // We have references to the attachment offsets, stating the layout type.
         VkAttachmentReference colorReference = {};
         colorReference.attachment = 0;
         colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+        VkAttachmentReference resolveReference = {};
+        resolveReference.attachment = 1;
+        resolveReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference depthReference = {};
-        depthReference.attachment = 1;
+        depthReference.attachment = (sample_count > 1) ? 2 : 1;
         depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         // There can be multiple subpasses in a renderpass, but this example has only one.
@@ -582,16 +609,17 @@ void VulkanCore::InitCommandPools(){
         subpassDescription.pInputAttachments = nullptr;
         subpassDescription.colorAttachmentCount = 1;
         subpassDescription.pColorAttachments = &colorReference;
-        subpassDescription.pResolveAttachments = nullptr;
+        subpassDescription.pResolveAttachments = (sample_count > 1) ? &resolveReference : nullptr;;
         subpassDescription.pDepthStencilAttachment = &depthReference;
         subpassDescription.preserveAttachmentCount = 0;
         subpassDescription.pPreserveAttachments = nullptr;
 
-        vkCreateRenderPass(m_device,
-                           gvr::RenderPassCreateInfo(0, (uint32_t) 2, attachmentDescriptions,
+        VkResult ret = vkCreateRenderPass(m_device,
+                           gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
                                                      1, &subpassDescription, (uint32_t) 0,
                                                      nullptr), nullptr, &renderPass);
-        mRenderPassMap[NORMAL_RENDERPASS] = renderPass;
+        GVR_VK_CHECK(!ret);
+        mRenderPassMap.insert(std::make_pair(NORMAL_RENDERPASS + sample_count, renderPass));
         return renderPass;
     }
 /*
@@ -697,7 +725,7 @@ VkCommandBuffer VulkanCore::createCommandBuffer(VkCommandBufferLevel level){
     GVR_VK_CHECK(!ret);
     return cmdBuffer;
 }
-void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int pass, VkRenderPass renderPass) {
+void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int pass, VkRenderPass renderPass, int sampleCount) {
     VkResult err;
 
     // The pipeline contains all major state for rendering.
@@ -752,7 +780,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,
                                                                                  &att_state[0]);
     pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
-            VK_SAMPLE_COUNT_1_BIT, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
+            getVKSampleBit(sampleCount), VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
             VK_NULL_HANDLE, VK_NULL_HANDLE);
 
     pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
@@ -829,11 +857,21 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         VkResult ret;
         std::vector<VkImageView> attachments;
+
+        if(sample_count > 1){
+            vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
+                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                                      VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
+            multisampledImage->createImageView(false);
+            mAttachments[MULTISAMPLED_IMAGE] = multisampledImage;
+            attachments.push_back(multisampledImage->getVkImageView());
+        }
+
         if(image_type & COLOR_IMAGE && mAttachments[COLOR_IMAGE]== nullptr) {
             vkImageBase *colorImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|
                                                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                      VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
+                                                      VK_IMAGE_LAYOUT_UNDEFINED, 1);
             colorImage->createImageView(true);
             mAttachments[COLOR_IMAGE] = colorImage;
             attachments.push_back(colorImage->getVkImageView());
@@ -841,7 +879,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
+                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
                                                       VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
             depthImage->createImageView(false);
             mAttachments[DEPTH_IMAGE] = depthImage;

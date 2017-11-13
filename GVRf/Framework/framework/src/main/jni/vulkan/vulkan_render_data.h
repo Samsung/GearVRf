@@ -59,7 +59,7 @@ struct VulkanRenderPass : public RenderPass
 
         virtual ~VulkanRenderData() {}
 
-        void createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, VkRenderPass);
+        void createPipeline(Shader* shader, VulkanRenderer* renderer, int pass, VkRenderPass, int sampleCount);
 
         VulkanUniformBlock& getTransformUbo(){
             return ubo;

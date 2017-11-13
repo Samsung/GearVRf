@@ -59,7 +59,7 @@ void vkImageBase::createImageView(bool host_accessible) {
             device,
             gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, format_, width_,
                                  height_, depth_, 1, mLayers,
-                                 VK_IMAGE_TILING_LINEAR,
+                                 tiling_,
                                  usage_flags_, 0, getVKSampleBit(mSampleCount),
                                  imageLayout),
             nullptr, &image

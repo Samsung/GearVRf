@@ -40,7 +40,9 @@ enum ShaderType{
     FRAGMENT_SHADER
 };
 enum RenderPassType{
-    SHADOW_RENDERPASS = 0, NORMAL_RENDERPASS
+    // Shadow RenderPass will have index from 1 to 16
+    // Whereas Normal Renderpass will have index 16 + sampleCount
+    SHADOW_RENDERPASS = 0, NORMAL_RENDERPASS = 16
 };
 extern std::vector<uint64_t> samplers;
 extern VkSampler getSampler(uint64_t index);
@@ -112,8 +114,9 @@ public:
 
     VkFence createFenceObject();
     VkCommandBuffer createCommandBuffer(VkCommandBufferLevel level);
-    void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, VkRenderPass);
+    void InitPipelineForRenderData(const GVR_VK_Vertices *m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int, VkRenderPass, int sampleCount);
     void submitCmdBuffer(VkFence fence, VkCommandBuffer cmdBuffer);
+
     bool GetMemoryTypeFromProperties(uint32_t typeBits, VkFlags requirements_mask,
                                      uint32_t *typeIndex);
 
@@ -161,11 +164,9 @@ private:
     static VulkanCore *theInstance;
     std::unordered_map<std::string, VkPipeline> pipelineHashMap;
 
-
-    explicit VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL), mRenderPassMap{0,0} {
+    explicit VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL){
         m_Vulkan_Initialised = false;
         initVulkanDevice(newNativeWindow);
-
     }
 
     bool CreateInstance();
@@ -208,8 +209,7 @@ private:
     VkCommandPool m_commandPoolTrans;
 
     VkPipelineCache m_pipelineCache;
-
-    VkRenderPass mRenderPassMap[2];
+    std::unordered_map<int, VkRenderPass> mRenderPassMap;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H
