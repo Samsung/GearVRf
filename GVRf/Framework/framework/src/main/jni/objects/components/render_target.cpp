@@ -38,7 +38,9 @@ RenderTarget::RenderTarget(RenderTexture* tex, bool is_multiview)
     mRenderState.shadow_map = false;
     mRenderState.material_override = NULL;
     mRenderState.is_multiview = is_multiview;
-    mRenderState.sampleCount = mRenderTexture->getSampleCount();
+    if (nullptr != mRenderTexture) {
+        mRenderState.sampleCount = mRenderTexture->getSampleCount();
+    }
 }
 void RenderTarget::beginRendering(Renderer *renderer) {
     mRenderTexture->useStencil(renderer->useStencilBuffer());
