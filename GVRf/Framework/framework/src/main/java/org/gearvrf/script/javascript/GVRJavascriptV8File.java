@@ -40,14 +40,30 @@ public class GVRJavascriptV8File {
     static protected ScriptEngine mEngine = null;
     protected Bindings bindings = null;
     protected Invocable invocable = null;
-    protected Bindings inputBindings = null;
-    Map inputVars = null;
+    static protected Bindings inputBindings = null;
+    private Map inputVars = null;
+    static private String externalImportStatement = "";
 
-
-    public GVRJavascriptV8File(GVRContext gvrContext, String scriptText) {
-
-        mScriptText = scriptText;
+    public GVRJavascriptV8File(GVRContext gvrContext) {
         mGvrContext = gvrContext;
+        if ( mEngine == null ) {
+            mEngine = new V8ScriptEngineFactory().getScriptEngine();
+        }
+    }
+
+    public void setExternalImportStatement(String externalImportStatement) {
+        this.externalImportStatement = externalImportStatement;
+    }
+
+
+    public String buildImportStatement(String scriptText) {
+        mScriptText = this.externalImportStatement + scriptText;
+        return mScriptText;
+    }
+
+
+    public ScriptEngine getScriptEngine() {
+        return mEngine;
     }
 
     public void setInputValues(Map inputValues) {
@@ -61,7 +77,7 @@ public class GVRJavascriptV8File {
                 mEngine = new V8ScriptEngineFactory().getScriptEngine();
             }
             if ( inputVars != null ) {
-                Bindings inputBindings = mEngine.createBindings();
+                if (inputBindings == null) inputBindings = mEngine.createBindings();
                 inputBindings.putAll(inputVars);
             }
 
@@ -69,7 +85,7 @@ public class GVRJavascriptV8File {
             mEngine.eval( mScriptText );
 
             invocable = (Invocable) mEngine;
-             invocable.invokeFunction(funcName, parameters);
+            invocable.invokeFunction(funcName, parameters);
             bindings = mEngine.getBindings( ScriptContext.ENGINE_SCOPE);
             runs = true;
         } catch (ScriptException e) {
