@@ -789,18 +789,47 @@ public abstract class GVRContext implements IEventReceiver {
      * Our {@linkplain GVRReference references} are placed on this queue, once
      * they've been finalized
      */
-    private final ReferenceQueue<GVRHybridObject> mReferenceQueue = new ReferenceQueue<GVRHybridObject>();
+    private ReferenceQueue<GVRHybridObject> mReferenceQueue = new ReferenceQueue<GVRHybridObject>();
     /**
      * We need hard references to {@linkplain GVRReference our references} -
      * otherwise, the references get garbage collected (usually before their
      * objects) and never get enqueued.
      */
-    private final Set<GVRReference> mReferenceSet = new HashSet<GVRReference>();
+    private Set<GVRReference> mReferenceSet = new HashSet<GVRReference>();
 
     protected final void finalizeUnreachableObjects() {
         GVRReference reference;
         while (null != (reference = (GVRReference)mReferenceQueue.poll())) {
-            reference.close();
+            reference.close(mReferenceSet);
+        }
+    }
+
+    final static class UndertakerThread extends Thread {
+        private final ReferenceQueue<GVRHybridObject> referenceQueue;
+        private final Set<GVRReference> referenceSet;
+
+        UndertakerThread(final ReferenceQueue<GVRHybridObject> referenceQueue, final Set<GVRReference> referenceSet, final String threadName) {
+            super(threadName);
+            this.referenceQueue = referenceQueue;
+            this.referenceSet = referenceSet;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    GVRReference reference = (GVRReference)referenceQueue.remove();
+                    reference.close(referenceSet);
+
+                    synchronized (referenceSet) {
+                        if (0 == referenceSet.size()) {
+                            break;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    //ignore; nobody has a handle to this thread, nobody can and is supposed to interrupt it
+                }
+            }
         }
     }
 
@@ -808,26 +837,31 @@ public abstract class GVRContext implements IEventReceiver {
         if (null != mHandlerThread) {
             mHandlerThread.getLooper().quitSafely();
         }
+
+        final String threadName = "Undertaker-" + Integer.toHexString(hashCode());
+        new UndertakerThread(mReferenceQueue, mReferenceSet, threadName).start();
+
+        mReferenceQueue = null;
+        mReferenceSet = null;
     }
 
-    final class GVRReference extends PhantomReference<GVRHybridObject> {
+    static final class GVRReference extends PhantomReference<GVRHybridObject> {
         private long mNativePointer;
         private final List<NativeCleanupHandler> mCleanupHandlers;
 
-        private GVRReference(GVRHybridObject object, long nativePointer,
-                List<NativeCleanupHandler> cleanupHandlers) {
-            super(object, mReferenceQueue);
+        private GVRReference(GVRHybridObject object, long nativePointer, List<NativeCleanupHandler> cleanupHandlers, final ReferenceQueue<GVRHybridObject> referenceQueue) {
+            super(object, referenceQueue);
 
             mNativePointer = nativePointer;
             mCleanupHandlers = cleanupHandlers;
         }
 
-        private void close() {
-            close(true);
+        private void close(final Set<GVRReference> referenceSet) {
+            close(referenceSet, true);
         }
 
-        private void close(boolean removeFromSet) {
-            synchronized (mReferenceSet) {
+        private void close(final Set<GVRReference> referenceSet, boolean removeFromSet) {
+            synchronized (referenceSet) {
                 if (mNativePointer != 0) {
                     if (mCleanupHandlers != null) {
                         for (NativeCleanupHandler handler : mCleanupHandlers) {
@@ -839,7 +873,7 @@ public abstract class GVRContext implements IEventReceiver {
                 }
 
                 if (removeFromSet) {
-                    mReferenceSet.remove(this);
+                    referenceSet.remove(this);
                 }
             }
         }
@@ -847,7 +881,7 @@ public abstract class GVRContext implements IEventReceiver {
 
     final void registerHybridObject(GVRHybridObject gvrHybridObject, long nativePointer, List<NativeCleanupHandler> cleanupHandlers) {
         synchronized (mReferenceSet) {
-            mReferenceSet.add(new GVRReference(gvrHybridObject, nativePointer, cleanupHandlers));
+            mReferenceSet.add(new GVRReference(gvrHybridObject, nativePointer, cleanupHandlers, mReferenceQueue));
         }
     }
 
