@@ -20,6 +20,10 @@ import org.gearvrf.utility.Log;
 
 import android.graphics.Color;
 
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Encapculates data to be sent to a vertex or fragment shader.
  * It contains a list of key / value pairs which can specify arbitrary length
@@ -60,8 +64,7 @@ public class GVRMaterial extends  GVRShaderData
 {
 
     private static final String TAG = Log.tag(GVRMaterial.class);
-
-    static final String MAIN_TEXTURE = "u_texture";
+    private String mMainTextureName = null;
 
     /** Pre-built shader ids. */
     public abstract static class GVRShaderType {
@@ -142,6 +145,12 @@ public class GVRMaterial extends  GVRShaderData
      */
     public GVRMaterial(GVRContext gvrContext, GVRShaderId shaderId) {
         super(gvrContext, shaderId);
+        Pattern pattern = Pattern.compile("([a-zA-Z0-9]+) ([a-zA-Z0-9_]+)");
+        Matcher matcher = pattern.matcher(getTextureDescriptor());
+        if (matcher.find(0))
+        {
+            mMainTextureName = matcher.group(2);
+        }
     }
 
     /**
@@ -163,8 +172,13 @@ public class GVRMaterial extends  GVRShaderData
      *
      * @return The {@linkplain GVRTexture main texture}
      */
-    public GVRTexture getMainTexture()  {
-        return getTexture(MAIN_TEXTURE);
+    public GVRTexture getMainTexture()
+    {
+        if (mMainTextureName != null)
+        {
+            return getTexture(mMainTextureName);
+        }
+        throw new IllegalArgumentException("Cannot get main texture if shader has no textures");
     }
 
     /**
@@ -174,8 +188,14 @@ public class GVRMaterial extends  GVRShaderData
      * @param texture
      *            The {@link GVRTexture} to bind.
      */
-    public void setMainTexture(GVRTexture texture)  {
-        setTexture(MAIN_TEXTURE, texture);
+    public void setMainTexture(GVRTexture texture)
+    {
+        if (mMainTextureName != null)
+        {
+            setTexture(mMainTextureName, texture);
+            return;
+        }
+        throw new IllegalArgumentException("Cannot set main texture if shader has no textures");
     }
 
 
@@ -275,7 +295,7 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Get the {@code u_color} uniform.
-     * 
+     *
      * By convention, some of the GVRF shaders can use a {@code vec3} uniform named
      * {@code u_color}. With the default {@linkplain GVRShaderType.Texture 'texture'
      * shader,} this allows you to modulate the texture with a color.
@@ -288,7 +308,7 @@ public class GVRMaterial extends  GVRShaderData
     /**
      * A convenience method that wraps {@link #getColor()} and returns an
      * Android {@link Color}
-     * 
+     *
      * @return An Android {@link Color}
      */
     public int getRgbColor() {
@@ -297,12 +317,12 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Set the {@code u_color} uniform.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec3} uniform named
      * {@code color}. With the default {@linkplain GVRShaderType.Texture 'texture'
      * shader,} this allows you to modulate the texture with a color.
      * Values are between {@code 0.0f} and {@code 1.0f}, inclusive.
-     * 
+     *
      * @param r
      *            Red
      * @param g
@@ -317,7 +337,7 @@ public class GVRMaterial extends  GVRShaderData
     /**
      * A convenience overload of {@link #setColor(float, float, float)} that
      * lets you use familiar Android {@link Color} values.
-     * 
+     *
      * @param color
      *            Any Android {@link Color}; the alpha byte is ignored.
      */
@@ -329,11 +349,11 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Get the {@code ambient_color} uniform.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec4} uniform named
      * {@code ambient_color}. With the default {@linkplain GVRShaderType.Texture 'texture'
      * shader,} this allows you to modulate the texture with a color.
-     * 
+     *
      * @return The current {@code vec4 ambient_color} as a four-element
      *         array
      */
@@ -343,13 +363,13 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Set the {@code ambient_color} uniform for lighting.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec4} uniform named
      * {@code ambient_color}. With the {@linkplain GVRShaderType.Texture
      * shader,} this allows you to add an overlay ambient light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
      * inclusive.
-     * 
+     *
      * @param r
      *            Red
      * @param g
@@ -365,12 +385,12 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Get the {@code diffuse_color} uniform.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec4} uniform named
      * {@code diffuse_color}. With the {@linkplain GVRShaderType.Texture
      *  shader,} this allows you to add an overlay color on top of the
      * texture.
-     * 
+     *
      * @return The current {@code vec4 diffuse_color} as a four-element
      *         array
      */
@@ -380,13 +400,13 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Set the {@code diffuse_color} uniform for lighting.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec4} uniform named
      * {@code diffuse_color}. With the {@linkplain GVRShaderType.Texture
      * shader,} this allows you to add an overlay diffuse light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
      * inclusive.
-     * 
+     *
      * @param r
      *            Red
      * @param g
@@ -402,12 +422,12 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Get the {@code specular_color} uniform.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec4} uniform named
      * {@code specular_color}. With the {@linkplain GVRShaderType.Texture
      * shader,} this allows you to add an overlay color on top of the
      * texture.
-     * 
+     *
      * @return The current {@code vec4 specular_color} as a four-element
      *         array
      */
@@ -417,13 +437,13 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Set the {@code specular_color} uniform for lighting.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code vec4} uniform named
      * {@code specular_color}. With the {@linkplain GVRShaderType.Texture
      * hader,} this allows you to add an overlay specular light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 1.0f},
      * inclusive.
-     * 
+     *
      * @param r
      *            Red
      * @param g
@@ -439,12 +459,12 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Get the {@code specular_exponent} uniform.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code float} uniform named
      * {@code specular_exponent}. With the {@linkplain GVRShaderType.Texture
      * shader,} this allows you to add an overlay color on top of the
      * texture.
-     * 
+     *
      * @return The current {@code float specular_exponent} as a float
      *         value.
      */
@@ -454,13 +474,13 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Set the {@code specular_exponent} uniform for lighting.
-     * 
+     *
      * By convention, GVRF shaders can use a {@code float} uniform named
      * {@code specular_exponent}. With the {@linkplain GVRShaderType.Texture
      * shader,} this allows you to add an overlay specular light color on
      * top of the texture. Values are between {@code 0.0f} and {@code 128.0f},
      * inclusive.
-     * 
+     *
      * @param exp
      *            Specular exponent
      */
@@ -473,7 +493,7 @@ public class GVRMaterial extends  GVRShaderData
      * <p>
      * The {@linkplain #setOpacity(float) setOpacity() documentation} explains
      * what the {@code u_opacity} uniform does.
-     * 
+     *
      * @return The {@code u_opacity} uniform used to render this material
      */
     public float getOpacity() {
@@ -482,7 +502,7 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Set the opacity ({@code u_opacity uniform}), in a complicated way.
-     * 
+     *
      * There are two things you need to know, how opacity is applied, and how
      * opacity is implemented.
      * <p>
@@ -505,7 +525,7 @@ public class GVRMaterial extends  GVRShaderData
      * {@code u_opacity} does exactly what you expect; you only have to worry
      * about the render order. However, it is totally up to a custom shader
      * whether or how it will handle opacity.
-     * 
+     *
      * @param opacity
      *            Value between {@code 0.0f} and {@code 1.0f}, inclusive.
      */
@@ -516,25 +536,24 @@ public class GVRMaterial extends  GVRShaderData
 
     /**
      * Gets the line width for line drawing.
-     * 
+     *
      * @see GVRRenderData#setDrawMode(int)
      */
     public float getLineWidth() {
         return getFloat("line_width");
     }
-    
+
     /**
      * Sets the line width for line drawing.
-     * 
+     *
      * By default, the line width is 1. It is applied when the
      * draw mode is GL_LINES, GL_LINE_STRIP or GL_LINE_LOOP.
-     * 
+     *
      * @param lineWidth new line width.
      * @see GVRRenderData#setDrawMode(int)
      */
     public void setLineWidth(float lineWidth) {
         setFloat("line_width", lineWidth);
     }
-
 }
 
