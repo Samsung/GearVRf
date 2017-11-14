@@ -145,6 +145,12 @@ public class GVRMaterial extends  GVRShaderData
      */
     public GVRMaterial(GVRContext gvrContext, GVRShaderId shaderId) {
         super(gvrContext, shaderId);
+        Pattern pattern = Pattern.compile("([a-zA-Z0-9]+) ([a-zA-Z0-9_]+)");
+        Matcher matcher = pattern.matcher(getTextureDescriptor());
+        if (matcher.find(0))
+        {
+            mMainTextureName = matcher.group(2);
+        }
     }
 
     /**
@@ -168,10 +174,9 @@ public class GVRMaterial extends  GVRShaderData
      */
     public GVRTexture getMainTexture()
     {
-        String mainTexName = findFirstTexture();
-        if (mainTexName != null)
+        if (mMainTextureName != null)
         {
-            return getTexture(mainTexName);
+            return getTexture(mMainTextureName);
         }
         throw new IllegalArgumentException("Cannot get main texture if shader has no textures");
     }
@@ -185,10 +190,9 @@ public class GVRMaterial extends  GVRShaderData
      */
     public void setMainTexture(GVRTexture texture)
     {
-        String mainTexName = findFirstTexture();
-        if (mainTexName != null)
+        if (mMainTextureName != null)
         {
-            setTexture(mainTexName, texture);
+            setTexture(mMainTextureName, texture);
             return;
         }
         throw new IllegalArgumentException("Cannot set main texture if shader has no textures");
@@ -551,20 +555,5 @@ public class GVRMaterial extends  GVRShaderData
     public void setLineWidth(float lineWidth) {
         setFloat("line_width", lineWidth);
     }
-
-    private String findFirstTexture()
-    {
-        if (mMainTextureName == null)
-        {
-            Pattern pattern = Pattern.compile("([a-zA-Z0-9]+) ([a-zA-Z0-9_]+)");
-            Matcher matcher = pattern.matcher(getTextureDescriptor());
-            if (matcher.find(0))
-            {
-                mMainTextureName = matcher.group(2);
-            }
-        }
-        return mMainTextureName;
-    }
-
 }
 
