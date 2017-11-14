@@ -154,4 +154,20 @@ public class GVREventListeners {
         @Override
         public void onTouchEnd(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) { }
     }
+
+    /**
+     * Null implementation of {@link IAssetEvents}
+     */
+    public static class AssetEvents implements IAssetEvents
+    {
+        public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, String errors) { }
+
+        public void onModelLoaded(GVRContext context, GVRSceneObject model, String filePath) { }
+
+        public void onTextureLoaded(GVRContext context, GVRTexture texture, String filePath) { }
+
+        public void onModelError(GVRContext context, String error, String filePath) { }
+
+        public void onTextureError(GVRContext context, String error, String filePath) { }
+    }
 }

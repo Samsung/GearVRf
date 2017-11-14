@@ -5,11 +5,13 @@ import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.IAssetEvents;
 import org.gearvrf.IPickEvents;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.R;
@@ -37,6 +39,14 @@ import java.util.Arrays;
 public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
 {
     private GVRSceneObject controller;
+    private IAssetEvents assetListener = new GVREventListeners.AssetEvents()
+    {
+        public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, String errors)
+        {
+            model.getGVRContext().getMainScene().bindShaders(model);
+            addChildObject(controller);
+        }
+    };
 
     /**
      * Constructor for GVRGearControllerSceneObject
@@ -53,8 +63,7 @@ public class GVRGearControllerSceneObject extends GVRCursorControllerSceneObject
         ray.getTransform().reset();
         try
         {
-            controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj");
-            addChildObject(controller);
+            controller = gvrContext.getAssetLoader().loadModel("gear_vr_controller.obj", assetListener);
         }
         catch (IOException ex)
         {
