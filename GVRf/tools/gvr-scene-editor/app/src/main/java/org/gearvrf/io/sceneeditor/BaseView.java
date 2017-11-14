@@ -152,7 +152,7 @@ abstract class BaseView {
                         pointerCoords.y = savedHitPointY
                                 + ((motionEvent.getY() - savedMotionEventY) * SCALE);
                     } else {
-                        float[] hitPoint = event.getHitPoint();
+                        float[] hitPoint = event.getPickedObject().getHitLocation();
                         pointerCoords.x = ((hitPoint[0] + halfQuadWidth) / quadWidth) * frameLayout
                                 .getWidth();
                         pointerCoords.y = (-(hitPoint[1] - halfQuadHeight) / quadHeight) *
@@ -180,10 +180,10 @@ abstract class BaseView {
                 }
             } else {
                 for (KeyEvent keyEvent : keyEvents) {
-                    sendMotionEventFromHitPoint(event.getHitPoint(), keyEvent.getAction());
+                    sendMotionEventFromHitPoint(event.getPickedObject().getHitLocation(), keyEvent.getAction());
                 }
                 if (keyEvents.isEmpty()) {
-                    sendMotionEventFromHitPoint(event.getHitPoint(), MotionEvent.ACTION_MOVE);
+                    sendMotionEventFromHitPoint(event.getPickedObject().getHitLocation(), MotionEvent.ACTION_MOVE);
                 }
             }
         }

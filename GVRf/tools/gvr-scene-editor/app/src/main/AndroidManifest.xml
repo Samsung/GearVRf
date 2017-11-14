@@ -22,8 +22,8 @@
     android:versionName="1.0">
 
     <uses-sdk
-        android:minSdkVersion="19"
-        android:targetSdkVersion="19"/>
+        android:minSdkVersion="21"
+        android:targetSdkVersion="21"/>
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -33,7 +33,6 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme"
         tools:replace="android:icon"
         >
         <meta-data

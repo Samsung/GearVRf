@@ -45,7 +45,7 @@ public class EditableBehavior extends GVRBehavior implements EditViewChangeListe
         this.cursorManager = cursorManager;
         animationEngine = cursorManager.getGVRContext().getAnimationEngine();
         try {
-            arrow = getGVRContext().loadModel(ARROW_MODEL);
+            arrow = getGVRContext().getAssetLoader().loadModel(ARROW_MODEL);
             rotationAnimation = new GVRRotationByAxisAnimation(arrow, 1.0f, 360.0f, 0.0f, 1.0f,
                     0.0f).setRepeatMode(GVRRepeatMode.REPEATED).setRepeatCount(-1);
         } catch (IOException e) {

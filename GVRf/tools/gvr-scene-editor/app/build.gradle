@@ -45,8 +45,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 19
+        minSdkVersion 21
+        targetSdkVersion 21
     }
 
     applicationVariants.all { variant ->
