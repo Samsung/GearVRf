@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="@android:color/transparent"
+             android:orientation="vertical"
+             android:layout_gravity="center"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@android:color/white"
+        android:padding="@dimen/editWindowPadding">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Large"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"
+            android:layout_weight="1"
+            android:id="@+id/tvSceneObjectName"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="2"
+            android:weightSum="1">
+
+            <TextView
+                android:id="@+id/tvScale"
+                android:layout_width="@dimen/editObjectTextSize"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_scale"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+            <Button
+                android:id="@+id/bScaleUp"
+                android:layout_width="41dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/scale_up_button"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.02"/>
+
+            <Button
+                android:id="@+id/bScaleDown"
+                android:layout_width="41dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/scale_down_button"
+                android:layout_marginStart="16dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.02"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="2">
+
+            <TextView
+                android:id="@+id/tvYaw"
+                android:layout_width="@dimen/editObjectTextSize"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_yaw"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+            <SeekBar
+                android:id="@+id/sbYaw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:indeterminate="false"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="2">
+
+            <TextView
+                android:id="@+id/tvPitch"
+                android:layout_width="@dimen/editObjectTextSize"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_pitch"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+            <SeekBar
+                android:id="@+id/sbPitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:indeterminate="false"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="2">
+
+            <TextView
+                android:id="@+id/tvRoll"
+                android:layout_width="@dimen/editObjectTextSize"
+                android:layout_height="wrap_content"
+                android:text="@string/tv_roll"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+            <SeekBar
+                android:id="@+id/sbRoll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:indeterminate="false"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/bRemoveFromScene"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/removeFromScene"
+            />
+
+    </LinearLayout>
+    <Button
+        android:id="@+id/bDone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|top"
+        android:layout_margin="1dp"
+        android:text="X"/>
+
+</FrameLayout>
