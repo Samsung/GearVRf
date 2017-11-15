@@ -16,16 +16,22 @@
 package org.gearvrf.io.cursor3d;
 
 
+import android.view.MotionEvent;
+
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRPerspectiveCamera;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.ISensorEvents;
-import org.gearvrf.SensorEvent;
-import org.gearvrf.SensorEvent.EventGroup;
+import org.gearvrf.GVRBoundsPicker;
+import org.gearvrf.GVRSwitch;
+import org.gearvrf.ITouchEvents;
+import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.io.GearCursorController;
 import org.gearvrf.io.cursor3d.CursorInputManager.IoDeviceListener;
 import org.gearvrf.io.cursor3d.settings.SettingsView;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
@@ -55,13 +61,8 @@ import java.util.Map;
  * by the {@link CursorManager} during runtime.
  * <p/>
  * The {@link CursorManager} will add/remove {@link Cursor} objects based on the changes
- * requested by the application.
- *
- * Once a {@link Cursor} is obtained all {@link CursorEvent}s generated can be obtained using the
- * {@link Cursor#addCursorEventListener(CursorEventListener)} call.
- * <p/>
- * The {@link CursorManager} is also responsible for setting properties of the {@link
- * Cursor} objects - look at the various methods defined by this class.
+ * requested by the application. The {@link CursorManager} is also responsible for setting
+ * properties of the {@link Cursor} objects - look at the various methods defined by this class.
  */
 public final class CursorManager {
     // Result of XML parsing in a package of all settings that need displaying.
@@ -72,8 +73,6 @@ public final class CursorManager {
     private GVRContext context;
     private GVRScene scene;
     private CursorInputManager inputManager;
-
-    private CursorSensor cursorSensor;
     private List<CursorActivationListener> activationListeners;
     // List of all the cursors available to the user.
     private List<Cursor> cursors;
@@ -81,7 +80,7 @@ public final class CursorManager {
     private List<IoDevice> usedIoDevices;
     private List<IoDevice> unusedIoDevices;
 
-    private float cursorScale;
+    private float mCursorDepth;
     private FrustumChecker frustumChecker;
     private Map<String, CursorTheme> themes;
     private final GlobalSettings globalSettings;
@@ -90,6 +89,7 @@ public final class CursorManager {
     private float settingsIoDeviceFarDepth, settingsIoDeviceNearDepth;
     private CursorActivationListener activationListener;
     private List<SelectableBehavior> selectableBehaviors;
+    private GVRBoundsPicker objectCursorPicker;
 
     /**
      * Create a {@link CursorManager}.
@@ -139,8 +139,7 @@ public final class CursorManager {
      * @param ioDevices A list of {@link IoDevice}s to add to the {@link
      *                  CursorManager} at initialization.
      */
-    public CursorManager(GVRContext context, GVRScene scene, List<IoDevice>
-            ioDevices) {
+    public CursorManager(GVRContext context, GVRScene scene, List<IoDevice> ioDevices) {
         if (context == null) {
             throw new IllegalArgumentException("GVRContext cannot be null");
         }
@@ -154,8 +153,7 @@ public final class CursorManager {
         usedIoDevices = new ArrayList<IoDevice>();
         unusedIoDevices = new ArrayList<IoDevice>();
         selectableBehaviors = new ArrayList<SelectableBehavior>();
-        cursorSensor = new CursorSensor(context);
-        cursorScale = DEFAULT_CURSOR_SCALE;
+        mCursorDepth = DEFAULT_CURSOR_SCALE;
 
         try {
             SettingsParser.parseSettings(context, this);
@@ -185,15 +183,19 @@ public final class CursorManager {
         }
         inputManager.addIoDeviceListener(cursorIoDeviceListener);
         unusedIoDevices.addAll(inputManager.getAvailableIoDevices());
+        context.getInputManager().scanControllers();
         assignIoDevicesToCursors();
 
         // disable all unused devices
-        for(IoDevice device:unusedIoDevices){
+        Iterator<IoDevice> iter = unusedIoDevices.iterator();
+        while (iter.hasNext())
+        {
+            IoDevice device = iter.next();
+            iter.remove();
             device.setEnable(false);
         }
 
         settingsCursor = new LaserCursor(context, this);
-        settingsCursor.setScene(scene);
 
         /**
          * TODO: what if there isn't a laser theme. Might need to load manually
@@ -214,34 +216,6 @@ public final class CursorManager {
      */
     public List<CursorTheme> getCursorThemes() {
         return new ArrayList<CursorTheme>(themes.values());
-    }
-
-    /**
-     * This method resets the position of the active cursor to the
-     * center of the camera view.
-     *
-     * This call does not work for Mouse or GearVr.
-     */
-    public void resetCursorPosition() {
-        if (scene == null) {
-            return;
-        }
-        synchronized (cursors) {
-            for (Cursor cursor : cursors) {
-                if (cursor.isActive()) {
-                    IoDevice ioDevice = cursor.getIoDevice();
-                    if (IoDeviceLoader.isGearVrDevice(ioDevice) || IoDeviceLoader.isMouseIoDevice
-                            (ioDevice)) {
-                        continue;
-                    }
-                    // place the cursor at a fixed depth
-                    Vector3f position = new Vector3f(0.0f, 0.0f, -cursorScale);
-                    // now get the position with respect to the camera.
-                    position.mulPosition(scene.getMainCameraRig().getHeadTransform().getModelMatrix4f());
-                    cursor.setPosition(position.x, position.y, position.z);
-                }
-            }
-        }
     }
 
     /**
@@ -348,7 +322,7 @@ public final class CursorManager {
                     if (cursor.isActive() == false) {
                         position.set(cursor.getPositionX(), cursor.getPositionY(), cursor
                                 .getPositionZ());
-                        position.mulPosition(cursor.getMainSceneObject().getTransform().getModelMatrix4f
+                        position.mulPosition(cursor.getOwnerObject().getTransform().getModelMatrix4f
                                 ());
                         boolean inFrustum = culler.testPoint(position);
 
@@ -432,15 +406,14 @@ public final class CursorManager {
         for (CursorActivationListener listener : activationListeners) {
             listener.onDeactivated(cursor);
         }
-        markIoDeviceUnused(cursor.getIoDevice());
         cursor.close();
     }
 
     void markIoDeviceUnused(IoDevice ioDevice) {
         Log.d(TAG, "Marking ioDevice:" + ioDevice.getName() + " unused");
+        ioDevice.getGvrCursorController().setCursor(null);
         usedIoDevices.remove(ioDevice);
         unusedIoDevices.add(ioDevice);
-        assignIoDevicesToCursors();
     }
 
     void markIoDeviceUsed(IoDevice ioDevice) {
@@ -474,7 +447,9 @@ public final class CursorManager {
         }
 
         this.scene = scene;
-
+        if (objectCursorPicker != null) {
+            objectCursorPicker.setScene(scene);
+        }
         if (scene == null) {
             return;
         }
@@ -515,8 +490,8 @@ public final class CursorManager {
         if(menuCursor != null) {
             removeCursorFromScene(settingsCursor);
             menuCursor.transferIoDevice(settingsCursor);
-            settingsCursor.ioDevice = null; // clear IoDevice of the settings cursor.
-            IoDevice device = menuCursor.ioDevice;
+            settingsCursor.mIODevice = null; // clear IoDevice of the settings cursor.
+            IoDevice device = menuCursor.getIoDevice();
             device.setFarDepth(settingsIoDeviceFarDepth);
             device.setNearDepth(settingsIoDeviceNearDepth);
             addCursorToScene(menuCursor);
@@ -552,6 +527,7 @@ public final class CursorManager {
                                 markIoDeviceUsed(clickedDevice);
                                 markIoDeviceUnused(oldIoDevice);
                                 addCursorToScene(settingsCursor);
+                                assignIoDevicesToCursors();
                                 return device.getCursorControllerId();
                             }
                         });
@@ -668,12 +644,6 @@ public final class CursorManager {
         if (this.scene != null) {
             //false to remove
             updateCursorsInScene(this.scene, false);
-            for (GVRSceneObject object : this.scene.getSceneObjects()) {
-                if (object.getSensor() == cursorSensor) {
-                    object.setSensor(null);
-                    object.getEventReceiver().removeListener(cursorSensor);
-                }
-            }
         }
 
         this.scene = scene;
@@ -683,7 +653,7 @@ public final class CursorManager {
         }
         // process the new scene
 
-        cursorScale = 0;
+        mCursorDepth = 0;
         // TODO check if the objects are okay
         for (GVRSceneObject object : scene.getSceneObjects()) {
             addSelectableObject(object);
@@ -693,27 +663,54 @@ public final class CursorManager {
     }
 
     void addCursorToScene(Cursor cursor) {
-        GVRSceneObject object = cursor.getMainSceneObject();
         IoDevice ioDevice = cursor.getIoDevice();
-        if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
-            scene.getMainCameraRig().addChildObject(object);
-        } else if (IoDeviceLoader.isControllerIoDevice(ioDevice)) {
-            //do nothing
-        } else {
-            scene.addSceneObject(object);
+        GVRCursorController controller = ioDevice.getGvrCursorController();
+        ioDevice.setSceneObject(cursor.getOwnerObject());
+
+        if (controller instanceof GearCursorController)
+        {
+            ((GearCursorController) controller).showControllerModel(true);
+        }
+        if (cursor instanceof ObjectCursor)
+        {
+            ObjectCursor ocurs = (ObjectCursor) cursor;
+            if (objectCursorPicker == null)
+            {
+                objectCursorPicker = new GVRBoundsPicker(scene, false);
+                objectCursorPicker.getEventReceiver().addListener(GVRBaseSensor.getPickHandler());
+                objectCursorPicker.getEventReceiver().addListener(touchListener);
+            }
+            if (ocurs.getCursorID() < 0)
+            {
+                ocurs.setCursorID(objectCursorPicker.addCollidable(cursor.getOwnerObject()));
+            }
+            objectCursorPicker.setController(controller);
+            controller.removePickEventListener(touchListener);
+            controller.removePickEventListener(GVRBaseSensor.getPickHandler());
+            controller.setCursorControl(GVRCursorController.CursorControl.CURSOR_DEPTH_FROM_CONTROLLER);
+        }
+        else
+        {
+            controller.addPickEventListener(touchListener);
+            controller.setCursorControl(GVRCursorController.CursorControl.PROJECT_CURSOR_ON_SURFACE);
         }
     }
 
     void removeCursorFromScene(Cursor cursor) {
-        GVRSceneObject object = cursor.getMainSceneObject();
-
         IoDevice ioDevice = cursor.getIoDevice();
-        if (IoDeviceLoader.isMouseIoDevice(ioDevice)) {
-            scene.getMainCameraRig().removeChildObject(object);
-        } else if (IoDeviceLoader.isControllerIoDevice(ioDevice)) {
-            //do nothing
-        } else {
-            scene.removeSceneObject(object);
+
+        if (ioDevice != null)
+        {
+            ioDevice.resetSceneObject();
+        }
+        if (cursor instanceof ObjectCursor)
+        {
+            ObjectCursor ocurs = (ObjectCursor) cursor;
+            if (ocurs.getCursorID() >= 0)
+            {
+                objectCursorPicker.removeCollidable(ocurs.getCursorID());
+                ocurs.setCursorID(-1);
+            }
         }
     }
 
@@ -738,20 +735,9 @@ public final class CursorManager {
     }
 
     /**
-     * Remove all the {@link GVRSceneObject}s that have been made selectable.
-     */
-    public void removeAllSelectableObjects() {
-        // Not yet implemented.
-        /**
-         * Would need to keep track of selectable objects and remove the sensors.
-         */
-    }
-
-    /**
      * This call makes sure that the {@link GVRSceneObject} passed is a
      * {@link Cursor} selectable object. The {@link Cursor} would deliver events
-     * using the {@link CursorEventListener} every time an interaction happens
-     * with the {@link GVRSceneObject}.
+     * every time an interaction happens with the {@link GVRSceneObject}.
      * <p/>
      * The Cursor would also provide a visual cue when over an object that this
      * selectable to notify that the user can interact with the object.
@@ -770,31 +756,25 @@ public final class CursorManager {
         if (null == object) {
             throw new IllegalArgumentException("GVRSceneObject cannot be null");
         }
-        if(object.getSensor() == cursorSensor) {
-            return true;
-        }
-
         addSelectableBehavior(object);
 
-        float scale = getDistance(object);
-        if (scale > cursorScale) {
+        float depth = getDistance(object);
+        if (depth > mCursorDepth) {
             synchronized (cursors) {
                 for (Cursor cursor : cursors) {
-                    cursor.setScale(scale);
+                    cursor.setCursorDepth(depth);
                 }
             }
-            settingsCursor.setScale(scale);
-            cursorScale = scale;
+            settingsCursor.setCursorDepth(depth);
+            mCursorDepth = depth;
         }
-        object.setSensor(cursorSensor);
-        object.getEventReceiver().addListener(cursorSensor);
         return true;
     }
 
     /**
      * This call is for objects for which {@link CursorManager#addSelectableObject(GVRSceneObject)}
      * was called. After calling this on a {@link GVRSceneObject} there will be no
-     * {@link CursorEvent}s generated when a {@link Cursor} interacts with this
+     * events generated when a {@link Cursor} interacts with this
      * {@link GVRSceneObject}. The {@link GVRSceneObject} that was passed in
      * {@link CursorManager#addSelectableObject(GVRSceneObject)} should be passed in here.
      * @param object The {@link GVRSceneObject} that is to be made un-selectable.
@@ -806,13 +786,7 @@ public final class CursorManager {
             throw new IllegalArgumentException("GVRSceneObject cannot be null");
         }
         removeSelectableBehavior(object);
-        if(object.getSensor() != null) {
-            object.setSensor(null);
-            object.getEventReceiver().removeListener(cursorSensor);
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
 
     private void addSelectableBehavior(GVRSceneObject object) {
@@ -824,7 +798,10 @@ public final class CursorManager {
         }
         if (selectableBehavior != null) {
             Log.d(TAG, "Adding a Selectable Object");
-            selectableBehaviors.add(selectableBehavior);
+            synchronized (selectableBehaviors)
+            {
+                selectableBehaviors.add(selectableBehavior);
+            }
             if (activationListener == null) {
                 createLocalActivationListener();
             }
@@ -846,8 +823,12 @@ public final class CursorManager {
                     getComponentType());
         }
         if (selectableBehavior != null) {
-            selectableBehaviors.remove(selectableBehavior);
+            synchronized (selectableBehaviors)
+            {
+                selectableBehaviors.remove(selectableBehavior);
+            }
         }
+        object.detachComponent(GVRSwitch.getComponentType());
     }
 
     private float getDistance(GVRSceneObject object) {
@@ -944,8 +925,12 @@ public final class CursorManager {
                                     usedCursors = new ArrayList<>(mUnusedCursors.size());
                                 }
                                 usedCursors.add(unUsedCursor);
-
-                                //force adding the new cursor later; otherwise addNewCursor can lead
+                                getGVRContext().getEventManager().sendEvent(getGVRContext().getInputManager(),
+                                                                            GVRInputManager.ICursorControllerSelectListener.class,
+                                                                            "onCursorControllerSelected",
+                                                                            availableIoDevice.getGvrCursorController(),
+                                                                            null);
+                                //force adding the new cursor later; otherwise ava can lead
                                 //to modifications to mUnusedCursors and thus a ConcurrentModificationException.
                                 Threads.spawn(new Runnable() {
                                     @Override
@@ -978,17 +963,60 @@ public final class CursorManager {
         }
     }
 
+    public Cursor findObjectCursorByID(int cursorID)
+    {
+        GVRSceneObject cursorSO = objectCursorPicker.getCollidable(cursorID);
+        synchronized (cursors)
+        {
+            for (int i = 0; i < cursors.size(); i++)
+            {
+                Cursor cursor = cursors.get(i);
+                if (cursor == null || cursor.getIoDevice() == null)
+                {
+                    continue;
+                }
+                if (cursor.getOwnerObject() == cursorSO)
+                {
+                    return cursor;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Cursor findCursorForController(GVRCursorController controller)
+    {
+        int id = controller.getId();
+        Cursor cursor = null;
+        synchronized (cursors)
+        {
+            for (int i = 0; i < cursors.size(); i++)
+            {
+                cursor = cursors.get(i);
+                if ((cursor == null) || (cursor.getIoDevice() == null))
+                {
+                    continue;
+                }
+                int cursorControllerId = cursor.getIoDevice().getCursorControllerId();
+                if (id == cursorControllerId)
+                {
+                    return cursor;
+                }
+            }
+        }
+        return null;
+    }
+
     private void addNewCursor(Cursor cursor, IoDevice ioDevice) {
         cursor.setIoDevice(ioDevice);
         if (scene != null) {
             addCursorToScene(cursor);
-            cursor.setScene(scene);
         }
 
         for (CursorActivationListener listener : activationListeners) {
             listener.onActivated(cursor);
         }
-        cursor.setScale(cursorScale);
+        cursor.setCursorDepth(mCursorDepth);
         usedIoDevices.add(ioDevice);
         synchronized (cursors) {
             cursors.add(cursor);
@@ -1047,66 +1075,154 @@ public final class CursorManager {
     };
 
     public boolean isDepthOrderEnabled() {
-        return cursorSensor.isDepthOrderEnabled();
+        return true;
     }
 
-    /**
-     * {@link CursorEvent}s can be grouped with other {@link CursorEvent}s according to the
-     * depth of the {@link GVRSceneObject} that the event occurred on. This feature can be enabled
-     * or disabled using {@link CursorManager#setDepthOrderEnabled(boolean)}. For eg. When a
-     * {@link Cursor} changes position or state and if that change generated {@link CursorEvent}s
-     * on multiple {@link GVRSceneObject}s, the generated {@link CursorEvent}s can be sent in
-     * order of the distance of the {@link GVRSceneObject} from origin, where the {@link CursorEvent}
-     * associated with the {@link GVRSceneObject} closest to the origin is delivered first and
-     * has an {@link EventGroup#MULTI_START} as the {@link EventGroup}. All subsequent
-     * {@link CursorEvent}s in the same group have {@link EventGroup#MULTI} and are delivered in
-     * depth order as described above. The last {@link CursorEvent} in that group has
-     * {@link EventGroup#MULTI_STOP} as the {@link EventGroup} value. {@link CursorEvent}s that
-     * occurred on only a single {@link GVRSceneObject} have {@link EventGroup#SINGLE} set as
-     * their {@link EventGroup}. However when depth order is disabled all {@link CursorEvent}s
-     * have the {@link EventGroup#GROUP_DISABLED} as their {@link EventGroup} value.
-     *
-     * Enabling this feature will incur extra cost every time there is a change in the
-     * {@link Cursor} position or state. The {@link CursorEvent}s need to be grouped
-     * and sorted according to the distance of the associated {@link GVRSceneObject}s from the
-     * origin. This feature should only be turned on if needed.
-     *
-     * The {@link EventGroup} given to {@link CursorEvent}s can be used in apps where there are
-     * multiple overlapping {@link GVRSceneObject}s and the application has to decide which of
-     * the {@link GVRSceneObject}s will handle the {@link CursorEvent}.
-     *
-     * @see CursorEvent#getEventGroup()
-     * @param depthOrderEnabled
-     */
-    public void setDepthOrderEnabled(boolean depthOrderEnabled) {
-        cursorSensor.setDepthOrderEnabled(depthOrderEnabled);
-    }
 
-    private class CursorSensor extends GVRBaseSensor implements ISensorEvents {
-
-        public CursorSensor(GVRContext context) {
-            super(context);
+    protected ITouchEvents touchListener = new ITouchEvents()
+    {
+        protected Cursor findCursor(GVRPicker.GVRPickedObject hit)
+        {
+            GVRCursorController controller = hit.getPicker().getController();
+            if (hit.collidableIndex >= 0)
+            {
+                GVRBoundsPicker picker = (GVRBoundsPicker) hit.getPicker();
+                GVRSceneObject cursorObj = picker.getCollidable(hit.collidableIndex);
+                if (cursorObj != null)
+                {
+                    return (Cursor) cursorObj.getComponent(Cursor.getComponentType());
+                }
+                return null;
+            }
+            else if (controller != null)
+            {
+                return findCursorForController(controller);
+            }
+            return null;
         }
 
-        @Override
-        public void onSensorEvent(SensorEvent event) {
-            int id = event.getCursorController().getId();
-            Cursor cursor;
 
-            synchronized (cursors) {
-                for (int i = 0; i < cursors.size(); i++) {
-                    cursor = cursors.get(i);
-                    if (cursor == null || cursor.getIoDevice() == null) {
-                        continue;
-                    }
-                    int cursorControllerId = cursor.getIoDevice().getCursorControllerId();
-                    if (id == cursorControllerId) {
-                        cursor.dispatchSensorEvent(event);
+        protected SelectableBehavior findSelector(GVRSceneObject obj)
+        {
+            MovableBehavior b1 = (MovableBehavior) obj.getComponent(MovableBehavior.getComponentType());
+            if (b1 != null)
+            {
+                return b1;
+            }
+            return (SelectableBehavior) obj.getComponent(SelectableBehavior.getComponentType());
+        }
+
+        public void onEnter(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+        {
+            Cursor cursor = findCursor(hit);
+            SelectableBehavior selector = findSelector(obj);
+            if ((cursor == null) || (selector == null))
+            {
+                return;
+            }
+            float cursorDistance = getDistance(cursor.getPositionX(),
+                                               cursor.getPositionY(),
+                                               cursor.getPositionZ());
+            float soDistance = getDistance(obj);
+
+            if (cursorDistance > soDistance)
+            {
+                selector.setWireFrame(cursor, hit);
+            }
+            else
+            {
+                selector.setIntersect(cursor, hit);
+            }
+            getGVRContext().getEventManager().sendEvent(obj,
+                                                        ICursorEvents.class,
+                                                        "onEnter", cursor, hit);
+        }
+
+        public void onExit(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+        {
+            Cursor cursor = findCursor(hit);
+            SelectableBehavior selector = findSelector(obj);
+            if ((cursor == null) || (selector == null))
+            {
+                return;
+            }
+            selector.setDefault(cursor, hit);
+            getGVRContext().getEventManager().sendEvent(obj,
+                                                        ICursorEvents.class,
+                                                        "onExit", cursor, hit);
+        }
+
+        public void onTouchStart(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+        {
+            Cursor cursor = findCursor(hit);
+            SelectableBehavior selector = findSelector(obj);
+            if ((cursor == null) || (selector == null))
+            {
+                return;
+            }
+            selector.setButtonPress(cursor, hit);
+            getGVRContext().getEventManager().sendEvent(obj,
+                                                        ICursorEvents.class,
+                                                        "onTouchStart", cursor, hit);
+        }
+
+        public void onTouchEnd(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+        {
+            Cursor cursor = findCursor(hit);
+            SelectableBehavior selector = findSelector(obj);
+            if ((cursor == null) || (selector == null))
+            {
+                return;
+            }
+            selector.setDefault(cursor, hit);
+            getGVRContext().getEventManager().sendEvent(obj,
+                                                        ICursorEvents.class,
+                                                        "onTouchEnd", cursor, hit);
+        }
+
+        public void onInside(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+        {
+            Cursor cursor = findCursor(hit);
+
+            if (cursor == null)
+            {
+                return;
+            }
+            if (hit.isTouched())
+            {
+                float depth = cursor.getCursorDepth();
+                if (depth != cursor.getIoDevice().getGvrCursorController().getCursorDepth())
+                {
+                    getGVRContext().getEventManager().sendEvent(cursor.getOwnerObject(),
+                            ICursorEvents.class,
+                            "onCursorScale", cursor);
+                }
+                getGVRContext().getEventManager().sendEvent(obj,
+                                                            ICursorEvents.class,
+                                                            "onDrag", findCursor(hit), hit);
+            }
+            onEnter(obj, hit);
+        }
+
+        public void onMotionOutside(GVRPicker picker, MotionEvent event)
+        {
+            GVRCursorController controller = picker.getController();
+            if (controller != null)
+            {
+                Cursor cursor = findCursorForController(controller);
+                if (cursor != null)
+                {
+                    float depth = cursor.getCursorDepth();
+                    if (depth != cursor.getIoDevice().getGvrCursorController().getCursorDepth())
+                    {
+                        getGVRContext().getEventManager().sendEvent(cursor.getOwnerObject(),
+                                ICursorEvents.class,
+                                "onCursorScale", cursor);
                     }
                 }
             }
         }
-    }
+    };
 
     /**
      * Save the configuration of the {@link CursorManager} that is currently in use.
@@ -1130,19 +1246,27 @@ public final class CursorManager {
             @Override
             public void onDeactivated(Cursor cursor) {
                 Log.d(TAG, "Cursor DeActivated:" + cursor.getName());
-                cursor.removeCursorEventListener(cursorEventListener);
-                for (SelectableBehavior selectableBehavior : selectableBehaviors) {
-                    selectableBehavior.onCursorDeactivated(cursor);
+                synchronized (selectableBehaviors)
+                {
+                    for (SelectableBehavior selectableBehavior : selectableBehaviors)
+                    {
+                        selectableBehavior.onCursorDeactivated(cursor);
+                    }
                 }
             }
 
             @Override
             public void onActivated(Cursor cursor) {
+                GVRCursorController controller = cursor.getIoDevice().getGvrCursorController();
                 Log.d(TAG, "On CursorActivated");
-                for (SelectableBehavior selectableBehavior : selectableBehaviors) {
-                    selectableBehavior.onCursorActivated(cursor);
+                synchronized (selectableBehaviors)
+                {
+
+                    for (SelectableBehavior selectableBehavior : selectableBehaviors)
+                    {
+                        selectableBehavior.onCursorActivated(cursor);
+                    }
                 }
-                cursor.addCursorEventListener(cursorEventListener);
             }
         };
 
@@ -1152,30 +1276,6 @@ public final class CursorManager {
         final List<Cursor> activeCursorsCopy = getActiveCursors();
         for (Cursor cursor : activeCursorsCopy) {
             activationListener.onActivated(cursor);
-        }
-    }
-
-    private CursorEventListener cursorEventListener = new CursorEventListener() {
-
-        @Override
-        public void onEvent(CursorEvent event) {
-            GVRSceneObject sceneObject = event.getObject();
-            callEventHandler(sceneObject, event);
-        }
-    };
-
-    private boolean callEventHandler(GVRSceneObject sceneObject, CursorEvent event) {
-        SelectableBehavior selectableBehavior = (SelectableBehavior) sceneObject.getComponent
-                (SelectableBehavior.getComponentType());
-        if (selectableBehavior == null) {
-            selectableBehavior = (SelectableBehavior) sceneObject.getComponent(MovableBehavior
-                    .getComponentType());
-        }
-        if (selectableBehavior != null) {
-            selectableBehavior.handleCursorEvent(event);
-            return true;
-        } else {
-            return false;
         }
     }
 

@@ -18,12 +18,14 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRSceneObject;
+import org.joml.Vector4f;
 
 /** Animate the opacity. */
 public class GVROpacityAnimation extends GVRMaterialAnimation {
 
     private final float mInitialOpacity;
     private final float mDeltaOpacity;
+    private final float[] mInitialColor;
 
     /**
      * Animate the {@link GVRMaterial#setOpacity(float) opacity} property.
@@ -37,8 +39,24 @@ public class GVROpacityAnimation extends GVRMaterialAnimation {
      */
     public GVROpacityAnimation(GVRMaterial target, float duration, float opacity) {
         super(target, duration);
-        mInitialOpacity = mMaterial.getOpacity();
-        mDeltaOpacity = opacity - mInitialOpacity;
+
+        if (mMaterial.hasUniform("u_opacity"))
+        {
+            mInitialOpacity = mMaterial.getOpacity();
+            mDeltaOpacity = opacity - mInitialOpacity;
+            mInitialColor = null;
+        }
+        else if (mMaterial.hasUniform("diffuse_color"))
+        {
+            mInitialOpacity = 1.0f;
+            mInitialColor = mMaterial.getVec4("diffuse_color");
+            mDeltaOpacity = opacity - mInitialColor[3];
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Material must have u_opacity or diffuse_color to animate opacity");
+        }
+
     }
 
     /**
@@ -59,6 +77,16 @@ public class GVROpacityAnimation extends GVRMaterialAnimation {
 
     @Override
     protected void animate(GVRHybridObject target, float ratio) {
-        mMaterial.setOpacity(mInitialOpacity + mDeltaOpacity * ratio);
+        float opacity = mDeltaOpacity * ratio;
+        if (mInitialColor != null)
+        {
+            mMaterial.setVec4("diffuse_color", mInitialColor[0],
+                    mInitialColor[1], mInitialColor[2],
+                    mInitialColor[3] + opacity);
+        }
+        else
+        {
+            mMaterial.setOpacity(mInitialOpacity + opacity);
+        }
     }
 }

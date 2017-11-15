@@ -23,11 +23,15 @@ import android.os.HandlerThread;
  * with its own main loop.
  */
 public class GVRPhysicsContext {
-    private static final GVRPhysicsContext mInstance = new GVRPhysicsContext();
+    private static GVRPhysicsContext mInstance;
     private final HandlerThread mHandlerThread;
     private final Handler mHandler;
 
     public static GVRPhysicsContext getInstance() {
+        if (mInstance == null) {
+            mInstance = new GVRPhysicsContext();
+        }
+
         return mInstance;
     }
 

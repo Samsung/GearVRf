@@ -23,7 +23,6 @@
 #include <memory>
 #include <unordered_set>
 #include "objects/hybrid_object.h"
-#include "objects/helpers.h"
 
 namespace gvr {
 

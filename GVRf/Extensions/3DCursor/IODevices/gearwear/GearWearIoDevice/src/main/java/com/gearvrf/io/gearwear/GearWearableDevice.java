@@ -153,7 +153,7 @@ public class GearWearableDevice extends IoDevice {
 
     public GearWearableDevice(GVRContext gvrContext, String deviceId, String name, MovementMode
             movementMode) {
-        super(deviceId, VENDOR_ID, PRODUCT_ID, name, VENDOR_NAME, false);
+        super(gvrContext, deviceId, VENDOR_ID, PRODUCT_ID, name, VENDOR_NAME, false);
         this.gvrContext = gvrContext;
         this.context = gvrContext.getContext();
         this.eventReceiver = new EventReceiver();

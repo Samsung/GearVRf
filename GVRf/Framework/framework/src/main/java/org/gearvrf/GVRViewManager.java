@@ -200,7 +200,6 @@ abstract class GVRViewManager extends GVRContext {
         mRenderBundle = makeRenderBundle();
         final DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
         getActivity().getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
-
         final GVRScene scene = null == mMainScene ? new GVRScene(GVRViewManager.this) : mMainScene;
         setMainSceneImpl(scene);
     }
@@ -816,7 +815,7 @@ abstract class GVRViewManager extends GVRContext {
     protected SplashScreen mSplashScreen;
 
     private final GVREventManager mEventManager;
-    private final GVRInputManagerImpl mInputManager;
+    protected final GVRInputManagerImpl mInputManager;
     protected IRenderBundle mRenderBundle;
 
     protected GVRMain mMain;

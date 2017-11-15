@@ -66,7 +66,7 @@ public class GVRMeshCollider extends GVRCollider {
      *            If true, coordinate information will be supplied in {@link org.gearvrf.GVRPicker.GVRPickedObject}.
      */
     public GVRMeshCollider(GVRContext gvrContext, GVRMesh mesh, boolean pickCoordinates) {
-        super(gvrContext, NativeMeshCollider.ctorMeshPicking(mesh.getNative(), pickCoordinates));
+        super(gvrContext, NativeMeshCollider.ctorMeshPicking((mesh != null) ? mesh.getNative() : 0L, pickCoordinates));
         mMesh = mesh;
     }
 

@@ -31,7 +31,8 @@ namespace gvr {
     ShaderData::ShaderData(const char* texture_desc) :
             mNativeShader(0),
             mTextureDesc(texture_desc),
-            mLock()
+            mLock(),
+            mDirty(NONE)
     {
         DataDescriptor texdesc(texture_desc);
         texdesc.forEach([this](const char* name, const char* type, int size) mutable
@@ -52,15 +53,15 @@ namespace gvr {
         }
         return NULL;
     }
+
     void ShaderData::setTexture(const char* key, Texture* texture)
     {
         std::lock_guard<std::mutex> lock(mLock);
-        for (auto it = mTextureNames.begin(); it < mTextureNames.end(); ++it)
+        for (int i = 0; i < mTextureNames.size(); ++i)
         {
-            const std::string& temp = *it;
+            const std::string& temp = mTextureNames[i];
             if (temp.compare(key) == 0)
             {
-                int i = it - mTextureNames.begin();
                 Texture* oldtex = mTextures[i];
                 makeDirty(oldtex ? MOD_TEXTURE : NEW_TEXTURE);
                 mTextures[i] = texture;
@@ -90,11 +91,13 @@ std::string ShaderData::makeShaderLayout()
 
 int ShaderData::getByteSize(const char* name) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getByteSize(name);
 }
 
 const char* ShaderData::getUniformDescriptor() const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getDescriptor();
 }
 
@@ -105,11 +108,13 @@ const char* ShaderData::getTextureDescriptor() const
 
 bool ShaderData::getFloat(const char* name, float& v) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getFloat(name, v);
 }
 
 bool   ShaderData::getInt(const char* name, int& v) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getInt(name, v);
 }
 
@@ -143,11 +148,13 @@ bool  ShaderData::setFloatVec(const char* name, const float* val, int n)
 
 bool  ShaderData::getFloatVec(const char* name, float* val, int n)
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getFloatVec(name, val, n);
 }
 
 bool  ShaderData::getIntVec(const char* name, int* val, int n)
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getIntVec(name, val, n);
 }
 
@@ -175,20 +182,26 @@ bool  ShaderData::setMat4(const char* name, const glm::mat4& m)
     return uniforms().setMat4(name, m);
 }
 
-void ShaderData::makeDirty(DIRTY_BITS bit)
+void ShaderData::makeDirty(DIRTY_BITS bits)
 {
     int temp = mDirty;
-    temp |= bit;
+    temp |= bits;
     mDirty = static_cast<DIRTY_BITS>(temp);
+}
+
+bool ShaderData::isDirty(DIRTY_BITS bits)
+{
+    return (bits & mDirty) != 0;
 }
 
 void ShaderData::clearDirty()
 {
-    mDirty = STD_ATTRIBS;
+    mDirty = NONE;
 }
 
 bool ShaderData::hasTexture(const char* key) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     for (auto it = mTextureNames.begin(); it < mTextureNames.end(); ++it)
     {
         if (*it == key && getTexture(key))
@@ -237,6 +250,7 @@ int ShaderData::updateGPU(Renderer* renderer, RenderData* rdata)
             }
         }
     }
+    clearDirty();
     return (uniforms().updateGPU(renderer) ? 1 : 0);
 }
 

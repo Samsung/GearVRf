@@ -15,23 +15,28 @@
 
 package org.gearvrf;
 
+import android.view.MotionEvent;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 /**
- * Finds the scene objects that are hit by a ray.
+ * Finds the scene objects that are hit by a ray or sphere.
  *
  * The picker can function in two modes. One way is to simply call its
  * static functions to make a single scan through the scene to determine
  * what is hit by the picking ray.
  * <p/>
  * The other way is to add the picker as a component to a scene object.
- * The picking ray is generated from the camera viewpoint
+ * Usually, the scene object is the camera. In this case,
+ * the picking ray is generated from the camera viewpoint
  * each frame. It's origin is the camera position and it's direction is
  * the camera forward look vector (what the user is looking at).
  * <p/>
@@ -53,39 +58,87 @@ import org.joml.Vector3f;
  * <li>onEnter(GVRSceneObject)  called when the pick ray enters a scene object.</li>
  * <li>onExit(GVRSceneObject)   called when the pick ray exits a scene object.</li>
  * <li>onInside(GVRSceneObject) called while the pick ray penetrates a scene object.</li>
- * <li>onPick(GVRPicker)        called when the set of picked objects changes.</li>
- * <li>onNoPick(GVRPicker)      called once when nothing is picked.</li>
+ * <li>onPick(GVRPicker)        called every frame if something is picked.</li>
+ * <li>onNoPick(GVRPicker)      called every frame if nothing is picked.</li>
  * </ul
+ * Each cursor controller has an internal picker that generates pick events
+ * from that cursor. When a cursor is used, the pick events contain touch
+ * information. You can register as a listener for pick events from a specific cursor.
  * @see IPickEvents
  * @see GVRSceneObject#attachCollider(GVRCollider)
  * @see GVRCollider
  * @see GVRCollider#setEnable(boolean)
  * @see GVRPickedObject
+ * @see GVRCursorController#addPickEventListener(IEvents)
  */
-public class GVRPicker extends GVRBehavior {
+public class GVRPicker extends GVRBehavior implements IEventReceiver {
     private static final String TAG = Log.tag(GVRPicker.class);
     static private long TYPE_PICKMANAGER = newComponentType(GVRPicker.class);
-    private Vector3f mRayOrigin = new Vector3f(0, 0, 0);
-    private Vector3f mRayDirection = new Vector3f(0, 0, -1);
-    private float[] mPickRay = new float[6];
-
-    protected GVRScene mScene;
+    private final Vector3f mRayOrigin = new Vector3f(0, 0, 0);
+    private final Vector3f mRayDirection = new Vector3f(0, 0, -1);
+    private final float[] mPickRay = new float[6];
+    protected volatile boolean mTouched = false;
+    protected volatile MotionEvent mMotionEvent = null;
+    protected GVRScene mScene = null;
+    protected GVRCursorController mController = null;
     protected GVRPickedObject[] mPicked = null;
+    protected boolean mPickClosest = true;
+    protected GVREventReceiver mListeners = null;
+    protected EnumSet<EventOptions> mEventOptions = EnumSet.of(
+            EventOptions.SEND_PICK_EVENTS,
+            EventOptions.SEND_TO_SCENE,
+            EventOptions.SEND_TO_LISTENERS);
 
     /**
-     * Construct a picker which picks from a given scene.
+     * One or more of these options may be combined to control
+     * what events the picker sends and to which objects.
+     * <table>
+     *     <tr><td>SEND_PICK_EVENTS</td>
+     *     Send events using the {@link IPickEvents} interface.
+     *     </tr>
+     *     <tr><td>SEND_TOUCH_EVENTS</td>
+     *     Send events using the {@link ITouchEvents} interface.
+     *     </tr>
+     *     <tr><td>SEND_TO_LISTENERS</td>
+     *     Send events to the pick event listeners attached to the {@link GVREventReceiver}
+     *     of this picker.
+     *     </tr>
+     *     <tr><td>SEND_TO_HIT_OBJECT</td>
+     *     Send touch events to the event listeners attached to the object that was hit.
+     *     Pick events are not sent to hit objects.
+     *     </tr>
+     *     <tr><td>SEND_TO_SCENE</td>
+     *     Send pick and touch events to the event listeners attached to the scene associated
+     *     with the picker.
+     *     </tr>
+     * </table>
+     * @see #setEventOptions(EnumSet)
+     */
+    public enum EventOptions
+    {
+        SEND_PICK_EVENTS,
+        SEND_TOUCH_EVENTS,
+        SEND_TO_HIT_OBJECT,
+        SEND_TO_LISTENERS,
+        SEND_TO_SCENE
+    };
+
+
+    /**
+     * Construct a picker which picks from the camera of a given scene.
      * Instantiating the picker will cause it to scan the scene
      * every frame and generate pick events based on the result.
-     *
+     * This constructor enables the SEND_PICK_EVENTS, SEND_TO_LISTENERS
+     * and SEND_TO_SCENE event options.
      * @param context context that owns the scene
      * @param scene scene containing the scene objects to pick from
+     * @see #getScene()
+     * @see #setScene(GVRScene)
+     * @see #setEventOptions(EnumSet)
      */
     public GVRPicker(GVRContext context, GVRScene scene)
     {
-        super(context);
-        mScene = scene;
-        mType = getComponentType();
-        startListening();
+        this(scene, true);
     }
 
     /**
@@ -95,22 +148,155 @@ public class GVRPicker extends GVRBehavior {
      * will scan the scene every frame and generate pick events.
      * <p>
      * This constructor is useful when you want to pick from the
-     * viewpoint of a scene object. It will not generate any
-     * pick events until after the picker has been attached
-     * to the scene object.
+     * viewpoint of a scene object. It enables the SEND_PICK_EVENTS,
+     * SEND_TO_LISTENERS and SEND_TO_SCENE event options.
      *
      * @param owner scene object to own the picker
      * @param scene scene containing the scene objects to pick from
+     * @see #getScene()
+     * @see #setScene(GVRScene)
+     * @see #setEventOptions(EnumSet)
      */
     public GVRPicker(GVRSceneObject owner, GVRScene scene)
     {
-        super(owner.getGVRContext());
-        mScene = scene;
-        setPickRay(0, 0, 0, 0, 0, 1);
+        this(scene, false);
         owner.attachComponent(this);
     }
 
+    /**
+     * Construct a picker which picks from a given cursor controller.
+     * <p>
+     * Instantiating the picker will cause it to generate pick and touch
+     * events from the position and direction specified by the controller.
+     * This constructor enables the SEND_PICK_EVENTS, SEND_TOUCH_EVENTS
+     * and SEND_TO_LISTENERS event options.
+     * @param controller {@link GVRCursorController} which will generate the pick ray.
+     * @param enable true to start in the enabled state (listening for events)
+     * @see #getController()
+     * @see #setEventOptions(EnumSet)
+     */
+    GVRPicker(GVRCursorController controller, boolean enable)
+    {
+        super(controller.getGVRContext());
+        mScene = null;
+        mType = getComponentType();
+        mListeners = new GVREventReceiver(this);
+        setPickRay(0, 0, 0, 0, 0, -1);
+        mController = controller;
+        mEventOptions = EnumSet.of(
+                EventOptions.SEND_PICK_EVENTS,
+                EventOptions.SEND_TOUCH_EVENTS,
+                EventOptions.SEND_TO_LISTENERS);
+        if (!enable)
+        {
+            setEnable(enable);
+        }
+        else
+        {
+            startListening();
+        }
+    }
+
+    /**
+     * Construct a picker which picks from a given scene.
+     *<p>
+     * This constructor enables the SEND_PICK_EVENTS
+     * and SEND_TO_LISTENERS event options.
+     * @param scene scene containing the scene objects to pick from
+     * @param enable true to start in the enabled state (listening for events)
+     * @see #setEventOptions(EnumSet)
+     */
+    public GVRPicker(GVRScene scene, boolean enable)
+    {
+        super(scene.getGVRContext());
+        mScene = scene;
+        mType = getComponentType();
+        mListeners = new GVREventReceiver(this);
+        setPickRay(0, 0, 0, 0, 0, -1);
+        if (!enable)
+        {
+            setEnable(enable);
+        }
+        else
+        {
+            startListening();
+        }
+    }
+
     static public long getComponentType() { return TYPE_PICKMANAGER; }
+
+
+    /**
+     * Sets the event options which control what events
+     * the picker sends and to which objects.
+     * The picker implements {@link IEventReceiver} which keeps a list
+     * of listeners for {@link IPickEvents} and {@link ITouchEvents}.
+     * You can add a listener with {@link GVREventReceiver#addListener(IEvents)}.
+     * <p>
+     * The default event options are <i>SEND_PICK_EVENTS, SEND_TOUCH_EVENTS, SEND_TO_LISTENERS</i>
+     * which will send events to both {@link IPickEvents} and {@link ITouchEvents} listeners
+     * but will not send them to the hit objects.
+     * </p>
+     * One or more of these options may be combined to change the event behavior:
+     * <table>
+     *     <tr><td>SEND_PICK_EVENTS</td>
+     *     Send events using the {@link IPickEvents} interface.
+     *     </tr>
+     *     <tr><td>SEND_TOUCH_EVENTS</td>
+     *     Send events using the {@link ITouchEvents} interface.
+     *     </tr>
+     *     <tr><td>SEND_TO_LISTENERS</td>
+     *     Send events to the pick event listeners attached to the {@link GVREventReceiver}
+     *     of this picker.
+     *     </tr>
+     *     <tr><td>SEND_TO_HIT_OBJECT</td>
+     *     Send events to the event listeners attached to the object that was hit.
+     *     </tr>
+     *     <tr><td>SEND_TO_SCENE</td>
+     *     Send events to the event listeners attached to the scene associated
+     *     with this picker.
+     *     </tr>
+     * </table>
+     * @see #getEventOptions()
+     */
+    public void setEventOptions(EnumSet<EventOptions> options)
+    {
+        mEventOptions = options;
+    }
+
+    /**
+     * Get the event options which control what events are
+     * sent and to which objects.
+     * @return picker event options
+     * @see #setEventOptions(EnumSet)
+     */
+    public EnumSet<EventOptions> getEventOptions()
+    {
+        return mEventOptions;
+    }
+
+    /**
+     * Get the scene containing the objects to pick from.
+     * @return {@link GVRScene} to pick against
+     * @see #setScene(GVRScene)
+     */
+    public GVRScene getScene() { return mScene; }
+
+    /**
+     * Set the scene to pick against.
+     * <p>
+     * The picker will only pick scene objects that are in
+     * this scene. You can change the scene at any time but
+     * this may give confusing event streams if done
+     * while the application is in the middle of picking.
+     * @param scene new scene to pick against, may not be null.
+     * @see #getScene()
+     */
+    public void setScene(GVRScene scene)
+    {
+        mScene = scene;
+    }
+
 
     /**
      * Get the current ray to use for picking.
@@ -124,18 +310,54 @@ public class GVRPicker extends GVRBehavior {
      * If not attached to a scene object, the origin of the
      * ray is the position of the viewer and its direction
      * is where the viewer is looking.
-     *
-     * @return pick ray
+     * <p>
+     * You can get the pick ray in world coordinates instead of
+     * with respect to the camera by calling {@link #getWorldPickRay(Vector3f, Vector3f)}.
+     * @return pick ray in local or camera coordinates
      */
-    public float[] getPickRay()
+    public final float[] getPickRay()
     {
-        mPickRay[0] = mRayOrigin.x;
-        mPickRay[1] = mRayOrigin.y;
-        mPickRay[2] = mRayOrigin.z;
-        mPickRay[3] = mRayDirection.x;
-        mPickRay[4] = mRayDirection.y;
-        mPickRay[5] = mRayDirection.z;
+        synchronized (this)
+        {
+            mPickRay[0] = mRayOrigin.x;
+            mPickRay[1] = mRayOrigin.y;
+            mPickRay[2] = mRayOrigin.z;
+            mPickRay[3] = mRayDirection.x;
+            mPickRay[4] = mRayDirection.y;
+            mPickRay[5] = mRayDirection.z;
+        }
         return mPickRay;
+    }
+
+    /**
+     * Gets the pick ray in world coordinates.
+     * <p>
+     * World coordinates are defined as the coordinate system at the
+     * root of the scene graph before any camera viewing transformation
+     * is applied.
+     * <p>
+     * You can get the pick ray relative to the scene object that
+     * owns the picker (or the camera if no owner) by calling
+     * {@link #getPickRay()}
+     * @param origin    world coordinate origin of the pick ray
+     * @param direction world coordinate direction of the pick ray
+     * @see #getPickRay()
+     * @see #setPickRay(float, float, float, float, float, float)
+     */
+    public final void getWorldPickRay(Vector3f origin, Vector3f direction)
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner == null)              // should never come here, picker always
+        {                               // owned by GearCursorController pivot
+            owner = mScene.getMainCameraRig().getHeadTransformObject();
+        }
+        Matrix4f mtx = owner.getTransform().getModelMatrix4f();
+        origin.set(mRayOrigin);
+        direction.set(mRayDirection);
+        origin.mulPosition(mtx);        // get ray in world coordinates
+        direction.mulDirection(mtx);
+        direction.normalize();
     }
 
     /**
@@ -176,22 +398,82 @@ public class GVRPicker extends GVRBehavior {
      * object, the ray is in the coordinate system of the scene's
      * main camera with (0, 0, 0) at the viewer and (0, 0, -1)
      * where the viewer is looking.
-     *
      * @see #doPick()
+     * @see #getPickRay()
+     * @see #getWorldPickRay(Vector3f, Vector3f)
      */
     public void setPickRay(float ox, float oy, float oz, float dx, float dy, float dz)
     {
-        mRayOrigin.x = ox;
-        mRayOrigin.y = oy;
-        mRayOrigin.z = oz;
-        mRayDirection.x = dx;
-        mRayDirection.y = dy;
-        mRayDirection.z = dz;
+        synchronized (this)
+        {
+            mRayOrigin.x = ox;
+            mRayOrigin.y = oy;
+            mRayOrigin.z = oz;
+            mRayDirection.x = dx;
+            mRayDirection.y = dy;
+            mRayDirection.z = dz;
+        }
     }
 
+    /**
+     * Get the cursor controller that drives this picker.
+     * <p>
+     * Every cursor controller has it's own picker that
+     * generates pick and touch events for that controller.
+     * You can also instantiate a picker independently of
+     * any controller.
+     * @return controller driving this picker or null if none.
+     * @see GVRCursorController#getPicker()
+     * @see GVRPicker(GVRCursorController, boolean)
+     */
+    public GVRCursorController getController() { return mController; }
+
+    /**
+     * Get the event receiver for this picker.
+     * <p>
+     * You can add listeners to this object for either
+     * pick or touch events. To add a listener, call
+     * {@code @getEventReceiver().addListener(IEvents)} with
+     * the {@link IPickEvents} or {@ITouchEvents} interface.
+     * @return {@link GVREventReceiver} that dispatches pick events
+     * @see IPickEvents
+     * @see ITouchEvents
+     * @see #setEventOptions(EnumSet)
+     */
+    public final GVREventReceiver getEventReceiver() { return mListeners; }
+
+    /**
+     * Query if picker is picking closest object or all objects
+     * intersected by the pick ray.
+     * @return true if picking closest object,
+     *          false if picking all intersected objects.
+     */
+    public boolean getPickClosest() { return mPickClosest; }
+
+    /**
+     * Enable or disable picking of the closest object.
+     * By default, the picker will return a list containing
+     * the object closest to the origin of the pick ray.
+     * You can disable this option and the picker will return
+     * a list of objects sorted by distance from the origin.
+     * @param flag true to pick closest object,
+     *            false to pick all objects intersecting the pick ray.
+     * @see #getPickClosest()
+     * @see #getPicked()
+     */
+    public void setPickClosest(boolean flag)
+    {
+        mPickClosest = flag;
+    }
+
+    /**
+     * Called every frame if the picker is enabled
+     * to generate pick events.
+     * @param frameTime starting time of the current frame
+     */
     public void onDrawFrame(float frameTime)
     {
-        if (isEnabled())
+        if (isEnabled() && (mScene != null))
         {
             doPick();
         }
@@ -203,39 +485,75 @@ public class GVRPicker extends GVRBehavior {
      * This function is called automatically by
      * the picker every frame.
      * @see IPickEvents
+     * @see ITouchEvents
      * @see #pickObjects(GVRScene, float, float, float, float, float, float)
      */
     protected void doPick()
     {
         GVRSceneObject owner = getOwnerObject();
         GVRTransform trans = (owner != null) ? owner.getTransform() : null;
-        GVRPickedObject[] picked = pickObjects(mScene, trans,
+        GVRPickedObject[] picked;
+
+        if (mPickClosest)
+        {
+            GVRPickedObject closest = pickClosest(mScene, trans,
                 mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
                 mRayDirection.x, mRayDirection.y, mRayDirection.z);
+            if (closest != null)
+            {
+                picked = new GVRPickedObject[] { closest };
+            }
+            else
+            {
+                picked = new GVRPickedObject[0];
+            }
+        }
+        else
+        {
+            picked = pickObjects(mScene, trans,
+                    mRayOrigin.x, mRayOrigin.y, mRayOrigin.z,
+                    mRayDirection.x, mRayDirection.y, mRayDirection.z);
+        }
         generatePickEvents(picked);
     }
 
-    protected void generatePickEvents(GVRPickedObject[] picked)
+    /**
+     * Scans the scene graph to collect picked items
+     * and generates appropriate pick and touch events.
+     * This function is called by the cursor controller
+     * internally but can also be used to funnel a
+     * stream of Android motion events into the picker.
+     * @see #pickObjects(GVRScene, float, float, float, float, float, float)
+     * @param touched    true if the "touched" button is pressed.
+     *                   Which button indicates touch is controller dependent.
+     * @param event      Android MotionEvent which caused the pick
+     * @see IPickEvents
+     * @see ITouchEvents
+     */
+    public void processPick(boolean touched, MotionEvent event)
     {
-        boolean selectionChanged = false;
+        mTouched = touched;
+        mMotionEvent = event;
+        doPick();
+    }
 
+    protected void generatePickEvents(GVRPickedObject[] picked) {
         /*
          * Send "onExit" events for colliders that were picked but
          * are not picked anymore.
          */
-        if (mPicked != null)
-        {
-            for (GVRPickedObject collision : mPicked)
-            {
-                if (collision == null)
-                {
+        if (mPicked != null) {
+            for (GVRPickedObject collision : mPicked) {
+                if (collision == null) {
                     continue;
                 }
                 GVRCollider collider = collision.hitCollider;
-                if (!hasCollider(picked, collider))
+                GVRPickedObject temp = findCollider(picked, collider);
+                if (temp == null)
                 {
-                    getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onExit", collider.getOwnerObject());
-                    selectionChanged = true;
+                    collision.touched = mTouched;
+                    collision.motionEvent = mMotionEvent;
+                    propagateOnExit(collider.getOwnerObject(), collision);
                 }
             }
         }
@@ -244,57 +562,313 @@ public class GVRPicker extends GVRBehavior {
 
         /*
          * Send "onEnter" events for colliders that were picked for the first time.
+         * Send "onTouchStart" events for colliders that were touched for the first time.
+         * Send "onTouchEnd" events for colliders that are no longer touched.
          * Send "onInside" events for colliders that were already picked.
          */
-        for (GVRPickedObject collision : picked)
-        {
-            if (collision == null)
-            {
+        for (GVRPickedObject collision : picked) {
+            if (collision == null) {
                 continue;
             }
-            //increment the pick count
             pickedCount++;
-
             GVRCollider collider = collision.hitCollider;
-            if (!hasCollider(mPicked, collider))
+            GVRPickedObject prevHit = findCollider(mPicked, collider);
+
+            collision.picker = this;
+            collision.touched = mTouched;
+            collision.motionEvent = mMotionEvent;
+            if (prevHit == null)
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onEnter", collider.getOwnerObject(), collision);
-                selectionChanged = true;
+                propagateOnEnter(collision);
+                if (mTouched)
+                {
+                    propagateOnTouch(collision);
+                }
             }
             else
             {
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onInside", collider.getOwnerObject(), collision);
+                propagateOnInside(collision);
+                if (prevHit.touched && !mTouched)
+                {
+                    propagateOnNoTouch(collision);
+                }
+                else if (!prevHit.touched && mTouched)
+                {
+                    propagateOnTouch(collision);
+                }
             }
         }
-        if (selectionChanged)
+
+        if (pickedCount > 0)
         {
-            if (pickedCount > 0)
+            mPicked = picked;
+            propagateOnPick(this);
+        }
+        else
+        {
+            mPicked = null;
+            propagateOnNoPick(this);
+            if (mMotionEvent != null)
             {
-                mPicked = picked;
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onPick", this);
-            }
-            else
-            {
-                mPicked = null;
-                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", this);
+                propagateOnMotionOutside(mMotionEvent);
             }
         }
     }
 
-    private boolean hasCollider(GVRPickedObject[] pickList, GVRCollider findme)
+    //@todo anything that sets nativePointer to 0 needs this otherwise GVRHybridObject's hashCode
+    //method breaks; this should go to GVRBehavior but I rather make this change gradually;  i am
+    //very much against mutable nativePointers and using the magic value of 0 btw.
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
+    /**
+     * Propagate onNoPick events to listeners
+     * @param picker GVRPicker which generated the event
+     */
+    protected void propagateOnNoPick(GVRPicker picker)
+    {
+        if (mEventOptions.contains(EventOptions.SEND_PICK_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                getGVRContext().getEventManager().sendEvent(this, IPickEvents.class, "onNoPick", picker);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onNoPick", picker);
+            }
+        }
+    }
+
+    /**
+     * Propagate onPick events to listeners
+     * @param picker GVRPicker which generated the event
+     */
+    protected void propagateOnPick(GVRPicker picker)
+    {
+        if (mEventOptions.contains(EventOptions.SEND_PICK_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                getGVRContext().getEventManager().sendEvent(this, IPickEvents.class, "onPick", picker);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                getGVRContext().getEventManager().sendEvent(mScene, IPickEvents.class, "onPick", picker);
+            }
+        }
+    }
+
+    /**
+     * Propagate onMotionOutside events to listeners
+     * @param MotionEvent Android MotionEvent when nothing is picked
+     */
+    protected void propagateOnMotionOutside(MotionEvent event)
+    {
+        if (mEventOptions.contains(EventOptions.SEND_TOUCH_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                getGVRContext().getEventManager().sendEvent(this, ITouchEvents.class, "onMotionOutside", this, event);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                getGVRContext().getEventManager().sendEvent(mScene, ITouchEvents.class, "onMotionOutside", this, event);
+            }
+        }
+    }
+
+    /**
+     * Propagate onEnter events to listeners
+     * @param hit collision object
+     */
+    protected void propagateOnEnter(GVRPickedObject hit)
+    {
+        GVRSceneObject hitObject = hit.getHitObject();
+        GVREventManager eventManager = getGVRContext().getEventManager();
+        if (mEventOptions.contains(EventOptions.SEND_TOUCH_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, ITouchEvents.class, "onEnter", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, ITouchEvents.class, "onEnter", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, ITouchEvents.class, "onEnter", hitObject, hit);
+            }
+        }
+        if (mEventOptions.contains(EventOptions.SEND_PICK_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, IPickEvents.class, "onEnter", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, IPickEvents.class, "onEnter", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, IPickEvents.class, "onEnter", hitObject, hit);
+            }
+        }
+    }
+
+    /**
+     * Propagate onTouchStart events to listeners
+     * @param hit collision object
+     */
+    protected void propagateOnTouch(GVRPickedObject hit)
+    {
+        if (mEventOptions.contains(EventOptions.SEND_TOUCH_EVENTS))
+        {
+            GVREventManager eventManager = getGVRContext().getEventManager();
+            GVRSceneObject hitObject = hit.getHitObject();
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, ITouchEvents.class, "onTouchStart", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, ITouchEvents.class, "onTouchStart", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, ITouchEvents.class, "onTouchStart", hitObject, hit);
+            }
+        }
+    }
+
+    /**
+     * Propagate onTouchEnd events to listeners
+     * @param hit collision object
+     */
+    protected void propagateOnNoTouch(GVRPickedObject hit)
+    {
+        if (mEventOptions.contains(EventOptions.SEND_TOUCH_EVENTS))
+        {
+            GVREventManager eventManager = getGVRContext().getEventManager();
+            GVRSceneObject hitObject = hit.getHitObject();
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, ITouchEvents.class, "onTouchEnd", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, ITouchEvents.class, "onTouchEnd", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, ITouchEvents.class, "onTouchEnd", hitObject, hit);
+            }
+        }
+    }
+
+    /**
+     * Propagate onInside events to listeners
+     * @param hit collision object
+     */
+    protected void propagateOnInside(GVRPickedObject hit)
+    {
+        GVRSceneObject hitObject = hit.getHitObject();
+        GVREventManager eventManager = getGVRContext().getEventManager();
+        if (mEventOptions.contains(EventOptions.SEND_TOUCH_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, ITouchEvents.class, "onInside", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, ITouchEvents.class, "onInside", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, ITouchEvents.class, "onInside", hitObject, hit);
+            }
+        }
+        if (mEventOptions.contains(EventOptions.SEND_PICK_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, IPickEvents.class, "onInside", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, IPickEvents.class, "onInside", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, IPickEvents.class, "onInside", hitObject, hit);
+            }
+        }
+    }
+
+    /**
+     * Propagate onExit events to listeners
+     * @param hitObject scene object
+     */
+    protected void propagateOnExit(GVRSceneObject hitObject, GVRPickedObject hit)
+    {
+        GVREventManager eventManager = getGVRContext().getEventManager();
+        if (mEventOptions.contains(EventOptions.SEND_TOUCH_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, ITouchEvents.class, "onExit", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, ITouchEvents.class, "onExit", hitObject, hit);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, ITouchEvents.class, "onExit", hitObject, hit);
+            }
+        }
+        if (mEventOptions.contains(EventOptions.SEND_PICK_EVENTS))
+        {
+            if (mEventOptions.contains(EventOptions.SEND_TO_LISTENERS))
+            {
+                eventManager.sendEvent(this, IPickEvents.class, "onExit", hitObject);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_HIT_OBJECT))
+            {
+                eventManager.sendEvent(hitObject, IPickEvents.class, "onExit", hitObject);
+            }
+            if (mEventOptions.contains(EventOptions.SEND_TO_SCENE) && (mScene != null))
+            {
+                eventManager.sendEvent(mScene, IPickEvents.class, "onExit", hitObject);
+            }
+        }
+    }
+
+    /**
+     * Find the collision against a specific collider in a list of collisions.
+     * @param pickList collision list
+     * @param findme   collider to find
+     * @return collision with the specified collider, null if not found
+     */
+    protected GVRPickedObject findCollider(GVRPickedObject[] pickList, GVRCollider findme)
     {
         if (pickList == null)
         {
-            return false;
+            return null;
         }
         for (GVRPickedObject hit : pickList)
         {
             if ((hit != null) && (hit.hitCollider == findme))
             {
-                return true;
+                return hit;
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -385,8 +959,7 @@ public class GVRPicker extends GVRBehavior {
      *                       can be populated by the native layer every time there is a
      *                       successful hit. Make use of the return value to know if the contents
      *                       of the buffer is valid or not. For multiple calls to this method a
-     *                       {@link ByteBuffer} can be created once and used multiple times. Look
-     *                       at the {@link SensorManager} class as an example of this methods use.
+     *                       {@link ByteBuffer} can be created once and used multiple times.
      *
      * @return <code>true</code> on a successful hit, <code>false</code> otherwise.
      */
@@ -465,6 +1038,78 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
+     * Casts a ray into the scene graph, and returns the closest object
+     * to origin of the pick ray.
+     * <p/>
+     * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
+     * {@code [dx, dy, dz]}. The ray is in the coordinate system of the
+     * input transform, allowing it to be with respect to a scene object.
+     *
+     * <p>
+     * The ray origin may be [0, 0, 0] and the direction components should be
+     * normalized from -1 to 1: Note that the y direction runs from -1 at the
+     * bottom to 1 at the top. To construct a picking ray originating at the
+     * center of a scene object and pointing where that scene object looks,
+     * attach the GVRPicker to the scene object and  pass (0, 0, 0) as
+     * the ray origin and (0, 0, -1) for the direction.
+     *
+     * <p>
+     * This method is thread safe because it guarantees that only
+     * one thread at a time is doing a ray cast into a particular scene graph,
+     * and it extracts the hit data during within its synchronized block. You
+     * can then examine the return list without worrying about another thread
+     * corrupting your hit data.
+     * <p/>
+     * Depending on the type of collider, that the hit location may not be exactly
+     * where the ray would intersect the scene object itself. Rather, it is
+     * where the ray intersects the collision geometry associated with the collider.
+     *
+     * @param scene
+     *            The {@link GVRScene} with all the objects to be tested.
+     * @param trans
+     *            The {@link GVRTransform} establishing the coordinate system of the ray.
+     * @param ox
+     *            The x coordinate of the ray origin.
+     *
+     * @param oy
+     *            The y coordinate of the ray origin.
+     *
+     * @param oz
+     *            The z coordinate of the ray origin.
+     *
+     * @param dx
+     *            The x vector of the ray direction.
+     *
+     * @param dy
+     *            The y vector of the ray direction.
+     *
+     * @param dz
+     *            The z vector of the ray direction.
+     * @return The {@link GVRPickedObject} closest to the ray origin or null if nothing picked.
+     *         Each {@link GVRPickedObject} contains the scene object
+     *         which owns the {@link GVRCollider} along with the hit
+     *         location and distance.
+     *
+     * @since 1.6.6
+     */
+    public static final GVRPickedObject pickClosest(GVRScene scene, GVRTransform trans,
+                                                    float ox, float oy, float oz,
+                                                    float dx, float dy, float dz)
+    {
+        sFindObjectsLock.lock();
+        try {
+            long nativeTrans = (trans != null) ? trans.getNative() : 0L;
+            final GVRPickedObject result =
+                    NativePicker.pickClosest(scene.getNative(),
+                            nativeTrans,
+                            ox, oy, oz, dx, dy, dz);
+            return result;
+        } finally {
+            sFindObjectsLock.unlock();
+        }
+    }
+
+    /**
      * Casts a ray into the scene graph, and returns the objects it intersects.
      * <p/>
      * The ray is defined by its origin {@code [ox, oy, oz]} and its direction
@@ -512,9 +1157,9 @@ public class GVRPicker extends GVRBehavior {
      * @param dz
      *            The z vector of the ray direction.
      * @return A list of {@link GVRPickedObject}, sorted by distance from the
-     *         camera rig. Each {@link GVRPickedObject} contains the scene object
+     *         pick ray origin. Each {@link GVRPickedObject} contains the scene object
      *         which owns the {@link GVRCollider} along with the hit
-     *         location and distance from the camera.
+     *         location and distance.
      *
      * @since 1.6.6
      */
@@ -531,16 +1176,6 @@ public class GVRPicker extends GVRBehavior {
     }
 
     /**
-     * Casts a ray into the scene graph, and returns the objects it intersects.
-     *
-     * @deprecated use GVRPickedObject[] pickObjects
-     */
-    public static final List<GVRPickedObject> findObjects(GVRScene scene, float ox, float oy, float oz, float dx,
-                                                          float dy, float dz) {
-        return Arrays.asList(pickObjects(scene, ox, oy, oz, dx, dy, dz));
-    }
-
-    /**
      * Internal utility to help JNI add hit objects to the pick list.
      */
     static GVRPickedObject makeHit(long colliderPointer, float distance, float hitx, float hity, float hitz)
@@ -553,6 +1188,8 @@ public class GVRPicker extends GVRBehavior {
         }
         return new GVRPicker.GVRPickedObject(collider, new float[] { hitx, hity, hitz }, distance);
     }
+
+
     /**
      * Internal utility to help JNI add hit objects to the pick list. Specifically for MeshColliders with picking
      * for UV, Barycentric, and normal coordinates enabled
@@ -572,27 +1209,6 @@ public class GVRPicker extends GVRBehavior {
                 new float[]{ texu, texv },
                 new float[]{normalx, normaly, normalz});
     }
-    
-    /**
-     * Tests the {@link GVRSceneObject}s contained within scene against the
-     * camera rig's lookat vector.
-     *
-     * <p>
-     * This method uses higher-level function
-     * {@linkplain #findObjects(GVRScene, float, float, float, float, float, float)
-     * findObjects()} internally.
-     *
-     * @param scene
-     *            The {@link GVRScene} with all the objects to be tested.
-     *
-     * @return A list of {@link GVRPickedObject}, sorted by distance from the
-     *         camera rig. Each {@link GVRPickedObject} contains the object
-     *         along with the hit location.
-     *
-     */
-    public static final List<GVRPickedObject> findObjects(GVRScene scene) {
-        return findObjects(scene, 0, 0, 0, 0, 0, -1.0f);
-    }
 
     /**
      * The result of a pick request which hits an object.
@@ -602,14 +1218,16 @@ public class GVRPicker extends GVRBehavior {
      *
      * @since 1.6.6
      * @see GVRPicker#pickObjects(GVRScene, float, float, float, float, float, float)
-     * @see GVRPicker#findObjects(GVRScene)
      */
     public static final class GVRPickedObject {
         public final GVRSceneObject hitObject;
         public final GVRCollider hitCollider;
+        public GVRPicker picker;
         public final float[] hitLocation;
         public final float hitDistance;
-
+        public boolean touched;
+        public MotionEvent motionEvent;
+        public int collidableIndex;
         public final int faceIndex;
         public final float[] barycentricCoords;
         public final float[] textureCoords;
@@ -649,6 +1267,9 @@ public class GVRPicker extends GVRBehavior {
             this.barycentricCoords = barycentricCoords;
             this.textureCoords = textureCoords;
             this.normalCoords = normalCoords;
+            this.touched = false;
+            this.collidableIndex = -1;
+            this.motionEvent = null;
         }
 
         public GVRPickedObject(GVRCollider hitCollider, float[] hitLocation, float hitDistance) {
@@ -660,6 +1281,9 @@ public class GVRPicker extends GVRBehavior {
             this.barycentricCoords = null;
             this.textureCoords = null;
             this.normalCoords = null;
+            this.touched = false;
+            this.collidableIndex = -1;
+            this.motionEvent = null;
         }
 
         public GVRPickedObject(GVRSceneObject hitObject, float[] hitLocation) {
@@ -671,6 +1295,9 @@ public class GVRPicker extends GVRBehavior {
             this.barycentricCoords = null;
             this.textureCoords = null;
             this.normalCoords = null;
+            this.touched = false;
+            this.collidableIndex = -1;
+            this.motionEvent = null;
         }
 
         /**
@@ -695,6 +1322,13 @@ public class GVRPicker extends GVRBehavior {
         }
 
         /**
+         * The {@link GVRPicker} this collision came from.
+         * This will be null if the collision was generated
+         * from {@link #pickObjects(GVRScene, float, float, float, float, float, float)}
+         */
+        public GVRPicker getPicker() { return picker; }
+
+        /**
          * The hit location, as an [x, y, z] array.
          *
          * @return A copy of the hit result
@@ -709,7 +1343,6 @@ public class GVRPicker extends GVRBehavior {
         public float getHitDistance() {
             return hitDistance;
         }
-
 
         /**
          * The barycentric coordinates of the hit location on the collided face
@@ -751,17 +1384,31 @@ public class GVRPicker extends GVRBehavior {
             else
                 return null;
         }
+
+        /**
+         * Determines whether the collider is touched.
+         * <p>
+         * If the "touch" button of the cursor controller associated
+         * with the picker is pressed, the collider is considered "touched".
+         * Which button indicates touch is controller dependent.
+         * @returns true if collider is touched, else false.
+         */
+        public boolean isTouched() { return touched; }
+
     }
 
     static final ReentrantLock sFindObjectsLock = new ReentrantLock();
 }
 
 final class NativePicker {
-    static native long[] pickScene(long scene, float ox, float oy, float oz,
-                                   float dx, float dy, float dz);
+    static native GVRPicker.GVRPickedObject pickClosest(long scene, long transform,
+                                                        float ox, float oy, float oz,
+                                                        float dx, float dy, float dz);
 
     static native GVRPicker.GVRPickedObject[] pickObjects(long scene, long transform, float ox, float oy, float oz,
                                                           float dx, float dy, float dz);
+
+    static native GVRPicker.GVRPickedObject[] pickBounds(long scene, List<GVRSceneObject> collidables);
 
     static native GVRPicker.GVRPickedObject pickSceneObject(long sceneObject, float ox, float oy, float oz,
                                                             float dx, float dy, float dz);

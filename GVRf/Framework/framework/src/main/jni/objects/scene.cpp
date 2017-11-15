@@ -175,7 +175,7 @@ void Scene::removeCollider(Collider* collider) {
 void Scene::set_main_scene(Scene* scene) {
     main_scene_ = scene;
     scene->getRoot()->onAddedToScene(scene);
-    scene->bindShaders();
+    //scene->bindShaders();
 }
 
 

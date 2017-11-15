@@ -1603,7 +1603,7 @@ public final class GVRAssetLoader {
             catch (IOException ex)
             {
                 mContext.getEventManager().sendEvent(this, IAssetEvents.class,
-                        "onModelError", new Object[]{this, ex.getMessage(),
+                        "onModelError", new Object[] { mContext, ex.getMessage(),
                                 androidResource.getResourceFilename()});
                 return null;
             }

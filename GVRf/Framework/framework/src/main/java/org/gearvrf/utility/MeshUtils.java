@@ -17,6 +17,7 @@ package org.gearvrf.utility;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRVertexBuffer;
 
 /**
  * Utilities for mesh creation and manipulation.
@@ -92,13 +93,8 @@ public class MeshUtils {
      * @return Return a new GVRMesh clone of given mesh.
      */
     public static GVRMesh clone(GVRContext gvrContext, GVRMesh mesh) {
-        GVRMesh newMesh = new GVRMesh(gvrContext);
-
-        newMesh.setVertices(mesh.getVertices());
-        newMesh.setTexCoords(mesh.getTexCoords());
-        newMesh.setNormals(mesh.getNormals());
-        newMesh.setIndices(mesh.getIndices());
-
+        GVRVertexBuffer srcVerts = new GVRVertexBuffer(mesh.getVertexBuffer(), mesh.getVertexBuffer().getDescriptor());
+        GVRMesh newMesh = new GVRMesh(srcVerts, mesh.getIndexBuffer());
         return newMesh;
     }
 

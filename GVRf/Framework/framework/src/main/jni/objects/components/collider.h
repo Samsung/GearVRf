@@ -47,6 +47,7 @@ public:
     glm::vec3       HitPosition;
     float           Distance;
     int             FaceIndex;
+    int             CollidableIndex;
     glm::vec3       BarycentricCoordinates;
     glm::vec2       TextureCoordinates;
     glm::vec3       NormalCoordinates;
@@ -76,6 +77,18 @@ public:
      */
     virtual ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) = 0;
 
+    /*
+     * Hit test the input sphere against this collider.
+     *
+     * Compares the center of the sphere against the bounding box of
+     * the collider and registers a hit if the box is within the sphere.
+     *
+     * @param sphere    float array with center of sphere and radius
+     *
+     * @returns ColliderData structure with hit point and distance from camera
+     */
+    virtual ColliderData isHit(const float sphere[]) = 0;
+
     virtual long shape_type() {
         return COLLIDER_SHAPE_UNKNOWN;
     }
@@ -94,6 +107,7 @@ public:
     static void transformRay(const glm::mat4& matrix, glm::vec3& rayStart, glm::vec3& rayDir);
     virtual void onAddedToScene(Scene* scene);
     virtual void onRemovedFromScene(Scene* scene);
+    static void transformSphere(const glm::mat4& model_matrix, float* sphere);
 
 protected:
     float pick_distance_;
@@ -107,6 +121,7 @@ protected:
 inline ColliderData::ColliderData(Collider* collider) :
         ColliderHit(collider),
         IsHit(false),
+        CollidableIndex(-1),
         HitPosition(std::numeric_limits<float>::infinity()),
         Distance((std::numeric_limits<float>::infinity())),
         FaceIndex(-1),
@@ -128,6 +143,7 @@ inline ColliderData::ColliderData() :
         ColliderHit(NULL),
         ObjectHit(NULL),
         IsHit(false),
+        CollidableIndex(-1),
         HitPosition(std::numeric_limits<float>::infinity()),
         Distance(std::numeric_limits<float>::infinity()),
         FaceIndex(-1),
