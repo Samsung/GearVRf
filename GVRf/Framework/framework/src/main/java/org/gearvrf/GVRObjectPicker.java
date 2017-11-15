@@ -15,16 +15,6 @@
 
 package org.gearvrf;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.joml.FrustumIntersection;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-
 /**
  * Finds the scene objects that intersect the scene object the
  * picker is attached to.
@@ -83,13 +73,13 @@ public class GVRObjectPicker extends GVRPicker
      * the picker if it is attached to a scene object.
      * You can instantiate the picker and not attach
      * it to a scene object. In this case you must
-     * manually set the pick ray and call doPick()
+     * manually set the pick ray and call processPick()
      * to generate the pick events.
      *
      * @see IPickEvents
      * @see GVRFrustumPicker#pickVisible
      */
-    public void doPick()
+    protected void doPick()
     {
         GVRSceneObject owner = getOwnerObject();
         GVRPickedObject[] picked = GVRFrustumPicker.pickVisible(mScene);

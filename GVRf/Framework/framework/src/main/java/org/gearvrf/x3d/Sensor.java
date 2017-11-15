@@ -29,7 +29,7 @@ import org.joml.Vector3f;
  *         animations based on if an object is touched, visible, within
  *         proximity of the camera.
  */
-public class Sensor
+public class Sensor extends GVRBaseSensor
 {
 
   public enum Type
@@ -43,41 +43,27 @@ public class Sensor
 
   private String name = null;
   private Type sensorType;
-  private GVRSceneObject sensorSceneObject = null;
   private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
   private String anchorURL = null;
-  private final GVRBaseSensor baseSensor;
   private Vector3f hitPoint = new Vector3f();
 
 
   public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject)
   {
-
+    super(sensorSceneObject.getGVRContext());
     this.name = name;
     this.sensorType = sensorType;
-    this.sensorSceneObject = sensorSceneObject;
-    this.baseSensor = new GVRBaseSensor(sensorSceneObject.getGVRContext());
-    sensorSceneObject.setSensor(this.baseSensor);
+    sensorSceneObject.attachComponent(this);
   }
 
   void addISensorEvents(ISensorEvents sensorEvents){
-    sensorSceneObject.getEventReceiver().addListener(sensorEvents);
-  }
-
-  void setDepthOrderEnabled(boolean depthOrderEnabled){
-    baseSensor.setDepthOrderEnabled(depthOrderEnabled);
+    getOwnerObject().getEventReceiver().addListener(sensorEvents);
   }
 
   public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
   {
     this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
   }
-
-  public GVRSceneObject getGVRSceneObject()
-  {
-    return this.sensorSceneObject;
-  }
-
   public GVRKeyFrameAnimation getGVRKeyFrameAnimation()
   {
     return this.gvrKeyFrameAnimation;
@@ -88,7 +74,7 @@ public class Sensor
     return this.name;
   }
 
-  public Type getType()
+  public Type getSensorType()
   {
     return this.sensorType;
   }

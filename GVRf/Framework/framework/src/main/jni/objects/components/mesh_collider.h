@@ -52,8 +52,11 @@ public:
         return pickCoordinates_;
     }
 
+    ColliderData isHit(const float sphere[]);
     ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
     static ColliderData isHit(const BoundingVolume& bounds, const glm::vec3& rayStart, const glm::vec3& rayDir);
+    static ColliderData isHit(const BoundingVolume& bounds, const float sphere[]);
+    static ColliderData isHit(const Mesh& mesh, const float sphere[]);
 
 private:
     MeshCollider(const MeshCollider& mesh_collider) = delete;

@@ -18,6 +18,7 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
@@ -576,6 +577,15 @@ public class AnimationInteractivityManager {
                         // this is an interactive object
                         final InteractiveObject interactiveObjectFinal = interactiveObject;
                         final GVRKeyFrameAnimation gvrKeyFrameAnimationFinal = gvrKeyFrameAnimation;
+                        interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                                new GVRSceneObject.SceneVisitor()
+                                {
+                                    public boolean visit (GVRSceneObject obj)
+                                    {
+                                        obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                        return true;
+                                    }
+                                });
 
                         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                             boolean isRunning;
@@ -616,8 +626,16 @@ public class AnimationInteractivityManager {
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
                 final Vector<InteractiveObject> interactiveObjectsFinal = interactiveObjects;
 
-                if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
-
+                if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                    interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                        new GVRSceneObject.SceneVisitor()
+                        {
+                            public boolean visit (GVRSceneObject obj)
+                            {
+                                obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                return true;
+                            }
+                        });
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         boolean stateChanged = false;
 
@@ -657,8 +675,16 @@ public class AnimationInteractivityManager {
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
 
                 if (interactiveObject.getSensor() != null) {
-                    if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
-
+                    if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                        interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                                new GVRSceneObject.SceneVisitor()
+                                {
+                                    public boolean visit (GVRSceneObject obj)
+                                    {
+                                        obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                        return true;
+                                    }
+                                });
                         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                             boolean stateChanged = false;
                             boolean isActiveDone = false;
@@ -723,7 +749,16 @@ public class AnimationInteractivityManager {
                 // a sensor and defined object, such as a TouchSensor
                 //    to a Boolean such as light on/off
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
-                if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
+                if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                    interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                            new GVRSceneObject.SceneVisitor()
+                            {
+                                public boolean visit (GVRSceneObject obj)
+                                {
+                                    obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                    return true;
+                                }
+                            });
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         //boolean isRunning;
                         @Override
@@ -749,8 +784,16 @@ public class AnimationInteractivityManager {
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
                 final Vector<InteractiveObject> interactiveObjectsFinal = interactiveObjects;
 
-                if (interactiveObject.getSensor().getType() == Sensor.Type.TOUCH) {
-
+                if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                    interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                            new GVRSceneObject.SceneVisitor()
+                            {
+                                public boolean visit (GVRSceneObject obj)
+                                {
+                                    obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                    return true;
+                                }
+                            });
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         boolean stateChanged = false;
 
@@ -777,7 +820,7 @@ public class AnimationInteractivityManager {
             }  // end if at least sensor, and eventUtility
             else if (interactiveObject.getSensor() != null) {
                 // Likely this is an Anchor tag since there are no routes with it
-                if ( interactiveObject.getSensor().getType() == Sensor.Type.ANCHOR) {
+                if ( interactiveObject.getSensor().getSensorType() == Sensor.Type.ANCHOR) {
                     anchorImplementation.AnchorInteractivity( interactiveObject );
                 }  //  end if Sensor Type is Anchor
             } // end sensor != null

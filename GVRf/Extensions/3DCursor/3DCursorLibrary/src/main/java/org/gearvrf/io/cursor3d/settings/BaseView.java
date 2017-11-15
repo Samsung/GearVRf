@@ -101,7 +101,7 @@ abstract class BaseView {
                 layoutSceneObject = new GVRViewSceneObject(context, frameLayout,
                         context.createQuad(quadWidth, quadHeight));
                 layoutSceneObject.getTransform().setPosition(x, y, z);
-                layoutSceneObject.setSensor(new GVRBaseSensor(context));
+                layoutSceneObject.attachComponent(new GVRBaseSensor(context));
                 layoutSceneObject.getEventReceiver().addListener(sensorEvents);
                 frameWidth = frameLayout.getWidth();
                 frameHeight = frameLayout.getHeight();

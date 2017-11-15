@@ -142,11 +142,8 @@ public class GVRBehavior extends GVRComponent implements GVRDrawFrameListener
         try
         {
             Class<? extends Object> clazz = getClass();
-            String name1 = clazz.getSimpleName();
             Method method = clazz.getMethod(methodName, paramTypes);
-            Class<? extends Object> declClazz = method.getDeclaringClass();
-            String name2 = declClazz.getSimpleName();
-            return declClazz.equals(clazz);
+            return !clazz.equals(GVRBehavior.class);
         }
         catch (SecurityException e)
         {

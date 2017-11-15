@@ -16,7 +16,10 @@
 package org.gearvrf.io.cursor3d;
 
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 
+import org.gearvrf.GVRBaseSensor;
+import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.io.GVRControllerType;
@@ -67,9 +70,9 @@ public class IoDevice {
      *                   IoDevice to the User.
      * @param vendorName name of the vendor for the {@link IoDevice}
      */
-    protected IoDevice(String deviceId, int vendorId, int productId, String name, String
+    protected IoDevice(GVRContext ctx, String deviceId, int vendorId, int productId, String name, String
             vendorName) {
-        this(deviceId, vendorId, productId, name, vendorName, true);
+        this(ctx, deviceId, vendorId, productId, name, vendorName, true);
     }
 
     /**
@@ -94,10 +97,10 @@ public class IoDevice {
      *                    connected at initialization. The {@link IoDevice#setConnected(boolean)}
      *                    call can be used to indicate the hardware device connection later.
      */
-    protected IoDevice(String deviceId, int vendorId, int productId, String name, String
+    protected IoDevice(GVRContext ctx, String deviceId, int vendorId, int productId, String name, String
             vendorName, boolean isConnected) {
         this(deviceId, vendorId, productId, name, vendorName, isConnected, new
-                GVRExternalCursorController());
+                GVRExternalCursorController(ctx));
     }
 
     IoDevice(String deviceId, int vendorId, int productId, String name, String
@@ -269,7 +272,7 @@ public class IoDevice {
             return;
         }
 
-        GVRSceneObject sceneObject = gvrCursorController.getSceneObject();
+        GVRSceneObject sceneObject = gvrCursorController.getCursor();
         if (sceneObject != null) {
             sceneObject.getTransform().setRotation(w, x, y, z);
         }
@@ -290,18 +293,18 @@ public class IoDevice {
      *              <code>false</code> turns off its visibility.
      */
     protected void setVisible(boolean visible) {
-        GVRSceneObject sceneObject = gvrCursorController.getSceneObject();
+        GVRSceneObject sceneObject = gvrCursorController.getCursor();
         if (sceneObject != null && sceneObject.isEnabled() != visible) {
             sceneObject.setEnable(visible);
         }
     }
 
     void setSceneObject(GVRSceneObject cursor) {
-        gvrCursorController.setSceneObject(cursor);
+        gvrCursorController.setCursor(cursor);
     }
 
     void resetSceneObject() {
-        gvrCursorController.resetSceneObject();
+        gvrCursorController.setCursor(null);
     }
 
     void addControllerEventListener(GVRCursorController.ControllerEventListener
@@ -433,8 +436,8 @@ public class IoDevice {
 
     //TODO this will go once GVRf is changed
     static class GVRExternalCursorController extends GVRCursorController {
-        GVRExternalCursorController() {
-            super(GVRControllerType.EXTERNAL);
+        GVRExternalCursorController(GVRContext context) {
+            super(context, GVRControllerType.EXTERNAL);
         }
 
         public void setKeyEvent(KeyEvent keyEvent) {
@@ -448,6 +451,10 @@ public class IoDevice {
         public float getFarDepth() {
             return super.getFarDepth();
         }
+
+        public boolean dispatchMotionEvent(MotionEvent ev) { return false; }
+
+        public boolean dispatchKeyEvent(KeyEvent ev) { return false; }
     }
 
     GVRCursorController getGvrCursorController() {

@@ -117,7 +117,7 @@ class CursorFactory {
         return cursor;
     }
 
-    private static void addGearVrBackup(Cursor cursor) {
+    private static void addGearVrBackup(GVRContext ctx, Cursor cursor) {
         boolean hasGearVr = false;
         for (PriorityIoDeviceTuple tuple : cursor.getIoDevices()) {
             if (IoDeviceLoader.isGearVrDevice(tuple.getIoDevice())) {
@@ -135,7 +135,7 @@ class CursorFactory {
             }
             int priority = maxPriority + 1;
             PriorityIoDeviceTuple gearVrTuple = new PriorityIoDeviceTuple(priority, IoDeviceLoader
-                    .getGearVrIoDevice());
+                    .getGearVrIoDevice(ctx));
             tuples.add(gearVrTuple);
             Collections.sort(tuples);
         }

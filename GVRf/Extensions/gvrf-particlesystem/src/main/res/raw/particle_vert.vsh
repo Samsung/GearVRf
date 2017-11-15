@@ -16,6 +16,7 @@ layout ( location = 1 ) in vec2 a_texcoord;
 
 layout ( location = 0 ) out float deltaTime;
 
+
 float snoise(vec3);
 
 void main() {

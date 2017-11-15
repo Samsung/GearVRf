@@ -15,16 +15,11 @@
 
 package org.gearvrf.io.cursor3d;
 
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.SensorEvent;
-import org.gearvrf.SensorEvent.EventGroup;
+import org.gearvrf.ITouchEvents;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 import org.gearvrf.utility.Log;
 import org.joml.Vector3f;
@@ -33,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Represents a 3D cursor in GVRf, it encapsulates the intended behavior from a
@@ -56,38 +50,31 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * </p>
  * Each {@link Cursor} object has a {@link CursorType} that defines the type of events generated.
  */
-public abstract class Cursor {
+public abstract class Cursor extends GVRBehavior
+{
     private static final String TAG = "Cursor";
+    static private long TYPE_CURSOR = newComponentType(Cursor.class);
     protected static final float MAX_CURSOR_SCALE = 1000;
+    protected ITouchEvents mTouchListener = null;
+    protected IoDevice mIODevice;
+    protected float mCursorDepth;
 
-    protected GVRSceneObject cursor;
-    private String name;
-    private final CursorType type;
-    private IoDevice savedIoDevice;
-    private Position position;
-    private String savedThemeId;
-    private List<PriorityIoDeviceTuple> compatibleIoDevices;
+    private final CursorType mCursorType;
+    private IoDevice mSavedIODevice;
+    private Position mStartPosition;
+    private String mSavedThemeID;
+    private List<PriorityIoDeviceTuple> mCompatibleDevices;
+    private static int sUniqueCursorID = 0;
+    private final int mCursorID;
+    private CursorTheme mCursorTheme;
+    private boolean mBusyLoading = false;
 
-    private static int uniqueCursorId = 0;
-    private final int cursorId;
-    protected GVRScene scene;
-    protected CursorSceneObject cursorSceneObject;
-
-    private List<CursorEventListener> cursorEventListeners;
-    private CursorTheme cursorTheme;
-
-    private boolean busyLoading = false;
-    IoDevice ioDevice;
-    float scale;
-    private boolean enabled = true;
-
-    private CursorAsset currentCursorAsset;
+    private CursorAsset mCursorAsset;
     // Used to save a copy of the current cursor when busy loading is set.
-    private CursorAsset savedCursorAsset;
-    private CursorAudioManager audioManager;
-    private CursorManager cursorManager;
-    private Vector3f objectPosition, direction;
-    protected boolean isControllerActive;
+    private CursorAsset mSavedCursorAsset;
+    private CursorAudioManager mAudioManager;
+    private CursorManager mCursorManager;
+    private Vector3f mTempPosition, mDirection;
 
     enum Position {
         CENTER,
@@ -97,31 +84,48 @@ public abstract class Cursor {
     }
 
     Cursor(GVRContext context, CursorType type, CursorManager cursorManager) {
-        this.type = type;
-        this.cursorId = uniqueCursorId++;
-        cursorSceneObject = new CursorSceneObject(context, cursorId);
-        cursorEventListeners = new CopyOnWriteArrayList<CursorEventListener>();
-        audioManager = CursorAudioManager.getInstance(context.getContext());
-        compatibleIoDevices = new ArrayList<PriorityIoDeviceTuple>();
-        objectPosition = new Vector3f();
-        direction = new Vector3f();
-        this.cursorManager = cursorManager;
+        super(cursorManager.getGVRContext());
+        mType = getComponentType();
+        mCursorType = type;
+        mCursorID = sUniqueCursorID++;
+        GVRSceneObject owner = new GVRSceneObject(context);
+        mAudioManager = CursorAudioManager.getInstance(context.getContext());
+        mCompatibleDevices = new ArrayList<PriorityIoDeviceTuple>();
+        mTempPosition = new Vector3f();
+        mDirection = new Vector3f();
+        mCursorManager = cursorManager;
+        owner.attachComponent(this);
+    }
+
+    /**
+     * Returns a unique long value associated with the {@link Cursor} class. Each
+     * subclass of  {@link GVRBehavior} needs a unique component type value. Use this value to
+     * get the instance of {@link Cursor} attached to any {@link GVRSceneObject}
+     * using {@link GVRSceneObject#getComponent(long)}
+     *
+     * @return the component type value.
+     */
+    public static long getComponentType() {
+        return TYPE_CURSOR;
     }
 
     void setIoDevice(IoDevice newIoDevice) {
-        destroyIoDevice(this.ioDevice);
-        this.ioDevice = newIoDevice;
-        if (enabled) {
+        if (mIODevice != null)
+        {
+            destroyIoDevice(mIODevice);
+        }
+        mIODevice = newIoDevice;
+        if (isEnabled()) {
             setupIoDevice(newIoDevice);
         }
     }
 
     void resetIoDevice(IoDevice ioDevice) {
-        if (this.ioDevice == ioDevice) {
-            if (enabled) {
+        if (mIODevice == ioDevice) {
+            if (isEnabled()) {
                 destroyIoDevice(ioDevice);
             }
-            this.ioDevice = null;
+            mIODevice = null;
         }
     }
 
@@ -136,36 +140,31 @@ public abstract class Cursor {
      */
     public void setCursorTheme(final CursorTheme theme) {
 
-        if (theme == cursorTheme || theme == null) {
+        if (theme == mCursorTheme || theme == null) {
             //nothing to do, return
             return;
         }
-        if (theme.getCursorType() != type) {
+        if (theme.getCursorType() != mCursorType) {
             throw new IllegalArgumentException("Cursor Theme does not match the cursor type");
         }
 
-        if (currentCursorAsset != null) {
-            currentCursorAsset.reset(cursorSceneObject);
+        if (mCursorAsset != null) {
+            mCursorAsset.reset(this);
         }
 
-        if (cursorTheme != null) {
-            cursorTheme.unload(cursorSceneObject);
+        if (mCursorTheme != null) {
+            mCursorTheme.unload(this);
         }
 
-        cursorTheme = theme;
-        audioManager.loadTheme(cursorTheme);
-        theme.load(cursorSceneObject);
-        if (scene != null) {
-            // new objects have been added to the cursorSceneObject
-            // force bind shaders
-           // scene.bindShaders(cursorSceneObject.getMainSceneObject());
-        }
-        if (currentCursorAsset != null) {
-            currentCursorAsset = cursorTheme.getAsset(currentCursorAsset.getAction());
-            if (currentCursorAsset == null) {
-                currentCursorAsset = cursorTheme.getAsset(Action.DEFAULT);
+        mCursorTheme = theme;
+        mAudioManager.loadTheme(mCursorTheme);
+        theme.load(this);
+        if (mCursorAsset != null) {
+            mCursorAsset = mCursorTheme.getAsset(mCursorAsset.getAction());
+            if (mCursorAsset == null) {
+                mCursorAsset = mCursorTheme.getAsset(Action.DEFAULT);
             }
-            currentCursorAsset.set(cursorSceneObject);
+            mCursorAsset.set(this);
         }
     }
 
@@ -175,16 +174,13 @@ public abstract class Cursor {
      * @return the currently set {@link CursorTheme}
      */
     public CursorTheme getCursorTheme() {
-        return cursorTheme;
+        return mCursorTheme;
     }
 
-    void setScene(GVRScene scene) {
-        this.scene = scene;
-    }
 
     // Means that the ioDevice is active
     boolean isActive() {
-        return ioDevice != null && ioDevice.isEnabled();
+        return mIODevice != null && mIODevice.isEnabled();
     }
 
     /**
@@ -195,7 +191,7 @@ public abstract class Cursor {
      * @return the {@link CursorType} of this {@link Cursor} object.
      */
     public CursorType getCursorType() {
-        return type;
+        return mCursorType;
     }
 
     /**
@@ -206,9 +202,9 @@ public abstract class Cursor {
      * @param z z value of the position
      */
     public void setPosition(float x, float y, float z) {
-        if (isActive() && enabled) {
-            if (ioDevice != null) {
-                ioDevice.setPosition(x, y, z);
+        if (isActive() && isEnabled()) {
+            if (mIODevice != null) {
+                mIODevice.setPosition(x, y, z);
             }
         }
     }
@@ -218,8 +214,15 @@ public abstract class Cursor {
      *
      * @return the current x position of the {@link Cursor}
      */
-    public float getPositionX() {
-        return cursorSceneObject.getPositionX();
+    public float getPositionX()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getPositionX();
+        }
+        return 0;
     }
 
     /**
@@ -227,8 +230,15 @@ public abstract class Cursor {
      *
      * @return the current y position of the {@link Cursor}
      */
-    public float getPositionY() {
-        return cursorSceneObject.getPositionY();
+    public float getPositionY()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getPositionY();
+        }
+        return 0;
     }
 
     /**
@@ -236,8 +246,15 @@ public abstract class Cursor {
      *
      * @return the current z position of the {@link Cursor}
      */
-    public float getPositionZ() {
-        return cursorSceneObject.getPositionZ();
+    public float getPositionZ()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getPositionZ();
+        }
+        return 0;
     }
 
     /**
@@ -245,8 +262,15 @@ public abstract class Cursor {
      *
      * @return the current 'w' component of this {@link Cursor}'s rotation quaternion.
      */
-    public float getRotationW() {
-        return cursorSceneObject.getRotationW();
+    public float getRotationW()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getRotationW();
+        }
+        return 0;
     }
 
     /**
@@ -254,8 +278,15 @@ public abstract class Cursor {
      *
      * @return the current 'x' component of this {@link Cursor}'s rotation quaternion.
      */
-    public float getRotationX() {
-        return cursorSceneObject.getRotationX();
+    public float getRotationX()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getRotationX();
+        }
+        return 0;
     }
 
     /**
@@ -263,8 +294,15 @@ public abstract class Cursor {
      *
      * @return the current 'y' component of this {@link Cursor}'s rotation quaternion.
      */
-    public float getRotationY() {
-        return cursorSceneObject.getRotationY();
+    public float getRotationY()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getRotationY();
+        }
+        return 0;
     }
 
     /**
@@ -272,32 +310,52 @@ public abstract class Cursor {
      *
      * @return the current 'z' component of this {@link Cursor}'s rotation quaternion.
      */
-    public float getRotationZ() {
-        return cursorSceneObject.getRotationZ();
+    public float getRotationZ()
+    {
+        GVRSceneObject owner = getOwnerObject();
+
+        if (owner != null)
+        {
+            return owner.getTransform().getRotationZ();
+        }
+        return 0;
+    }
+
+    public void addChildObject(GVRSceneObject child) {
+        getOwnerObject().addChildObject(child);
+    }
+
+    public void removeChildObject(GVRSceneObject child) {
+        getOwnerObject().removeChildObject(child);
     }
 
     /**
      * The method will force a process cycle that may result in an
-     * {@link CursorEvent}s being generated if there is a significant event
+     * {@link ICursorEvents} being generated if there is a significant event
      * that affects a {@link Cursor}. In most cases when a new position
      * or key event is received, the {@link Cursor} internally
      * invalidates its own data. However there may be situations where the
      * cursor data remains the same while the scene graph is changed. This
      * {@link #invalidate()} call can help force the {@link Cursor}
      * to run a new process loop on its existing information against the changed
-     * scene graph to generate possible {@link CursorEvent}s.
+     * scene graph to generate possible {@link ICursorEvents}.
      */
     public void invalidate() {
         //generate a new event
-        if (ioDevice != null) {
-            ioDevice.invalidate();
+        if (mIODevice != null) {
+            mIODevice.invalidate();
         }
     }
 
-    void setScale(float scale) {
-        this.scale = scale;
-        if (ioDevice != null) {
-            ioDevice.setPosition(0.0f, 0.0f, -scale);
+    public float getCursorDepth() {
+        return mCursorDepth;
+    }
+
+    void setCursorDepth(float depth) {
+        mCursorDepth = depth;
+        if (mIODevice != null) {
+            mIODevice.getGvrCursorController().setCursorDepth(mCursorDepth);
+            mIODevice.setPosition(0.0f, 0.0f, -mCursorDepth);
         }
     }
 
@@ -305,12 +363,11 @@ public abstract class Cursor {
      * Perform all Cursor cleanup here.
      */
     void close() {
-        // remove listener only if ioDevice is not null
-        if (ioDevice != null) {
-            ioDevice.removeControllerEventListener(getControllerEventListener());
+        mIODevice = null;
+        GVRSceneObject owner = getOwnerObject();
+        if (owner.getParent() != null) {
+            owner.getParent().removeChildObject(owner);
         }
-        ioDevice = null;
-        cursorEventListeners.clear();
     }
 
     /* Set the asset only if it is not already set,
@@ -318,17 +375,17 @@ public abstract class Cursor {
      */
     void checkAndSetAsset(Action action) {
         // check the theme if we have a asset
-        CursorAsset asset = cursorTheme.getAsset(action);
+        CursorAsset asset = mCursorTheme.getAsset(action);
 
         if (asset == null) {
             return;
         }
 
         // do not set if the app is busy loading
-        if (currentCursorAsset == null || currentCursorAsset.getAction().equals(action) == false) {
+        if (mCursorAsset == null || !mCursorAsset.getAction().equals(action)) {
             if (isBusyLoading()) {
                 //save the new state for restore when busy loading is done
-                savedCursorAsset = asset;
+                mSavedCursorAsset = asset;
             } else {
                 setAsset(asset);
             }
@@ -340,28 +397,29 @@ public abstract class Cursor {
             return;
         }
 
-        if (currentCursorAsset != null) {
-            currentCursorAsset.reset(cursorSceneObject);
+        if (mCursorAsset != null) {
+            mCursorAsset.reset(this);
         }
         // load new asset
-        currentCursorAsset = asset;
-        currentCursorAsset.set(cursorSceneObject);
+        mCursorAsset = asset;
+        mCursorAsset.set(this);
     }
 
     void setSavedIoDevice(IoDevice savedIoDevice) {
-        this.savedIoDevice = savedIoDevice;
+        mSavedIODevice = savedIoDevice;
     }
 
     IoDevice getSavedIoDevice() {
-        return savedIoDevice;
+        return mSavedIODevice;
     }
 
     void clearSavedIoDevice() {
-        savedIoDevice = null;
+        mSavedIODevice = null;
     }
 
-    void setName(String name) {
-        this.name = name;
+    void setName(String name)
+    {
+        getOwnerObject().setName(name);
     }
 
     /**
@@ -372,24 +430,24 @@ public abstract class Cursor {
      * @return a String representing the Cursor
      */
     public String getName() {
-        return name;
+        return getOwnerObject().getName();
     }
 
     void setStartPosition(Position position) {
-        this.position = position;
+        mStartPosition = position;
     }
 
     Position getStartPosition() {
-        return position;
+        return mStartPosition;
     }
 
     void setSavedThemeId(String savedThemeId) {
-        this.savedThemeId = savedThemeId;
+        mSavedThemeID = savedThemeId;
     }
 
     String clearSavedThemeId() {
-        String themeId = savedThemeId;
-        savedThemeId = null;
+        String themeId = mSavedThemeID;
+        mSavedThemeID = null;
         return themeId;
     }
 
@@ -399,7 +457,7 @@ public abstract class Cursor {
      * @return the {@link IoDevice} attached. <code>null</code> is no device is attached.
      */
     public IoDevice getIoDevice() {
-        return ioDevice;
+        return mIODevice;
     }
 
     /**
@@ -409,31 +467,17 @@ public abstract class Cursor {
      */
     public List<IoDevice> getCompatibleIoDevices() {
         List<IoDevice> ioDevices = new LinkedList<IoDevice>();
-        for (PriorityIoDeviceTuple tuple : compatibleIoDevices) {
+        for (PriorityIoDeviceTuple tuple : mCompatibleDevices) {
             ioDevices.add(tuple.getIoDevice());
         }
         return ioDevices;
     }
 
     List<PriorityIoDeviceTuple> getIoDevices() {
-        return compatibleIoDevices;
+        return mCompatibleDevices;
     }
 
-    /**
-     * Return the {@link GVRSceneObject} associated with the Cursor object.
-     * <p/>
-     * This call is useful for applications that need to change the properties of the
-     * {@link GVRSceneObject} controlled by the {@link Cursor}.
-     *
-     * @return the {@link GVRSceneObject} representing the Cursor object.
-     */
-    public GVRSceneObject getSceneObject() {
-        return cursorSceneObject.getExternalSceneObject();
-    }
 
-    GVRSceneObject getMainSceneObject() {
-        return cursorSceneObject.getMainSceneObject();
-    }
 
     /**
      * This method returns an integer value that can be used to
@@ -442,7 +486,7 @@ public abstract class Cursor {
      * @return an integer representing the Cursor
      */
     public int getId() {
-        return cursorId;
+        return mCursorID;
     }
 
     /**
@@ -457,20 +501,20 @@ public abstract class Cursor {
      *                restores it to its original state when <code>false</code>.
      */
     public void setBusyLoading(boolean loading) {
-        if (loading && (busyLoading == false)) {
+        if (loading && (mBusyLoading == false)) {
             // save the state
-            savedCursorAsset = currentCursorAsset;
-            setAsset(cursorTheme.getAsset(Action.LOADING));
-            busyLoading = true;
-        } else if ((loading == false) && busyLoading && savedCursorAsset != null) {
+            mSavedCursorAsset = mCursorAsset;
+            setAsset(mCursorTheme.getAsset(Action.LOADING));
+            mBusyLoading = true;
+        } else if ((loading == false) && mBusyLoading && mSavedCursorAsset != null) {
             // restore saved state
-            boolean soundEnabled = savedCursorAsset.isSoundEnabled();
+            boolean soundEnabled = mSavedCursorAsset.isSoundEnabled();
             // we don't want a sound on restore
-            savedCursorAsset.setSoundEnabled(false);
-            setAsset(savedCursorAsset);
-            savedCursorAsset.setSoundEnabled(soundEnabled);
-            savedCursorAsset = null;
-            busyLoading = false;
+            mSavedCursorAsset.setSoundEnabled(false);
+            setAsset(mSavedCursorAsset);
+            mSavedCursorAsset.setSoundEnabled(soundEnabled);
+            mSavedCursorAsset = null;
+            mBusyLoading = false;
         }
     }
 
@@ -483,196 +527,65 @@ public abstract class Cursor {
      * <code>false</code> otherwise.
      */
     public boolean isBusyLoading() {
-        return busyLoading;
+        return mBusyLoading;
     }
 
-    /**
-     * Could be done as a part of the Sensor framework provided by GVRf.
-     *
-     * @param event
-     */
-    abstract void dispatchSensorEvent(SensorEvent event);
 
-    abstract ControllerEventListener getControllerEventListener();
+    public ITouchEvents getTouchListener() { return mTouchListener; }
 
-    /**
-     * Use this method to check if the {@link Cursor} is enabled or disabled.
-     *
-     * By default every {@link Cursor} object is enabled.s
-     *
-     * @return <code>true</code> if the {@link Cursor} is enabled, <code>false</code> otherwise.
-     */
-    public boolean isEnabled() {
-        return enabled;
+
+    public void onEnable()
+    {
+        Log.d(TAG, Integer.toHexString(hashCode()) + " enabled");
+        mCursorManager.assignIoDevicesToCursors();
     }
 
-    /**
-     * When enabled the Cursor would report {@link CursorEvent}s. Disabling the
-     * Cursor would stop the events and also remove the Cursor from the
-     * scene (if one is provided). The {@link Cursor} can be enabled and disabled
-     * from the settings menu
-     * <p/>
-     * <code>true</code> for enable, <code>false</code> for disable.
-     * <p/>
-     * Default <code>true</code> - enabled.
-     *
-     * @param value
-     */
-    public void setEnable(boolean value) {
-        if (!enabled && value) {
-            Log.d(TAG, Integer.toHexString(hashCode()) + " enabled");
-            enabled = true;
-            cursorManager.assignIoDevicesToCursors();
-        } else if (enabled && !value) {
-            if (ioDevice == null) {
-                Log.d(TAG, Integer.toHexString(hashCode()) + " disabled; ioDevice == null");
-                enabled = false;
-            } else {
-                Log.d(TAG, Integer.toHexString(hashCode()) + " disabled");
-                enabled = false;
-                Log.d(TAG, "Destroying Iodevice:" + ioDevice.getDeviceId());
-                destroyIoDevice(ioDevice);
-                cursorManager.markCursorUnused(this);
-            }
+    public void onDisable()
+    {
+        if (mIODevice == null) {
+            Log.d(TAG, Integer.toHexString(hashCode()) + " disabled; ioDevice == null");
+        }
+        else
+        {
+            IoDevice device = getIoDevice();
+            Log.d(TAG, Integer.toHexString(hashCode()) + " disabled");
+            Log.d(TAG, "Destroying Iodevice:" + device.getDeviceId());
+            mCursorManager.markCursorUnused(this);
+            mCursorManager.markIoDeviceUnused(device);
         }
     }
 
     void setupIoDevice(IoDevice ioDevice) {
-        if (ioDevice != null) {
-            // should have a normal asset
-            setAsset(cursorTheme.getAsset(Action.DEFAULT));
-            ioDevice.setSceneObject(cursorSceneObject.getMainSceneObject());
-            ioDevice.setEnable(true);
-            ioDevice.setPosition(0.0f, 0.0f, -scale);
-            ioDevice.addControllerEventListener(getControllerEventListener());
-        }
+        // should have a normal asset
+        setAsset(mCursorTheme.getAsset(Action.DEFAULT));
+        ioDevice.setEnable(true);
+        ioDevice.setPosition(0.0f, 0.0f, -mCursorDepth);
+        ioDevice.getGvrCursorController().addPickEventListener(getTouchListener());
     }
 
     void destroyIoDevice(IoDevice ioDevice) {
-        if (ioDevice != null) {
-            if(isControllerActive) {
-                isControllerActive = false;
-            }
-            ioDevice.setEnable(false);
-            ioDevice.removeControllerEventListener(getControllerEventListener());
-            ioDevice.resetSceneObject();
-        }
+        ioDevice.setEnable(false);
+        ioDevice.getGvrCursorController().removePickEventListener(getTouchListener());
+        ioDevice.resetSceneObject();
     }
 
     void transferIoDevice(Cursor targetCursor) {
+        if (mIODevice != null)
+        {
+            mIODevice.getGvrCursorController().removePickEventListener(targetCursor.getTouchListener());
+        }
         IoDevice targetIoDevice = targetCursor.getIoDevice();
-        targetIoDevice.removeControllerEventListener(targetCursor.getControllerEventListener());
         targetIoDevice.resetSceneObject();
-        ioDevice = targetIoDevice;
+        mIODevice = targetIoDevice;
         setupIoDevice(targetIoDevice);
     }
 
 
-
-    /**
-     * Register for events whenever the {@link Cursor} updates its position or
-     * receives button clicks.
-     *
-     * @param listener the {@link CursorEventListener} to be added.<code>null</code>
-     *                 objects are ignored.
-     */
-    public void addCursorEventListener(CursorEventListener listener) {
-        if (listener == null) {
-            // ignore null input
-            return;
-        }
-
-        cursorEventListeners.add(listener);
-        //trigger an event with the current position.
-        if (ioDevice != null) {
-            ioDevice.setPosition(0.0f, 0.0f, -scale);
-        }
-    }
-
-    boolean isColliding(GVRSceneObject sceneObject) {
-        return cursorSceneObject.isColliding(sceneObject);
-    }
-
-    /**
-     * Remove the previously added {@link CursorEventListener}.
-     *
-     * @param listener the {@link CursorEventListener} to be removed.<code>null</code>
-     *                 objects are ignored.
-     */
-    public void removeCursorEventListener(CursorEventListener listener) {
-        if (listener == null) {
-            // ignore null input
-            return;
-        }
-
-        cursorEventListeners.remove(listener);
-    }
-
-    void dispatchCursorEvent(CursorEvent event) {
-        if (enabled) {
-            //TODO find better fix for concurrent modification
-            for (CursorEventListener listener : cursorEventListeners) {
-                listener.onEvent(event);
-            }
-        }
-        event.recycle();
-    }
-
     IoDevice getIoDeviceForPriority(int priorityLevel) {
-        if (priorityLevel < compatibleIoDevices.size()) {
-            return compatibleIoDevices.get(priorityLevel).getIoDevice();
+        if (priorityLevel < mCompatibleDevices.size()) {
+            return mCompatibleDevices.get(priorityLevel).getIoDevice();
         } else {
             return null;
-        }
-    }
-
-    /**
-     * Checks if the associated {@link GVRCursorController} is active or not by checking all the
-     * {@link KeyEvent} reported by the {@link GVRCursorController}. The active state depends on
-     * the {@link KeyEvent#getAction()} of the latest {@link KeyEvent}.
-     * @param controller The {@link GVRCursorController} associated with the {@link Cursor}
-     */
-    protected void checkControllerActive(GVRCursorController controller) {
-        List<KeyEvent> keyEvents = controller.getKeyEvents();
-        if(keyEvents == null) {
-            return;
-        }
-        for(KeyEvent keyEvent: keyEvents) {
-            if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                isControllerActive = true;
-            } else if (keyEvent.getAction() == KeyEvent.ACTION_UP) {
-                isControllerActive = false;
-            }
-        }
-    }
-
-    protected void handleControllerEvent(GVRCursorController controller, boolean sentEvent) {
-        lookAt();
-        if (cursorManager.isDepthOrderEnabled() &&
-                !controller.isEventHandledBySensorManager() && !sentEvent &&
-                (controller.getKeyEvent() != null || controller.getMotionEvents().size() > 0)) {
-
-            Log.d(TAG, Integer.toHexString(hashCode()) + " handling event"
-                    + "; isDepthOrderEnabled " + cursorManager.isDepthOrderEnabled()
-                    + "; isEventHandledBySensorManager " + controller.isEventHandledBySensorManager()
-                    + "; sentEvent " + sentEvent
-                    + "; getMotionEvents().size() " + controller.getMotionEvents().size()
-                    + "; getKeyEvent() " + controller.getKeyEvent()
-            );
-
-            CursorEvent cursorEvent = CursorEvent.obtain();
-            cursorEvent.setOver(false);
-            cursorEvent.setColliding(false);
-            cursorEvent.setActive(isControllerActive);
-            cursorEvent.setCursor(Cursor.this);
-            cursorEvent.setObject(null);
-            cursorEvent.setHitPoint(0,0,0);
-
-            List<MotionEvent> motionEvents = controller.getMotionEvents();
-            cursorEvent.setMotionEvents(motionEvents);
-            cursorEvent.setEventGroup(EventGroup.SINGLE);
-            cursorEvent.setKeyEvent(controller.getKeyEvent());
-            dispatchCursorEvent(cursorEvent);
         }
     }
 
@@ -686,12 +599,12 @@ public abstract class Cursor {
      */
     public List<IoDevice> getAvailableIoDevices() {
         List<IoDevice> returnList = new ArrayList<IoDevice>();
-        for (PriorityIoDeviceTuple compatibleIoDeviceTuple : compatibleIoDevices) {
+        for (PriorityIoDeviceTuple compatibleIoDeviceTuple : mCompatibleDevices) {
             IoDevice compatibleIoDevice = compatibleIoDeviceTuple.getIoDevice();
-            if (compatibleIoDevice.equals(getIoDevice())) {
-                returnList.add(ioDevice);
+            if (compatibleIoDevice.equals(mIODevice)) {
+                returnList.add(mIODevice);
             } else {
-                IoDevice ioDevice = cursorManager.getAvailableIoDevice(compatibleIoDevice);
+                IoDevice ioDevice = mCursorManager.getAvailableIoDevice(compatibleIoDevice);
                 if (ioDevice != null) {
                     returnList.add(ioDevice);
                 }
@@ -711,11 +624,11 @@ public abstract class Cursor {
      *                     attached.
      */
     public void attachIoDevice(IoDevice ioDevice) throws IOException {
-        if (!enabled) {
+        if (!isEnabled()) {
             throw new IllegalStateException("Cursor not enabled");
         }
-
-        if (this.ioDevice != null && this.ioDevice.equals(ioDevice)) {
+        IoDevice oldDevice = getIoDevice();
+        if (oldDevice != null && oldDevice.equals(ioDevice)) {
             Log.d(TAG, "Current and desired Io device are same");
             return;
         }
@@ -723,25 +636,26 @@ public abstract class Cursor {
         if (!isIoDeviceCompatible(ioDevice)) {
             throw new IllegalArgumentException("IO device not compatible");
         }
-        IoDevice availableIoDevice = cursorManager.getAvailableIoDevice(ioDevice);
+        IoDevice availableIoDevice = mCursorManager.getAvailableIoDevice(ioDevice);
         if (availableIoDevice == null) {
             throw new IOException("IO device cannot be attached");
         }
 
         Log.d(TAG, "Attaching ioDevice:" + availableIoDevice.getDeviceId() + " to cursor:"
-                + cursorId);
+                   + mCursorID);
 
-        IoDevice oldIoDevice = this.ioDevice;
+        mCursorManager.removeCursorFromScene(this);
+        if (oldDevice != null)
+        {
+            mCursorManager.markIoDeviceUnused(oldDevice);
+        }
         setIoDevice(availableIoDevice);
-        cursorManager.removeCursorFromScene(this);
-        cursorManager.markIoDeviceUnused(oldIoDevice);
-        cursorManager.markIoDeviceUsed(availableIoDevice);
-        cursorManager.addCursorToScene(this);
-
+        mCursorManager.addCursorToScene(this);
+        mCursorManager.assignIoDevicesToCursors();
     }
 
     private boolean isIoDeviceCompatible(IoDevice ioDevice) {
-        for (PriorityIoDeviceTuple compatibleIoDevice : compatibleIoDevices) {
+        for (PriorityIoDeviceTuple compatibleIoDevice : mCompatibleDevices) {
             if (compatibleIoDevice.getIoDevice().equals(ioDevice)) {
                 return true;
             }
@@ -757,17 +671,15 @@ public abstract class Cursor {
      * <p/>
      * http://mmmovania.blogspot.com/2014/03/making-opengl-object-look-at-another.html
      */
-    protected void lookAt() {
-        objectPosition.set(cursorSceneObject.getPositionX(), cursorSceneObject.getPositionY(),
-                cursorSceneObject.getPositionZ());
-        objectPosition.negate(direction);
+    protected void lookAt() {mTempPosition.set(getPositionX(), getPositionY(), getPositionZ());
+        mTempPosition.negate(mDirection);
 
         Vector3f up;
-        direction.normalize();
+        mDirection.normalize();
 
-        if (Math.abs(direction.x) < 0.00001
-                && Math.abs(direction.z) < 0.00001) {
-            if (direction.y > 0) {
+        if (Math.abs(mDirection.x) < 0.00001
+                && Math.abs(mDirection.z) < 0.00001) {
+            if (mDirection.y > 0) {
                 up = new Vector3f(0.0f, 0.0f, -1.0f); // if direction points in +y
             } else {
                 up = new Vector3f(0.0f, 0.0f, 1.0f); // if direction points in -y
@@ -778,14 +690,15 @@ public abstract class Cursor {
 
         up.normalize();
         Vector3f right = new Vector3f();
-        up.cross(direction, right);
+        up.cross(mDirection, right);
         right.normalize();
-        direction.cross(right, up);
+        mDirection.cross(right, up);
         up.normalize();
 
         float[] matrix = new float[]{right.x, right.y, right.z, 0.0f, up.x, up.y,
-                up.z, 0.0f, direction.x, direction.y, direction.z, 0.0f,
+                up.z, 0.0f, mDirection.x, mDirection.y, mDirection.z, 0.0f,
                 0.0f, 0.0f, 0.0f, 0.0f};
-        cursorSceneObject.setModelMatrix(matrix);
+        getOwnerObject().getTransform().setModelMatrix(matrix);
     }
+
 }

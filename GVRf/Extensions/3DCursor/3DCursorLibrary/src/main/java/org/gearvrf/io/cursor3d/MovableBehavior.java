@@ -2,6 +2,7 @@ package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.utility.Log;
@@ -17,19 +18,15 @@ import org.joml.Vector3f;
 public class MovableBehavior extends SelectableBehavior {
     public static final String TAG = MovableBehavior.class.getSimpleName();
     static private long TYPE_MOVABLE = newComponentType(MovableBehavior.class);
-    private Vector3f prevCursorPosition;
-    private Quaternionf rotation;
-    private Vector3f cross;
+    private Vector3f mCursorPosition;
+    private Quaternionf mRotation;
+    private Vector3f mTempCross;
 
-    private GVRSceneObject selected;
-    private final Object selectedLock = new Object();
-    private GVRSceneObject cursorSceneObject;
-    private Cursor cursor;
-    private CursorManager cursorManager;
-    private GVRSceneObject ownerObject;
-    private GVRSceneObject ownerParent;
-    private static final Matrix4f cursorModelMatrix = new Matrix4f();
-    private static final Matrix4f selectedModelMatrix = new Matrix4f();
+    private GVRSceneObject mSelected;
+    private Cursor mCurrentCursor;
+    private GVRSceneObject mOwnerParent;
+    private static final Matrix4f mTempParentMatrix = new Matrix4f();
+    private static final Matrix4f mTempSelectedMatrix = new Matrix4f();
 
     /**
      * Creates a {@link MovableBehavior} to be attached to any {@link GVRSceneObject}. The
@@ -48,7 +45,7 @@ public class MovableBehavior extends SelectableBehavior {
      * the top and a child for each of the states of the {@link MovableBehavior}.
      * The order of the child nodes has to follow {@link ObjectState#DEFAULT},
      * {@link ObjectState#BEHIND}, {@link ObjectState#COLLIDING}, and {@link ObjectState#CLICKED}
-     * from left to right.The {@link MovableBehavior} handles all the {@link CursorEvent}s on the
+     * from left to right.The {@link MovableBehavior} handles all the {@link ICursorEvents} on the
      * linked {@link GVRSceneObject} and maintains the {@link ObjectState} as well as moving the
      * {@link GVRSceneObject} with the movement of a {@link Cursor}. It also makes the correct child
      * {@link GVRSceneObject} visible according to the {@link ObjectState}. It is recommended that
@@ -75,7 +72,7 @@ public class MovableBehavior extends SelectableBehavior {
      * Creates a {@link MovableBehavior} which is to be attached to a {@link GVRSceneObject}
      * with a specific hierarchy where, the {@link GVRSceneObject} to be attached has a root node at
      * the top and a child for each of the states of the {@link MovableBehavior}.
-     * The {@link MovableBehavior} handles all the {@link CursorEvent}s on the linked
+     * The {@link MovableBehavior} handles all the {@link ICursorEvents} on the linked
      * {@link GVRSceneObject} and maintains the {@link ObjectState} as well as moves the associated
      * {@link GVRSceneObject} with the {@link Cursor}. It also makes the correct child
      * {@link GVRSceneObject} visible according to the {@link ObjectState}. It is recommended to
@@ -100,131 +97,153 @@ public class MovableBehavior extends SelectableBehavior {
         initialize(cursorManager);
     }
 
-    private void initialize(CursorManager cursorManager) {
-        prevCursorPosition = new Vector3f();
-        rotation = new Quaternionf();
-        cross = new Vector3f();
-        this.cursorManager = cursorManager;
+    private void initialize(final CursorManager cursorManager) {
+        mCursorPosition = new Vector3f();
+        mRotation = new Quaternionf();
+        mTempCross = new Vector3f();
         mType = getComponentType();
-    }
-
-    @Override
-    void handleClickEvent(CursorEvent event) {
-        synchronized (selectedLock) {
-            if (selected != null && cursor != event.getCursor()) {
-                // We have a selected object but not the correct cursor
-                return;
-            }
-
-            cursor = event.getCursor();
-            cursorSceneObject = event.getCursor().getSceneObject();
-            prevCursorPosition.set(cursor.getPositionX(), cursor.getPositionY(), cursor
-                    .getPositionZ());
-            selected = getOwnerObject();
-
-            if (cursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader
-                    .isControllerIoDevice(cursor.getIoDevice())) {
-                ownerParent = selected.getParent();
-                GVRTransform selectedTransform = selected.getTransform();
-                cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
-                cursorModelMatrix.invert();
-                selectedModelMatrix.set(selectedTransform.getModelMatrix());
-                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedModelMatrix));
-                ownerParent.removeChildObject(selected);
-                cursorSceneObject.addChildObject(selected);
-            }
-        }
-    }
-
-    @Override
-    void handleDragEvent(CursorEvent event) {
-        if (cursor.getCursorType() == CursorType.LASER && cursor == event.getCursor()) {
-            if (IoDeviceLoader.isControllerIoDevice(cursor.getIoDevice())) {
-                return;
-            }
-            Cursor cursor = event.getCursor();
-            Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor.getPositionY
-                    (), cursor.getPositionZ());
-            rotateObjectToFollowCursor(cursorPosition);
-            prevCursorPosition = cursorPosition;
-        }
-    }
-
-    @Override
-    void handleCursorLeave(CursorEvent event) {
-        if (event.isActive() && cursor == event.getCursor()) {
-            if (cursor.getCursorType() == CursorType.LASER && !IoDeviceLoader
-                    .isControllerIoDevice(cursor.getIoDevice())) {
-                Vector3f cursorPosition = new Vector3f(cursor.getPositionX(), cursor
-                        .getPositionY(), cursor.getPositionZ());
-                rotateObjectToFollowCursor(cursorPosition);
-                prevCursorPosition = cursorPosition;
-            } else if (cursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader
-                    .isControllerIoDevice(cursor.getIoDevice())) {
-                handleClickReleased(event);
-            }
-        }
-    }
-
-    @Override
-    void handleClickReleased(CursorEvent event) {
-        synchronized (selectedLock) {
-            if (selected != null && cursor != event.getCursor()) {
-                // We have a selected object but not the correct cursor
-                return;
-            }
-
-            if (selected != null && (cursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader
-                    .isControllerIoDevice(cursor.getIoDevice()))) {
-                GVRTransform selectedTransform = selected.getTransform();
-                cursorModelMatrix.set(cursorSceneObject.getTransform().getModelMatrix());
-                cursorSceneObject.removeChildObject(selected);
-                ownerParent.addChildObject(selected);
-                selectedModelMatrix.set(selectedTransform.getModelMatrix());
-                selectedTransform.setModelMatrix(cursorModelMatrix.mul(selectedModelMatrix));
-            }
-            selected = null;
-            // object has been moved, invalidate all other cursors to check for events
-            for (Cursor remaining : cursorManager.getActiveCursors()) {
-                if (cursor != remaining) {
-                    remaining.invalidate();
+        clickListener = new ICursorEvents()
+        {
+            public void onCursorScale(Cursor c) { }
+            public void onEnter(Cursor c, GVRPicker.GVRPickedObject hit) { }
+            public void onTouchStart(Cursor c, GVRPicker.GVRPickedObject hit)
+            {
+                synchronized (this)
+                {
+                    if (mSelected != null)
+                    {
+                        return;
+                    }
+                    mCurrentCursor = c;
+                    mSelected = getOwnerObject();
+                    mCursorPosition.set(mCurrentCursor.getPositionX(), mCurrentCursor.getPositionY(), mCurrentCursor.getPositionZ());
+                    mOwnerParent = mSelected.getParent();
+                    GVRTransform selectedTransform = mSelected.getTransform();
+                    Log.d("CURSOR", "onTouchStart %s  at (%f, %f, %f) cursor=(%f, %f, %f)",
+                          mSelected.getName(),
+                          selectedTransform.getPositionX(),
+                          selectedTransform.getPositionY(),
+                          selectedTransform.getPositionZ(),
+                          mCursorPosition.x, mCursorPosition.y, mCursorPosition.z);
+                    mTempParentMatrix.set(c.getTransform().getModelMatrix());
+                    mTempParentMatrix.invert();
+                    mTempSelectedMatrix.set(selectedTransform.getModelMatrix());
+                    mTempParentMatrix.mul(mTempSelectedMatrix, mTempParentMatrix);
+                    mOwnerParent.removeChildObject(mSelected);
+                    selectedTransform.setModelMatrix(mTempParentMatrix);
+                    c.addChildObject(mSelected);
                 }
             }
-        }
-    }
 
-    private void rotateObjectToFollowCursor(Vector3f cursorPosition) {
-        computeRotation(prevCursorPosition, cursorPosition);
-        ownerObject.getTransform().rotateWithPivot(rotation.w, rotation.x, rotation.y,
-                rotation.z, 0,
-                0, 0);
-        ownerObject.getTransform().setRotation(1, 0, 0, 0);
-    }
-
-    /*
-    formulae for quaternion rotation taken from
-    http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
-    */
-    private void computeRotation(Vector3f start, Vector3f end) {
-        float norm_u_norm_v = (float) Math.sqrt(start.dot(start) * end.dot(end));
-        float real_part = norm_u_norm_v + start.dot(end);
-
-        if (real_part < 1.e-6f * norm_u_norm_v) {
-        /* If u and v are exactly opposite, rotate 180 degrees
-         * around an arbitrary orthogonal axis. Axis normalisation
-         * can happen later, when we normalise the quaternion. */
-            real_part = 0.0f;
-            if (Math.abs(start.x) > Math.abs(start.z)) {
-                cross = new Vector3f(-start.y, start.x, 0.f);
-            } else {
-                cross = new Vector3f(0.f, -start.z, start.y);
+            public void onDrag(Cursor c, GVRPicker.GVRPickedObject hit)
+            {
+                if ((mCurrentCursor == c) && (c.getCursorType() == CursorType.LASER))
+                {
+                    if (IoDeviceLoader.isControllerIoDevice(mCurrentCursor.getIoDevice()))
+                    {
+                        return;
+                    }
+                    mCursorPosition = new Vector3f(c.getPositionX(), c.getPositionY(), c.getPositionZ());
+                    rotateObjectToFollowCursor(mCursorPosition);
+                }
             }
-        } else {
-                /* Otherwise, build quaternion the standard way. */
-            start.cross(end, cross);
-        }
-        rotation.set(cross.x, cross.y, cross.z, real_part).normalize();
+
+            public void onExit(Cursor c, GVRPicker.GVRPickedObject hit)
+            {
+                if (hit.touched && (mCurrentCursor == c))
+                {
+                    if (mCurrentCursor.getCursorType() == CursorType.LASER && !IoDeviceLoader.isControllerIoDevice(
+                            mCurrentCursor.getIoDevice()))
+                    {
+                        mCursorPosition = new Vector3f(mCurrentCursor.getPositionX(), mCurrentCursor.getPositionY(), mCurrentCursor.getPositionZ());
+                        rotateObjectToFollowCursor(mCursorPosition);
+                    }
+                    else if (mCurrentCursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader.isControllerIoDevice(
+                            mCurrentCursor.getIoDevice()))
+                    {
+                        onTouchEnd(c, hit);
+                    }
+                }
+            }
+
+            public void onTouchEnd(Cursor c, GVRPicker.GVRPickedObject hit)
+            {
+                synchronized (this)
+                {
+                    if ((mSelected == null) || (mCurrentCursor != c))
+                    {
+                        return;
+                    }
+                    GVRTransform selectedTransform = mSelected.getTransform();
+
+                    mCursorPosition = new Vector3f(mCurrentCursor.getPositionX(), mCurrentCursor.getPositionY(), mCurrentCursor.getPositionZ());
+                    mTempParentMatrix.set(mOwnerParent.getTransform().getModelMatrix());
+                    mTempParentMatrix.invert();
+                    mTempSelectedMatrix.set(selectedTransform.getModelMatrix());
+                    mTempParentMatrix.mul(mTempSelectedMatrix, mTempParentMatrix);
+                    c.removeChildObject(mSelected);
+                    selectedTransform.setModelMatrix(mTempParentMatrix);
+                    Log.d("CURSOR", "onTouchEnd %s  at (%f, %f, %f) cursor=(%f, %f, %f)",
+                          mSelected.getName(),
+                          selectedTransform.getPositionX(),
+                          selectedTransform.getPositionY(),
+                          selectedTransform.getPositionZ(),
+                          mCursorPosition.x, mCursorPosition.y, mCursorPosition.z);
+                    mOwnerParent.addChildObject(mSelected);
+                    mSelected = null;
+                    // object has been moved, invalidate all other cursors to check for events
+                    for (Cursor remaining : cursorManager.getActiveCursors())
+                    {
+                        if (mCurrentCursor != remaining)
+                        {
+                            remaining.invalidate();
+                        }
+                    }
+                }
+            }
+
+            private void rotateObjectToFollowCursor(Vector3f cursorPosition)
+            {
+                computeRotation(mCursorPosition, cursorPosition);
+                getOwnerObject().getTransform().rotateWithPivot(mRotation.w, mRotation.x, mRotation.y, mRotation.z, 0, 0, 0);
+                getOwnerObject().getTransform().setRotation(1, 0, 0, 0);
+            }
+
+            /*
+            formulae for quaternion mRotation taken from
+            http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
+            */
+            private void computeRotation(Vector3f start, Vector3f end)
+            {
+                float norm_u_norm_v = (float) Math.sqrt(start.dot(start) * end.dot(end));
+                float real_part = norm_u_norm_v + start.dot(end);
+
+                if (real_part < 1.e-6f * norm_u_norm_v)
+                {
+            /* If u and v are exactly opposite, rotate 180 degrees
+             * around an arbitrary orthogonal axis. Axis normalisation
+             * can happen later, when we normalise the quaternion. */
+                    real_part = 0.0f;
+                    if (Math.abs(start.x) > Math.abs(start.z))
+                    {
+                        mTempCross.set(-start.y, start.x, 0.f);
+                    }
+                    else
+                    {
+                        mTempCross.set(0.f, -start.z, start.y);
+                    }
+                }
+                else
+                {
+                    /* Otherwise, build quaternion the standard way. */
+                    start.cross(end, mTempCross);
+                }
+                mRotation.set(mTempCross.x, mTempCross.y, mTempCross.z, real_part).normalize();
+            }
+
+        };
     }
+
 
     /**
      * Returns a unique long value associated with the {@link MovableBehavior} class. Each
@@ -236,18 +255,6 @@ public class MovableBehavior extends SelectableBehavior {
      */
     public static long getComponentType() {
         return TYPE_MOVABLE;
-    }
-
-    @Override
-    public void onAttach(GVRSceneObject sceneObject) {
-        super.onAttach(sceneObject);
-        ownerObject = sceneObject;
-    }
-
-    @Override
-    public void onDetach(GVRSceneObject sceneObject) {
-        super.onDetach(sceneObject);
-        ownerObject = null;
     }
 }
 

@@ -55,6 +55,7 @@ import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
@@ -348,11 +349,13 @@ public class GVRViewSceneObject extends GVRSceneObject {
                     || event.getEventTime() - event.getDownTime()
                                 >= ViewConfiguration.getLongPressTimeout())) {
                 Log.w(mSceneObject.getClass().getSimpleName(),
-                        "Double tap/long presss disabled to avoid popups!!!");
+                        "Double tap/long press disabled to avoid popups!!!");
                 if (event.getAction() == MotionEvent.ACTION_UP) {
                     mLastUpTime = event.getEventTime();
                 }
                 // FIXME: Improve it to avoid  blue balloon of the cursor.
+                Log.d("PICKER EVENT CANCELED", "onTouchEvent action=%d button=%d x=%f y=%f",
+                      event.getAction(), event.getButtonState(), event.getX(), event.getY());
                 return true;
             }
 
@@ -385,6 +388,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         float mActionDownY;
         float mHitLocationX;
         float mHitLocationY;
+        GVRSceneObject mSelected = null;
         SoftInputController mSoftInputController;
 
         public RootViewGroup(GVRActivity gvrActivity, GVRViewSceneObject sceneObject) {
@@ -422,8 +426,22 @@ public class GVRViewSceneObject extends GVRSceneObject {
             return super.invalidateChildInParent(location, dirty);
         }
 
-        public boolean dispatchPickerInputEvent(MotionEvent ev, float[] hitLocation) {
-            return super.dispatchTouchEvent(ev);
+        public void dispatchPickerInputEvent(final MotionEvent e, final float x, final float y) {
+
+            Log.d("EVENT:", "dispatchPickerInputEvent action=%d button=%d x=%f y=%f",
+                  e.getAction(), e.getButtonState(), x, y);
+
+            mGVRContext.getActivity().runOnUiThread(new Runnable()
+            {
+                public void run()
+                {
+                    MotionEvent enew = MotionEvent.obtain(e);
+
+                    enew.setLocation(x, y);
+                    RootViewGroup.super.dispatchTouchEvent(enew);
+                    enew.recycle();
+                }
+            });
         }
 
         @Override
@@ -579,38 +597,65 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         }
 
-        @Override
-        public void onTouch(GVRSceneObject sceneObject, MotionEvent event, float[] hitLocation) {
-            final int action = event.getAction();
-            float x = event.getX();
-            float y = event.getY();
+        public void onEnter(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) { }
+        public void onExit(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject == mSelected)
+            {
+                mSelected = null;
+                onDrag(pickInfo);
+           }
+        }
 
-            switch (action) {
-                case MotionEvent.ACTION_DOWN:
-                    mActionDownX = x;
-                    mActionDownY = y;
+        public void onTouchStart(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if ((mSelected == null) && (pickInfo.motionEvent != null))
+            {
+                final MotionEvent event = pickInfo.motionEvent;
+                float x = event.getX();
+                float y = event.getY();
+                final float[] hitLocation = pickInfo.hitLocation;
 
-                    if (hitLocation != null) {
-                        mHitLocationX = (hitLocation[0] + 0.5f) * getWidth();
-                        mHitLocationY = (-hitLocation[1] + 0.5f) * getHeight();
-                    } else {
-                        mHitLocationX = getWidth() * 0.5f;
-                        mHitLocationY = getHeight() * 0.5f;
-                    }
-
-                    x = mHitLocationX;
-                    y = mHitLocationY;
-                    break;
-                case MotionEvent.ACTION_UP:
-                default:
-                    x = x - mActionDownX + mHitLocationX;
-                    y = y - mActionDownY + mHitLocationY;
-                    break;
+                mSelected = sceneObject;
+                mActionDownX = x;
+                mActionDownY = y;
+                mHitLocationX = x = (hitLocation[0] + 0.5f) * getWidth();
+                mHitLocationY = y = (0.5f - hitLocation[1]) * getHeight();
+                dispatchPickerInputEvent(event,  x, y);
             }
+       }
 
-            event.setLocation(x, y);
+        public void onInside(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject == mSelected)
+            {
+                onDrag(pickInfo);
+            }
+        }
 
-            dispatchPickerInputEvent(event, hitLocation);
+        public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject == mSelected)
+            {
+                mSelected = null;
+                onDrag(pickInfo);
+            }
+        }
+
+        public void onDrag(GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (pickInfo.motionEvent != null)
+            {
+                final MotionEvent event = pickInfo.motionEvent;
+                float x = (pickInfo.hitLocation[0] + 0.5f) * getWidth();
+                float y = (0.5f - pickInfo.hitLocation[1]) * getHeight();
+                dispatchPickerInputEvent(event,  x, y);
+            }
+        }
+
+        public void onMotionOutside(GVRPicker picker, MotionEvent event)
+        {
+            dispatchPickerInputEvent(event, event.getX(), event.getY());
         }
     }
 

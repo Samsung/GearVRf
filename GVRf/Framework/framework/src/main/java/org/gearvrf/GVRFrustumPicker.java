@@ -15,14 +15,8 @@
 
 package org.gearvrf;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.joml.FrustumIntersection;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 /**
@@ -210,7 +204,6 @@ public class GVRFrustumPicker extends GVRPicker {
                     p.sub(center, p);
                     p.w = 0;
                     radius = p.length();
-                    boolean pointIn = mCuller.testPoint(center.x, center.y, center.z);
                     if (!mCuller.testSphere(center.x, center.y, center.z, radius))
                     {
                         picked[i] = null;

@@ -27,29 +27,45 @@
 #include "glm/glm.hpp"
 
 namespace gvr {
-    class Scene;
-    class Collider;
-    class SceneObject;
-    class CameraRig;
-    class Transform;
+class Scene;
+class Collider;
+class SceneObject;
+class CameraRig;
+class Transform;
+class SceneObject;
 
-    namespace Picker {
-        void pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& pickList);
-        void pickScene(Scene* scene, std::vector<ColliderData>& pickList);
-        void pickScene(
-                Scene* scene, std::vector<ColliderData>& pickList,
-                Transform* t,
-                float ox, float oy, float oz,
-                float dx, float dy, float dz);
-        void pickSceneObject(
-                const SceneObject* scene_object,
-                float ox, float oy, float oz,
-                float dx, float dy, float dz,
-                ColliderData &colliderData);
-        glm::vec3 pickSceneObjectAgainstBoundingBox(
-                const SceneObject* scene_object, float ox, float oy, float oz,
-                float dx, float dy, float dz);
-    }
+class Picker {
+private:
+    Picker();
+    ~Picker();
+
+public:
+    static void pickVisible(Scene* scene, Transform* t, std::vector<ColliderData>& pickList);
+    static void pickScene(
+            Scene* scene, std::vector<ColliderData>& pickList,
+            Transform* t,
+            float ox, float oy, float oz,
+            float dx, float dy, float dz);
+    static void pickClosest(
+            Scene* scene,
+            ColliderData& closest,
+            Transform* t,
+            float ox, float oy, float oz,
+            float dx, float dy, float dz);
+    static void pickBounds(
+            Scene* scene,
+            std::vector<ColliderData>& picklist,
+            const std::vector<SceneObject*>& collidables);
+    static void pickSceneObject(
+            const SceneObject* scene_object,
+            float ox, float oy, float oz,
+            float dx, float dy, float dz,
+            ColliderData &colliderData);
+    static glm::vec3 pickSceneObjectAgainstBoundingBox(
+            const SceneObject* scene_object, float ox, float oy, float oz,
+            float dx, float dy, float dz);
+};
+
 }
 
 #endif
