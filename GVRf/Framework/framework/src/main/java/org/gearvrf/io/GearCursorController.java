@@ -25,21 +25,27 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVREventListeners;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.IActivityEvents;
+import org.gearvrf.IAssetEvents;
 import org.gearvrf.scene_objects.GVRLineSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import java.io.IOException;
+import java.util.EnumSet;
 
 
 /**
@@ -283,7 +289,8 @@ public final class GearCursorController extends GVRCursorController
         }
         try
         {
-            mControllerModel = context.getAssetLoader().loadModel("gear_vr_controller.obj");
+            EnumSet<GVRImportSettings> settings = GVRImportSettings.getRecommendedSettingsWith(EnumSet.of(GVRImportSettings.NO_LIGHTING));
+            mControllerModel = context.getAssetLoader().loadModel("gear_vr_controller.obj", settings, true, null);
         }
         catch (IOException ex)
         {
