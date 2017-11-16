@@ -55,8 +55,6 @@ import static java.lang.Integer.parseInt;
 class GVRJassimpAdapter {
     private static final String TAG = GVRJassimpAdapter.class.getSimpleName();
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
-    private GVRAssetLoader  mLoader;
-    private List<INodeFactory> mNodeFactories;
     private AiScene mScene;
     private GVRContext mContext;
     private String mFileName;
@@ -64,23 +62,8 @@ class GVRJassimpAdapter {
     private static final int MAX_VERTEX_COLORS = JassimpConfig.MAX_NUMBER_COLORSETS;
 
 
-    public interface INodeFactory {
-        GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
-    }
-
     public GVRJassimpAdapter(GVRAssetLoader loader, String filename) {
-        mLoader = loader;
         mFileName = filename;
-        mNodeFactories = new ArrayList<INodeFactory>();
-    }
-
-    public void addNodeFactory(INodeFactory factory) {
-        // Insert new factory in front of the list to support overriding
-        mNodeFactories.add(0, factory);
-    }
-
-    public void removeNodeFactory(INodeFactory factory) {
-        mNodeFactories.remove(factory);
     }
 
     public GVRMesh createMesh(GVRContext ctx, AiMesh aiMesh, EnumSet<GVRImportSettings> settings)
@@ -314,22 +297,6 @@ class GVRJassimpAdapter {
         return bone;
     }
 
-    public GVRSceneObject createSceneObject(GVRContext ctx, AiNode node) {
-        GVRSceneObject sceneObject = null;
-
-        for (INodeFactory factory : mNodeFactories) {
-            sceneObject = factory.createSceneObject(ctx, node);
-            if (sceneObject != null)
-                return sceneObject;
-        }
-
-        // Default
-        sceneObject = new GVRSceneObject(ctx);
-        sceneObject.setName(node.getName());
-
-        return sceneObject;
-    }
-
     public GVRKeyFrameAnimation createAnimation(AiAnimation aiAnim, GVRSceneObject target) {
         GVRKeyFrameAnimation anim = new GVRKeyFrameAnimation(aiAnim.getName(), target,
                 (float)aiAnim.getDuration(), (float)aiAnim.getTicksPerSecond());
@@ -518,64 +485,75 @@ class GVRJassimpAdapter {
     }
 
     private void recurseAssimpNodes(
-        GVRAssetLoader.AssetRequest request,
-        GVRSceneObject parentSceneObject,
-        AiNode node,
-        Hashtable<String,
-        GVRLightBase> lightlist) {
-        final GVRSceneObject sceneObject;
+            final GVRAssetLoader.AssetRequest request,
+            final GVRSceneObject model,
+            final AiNode node,
+            Hashtable<String, GVRLightBase> lightlist)
+    {
         final GVRContext context = mContext;
 
-        if (node.getNumMeshes() == 0) {
-            sceneObject = createSceneObject(mContext, node);
-            parentSceneObject.addChildObject(sceneObject);
-        } else if (node.getNumMeshes() == 1) {
-            // add the scene object to the scene graph
+        /*
+         * Node has a single mesh - attach the mesh to the input model.
+         */
+        if (node.getNumMeshes() == 1)
+        {
             AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[0]);
-            sceneObject = createSubSceneObject(request, parentSceneObject, node, aiMesh);
-        } else {
-            sceneObject = createSceneObject(mContext, node);
-            parentSceneObject.addChildObject(sceneObject);
-            for (int i = 0; i < node.getNumMeshes(); i++) {
+            addMesh(request, model, aiMesh);
+        }
+        /*
+         * Node has multiple meshes. Make a scene object for each one.
+         */
+        else if (node.getNumMeshes() > 1)
+        {
+            for (int i = 0; i < node.getNumMeshes(); i++)
+            {
                 AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[i]);
-                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, node, aiMesh);
+                GVRSceneObject sceneObj = new GVRSceneObject(context);
+                sceneObj.setName(aiMesh.getName());
+                model.addChildObject(sceneObj);
+                addMesh(request, sceneObj, aiMesh);
             }
         }
 
-        if (node.getTransform(sWrapperProvider) != null) {
+        if (node.getTransform(sWrapperProvider) != null)
+        {
             float[] matrix = node.getTransform(sWrapperProvider);
-            sceneObject.getTransform().setModelMatrix(matrix);
+            model.getTransform().setModelMatrix(matrix);
         }
         if (!request.getImportSettings().contains(GVRImportSettings.NO_LIGHTING))
         {
-            attachLights(lightlist, sceneObject);
+            attachLights(lightlist, model);
         }
-        for (AiNode child : node.getChildren()) {
-            recurseAssimpNodes(request, sceneObject, child, lightlist);
+        for (AiNode child : node.getChildren())
+        {
+            GVRSceneObject sceneObj = new GVRSceneObject(mContext);
+            sceneObj.setName(child.getName());
+            model.addChildObject(sceneObj);
+            recurseAssimpNodes(request, sceneObj, child, lightlist);
         }
-
         context.runOnTheFrameworkThread(new Runnable() {
             public void run() {
                 // Inform the loaded object after it has been attached to the scene graph
                 context.getEventManager().sendEvent(
-                        sceneObject,
+                        model,
                         ISceneObjectEvents.class,
                         "onLoaded");
             }
         });
      }
 
-    private void attachLights(Hashtable<String, GVRLightBase> lightlist, GVRSceneObject sceneObject){
+    private void attachLights(Hashtable<String, GVRLightBase> lightlist, GVRSceneObject sceneObject)
+    {
         String name = sceneObject.getName();
         GVRLightBase light =  lightlist.get(name);
-        if (light != null) {
+        if (light != null)
+        {
             Quaternionf q = new Quaternionf();
             q.rotationX((float) Math.PI / 2.0f);
             q.normalize();
             light.setDefaultOrientation(q);
             sceneObject.attachLight(light);
         }
-
     }
 
     /**
@@ -583,10 +561,6 @@ class GVRJassimpAdapter {
      *
      * @param assetRequest
      *            GVRAssetRequest containing the original request to load the model
-     *
-     * @param node
-     *            A reference to the AiNode for which we want to recurse all its
-     *            children and meshes.
      *
      * @param aiMesh
      *            The assimp mesh
@@ -596,10 +570,9 @@ class GVRJassimpAdapter {
      * @throws IOException
      *             File does not exist or cannot be read
      */
-    private GVRSceneObject createSubSceneObject(
+    private void addMesh(
             GVRAssetLoader.AssetRequest assetRequest,
-            GVRSceneObject parent,
-            AiNode node,
+            GVRSceneObject model,
             AiMesh aiMesh)
     {
         EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
@@ -646,15 +619,11 @@ class GVRJassimpAdapter {
         float specularExponent = material.getShininess();
         meshMaterial.setSpecularExponent(specularExponent);
 
-        GVRSceneObject sceneObject = createSceneObject(mContext, node);
         GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
         sceneObjectRenderData.setMesh(mesh);
 
         sceneObjectRenderData.setMaterial(meshMaterial);
-        sceneObject.attachRenderData(sceneObjectRenderData);
-
-        parent.addChildObject(sceneObject);
-        return sceneObject;
+        model.attachRenderData(sceneObjectRenderData);
     }
 
     private static final Map<AiTextureType, String> textureMap;
