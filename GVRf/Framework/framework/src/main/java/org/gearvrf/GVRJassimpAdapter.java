@@ -647,11 +647,9 @@ class GVRJassimpAdapter {
                 meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
                                      emissiveColor.getGreen(), emissiveColor.getBlue(),
                                      emissiveColor.getAlpha());
+            /* Specular Exponent */
+                 meshMaterial.setSpecularExponent(material.getShininess());
         }
-
-        /* Specular Exponent */
-        float specularExponent = material.getShininess();
-        meshMaterial.setSpecularExponent(specularExponent);
         sceneObjectRenderData.setMaterial(meshMaterial);
         model.attachRenderData(sceneObjectRenderData);
     }
