@@ -606,49 +606,63 @@ class GVRJassimpAdapter {
         GVRMesh mesh = createMesh(mContext, aiMesh, settings);
         AiMaterial material = mScene.getMaterials().get(aiMesh.getMaterialIndex());
         final GVRMaterial meshMaterial = createMaterial(material, assetRequest.getImportSettings());
+        GVRSceneObject sceneObject = createSceneObject(mContext, node);
+        GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
+        AiColor diffuseColor = material.getDiffuseColor(sWrapperProvider);        /* Opacity */
+        float opacity = diffuseColor.getAlpha();
 
+        sceneObjectRenderData.setMesh(mesh);
         if (!settings.contains(GVRImportSettings.NO_TEXTURING))
         {
             loadTextures(assetRequest, material, meshMaterial, aiMesh);
         }
-
-        /* Diffuse color & Opacity */
-        AiColor diffuseColor = material.getDiffuseColor(sWrapperProvider);        /* Opacity */
-        float opacity = diffuseColor.getAlpha();
-        if (material.getOpacity() > 0) {
-            opacity *= material.getOpacity();
+        if (settings.contains(GVRImportSettings.NO_LIGHTING))
+        {
+            sceneObjectRenderData.disableLight();
+            if (material.getOpacity() > 0)
+            {
+                opacity *= material.getOpacity();
+            }
+            meshMaterial.setVec3("u_color",
+                                 diffuseColor.getRed(),
+                                 diffuseColor.getGreen(),
+                                 diffuseColor.getBlue());
+            meshMaterial.setFloat("u_opacity", opacity);
         }
-        meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
-                diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
+        else
+        {
+        /* Diffuse color & Opacity */
+            if (material.getOpacity() > 0)
+            {
+                opacity *= material.getOpacity();
+            }
+            meshMaterial.setVec4("diffuse_color", diffuseColor.getRed(),
+                                 diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
 
         /* Specular color */
-        AiColor specularColor = material.getSpecularColor(sWrapperProvider);
-        meshMaterial.setSpecularColor(specularColor.getRed(),
-                specularColor.getGreen(), specularColor.getBlue(),
-                specularColor.getAlpha());
+            AiColor specularColor = material.getSpecularColor(sWrapperProvider);
+            meshMaterial.setSpecularColor(specularColor.getRed(),
+                                          specularColor.getGreen(), specularColor.getBlue(),
+                                          specularColor.getAlpha());
 
 
         /* Ambient color */
-        AiColor ambientColor = material.getAmbientColor(sWrapperProvider);
-        meshMaterial.setAmbientColor(ambientColor.getRed(),
-                ambientColor.getGreen(), ambientColor.getBlue(),
-                ambientColor.getAlpha());
+            AiColor ambientColor = material.getAmbientColor(sWrapperProvider);
+            meshMaterial.setAmbientColor(ambientColor.getRed(),
+                                         ambientColor.getGreen(), ambientColor.getBlue(),
+                                         ambientColor.getAlpha());
 
 
         /* Emissive color */
-        AiColor emissiveColor = material.getEmissiveColor(sWrapperProvider);
-        meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
-                emissiveColor.getGreen(), emissiveColor.getBlue(),
-                emissiveColor.getAlpha());
-
+            AiColor emissiveColor = material.getEmissiveColor(sWrapperProvider);
+            meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                                 emissiveColor.getGreen(), emissiveColor.getBlue(),
+                                 emissiveColor.getAlpha());
+        }
 
         /* Specular Exponent */
         float specularExponent = material.getShininess();
         meshMaterial.setSpecularExponent(specularExponent);
-
-        GVRSceneObject sceneObject = createSceneObject(mContext, node);
-        GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
-        sceneObjectRenderData.setMesh(mesh);
 
         sceneObjectRenderData.setMaterial(meshMaterial);
         sceneObject.attachRenderData(sceneObjectRenderData);
@@ -699,7 +713,7 @@ class GVRJassimpAdapter {
             }
         }
         GVRShaderId shaderType = GVRMaterial.GVRShaderType.Phong.ID;
-        if (settings.contains(GVRImportSettings.NO_ANIMATION))
+        if (settings.contains(GVRImportSettings.NO_LIGHTING))
         {
             shaderType = GVRMaterial.GVRShaderType.Texture.ID;
         }
