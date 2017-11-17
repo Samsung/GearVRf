@@ -71,16 +71,29 @@ public:
 
     RenderData() :
             JavaComponent(RenderData::getComponentType()), mesh_(0),
-            use_light_(false), use_lightmap_(false), batching_(true),
             render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
-            rendering_order_(DEFAULT_RENDERING_ORDER), hash_code_dirty_(true),
-            offset_(false), offset_factor_(0.0f), offset_units_(0.0f),
-            depth_test_(true), depth_mask_(true), alpha_blend_(true), alpha_to_coverage_(false),
-            sample_coverage_(1.0f), invert_coverage_mask_(GL_FALSE),
+            rendering_order_(DEFAULT_RENDERING_ORDER),
+            offset_factor_(0.0f), offset_units_(0.0f),
+            sample_coverage_(1.0f),
             source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
-            draw_mode_(GL_TRIANGLES), texture_capturer(0), cast_shadows_(true),
-            bones_ubo_(nullptr),dirty_(false)
+            texture_capturer(0),
+            bones_ubo_(nullptr)
     {
+        render_data_flags.use_light_ = false;
+        render_data_flags.use_lightmap_ = false;
+        render_data_flags.batching_ = true;
+        render_data_flags.offset_ = false;
+        render_data_flags.depth_test_ = true;
+        render_data_flags.depth_mask_ = true;
+        render_data_flags.alpha_blend_ = true;
+        render_data_flags.alpha_to_coverage_ = false;
+        hash_code_dirty_ = true;
+        render_data_flags.cast_shadows_ = true;
+        render_data_flags.dirty_ = false;
+        render_data_flags.invert_coverage_mask_ = GL_FALSE;
+        render_data_flags.stencilTestFlag_ = false;
+        render_data_flags.draw_mode_ = GL_TRIANGLES;
+        render_data_flags.padding = 0;
     }
 
     virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
@@ -89,34 +102,34 @@ public:
     {
         hash_code = rdata.hash_code;
         mesh_ = rdata.mesh_;
-        use_light_ = rdata.use_light_;
-        use_lightmap_ = rdata.use_lightmap_;
-        batching_ = rdata.batching_;
+        render_data_flags.use_light_ = rdata.render_data_flags.use_light_;
+        render_data_flags.use_lightmap_ = rdata.render_data_flags.use_lightmap_;
+        render_data_flags.batching_ = rdata.render_data_flags.batching_;
         render_mask_ = rdata.render_mask_;
         bones_ubo_ = rdata.bones_ubo_;
-        cast_shadows_ = rdata.cast_shadows_;
+        render_data_flags.cast_shadows_ = rdata.render_data_flags.cast_shadows_;
         batch_ = rdata.batch_;
         for(int i=0;i<rdata.render_pass_list_.size();i++) {
             render_pass_list_.push_back((rdata.render_pass_list_)[i]);
         }
         rendering_order_ = rdata.rendering_order_;
         hash_code_dirty_ = rdata.hash_code_dirty_;
-        dirty_ = rdata.dirty_;
-        offset_ = rdata.offset_;
+        render_data_flags.dirty_ = rdata.render_data_flags.dirty_;
+        render_data_flags.offset_ = rdata.render_data_flags.offset_;
         offset_factor_ = rdata.offset_factor_;
         offset_units_ = rdata.offset_units_;
-        depth_test_ = rdata.depth_test_;
-        depth_mask_ = rdata.depth_mask_;
-        alpha_blend_ = rdata.alpha_blend_;
+        render_data_flags.depth_test_ = rdata.render_data_flags.depth_test_;
+        render_data_flags.depth_mask_ = rdata.render_data_flags.depth_mask_;
+        render_data_flags.alpha_blend_ = rdata.render_data_flags.alpha_blend_;
         source_alpha_blend_func_ = rdata.source_alpha_blend_func_;
         dest_alpha_blend_func_ = rdata.dest_alpha_blend_func_;
-        alpha_to_coverage_ = rdata.alpha_to_coverage_;
+        render_data_flags.alpha_to_coverage_ = rdata.render_data_flags.alpha_to_coverage_;
         sample_coverage_ = rdata.sample_coverage_;
-        invert_coverage_mask_ = rdata.invert_coverage_mask_;
-        draw_mode_ = rdata.draw_mode_;
+        render_data_flags.invert_coverage_mask_ = rdata.render_data_flags.invert_coverage_mask_;
+        render_data_flags.draw_mode_ = rdata.render_data_flags.draw_mode_;
         texture_capturer = rdata.texture_capturer;
 
-        stencilTestFlag_ = rdata.stencilTestFlag_;
+        render_data_flags.stencilTestFlag_ = rdata.render_data_flags.stencilTestFlag_;
         stencilMaskMask_ = rdata.stencilMaskMask_;
         stencilFuncFunc_ = rdata.stencilFuncFunc_;
         stencilFuncRef_ = rdata.stencilFuncRef_;
@@ -155,38 +168,38 @@ public:
      */
     void bindShader(JNIEnv* env, jobject localSceneObject, bool);
     void markDirty() {
-        dirty_ = true;
+        render_data_flags.dirty_ = true;
     }
 
     bool isDirty() const {
-        return dirty_;
+        return render_data_flags.dirty_;
     }
 
     void clearDirty() {
-        dirty_ = false;
+        render_data_flags.dirty_ = false;
     }
 
     void enable_light() {
-        use_light_ = true;
+        render_data_flags.use_light_ = true;
         hash_code_dirty_ = true;
     }
 
     void disable_light() {
-        use_light_ = false;
+        render_data_flags.use_light_ = false;
         hash_code_dirty_ = true;
     }
 
     bool light_enabled() {
-        return use_light_;
+        return render_data_flags.use_light_;
     }
 
     void enable_lightmap() {
-        use_lightmap_ = true;
+        render_data_flags.use_lightmap_ = true;
         hash_code_dirty_ = true;
     }
 
     void disable_lightmap() {
-        use_lightmap_ = false;
+        render_data_flags.use_lightmap_ = false;
         hash_code_dirty_ = true;
     }
 
@@ -208,11 +221,11 @@ public:
     }
 
     bool cast_shadows() {
-        return cast_shadows_;
+        return render_data_flags.cast_shadows_;
     }
 
     void set_cast_shadows(bool cast_shadows) {
-        cast_shadows_ = cast_shadows;
+        render_data_flags.cast_shadows_ = cast_shadows;
     }
 
     Batch* getBatch() {
@@ -220,11 +233,11 @@ public:
     }
 
     void set_batching(bool status) {
-        batching_ = status;
+        render_data_flags.batching_ = status;
     }
 
     bool batching() {
-        return batching_;
+        return render_data_flags.batching_;
     }
 
     void setBatch(Batch* batch) {
@@ -238,11 +251,11 @@ public:
     bool cull_face(int pass=0) const ;
 
     bool offset() const {
-        return offset_;
+        return render_data_flags.offset_;
     }
 
     void set_offset(bool offset) {
-        offset_ = offset;
+        render_data_flags.offset_ = offset;
         hash_code_dirty_ = true;
     }
 
@@ -265,20 +278,20 @@ public:
     }
 
     bool depth_test() const {
-        return depth_test_;
+        return render_data_flags.depth_test_;
     }
 
     bool depth_mask() const {
-        return depth_mask_;
+        return render_data_flags.depth_mask_;
     }
 
     void set_depth_test(bool depth_test) {
-        depth_test_ = depth_test;
+        render_data_flags.depth_test_ = depth_test;
         hash_code_dirty_ = true;
     }
 
     void set_depth_mask(bool depth_mask) {
-        depth_mask_ = depth_mask;
+        render_data_flags.depth_mask_ = depth_mask;
         hash_code_dirty_ = true;
     }
 
@@ -296,20 +309,20 @@ public:
     }
 
     bool alpha_blend() const {
-        return alpha_blend_;
+        return render_data_flags.alpha_blend_;
     }
 
     void set_alpha_blend(bool alpha_blend) {
-        alpha_blend_ = alpha_blend;
+        render_data_flags.alpha_blend_ = alpha_blend;
         hash_code_dirty_ = true;
     }
 
     bool alpha_to_coverage() const {
-        return alpha_to_coverage_;
+        return render_data_flags.alpha_to_coverage_;
     }
 
     void set_alpha_to_coverage(bool alpha_to_coverage) {
-        alpha_to_coverage_ = alpha_to_coverage;
+        render_data_flags.alpha_to_coverage_ = alpha_to_coverage;
         hash_code_dirty_ = true;
     }
 
@@ -323,16 +336,16 @@ public:
     }
 
     void set_invert_coverage_mask(GLboolean invert_coverage_mask) {
-        invert_coverage_mask_ = invert_coverage_mask;
+        render_data_flags.invert_coverage_mask_ = invert_coverage_mask;
         hash_code_dirty_ = true;
     }
 
     GLboolean invert_coverage_mask() const {
-        return invert_coverage_mask_;
+        return render_data_flags.invert_coverage_mask_;
     }
 
     GLenum draw_mode() const {
-        return draw_mode_;
+        return render_data_flags.draw_mode_;
     }
 
     float camera_distance()
@@ -347,7 +360,7 @@ public:
 
     void set_draw_mode(GLenum draw_mode)
     {
-        draw_mode_ = draw_mode;
+        render_data_flags.draw_mode_ = draw_mode;
         hash_code_dirty_ = true;
     }
     bool isHashCodeDirty()  { return hash_code_dirty_; }
@@ -376,7 +389,7 @@ public:
 
     unsigned int getStencilMask() { return stencilMaskMask_; }
 
-    bool stencil_test() { return stencilTestFlag_; }
+    bool stencil_test() { return render_data_flags.stencilTestFlag_; }
     int stencil_func_func() { return stencilFuncFunc_; }
     int stencil_func_ref() { return stencilFuncRef_; }
     int stencil_func_mask() { return stencilFuncMask_; }
@@ -387,6 +400,10 @@ public:
         return bones_ubo_;
     }
     void adjustRenderingOrderForTransparency(bool hasAlpha);
+
+    unsigned short getRenderDataFlagsHashCode(){
+        return *(reinterpret_cast<unsigned short*>(&render_data_flags));
+    }
 
 private:
     RenderData(RenderData&& render_data) = delete;
@@ -400,28 +417,16 @@ protected:
     Mesh* mesh_;
     UniformBlock* bones_ubo_;
     Batch* batch_;
-    bool hash_code_dirty_;
-    bool dirty_;
     std::string hash_code;
     std::vector<RenderPass*> render_pass_list_;
     int source_alpha_blend_func_;
     int dest_alpha_blend_func_;
-    bool use_light_;
-    bool batching_;
-    bool use_lightmap_;
     int render_mask_;
     int rendering_order_;
-    bool offset_;
     float offset_factor_;
     float offset_units_;
-    bool depth_test_;
-    bool depth_mask_;
-    bool alpha_blend_;
-    bool alpha_to_coverage_;
-    bool cast_shadows_;
     float sample_coverage_;
-    GLboolean invert_coverage_mask_;
-    GLenum draw_mode_;
+
     float camera_distance_;
     TextureCapturer *texture_capturer;
     std::function<float()> cameraDistanceLambda_ = nullptr;
@@ -433,7 +438,28 @@ protected:
     int stencilOpDpfail_ = 0;
     int stencilOpDppass_ = 0;
     unsigned int stencilMaskMask_ = 0;
-    bool stencilTestFlag_ = false;
+    bool hash_code_dirty_;
+
+    typedef struct Bitfields{
+        // Note: unsigned short int will set the struct size to be 16 bits, hence only 1 padding bit required
+        unsigned short int draw_mode_:3;
+        bool use_light_:1;
+        bool use_lightmap_:1;
+        bool offset_:1;
+        bool depth_test_:1;
+        bool depth_mask_:1;
+        bool alpha_blend_:1;
+        bool alpha_to_coverage_:1;
+        bool batching_:1;
+
+        bool dirty_:1;
+        bool cast_shadows_:1;
+        GLboolean invert_coverage_mask_:1;
+        bool stencilTestFlag_:1;
+        unsigned short int padding: 1;
+    }Bitfields;
+
+    Bitfields render_data_flags;
 
 public:
     void setStencilTest(bool flag);

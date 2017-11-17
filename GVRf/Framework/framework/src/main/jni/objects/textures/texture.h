@@ -56,11 +56,11 @@ public:
 
     TextureParameters() : MaxAnisotropy(1.0f)
     {
-        Params.HashCode = 0;
-        Params.BitFields.MinFilter = LINEAR_MIPMAP_NEAREST;
-        Params.BitFields.MagFilter = LINEAR;
-        Params.BitFields.WrapU = CLAMP;
-        Params.BitFields.WrapV = CLAMP;
+        Params.Padding = 0;
+        Params.MinFilter = LINEAR_MIPMAP_NEAREST;
+        Params.MagFilter = LINEAR;
+        Params.WrapU = CLAMP;
+        Params.WrapV = CLAMP;
     }
 
     TextureParameters(const int* params)
@@ -70,6 +70,7 @@ public:
         setMaxAnisotropy((float) params[2]);
         setWrapU(params[3]);
         setWrapV(params[4]);
+        setPadding();
     }
 
     TextureParameters& operator=(const int* params)
@@ -79,32 +80,35 @@ public:
         setMaxAnisotropy((float) params[2]);
         setWrapU(params[3]);
         setWrapV(params[4]);
+        setPadding();
     }
 
-    int getMinFilter() const { return Params.BitFields.MinFilter; }
-    int getMagFilter() const { return Params.BitFields.MagFilter; }
-    int getWrapU() const { return Params.BitFields.WrapU; }
-    int getWrapV() const { return Params.BitFields.WrapV; }
+    int getMinFilter() const { return Params.MinFilter; }
+    int getMagFilter() const { return Params.MagFilter; }
+    int getWrapU() const { return Params.WrapU; }
+    int getWrapV() const { return Params.WrapV; }
     float getMaxAnisotropy() const { return MaxAnisotropy; }
-    unsigned short getHashCode() const { return Params.HashCode; }
-    void setMinFilter(int f) { Params.BitFields.MinFilter = f; }
-    void setMagFilter(int f) { Params.BitFields.MagFilter = f; }
-    void setWrapU(int wrap) { Params.BitFields.WrapU = wrap; }
-    void setWrapV(int wrap) { Params.BitFields.WrapV = wrap; }
+    unsigned short getHashCode() { return *(reinterpret_cast<unsigned short*>(&Params)); }
+    void setMinFilter(int f) { Params.MinFilter = f; }
+    void setMagFilter(int f) { Params.MagFilter = f; }
+    void setWrapU(int wrap) { Params.WrapU = wrap; }
+    void setWrapV(int wrap) { Params.WrapV = wrap; }
+    void setPadding() { Params.Padding = 0; }
     void setMaxAnisotropy(float v) { MaxAnisotropy = v; }
 
 protected:
-    union
+
+    typedef struct BitFields
     {
-        struct
-        {
-            unsigned int MinFilter : 3;
-            unsigned int MagFilter : 3;
-            unsigned int WrapU : 2;
-            unsigned int WrapV : 2;
-        } BitFields;
-        unsigned short HashCode;
-    } Params;
+        // Note: unsigned short int will set the struct size to be 16 bits, hence 6 padding bits are required
+        unsigned short int MinFilter : 3;
+        unsigned short int MagFilter : 3;
+        unsigned short int WrapU : 2;
+        unsigned short int WrapV : 2;
+        unsigned short int Padding : 6;
+    }BitFields;
+
+    BitFields Params;
     float MaxAnisotropy;
 };
 
