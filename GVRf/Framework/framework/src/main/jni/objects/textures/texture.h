@@ -60,11 +60,20 @@ public:
 
         glBindTexture(target, getId());
 
-        // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
-        if (texture_parameters[2] > 1.0f) {
-            glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, texture_parameters[2]);
-        }
 
+        const char* extension_string = (const char*)glGetString(GL_EXTENSIONS);
+        if(strstr(extension_string, "GL_EXT_texture_filter_anisotropic")) {
+
+            GLfloat anisotropic_level;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropic_level);
+            if (texture_parameters[2] < anisotropic_level)
+                anisotropic_level = texture_parameters[2];
+
+            // Sets the anisotropic filtering if the value provided is greater than 1 because 1 is the default value
+            if (texture_parameters[2] > 1.0f) {
+                glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropic_level);
+            }
+        }
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s_type_);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t_type_);
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter_type_);
