@@ -33,6 +33,7 @@ final public class GVRGazeCursorController extends GVRCursorController {
     private static float TOUCH_SQUARE = 8.0f * 8.0f;
     private static final float DEPTH_SENSITIVITY = 0.1f;
     private final GVRContext context;
+    private final GVRInputManagerImpl mInputManager;
     private int referenceCount;
     private boolean buttonDownSent;
     private float actionDownX;
@@ -47,11 +48,12 @@ final public class GVRGazeCursorController extends GVRCursorController {
     private final Vector3f forwardDirection;
     private EventHandlerThread thread;
 
-    GVRGazeCursorController(GVRContext context,
+    GVRGazeCursorController(GVRContext context, GVRInputManagerImpl inputManager,
                             GVRControllerType controllerType, String name, int vendorId,
                             int productId) {
         super(context, controllerType, name, vendorId, productId);
         this.context = context;
+        mInputManager = inputManager;
         forwardDirection = new Vector3f(0, 0, -1);
         thread = new EventHandlerThread();
         isEnabled = isEnabled();
@@ -76,14 +78,14 @@ final public class GVRGazeCursorController extends GVRCursorController {
             thread.await();
         }
         connected = true;
-        context.getInputManager().activateCursorController(this);
+        mInputManager.activateCursorController(this);
         context.getActivity().getEventReceiver().addListener(activityHandler);
     }
 
     private void stop()
     {
         connected = false;
-        context.getInputManager().deactivateCursorController(this);
+        mInputManager.deactivateCursorController(this);
         context.getActivity().getEventReceiver().removeListener(activityHandler);
     }
 
@@ -205,7 +207,7 @@ final public class GVRGazeCursorController extends GVRCursorController {
 
     void close() {
         if (referenceCount > 0) {
-            context.getInputManager().deactivateCursorController(this);
+            mInputManager.deactivateCursorController(this);
             referenceCount = 0;
         }
         if (thread.isAlive()) {
