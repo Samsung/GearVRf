@@ -99,7 +99,6 @@ class GVRInputManagerImpl extends GVRInputManager {
     @Override
     public void removeCursorController(GVRCursorController controller) {
         controllers.remove(controller);
-        controller.setScene(null);
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
                 listener.onCursorControllerRemoved(controller);
