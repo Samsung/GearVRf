@@ -23,7 +23,6 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
-import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;

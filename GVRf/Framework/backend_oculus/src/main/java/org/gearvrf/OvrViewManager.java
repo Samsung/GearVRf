@@ -23,7 +23,6 @@ import org.gearvrf.debug.GVRMethodCallTracer;
 import org.gearvrf.debug.GVRStatsLine;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
-import org.gearvrf.io.GearCursorController;
 
 /*
  * This is the most important part of gvrf.

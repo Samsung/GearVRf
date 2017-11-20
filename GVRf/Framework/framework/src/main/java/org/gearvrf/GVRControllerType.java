@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
 /**
  * IO device types supported by the GVRf IO framework.

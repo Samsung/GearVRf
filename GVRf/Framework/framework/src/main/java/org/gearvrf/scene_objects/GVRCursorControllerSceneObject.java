@@ -3,12 +3,11 @@ package org.gearvrf.scene_objects;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IPickEvents;
-import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.GVRControllerType;
 
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -153,7 +152,7 @@ public class GVRCursorControllerSceneObject extends GVRSceneObject
 
     /**
      * Sets the {@link GVRCursorController} that controls this object. The cursor controller
-     * should have a type of {@link org.gearvrf.io.GVRControllerType#CONTROLLER}.
+     * should have a type of {@link GVRControllerType#CONTROLLER}.
      *
      * @param cursorController the cursor controller that controls this scene object
      */

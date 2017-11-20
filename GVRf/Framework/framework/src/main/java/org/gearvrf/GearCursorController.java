@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
 import android.graphics.PointF;
 import android.os.Handler;
@@ -25,12 +25,6 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTransform;
-import org.gearvrf.IActivityEvents;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 

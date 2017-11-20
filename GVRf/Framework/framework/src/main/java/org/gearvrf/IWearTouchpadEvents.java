@@ -1,4 +1,4 @@
-package org.gearvrf.io;
+package org.gearvrf;
 
 import android.view.MotionEvent;
 

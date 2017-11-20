@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
 class GVRDeviceConstants {
     public static final String OCULUS_GEARVR_DEVICE_NAME = "GearVR";

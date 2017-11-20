@@ -1,28 +1,14 @@
 package org.gearvrf.scene_objects;
 
 
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRPicker;
-import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.IAssetEvents;
-import org.gearvrf.IPickEvents;
-import org.gearvrf.ISensorEvents;
-import org.gearvrf.R;
-import org.gearvrf.SensorEvent;
-import org.gearvrf.io.GVRControllerType;
 
 import org.gearvrf.utility.Log;
-import org.joml.Vector3f;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * A {@link GVRSceneObject} that respresents a GearVR controller in the scene.

@@ -21,8 +21,6 @@ import android.view.WindowManager;
 import com.google.vr.ndk.base.AndroidCompat;
 import com.google.vr.ndk.base.GvrLayout;
 
-import org.gearvrf.io.GearCursorController;
-
 class DaydreamViewManager extends GVRViewManager {
     private static final String TAG = DaydreamViewManager.class.getSimpleName();
     private GvrLayout gvrLayout;

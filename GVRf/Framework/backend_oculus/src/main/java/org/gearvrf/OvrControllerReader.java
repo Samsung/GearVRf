@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-class OvrControllerReader implements org.gearvrf.io.GearCursorController.ControllerReader {
+class OvrControllerReader implements GearCursorController.ControllerReader {
 
     private FloatBuffer readbackBuffer;
     private final long mPtr;

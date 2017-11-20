@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -23,10 +23,6 @@ import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.io.GearCursorController;
 
 import java.util.ArrayList;
 import java.util.List;

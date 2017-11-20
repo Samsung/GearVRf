@@ -13,14 +13,8 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
-import org.gearvrf.GVRBaseSensor;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;

@@ -17,45 +17,30 @@ package org.gearvrf;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.Gravity;
 
-import org.gearvrf.GVRAndroidResource.BitmapTextureCallback;
-import org.gearvrf.GVRAndroidResource.CompressedTextureCallback;
 import org.gearvrf.GVRAndroidResource.MeshCallback;
-import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.GVRHybridObject.NativeCleanupHandler;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRMaterialAnimation;
 import org.gearvrf.animation.GVROnFinish;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
-import org.gearvrf.asynchronous.GVRCompressedTexture;
-import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
 import org.gearvrf.debug.DebugServer;
-import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
-import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 /**
  * Like the Android {@link Context} class, {@code GVRContext} provides core

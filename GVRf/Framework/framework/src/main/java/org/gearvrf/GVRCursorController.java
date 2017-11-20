@@ -18,9 +18,6 @@ package org.gearvrf;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.io.CursorControllerListener;
-import org.gearvrf.io.GVRControllerType;
-import org.gearvrf.io.GVRInputManager;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;

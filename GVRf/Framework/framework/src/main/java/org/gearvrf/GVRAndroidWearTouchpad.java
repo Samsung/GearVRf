@@ -14,7 +14,7 @@
  *
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -28,10 +28,7 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventListeners.ActivityEvents;
-import org.gearvrf.GVREventManager;
 
 class GVRAndroidWearTouchpad {
     private static final String TAG = GVRAndroidWearTouchpad.class.getSimpleName();

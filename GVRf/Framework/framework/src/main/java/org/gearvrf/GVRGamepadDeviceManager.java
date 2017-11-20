@@ -13,21 +13,14 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
 import android.opengl.Matrix;
-import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import org.gearvrf.GVRBaseSensor;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
 
 import java.util.HashSet;
 import java.util.Set;

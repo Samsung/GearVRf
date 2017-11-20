@@ -2,8 +2,6 @@ package org.gearvrf;
 
 import android.graphics.PointF;
 
-import org.gearvrf.io.GearCursorController;
-import org.gearvrf.utility.Log;
 import org.joml.Math;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;

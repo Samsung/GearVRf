@@ -18,9 +18,6 @@ package org.gearvrf;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gearvrf.io.CursorControllerListener;
-import org.gearvrf.io.GVRInputManager;
-
 /**
  * 
  * The input received from the {@link GVRCursorController} is dispatched across

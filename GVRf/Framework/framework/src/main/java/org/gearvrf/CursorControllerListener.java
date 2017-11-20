@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
-
-import org.gearvrf.GVRCursorController;
+package org.gearvrf;
 
 /**
  * Add a {@link CursorControllerListener} to the {@link GVRInputManager} to

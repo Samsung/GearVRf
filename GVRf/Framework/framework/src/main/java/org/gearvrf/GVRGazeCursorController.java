@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-package org.gearvrf.io;
+package org.gearvrf;
 
-import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.PointF;
 import android.os.Handler;
 import android.os.Handler.Callback;
@@ -25,16 +23,6 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRBaseSensor;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRMain;
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRTransform;
-import org.gearvrf.IActivityEvents;
-import org.gearvrf.IEvents;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
