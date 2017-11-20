@@ -134,6 +134,7 @@ class GVRInputManagerImpl implements GVRInputManager {
 
     @Override
     public void activateCursorController(GVRCursorController controller) {
+        controller.setScene(context.getMainScene());
         synchronized (listeners) {
             for (CursorControllerListener listener : listeners) {
                 listener.onCursorControllerActive(controller);
