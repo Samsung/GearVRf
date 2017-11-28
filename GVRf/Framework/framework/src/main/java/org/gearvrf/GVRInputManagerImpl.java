@@ -96,8 +96,6 @@ class GVRInputManagerImpl implements GVRInputManager {
         if(useAndroidWearTouchpad && checkIfWearTouchPadServiceInstalled(context)) {
             androidWearTouchpad = new GVRAndroidWearTouchpad(context);
         }
-
-        scanDevices();
     }
 
     public void scanControllers()
@@ -187,7 +185,7 @@ class GVRInputManagerImpl implements GVRInputManager {
         return result;
     }
 
-    private void scanDevices()
+    public void scanDevices()
     {
         for (int deviceId : inputManager.getInputDeviceIds()) {
             addDevice(deviceId);
