@@ -28,6 +28,7 @@
 
 #include "sphere_collider.h"
 #include "objects/mesh.h"
+#include "mesh_collider.h"
 
 namespace gvr {
 /*
@@ -46,30 +47,27 @@ ColliderData SphereCollider::isHit(const glm::vec3& rayStart, const glm::vec3& r
      * If we have a scene object with a mesh
      * get the sphere center and radius from that.
      */
-    if (owner != NULL)
+    RenderData* rd = owner->render_data();
+    Transform* t = owner->transform();
+    if (t != NULL)
     {
-        RenderData* rd = owner->render_data();
-        Transform* t = owner->transform();
-        if (t != NULL)
+        model_matrix = t->getModelMatrix();
+    }
+    /*
+     * If there is a mesh attached to the scene object
+     * use the bounding sphere of the mesh to compute
+     * the sphere center and radius in mesh coordinates.
+     */
+    if (rd != NULL)
+    {
+        Mesh* mesh = rd->mesh();
+        if (mesh != NULL)
         {
-            model_matrix = t->getModelMatrix();
-        }
-        /*
-         * If there is a mesh attached to the scene object
-         * use the bounding sphere of the mesh to compute
-         * the sphere center and radius in mesh coordinates.
-         */
-        if (rd != NULL)
-        {
-            Mesh* mesh = rd->mesh();
-            if (mesh != NULL)
+            const BoundingVolume& meshbv = mesh->getBoundingVolume();
+            sphCenter = meshbv.center();
+            if (radius <= 0)
             {
-                const BoundingVolume& meshbv = mesh->getBoundingVolume();
-                sphCenter = meshbv.center();
-                if (radius <= 0)
-                {
-                    radius = meshbv.radius();
-                }
+                radius = meshbv.radius();
             }
         }
     }
@@ -79,6 +77,18 @@ ColliderData SphereCollider::isHit(const glm::vec3& rayStart, const glm::vec3& r
     }
     ColliderData data = isHit(model_matrix, sphCenter, radius, rayStart, rayDir);
     data.ObjectHit = owner;
+    data.ColliderHit = this;
+    return data;
+}
+
+/*
+ * Determine if the input sphere hits the sphere collider.
+ * @param sphere  float array with center and radius of sphere
+ *                in world coordinates.
+ */
+ColliderData SphereCollider::isHit(const float sphere[])
+{
+    ColliderData data = MeshCollider::isHit(owner_object()->getBoundingVolume(), sphere);
     data.ColliderHit = this;
     return data;
 }

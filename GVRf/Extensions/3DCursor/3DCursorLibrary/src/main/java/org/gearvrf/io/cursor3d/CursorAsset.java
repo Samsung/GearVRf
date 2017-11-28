@@ -19,6 +19,7 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.Log;
@@ -145,22 +146,22 @@ abstract class CursorAsset {
     }
 
     /**
-     * Use the set method to "set" this asset to the given {@link GVRSceneObject}.
+     * Use the set method to "set" this asset to the given {@link Cursor}.
      *
-     * @param sceneObject the {@link GVRSceneObject} to set the asset.
+     * @param cursor the {@link Cursor} to set the asset.
      */
-    void set(CursorSceneObject sceneObject) {
+    void set(Cursor cursor) {
         if (hasSound() && soundEnabled && globalSettings.isSoundEnabled()) {
             audioManager.play(this);
         }
     }
 
     /**
-     * Use the reset method to remove this asset from the given {@link GVRSceneObject}.
+     * Use the reset method to remove this asset from the given {@link Cursor}.
      *
-     * @param sceneObject the {@link GVRSceneObject}  for the asset to be removed
+     * @param cursor the {@link Cursor}  for the asset to be removed
      */
-    void reset(CursorSceneObject sceneObject) {
+    void reset(Cursor cursor) {
         // Override to use
     }
 
@@ -174,22 +175,22 @@ abstract class CursorAsset {
      * is loaded all its accompanying assets are also loaded using this call.
      * </p>
      * In most cases the {@link CursorAsset} will use this method to issue a {@link
-     * GVRContext#loadFutureMesh (GVRAndroidResource)} or {@link GVRContext#loadFutureTexture
-     * (GVRAndroidResource)} call to check the GVRf resource cache to load an existing copy or to
+     * GVRAssetLoader#loadMesh (GVRAndroidResource)} or {@link GVRAssetLoader#loadTexture(GVRAndroidResource)}
+     * call to check the GVRf resource cache to load an existing copy or to
      * asynchronously load a new copy on demand.
      */
-    abstract void load(CursorSceneObject sceneObject);
+    abstract void load(Cursor cursor);
 
     /**
      * Use this method to clear references to the resources that were loaded when {@link #load
-     * (CursorSceneObject)} was last called.
+     * (Cursor)} was last called.
      * <p>
      * This helps garbage collect the resources if not needed. GVRf maintains a cached copy of
      * the objects and for cases where the resource is needed immediately the GVRf framework
      * would do so with a resource cache provided it has not been garbage collected.
      * </p>
      */
-    abstract void unload(CursorSceneObject sceneObject);
+    abstract void unload(Cursor cursor);
 
     void setAssetType(AssetType assetType) {
         this.assetType = assetType;

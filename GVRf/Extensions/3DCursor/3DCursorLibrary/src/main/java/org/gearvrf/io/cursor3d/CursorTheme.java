@@ -15,6 +15,8 @@
 
 package org.gearvrf.io.cursor3d;
 
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSwitch;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 
 import java.util.ArrayList;
@@ -69,6 +71,7 @@ public class CursorTheme {
     private String name;
     private String description;
     private Map<Action, CursorAsset> assets;
+    private GVRSceneObject assetRoot;
     private CursorType type;
 
     CursorTheme() {
@@ -151,18 +154,20 @@ public class CursorTheme {
     /**
      * Ready this {@link CursorTheme} by loading all the available {@link CursorAsset}s
      */
-    void load(CursorSceneObject sceneObject) {
+    void load(Cursor cursor) {
+        assetRoot = new GVRSceneObject(cursor.getGVRContext());
+        assetRoot.attachComponent(new GVRSwitch(cursor.getGVRContext()));
         for (CursorAsset asset : assets.values()) {
-            asset.load(sceneObject);
+            asset.load(cursor);
         }
     }
 
     /**
      * Notify the {@link CursorAsset}s that the {@link CursorTheme} has been unloaded.
      */
-    void unload(CursorSceneObject sceneObject) {
+    void unload(Cursor cursor) {
         for (CursorAsset asset : assets.values()) {
-            asset.unload(sceneObject);
+            asset.unload(cursor);
         }
     }
 

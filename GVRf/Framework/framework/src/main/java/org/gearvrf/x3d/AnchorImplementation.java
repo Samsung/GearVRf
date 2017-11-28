@@ -21,6 +21,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalScene;
+import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
@@ -158,6 +159,17 @@ public class AnchorImplementation {
         // Could be a link to another x3d page, <Viewpoint> (camera) or web page
 
         final InteractiveObject interactiveObjectFinal = interactiveObject;
+
+        interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                new GVRSceneObject.SceneVisitor()
+                {
+                    public boolean visit (GVRSceneObject obj)
+                    {
+                        obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                        return true;
+                    }
+                });
+
         interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
             boolean isActiveDone = false;
             boolean newSceneLoaded = false;
@@ -166,8 +178,6 @@ public class AnchorImplementation {
             public void onSensorEvent(SensorEvent event) {
                 // Getting event group stuff.
                 if (event.isActive()) {
-                    //Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getDefinedItem().getName() );
-                    Log.e("X3D-a", "event.isActive " + interactiveObjectFinal.getSensor().getAnchorURL() );
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
@@ -261,7 +271,7 @@ public class AnchorImplementation {
                     webPageClosed = false;
                 }
                 else if (event.isOver()) {
-                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getOwnerObject();
                     if (sensorObj != null) {
                         GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
                         if (sensorObj2 != null) {
@@ -273,7 +283,7 @@ public class AnchorImplementation {
                         }
                     }
                 } else {
-                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getGVRSceneObject();
+                    GVRSceneObject sensorObj = interactiveObjectFinal.getSensor().getOwnerObject();
                     if (sensorObj != null) {
                         GVRSceneObject sensorObj2 = sensorObj.getChildByIndex(0);
                         if (sensorObj2 != null) {
@@ -333,7 +343,7 @@ public class AnchorImplementation {
     private void LaunchWebPage(InteractiveObject interactiveObjectFinal, String url) {
         if (webPagePlusUISceneObject == null) {
             final String urlFinal = url;
-            final GVRSceneObject gvrSceneObjectAnchor = interactiveObjectFinal.getSensor().getGVRSceneObject();
+            final GVRSceneObject gvrSceneObjectAnchor = interactiveObjectFinal.getSensor().getOwnerObject();
             gvrContext.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

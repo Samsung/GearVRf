@@ -15,9 +15,13 @@
 
 package org.gearvrf.scene_objects;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
@@ -32,23 +36,30 @@ import android.view.Surface;
 import android.view.ViewConfiguration;
 
 import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRBoxCollider;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.IHoverEvents;
+import org.gearvrf.IActivityEvents;
 import org.gearvrf.IKeyboardEvents;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.utility.MeshUtils;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,13 +86,102 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
     private Map<Integer, GVRKeyboard> mGVRKeyboardCache;
 
     private float mKeyMeshDeepthSize;
-    private float mKeyMeshDeepthScale;
+    private float mKeyMeshDepthScale;
     private float mKeyMeshDeepthPos;
 
     private final float mDefaultKeyAnimZOffset;
     private GVRSceneObject mEditableSceneObject;
-    private OutsideMiniKeyboardEvent mMiniKeyboardHandler;
     private KeyEventsHandler mKeyEventsHandler;
+    private GVRPicker mPicker;
+
+    /**
+     * Listens to touch events on all objects and hides the keyboard
+     * when a touch event is received on something other than
+     * the keyboard.
+     */
+    private ITouchEvents mTouchManager = new ITouchEvents()
+    {
+        @Override
+        public void onTouchStart(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject instanceof GVRKeyboard)
+            {
+                return;
+            }
+            if (sceneObject instanceof GVRKey)
+            {
+                mKeyEventsHandler.onTouchStartKey(mActivity, pickInfo);
+            }
+            else if (getParent() != null)
+            {
+                stopInput();
+            }
+        }
+
+        @Override
+        public void onEnter(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject instanceof GVRKey)
+            {
+                mKeyEventsHandler.onEnterKey(mActivity, pickInfo);
+            }
+        }
+
+        @Override
+        public void onExit(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject instanceof GVRKey)
+            {
+                mKeyEventsHandler.onExitKey(mActivity, pickInfo);
+            }
+        }
+
+        @Override
+        public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject instanceof GVRKey)
+            {
+                mKeyEventsHandler.onTouchEndKey(mActivity, pickInfo);
+            }
+        }
+
+        @Override
+        public void onInside(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject instanceof GVRKey)
+            {
+                MotionEvent event = pickInfo.motionEvent;
+
+                if (event != null)
+                {
+                    int action = event.getAction();
+                    if ((action == MotionEvent.ACTION_CANCEL) || (action == MotionEvent.ACTION_OUTSIDE))
+                    {
+                        mKeyEventsHandler.onCancel();
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onMotionOutside(GVRPicker picker, MotionEvent event)
+        {
+            mKeyEventsHandler.onCancel();
+        }
+    };
+
+
+    private IActivityEvents mActivityEventsHandler = new GVREventListeners.ActivityEvents()
+    {
+        @Override
+        public void dispatchTouchEvent(MotionEvent event)
+        {
+            int action = event.getAction();
+            boolean touched = (action == MotionEvent.ACTION_DOWN) ||
+                              (action == MotionEvent.ACTION_MOVE);
+            mPicker.processPick(touched, event);
+        }
+    };
 
     /**
      * Creates a {@linkplain GVRKeyboardSceneObject keyboard} from the given xml key layout file.
@@ -95,7 +195,6 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
                                    Drawable keyBackground, int textColor, boolean enableHoverAnim) {
         super(gvrContext);
         mActivity = gvrContext.getActivity();
-
         mKeyboardMesh = keyboardMesh;
         mKeyMesh = keyMesh;
         mKeyboardTexture = keyboardTexture;
@@ -115,15 +214,47 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         mKeyEventsHandler = new KeyEventsHandler(mActivity.getMainLooper(), this);
         mGVRKeyboardCache = new HashMap<Integer, GVRKeyboard>();
 
-        mMiniKeyboardHandler = new OutsideMiniKeyboardEvent();
-
         mEditableSceneObject = null;
         mMiniKeyboard = null;
         mMainKeyboard = null;
         mKeyboardResId = -1;
-
+        setPicker(new GVRPicker(gvrContext, gvrContext.getMainScene()));
+        //mActivity.getEventReceiver().addListener(mActivityEventsHandler);
         setKeyboard(keyboardResId);
     }
+
+    /**
+     * Establishes which picker should generate touch events for the keyboard.
+     * By default, a new picker is created on startup which is attached
+     * to the camera and follows the user's gaze. This function lets you
+     * associate the keyboard with a specific controller or a custom picker.
+     * @param picker GVRPicker used to generate touch events
+     * @see org.gearvrf.GVRCursorController#getPicker()
+     */
+    public void setPicker(GVRPicker picker)
+    {
+        if (mPicker != null)
+        {
+            mPicker.getEventReceiver().removeListener(mTouchManager);
+            mPicker.getEventReceiver().removeListener(GVRBaseSensor.getPickHandler());
+        }
+        mPicker = picker;
+        if (picker != null)
+        {
+            EnumSet<GVRPicker.EventOptions> opts = picker.getEventOptions();
+
+            opts.add(GVRPicker.EventOptions.SEND_TOUCH_EVENTS);
+            picker.getEventReceiver().addListener(mTouchManager);
+            picker.getEventReceiver().addListener(GVRBaseSensor.getPickHandler());
+            picker.setEventOptions(opts);
+        }
+    }
+
+    /**
+     * Gets the picker which generates touch events for this keyboard
+     * @returns {@link GVRPicker}
+     */
+    public GVRPicker getPicker() { return mPicker; }
 
     public void setKeyboard(int keyboardResId) {
         GVRKeyboard gvrKeyboard = mGVRKeyboardCache.get(keyboardResId);
@@ -145,15 +276,15 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
     }
 
     private void onNewKeyboard(Keyboard keyboard, int cacheId) {
-        mKeyMeshDeepthScale = 1.0f;
+        mKeyMeshDepthScale = 1.0f;
 
         if (keyboard.getKeys().size() > 0) {
             final Keyboard.Key key = keyboard.getKeys().get(0);
-            mKeyMeshDeepthScale = (float) Math.min(key.width, key.height)
+            mKeyMeshDepthScale = (float) Math.min(key.width, key.height)
                     / Math.max(keyboard.getMinWidth(), keyboard.getHeight());
         }
 
-        mKeyMeshDeepthPos = mKeyMeshDeepthScale * mKeyMeshDeepthSize * 0.5f + 0.02f;
+        mKeyMeshDeepthPos = mKeyMeshDepthScale * mKeyMeshDeepthSize * 0.5f + 0.02f;
 
         GVRKeyboard newGVRKeybaord = getGVRKeyboard(keyboard, cacheId);
 
@@ -195,9 +326,9 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             final float gap = gvrKeyboard.sizeViewToScene(key.gap);
 
             final GVRBoxCollider collider = new GVRBoxCollider(gvrContext);
-            collider.setHalfExtents((xscale + gap) * 0.5f, (yscale + gap) * 0.5f, mKeyMeshDeepthScale * 0.5f);
+            collider.setHalfExtents((xscale + gap) * 0.5f, (yscale + gap) * 0.5f, mKeyMeshDepthScale * 0.5f);
             final GVRMesh mesh = MeshUtils.clone(gvrContext, mKeyMesh);
-            MeshUtils.scale(mesh, xscale, yscale, mKeyMeshDeepthScale);
+            MeshUtils.scale(mesh, xscale, yscale, mKeyMeshDepthScale);
 
 
             GVRKey gvrKey = new GVRKey(gvrContext, key, mesh, mKeyBackground,
@@ -206,7 +337,6 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             gvrKey.setHoveredOffset(mKeyMeshDeepthPos, mDefaultKeyAnimZOffset);
 
             gvrKey.attachComponent(collider);
-            gvrKey.getEventReceiver().addListener(mKeyEventsHandler);
 
             gvrKeyboard.addKey(gvrKey);
 
@@ -333,7 +463,6 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             return false;
         }
         int cacheId = getCacheId(popupKey);
-
         mMiniKeyboard = getGVRKeyboard(popupKeyboard, cacheId);
 
         float scale = mMainKeyboard.sizeViewToScene(mMiniKeyboard.mKeyboardSize);
@@ -356,19 +485,12 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         mMainKeyboard.addChildObject(mMiniKeyboard);
 
         enableCollision(false);
-
-        mMainKeyboard.getEventReceiver().addListener(mMiniKeyboardHandler);
-        mMiniKeyboardHandler.start(this);
-
-        return true;
+       return true;
     }
 
     private boolean onHideMiniKeyboard() {
         if (mMiniKeyboard != null) {
             onShowPressedKey(mMiniKeyboard.mModifierKey, false, false);
-
-            mMiniKeyboardHandler.stop();
-            mMainKeyboard.getEventReceiver().removeListener(mMiniKeyboardHandler);
             mMainKeyboard.removeChildObject(mMiniKeyboard);
             enableCollision(true);
             mMiniKeyboard = null;
@@ -737,17 +859,66 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
     }
 
     private static class KeyEventsHandler extends Handler
-            implements ITouchEvents, IHoverEvents {
+    {
         private static final int LONGPRESS_TIMEOUT = ViewConfiguration.getLongPressTimeout();
-        private static final int REPEAT_TIMETOU = ViewConfiguration.getKeyRepeatTimeout();
+        private static final int REPEAT_TIMEOUT = ViewConfiguration.getKeyRepeatTimeout();
         private static final int REPEAT_DELAY = ViewConfiguration.getKeyRepeatDelay();
 
         private static final int SHOW_LONG_PRESS = 3;
         private static final int MSG_REPEAT = 4;
 
+        private boolean mIsProcessing = false;
         GVRKeyboardSceneObject mGvrKeyboard;
         GVRKey mSelectedKey;
         GVRKey mPressedKey;
+
+        static class KeyEventDispatcher implements Runnable
+        {
+            public GVRKey HitKey;
+
+            public void run() { };
+        }
+
+        private KeyEventDispatcher mOnEnterKey = new KeyEventDispatcher()
+        {
+            public void run()
+            {
+                onKeyHovered(HitKey, true);
+            }
+        };
+
+
+        private Runnable mOnTouchStartKey = new Runnable()
+        {
+            public void run()
+            {
+                if (mSelectedKey != null) {
+                    onKeyPress(mSelectedKey, true);
+                }
+            }
+        };
+
+        private Runnable mOnTouchEndKey = new Runnable()
+        {
+            public void run()
+            {
+                if (mPressedKey != null) {
+                    onKeyPress(mPressedKey, false);
+                }
+            }
+        };
+
+        private KeyEventDispatcher mOnExitKey = new KeyEventDispatcher()
+        {
+            public void run()
+            {
+                onKeyHovered(HitKey, false);
+                if (mPressedKey != null)
+                {
+                    onKeyPress(mPressedKey, false);
+                }
+            }
+        };
 
         public KeyEventsHandler(Looper loop, GVRKeyboardSceneObject gvrKeyboard) {
             super(loop);
@@ -755,11 +926,13 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         }
 
         public void start() {
+            mIsProcessing = true;
             mSelectedKey = null;
             mPressedKey = null;
         }
 
         public void stop() {
+            onCancel();
         }
 
         @Override
@@ -783,36 +956,32 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             }
         }
 
-        @Override
-        public void onHoverEnter(GVRSceneObject sceneObject) {
-            onKeyHovered((GVRKey) sceneObject, true);
+        public void onEnterKey(Activity activity, GVRPicker.GVRPickedObject pickInfo) {
+            mOnEnterKey.HitKey = (GVRKey) pickInfo.hitObject;
+            activity.runOnUiThread(mOnEnterKey);
         }
 
-        @Override
-        public void onHoverExit(GVRSceneObject sceneObject) {
-            onKeyHovered((GVRKey) sceneObject, false);
+        public void onExitKey(Activity activity, GVRPicker.GVRPickedObject pickInfo) {
+            mOnExitKey.HitKey = (GVRKey) pickInfo.hitObject;
+            activity.runOnUiThread(mOnExitKey);
+       }
+
+        public void onTouchStartKey(Activity activity, GVRPicker.GVRPickedObject pickInfo) {
+            activity.runOnUiThread(mOnTouchStartKey);
         }
 
-        @Override
-        public void onTouch(GVRSceneObject sceneObject, MotionEvent event, float[] hitLocation) {
-            final int action = event.getAction();
-            switch (action) {
-                case MotionEvent.ACTION_DOWN:
-                    if (mSelectedKey != null) {
-                        onKeyPress(mSelectedKey, true);
-                    }
-                    break;
-                case MotionEvent.ACTION_UP:
-                    if (mPressedKey != null) {
-                        onKeyPress(mPressedKey, false);
-                    }
-                    break;
-                case MotionEvent.ACTION_CANCEL:
-                case MotionEvent.ACTION_OUTSIDE:
-                    mSelectedKey = null;
-                    mPressedKey = null;
-                    mGvrKeyboard.stopInput();
-                    break;
+        public void onTouchEndKey(Activity activity, GVRPicker.GVRPickedObject pickInfo) {
+            activity.runOnUiThread(mOnTouchEndKey);
+        }
+
+        public void onCancel()
+        {
+            if (mIsProcessing)
+            {
+                mIsProcessing = false;
+                mSelectedKey = null;
+                mPressedKey = null;
+                mGvrKeyboard.stopInput();
             }
         }
 
@@ -852,7 +1021,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             if (pressed) {
                 mPressedKey = gvrKey;
                 if (gvrKey.mKey.repeatable) {
-                    sendEmptyMessageDelayed(MSG_REPEAT, REPEAT_TIMETOU);
+                    sendEmptyMessageDelayed(MSG_REPEAT, REPEAT_TIMEOUT);
                 } else {
                     sendEmptyMessageDelayed(SHOW_LONG_PRESS, LONGPRESS_TIMEOUT);
                 }
@@ -862,7 +1031,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
                 boolean isLongPress = !hasMessages(SHOW_LONG_PRESS);
 
                 mPressedKey = null;
-                removeMessages(REPEAT_TIMETOU);
+                removeMessages(REPEAT_TIMEOUT);
                 removeMessages(SHOW_LONG_PRESS);
 
                 if (gvrKey == mSelectedKey) {
@@ -922,42 +1091,6 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             mPressedKey = null;
 
             mGvrKeyboard.onShowMiniKeyboard(gvrKey);
-        }
-    }
-
-    private static class OutsideMiniKeyboardEvent implements ITouchEvents {
-        GVRKeyboardSceneObject mGvrKeyboard;
-
-        public OutsideMiniKeyboardEvent() {
-            mGvrKeyboard = null;
-        }
-
-        public void start(GVRKeyboardSceneObject gvrKeyboard) {
-            mGvrKeyboard = gvrKeyboard;
-        }
-
-        public void stop() {
-            mGvrKeyboard = null;
-        }
-
-        public boolean isStarted() {
-            return  mGvrKeyboard != null;
-        }
-
-        @Override
-        public void onTouch(GVRSceneObject sceneObject, MotionEvent event, float[] hitLocation) {
-            final int action = event.getAction();
-            switch (action) {
-                case MotionEvent.ACTION_DOWN:
-                    closePopup();
-                    break;
-            }
-        }
-
-        private void closePopup() {
-            if(isStarted()) {
-                mGvrKeyboard.onHideMiniKeyboard();
-            }
         }
     }
 

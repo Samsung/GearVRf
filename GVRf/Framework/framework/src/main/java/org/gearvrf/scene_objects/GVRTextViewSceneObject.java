@@ -122,7 +122,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     /**
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with view's default height and width.
-     * 
+     *
      * @param gvrContext
      *            current {@link GVRContext}
      * @param width
@@ -184,7 +184,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * Shows a {@link TextView} on a {@linkplain GVRSceneObject scene object}
      * with both view's default height and width and quad's default height and
      * width.
-     * 
+     *
      * @param gvrContext
      *            current {@link GVRContext}
      * @param text
@@ -199,7 +199,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * with both view's default height and width and quad's default height and
      * width. The initial text will be the private {@code DEFAULT_TEXT}
      * constant, or {@code ""}.
-     * 
+     *
      * @param gvrContext
      *            current {@link GVRContext}
      */
@@ -316,7 +316,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * Set the text size.
      * Note that Android's TextView.setTextSize modifies the size value
      * Thus size, and getTextSize() will not be the same results
-     * 
+     *
      * @param size
      *            The new text size.
      */
@@ -327,7 +327,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Get the current text size.
-     * 
+     *
      * @return The current text size modified and saved within Android's TextView class.
      */
     public float getTextSize() {
@@ -344,7 +344,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
     }
     /**
      * Set the text color.
-     * 
+     *
      * @param color
      *            The text color, in Android {@link Color} format. The
      *            {@linkplain Color#alpha(int) alpha component} is ignored.
@@ -356,7 +356,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Set the text to be displayed.
-     * 
+     *
      * @param text
      *            The new text to be displayed.
      */
@@ -382,7 +382,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Get the current text.
-     * 
+     *
      * @return The text that is currently displayed.
      */
     public CharSequence getText() {
@@ -391,10 +391,10 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Get the current text, as a {@code String}.
-     * 
+     *
      * This is a convenience function, 100% equivalent to {@link #getText()}
      * {@code .toString()}
-     * 
+     *
      * @return The text that is currently displayed.
      */
     public String getTextString() {
@@ -403,7 +403,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Set the view's background color.
-     * 
+     *
      * @param color
      *            The view's background color, in Android {@link Color} format.
      *            The {@linkplain Color#alpha(int) alpha component} is ignored.
@@ -432,8 +432,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         if (justify == justifyTypes.BEGIN) mTextView.setGravity(Gravity.LEFT);
         else if (justify == justifyTypes.MIDDLE) mTextView.setGravity(Gravity.CENTER);
         else if (justify == justifyTypes.END) mTextView.setGravity(Gravity.RIGHT);
-        else if (justify == justifyTypes.FIRST) mTextView.setGravity(Gravity.START);
-        else mTextView.setGravity(Gravity.NO_GRAVITY);
+            else if (justify == justifyTypes.FIRST) mTextView.setGravity(Gravity.START);
+                else mTextView.setGravity(Gravity.NO_GRAVITY);
     }
 
     /**
@@ -449,9 +449,9 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         if ( mTextView.getGravity()== Gravity.LEFT) justify = justifyTypes.BEGIN;
         else if ( mTextView.getGravity()== GRAVITY_LEFT) justify = justifyTypes.BEGIN;
         else if ( mTextView.getGravity()== Gravity.CENTER) justify = justifyTypes.MIDDLE;
-        else if ( mTextView.getGravity()== Gravity.RIGHT) justify = justifyTypes.END;
-        else if ( mTextView.getGravity()== GRAVITY_RIGHT) justify = justifyTypes.END;
-        else if ( mTextView.getGravity()== Gravity.START) justify = justifyTypes.FIRST;
+            else if ( mTextView.getGravity()== Gravity.RIGHT) justify = justifyTypes.END;
+                else if ( mTextView.getGravity()== GRAVITY_RIGHT) justify = justifyTypes.END;
+                    else if ( mTextView.getGravity()== Gravity.START) justify = justifyTypes.FIRST;
         return justify;
     }
 
@@ -549,7 +549,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Set the view's background {@code Drawable}.
-     * 
+     *
      * @param drawable
      *            The view's background. {@code null} will clear any current
      *            background {@code Drawable}.
@@ -569,7 +569,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Set the view's gravity.
-     * 
+     *
      * @param gravity
      *            The gravity of the internal TextView
      */
@@ -580,7 +580,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
 
     /**
      * Get the view's gravity.
-     * 
+     *
      * @return The gravity of the internal TextView
      */
     public int getGravity() {
@@ -591,7 +591,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
      * Set the refresh frequency of this scene object.
      * Use NONE for improved performance when the text is set initially and never
      * changed.
-     * 
+     *
      * @param frequency
      *            The refresh frequency of this TextViewSceneObject.
      */
@@ -602,44 +602,44 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             getGVRContext().registerDrawFrameListener(mFrameListener);
         }
         switch (frequency) {
-        case REALTIME:
-            mRefreshInterval = REALTIME_REFRESH_INTERVAL;
-            break;
-        case HIGH:
-            mRefreshInterval = HIGH_REFRESH_INTERVAL;
-            break;
-        case MEDIUM:
-            mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
-            break;
-        case LOW:
-            mRefreshInterval = LOW_REFRESH_INTERVAL;
-            break;
-        case NONE:
-            mRefreshInterval = NONE_REFRESH_INTERVAL;
-            break;
-        default:
-            break;
+            case REALTIME:
+                mRefreshInterval = REALTIME_REFRESH_INTERVAL;
+                break;
+            case HIGH:
+                mRefreshInterval = HIGH_REFRESH_INTERVAL;
+                break;
+            case MEDIUM:
+                mRefreshInterval = MEDIUM_REFRESH_INTERVAL;
+                break;
+            case LOW:
+                mRefreshInterval = LOW_REFRESH_INTERVAL;
+                break;
+            case NONE:
+                mRefreshInterval = NONE_REFRESH_INTERVAL;
+                break;
+            default:
+                break;
         }
     }
 
     /**
      * Get the refresh frequency of this scene object.
-     * 
+     *
      * @return The refresh frequency of this TextViewSceneObject.
      */
 
     public IntervalFrequency getRefreshFrequency() {
         switch (mRefreshInterval) {
-        case REALTIME_REFRESH_INTERVAL:
-            return IntervalFrequency.REALTIME;
-        case HIGH_REFRESH_INTERVAL:
-            return IntervalFrequency.HIGH;
-        case LOW_REFRESH_INTERVAL:
-            return IntervalFrequency.LOW;
-        case MEDIUM_REFRESH_INTERVAL:
-            return IntervalFrequency.MEDIUM;
-        default:
-            return IntervalFrequency.NONE;
+            case REALTIME_REFRESH_INTERVAL:
+                return IntervalFrequency.REALTIME;
+            case HIGH_REFRESH_INTERVAL:
+                return IntervalFrequency.HIGH;
+            case LOW_REFRESH_INTERVAL:
+                return IntervalFrequency.LOW;
+            case MEDIUM_REFRESH_INTERVAL:
+                return IntervalFrequency.MEDIUM;
+            default:
+                return IntervalFrequency.NONE;
         }
     }
 
@@ -657,7 +657,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
                 if ((sceneObject.mFirstFrame || sceneObject.mIsChanged) &&
                     (REALTIME_REFRESH_INTERVAL == refreshInterval ||
                      (NONE_REFRESH_INTERVAL != refreshInterval
-                            && (++sceneObject.mCount % refreshInterval == 0)))) {
+                      && (++sceneObject.mCount % refreshInterval == 0)))) {
 
                     sceneObject.refresh();
                     if (!sceneObject.mFirstFrame) {

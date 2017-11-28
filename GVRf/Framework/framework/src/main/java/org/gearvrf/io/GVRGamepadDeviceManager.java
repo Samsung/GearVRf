@@ -16,17 +16,20 @@
 package org.gearvrf.io;
 
 import android.opengl.Matrix;
-import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTransform;
+import org.joml.Vector3f;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -82,7 +85,7 @@ class GVRGamepadDeviceManager {
         controllers = new SparseArray<GVRGamepadController>();
     }
 
-    GVRBaseController getCursorController(GVRContext context, String name,
+    GVRCursorController getCursorController(GVRContext context, String name,
                                           int vendorId, int productId) {
         startThread();
         GVRGamepadController controller = new GVRGamepadController(context,
@@ -92,7 +95,7 @@ class GVRGamepadDeviceManager {
         return controller;
     }
 
-    void removeCursorController(GVRBaseController controller) {
+    void removeCursorController(GVRCursorController controller) {
         int id = controller.getId();
         controllers.remove(id);
 
@@ -103,7 +106,7 @@ class GVRGamepadDeviceManager {
         }
     }
 
-    private static class GVRGamepadController extends GVRBaseController {
+    private static class GVRGamepadController extends GVRCursorController {
         private static final float[] UP_VECTOR = {0.0f, 1.0f, 0.0f, 1.0f};
         private static final float[] RIGHT_VECTOR = {1.0f, 0.0f, 0.0f, 1.0f};
 
@@ -115,38 +118,39 @@ class GVRGamepadDeviceManager {
         private static final float SPEED = 30f;
 
         private GVRGamepadDeviceManager deviceManager;
-        private GVRSceneObject internalObject;
-        private GVRContext context;
-        private boolean isEnabled = false;
+        private GVRTransform tempTrans;
 
         public GVRGamepadController(GVRContext context,
                                     GVRControllerType controllerType, String name, int vendorId,
                                     int productId, GVRGamepadDeviceManager deviceManager) {
-            super(controllerType, name, vendorId, productId);
-            this.context = context;
-            internalObject = new GVRSceneObject(context);
-            internalObject.getTransform().setPosition(0.0f, 0.0f, -1.0f);
+            super(context, controllerType, name, vendorId, productId);
+            tempTrans = new GVRSceneObject(context).getTransform();
+            tempTrans.setPosition(0.0f, 0.0f, -1.0f);
             this.deviceManager = deviceManager;
-            isEnabled = isEnabled();
+            enable = isEnabled();
+            mPicker.setEnable(false);
         }
 
         @Override
-        public void setEnable(boolean enable) {
-            if (!isEnabled && enable) {
-                isEnabled = true;
+        public void setEnable(boolean flag) {
+            if (!enable && flag) {
+                enable = true;
                 deviceManager.startThread();
                 //set the enabled flag on the handler thread
                 deviceManager.thread.setEnable(getId(), true);
-            } else if (isEnabled && !enable) {
-                isEnabled = false;
+                mConnected = true;
+            } else if (enable && !flag) {
+                enable = false;
                 //set the disabled flag on the handler thread
                 deviceManager.thread.setEnable(getId(), false);
                 deviceManager.stopThread();
+                mConnected = false;
+                context.getInputManager().removeCursorController(this);
             }
         }
 
         @Override
-        protected void setScene(GVRScene scene) {
+        public void setScene(GVRScene scene) {
             if (!deviceManager.threadStarted) {
                 super.setScene(scene);
             } else {
@@ -177,6 +181,19 @@ class GVRGamepadDeviceManager {
 
         @Override
         protected void setKeyEvent(KeyEvent keyEvent) {
+            int action = keyEvent.getAction();
+
+            if (keyEvent.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L1)
+            {
+                if (action == KeyEvent.ACTION_DOWN)
+                {
+                    setActive(true);
+                }
+                else if (action == KeyEvent.ACTION_UP)
+                {
+                    setActive(false);
+                }
+            }
             super.setKeyEvent(keyEvent);
         }
 
@@ -205,26 +222,24 @@ class GVRGamepadDeviceManager {
 
                 Matrix.multiplyMV(xAxis, 0, viewMatrix, 0, UP_VECTOR, 0);
                 Matrix.multiplyMV(yAxis, 0, viewMatrix, 0, RIGHT_VECTOR, 0);
-
                 float sensitivity = SPEED / 100f;
                 if (x != 0 || y != 0) {
                     float angle = (float) Math.atan2(y, x);
                     float displacementX = (float) Math.cos(angle);
                     float displacementY = (float) Math.sin(angle);
-                    internalObject.getTransform().setRotation(1.0f, 0.0f, 0.0f,
-                            0.0f);
+                    tempTrans.setRotation(1.0f, 0.0f, 0.0f, 0.0f);
 
-                    internalObject.getTransform().rotateByAxisWithPivot(
+                    tempTrans.rotateByAxisWithPivot(
                             -displacementX * sensitivity, xAxis[0], xAxis[1],
                             xAxis[2], 0.0f, 0.0f, 0.0f);
-                    internalObject.getTransform().rotateByAxisWithPivot(
+                    tempTrans.rotateByAxisWithPivot(
                             displacementY * sensitivity, yAxis[0], yAxis[1],
                             yAxis[2], 0.0f, 0.0f, 0.0f);
                 }
                 float[] controllerPosition = new float[]{
-                        internalObject.getTransform().getPositionX(),
-                        internalObject.getTransform().getPositionY(),
-                        internalObject.getTransform().getPositionZ()};
+                        tempTrans.getPositionX(),
+                        tempTrans.getPositionY(),
+                        tempTrans.getPositionZ()};
 
                 if (z != 0.0f) {
                     float step = (z < 0) ? DEPTH_STEP * sensitivity
@@ -239,13 +254,12 @@ class GVRGamepadDeviceManager {
                                     + controllerPosition[2] * step};
 
                     if (checkBounds(point)) {
-                        internalObject.getTransform().setPosition(point[0],
-                                point[1], point[2]);
+                        tempTrans.setPosition(point[0], point[1], point[2]);
                     }
                 }
-                super.setPosition(internalObject.getTransform().getPositionX(),
-                        internalObject.getTransform().getPositionY(),
-                        internalObject.getTransform().getPositionZ());
+                super.setPosition(tempTrans.getPositionX(),
+                                  tempTrans.getPositionY(),
+                                  tempTrans.getPositionZ());
             }
         }
 
@@ -270,7 +284,8 @@ class GVRGamepadDeviceManager {
 
         @Override
         public void setPosition(float x, float y, float z) {
-            internalObject.getTransform().setPosition(x, y, z);
+            super.setPosition(x, y, z);
+            tempTrans.setPosition(x, y, z);
             if (!deviceManager.threadStarted) {
                 //do nothing
                 return;

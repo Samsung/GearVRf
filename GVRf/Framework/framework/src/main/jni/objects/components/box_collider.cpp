@@ -23,11 +23,10 @@ namespace gvr {
 
         /*
          * If we have a scene object with a mesh
-         * get the sphere center and radius from that.
+         * get the box center and extents from that.
          */
         if (owner != NULL)
         {
-            RenderData* rd = owner->render_data();
             Transform* t = owner->transform();
             if (t != NULL)
             {
@@ -37,6 +36,47 @@ namespace gvr {
 
         ColliderData data = isHit(model_matrix, halfExtent, rayStart, rayDir);
         data.ObjectHit = owner;
+        data.ColliderHit = this;
+        return data;
+    }
+
+    /*
+     * Determine if the sphere hits the box.
+     * @param sphere array with sphere center and radius
+     */
+    ColliderData BoxCollider::isHit(const glm::vec3& center, const glm::vec3& half_extents, const float sphere[])
+    {
+        glm::vec3       sphereCenter(sphere[0], sphere[1], sphere[2]);
+        glm::vec3       rayDir(center - sphereCenter);
+        glm::vec3       hitPos;
+        ColliderData    data;
+        BoundingVolume  box;
+
+        box.expand(sphereCenter + half_extents); // box collider bounds
+        box.expand(sphereCenter - half_extents);
+        if (box.intersect(hitPos, sphereCenter, rayDir))
+        {
+            float dist = glm::length(sphereCenter - hitPos);
+
+            if (dist <= sphere[3])
+            {
+                data.Distance = dist;
+                data.IsHit = true;
+                data.HitPosition = hitPos;      // hit position in box coordinates
+            }
+        }
+        return data;
+    }
+
+    /*
+     * Determine if the sphere hits the collider.
+     * @param sphere array with sphere center and radius
+     */
+    ColliderData BoxCollider::isHit(const float sphere[])
+    {
+        SceneObject* owner = owner_object();
+        BoundingVolume& bounds = owner->getBoundingVolume();
+        ColliderData data = BoxCollider::isHit(bounds.center(), half_extents_, sphere);
         data.ColliderHit = this;
         return data;
     }

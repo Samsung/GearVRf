@@ -21,7 +21,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
@@ -29,15 +28,12 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
-import android.view.MotionEvent;
 
-import org.gearvrf.IActivityEvents;
+
 import org.gearvrf.utility.Log;
 
 /**

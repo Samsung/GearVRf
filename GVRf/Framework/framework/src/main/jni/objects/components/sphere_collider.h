@@ -51,6 +51,8 @@ public:
     }
 
     ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
+    ColliderData isHit(const float sphere[]);
+
     static ColliderData isHit(Mesh& mesh, const glm::mat4& model_matrix, const glm::vec3& rayStart, const glm::vec3& rayDir);
     static ColliderData isHit(const glm::mat4& model_matrix, const glm::vec3& center, float radius, const glm::vec3& rayStart, const glm::vec3& rayDir);
 

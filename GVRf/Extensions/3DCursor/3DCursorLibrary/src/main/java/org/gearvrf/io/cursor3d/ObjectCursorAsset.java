@@ -46,15 +46,14 @@ class ObjectCursorAsset extends CursorAsset {
     }
 
     @Override
-    void set(CursorSceneObject sceneObject) {
-        super.set(sceneObject);
-        GVRModelSceneObject modelSceneObject = objects.get(sceneObject.getId());
+    void set(Cursor cursor) {
+        super.set(cursor);
+        GVRModelSceneObject modelSceneObject = objects.get(cursor.getId());
 
         if (modelSceneObject == null) {
             Log.e(TAG, "Model not found, should not happen");
             return;
         }
-        sceneObject.set(modelSceneObject);
         modelSceneObject.setEnable(true);
 
         for (GVRAnimation animation : modelSceneObject.getAnimations()) {
@@ -76,12 +75,11 @@ class ObjectCursorAsset extends CursorAsset {
     }
 
     @Override
-    void reset(CursorSceneObject sceneObject) {
-        super.reset(sceneObject);
+    void reset(Cursor cursor) {
+        super.reset(cursor);
 
-        GVRModelSceneObject modelSceneObject = objects.get(sceneObject.getId());
+        GVRModelSceneObject modelSceneObject = objects.get(cursor.getId());
 
-        sceneObject.reset();
         modelSceneObject.setEnable(false);
         for (GVRAnimation animation : modelSceneObject.getAnimations()) {
             if (animation.isFinished() == false) {
@@ -93,22 +91,23 @@ class ObjectCursorAsset extends CursorAsset {
     }
 
     @Override
-    void load(CursorSceneObject sceneObject) {
-        int key = sceneObject.getId();
+    void load(Cursor cursor) {
+        Integer key = cursor.getId();
         GVRModelSceneObject modelSceneObject = objects.get(key);
 
         if (modelSceneObject == null) {
             modelSceneObject = loadModelSceneObject();
+            modelSceneObject.setName( getAction().toString() + key.toString());
             objects.put(key, modelSceneObject);
         }
-        sceneObject.addChildObject(modelSceneObject);
+        cursor.addChildObject(modelSceneObject);
         modelSceneObject.setEnable(false);
     }
 
     @Override
-    void unload(CursorSceneObject sceneObject) {
-        GVRSceneObject assetSceneObject = objects.get(sceneObject.getId());
-        sceneObject.removeChildObject(assetSceneObject);
-        objects.remove(sceneObject.getId());
+    void unload(Cursor cursor) {
+        GVRSceneObject assetSceneObject = objects.get(cursor.getId());
+        cursor.removeChildObject(assetSceneObject);
+        objects.remove(cursor.getId());
     }
 }

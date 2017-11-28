@@ -42,19 +42,6 @@ import java.util.List;
 public class GVRGUISceneObject extends GVRViewSceneObject {
     private static final String TAG = GVRGUISceneObject.class.getSimpleName();;
 
-    private static final int MOTION_EVENT = 1;
-
-    private int frameWidth;
-    private int frameHeight;
-
-    private final MotionEvent.PointerProperties[] pointerProperties;
-    private final MotionEvent.PointerCoords pointerCoords = new MotionEvent.PointerCoords();;
-    private final MotionEvent.PointerCoords[] pointerCoordsArray = new MotionEvent.PointerCoords[]{pointerCoords};;
-    private Handler mainThreadHandler;
-
-    static {
-    }
-
     /**
      * Constructor for GVRGUISceneObject
      *
@@ -63,7 +50,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param gvrContext    current {@link GVRContext}
      * @param gvrView       the {@link GVRView} to be displayed on the GVRGUISceneObject
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, T gvrView) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, T gvrView) {
         this(gvrContext, gvrView, planarMesh(gvrContext, gvrView));
     }
 
@@ -78,7 +65,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param radius        the radius of the circle to use to create the arc
      * @param centralAngle  the central angle of the arc
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius, float centralAngle) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius, float centralAngle) {
         this(gvrContext, gvrView, curvedMesh(gvrContext, gvrView, radius, centralAngle));
     }
 
@@ -92,7 +79,7 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param gvrView       the {@link GVRView} to be displayed on the GVRGUISceneObject
      * @param radius        the radius of the circle to use to create the arc
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, T gvrView, float radius) {
         this(gvrContext, gvrView, curvedMesh(gvrContext, gvrView, radius, 45f));
     }
 
@@ -103,90 +90,20 @@ public class GVRGUISceneObject extends GVRViewSceneObject {
      * @param gvrView       the {@link GVRView} to be displayed on the GVRGUISceneObject
      * @param mesh          the mesh that the {@link GVRView} will be displayed on
      */
-    public <T extends View & GVRView> GVRGUISceneObject(GVRContext gvrContext, final T gvrView, GVRMesh mesh) {
+    public <T extends View> GVRGUISceneObject(GVRContext gvrContext, final T gvrView, GVRMesh mesh) {
         super(gvrContext, gvrView, mesh);
-        this.frameWidth = gvrView.getView().getWidth();
-        this.frameHeight = gvrView.getView().getHeight();
-        this.attachCollider(new GVRMeshCollider(gvrContext, mesh, true));
-        this.mainThreadHandler = new Handler(gvrContext.getActivity().getMainLooper()){
-            @Override
-            public void handleMessage(Message msg) {
-                // Dispatch motion event
-                if (msg.what == MOTION_EVENT) {
-                    MotionEvent motionEvent = (MotionEvent) msg.obj;
-                    gvrView.dispatchTouchEvent(motionEvent);
-                    gvrView.invalidate();
-                    motionEvent.recycle();
-                }
-            }
-        };
-        this.getEventReceiver().addListener(GUIEventListener);
-        this.setSensor(new GVRBaseSensor(gvrContext));
-
-        MotionEvent.PointerProperties properties = new MotionEvent.PointerProperties();
-        properties.id = 0;
-        properties.toolType = MotionEvent.TOOL_TYPE_MOUSE;
-        pointerProperties = new MotionEvent.PointerProperties[]{properties};
     }
 
-    private static GVRMesh planarMesh(GVRContext gvrContext, GVRView gvrView){
-        View view = gvrView.getView();
+    private static GVRMesh planarMesh(GVRContext gvrContext, View view){
         int w = view.getWidth();
         int h = view.getHeight();
         int largest = w > h ? w : h;
         return gvrContext.createQuad((float)w/largest*1.0f, (float)h/largest*1.0f);
     }
 
-    private static GVRMesh curvedMesh(GVRContext gvrContext, GVRView gvrView, float radius, float centralAngle){
-        View view = gvrView.getView();
+    private static GVRMesh curvedMesh(GVRContext gvrContext, View view, float radius, float centralAngle){
         int w = view.getWidth();
         int h = view.getHeight();
         return GVRMesh.createCurvedMesh(gvrContext, w, h, centralAngle, radius);
     }
-
-    private ISensorEvents GUIEventListener = new ISensorEvents() {
-        private static final float SCALE = 5.0f;
-        private float savedMotionEventX, savedMotionEventY, savedHitPointX,
-                savedHitPointY;
-
-        @Override
-        public void onSensorEvent(SensorEvent event) {
-            List<MotionEvent> motionEvents = event.getCursorController().getMotionEvents();
-
-            for (MotionEvent motionEvent : motionEvents) {
-                if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
-                    pointerCoords.x = savedHitPointX
-                            + ((motionEvent.getX() - savedMotionEventX) * SCALE);
-                    pointerCoords.y = savedHitPointY
-                            + ((motionEvent.getY() - savedMotionEventY) * SCALE);
-                } else {
-                    GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
-                    float[] texCoords = pickedObject.getTextureCoords();
-                    pointerCoords.x = texCoords[0] * frameWidth;
-                    pointerCoords.y = texCoords[1] * frameHeight;
-
-
-                    if (motionEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                        // save the coordinates on down
-                        savedMotionEventX = motionEvent.getX();
-                        savedMotionEventY = motionEvent.getY();
-
-                        savedHitPointX = pointerCoords.x;
-                        savedHitPointY = pointerCoords.y;
-                    }
-                }
-
-                final MotionEvent clone = MotionEvent.obtain(
-                        motionEvent.getDownTime(), motionEvent.getEventTime(),
-                        motionEvent.getAction(), 1, pointerProperties,
-                        pointerCoordsArray, 0, 0, 1f, 1f, 0, 0,
-                        InputDevice.SOURCE_TOUCHSCREEN, 0);
-
-                Message message = Message.obtain(mainThreadHandler, MOTION_EVENT, 0, 0,
-                        clone);
-                mainThreadHandler.sendMessage(message);
-            }
-        }
-    };
-
 }

@@ -51,5 +51,4 @@ public interface CursorControllerListener {
      *            the {@link GVRCursorController} removed.
      */
     public void onCursorControllerRemoved(GVRCursorController controller);
-
 }

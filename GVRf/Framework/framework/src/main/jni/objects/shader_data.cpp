@@ -91,11 +91,13 @@ std::string ShaderData::makeShaderLayout()
 
 int ShaderData::getByteSize(const char* name) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getByteSize(name);
 }
 
 const char* ShaderData::getUniformDescriptor() const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getDescriptor();
 }
 
@@ -106,11 +108,13 @@ const char* ShaderData::getTextureDescriptor() const
 
 bool ShaderData::getFloat(const char* name, float& v) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getFloat(name, v);
 }
 
 bool   ShaderData::getInt(const char* name, int& v) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getInt(name, v);
 }
 
@@ -144,11 +148,13 @@ bool  ShaderData::setFloatVec(const char* name, const float* val, int n)
 
 bool  ShaderData::getFloatVec(const char* name, float* val, int n)
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getFloatVec(name, val, n);
 }
 
 bool  ShaderData::getIntVec(const char* name, int* val, int n)
 {
+    std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getIntVec(name, val, n);
 }
 
@@ -195,6 +201,7 @@ void ShaderData::clearDirty()
 
 bool ShaderData::hasTexture(const char* key) const
 {
+    std::lock_guard<std::mutex> lock(mLock);
     for (auto it = mTextureNames.begin(); it < mTextureNames.end(); ++it)
     {
         if (*it == key && getTexture(key))

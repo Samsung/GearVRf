@@ -160,7 +160,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         return mAppSettings;
     }
 
-    final GVRViewManager getViewManager() {
+    public final GVRViewManager getViewManager() {
         return mViewManager;
     }
 

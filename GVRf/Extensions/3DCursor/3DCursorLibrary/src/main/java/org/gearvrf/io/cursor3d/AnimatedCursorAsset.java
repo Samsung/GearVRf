@@ -69,10 +69,10 @@ class AnimatedCursorAsset extends MeshCursorAsset {
     }
 
     @Override
-    void set(CursorSceneObject sceneObject) {
-        super.set(sceneObject);
+    void set(Cursor cursor) {
+        super.set(cursor);
 
-        int key = sceneObject.getId();
+        int key = cursor.getId();
         GVRImageFrameAnimation animation = animations.get(key);
         if (animation == null) {
             GVRSceneObject assetSceneObject = sceneObjectArray.get(key);
@@ -95,13 +95,13 @@ class AnimatedCursorAsset extends MeshCursorAsset {
     }
 
     @Override
-    void reset(CursorSceneObject sceneObject) {
-        int key = sceneObject.getId();
+    void reset(Cursor cursor) {
+        int key = cursor.getId();
         GVRImageFrameAnimation animation = animations.get(key);
         if (animation == null) {
             //nothing to do
             Log.d(TAG, "Animation is finished return, should not happen ");
-            super.reset(sceneObject);
+            super.reset(cursor);
             return;
         }
 
@@ -114,12 +114,12 @@ class AnimatedCursorAsset extends MeshCursorAsset {
         }
         animations.remove(key);
 
-        super.reset(sceneObject);
+        super.reset(cursor);
     }
 
     @Override
-    void load(CursorSceneObject sceneObject) {
-        super.load(sceneObject);
+    void load(Cursor cursor) {
+        super.load(cursor);
         if (loaderTextures != null) {
             return;
         }
@@ -138,9 +138,9 @@ class AnimatedCursorAsset extends MeshCursorAsset {
     }
 
     @Override
-    void unload(CursorSceneObject sceneObject) {
-        super.unload(sceneObject);
-        animations.remove(sceneObject.getId());
+    void unload(Cursor cursor) {
+        super.unload(cursor);
+        animations.remove(cursor.getId());
 
         // check if there are cursors still using the textures
         if (sceneObjectArray.size() == 0) {

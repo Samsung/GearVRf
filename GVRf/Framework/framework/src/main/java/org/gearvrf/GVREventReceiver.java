@@ -66,7 +66,10 @@ public class GVREventReceiver {
      *         The listener to be added.
      */
     public void addListener(IEvents listener) {
-        mListeners.add(listener);
+        if (!mListeners.contains(listener))
+        {
+            mListeners.add(listener);
+        }
     }
 
     /**

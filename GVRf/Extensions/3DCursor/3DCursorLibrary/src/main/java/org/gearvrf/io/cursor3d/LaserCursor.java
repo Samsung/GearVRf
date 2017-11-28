@@ -16,12 +16,12 @@
 
 package org.gearvrf.io.cursor3d;
 
+import android.view.MotionEvent;
+
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRCursorController.ControllerEventListener;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.SensorEvent;
+import org.gearvrf.ITouchEvents;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
 import org.gearvrf.utility.Log;
 
@@ -30,7 +30,6 @@ import org.gearvrf.utility.Log;
  */
 class LaserCursor extends Cursor {
     private static final String TAG = "LaserCursor";
-    private static final boolean COLLIDING = true;
 
     /**
      * Create a laser type 3D cursor for GVRf.
@@ -40,75 +39,51 @@ class LaserCursor extends Cursor {
     LaserCursor(GVRContext context, CursorManager manager) {
         super(context, CursorType.LASER, manager);
         Log.d(TAG, Integer.toHexString(hashCode()) + " constructed");
-    }
-
-    @Override
-    void dispatchSensorEvent(SensorEvent event) {
-        CursorEvent cursorEvent = CursorEvent.obtain();
-        cursorEvent.setOver(event.isOver());
-        cursorEvent.setColliding(COLLIDING);
-        cursorEvent.setActive(event.isActive());
-        cursorEvent.setCursor(this);
-        GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
-        GVRSceneObject object = pickedObject.getHitObject();
-        SelectableGroup selectableGroup = (SelectableGroup) object.getComponent
-                (SelectableGroup.getComponentType());
-
-        if (selectableGroup != null) {
-            //if part of a selectable group and disabled then ignore
-            if (!object.isEnabled()) {
-                return;
-            }
-            object = selectableGroup.getParent();
-        }
-
-        cursorEvent.setObject(object);
-        cursorEvent.setHitPoint(pickedObject.hitLocation[0], pickedObject.hitLocation[1], pickedObject.hitLocation[2]);
-        cursorEvent.setCursorPosition(getPositionX(), getPositionY(), getPositionZ());
-        cursorEvent.setCursorRotation(getRotationW(), getRotationX(), getRotationY(),
-                getRotationZ());
-        GVRCursorController controller = event.getCursorController();
-        cursorEvent.setMotionEvents(controller.getMotionEvents());
-        cursorEvent.setKeyEvent(controller.getKeyEvent());
-        isControllerActive = event.isActive();
-        cursorEvent.setEventGroup(event.getEventGroup());
-
-        if (event.isActive()) {
-            checkAndSetAsset(Action.CLICK);
-        } else {
-            if (event.isOver()) {
+        mTouchListener = new ITouchEvents()
+        {
+            public void onEnter(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+            {
                 checkAndSetAsset(Action.HOVER);
-            } else {
+            }
+
+            public void onExit(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+            {
                 checkAndSetAsset(Action.DEFAULT);
             }
-        }
-        dispatchCursorEvent(cursorEvent);
+
+            public void onInside(GVRSceneObject obj, GVRPicker.GVRPickedObject hit) { }
+
+            public void onTouchStart(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+            {
+                checkAndSetAsset(Action.CLICK);
+            }
+
+            public void onTouchEnd(GVRSceneObject obj, GVRPicker.GVRPickedObject hit)
+            {
+                checkAndSetAsset(Action.DEFAULT);
+            }
+
+            public void onMotionOutside(GVRPicker picker, MotionEvent event) { }
+        };
     }
 
     @Override
-    ControllerEventListener getControllerEventListener() {
-        return listener;
-    }
-
-    @Override
-    void setScale(float scale) {
-        if(scale > MAX_CURSOR_SCALE) {
+    void setCursorDepth(float depth) {
+        if (depth > MAX_CURSOR_SCALE) {
             return;
         }
-        super.setScale(scale);
-        /* the laser cursor does not use depth, set a fixed depth.*/
-        cursorSceneObject.setScale(scale);
-        if (ioDevice != null) {
-            ioDevice.setFarDepth(-scale);
-            ioDevice.setNearDepth(-scale);
+        super.setCursorDepth(depth);
+        if (mIODevice != null) {
+            mIODevice.setFarDepth(-depth);
+            mIODevice.setNearDepth(-depth);
         }
     }
 
     @Override
     void setIoDevice(IoDevice ioDevice) {
         super.setIoDevice(ioDevice);
-        ioDevice.setFarDepth(-scale);
-        ioDevice.setNearDepth(-scale);
+        ioDevice.setFarDepth(-mCursorDepth);
+        ioDevice.setNearDepth(-mCursorDepth);
     }
 
     @Override
@@ -117,14 +92,6 @@ class LaserCursor extends Cursor {
         ioDevice.setDisableRotation(true);
     }
 
-    private ControllerEventListener listener = new ControllerEventListener() {
 
-        @Override
-        public void onEvent(GVRCursorController controller) {
-            if(!controller.isEventHandledBySensorManager()) {
-                checkControllerActive(controller);
-            }
-            handleControllerEvent(controller, false);
-        }
-    };
+
 }

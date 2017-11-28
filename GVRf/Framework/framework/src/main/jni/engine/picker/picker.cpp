@@ -35,9 +35,6 @@ namespace gvr {
 /*
  * Intersects all the colliders in the scene with the input ray
  * and returns the list of collisions.
- *
- * This function is not thread-safe because it relies on a static
- * array of colliders which could be updated by a different thread.
  */
 void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transform* t,
                        float ox, float oy, float oz, float dx, float dy, float dz) {
@@ -64,9 +61,90 @@ void Picker::pickScene(Scene* scene, std::vector<ColliderData>& picklist, Transf
     scene->unlockColliders();
 }
 
-void Picker::pickScene(Scene* scene, std::vector<ColliderData>& pickList) {
-    Transform* t = scene->main_camera_rig()->getHeadTransform();
-    pickScene(scene, pickList, t, 0, 0, 0, 0, 0, -1.0f);
+/*
+ * Intersects all the colliders in the scene with the input ray
+ * and returns the one closest to the camera.
+ */
+void Picker::pickClosest(Scene* scene,
+                         ColliderData& closest,
+                         Transform* t,
+                         float ox, float oy, float oz,
+                         float dx, float dy, float dz)
+{
+    glm::vec3 ray_start(ox, oy, oz);
+    glm::vec3 ray_dir(dx, dy, dz);
+    const std::vector<Component*>& colliders = scene->lockColliders();
+    const glm::mat4& model_matrix = t->getModelMatrix();
+
+    closest.Distance = std::numeric_limits<float>::infinity();
+    Collider::transformRay(model_matrix, ray_start, ray_dir);
+    for (auto it = colliders.begin(); it != colliders.end(); ++it)
+    {
+        Collider* collider = reinterpret_cast<Collider*>(*it);
+        SceneObject* owner = collider->owner_object();
+        if (collider->enabled() && (owner != NULL) && owner->enabled())
+        {
+            ColliderData data = collider->isHit(ray_start, ray_dir);
+            if ((collider->pick_distance() > 0) && (collider->pick_distance() < data.Distance))
+            {
+                data.IsHit = false;
+            }
+            if (data.IsHit && (data.Distance < closest.Distance))
+            {
+                closest = data;
+            }
+        }
+    }
+    scene->unlockColliders();
+}
+
+/*
+ * Intersects all the colliders in the scene with the set of
+ * input scene objects (collidables) and returns the list of collisions.
+ * The index of the collidable that hit is returned as the
+ * CursorID field of the ColliderData resulting from the hit.
+ */
+void Picker::pickBounds(Scene* scene,
+                        std::vector<ColliderData>& picklist,
+                        const std::vector<SceneObject*>& collidables)
+{
+    const std::vector<Component*>& colliders = scene->lockColliders();
+
+    for (auto it = colliders.begin(); it != colliders.end(); ++it)
+    {
+        int cursorID = 0;
+        for (auto it2 = collidables.begin(); it2 != collidables.end(); ++it2)
+        {
+            SceneObject* collidable = *it2;
+            if ((collidable == NULL) || !collidable->enabled())
+            {
+                ++cursorID;
+                continue;
+            }
+            BoundingVolume& bv = collidable->getBoundingVolume();
+            glm::vec3 center(bv.center());
+            float bsphere[4] = { center.x, center.y, center.z, bv.radius()};
+            Collider* collider = reinterpret_cast<Collider*>(*it);
+            SceneObject* owner = collider->owner_object();
+
+            if (collider->enabled() &&
+                (owner != NULL) &&
+                owner->enabled() &&
+                (bsphere[3] > 0) &&
+                (bsphere[3] != std::numeric_limits<float>::infinity()))
+            {
+                ColliderData data = collider->isHit(bsphere);
+                if (data.IsHit)
+                {
+                    data.CollidableIndex = cursorID;      // cursor ID is index of collidable
+                    data.ObjectHit = owner;
+                    picklist.push_back(data);
+                }
+            }
+            ++cursorID;
+        }
+    }
+    scene->unlockColliders();
 }
 
 /**
