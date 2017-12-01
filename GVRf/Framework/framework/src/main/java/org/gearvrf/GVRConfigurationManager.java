@@ -58,6 +58,9 @@ abstract class GVRConfigurationManager {
         });
 
     }
+    public boolean isResetFovY(){
+        return mResetFovY;
+    }
     private final Runnable mUsbCheckRunnable = new Runnable() {
         private final static int MAX_TRIES = 50;
         private int mCounter;
