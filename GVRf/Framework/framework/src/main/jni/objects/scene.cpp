@@ -36,11 +36,9 @@ Scene::Scene() :
         frustum_flag_(false),
         dirtyFlag_(0),
         occlusion_flag_(false),
-        bindShadersMethod_(0),
-        pick_visible_(true),
-        is_shadowmap_invalid(true) {
+        pick_visible_(true)
 
-}
+{ }
 
 Scene::~Scene() {
     if (javaVM_ && javaObj_)
@@ -61,12 +59,6 @@ void Scene::set_java(JavaVM* javaVM, jobject javaScene)
     if (env)
     {
         javaObj_ = env->NewWeakGlobalRef(javaScene);
-        jclass sceneClass = env->GetObjectClass(javaScene);
-        bindShadersMethod_ = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
-        if (bindShadersMethod_ == 0)
-        {
-            LOGE("Scene::bindShader ERROR cannot find 'GVRScene.bindShadersNative()' Java method");
-        }
     }
 }
 
@@ -90,33 +82,6 @@ int Scene::get_java_env(JNIEnv** envptr)
     return 0;
 }
 
-/**
- * Called when the shaders need to be generated on the Java side
- * (usually because a light is added or removed).
- * This function spawns a Java task on the Framework thread which generates the shaders.
- */
-void Scene::bindShaders()
-{
-    JNIEnv* env = NULL;
-    int rc = get_java_env(&env);
-
-    jobject localJavaObject = getJavaObj(*env);
-
-    if ((bindShadersMethod_ == NULL) || (localJavaObject == NULL))
-    {
-        LOGE("SHADER: Could not call GVRScene::bindShadersNative");
-    }
-    if (env && (rc >= 0))
-    {
-        if (nullptr != localJavaObject) {
-            env->CallVoidMethod(localJavaObject, bindShadersMethod_, localJavaObject);
-        }
-        if (rc > 0)
-        {
-            getJavaVM()->DetachCurrentThread();
-        }
-    }
-}
 
 void Scene::addSceneObject(SceneObject* scene_object) {
     scene_root_.addChildObject(&scene_root_, scene_object);
@@ -175,7 +140,6 @@ void Scene::removeCollider(Collider* collider) {
 void Scene::set_main_scene(Scene* scene) {
     main_scene_ = scene;
     scene->getRoot()->onAddedToScene(scene);
-    //scene->bindShaders();
 }
 
 

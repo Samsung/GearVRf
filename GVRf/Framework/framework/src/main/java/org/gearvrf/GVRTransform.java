@@ -491,7 +491,6 @@ public class GVRTransform extends GVRComponent {
      */
     public void rotateWithPivot(float quatW, float quatX, float quatY,
             float quatZ, float pivotX, float pivotY, float pivotZ) {
-        getGVRContext().getMainScene().inValidateShadowMap();
         NativeTransform.rotateWithPivot(getNative(), quatW, quatX, quatY,
                 quatZ, pivotX, pivotY, pivotZ);
     }
@@ -503,7 +502,6 @@ public class GVRTransform extends GVRComponent {
      * This will undo any translations, rotations, or scaling and reset the Transform back to default values.  This is the equivilent to setting the Transform to an identity matrix.
      */
     public void reset() {
-        getGVRContext().getMainScene().inValidateShadowMap();
         setPosition(0, 0, 0);
         setRotation(1, 0, 0, 0);
         setScale(1, 1, 1);

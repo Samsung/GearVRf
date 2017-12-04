@@ -54,9 +54,6 @@ public:
     }
     std::vector<SceneObject*> getWholeSceneObjects();
 
-    int getSceneDirtyFlag() { return 1 || dirtyFlag_;  /* force to be true */}
-    void setSceneDirtyFlag(int dirtyBits) { dirtyFlag_ |= dirtyBits; }
-
     void set_frustum_culling( bool frustum_flag){ frustum_flag_ = frustum_flag; }
     bool get_frustum_culling(){ return frustum_flag_; }
 
@@ -107,15 +104,7 @@ public:
     const std::vector<Light*>& getLightList() const {
         return lightList;
     }
-    void validateShadowMaps(){
-    	is_shadowmap_invalid = false;
-    }
-    void invalidateShadowMaps(){
-    	is_shadowmap_invalid = true;
-    }
-    const bool isShadowMapsInvalid(){
-    	return is_shadowmap_invalid;
-    }
+
     /*
      * If set to true only visible objects will be pickable.
      * Otherwise, all objects are pickable.
@@ -206,11 +195,9 @@ private:
 
 
 private:
-    std::string uniform_desc_;
     static Scene* main_scene_;
     JavaVM* javaVM_;
     jobject javaObj_;
-    jmethodID bindShadersMethod_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;
@@ -221,7 +208,6 @@ private:
     std::vector<Light*> lightList;
     std::vector<Component*> allColliders;
     std::vector<Component*> visibleColliders;
-    bool is_shadowmap_invalid;
 };
 
 }
