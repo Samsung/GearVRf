@@ -449,6 +449,11 @@ class GVRJassimpAdapter {
         if (!settings.contains(GVRImportSettings.NO_ANIMATION))
         {
             List<AiAnimation> animations = scene.getAnimations();
+            GVRModelSceneObject modelRoot = null;
+            if (GVRModelSceneObject.class.isAssignableFrom(model.getClass()))
+            {
+                modelRoot = (GVRModelSceneObject) model;
+            }
             if (animations.size() > 0)
             {
                 GVRAnimator animator = new GVRAnimator(mContext, startAnimations);
@@ -456,11 +461,7 @@ class GVRJassimpAdapter {
                 for (AiAnimation aiAnim : scene.getAnimations())
                 {
                     GVRAnimation animation = createAnimation(aiAnim, model);
-                    GVRModelSceneObject modelRoot = null;
-                    if (GVRModelSceneObject.class.isAssignableFrom(model.getClass()))
-                    {
-                        modelRoot = (GVRModelSceneObject) model;
-                    }
+
                     if (animation != null)
                     {
                         animator.addAnimation(animation);
