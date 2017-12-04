@@ -277,10 +277,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     public void setPickVisible(boolean flag) {
         NativeScene.setPickVisible(getNative(), flag);
     }
-    
-    public void inValidateShadowMap(){
-        NativeScene.invalidateShadowMap(getNative());
-    }
+
     /**
      * Sets the frustum culling for the {@link GVRScene}.
      */
@@ -668,8 +665,6 @@ class NativeScene {
 
     static native void addSceneObject(long scene, long sceneObject);
    
-    public static native void invalidateShadowMap(long scene);
-
     static native void removeAllSceneObjects(long scene);
 
     static native void deleteLightsAndDepthTextureOnRenderThread(long scene);

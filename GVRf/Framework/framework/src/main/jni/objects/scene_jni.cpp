@@ -82,10 +82,6 @@ extern "C" {
     Java_org_gearvrf_NativeScene_getLightList(JNIEnv* env, jobject obj, jlong scene);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
-            jobject obj, jlong jscene);
-
-    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeScene_addCollider(JNIEnv * env,
             jobject obj, jlong jscene, jlong jcollider);
 
@@ -113,12 +109,6 @@ Java_org_gearvrf_NativeScene_setJava(JNIEnv* env, jlong nativeScene, jobject jav
     scene->set_java(jvm, javaScene);
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_invalidateShadowMap(JNIEnv * env,
-        jobject obj, jlong jscene){
-	 Scene* scene = reinterpret_cast<Scene*>(jscene);
-	 scene->invalidateShadowMaps();
-}
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
         jobject obj, jlong jscene, jlong jscene_object) {
