@@ -208,7 +208,10 @@ public final class GVRAssetLoader {
                                                               request, r, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
 
                     GVRImage whiteTex = getDefaultImage(mContext);
-                    request.loaded(whiteTex, null);
+                    if (whiteTex != null)
+                    {
+                        request.loaded(whiteTex, null);
+                    }
                     onTextureError(mContext, ex.getMessage(), request.TextureFile);
                 }
             }
@@ -602,12 +605,18 @@ public final class GVRAssetLoader {
     {
         if (mDefaultImage == null)
         {
-            mDefaultImage = new GVRBitmapTexture(ctx);
-            Bitmap bmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
+            try
+            {
+                Bitmap bmap = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
 
-            Canvas canvas = new Canvas(bmap);
-            canvas.drawRGB(0xff, 0xff, 0xff);
-            mDefaultImage.setBitmap(bmap);
+                Canvas canvas = new Canvas(bmap);
+                canvas.drawRGB(0xff, 0xff, 0xff);
+                mDefaultImage = new GVRBitmapTexture(ctx, bmap);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
         return mDefaultImage;
     }

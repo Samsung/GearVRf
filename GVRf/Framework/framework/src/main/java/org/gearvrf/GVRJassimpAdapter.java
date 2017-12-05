@@ -631,33 +631,33 @@ class GVRJassimpAdapter {
         }
         else
         {
-        /* Diffuse color & Opacity */
+            /* Diffuse color & Opacity */
             if (material.getOpacity() > 0)
             {
                 opacity *= material.getOpacity();
             }
-            meshMaterial.setVec4("diffuse_color", diffuseColor.getRed(),
-                                 diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
+            meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
+                    diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
 
-        /* Specular color */
-            AiColor specularColor = material.getSpecularColor(sWrapperProvider);
-            meshMaterial.setSpecularColor(specularColor.getRed(),
-                                          specularColor.getGreen(), specularColor.getBlue(),
-                                          specularColor.getAlpha());
-
-
-        /* Ambient color */
-            AiColor ambientColor = material.getAmbientColor(sWrapperProvider);
-            meshMaterial.setAmbientColor(ambientColor.getRed(),
-                                         ambientColor.getGreen(), ambientColor.getBlue(),
-                                         ambientColor.getAlpha());
+            /* Specular color */
+                AiColor specularColor = material.getSpecularColor(sWrapperProvider);
+                meshMaterial.setSpecularColor(specularColor.getRed(),
+                                              specularColor.getGreen(), specularColor.getBlue(),
+                                              specularColor.getAlpha());
 
 
-        /* Emissive color */
-            AiColor emissiveColor = material.getEmissiveColor(sWrapperProvider);
-            meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
-                                 emissiveColor.getGreen(), emissiveColor.getBlue(),
-                                 emissiveColor.getAlpha());
+            /* Ambient color */
+                AiColor ambientColor = material.getAmbientColor(sWrapperProvider);
+                meshMaterial.setAmbientColor(ambientColor.getRed(),
+                                             ambientColor.getGreen(), ambientColor.getBlue(),
+                                             ambientColor.getAlpha());
+
+
+            /* Emissive color */
+                AiColor emissiveColor = material.getEmissiveColor(sWrapperProvider);
+                meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                                     emissiveColor.getGreen(), emissiveColor.getBlue(),
+                                     emissiveColor.getAlpha());
         }
 
         /* Specular Exponent */
@@ -739,6 +739,11 @@ class GVRJassimpAdapter {
         if (uvIndex > 0)
         {
             texCoordKey += uvIndex;
+        }
+        if (texIndex > 1)
+        {
+            assetRequest.onTextureError(mContext, "Layering only supported for two textures, ignoring " + mFileName, mFileName);
+            return;
         }
         if (texIndex > 0)
         {
