@@ -429,25 +429,10 @@ class GVRJassimpAdapter {
         {
             return;
         }
-        AiNode root = scene.getSceneRoot(sWrapperProvider);
-        if (root.getNumChildren() > 0)
-        {
-            GVRSceneObject temp = new GVRSceneObject(model.getGVRContext());
-            model.addChildObject(temp);
-            recurseAssimpNodes(request, temp, root, lightList);
-        }
-        else
-        {
-            recurseAssimpNodes(request, model, root, lightList);
-        }
+        recurseAssimpNodes(request, model, scene.getSceneRoot(sWrapperProvider), lightList);
         if (!settings.contains(GVRImportSettings.NO_ANIMATION))
         {
             List<AiAnimation> animations = scene.getAnimations();
-            GVRModelSceneObject modelRoot = null;
-            if (GVRModelSceneObject.class.isAssignableFrom(model.getClass()))
-            {
-                modelRoot = (GVRModelSceneObject) model;
-            }
             if (animations.size() > 0)
             {
                 GVRAnimator animator = new GVRAnimator(mContext, startAnimations);
@@ -455,7 +440,11 @@ class GVRJassimpAdapter {
                 for (AiAnimation aiAnim : scene.getAnimations())
                 {
                     GVRAnimation animation = createAnimation(aiAnim, model);
-
+                    GVRModelSceneObject modelRoot = null;
+                    if (GVRModelSceneObject.class.isAssignableFrom(model.getClass()))
+                    {
+                        modelRoot = (GVRModelSceneObject) model;
+                    }
                     if (animation != null)
                     {
                         animator.addAnimation(animation);
