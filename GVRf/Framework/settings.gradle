@@ -1,6 +1,11 @@
 include ':framework'
-include ':backend_oculus'
-include ':backend_daydream'
+if (hasProperty('only_daydream') && (only_daydream == "true")) {
+    include ':backend_daydream'
+}
+else {
+    include ':backend_daydream'
+    include ':backend_oculus'
+}
 
 if(file("../../../extra_settings.gradle").exists()) {
     apply from: '../../../extra_settings.gradle'
