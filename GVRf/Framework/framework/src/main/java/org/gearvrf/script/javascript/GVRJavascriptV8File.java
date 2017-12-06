@@ -110,4 +110,7 @@ public class GVRJavascriptV8File {
         return mScriptText;
     }
 
+    public static void destroy() {
+        mEngine = null;
+    }
 }

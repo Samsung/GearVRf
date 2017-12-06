@@ -25,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.script.IScriptable;
+import org.gearvrf.script.javascript.GVRJavascriptV8File;
 import org.gearvrf.utility.DockEventReceiver;
 import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
 import org.gearvrf.utility.Log;
@@ -236,6 +237,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mRenderableViewGroup = null;
         mConfigurationManager = null;
 
+        GVRJavascriptV8File.destroy();
         super.onDestroy();
     }
 
