@@ -48,6 +48,13 @@ public class GVRJavascriptV8File {
 
         mScriptText = scriptText;
         mGvrContext = gvrContext;
+
+        GVRContext.addResetOnRestartHandler(new Runnable() {
+            @Override
+            public void run() {
+                mEngine = null;
+            }
+        });
     }
 
     public void setInputValues(Map inputValues) {
@@ -108,9 +115,5 @@ public class GVRJavascriptV8File {
      */
     public String getScriptText() {
         return mScriptText;
-    }
-
-    public static void destroy() {
-        mEngine = null;
     }
 }
