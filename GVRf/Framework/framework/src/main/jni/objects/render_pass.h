@@ -57,6 +57,7 @@ public:
 
     void markDirty() {
         dirty_ = true;
+        hash_code_dirty_ = true;
     }
 
     void clearDirty() {
@@ -73,6 +74,7 @@ public:
      * @returns -1 = material not ready, 0 = dirty, 1 = clean
      */
     int isValid(Renderer* renderer, const RenderState& rstate, RenderData* rdata);
+    const std::string& getHashCode(bool is_multiview);
 
 private:
     static const int DEFAULT_CULL_FACE = CullBack;
@@ -80,6 +82,8 @@ private:
     int shaderID_[2];
     int cull_face_;
     bool dirty_;
+    bool hash_code_dirty_;
+    std::string hash_code;
 };
 
 }

@@ -378,7 +378,7 @@ public:
     int isValid(Renderer* renderer, const RenderState& scene);
 
     int             get_shader(bool useMultiview =false, int pass =0) const { return render_pass_list_[pass]->get_shader(useMultiview); }
-    std::string     getHashCode();
+    const std::string&     getHashCode();
     void            setCameraDistanceLambda(std::function<float()> func);
 
     void setStencilFunc(int func, int ref, int mask);

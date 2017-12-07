@@ -20,7 +20,7 @@
 namespace gvr {
 
 RenderPass::RenderPass() :
-        material_(0), cull_face_(DEFAULT_CULL_FACE), dirty_(true)
+        material_(0), cull_face_(DEFAULT_CULL_FACE), dirty_(true), hash_code_dirty_(true)
 {
     memset(shaderID_,0,sizeof(shaderID_));
 }
@@ -74,5 +74,15 @@ int RenderPass::isValid(Renderer* renderer, const RenderState& rstate, RenderDat
     return !dirty;
 }
 
+const std::string& RenderPass::getHashCode(bool is_multiview){
+    if (hash_code_dirty_) {
+        std::string render_data_string;
+        render_data_string.append(to_string(cull_face_));
+        render_data_string.append(to_string(shaderID_[is_multiview]));
+        hash_code = render_data_string;
+        hash_code_dirty_ = false;
+    }
+    return hash_code;
+}
 
 }

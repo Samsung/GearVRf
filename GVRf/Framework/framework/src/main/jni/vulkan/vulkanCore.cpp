@@ -801,6 +801,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     std::vector<VkDynamicState> dynamic_states = {
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_SCISSOR,
+            VK_DYNAMIC_STATE_LINE_WIDTH
     };
 
     VkPipelineDynamicStateCreateInfo dynamic_state_create_info = {
@@ -954,6 +955,13 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             for(int curr_pass = postEffectFlag ? (rdata->pass_count() - 1) : 0 ;curr_pass < rdata->pass_count(); curr_pass++) {
                 VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(
                         rdata->get_shader(false,curr_pass)));
+
+                float line_width;
+                ShaderData* material = rdata->pass(curr_pass)->material();
+                if(!material || !material->getFloat("line_width", line_width)){
+                    line_width = 1.0;
+                }
+                vkCmdSetLineWidth(cmdBuffer, line_width);
 
                 rdata->render(shader,cmdBuffer,curr_pass);
            }

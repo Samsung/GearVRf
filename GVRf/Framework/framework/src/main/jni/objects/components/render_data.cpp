@@ -40,6 +40,7 @@ RenderPass* RenderData::pass(int pass) {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass];
     }
+    return nullptr;
 }
 
 const RenderPass* RenderData::pass(int pass) const {
@@ -202,7 +203,7 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
     return i->rendering_order() < j->rendering_order();
 }
 
-std::string RenderData::getHashCode()
+const std::string& RenderData::getHashCode()
 {
     if (hash_code_dirty_)    {
         std::string render_data_string;
@@ -219,7 +220,7 @@ std::string RenderData::getHashCode()
         render_data_string.append(to_string(stencilOpSfail_));
         render_data_string.append(to_string(stencilOpDpfail_));
         render_data_string.append(to_string(stencilOpDppass_));
-
+        render_data_string.append(to_string(mesh_->getVertexBuffer()->getDescriptor()));
         hash_code = render_data_string;
         hash_code_dirty_ = false;
     }

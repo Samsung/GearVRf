@@ -111,6 +111,10 @@ struct VulkanRenderPass : public RenderPass
             ibuf->generateVKBuffers(renderer->getCore());
         }
 
+        VulkanRenderPass* getRenderPass(int pass){
+            return static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
+        }
+
         void bindToShader(Shader* shader, Renderer* renderer);
         bool isDirty(int pass){
             return isHashCodeDirty() || RenderData::isDirty() || isDescriptorSetNull(pass);
