@@ -237,7 +237,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mRenderableViewGroup = null;
         mConfigurationManager = null;
 
-        GVRJavascriptV8File.destroy();
         super.onDestroy();
     }
 
