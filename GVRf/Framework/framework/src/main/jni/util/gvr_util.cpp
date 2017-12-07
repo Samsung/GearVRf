@@ -15,8 +15,19 @@
 #include "util/gvr_util.h"
 #include <sys/system_properties.h>
 #include <cstring>
+#include <jni.h>
 
 namespace gvr {
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_SystemPropertyUtil_isSystemPropertySet(JNIEnv *env, jclass type, jstring name_) {
+    const char *name = env->GetStringUTFChars(name_, 0);
+    bool result = isSystemPropertySet(name);
+    env->ReleaseStringUTFChars(name_, name);
+
+    return result;
+}
 
 bool isSystemPropertySet(const char *prop) {
     const prop_info *pi = __system_property_find(prop);
