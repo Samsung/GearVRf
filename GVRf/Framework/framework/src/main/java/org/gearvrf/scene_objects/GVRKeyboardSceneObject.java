@@ -15,12 +15,9 @@
 
 package org.gearvrf.scene_objects;
 
-import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
@@ -43,7 +40,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
@@ -53,10 +49,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.IKeyboardEvents;
 import org.gearvrf.ITouchEvents;
-import org.gearvrf.utility.Log;
 import org.gearvrf.utility.MeshUtils;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -204,40 +197,8 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         }
     };
 
-
-
-    private IActivityEvents mActivityEventsHandler = new IActivityEvents()
+    private IActivityEvents mActivityEventsHandler = new GVREventListeners.ActivityEvents()
     {
-        @Override
-        public void onTouchEvent(MotionEvent event)
-        {
-        }
-
-        @Override
-        public void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint) {
-        }
-
-        @Override
-        public void onPause() {}
-
-        @Override
-        public void onResume() {}
-
-        @Override
-        public void onDestroy() {}
-
-        @Override
-        public void onSetMain(GVRMain script) {}
-
-        @Override
-        public void onWindowFocusChanged(boolean hasFocus) {}
-
-        @Override
-        public void onConfigurationChanged(Configuration config) {}
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {}
-
         @Override
         public void dispatchTouchEvent(MotionEvent event)
         {

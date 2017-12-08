@@ -25,8 +25,11 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import static org.gearvrf.GearCursorController.CONTROLLER_KEYS.BUTTON_NONE;
 
 
 /**
@@ -51,6 +54,7 @@ public final class GearCursorController extends GVRCursorController
 
     public enum CONTROLLER_KEYS
     {
+        BUTTON_NONE (0),
         BUTTON_A (0x00000001),
         BUTTON_ENTER (0x00100000),
         BUTTON_BACK (0x00200000),
@@ -368,9 +372,6 @@ public final class GearCursorController extends GVRCursorController
         }
 
         void handleControllerEvent(final ControllerEvent event) {
-            context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerEvent",
-                                                event.position, event.rotation, event.pointF);
-
             this.currentControllerEvent = event;
             Quaternionf q = event.rotation;
             Vector3f pos = event.position;
@@ -388,31 +389,56 @@ public final class GearCursorController extends GVRCursorController
             pivot.getTransform().setPosition(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
             setOrigin(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
 
+            CONTROLLER_KEYS controllerKey = BUTTON_NONE;
             int handleResult = handleEnterButton(key, event.pointF, event.touched);
             prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
+            if (0 == prevButtonEnter) {
+                controllerKey = CONTROLLER_KEYS.BUTTON_ENTER;
+            }
 
             handleResult = handleAButton(key);
             prevButtonA = handleResult == -1 ? prevButtonA : handleResult;
+            if (0 == prevButtonA) {
+                controllerKey = CONTROLLER_KEYS.BUTTON_A;
+            }
 
             handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK,
                                         prevButtonBack, KeyEvent.KEYCODE_BACK);
             prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
+            if (0 == prevButtonBack) {
+                controllerKey = CONTROLLER_KEYS.BUTTON_BACK;
+            }
 
             handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_UP,
                                         prevButtonVolumeUp, KeyEvent.KEYCODE_VOLUME_UP);
             prevButtonVolumeUp = handleResult == -1 ? prevButtonVolumeUp : handleResult;
+            if (0 == prevButtonVolumeUp) {
+                controllerKey = CONTROLLER_KEYS.BUTTON_VOLUME_UP;
+            }
 
             handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_DOWN,
                                         prevButtonVolumeDown, KeyEvent.KEYCODE_VOLUME_DOWN);
             prevButtonVolumeDown = handleResult == -1 ? prevButtonVolumeDown : handleResult;
+            if (0 == prevButtonVolumeDown) {
+                controllerKey = CONTROLLER_KEYS.BUTTON_VOLUME_DOWN;
+            }
 
             handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_HOME,
                                         prevButtonHome, KeyEvent.KEYCODE_HOME);
             prevButtonHome = handleResult == -1 ? prevButtonHome : handleResult;
+            if (0 == prevButtonHome) {
+                controllerKey = CONTROLLER_KEYS.BUTTON_HOME;
+            }
 
             GearCursorController.super.setPosition(result.x, result.y, result.z);
             event.recycle();
 
+            context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerEvent",
+                    event.position, event.rotation, event.pointF);
+
+            if (BUTTON_NONE != controllerKey) {
+                context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerButton", controllerKey);
+            }
         }
 
         void sendEvent(ControllerEvent event) {

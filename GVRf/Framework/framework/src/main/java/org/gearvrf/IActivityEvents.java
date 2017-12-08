@@ -52,5 +52,7 @@ public interface IActivityEvents extends IEvents {
      */
     void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint);
 
+    void onControllerButton(GearCursorController.CONTROLLER_KEYS key);
+
     void dispatchTouchEvent(MotionEvent event);
 }

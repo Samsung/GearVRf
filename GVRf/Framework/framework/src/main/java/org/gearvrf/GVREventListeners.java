@@ -96,6 +96,10 @@ public class GVREventListeners {
         }
 
         @Override
+        public void onControllerButton(GearCursorController.CONTROLLER_KEYS key) {
+        }
+
+        @Override
         public void dispatchTouchEvent(MotionEvent event) {
         }
     }
