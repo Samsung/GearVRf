@@ -649,7 +649,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
 
         // bottom cap
         // 3 * numSlices
-        if (params.BottomRadius > 0) {
+        if (params.HasBottomCap && (params.BottomRadius > 0)) {
             createCap(params.BottomRadius, -halfHeight, params.SliceNumber, -1.0f, params.FacingOut);
         }
     }
