@@ -16,7 +16,6 @@
 package org.gearvrf.resonanceaudio;
 
 import com.google.vr.sdk.audio.GvrAudioEngine;
-
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
