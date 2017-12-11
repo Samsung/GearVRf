@@ -45,7 +45,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Keep Oculus-specifics here
  */
-class OvrVrapiActivityHandler implements OvrActivityHandler {
+final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private final GVRActivity mActivity;
     private long mPtr;
@@ -83,10 +83,9 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     public void onPause() {
         stopChoreographerThread();
 
-        final CountDownLatch cdl;
         if (null != mSurfaceView) {
+            final CountDownLatch cdl = new CountDownLatch(1);
             mSurfaceView.onPause();
-            cdl = new CountDownLatch(1);
             mSurfaceView.queueEvent(new Runnable() {
                 @Override
                 public void run() {
@@ -96,19 +95,10 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
                     cdl.countDown();
                 }
             });
-        } else {
-            cdl = null;
-        }
-
-        if (mVrApiInitialized) {
-            if (null != cdl) {
-                try {
-                    cdl.await();
-                } catch (final InterruptedException ignored) {
-                }
+            try {
+                cdl.await();
+            } catch (final InterruptedException e) {
             }
-            nativeUninitializeVrApi(mPtr);
-            mVrApiInitialized = false;
         }
         mCurrentSurfaceWidth = mCurrentSurfaceHeight = 0;
     }
@@ -139,8 +129,11 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     }
 
     @Override
-    public boolean onBackLongPress() {
-        return false;
+    public void onDestroy() {
+        if (mVrApiInitialized) {
+            nativeUninitializeVrApi(mPtr);
+            mVrApiInitialized = false;
+        }
     }
 
     @Override

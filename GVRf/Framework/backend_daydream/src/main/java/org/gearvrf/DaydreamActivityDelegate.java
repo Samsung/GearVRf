@@ -16,15 +16,13 @@
 package org.gearvrf;
 
 import android.content.res.AssetManager;
-import android.content.res.Configuration;
-import android.view.KeyEvent;
 
 import org.gearvrf.utility.VrAppSettings;
 
 /**
  * {@inheritDoc}
  */
-final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate, IActivityNative {
+final class DaydreamActivityDelegate extends GVRActivity.ActivityDelegateStubs implements IActivityNative {
     private GVRActivity mActivity;
     private DaydreamViewManager daydreamViewManager;
 
@@ -80,23 +78,6 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
     }
 
     @Override
-    public boolean onBackPress() {
-        return false;
-    }
-
-    @Override
-    public void onPause() {
-    }
-
-    @Override
-    public void onResume() {
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-    }
-
-    @Override
     public boolean setMain(GVRMain gvrMain, String dataFileName) {
         return true;
     }
@@ -113,26 +94,6 @@ final class DaydreamActivityDelegate implements GVRActivity.GVRActivityDelegate,
         params.setResolutionHeight(VrAppSettings.DEFAULT_FBO_RESOLUTION);
         params.setResolutionWidth(VrAppSettings.DEFAULT_FBO_RESOLUTION);
         return settings;
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public void onDestroy() {
-
     }
 
     @Override

@@ -682,6 +682,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         void onCreate(GVRActivity activity);
         void onPause();
         void onResume();
+        void onDestroy();
         void onConfigurationChanged(final Configuration newConfig);
 
         boolean onKeyDown(int keyCode, KeyEvent event);
@@ -701,5 +702,103 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         void parseXmlSettings(AssetManager assetManager, String dataFilename);
 
         boolean onBackPress();
+    }
+
+    static class ActivityDelegateStubs implements GVRActivityDelegate {
+
+        @Override
+        public void onCreate(GVRActivity activity) {
+
+        }
+
+        @Override
+        public void onPause() {
+
+        }
+
+        @Override
+        public void onResume() {
+
+        }
+
+        @Override
+        public void onDestroy() {
+
+        }
+
+        @Override
+        public void onConfigurationChanged(Configuration newConfig) {
+
+        }
+
+        @Override
+        public boolean onKeyDown(int keyCode, KeyEvent event) {
+            return false;
+        }
+
+        @Override
+        public boolean onKeyUp(int keyCode, KeyEvent event) {
+            return false;
+        }
+
+        @Override
+        public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+            return false;
+        }
+
+        @Override
+        public boolean setMain(GVRMain gvrMain, String dataFileName) {
+            return false;
+        }
+
+        @Override
+        public void setViewManager(GVRViewManager viewManager) {
+
+        }
+
+        @Override
+        public void onInitAppSettings(VrAppSettings appSettings) {
+
+        }
+
+        @Override
+        public VrAppSettings makeVrAppSettings() {
+            return null;
+        }
+
+        @Override
+        public IActivityNative getActivityNative() {
+            return null;
+        }
+
+        @Override
+        public GVRViewManager makeViewManager() {
+            return null;
+        }
+
+        @Override
+        public GVRViewManager makeMonoscopicViewManager() {
+            return null;
+        }
+
+        @Override
+        public GVRCameraRig makeCameraRig(GVRContext context) {
+            return null;
+        }
+
+        @Override
+        public GVRConfigurationManager makeConfigurationManager(GVRActivity activity) {
+            return null;
+        }
+
+        @Override
+        public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
+
+        }
+
+        @Override
+        public boolean onBackPress() {
+            return false;
+        }
     }
 }
