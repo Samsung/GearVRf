@@ -156,4 +156,25 @@ public class GVREventListeners {
         @Override
         public void onMotionOutside(GVRPicker picker, MotionEvent event) { }
     }
+
+    /**
+     * Null implementation of {@link IAssetEvents}
+     */
+    public static class AssetEvents implements IAssetEvents
+    {
+        @Override
+        public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, String errors) { }
+
+        @Override
+        public void onModelLoaded(GVRContext context, GVRSceneObject model, String filePath) { }
+
+        @Override
+        public void onTextureLoaded(GVRContext context, GVRTexture texture, String filePath) { }
+
+        @Override
+        public void onModelError(GVRContext context, String error, String filePath) { }
+
+        @Override
+        public void onTextureError(GVRContext context, String error, String filePath) { }
+    }
 }
