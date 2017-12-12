@@ -1980,7 +1980,7 @@ public final class GVRAssetLoader {
             throw new IOException(errmsg);
         }
         boolean startAnimations = settings.contains(GVRImportSettings.START_ANIMATIONS);
-        jassimpAdapter.processScene(request, model, assimpScene, volume, startAnimations);
+        jassimpAdapter.processScene(request, model, assimpScene, startAnimations);
         request.onModelLoaded(mContext, model, filePath);
         return model;
     }
