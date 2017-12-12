@@ -275,6 +275,37 @@ public class GVRCubeSceneObject extends GVRSceneObject {
 
     /**
      * Constructs a cube scene object with each side of length 1.
+     * <p>
+     * The cube's triangles and normals are facing either in or out and the same
+     * texture will be applied to each side of the cube.
+     * <p>
+     * This form of the constructor lets you control which components are in the
+     * cube mesh. Typically the cube comes with positions, texture coordinates and
+     * normals. You can specify a more limiting descriptor to use the cube with
+     * a shader that does not require all the vertex components. This can give
+     * better performance because it uses the GPU vertex cache more effectively.
+     * @param gvrContext
+     *            current {@link GVRContext}
+     *
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or facing out.
+     * @param vertexDesc
+     *            String descriptor used to construct mesh tailored to a specific shader.
+     * @param mtl
+     *            material to use for this scene object.
+     * @param dimensions
+     *            Vector3f containing X, Y, Z dimensions
+     */
+    public GVRCubeSceneObject(GVRContext gvrContext, boolean facingOut, String vertexDesc, GVRMaterial mtl, Vector3f dimensions) {
+        super(gvrContext);
+        GVRMesh mesh = createCube(gvrContext, vertexDesc, facingOut, dimensions);
+        GVRRenderData renderData = new GVRRenderData(gvrContext, mtl);
+        attachComponent(renderData);
+        renderData.setMesh(mesh);
+    }
+
+    /**
+     * Constructs a cube scene object with each side of length 1.
      * 
      * The cube's triangles and normals are facing either in or out and the same
      * texture will be applied to each side of the cube. All six faces share the
