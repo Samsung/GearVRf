@@ -18,7 +18,6 @@ package org.gearvrf.io.cursor3d;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
@@ -40,7 +39,7 @@ import java.util.List;
  * {@link CursorManager#getActiveCursors()}. This call requests the {@link CursorManager} for
  * all the active {@link Cursor} objects with the {@link CursorManager}.</li>
  * <li> Use the {@link
- * CursorActivationListener} to know about {@link Cursor} objects added or removed from the
+ * ICursorActivationListener} to know about {@link Cursor} objects added or removed from the
  * {@link CursorManager} during runtime.</li> </ul> </p>
  * <p>
  * As a general rule it an application would query the {@link CursorManager} for all available

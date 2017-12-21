@@ -26,23 +26,16 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.IActivityEvents;
-import org.gearvrf.IAssetEvents;
-import org.gearvrf.IEvents;
-import org.gearvrf.IPickEvents;
-import org.gearvrf.ITouchEvents;
 import org.gearvrf.scene_objects.GVRLineSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
@@ -55,18 +48,18 @@ import java.util.EnumSet;
 /**
  * This class represents the Gear Controller.
  *
- * The input manager notifies the application when the controller has mConnected successfully. Use
- * the {@link GVRInputManager#addCursorControllerListener(CursorControllerListener)} to get notified
- * when the controller is available to use. To query the device specific information from the
+ * The input manager notifies the application when the controller has mConnected successfully.
+ * Add a {@link org.gearvrf.io.GVRInputManager.ICursorControllerListener)} to the {@link GVREventReceiver}
+ * of this controller to get notified when the controller is available to use.
+ * To query the device specific information from the
  * Gear Controller make sure to type cast the returned {@link GVRCursorController} to
  * {@link GearCursorController} like below:
  *
  * <code>
- * OvrGearController controller = (OvrGearController) gvrCursorController;
+ * GearController controller = (GearController) gvrCursorController;
  * </code>
  *
- * Additionally register a {@link org.gearvrf.GVRCursorController.ControllerEventListener} using
- * {@link GVRCursorController#addControllerEventListener(ControllerEventListener)} to receive
+ * AYou can add a listener for {@link IControllerEvent} to receive
  * notification whenever the controller information is updated.
  */
 public final class GearCursorController extends GVRCursorController

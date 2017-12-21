@@ -18,7 +18,6 @@ package org.gearvrf;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
 import org.joml.Matrix3f;
@@ -29,28 +28,29 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Define a class of type {@link GVRCursorController} to register a new cursor
  * controller with the {@link GVRInputManager}.
- *
+ * <p>
  * You can request for all the {@link GVRCursorController}s in the system by
  * querying the {@link GVRInputManager#getCursorControllers()} call.
- *
  * Alternatively all notifications for {@link GVRCursorController}s attached or
  * detached from the framework can be obtained by registering a
- * {@link CursorControllerListener} with the {@link GVRInputManager}.
- *
+ * {@link org.gearvrf.io.GVRInputManager.ICursorControllerListener} or
+ * {@link org.gearvrf.io.GVRInputManager.ICursorControllerSelectListener
+ * }with the {@link GVREventReceiver} of this input manager.
+ * <p>
  * Make use of the {@link GVRCursorController#setCursor(GVRSceneObject)} to
  * add a Cursor for the controller in 3D space. The {@link GVRInputManager} will
  * manipulate the {@link GVRSceneObject} based on the input coming in to the
  * {@link GVRCursorController}.
- *
- * Use the {@link GVRInputManager#addCursorController(GVRCursorController)} call
- * to add an external {@link GVRCursorController} to the framework.
+ * @see GVRInputManager
+ * @see org.gearvrf.io.GearCursorController
+ * @see org.gearvrf.io.GVRGazeCursorController
  */
-public abstract class GVRCursorController {
+public abstract class GVRCursorController implements IEventReceiver
+{
     public enum CursorControl
     {
         NONE,
@@ -72,7 +72,7 @@ public abstract class GVRCursorController {
     private List<KeyEvent> processedKeyEvent;
     protected List<MotionEvent> motionEvent;
     private List<MotionEvent> processedMotionEvent;
-    private List<ControllerEventListener> controllerEventListeners;
+    private GVREventReceiver listeners;
 
     protected Object eventLock = new Object();
     protected GVRSceneObject mCursor = null;
@@ -143,7 +143,7 @@ public abstract class GVRCursorController {
         processedKeyEvent = new ArrayList<KeyEvent>();
         motionEvent = new ArrayList<MotionEvent>();
         processedMotionEvent = new ArrayList<MotionEvent>();
-        controllerEventListeners = new CopyOnWriteArrayList<ControllerEventListener>();
+        listeners = new GVREventReceiver(this);
         if (mPicker == null)
         {
             mPicker = new GVRPicker(this, false);
@@ -157,6 +157,12 @@ public abstract class GVRCursorController {
         mDragRoot.addChildObject(mCursorScale);
     }
 
+    /**
+     * Dispatch a key event for this controller.
+     * @param event event to dispatch
+     * @return true if event handled, false if event should be routed to the application
+     * @see #sendEventsToActivity(boolean)
+     */
     synchronized public boolean dispatchKeyEvent(KeyEvent event)
     {
         synchronized (eventLock) {
@@ -165,6 +171,12 @@ public abstract class GVRCursorController {
         return !mSendEventsToActivity;
     }
 
+    /**
+     * Dispatch a motion event for this controller.
+     * @param event event to dispatch
+     * @return true if event handled, false if event should be routed to the application
+     * @see #sendEventsToActivity(boolean)
+     */
     synchronized public boolean dispatchMotionEvent(MotionEvent event)
     {
         synchronized (eventLock) {
@@ -182,8 +194,19 @@ public abstract class GVRCursorController {
         return controllerId;
     }
 
+    /**
+     * Get the {@link GVRContext} which owns this controller.
+     * @return {@link GVRContext} for the controller
+     */
     public GVRContext getGVRContext() { return context; }
 
+    /**
+     * Get the {@link GVREventReceiver} which dispatches {@link IControllerEvent}s
+     * for this controller.
+     * @link {@link GVREventReceiver} for the controller
+     * @see GVREventReceiver#addListener(IEvents)
+     */
+    public GVREventReceiver getEventReceiver() { return listeners; }
 
     /**
      * Enable or disable routing controller MotionEvents to GVRActivity.
@@ -196,7 +219,7 @@ public abstract class GVRCursorController {
      * emitted by the{@link GVRPicker} associated with the controller.
      * The {@link GVRPicker.GVRPickedObject} associated with the
      * event may have an Android MotionEvent attached.
-     * You can also use a {@link GVRCursorController.ControllerEventListener}
+     * You can also use a {@link IControllerEvent}
      * to listen for controller events. You can get the motion event
      * with {@link GVRCursorController#getMotionEvent()}.
      * <p>
@@ -210,7 +233,7 @@ public abstract class GVRCursorController {
      *
      * @param flag true to send events to GVRActivity, false to not send them
      * @see #sendingEventsToActivity
-     * @see GVRCursorController.ControllerEventListener
+     * @see IControllerEvent
      * @see #addPickEventListener(IEvents)
      * @see ITouchEvents
      */
@@ -225,24 +248,6 @@ public abstract class GVRCursorController {
      */
     public boolean sendingEventsToActivity() { return mSendEventsToActivity; }
 
-    /**
-     * Use this method to set the active state of the{@link GVRCursorController}.
-     * It indicates whether or not the "active" button is pressed.
-     * <p>
-     * It is up to the developer to map the designated button to the active flag.
-     * Eg. A Gamepad could attach {@link KeyEvent#KEYCODE_BUTTON_A} to active.
-     * @param active    Setting active to true causes the {@link SensorEvent} generated
-     *                  from collisions with the cursor to have {@link SensorEvent#isActive()} as
-     *                  <code>true</code>. Clearing it will emit events with <code>false</code>.
-     *                  The active flag is also propagated to the picker, setting the value of
-     *                  {@link GVRPicker.GVRPickedObject#touched}.
-     */
-    protected void setActive(boolean active) {
-        if (isEnabled())
-        {
-            this.active = active;
-        }
-    }
 
     /**
      * Set a {@link GVRSceneObject} to be controlled by the
@@ -273,36 +278,41 @@ public abstract class GVRCursorController {
         }
     }
 
-    protected void attachCursor(GVRSceneObject cursor)
-    {
-        GVRSceneObject parent = cursor.getParent();
-        if (parent != null)
-        {
-            parent.removeChildObject(cursor);
-        }
-        mCursorScale.addChildObject(cursor);
-    }
-
-    protected void detachCursor()
-    {
-        mCursorScale.removeChildObject(mCursor);
-    }
-
+    /**
+     * Set the default distance of the cursor from the camera.
+     * <p>
+     * If the cursor is not projected on a surface, it is
+     * displayed at this depth.
+     * </p>
+     * @param depth default cursor depth
+     * @see #getCursorDepth()'
+     * @see #setCursorControl(CursorControl)
+     */
     public void setCursorDepth(float depth)
     {
         mCursorDepth = Math.abs(depth);
     }
 
+    /**
+     * Get the defrault distance of the cursor from the camera.
+     * <p>
+     * If the cursor is not projected on a surface, it is
+     * displayed at this depth.
+     * </p>
+     * @return default cursor depth
+     * @see #setCursorDepth(float)
+     * @see #setCursorControl(CursorControl)
+     */
     public float getCursorDepth()
     {
         return mCursorDepth;
     }
 
     /**
-     * Return the currently set {@link GVRSceneObject}.
+     * Return the {@link GVRSceneObject} representing the current cursor.
      *
-     * @return the currently set {@link GVRSceneObject} if there is one, else
-     * return <code>null</code>
+     * @return the current cursor or null if none
+     * @see #setCursor(GVRSceneObject)
      */
     public GVRSceneObject getCursor()
     {
@@ -313,7 +323,7 @@ public abstract class GVRCursorController {
     }
 
     /**
-     * The method will force a process cycle that may result in an
+     * The method will force a process cycle that may result in
      * {@link ISensorEvents} being generated if there is a significant event
      * that affects a {@link GVRBaseSensor} or {@link IPickEvents} if the
      * cursor pick ray intersects a collider.
@@ -337,17 +347,7 @@ public abstract class GVRCursorController {
     /**
      * Return the {@link GVRControllerType} associated with the
      * {@link GVRCursorController}.
-     *
-     * In most cases, this method should return
-     * {@link GVRControllerType#EXTERNAL}. {@link GVRControllerType#EXTERNAL}
-     * allows the input device to define its own input behavior. If the device
-     * wishes to implement {@link GVRControllerType#MOUSE} or
-     * {@link GVRControllerType#GAMEPAD} make sure that the behavior is
-     * consistent with that defined in GVRMouseDeviceManager and
-     * GVRGamepadDeviceManager.
-     *
      * @return the {@link GVRControllerType} for the {@link GVRCursorController}
-     * .
      */
     public GVRControllerType getControllerType() {
         return controllerType;
@@ -375,7 +375,7 @@ public abstract class GVRCursorController {
      *        cursor to the hit point on the collider that was hit.
      *    </td>
      * </tr>
-     * <tr<td>ORIENT_CURSOR_ON_SURFACE</td>
+     * <tr><td>ORIENT_CURSOR_ON_SURFACE</td>
      *    <td>cursor depth is changed dynamically to move the
      *        cursor to the hit point on the collider that was hit.
      *        In addition the cursor is oriented along the surface normal
@@ -383,6 +383,8 @@ public abstract class GVRCursorController {
      *        picking enabled {@link GVRMeshCollider#GVRMeshCollider(GVRContext, GVRMesh, boolean}
      *    </td>
      * </tr>
+     * <tr><td>CURSOR_DEPTH_FROM_CONTROLLER</td>
+     * <td>cursor depth can be changed by the user with the touchpad on the controller</td>
      * </table>
      * @param control cursor control options
      */
@@ -391,9 +393,30 @@ public abstract class GVRCursorController {
         mCursorControl = control;
     }
 
+    /**
+     * Get the current cursor control options which indicate how
+     * the distance of the cursor from the camera is controlled.
+     * @return cursor control options
+     * @see #setCursorControl(CursorControl)
+     */
     public CursorControl getCursorControl() { return mCursorControl; }
 
-
+    /**
+     * Allows a single {@link GVRSceneObject} to be dragged by the controller.
+     * <p>
+     * The object is added as a child of the controller until dragging is stopped.
+     * Because the cursor is moved independently in a separate thread,
+     * this function is required to parent the dragged object in a thread-safe way,
+     * </p>
+     * Only one object may be dragged at a time. If an object is already
+     * being dragged, this function returns false and does nothing.
+     * <p>
+     * To stop dragging with the cursor, call {@link #stopDrag()}.
+     * </p>
+     * @param dragMe scene object to drag with controller
+     * @return true if object is dragging, false on error
+     * @see #stopDrag()
+     */
     public boolean startDrag(GVRSceneObject dragMe)
     {
         if (mDragMe != null)
@@ -419,6 +442,18 @@ public abstract class GVRCursorController {
         return true;
     }
 
+    /**
+     * Stops dragging the designated object with the controller.
+     * <p>
+     * Because the cursor is moved independently in a separate thread,
+     * this function is required to disconnect the dragged object in a thread-safe way,
+     * </p>
+     * The {@link #startDrag(GVRSceneObject)} function starts dragging an object
+     * with the controller.
+     * If an object is not being dragged, this function returns false and does nothing.
+     * @return true if dragging is stopped, false if nothing dragged
+     * @see #startDrag(GVRSceneObject)
+     */
     public boolean stopDrag()
     {
         if (mDragMe == null)
@@ -445,6 +480,413 @@ public abstract class GVRCursorController {
             mDragParent = null;
         }
         return true;
+    }
+
+
+    /**
+     * Get the all the key events processed by the {@link GVRCursorController}
+     * if there are any. This call returns all the motion events reports since
+     * the last callback was made.
+     *
+     * Note that not all {@link GVRCursorController} report {@link KeyEvent}s),
+     * this function could also return an empty list for
+     * {@link GVRCursorController}s that do not generate {@link KeyEvent}s.
+     *
+     * To get every {@link KeyEvent} reported by the {@link GVRCursorController}
+     * use the {@link IControllerEvent} or the {@link ISensorEvents}
+     * listener to query for the {@link KeyEvent} whenever a a callback is made.
+     *
+     * The {@link KeyEvent} would be valid for the lifetime of that callback and
+     * would be reset to null on completion.
+     *
+     * @return the list of {@link KeyEvent}s processed by the
+     * {@link GVRCursorController}.
+     */
+    public List<KeyEvent> getKeyEvents() {
+        synchronized (eventLock) {
+            return processedKeyEvent;
+        }
+    }
+
+    /**
+     * Get the latest key event processed by the {@link GVRCursorController} if
+     * there is one (not all {@link GVRCursorController} report {@link KeyEvent}
+     * s). Note that this value will be null if the latest event processed by
+     * the {@link GVRCursorController} did not contain a {@link KeyEvent}.
+     *
+     * Note that this function also returns a null. To get every
+     * {@link KeyEvent} reported by the {@link GVRCursorController} use the
+     * {@link IControllerEvent} or the {@link ISensorEvents} listener to
+     * query for the {@link KeyEvent} whenever a a callback is made.
+     *
+     * The {@link KeyEvent} would be valid for the lifetime of that callback and
+     * would be reset to null on completion.
+     *
+     * @return the {@link KeyEvent} or null if there isn't one.
+     */
+    public KeyEvent getKeyEvent() {
+        synchronized (eventLock) {
+            if (processedKeyEvent.isEmpty()) {
+                return null;
+            } else {
+                return processedKeyEvent.get(processedKeyEvent.size() - 1);
+            }
+        }
+    }
+
+
+    /**
+     * Get the all the {@link MotionEvent}s processed by the
+     * {@link GVRCursorController} if there are any. This call returns all the
+     * motion events reports since the last callback was made.
+     *
+     * Note that not all {@link GVRCursorController}s report {@link MotionEvent}s,
+     * this function also returns an empty list. To get every
+     * {@link MotionEvent} reported by the {@link GVRCursorController} use the
+     * {@link IControllerEvent} or the {@link ISensorEvents} listener to
+     * query for the {@link MotionEvent}s whenever a a callback is made.
+     *
+     * The {@link MotionEvent}s reported would be valid for the lifetime of that
+     * callback and would be recycled and reset on completion. Make use to the
+     * {@link MotionEvent#obtain(MotionEvent)} to clone a copy of the
+     * {@link MotionEvent}.
+     *
+     * @return a list of {@link MotionEvent}s processed by the
+     * {@link GVRCursorController} .
+     */
+    public List<MotionEvent> getMotionEvents() {
+        synchronized (eventLock) {
+            return processedMotionEvent;
+        }
+    }
+
+    /**
+     * Get the latest {@link MotionEvent} processed by the
+     * {@link GVRCursorController} if there is one (not all
+     * {@link GVRCursorController}s report {@link MotionEvent}s)
+     *
+     * Note that this function also returns a null. To get every
+     * {@link MotionEvent} reported by the {@link GVRCursorController} use the
+     * {@link IControllerEvent} or the {@link ISensorEvents} listener to
+     * query for the {@link MotionEvent} whenever a a callback is made.
+     *
+     * The {@link MotionEvent} would be valid for the lifetime of that callback
+     * and would be recycled and reset to null on completion. Make use to the
+     * {@link MotionEvent#obtain(MotionEvent)} to clone a copy of the
+     * {@link MotionEvent}.
+     *
+     * @return the latest {@link MotionEvent} processed by the
+     * {@link GVRCursorController} or null.
+     */
+    public MotionEvent getMotionEvent() {
+        synchronized (eventLock) {
+            if (processedMotionEvent.isEmpty()) {
+                return null;
+            } else {
+                return processedMotionEvent
+                        .get(processedMotionEvent.size() - 1);
+            }
+        }
+    }
+
+
+    /**
+     * This call sets the position of the {@link GVRCursorController}.
+     *
+     * Use this call to also set an initial position for the Cursor when a new
+     * {@link GVRCursorController} is returned by the
+     * {@link ICursorControllerListener}.
+     *
+     * @param x the x value of the position.
+     * @param y the y value of the position.
+     * @param z the z value of the position.
+     */
+    public void setPosition(float x, float y, float z)
+    {
+        if (isEnabled())
+        {
+            position.set(x, y, z);
+            update();
+        }
+    }
+
+
+    public Vector3f getPosition(Vector3f pos) {
+        pos.set(position);
+        return pos;
+    }
+
+    /**
+     * Register a {@link IControllerEvent} to receive a callback whenever
+     * the {@link GVRCursorController} has been updated.
+     *
+     * Use the {@link GVRCursorController} methods to query for information
+     * about the {@link GVRCursorController}.
+     */
+    public interface IControllerEvent extends IEvents
+    {
+        void onEvent(GVRCursorController controller, boolean isActive);
+    }
+
+    /**
+     * Add a {@link IControllerEvent} to receive updates from this
+     * {@link GVRCursorController}.
+     *
+     * @param listener the {@link org.gearvrf.io.GVRInputManager.ICursorControllerListener} to be added.
+     */
+    public void addControllerEventListener(IControllerEvent listener) {
+        listeners.addListener(listener);
+    }
+
+    /**
+     * Remove the previously added {@link IControllerEvent}.
+     *
+     * @param listener {@link IControllerEvent} that was previously added .
+     */
+    public void removeControllerEventListener(IControllerEvent listener) {
+        listeners.removeListener(listener);
+    }
+
+    /**
+     * Add a {@link IPickEvents} or {@link ITouchEvents} listener to receive updates from this
+     * {@link GVRCursorController}. A pick event is emitted whenever
+     * the pick ray from the controller intersects a {@link GVRCollider}.
+     * A touch event is emitted when the active button is pressed while
+     * the pick ray is inside the collider.
+     *
+     * @param listener the {@link IPickEvents} or {@link ITouchEvents} listener to be added.
+     */
+    public void addPickEventListener(IEvents listener)
+    {
+        if (IPickEvents.class.isAssignableFrom(listener.getClass()) ||
+                ITouchEvents.class.isAssignableFrom(listener.getClass()))
+        {
+            mPicker.getEventReceiver().addListener(listener);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Pick event listener must be derive from IPickEvents or ITouchEvents");
+        }
+    }
+
+    /**
+     * Remove the previously added pick or touch listener.
+     *
+     * @param listener {@link IPickEvents} or {@link ITouchEvents} listener that was previously added.
+     */
+    public void removePickEventListener(IEvents listener)
+    {
+        mPicker.getEventReceiver().removeListener(listener);
+    }
+
+    /**
+     * Use this method to enable or disable the {@link GVRCursorController}.
+     *
+     * By default the {@link GVRCursorController} is enabled. If disabled, the
+     * controller would not report new positions for the cursor and would not
+     * generate {@link SensorEvent}s to {@link GVRBaseSensor}s.
+     *
+     * @param flag <code>true</code> to enable the {@link GVRCursorController},
+     *               <code>false</code> to disable.
+     */
+    public void setEnable(boolean flag) {
+        mPicker.setEnable(flag);
+        mDragRoot.setEnable(flag);
+        if (this.enable == flag)
+        {
+            // nothing to be done here, return
+            return;
+        }
+        this.enable = flag;
+        if (!flag)
+        {
+            // reset
+            position.zero();
+            if (previousActive) {
+                active = false;
+            }
+
+            synchronized (eventLock) {
+                keyEvent.clear();
+                motionEvent.clear();
+            }
+            update();
+            context.getInputManager().removeCursorController(this);
+        }
+    }
+
+    /**
+     * Check if the {@link GVRCursorController} is enabled or disabled.
+     *
+     * By default the {@link GVRCursorController} is enabled.
+     *
+     * @return <code>true</code> if the {@link GVRCursorController} is enabled,
+     * <code>false</code> otherwise.
+     */
+    public boolean isEnabled() {
+        return enable;
+    }
+
+    /**
+     * Check if the {@link GVRCursorController} is connected and providing
+     * input data.
+     * @return true if controller is connected, else false
+     */
+    public boolean isConnected() { return mConnected; }
+
+
+    /**
+     * Sets the x, y, z location from where the pick begins
+     * Should match the location of the camera or the hand controller.
+     * @param x X position of the camera
+     * @param y Y position of the camera
+     * @param z Z position of the camera
+     */
+    public void setOrigin(float x, float y, float z){
+        origin.set(x,y,z);
+    }
+
+    /**
+     * Returns the origin of the pick ray for this controller.
+     * @return X,Y,Z origin of picking ray
+     */
+    public Vector3f getOrigin()
+    {
+        return origin;
+    }
+
+    /**
+     * Set the near depth value for the controller. This is the closest the
+     * {@link GVRCursorController} can get in relation to the {@link GVRCamera}.
+     *
+     * By default this value is set to zero.
+     *
+     * @param nearDepth
+     */
+    public void setNearDepth(float nearDepth) {
+        this.nearDepth = nearDepth;
+    }
+
+    /**
+     * Set the far depth value for the controller. This is the farthest the
+     * {@link GVRCursorController} can get in relation to the {@link GVRCamera}.
+     *
+     * By default this value is set to negative {@link Float#MAX_VALUE}.
+     *
+     * @param farDepth
+     */
+    public void setFarDepth(float farDepth) {
+        this.farDepth = farDepth;
+    }
+
+    /**
+     * Get the near depth value for the controller.
+     *
+     * @return value representing the near depth. By default the value returned
+     * is zero.
+     */
+    public float getNearDepth() {
+        return nearDepth;
+    }
+
+    /**
+     * Get the far depth value for the controller.
+     *
+     * @return value representing the far depth. By default the value returned
+     * is negative {@link Float#MAX_VALUE}.
+     */
+    public float getFarDepth() {
+        return farDepth;
+    }
+
+    /**
+     * Get the product id associated with the {@link GVRCursorController}
+     *
+     * @return an integer representing the product id if there is one, else
+     * return zero.
+     */
+    public int getProductId() {
+        return productId;
+    }
+
+    /**
+     * Get the vendor id associated with the {@link GVRCursorController}
+     *
+     * @return an integer representing the vendor id if there is one, else
+     * return zero.
+     */
+    public int getVendorId() {
+        return vendorId;
+    }
+
+    /**
+     * Get the name associated with the {@link GVRCursorController}.
+     *
+     * @return a string representing the {@link GVRCursorController} is there is
+     * one, else return <code>null</code>
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Change the scene associated with this controller (and
+     * its associated picker). The picker is not enabled
+     * and will not automatically pick. The controller
+     * explicity calls GVRPicker.processPick each tima a
+     * controller event is received.
+     * @param scene The scene from which to pick colliders
+     */
+    public void setScene(GVRScene scene)
+    {
+        mPicker.setScene(scene);
+        if (scene != null)
+        {
+            synchronized (mCursorLock)
+            {
+                if (mDragRoot.getParent() != null)
+                {
+                    mDragRoot.getParent().removeChildObject(mDragRoot);
+                }
+                scene.getMainCameraRig().addChildObject(mDragRoot);
+            }
+        }
+        this.scene = scene;
+    }
+
+    /**
+     * Use this method to set the active state of the{@link GVRCursorController}.
+     * It indicates whether or not the "active" button is pressed.
+     * <p>
+     * It is up to the developer to map the designated button to the active flag.
+     * Eg. A Gamepad could attach {@link KeyEvent#KEYCODE_BUTTON_A} to active.
+     * @param active    Setting active to true causes the {@link SensorEvent} generated
+     *                  from collisions with the cursor to have {@link SensorEvent#isActive()} as
+     *                  <code>true</code>. Clearing it will emit events with <code>false</code>.
+     *                  The active flag is also propagated to the picker, setting the value of
+     *                  {@link GVRPicker.GVRPickedObject#touched}.
+     */
+    protected void setActive(boolean active)
+    {
+        if (isEnabled())
+        {
+            this.active = active;
+        }
+    }
+
+    protected void attachCursor(GVRSceneObject cursor)
+    {
+        GVRSceneObject parent = cursor.getParent();
+        if (parent != null)
+        {
+            parent.removeChildObject(cursor);
+        }
+        mCursorScale.addChildObject(cursor);
+    }
+
+    protected void detachCursor()
+    {
+        mCursorScale.removeChildObject(mCursor);
     }
 
     protected void updateCursor(GVRPicker.GVRPickedObject collision)
@@ -593,56 +1035,6 @@ public abstract class GVRCursorController {
         }
     }
 
-    /**
-     * Get the all the key events processed by the {@link GVRCursorController}
-     * if there are any. This call returns all the motion events reports since
-     * the last callback was made.
-     *
-     * Note that not all {@link GVRCursorController} report {@link KeyEvent}s),
-     * this function could also return an empty list for
-     * {@link GVRCursorController}s that do not generate {@link KeyEvent}s.
-     *
-     * To get every {@link KeyEvent} reported by the {@link GVRCursorController}
-     * use the {@link ControllerEventListener} or the {@link ISensorEvents}
-     * listener to query for the {@link KeyEvent} whenever a a callback is made.
-     *
-     * The {@link KeyEvent} would be valid for the lifetime of that callback and
-     * would be reset to null on completion.
-     *
-     * @return the list of {@link KeyEvent}s processed by the
-     * {@link GVRCursorController}.
-     */
-    public List<KeyEvent> getKeyEvents() {
-        synchronized (eventLock) {
-            return processedKeyEvent;
-        }
-    }
-
-    /**
-     * Get the latest key event processed by the {@link GVRCursorController} if
-     * there is one (not all {@link GVRCursorController} report {@link KeyEvent}
-     * s). Note that this value will be null if the latest event processed by
-     * the {@link GVRCursorController} did not contain a {@link KeyEvent}.
-     *
-     * Note that this function also returns a null. To get every
-     * {@link KeyEvent} reported by the {@link GVRCursorController} use the
-     * {@link ControllerEventListener} or the {@link ISensorEvents} listener to
-     * query for the {@link KeyEvent} whenever a a callback is made.
-     *
-     * The {@link KeyEvent} would be valid for the lifetime of that callback and
-     * would be reset to null on completion.
-     *
-     * @return the {@link KeyEvent} or null if there isn't one.
-     */
-    public KeyEvent getKeyEvent() {
-        synchronized (eventLock) {
-            if (processedKeyEvent.isEmpty()) {
-                return null;
-            } else {
-                return processedKeyEvent.get(processedKeyEvent.size() - 1);
-            }
-        }
-    }
 
     /**
      * Set the latest motion event processed by the {@link GVRCursorController}.
@@ -658,302 +1050,6 @@ public abstract class GVRCursorController {
         synchronized (eventLock) {
             this.motionEvent.add(motionEvent);
         }
-    }
-
-    /**
-     * Get the all the {@link MotionEvent}s processed by the
-     * {@link GVRCursorController} if there are any. This call returns all the
-     * motion events reports since the last callback was made.
-     *
-     * Note that not all {@link GVRCursorController}s report {@link MotionEvent}s,
-     * this function also returns an empty list. To get every
-     * {@link MotionEvent} reported by the {@link GVRCursorController} use the
-     * {@link ControllerEventListener} or the {@link ISensorEvents} listener to
-     * query for the {@link MotionEvent}s whenever a a callback is made.
-     *
-     * The {@link MotionEvent}s reported would be valid for the lifetime of that
-     * callback and would be recycled and reset on completion. Make use to the
-     * {@link MotionEvent#obtain(MotionEvent)} to clone a copy of the
-     * {@link MotionEvent}.
-     *
-     * @return a list of {@link MotionEvent}s processed by the
-     * {@link GVRCursorController} .
-     */
-    public List<MotionEvent> getMotionEvents() {
-        synchronized (eventLock) {
-            return processedMotionEvent;
-        }
-    }
-
-    /**
-     * Get the latest {@link MotionEvent} processed by the
-     * {@link GVRCursorController} if there is one (not all
-     * {@link GVRCursorController}s report {@link MotionEvent}s)
-     *
-     * Note that this function also returns a null. To get every
-     * {@link MotionEvent} reported by the {@link GVRCursorController} use the
-     * {@link ControllerEventListener} or the {@link ISensorEvents} listener to
-     * query for the {@link MotionEvent} whenever a a callback is made.
-     *
-     * The {@link MotionEvent} would be valid for the lifetime of that callback
-     * and would be recycled and reset to null on completion. Make use to the
-     * {@link MotionEvent#obtain(MotionEvent)} to clone a copy of the
-     * {@link MotionEvent}.
-     *
-     * @return the latest {@link MotionEvent} processed by the
-     * {@link GVRCursorController} or null.
-     */
-    public MotionEvent getMotionEvent() {
-        synchronized (eventLock) {
-            if (processedMotionEvent.isEmpty()) {
-                return null;
-            } else {
-                return processedMotionEvent
-                        .get(processedMotionEvent.size() - 1);
-            }
-        }
-    }
-
-    /**
-     * This call sets the position of the {@link GVRCursorController}.
-     *
-     * Use this call to also set an initial position for the Cursor when a new
-     * {@link GVRCursorController} is returned by the
-     * {@link CursorControllerListener}.
-     *
-     * @param x the x value of the position.
-     * @param y the y value of the position.
-     * @param z the z value of the position.
-     */
-    public void setPosition(float x, float y, float z)
-    {
-        if (isEnabled())
-        {
-            position.set(x, y, z);
-            update();
-        }
-    }
-
-
-    public Vector3f getPosition(Vector3f pos) {
-        pos.set(position);
-        return pos;
-    }
-
-    /**
-     * Register a {@link ControllerEventListener} to receive a callback whenever
-     * the {@link GVRCursorController} has been updated.
-     *
-     * Use the {@link GVRCursorController} methods to query for information
-     * about the {@link GVRCursorController}.
-     */
-    public interface ControllerEventListener {
-        void onEvent(GVRCursorController controller, boolean isActive);
-    }
-
-    /**
-     * Add a {@link ControllerEventListener} to receive updates from this
-     * {@link GVRCursorController}.
-     *
-     * @param listener the {@link CursorControllerListener} to be added.
-     */
-    public void addControllerEventListener(ControllerEventListener listener) {
-        controllerEventListeners.add(listener);
-    }
-
-    /**
-     * Remove the previously added {@link ControllerEventListener}.
-     *
-     * @param listener {@link ControllerEventListener} that was previously added .
-     */
-    public void removeControllerEventListener(ControllerEventListener listener) {
-        controllerEventListeners.remove(listener);
-    }
-
-    /**
-     * Add a {@link IPickEvents} or {@link ITouchEvents} listener to receive updates from this
-     * {@link GVRCursorController}. A pick event is emitted whenever
-     * the pick ray from the controller intersects a {@link GVRCollider}.
-     * A touch event is emitted when the active button is pressed while
-     * the pick ray is inside the collider.
-     *
-     * @param listener the {@link IPickEvents} or {@link ITouchEvents} listener to be added.
-     */
-    public void addPickEventListener(IEvents listener)
-    {
-        if (IPickEvents.class.isAssignableFrom(listener.getClass()) ||
-            ITouchEvents.class.isAssignableFrom(listener.getClass()))
-        {
-            mPicker.getEventReceiver().addListener(listener);
-        }
-        else
-        {
-            throw new IllegalArgumentException("Pick event listener must be derive from IPickEvents or ITouchEvents");
-        }
-    }
-
-    /**
-     * Remove the previously added pick or touch listener.
-     *
-     * @param listener {@link IPickEvents} or {@link ITouchEvents} listener that was previously added.
-     */
-    public void removePickEventListener(IEvents listener)
-    {
-        mPicker.getEventReceiver().removeListener(listener);
-    }
-
-    /**
-     * Use this method to enable or disable the {@link GVRCursorController}.
-     *
-     * By default the {@link GVRCursorController} is enabled. If disabled, the
-     * controller would not report new positions for the cursor and would not
-     * generate {@link SensorEvent}s to {@link GVRBaseSensor}s.
-     *
-     * @param flag <code>true</code> to enable the {@link GVRCursorController},
-     *               <code>false</code> to disable.
-     */
-    public void setEnable(boolean flag) {
-        mPicker.setEnable(flag);
-        mDragRoot.setEnable(flag);
-        if (this.enable == flag)
-        {
-            // nothing to be done here, return
-            return;
-        }
-        this.enable = flag;
-        if (!flag)
-        {
-            // reset
-            position.zero();
-            if (previousActive) {
-                active = false;
-            }
-
-            synchronized (eventLock) {
-                keyEvent.clear();
-                motionEvent.clear();
-            }
-            update();
-            context.getInputManager().removeCursorController(this);
-        }
-    }
-
-    /**
-     * Check if the {@link GVRCursorController} is enabled or disabled.
-     *
-     * By default the {@link GVRCursorController} is enabled.
-     *
-     * @return <code>true</code> if the {@link GVRCursorController} is enabled,
-     * <code>false</code> otherwise.
-     */
-    public boolean isEnabled() {
-        return enable;
-    }
-
-    /**
-     * Check if the {@link GVRCursorController} is mConnected and providing
-     * input data.
-     * @return true if controller is mConnected, else false
-     */
-    public boolean isConnected() { return mConnected; }
-
-    /**
-     * Set the near depth value for the controller. This is the closest the
-     * {@link GVRCursorController} can get in relation to the {@link GVRCamera}.
-     *
-     * By default this value is set to zero.
-     *
-     * @param nearDepth
-     */
-    public void setNearDepth(float nearDepth) {
-        this.nearDepth = nearDepth;
-    }
-
-    /**
-     * Set the far depth value for the controller. This is the farthest the
-     * {@link GVRCursorController} can get in relation to the {@link GVRCamera}.
-     *
-     * By default this value is set to negative {@link Float#MAX_VALUE}.
-     *
-     * @param farDepth
-     */
-    public void setFarDepth(float farDepth) {
-        this.farDepth = farDepth;
-    }
-
-    /**
-     * Get the near depth value for the controller.
-     *
-     * @return value representing the near depth. By default the value returned
-     * is zero.
-     */
-    public float getNearDepth() {
-        return nearDepth;
-    }
-
-    /**
-     * Get the far depth value for the controller.
-     *
-     * @return value representing the far depth. By default the value returned
-     * is negative {@link Float#MAX_VALUE}.
-     */
-    public float getFarDepth() {
-        return farDepth;
-    }
-
-    /**
-     * Get the product id associated with the {@link GVRCursorController}
-     *
-     * @return an integer representing the product id if there is one, else
-     * return zero.
-     */
-    public int getProductId() {
-        return productId;
-    }
-
-    /**
-     * Get the vendor id associated with the {@link GVRCursorController}
-     *
-     * @return an integer representing the vendor id if there is one, else
-     * return zero.
-     */
-    public int getVendorId() {
-        return vendorId;
-    }
-
-    /**
-     * Get the name associated with the {@link GVRCursorController}.
-     *
-     * @return a string representing the {@link GVRCursorController} is there is
-     * one, else return <code>null</code>
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Change the scene associated with this controller (and
-     * its associated picker). The picker is not enabled
-     * and will not automatically pick. The controller
-     * explicity calls GVRPicker.processPick each tima a
-     * controller event is received.
-     * @param scene The scene from which to pick colliders
-     */
-    public void setScene(GVRScene scene)
-    {
-        mPicker.setScene(scene);
-        if (scene != null)
-        {
-            synchronized (mCursorLock)
-            {
-                if (mDragRoot.getParent() != null)
-                {
-                    mDragRoot.getParent().removeChildObject(mDragRoot);
-                }
-                scene.getMainCameraRig().addChildObject(mDragRoot);
-            }
-        }
-        this.scene = scene;
     }
 
     /**
@@ -973,26 +1069,6 @@ public abstract class GVRCursorController {
         mPicker.processPick(isActive, event); // move cursor if there is a pick
     }
 
-    private boolean eventHandledBySensor = false;
-
-    /**
-     * Returns whether events generated as a result of the latest change in the
-     * GVRCursorController state, i.e. change in Position, or change in Active/Enable state were
-     * handled by a sensor. This can be used by an application to know whether
-     * there were any {@link SensorEvent}s generated as a result of any change in the
-     * {@link GVRCursorController}.
-     * @return <code>true</code> if event was handled by a sensor,
-     * <code>false</code> if otherwise.
-     */
-    public boolean isEventHandledBySensorManager() {
-        return eventHandledBySensor;
-    }
-
-    void setEventHandledBySensor()
-    {
-        eventHandledBySensor = true;
-    }
-
     /**
      * Process the input data.
      */
@@ -1006,17 +1082,13 @@ public abstract class GVRCursorController {
             processedMotionEvent.addAll(motionEvent);
             motionEvent.clear();
         }
-
         previousActive = active;
-        eventHandledBySensor = false;
         if (scene != null)
         {
             updatePicker(getMotionEvent());
         }
-        for (ControllerEventListener listener : controllerEventListeners)
-        {
-            listener.onEvent(this, active);
-        }
+        context.getEventManager().sendEvent(this, IControllerEvent.class, "onEvent", this, active);
+
         // reset the set key and motion events.
         synchronized (eventLock)
         {
@@ -1030,24 +1102,4 @@ public abstract class GVRCursorController {
         }
     }
 
-    /**
-     * Sets the x, y, z location from where the pick begins
-     * Should match the location of the camera or the hand controller.
-     * @param x X position of the camera
-     * @param y Y position of the camera
-     * @param z Z position of the camera
-     */
-    public void setOrigin(float x, float y, float z){
-        origin.set(x,y,z);
-    }
-
-
-    /**
-     * Returns the origin of the pick ray for this controller.
-     * @return X,Y,Z origin of picking ray
-     */
-    public Vector3f getOrigin()
-    {
-        return origin;
-    }
 }

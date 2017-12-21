@@ -18,7 +18,6 @@ package org.gearvrf.io.cursor3d;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
@@ -304,17 +303,17 @@ public class IoDevice {
         gvrCursorController.setCursor(null);
     }
 
-    void addControllerEventListener(GVRCursorController.ControllerEventListener
+    void addControllerEventListener(GVRCursorController.IControllerEvent
                                             controllerEventListener) {
         if (controllerEventListener != null) {
-            gvrCursorController.addControllerEventListener(controllerEventListener);
+            gvrCursorController.getEventReceiver().addListener(controllerEventListener);
         }
     }
 
-    void removeControllerEventListener(GVRCursorController.ControllerEventListener
+    void removeControllerEventListener(GVRCursorController.IControllerEvent
                                                controllerEventListener) {
         if (controllerEventListener != null) {
-            gvrCursorController.removeControllerEventListener(controllerEventListener);
+            gvrCursorController.getEventReceiver().removeListener(controllerEventListener);
         }
     }
 
