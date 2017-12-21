@@ -276,6 +276,16 @@ public final class CursorManager {
 
     IoDevice getAvailableIoDevice(IoDevice targetIoDevice)
     {
+        IoDevice d = getIoDevice(targetIoDevice);
+        if (!isDeviceActive(d))
+        {
+            return d;
+        }
+        return null;
+    }
+
+    IoDevice getIoDevice(IoDevice targetIoDevice)
+    {
         synchronized (mIODevices)
         {
             int i = mIODevices.indexOf(targetIoDevice);
@@ -285,15 +295,11 @@ public final class CursorManager {
             }
             else
             {
-                IoDevice d = mIODevices.get(i);
-                if (!isDeviceActive(d))
-                {
-                    return d;
-                }
+                return mIODevices.get(i);
             }
-            return null;
         }
     }
+
 
     void addCursor(Cursor cursor) {
         synchronized (mCursors) {

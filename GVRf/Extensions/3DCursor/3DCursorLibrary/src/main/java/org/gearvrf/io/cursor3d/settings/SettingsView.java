@@ -106,7 +106,7 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
     @Override
     void show() {
         super.show();
-        setGestureDetector(new GestureDetector(swipeListener));
+        setGestureDetector(new GestureDetector(currentCursor.getGVRContext().getContext(), swipeListener));
     }
 
     SettingsChangeListener configChangeListener = new SettingsChangeListener()

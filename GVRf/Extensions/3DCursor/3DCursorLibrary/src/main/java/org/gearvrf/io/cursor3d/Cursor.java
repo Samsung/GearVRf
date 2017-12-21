@@ -651,7 +651,7 @@ public abstract class Cursor extends GVRBehavior
             if (compatibleIoDevice.equals(mIODevice)) {
                 returnList.add(mIODevice);
             } else {
-                IoDevice ioDevice = mCursorManager.getAvailableIoDevice(compatibleIoDevice);
+                IoDevice ioDevice = mCursorManager.getIoDevice(compatibleIoDevice);
                 if (ioDevice != null) {
                     returnList.add(ioDevice);
                 }

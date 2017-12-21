@@ -116,7 +116,7 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         }
         ioDeviceViews = new ArrayList<View>();
         for (IoDevice ioDevice : ioDevicesDisplayed) {
-            addIoDevice(ioDevice, llIoDevices, ioDevice == cursor.getIoDevice());
+            addIoDevice(ioDevice, llIoDevices, cursorManager.isDeviceActive(ioDevice));
         }
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
     }
