@@ -276,8 +276,7 @@ final public class GVRGazeCursorController extends GVRCursorController
                 }
                 break;
             }
-            MotionEvent clone = MotionEvent.obtain(event);
-            GVRGazeCursorController.this.setMotionEvent(clone);
+            GVRGazeCursorController.this.setMotionEvent(event);
             GVRGazeCursorController.super.invalidate();
         }
 
@@ -298,7 +297,7 @@ final public class GVRGazeCursorController extends GVRCursorController
         }
 
         public void dispatchMotionEvent(MotionEvent motionEvent) {
-            Message msg = Message.obtain(gazeEventHandler, SET_MOTION_EVENT, motionEvent);
+            Message msg = Message.obtain(gazeEventHandler, SET_MOTION_EVENT, MotionEvent.obtain(motionEvent));
             msg.sendToTarget();
         }
 
