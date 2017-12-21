@@ -543,7 +543,7 @@ public final class GearCursorController extends GVRCursorController
                 }
                 for (MotionEvent e : motionEvent)
                 {
-                    activity.dispatchTouchEvent(e);
+                    activity.dispatchTouchEvent(MotionEvent.obtain(e));
                 }
             }
             GearCursorController.super.invalidate();
