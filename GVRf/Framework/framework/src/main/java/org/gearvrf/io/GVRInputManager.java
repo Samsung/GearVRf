@@ -66,6 +66,7 @@ import java.util.Set;
  * If a higher priority controller becomes available while your application is running,
  * this function is called again to allow your app to switch controllers if desired.
  * <p>
+ * You can also use a {@link ICursorControllerListener}
  * to get notified whenever a cursor controller is added or removed from the system.
  * In this case, your application can select one or more controllers based on these notifications.
  * A controller is selected or removed by calling {@link GVRCursorController#setEnable(boolean)}.
@@ -203,9 +204,9 @@ public class GVRInputManager implements IEventReceiver
      * the input manager switches to using the new controller
      * and "onCursorControllerSelected" is emitted again.
      * @param listener     listens for onCursorControllerSelected events.
-     * @see #scanControllers()
      * @see ICursorControllerSelectListener
      * @see org.gearvrf.io.GVRInputManager.ICursorControllerSelectListener
+     * @see #scanControllers()
      */
     public void selectController(ICursorControllerSelectListener listener)
     {
@@ -623,6 +624,7 @@ public class GVRInputManager implements IEventReceiver
     };
 
     /**
+     * Add a {@link ICursorControllerListener} to the
      * {@link GVREventReceiver} of the {@link GVRInputManager} to
      * receive notifications whenever a {@link GVRCursorController} is added or
      * removed from the system at runtime.
