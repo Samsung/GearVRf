@@ -16,8 +16,8 @@
 package org.gearvrf.io.cursor3d.settings;
 
 import android.content.Context;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -34,27 +34,28 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.CursorType;
-import org.gearvrf.io.cursor3d.CustomKeyEvent;
 import org.gearvrf.io.cursor3d.IoDevice;
 import org.gearvrf.io.cursor3d.R;
 import org.gearvrf.utility.Log;
+import org.gearvrf.io.GVRTouchPadGestureDetector;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class SettingsView extends BaseView implements View.OnClickListener,
-        OnCheckedChangeListener {
+public class SettingsView extends BaseView implements OnCheckedChangeListener
+{
     private static final String TAG = SettingsView.class.getSimpleName();
     private ListView cursorList;
     private List<Cursor> cursors;
     private CursorManager cursorManager;
     private Cursor currentCursor;
-    SettingsChangeListener changeListener;
+    private final SettingsChangeListener changeListener;
     CursorAdapter cursorAdapter;
     private ToggleButton tbSoundEnabled;
 
-    public interface SettingsChangeListener {
+    public interface SettingsChangeListener
+    {
         void onBack(boolean cascading);
 
         /**
@@ -69,7 +70,8 @@ public class SettingsView extends BaseView implements View.OnClickListener,
     //Called on main thread
     public SettingsView(final GVRContext context, final GVRScene
             scene, CursorManager cursorManager, int settingsCursorId, final Cursor currentCursor,
-                        SettingsChangeListener changeListener) {
+                        SettingsChangeListener changeListener)
+    {
         super(context, scene, settingsCursorId, R.layout.settings_layout);
         Log.d(TAG, "new SettingsView, hash=" + this.hashCode());
         final GVRActivity activity = context.getActivity();
@@ -83,57 +85,96 @@ public class SettingsView extends BaseView implements View.OnClickListener,
         tbSoundEnabled.setChecked(cursorManager.isSoundEnabled());
         tbSoundEnabled.setOnCheckedChangeListener(this);
         // sort the cursors
-        Collections.sort(cursors, new Comparator<Cursor>() {
+        Collections.sort(cursors, new Comparator<Cursor>()
+        {
             @Override
-            public int compare(Cursor cursor1, Cursor cursor2) {
+            public int compare(Cursor cursor1, Cursor cursor2)
+            {
                 return cursor1.getName().compareTo(cursor2.getName());
             }
         });
 
         TextView tvDoneButton = (TextView) findViewById(R.id.tvDoneButton);
-        tvDoneButton.setOnClickListener(this);
+        tvDoneButton.setOnClickListener(doneButtonListener);
 
         cursorAdapter = new CursorAdapter(activity, cursors);
         cursorList.setAdapter(cursorAdapter);
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
     }
 
-    SettingsChangeListener configChangeListener = new SettingsChangeListener() {
+    @Override
+    void show() {
+        super.show();
+        setGestureDetector(new GVRTouchPadGestureDetector(swipeListener));
+    }
+
+    SettingsChangeListener configChangeListener = new SettingsChangeListener()
+    {
         @Override
-        public void onBack(boolean cascading) {
+        public void onBack(boolean cascading)
+        {
             Log.d(TAG, "onBack: cascading=" + cascading);
             cursorAdapter.notifyDataSetChanged();
-            if (!cascading) {
+            if (!cascading)
+            {
                 enable();
-            } else {
+            }
+            else
+            {
                 changeListener.onBack(true);
             }
         }
 
         @Override
-        public int onDeviceChanged(IoDevice device) {
+        public int onDeviceChanged(IoDevice device)
+        {
             int settingsCursorId = changeListener.onDeviceChanged(device);
             setSettingsCursorId(settingsCursorId);
             return settingsCursorId;
         }
     };
 
-    private void createConfigView(Cursor cursor) {
-        if (cursor.isEnabled()) {
+    private void createConfigView(Cursor cursor)
+    {
+        if (cursor.isEnabled())
+        {
             disable();
             new CursorConfigView(context, cursorManager, cursor, currentCursor, scene,
-                    settingsCursorId, configChangeListener);
+                                 settingsCursorId, configChangeListener);
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.tvDoneButton) {
-            Log.d(TAG, "Clicked done button");
-            hide();
-            changeListener.onBack(false);
+    private View.OnClickListener doneButtonListener = new View.OnClickListener()
+    {
+        public void onClick(View v)
+        {
+            if (v.getId() == R.id.tvDoneButton)
+            {
+                Log.d(TAG, "Clicked done button");
+                hide();
+                changeListener.onBack(false);
+            }
         }
-    }
+
+    };
+
+    GVRTouchPadGestureDetector.OnTouchPadGestureListener swipeListener =
+            new GVRTouchPadGestureDetector.OnTouchPadGestureListener()
+            {
+                public boolean onSingleTap(MotionEvent e) { return false; }
+
+                public void onLongPress(MotionEvent e) { }
+
+                public boolean onSwipe(MotionEvent e, GVRTouchPadGestureDetector.SwipeDirection swipeDirection,
+                                float velocityX, float velocityY)
+                {
+                    hide();
+                    changeListener.onBack(false);
+                    return true;
+                }
+
+                public boolean onScroll(MotionEvent arg0, MotionEvent arg1, float arg2, float arg3) { return false; }
+            };
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -228,28 +269,6 @@ public class SettingsView extends BaseView implements View.OnClickListener,
                 tvIoDevice.setText(R.string.no_io_device);
                 tvIoDevice.setTextColor(redColor);
             }
-        }
-    }
-
-    @Override
-    void onSwipeEvent(KeyEvent keyEvent) {
-        //TODO: Combine logic since they are identical, keep for now for logging
-        switch (keyEvent.getKeyCode()) {
-            case CustomKeyEvent.KEYCODE_SWIPE_LEFT:
-                Log.d(TAG, "Swipe left, SettingsView hashCode=" + hashCode());
-                //Back event: Issue normal back
-                hide();
-                changeListener.onBack(false);
-                break;
-            case CustomKeyEvent.KEYCODE_SWIPE_RIGHT:
-                Log.d(TAG, "Swipe right, SettingsView hashCode=" + hashCode());
-                //OK event: Issue cascading back
-                hide();
-                changeListener.onBack(false);
-                break;
-            default:
-                //No need to handle other event types
-                break;
         }
     }
 }

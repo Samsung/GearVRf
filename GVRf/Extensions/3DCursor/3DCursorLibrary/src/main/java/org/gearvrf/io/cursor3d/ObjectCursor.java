@@ -30,7 +30,7 @@ import java.util.Set;
 
 class ObjectCursor extends Cursor {
     private static final String TAG = ObjectCursor.class.getSimpleName();
-    private static final float POINT_CURSOR_NEAR_DEPTH = -1.0f;
+    private static final float POINT_CURSOR_NEAR_DEPTH = 1.0f;
     private static final float[] EMPTY_HIT_POINT = new float[3];
     private Set<GVRSceneObject> intersecting;
     private int cursorID = -1;

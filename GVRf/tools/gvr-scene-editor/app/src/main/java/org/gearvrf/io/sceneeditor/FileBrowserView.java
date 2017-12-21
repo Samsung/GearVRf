@@ -15,6 +15,8 @@
 
 package org.gearvrf.io.sceneeditor;
 
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -34,11 +36,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class FileBrowserView extends BaseView implements OnClickListener, OnItemClickListener {
+class FileBrowserView extends BaseView implements OnClickListener {
     private static final String TAG = FileBrowserView.class.getSimpleName();
     private static final String DEFAULT_DIRECTORY = "/sdcard/SceneEditor";
     private final TextView tvTitle;
     private String path;
+    private String baseDir;
     private ListView listView;
     private TextView dirView;
     private TextView loadingText;
@@ -47,14 +50,24 @@ class FileBrowserView extends BaseView implements OnClickListener, OnItemClickLi
     private SceneFileFilter filenameFilter;
     private ArrayAdapter fileAdapter;
 
+
+    private AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener()
+    {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+        {
+            FileBrowserView.this.onItemClick(parent, view, position, id);
+        }
+    };
+
+
     public interface FileViewListener extends WindowChangeListener {
         void onFileSelected(String modelFileName);
     }
 
     //Called on main thread
-    FileBrowserView(final GVRContext context, final GVRScene scene, FileViewListener listener,
+    FileBrowserView(final GVRScene scene, FileViewListener listener,
                     String[] extensions, String title) {
-        super(context, scene, R.layout.file_browser_layout, true);
+        super(scene, R.layout.file_browser_layout, true);
         listView = (ListView) findViewById(R.id.lvFiles);
         dirView = (TextView) findViewById(R.id.tvDirName);
         loadingText = (TextView) findViewById(R.id.tvLoading);
@@ -62,14 +75,14 @@ class FileBrowserView extends BaseView implements OnClickListener, OnItemClickLi
         listView.setVisibility(View.VISIBLE);
         tvTitle = (TextView) findViewById(R.id.tvTitle);
         bDone = (Button) findViewById(R.id.bDone);
-        listView.setOnItemClickListener(FileBrowserView.this);
-        fileAdapter = new ArrayAdapter(activity, android.R.layout.simple_list_item_2,
+        listView.setOnItemClickListener(itemClickListener);
+        fileAdapter = new ArrayAdapter(scene.getGVRContext().getActivity(), android.R.layout.simple_list_item_2,
                 android.R.id.text1, new ArrayList<String>());
         listView.setAdapter(fileAdapter);
-        reset(listener, extensions, title);
+        reset(listener, extensions, title, "models");
     }
 
-    void reset(FileViewListener listener, String[] extensions, String title) {
+    void reset(FileViewListener listener, String[] extensions, String title, String defaultDir) {
         this.fileViewListener = listener;
         bDone.setOnClickListener(new OnClickListener() {
             @Override
@@ -85,7 +98,8 @@ class FileBrowserView extends BaseView implements OnClickListener, OnItemClickLi
             filenameFilter = new SceneFileFilter(extensions);
         }
 
-        path = DEFAULT_DIRECTORY;
+        baseDir = DEFAULT_DIRECTORY + "/" + defaultDir;
+        path = baseDir;
         File file = new File(path);
         file.mkdir();
         List<String> filesAtPath = getFilesAtPath(path);
@@ -108,6 +122,51 @@ class FileBrowserView extends BaseView implements OnClickListener, OnItemClickLi
             case R.id.bDone:
                 hide();
                 break;
+        }
+    }
+
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+    {
+        String filename = (String) listView.getItemAtPosition(position);
+        if (filename.endsWith(".."))
+        {
+            // strip out the /..
+            int index = path.lastIndexOf(File.separator);
+            filename = path.substring(0, index);
+        }
+        else
+            if (path.endsWith(File.separator))
+            {
+                filename = path + filename;
+            }
+            else
+            {
+                filename = path + File.separator + filename;
+            }
+        if (new File(filename).isDirectory())
+        {
+            /*
+             * Don't go above the DEFAULT_DIRECTORY
+             */
+            if (path.equals(baseDir) &&
+                (path.indexOf(filename) == 0) &&
+                (filename.length() < path.length()))
+            {
+                return;
+            }
+            List<String> filesAtPath = getFilesAtPath(filename);
+            fileAdapter.clear();
+            fileAdapter.addAll(filesAtPath);
+        }
+        else if (!filename.isEmpty())
+        {
+            // strip out /sdcard
+            filename = filename.substring(8);
+            listView.setVisibility(View.GONE);
+            loadingText.setVisibility(View.VISIBLE);
+            // try to load the model
+            Log.d(TAG, "File Selected");
+            fileViewListener.onFileSelected(filename);
         }
     }
 
@@ -136,34 +195,6 @@ class FileBrowserView extends BaseView implements OnClickListener, OnItemClickLi
         // sort alphabetically
         Collections.sort(values);
         return values;
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        String filename = (String) listView.getItemAtPosition(position);
-        if (filename.endsWith("..")) {
-            // strip out the /..
-            int index = path.lastIndexOf(File.separator);
-            filename = path.substring(0, index);
-        } else if (path.endsWith(File.separator)) {
-            filename = path + filename;
-        } else {
-            filename = path + File.separator + filename;
-        }
-
-        if (new File(filename).isDirectory()) {
-            List<String> filesAtPath = getFilesAtPath(filename);
-            fileAdapter.clear();
-            fileAdapter.addAll(filesAtPath);
-        } else if (!filename.isEmpty()) {
-            // strip out /sdcard
-            filename = filename.substring(8);
-            listView.setVisibility(View.GONE);
-            loadingText.setVisibility(View.VISIBLE);
-            // try to load the model
-            Log.d(TAG, "File Selected");
-            fileViewListener.onFileSelected(filename);
-        }
     }
 
     public void modelLoaded() {

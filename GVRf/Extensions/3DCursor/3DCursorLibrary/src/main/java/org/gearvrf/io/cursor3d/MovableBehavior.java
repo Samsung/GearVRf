@@ -2,6 +2,7 @@ package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
@@ -110,60 +111,23 @@ public class MovableBehavior extends SelectableBehavior {
             {
                 synchronized (this)
                 {
+                    GVRCursorController controller = hit.getPicker().getController();
+
                     if (mSelected != null)
                     {
                         return;
                     }
                     mCurrentCursor = c;
                     mSelected = getOwnerObject();
-                    mCursorPosition.set(mCurrentCursor.getPositionX(), mCurrentCursor.getPositionY(), mCurrentCursor.getPositionZ());
-                    mOwnerParent = mSelected.getParent();
-                    GVRTransform selectedTransform = mSelected.getTransform();
-                    Log.d("CURSOR", "onTouchStart %s  at (%f, %f, %f) cursor=(%f, %f, %f)",
-                          mSelected.getName(),
-                          selectedTransform.getPositionX(),
-                          selectedTransform.getPositionY(),
-                          selectedTransform.getPositionZ(),
-                          mCursorPosition.x, mCursorPosition.y, mCursorPosition.z);
-                    mTempParentMatrix.set(c.getTransform().getModelMatrix());
-                    mTempParentMatrix.invert();
-                    mTempSelectedMatrix.set(selectedTransform.getModelMatrix());
-                    mTempParentMatrix.mul(mTempSelectedMatrix, mTempParentMatrix);
-                    mOwnerParent.removeChildObject(mSelected);
-                    selectedTransform.setModelMatrix(mTempParentMatrix);
-                    c.addChildObject(mSelected);
+                    controller.startDrag(mSelected);
                 }
             }
 
-            public void onDrag(Cursor c, GVRPicker.GVRPickedObject hit)
-            {
-                if ((mCurrentCursor == c) && (c.getCursorType() == CursorType.LASER))
-                {
-                    if (IoDeviceLoader.isControllerIoDevice(mCurrentCursor.getIoDevice()))
-                    {
-                        return;
-                    }
-                    mCursorPosition = new Vector3f(c.getPositionX(), c.getPositionY(), c.getPositionZ());
-                    rotateObjectToFollowCursor(mCursorPosition);
-                }
-            }
+            public void onDrag(Cursor c, GVRPicker.GVRPickedObject hit) { }
 
             public void onExit(Cursor c, GVRPicker.GVRPickedObject hit)
             {
-                if (hit.touched && (mCurrentCursor == c))
-                {
-                    if (mCurrentCursor.getCursorType() == CursorType.LASER && !IoDeviceLoader.isControllerIoDevice(
-                            mCurrentCursor.getIoDevice()))
-                    {
-                        mCursorPosition = new Vector3f(mCurrentCursor.getPositionX(), mCurrentCursor.getPositionY(), mCurrentCursor.getPositionZ());
-                        rotateObjectToFollowCursor(mCursorPosition);
-                    }
-                    else if (mCurrentCursor.getCursorType() == CursorType.OBJECT || IoDeviceLoader.isControllerIoDevice(
-                            mCurrentCursor.getIoDevice()))
-                    {
-                        onTouchEnd(c, hit);
-                    }
-                }
+                onTouchEnd(c, hit);
             }
 
             public void onTouchEnd(Cursor c, GVRPicker.GVRPickedObject hit)
@@ -174,22 +138,9 @@ public class MovableBehavior extends SelectableBehavior {
                     {
                         return;
                     }
-                    GVRTransform selectedTransform = mSelected.getTransform();
+                    GVRCursorController controller = hit.getPicker().getController();
 
-                    mCursorPosition = new Vector3f(mCurrentCursor.getPositionX(), mCurrentCursor.getPositionY(), mCurrentCursor.getPositionZ());
-                    mTempParentMatrix.set(mOwnerParent.getTransform().getModelMatrix());
-                    mTempParentMatrix.invert();
-                    mTempSelectedMatrix.set(selectedTransform.getModelMatrix());
-                    mTempParentMatrix.mul(mTempSelectedMatrix, mTempParentMatrix);
-                    c.removeChildObject(mSelected);
-                    selectedTransform.setModelMatrix(mTempParentMatrix);
-                    Log.d("CURSOR", "onTouchEnd %s  at (%f, %f, %f) cursor=(%f, %f, %f)",
-                          mSelected.getName(),
-                          selectedTransform.getPositionX(),
-                          selectedTransform.getPositionY(),
-                          selectedTransform.getPositionZ(),
-                          mCursorPosition.x, mCursorPosition.y, mCursorPosition.z);
-                    mOwnerParent.addChildObject(mSelected);
+                    controller.stopDrag();
                     mSelected = null;
                     // object has been moved, invalidate all other cursors to check for events
                     for (Cursor remaining : cursorManager.getActiveCursors())

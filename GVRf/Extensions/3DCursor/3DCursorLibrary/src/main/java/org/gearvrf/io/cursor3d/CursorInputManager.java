@@ -68,6 +68,18 @@ class CursorInputManager {
         }
     }
 
+    IoDevice findDeviceByType(GVRControllerType type)
+    {
+        for (IoDevice device : availableIoDevices)
+        {
+            GVRCursorController controller = device.getGvrCursorController();
+            if ((controller != null) && (controller.getControllerType() == type))
+            {
+                return device;
+            }
+       }
+       return null;
+    }
     private CursorControllerListener gvrControllerListener = new CursorControllerListener() {
         @Override
         public void onCursorControllerAdded(GVRCursorController gvrCursorController) {
@@ -114,7 +126,10 @@ class CursorInputManager {
                     synchronized (lock) {
                         if (unavailableIoDevices.remove(ioDevice)) {
                             gvrInputManager.addCursorController(ioDevice.getGvrCursorController());
-                            availableIoDevices.add(ioDevice);
+                            if (!availableIoDevices.contains(ioDevice))
+                            {
+                                availableIoDevices.add(ioDevice);
+                            }
                             for (IoDeviceListener ioDeviceListener : ioDeviceListeners) {
                                 ioDeviceListener.onIoDeviceAdded(ioDevice);
                             }
@@ -123,14 +138,20 @@ class CursorInputManager {
                 }
 
                 @Override
-                public void onIoDeviceDisconnected(IoDevice ioDevice) {
+                public void onIoDeviceDisconnected(IoDevice ioDevice)
+                {
                     Log.d(TAG, "On IoDevice disconnected:" + ioDevice.getDeviceId());
-                    synchronized (lock) {
-                        if (availableIoDevices.remove(ioDevice)) {
-                            gvrInputManager.removeCursorController(ioDevice
-                                    .getGvrCursorController());
-                            unavailableIoDevices.add(ioDevice);
-                            for (IoDeviceListener ioDeviceListener : ioDeviceListeners) {
+                    synchronized (lock)
+                    {
+                        if (availableIoDevices.remove(ioDevice))
+                        {
+                            gvrInputManager.removeCursorController(ioDevice.getGvrCursorController());
+                            if (!unavailableIoDevices.contains(ioDevice))
+                            {
+                                unavailableIoDevices.add(ioDevice);
+                            }
+                            for (IoDeviceListener ioDeviceListener : ioDeviceListeners)
+                            {
                                 ioDeviceListener.onIoDeviceRemoved(ioDevice);
                             }
                         }
@@ -138,24 +159,36 @@ class CursorInputManager {
                 }
             };
 
-    void addIoDevice(IoDevice addedIoDevice) {
-        if (addedIoDevice.isConnected()) {
+    void addIoDevice(IoDevice addedIoDevice)
+    {
+        GVRCursorController gvrCursorController = addedIoDevice.getGvrCursorController();
+
+        if (addedIoDevice.isConnected() && gvrCursorController.isConnected())
+        {
             Log.d(TAG, "Added a IoDevice which is already connected:" + addedIoDevice
                     .getDeviceId());
-            GVRCursorController gvrCursorController = addedIoDevice.getGvrCursorController();
-            synchronized (lock) {
-                if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL) {
+            synchronized (lock)
+            {
+                if (gvrCursorController.getControllerType() == GVRControllerType.EXTERNAL)
+                {
                     gvrInputManager.addCursorController(gvrCursorController);
                 }
-                availableIoDevices.add(addedIoDevice);
-                for (IoDeviceListener listener : ioDeviceListeners) {
+                if (!availableIoDevices.contains(addedIoDevice))
+                {
+                    availableIoDevices.add(addedIoDevice);
+                }
+                for (IoDeviceListener listener : ioDeviceListeners)
+                {
                     listener.onIoDeviceAdded(addedIoDevice);
                 }
             }
-        } else {
+        }
+        else
+        {
             Log.d(TAG, "Added a ioDevice which is not connected:" + addedIoDevice
                     .getDeviceId());
-            synchronized (lock) {
+            synchronized (lock)
+            {
                 unavailableIoDevices.add(addedIoDevice);
             }
         }

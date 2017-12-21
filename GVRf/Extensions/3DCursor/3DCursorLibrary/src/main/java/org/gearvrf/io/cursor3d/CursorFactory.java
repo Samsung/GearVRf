@@ -112,34 +112,9 @@ class CursorFactory {
         }
 
         Collections.sort(cursor.getIoDevices());
-        //addGearVrBackup(cursor);
-
         return cursor;
     }
 
-    private static void addGearVrBackup(GVRContext ctx, Cursor cursor) {
-        boolean hasGearVr = false;
-        for (PriorityIoDeviceTuple tuple : cursor.getIoDevices()) {
-            if (IoDeviceLoader.isGearVrDevice(tuple.getIoDevice())) {
-                hasGearVr = true;
-                break;
-            }
-        }
-        if (!hasGearVr) {
-            List<PriorityIoDeviceTuple> tuples = cursor.getIoDevices();
-            int maxPriority;
-            if (tuples.size() == 0) {
-                maxPriority = 0;
-            } else {
-                maxPriority = tuples.get(tuples.size() - 1).getPriority();
-            }
-            int priority = maxPriority + 1;
-            PriorityIoDeviceTuple gearVrTuple = new PriorityIoDeviceTuple(priority, IoDeviceLoader
-                    .getGearVrIoDevice(ctx));
-            tuples.add(gearVrTuple);
-            Collections.sort(tuples);
-        }
-    }
 
     private static void readOtherCursorAttributes(XmlPullParser parser, Cursor cursor) throws
             XmlPullParserException, IOException {

@@ -461,8 +461,46 @@ public abstract class Cursor extends GVRBehavior
     }
 
     /**
-     * Returns a list of {@link IoDevice}s compatible with the {@link Cursor}.
+     * Returns the priority for the {@link IoDevice} currently attached to the {@link Cursor}.
      *
+     * @return -1 if no device attached, otherwise returns device priority
+     */
+    int getCurrentDevicePriority() {
+        if (mIODevice == null)
+        {
+            return -1;
+        }
+        for (PriorityIoDeviceTuple tuple : mCompatibleDevices)
+        {
+            if (tuple.getIoDevice().equals(mIODevice))
+            {
+                return tuple.getPriority();
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the priority for the given {@link IoDevice} for this {@link Cursor}.
+     *
+     * @return -1 if device not compatible with this cursor, otherwise returns device priority
+     */
+    int getDevicePriority(IoDevice device)
+    {
+        for (PriorityIoDeviceTuple tuple : mCompatibleDevices)
+        {
+            if (tuple.getIoDevice().equals(device))
+            {
+                return tuple.getPriority();
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns a list of {@link IoDevice}s compatible with the {@link Cursor}.
+     * The resulting list is sorted in priority order with highest priority
+     * devices first.
      * @return list of compatible {@link IoDevice}s
      */
     public List<IoDevice> getCompatibleIoDevices() {
@@ -477,7 +515,22 @@ public abstract class Cursor extends GVRBehavior
         return mCompatibleDevices;
     }
 
-
+    /**
+     * Determines whether the input {@link IoDevice} is compatible with the {@link Cursor}.
+     * @return true if device is compatible, else false
+     */
+    boolean isDeviceCompatible(final IoDevice device)
+    {
+        List<IoDevice> ioDevices = new LinkedList<IoDevice>();
+        for (PriorityIoDeviceTuple tuple : mCompatibleDevices)
+        {
+            if (tuple.getIoDevice().equals(device))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * This method returns an integer value that can be used to
@@ -537,7 +590,7 @@ public abstract class Cursor extends GVRBehavior
     public void onEnable()
     {
         Log.d(TAG, Integer.toHexString(hashCode()) + " enabled");
-        mCursorManager.assignIoDevicesToCursors();
+        mCursorManager.assignDeviceToCursor(this);
     }
 
     public void onDisable()
@@ -593,7 +646,8 @@ public abstract class Cursor extends GVRBehavior
      * Get a list of currently available {@link IoDevice}s to use with the {@link Cursor}. The
      * {@link Cursor} defines a list of compatible {@link IoDevice}s in the settings.xml. This
      * method returns a subset from the compatible list of {@link IoDevice}s that are available to
-     * the framework and not being used by any other cursor.
+     * the framework and not being used by any other cursor. This list is sorted in order
+     * of priority with highest priority devices first.
      *
      * @return a list of available {@link IoDevice}.
      */
@@ -651,7 +705,6 @@ public abstract class Cursor extends GVRBehavior
         }
         setIoDevice(availableIoDevice);
         mCursorManager.addCursorToScene(this);
-        mCursorManager.assignIoDevicesToCursors();
     }
 
     private boolean isIoDeviceCompatible(IoDevice ioDevice) {

@@ -1,0 +1,153 @@
+if(file("../../../extra_properties.gradle").exists()) {
+    apply from: '../../../extra_properties.gradle'
+}
+
+if(file("../../../../extra_properties.gradle").exists()) {
+    apply from: '../../../../extra_properties.gradle'
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            url "http://google.bintray.com/googlevr"
+        }
+        flatDir {
+            dirs '../../../gearvrf-libs'
+        }
+    }
+}
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "25.0.0"
+
+    buildTypes {
+        debug {
+            debuggable = true
+            jniDebuggable = true
+            resValue 'string', 'app_name', System.getProperty("appName")
+        }
+        release {
+            signingConfig signingConfigs.debug
+            resValue 'string', 'app_name', System.getProperty("appName")
+        }
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 21
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(
+                    output.outputFile.parent,
+                    System.getProperty("appName") + ".apk")
+        }
+    }
+
+    // ignore the x86 files from the google vr libraries
+    packagingOptions {
+        exclude 'lib/x86/libgvr.so'
+        if (!project.hasProperty("ARM64")) {
+            exclude 'lib/arm64-v8a/*.so'
+        } else {
+            exclude 'lib/armeabi-v7a/*.so'
+        }
+    }
+}
+
+task copyOculusSignature(type: Copy) {
+    if (project.hasProperty("OCULUS_SIGS_DIRECTORY")) {
+        copy {
+            from project.property("OCULUS_SIGS_DIRECTORY")
+            into 'src/main/assets'
+            include 'oculussig_*'
+        }
+    }
+}
+
+preBuild {}.dependsOn copyOculusSignature
+
+/*
+To use local dependencies add the following line in a global gradle properties file
+eg. ~/.gradle/gradle.properties:
+
+useLocalDependencies=true
+
+ */
+ext.gearvrfVersion='4.0.1-SNAPSHOT'
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+project.ext.daydreamVersion='1.80.0'
+
+if(project.hasProperty("useLocalDependencies") && project.useLocalDependencies) {
+    dependencies {
+        compile 'com.google.code.gson:gson:2.7'
+        compile "org.joml:joml-android:${jomlVersion}"
+
+        if (findProject(':framework')) {
+            compile project(':framework')
+        } else {
+            debugCompile(name: 'framework-debug', ext: 'aar')
+            releaseCompile(name: 'framework-release', ext: 'aar')
+        }
+
+        if (project.hasProperty("only_daydream")) {
+            if (findProject(':backend_daydream')) {
+                compile project(':backend_daydream')
+            } else {
+                debugCompile(name: 'backend_daydream-debug', ext: 'aar')
+                releaseCompile(name: 'backend_daydream-release', ext: 'aar')
+            }
+            compile "com.google.vr:sdk-base:${daydreamVersion}"
+            compile "com.google.vr:sdk-controller:${daydreamVersion}"
+        } else {
+            if (project.hasProperty("no_oculus")) {
+                if (findProject(':backend')) {
+                    compile project(':backend')
+                } else {
+                    debugCompile(name: 'backend-debug', ext: 'aar')
+                    releaseCompile(name: 'backend-release', ext: 'aar')
+                }
+            } else { //default oculus+daydream
+                if (findProject(':backend_daydream')) {
+                    compile project(':backend_daydream')
+                } else {
+                    debugCompile(name: 'backend_daydream-debug', ext: 'aar')
+                    releaseCompile(name: 'backend_daydream-release', ext: 'aar')
+                }
+                compile "com.google.vr:sdk-base:${daydreamVersion}"
+                compile "com.google.vr:sdk-controller:${daydreamVersion}"
+
+                if (findProject(':backend_oculus')) {
+                    compile project(':backend_oculus')
+                } else {
+                    debugCompile(name: 'backend_oculus-debug', ext: 'aar')
+                    releaseCompile(name: 'backend_oculus-release', ext: 'aar')
+                }
+            }
+        }
+    }
+} else {
+    dependencies {
+        compile 'com.google.code.gson:gson:2.7'
+        compile "org.joml:joml-android:${jomlVersion}"
+        compile "org.gearvrf:framework:$gearvrfVersion"
+
+        if (project.hasProperty("only_daydream")) {
+            compile "org.gearvrf:backend_daydream:$gearvrfVersion"
+            compile "com.google.vr:sdk-base:${daydreamVersion}"
+            compile "com.google.vr:sdk-controller:${daydreamVersion}"
+        } else { //default oculus+daydream
+            compile "org.gearvrf:backend_daydream:$gearvrfVersion"
+            compile "com.google.vr:sdk-base:${daydreamVersion}"
+            compile "com.google.vr:sdk-controller:${daydreamVersion}"
+            compile "org.gearvrf:backend_oculus:$gearvrfVersion"
+        }
+    }
+}
+

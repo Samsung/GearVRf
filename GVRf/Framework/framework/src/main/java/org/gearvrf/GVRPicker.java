@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.gearvrf.utility.Log;
@@ -84,9 +85,11 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
     protected GVRPickedObject[] mPicked = null;
     protected boolean mPickClosest = true;
     protected GVREventReceiver mListeners = null;
+    protected Lock mPickEventLock = new ReentrantLock();
     protected EnumSet<EventOptions> mEventOptions = EnumSet.of(
             EventOptions.SEND_PICK_EVENTS,
             EventOptions.SEND_TO_SCENE,
+            EventOptions.SEND_TO_HIT_OBJECT,
             EventOptions.SEND_TO_LISTENERS);
 
     /**
@@ -186,6 +189,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
         mEventOptions = EnumSet.of(
                 EventOptions.SEND_PICK_EVENTS,
                 EventOptions.SEND_TOUCH_EVENTS,
+                EventOptions.SEND_TO_HIT_OBJECT,
                 EventOptions.SEND_TO_LISTENERS);
         if (!enable)
         {
@@ -473,9 +477,17 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
      */
     public void onDrawFrame(float frameTime)
     {
-        if (isEnabled() && (mScene != null))
+        if (isEnabled() && (mScene != null) && mPickEventLock.tryLock())
         {
-            doPick();
+            // Don't call if we are in the middle of processing another pick
+            try
+            {
+                doPick();
+            }
+            finally
+            {
+                mPickEventLock.unlock();
+            }
         }
     }
 
@@ -515,6 +527,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
                     mRayDirection.x, mRayDirection.y, mRayDirection.z);
         }
         generatePickEvents(picked);
+        mMotionEvent = null;
     }
 
     /**
@@ -537,81 +550,95 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
         doPick();
     }
 
-    protected void generatePickEvents(GVRPickedObject[] picked) {
-        /*
-         * Send "onExit" events for colliders that were picked but
-         * are not picked anymore.
-         */
-        if (mPicked != null) {
-            for (GVRPickedObject collision : mPicked) {
-                if (collision == null) {
+    protected void generatePickEvents(GVRPickedObject[] picked)
+    {
+        mPickEventLock.lock();
+        try
+        {
+    /*
+     * Send "onExit" events for colliders that were picked but
+     * are not picked anymore.
+     */
+            if (mPicked != null)
+            {
+                for (GVRPickedObject collision : mPicked)
+                {
+                    if (collision == null)
+                    {
+                        continue;
+                    }
+                    GVRCollider collider = collision.hitCollider;
+                    GVRPickedObject temp = findCollider(picked, collider);
+                    if (temp == null)
+                    {
+                        collision.touched = mTouched;
+                        collision.motionEvent = mMotionEvent;
+                        propagateOnExit(collider.getOwnerObject(), collision);
+                    }
+                }
+            }
+            // get the count of non null picked objects
+            int pickedCount = 0;
+
+    /*
+     * Send "onEnter" events for colliders that were picked for the first time.
+     * Send "onTouchStart" events for colliders that were touched for the first time.
+     * Send "onTouchEnd" events for colliders that are no longer touched.
+     * Send "onInside" events for colliders that were already picked.
+     */
+            for (GVRPickedObject collision : picked)
+            {
+                if (collision == null)
+                {
                     continue;
                 }
+                pickedCount++;
                 GVRCollider collider = collision.hitCollider;
-                GVRPickedObject temp = findCollider(picked, collider);
-                if (temp == null)
+                GVRPickedObject prevHit = findCollider(mPicked, collider);
+
+                collision.picker = this;
+                collision.touched = mTouched;
+                collision.motionEvent = mMotionEvent;
+                if (prevHit == null)
                 {
-                    collision.touched = mTouched;
-                    collision.motionEvent = mMotionEvent;
-                    propagateOnExit(collider.getOwnerObject(), collision);
+                    propagateOnEnter(collision);
+                    if (mTouched)
+                    {
+                        propagateOnTouch(collision);
+                    }
+                }
+                else
+                {
+                    propagateOnInside(collision);
+                    if (prevHit.touched && !mTouched)
+                    {
+                        propagateOnNoTouch(collision);
+                    }
+                    else if (!prevHit.touched && mTouched)
+                    {
+                        propagateOnTouch(collision);
+                    }
                 }
             }
-        }
-        // get the count of non null picked objects
-        int pickedCount = 0;
 
-        /*
-         * Send "onEnter" events for colliders that were picked for the first time.
-         * Send "onTouchStart" events for colliders that were touched for the first time.
-         * Send "onTouchEnd" events for colliders that are no longer touched.
-         * Send "onInside" events for colliders that were already picked.
-         */
-        for (GVRPickedObject collision : picked) {
-            if (collision == null) {
-                continue;
-            }
-            pickedCount++;
-            GVRCollider collider = collision.hitCollider;
-            GVRPickedObject prevHit = findCollider(mPicked, collider);
-
-            collision.picker = this;
-            collision.touched = mTouched;
-            collision.motionEvent = mMotionEvent;
-            if (prevHit == null)
+            if (pickedCount > 0)
             {
-                propagateOnEnter(collision);
-                if (mTouched)
-                {
-                    propagateOnTouch(collision);
-                }
+                mPicked = picked;
+                propagateOnPick(this);
             }
             else
             {
-                propagateOnInside(collision);
-                if (prevHit.touched && !mTouched)
+                mPicked = null;
+                propagateOnNoPick(this);
+                if (mMotionEvent != null)
                 {
-                    propagateOnNoTouch(collision);
-                }
-                else if (!prevHit.touched && mTouched)
-                {
-                    propagateOnTouch(collision);
+                    propagateOnMotionOutside(mMotionEvent);
                 }
             }
         }
-
-        if (pickedCount > 0)
+        finally
         {
-            mPicked = picked;
-            propagateOnPick(this);
-        }
-        else
-        {
-            mPicked = null;
-            propagateOnNoPick(this);
-            if (mMotionEvent != null)
-            {
-                propagateOnMotionOutside(mMotionEvent);
-            }
+            mPickEventLock.unlock();
         }
     }
 

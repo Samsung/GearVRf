@@ -25,14 +25,18 @@ import android.view.Gravity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRRenderData.GVRRenderingOrder;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.IAssetEvents;
+import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.MovableBehavior;
@@ -50,6 +54,7 @@ import org.gearvrf.utlis.sceneserializer.SceneSerializer.SceneLoaderListener;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -87,6 +92,7 @@ public class SceneEditorMain extends GVRMain {
     private GVRSphereSceneObject environmentSphere;
     private GVRSceneObject environmentSceneObject;
     private String currentModel;
+
 
     @Override
     public void onInit(GVRContext gvrContext) {
@@ -175,7 +181,7 @@ public class SceneEditorMain extends GVRMain {
         Log.d(TAG, "Loading the model to scene:%s", modelFileName);
         try {
             currentModel = modelFileName;
-            gvrContext.getAssetLoader().loadModel(modelFileName);
+            gvrContext.getAssetLoader().loadModel("sd:" + modelFileName);
         } catch (IOException e) {
             Log.e(TAG, "Could not load model:" + modelFileName + e.getMessage());
         }
@@ -214,7 +220,7 @@ public class SceneEditorMain extends GVRMain {
                 StateChangedListener() {
                     @Override
                     public void onStateChanged(SelectableBehavior behavior, ObjectState
-                            prev, ObjectState current, Cursor cursor) {
+                            prev, ObjectState current, Cursor cursor, GVRPicker.GVRPickedObject hit) {
                         if (current == ObjectState.CLICKED) {
                             setMenuVisibility(false);
                             cursorManager.enableSettingsCursor(cursor);
@@ -222,14 +228,14 @@ public class SceneEditorMain extends GVRMain {
                                     @Override
                                     public void run() {
                                         if(fileBrowserView == null) {
-                                            fileBrowserView = new FileBrowserView(gvrContext,
-                                                    mainScene, environFileViewListener, FileBrowserView
+                                            fileBrowserView = new FileBrowserView(mainScene, environFileViewListener, FileBrowserView
                                                     .ENVIRONMENT_EXTENSIONS, resources.getString(R.string
                                                     .environment_picker_title));
                                         } else {
                                             fileBrowserView.reset(environFileViewListener,
                                                     FileBrowserView.ENVIRONMENT_EXTENSIONS,
-                                                    resources.getString(R.string.environment_picker_title));
+                                                    resources.getString(R.string.environment_picker_title),
+                                                    "environments");
                                         }
                                         fileBrowserView.render();
                                     }
@@ -247,21 +253,21 @@ public class SceneEditorMain extends GVRMain {
                 StateChangedListener() {
                     @Override
                     public void onStateChanged(SelectableBehavior behavior, ObjectState
-                            prev, ObjectState current, Cursor cursor) {
+                            prev, ObjectState current, Cursor cursor, GVRPicker.GVRPickedObject hit) {
                         if (current == ObjectState.CLICKED) {
                             cursorManager.enableSettingsCursor(cursor);
                             gvrContext.getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     if(fileBrowserView == null) {
-                                        fileBrowserView = new FileBrowserView(gvrContext,
-                                                mainScene, modelFileViewListener,
+                                        fileBrowserView = new FileBrowserView(mainScene, modelFileViewListener,
                                                 FileBrowserView.MODEL_EXTENSIONS, resources.getString(R
                                                 .string.model_picker_title));
                                     } else {
                                         fileBrowserView.reset(modelFileViewListener,
                                                 FileBrowserView.MODEL_EXTENSIONS,
-                                                resources.getString(R.string.model_picker_title));
+                                                resources.getString(R.string.model_picker_title),
+                                                "models");
                                     }
                                     fileBrowserView.render();
                                     setMenuVisibility(false);
@@ -359,7 +365,7 @@ public class SceneEditorMain extends GVRMain {
 
         @Override
         public void onStateChanged(final SelectableBehavior behavior, ObjectState prev,
-                                   ObjectState current, Cursor cursor) {
+                                   ObjectState current, Cursor cursor, GVRPicker.GVRPickedObject hit) {
             if (prev == ObjectState.CLICKED) {
                 long currentTimeStamp = System.currentTimeMillis();
                 if (prevClickTimeStamp != 0 && (currentTimeStamp - prevClickTimeStamp) <
@@ -462,6 +468,7 @@ public class SceneEditorMain extends GVRMain {
                 GVRAndroidResource(gvrContext, R.drawable.skybox_gridroom));
         initializeSurroundingSphere();
         environmentSphere.getRenderData().getMaterial().setMainTexture(futureTexture);
+        environmentSphere.getRenderData().disableLight();
         environmentSceneObject = environmentSphere;
         mainScene.addSceneObject(environmentSceneObject);
     }

@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import android.content.res.AssetManager;
 
+import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.utility.VrAppSettings;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -27,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class DaydreamXMLParser {
     DaydreamXMLParser(AssetManager assets, String fileName, VrAppSettings settings) {
@@ -71,6 +74,9 @@ final class DaydreamXMLParser {
                             } else if(attributeName.equals("useAndroidWearTouchpad")) {
                                 settings.setUseAndroidWearTouchpad(Boolean.parseBoolean(xpp
                                         .getAttributeValue(i)));
+                            } else if (attributeName
+                                    .equals("useGazeCursorController")) {
+                                parseControllerTypes(settings, xpp.getAttributeValue(i));
                             }
                         }
                     }
@@ -86,6 +92,42 @@ final class DaydreamXMLParser {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             throw e;
+        }
+    }
+
+    private void parseControllerTypes(VrAppSettings settings, String typeList) {
+        Pattern pattern = Pattern.compile("([a-z]+)[, ]*");
+        Matcher matcher = pattern.matcher(typeList);
+        int index = 0;
+        while (matcher.find(index))
+        {
+            String match = matcher.group(1);
+            index = matcher.end();
+
+            if (match.equals("gaze"))
+            {
+                settings.addControllerType(GVRControllerType.GAZE);
+            }
+            else if (match.equals("controller"))
+            {
+                settings.addControllerType(GVRControllerType.CONTROLLER);
+            }
+            else if (match.equals("gamepad"))
+            {
+                    settings.addControllerType(GVRControllerType.GAMEPAD);
+            }
+            else if (match.equals("weartouchpad"))
+            {
+                    settings.addControllerType(GVRControllerType.WEARTOUCHPAD);
+            }
+            else if (match.equals("mouse"))
+            {
+                    settings.addControllerType(GVRControllerType.MOUSE);
+            }
+            else if (match.equals("external"))
+            {
+                    settings.addControllerType(GVRControllerType.EXTERNAL);
+            }
         }
     }
 }

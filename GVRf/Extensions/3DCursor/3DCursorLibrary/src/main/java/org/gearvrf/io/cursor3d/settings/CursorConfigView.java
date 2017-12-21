@@ -20,6 +20,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -30,6 +31,7 @@ import android.widget.TextView;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
+import org.gearvrf.io.GVRTouchPadGestureDetector;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.CursorTheme;
@@ -117,8 +119,13 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         for (IoDevice ioDevice : ioDevicesDisplayed) {
             addIoDevice(ioDevice, llIoDevices, ioDevice == cursor.getIoDevice());
         }
-
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
+    }
+
+    @Override
+    void show() {
+        super.show();
+        setGestureDetector(new GVRTouchPadGestureDetector(swipeListener));
     }
 
     private void loadDrawables(Context context) {
@@ -268,20 +275,18 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
     }
 
     private void createIoChangeDialog(final IoDevice ioDevice, final int newIoDevicePosition) {
-        setSensorEnabled(false);
         new IoChangeDialogView(context, scene, settingsCursorId, new IoChangeDialogView
                 .DialogResultListener() {
             @Override
             public void onConfirm() {
                 setSettingsCursorId(changeListener.onDeviceChanged(ioDevice));
                 markIoDeviceSelected(newIoDevicePosition);
-                setSensorEnabled(true);
                 navigateBack(true);
             }
 
             @Override
             public void onCancel() {
-                setSensorEnabled(true);
+
             }
         });
     }
@@ -291,22 +296,27 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         changeListener.onBack(cascading);
     }
 
-    @Override
-    void onSwipeEvent(KeyEvent keyEvent) {
-        switch (keyEvent.getKeyCode()) {
-            case CustomKeyEvent.KEYCODE_SWIPE_LEFT:
-                Log.d(TAG, "Swipe left");
-                //Back event: Issue normal back
-                navigateBack(false);
-                break;
-            case CustomKeyEvent.KEYCODE_SWIPE_RIGHT:
-                Log.d(TAG, "Swipe right");
-                //OK event: Issue cascading back
-                navigateBack(true);
-                break;
-            default:
-                //No need to handle other event types
-                break;
-        }
-    }
+    GVRTouchPadGestureDetector.OnTouchPadGestureListener swipeListener =
+            new GVRTouchPadGestureDetector.OnTouchPadGestureListener()
+            {
+                public boolean onSingleTap(MotionEvent e) { return false; }
+
+                public void onLongPress(MotionEvent e) { }
+
+                public boolean onSwipe(MotionEvent e, GVRTouchPadGestureDetector.SwipeDirection swipeDirection,
+                                       float velocityX, float velocityY)
+                {
+                    if (swipeDirection == GVRTouchPadGestureDetector.SwipeDirection.Forward)
+                    {
+                        navigateBack(false);
+                    }
+                    else
+                    {
+                        navigateBack(true);
+                    }
+                    return true;
+                }
+
+                public boolean onScroll(MotionEvent arg0, MotionEvent arg1, float arg2, float arg3) { return false; }
+            };
 }

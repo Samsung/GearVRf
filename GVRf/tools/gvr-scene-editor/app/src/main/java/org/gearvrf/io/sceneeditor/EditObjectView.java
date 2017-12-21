@@ -51,9 +51,9 @@ class EditObjectView extends BaseView implements OnClickListener, OnSeekBarChang
     }
 
     //Called on main thread
-    EditObjectView(final GVRContext context, final GVRScene scene, EditViewChangeListener
+    EditObjectView(final GVRScene scene, EditViewChangeListener
             editViewChangeListener) {
-        super(context, scene, R.layout.edit_object_layout, 5, 7, false);
+        super(scene, R.layout.edit_object_layout, 5, 7, false);
         ((Button) findViewById(R.id.bDone)).setOnClickListener(this);
         ((Button) findViewById(R.id.bScaleUp)).setOnClickListener(this);
         ((Button) findViewById(R.id.bScaleDown)).setOnClickListener(this);
@@ -84,7 +84,7 @@ class EditObjectView extends BaseView implements OnClickListener, OnSeekBarChang
         viewSceneObject.getTransform().reset();
         viewSceneObject.getTransform().setPosition(0, 0, -10);
         viewSceneObject.getTransform().rotateByAxisWithPivot(-35, 1, 0, 0, 0, 0, 0);
-        Matrix4f cameraMatrix = gvrContext.getMainScene().getMainCameraRig()
+        Matrix4f cameraMatrix = this.scene.getMainCameraRig()
                 .getHeadTransform().getModelMatrix4f();
         Matrix4f objectMatrix = viewSceneObject.getTransform().getModelMatrix4f();
         Matrix4f finalMatrix = cameraMatrix.mul(objectMatrix);

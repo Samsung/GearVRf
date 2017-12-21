@@ -60,7 +60,7 @@ public class EditableBehavior extends GVRBehavior implements EditViewChangeListe
             @Override
             public void run() {
                 if (editableView == null) {
-                    editableView = new EditObjectView(getGVRContext(), scene, EditableBehavior
+                    editableView = new EditObjectView(scene, EditableBehavior
                             .this);
                 }
                 editableView.setSceneObject(newOwner);

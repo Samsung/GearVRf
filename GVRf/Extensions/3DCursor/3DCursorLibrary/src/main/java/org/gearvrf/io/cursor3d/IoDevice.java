@@ -304,6 +304,7 @@ public class IoDevice {
     }
 
     void resetSceneObject() {
+        gvrCursorController.stopDrag();
         gvrCursorController.setCursor(null);
     }
 

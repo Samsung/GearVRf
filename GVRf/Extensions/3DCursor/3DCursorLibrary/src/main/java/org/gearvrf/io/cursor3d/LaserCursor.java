@@ -69,29 +69,17 @@ class LaserCursor extends Cursor {
 
     @Override
     void setCursorDepth(float depth) {
+        depth = Math.abs(depth);
         if (depth > MAX_CURSOR_SCALE) {
             return;
         }
         super.setCursorDepth(depth);
-        if (mIODevice != null) {
-            mIODevice.setFarDepth(-depth);
-            mIODevice.setNearDepth(-depth);
-        }
     }
 
     @Override
     void setIoDevice(IoDevice ioDevice) {
         super.setIoDevice(ioDevice);
-        ioDevice.setFarDepth(-mCursorDepth);
-        ioDevice.setNearDepth(-mCursorDepth);
-    }
-
-    @Override
-    void setupIoDevice(IoDevice ioDevice) {
-        super.setupIoDevice(ioDevice);
         ioDevice.setDisableRotation(true);
     }
-
-
 
 }

@@ -15,18 +15,24 @@
 
 package org.gearvrf.widgetplugin;
 
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSharedTexture;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.ITouchEvents;
 import org.gearvrf.scene_objects.view.GVRView;
 
 import android.graphics.SurfaceTexture;
+import android.view.MotionEvent;
 import android.view.Surface;
 
 
@@ -56,94 +62,85 @@ import android.view.Surface;
  *  this view by assigning appropriate texture coordinates.
  * 
  */
-public class GVRWidgetSceneObject extends GVRSceneObject {
+public class GVRWidgetSceneObject extends GVRSceneObject
+{
 
     private int mWidth;
     private int mHeight;
 
-    private static final float[] SIMPLE_NORMALS = { 0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f };
-
-    private static final char[] SIMPLE_INDICES = { 0, 1, 2, 2, 1, 3 };
+    private static final char[] SIMPLE_INDICES = {0, 1, 2, 2, 1, 3};
 
     private GVRWidgetSceneObjectMeshInfo mMeshInfo;
 
     /**
      * Shows GVRF UI widgets (Libgdx scene2d) {@linkplain GVRWidgetSceneObject
      * scene object}
-     * 
-     * @param gvrContext
-     *            current {@link GVRContext}
-     * @param mesh
-     *            a {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
-     *            and {@link GVRContext#createQuad(float, float)}
-     * @param int Libgdx Texture ID
+     *
+     * @param gvrContext current {@link GVRContext}
+     * @param mesh       a {@link GVRMesh} - see
+     *                   {@link GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *                   and {@link GVRContext#createQuad(float, float)}
+     * @param texid        Libgdx Texture ID
      */
-    public GVRWidgetSceneObject(GVRContext gvrContext, GVRMesh mesh, int texid) {
+    public GVRWidgetSceneObject(GVRContext gvrContext, GVRMesh mesh, int texid)
+    {
         super(gvrContext, mesh);
 
-        GVRMaterial material = new GVRMaterial(gvrContext,
-                GVRShaderType.UnlitFBO.ID);
-        if (texid != 0) {
+        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.UnlitFBO.ID);
+        if (texid != 0)
+        {
             material.setMainTexture(new GVRSharedTexture(gvrContext, texid));
         }
         getRenderData().setMaterial(material);
-
+        attachCollider(new GVRMeshCollider(gvrContext, null, true));
     }
 
     /**
      * Shows GVRF UI widgets (Libgdx scene2d) {@linkplain GVRWidgetSceneObject
      * scene object}
-     * 
-     * @param gvrContext
-     *            current {@link GVRContext}
-     * @param GVRWidgetSceneObjectMeshInfo
-     *            a {@link GVRWidgetSceneObjectMeshInfo} - see
-     * 
-     * @param int Libgdx viewWidth
-     * @param int Libgdx viewHeight
+     *
+     * @param gvrContext     current {@link GVRContext}
+     * @param mesh           a {@link GVRWidgetSceneObjectMeshInfo}
+     * @param viewWidth      Libgdx viewWidth
+     * @param viewHeight     Libgdx viewHeight
      */
-    public GVRWidgetSceneObject(GVRContext gvrContext, int texid,
-            GVRWidgetSceneObjectMeshInfo mesh, int viewWidth, int viewHeight) {
+    public GVRWidgetSceneObject(GVRContext gvrContext, int texid, GVRWidgetSceneObjectMeshInfo mesh, int viewWidth, int viewHeight)
+    {
         super(gvrContext);
         mMeshInfo = mesh;
         mWidth = viewWidth;
         mHeight = viewHeight;
-        GVRMaterial material = new GVRMaterial(gvrContext,
-                GVRShaderType.UnlitFBO.ID);
-        if (texid != 0) {
+        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.UnlitFBO.ID);
+        if (texid != 0)
+        {
             material.setMainTexture(new GVRSharedTexture(gvrContext, texid));
         }
         createSceneObject(gvrContext, material);
     }
 
-    private void createSceneObject(GVRContext gvrContext, GVRMaterial mat) {
-        GVRMesh mesh = new GVRMesh(gvrContext);
-        float[] vertices = { mMeshInfo.mTopLeftX, mMeshInfo.mBottomRightY,
-                mMeshInfo.mZ,
+    public float getWidth() { return mWidth; }
+    public float getHeight() { return mHeight; }
+
+    private void createSceneObject(GVRContext gvrContext, GVRMaterial mat)
+    {
+        GVRMesh mesh = new GVRMesh(gvrContext, "float3 a_position float2 a_texcoord");
+        float[] vertices = {mMeshInfo.mTopLeftX, mMeshInfo.mBottomRightY, mMeshInfo.mZ,
 
                 mMeshInfo.mBottomRightX, mMeshInfo.mBottomRightY, mMeshInfo.mZ,
 
                 mMeshInfo.mTopLeftX, mMeshInfo.mTopLeftY, mMeshInfo.mZ,
 
-                mMeshInfo.mBottomRightX, mMeshInfo.mTopLeftY, mMeshInfo.mZ };
+                mMeshInfo.mBottomRightX, mMeshInfo.mTopLeftY, mMeshInfo.mZ};
 
-        float[] textCoords = {
-                (float) mMeshInfo.mTopLeftViewCoords[0] / (float) mWidth,
-                (float) mMeshInfo.mBottomRightViewCoords[1] / (float) mHeight,
+        float[] textCoords = {(float) mMeshInfo.mTopLeftViewCoords[0] / (float) mWidth, (float) mMeshInfo.mBottomRightViewCoords[1] / (float) mHeight,
 
-                (float) mMeshInfo.mBottomRightViewCoords[0] / (float) mWidth,
-                (float) mMeshInfo.mBottomRightViewCoords[1] / (float) mHeight,
+                (float) mMeshInfo.mBottomRightViewCoords[0] / (float) mWidth, (float) mMeshInfo.mBottomRightViewCoords[1] / (float) mHeight,
 
-                (float) mMeshInfo.mTopLeftViewCoords[0] / (float) mWidth,
-                (float) mMeshInfo.mTopLeftViewCoords[1] / (float) mHeight,
+                (float) mMeshInfo.mTopLeftViewCoords[0] / (float) mWidth, (float) mMeshInfo.mTopLeftViewCoords[1] / (float) mHeight,
 
-                (float) mMeshInfo.mBottomRightViewCoords[0] / (float) mWidth,
-                (float) mMeshInfo.mTopLeftViewCoords[1] / (float) mHeight };
+                (float) mMeshInfo.mBottomRightViewCoords[0] / (float) mWidth, (float) mMeshInfo.mTopLeftViewCoords[1] / (float) mHeight};
 
         mesh.setVertices(vertices);
-        mesh.setNormals(SIMPLE_NORMALS);
         mesh.setTexCoords(textCoords);
         mesh.setIndices(SIMPLE_INDICES);
 
@@ -151,9 +148,13 @@ public class GVRWidgetSceneObject extends GVRSceneObject {
         renderData.setMaterial(mat);
         attachRenderData(renderData);
         renderData.setMesh(mesh);
+        attachCollider(new GVRMeshCollider(gvrContext, null, true));
     }
 
-    public GVRWidgetSceneObjectMeshInfo getmeshInfo() {
+    public GVRWidgetSceneObjectMeshInfo getmeshInfo()
+    {
         return mMeshInfo;
     }
+
+
 }

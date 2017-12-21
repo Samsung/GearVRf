@@ -128,7 +128,7 @@ public class SensorEvent {
      * 
      *         This usually denotes a button press on a given input event. The
      *         actual interaction that causes the active state is defined by the
-     *         input provided to the {@link GVRInputManagerImpl}.
+     *         input provided to the {@link GVRInputManager}.
      */
     public boolean isActive() {
         return isActive;

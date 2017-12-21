@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 import android.view.MotionEvent.PointerCoords;
 import android.view.MotionEvent.PointerProperties;
 import android.view.View;
+import android.widget.FrameLayout;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRBaseSensor;
@@ -33,9 +34,11 @@ import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
+import org.gearvrf.io.GVRTouchPadGestureDetector;
 import org.gearvrf.io.cursor3d.CustomKeyEvent;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRFrameLayout;
+import org.gearvrf.utility.Log;
 
 import java.util.List;
 
@@ -44,34 +47,16 @@ abstract class BaseView {
     private static final float QUAD_X = 10.0f;
     private static final float QUAD_Y = 8f;
     public static final float QUAD_DEPTH = -13f;
-    private GVRFrameLayout frameLayout;
+    private FrameLayout frameLayout;
 
-    private int frameWidth;
-    private int frameHeight;
     private float quadHeight;
-    private float halfQuadHeight;
     private float quadWidth;
-    private float halfQuadWidth;
     GVRScene scene;
     GVRActivity activity;
     GVRContext context;
     private GVRViewSceneObject layoutSceneObject;
-    private boolean sensorEnabled = true;
-
     private Handler glThreadHandler;
-    private final static PointerProperties[] pointerProperties;
-    private final static PointerCoords[] pointerCoordsArray;
-    private final static PointerCoords pointerCoords;
     int settingsCursorId;
-
-    static {
-        PointerProperties properties = new PointerProperties();
-        properties.id = 0;
-        properties.toolType = MotionEvent.TOOL_TYPE_MOUSE;
-        pointerProperties = new PointerProperties[]{properties};
-        pointerCoords = new PointerCoords();
-        pointerCoordsArray = new PointerCoords[]{pointerCoords};
-    }
 
     BaseView(GVRContext context, GVRScene scene, int settingsCursorId, int layoutID) {
         this(context, scene, settingsCursorId, layoutID, QUAD_Y, QUAD_X);
@@ -83,12 +68,10 @@ abstract class BaseView {
         this.scene = scene;
         this.settingsCursorId = settingsCursorId;
         this.quadHeight = quadHeight;
-        this.halfQuadHeight = quadHeight / 2;
         this.quadWidth = quadWidth;
-        this.halfQuadWidth = quadWidth / 2;
 
         activity = context.getActivity();
-        frameLayout = new GVRFrameLayout(activity);
+        frameLayout = new FrameLayout(activity);
         frameLayout.setBackgroundColor(Color.TRANSPARENT);
         View.inflate(activity, layoutID, frameLayout);
         glThreadHandler = new Handler(Looper.getMainLooper());
@@ -101,76 +84,9 @@ abstract class BaseView {
                 layoutSceneObject = new GVRViewSceneObject(context, frameLayout,
                         context.createQuad(quadWidth, quadHeight));
                 layoutSceneObject.getTransform().setPosition(x, y, z);
-                layoutSceneObject.attachComponent(new GVRBaseSensor(context));
-                layoutSceneObject.getEventReceiver().addListener(sensorEvents);
-                frameWidth = frameLayout.getWidth();
-                frameHeight = frameLayout.getHeight();
                 show();
             }
         });
-    }
-
-    private ISensorEvents sensorEvents = new ISensorEvents() {
-        @Override
-        public void onSensorEvent(final SensorEvent event) {
-            int id = event.getCursorController().getId();
-            GVRPicker.GVRPickedObject pickedObject = event.getPickedObject();
-
-            if (id != settingsCursorId || !sensorEnabled) {
-                return;
-            }
-            List<KeyEvent> keyEvents = event.getCursorController()
-                    .getKeyEvents();
-
-            if (keyEvents.isEmpty() == false) {
-                for (KeyEvent keyEvent : keyEvents) {
-                    if (keyEvent.getAction() == CustomKeyEvent.ACTION_SWIPE) {
-                        sendSwipeEvent(keyEvent);
-                        continue;
-                    }
-                    sendMotionEvent(pickedObject.hitLocation[0], pickedObject.hitLocation[1], keyEvent.getAction());
-                }
-            } else {
-                sendMotionEvent(pickedObject.hitLocation[0], pickedObject.hitLocation[1], MotionEvent.ACTION_MOVE);
-            }
-        }
-    };
-
-    private void sendSwipeEvent(final KeyEvent keyEvent) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                KeyEvent clone = new KeyEvent(keyEvent);
-                onSwipeEvent(clone);
-            }
-        });
-    }
-
-    private void sendMotionEvent(float hitX, float hitY, final int action) {
-        float x = (hitX + halfQuadWidth) / quadWidth;
-        float y = -(hitY - halfQuadHeight) / quadHeight;
-        pointerCoords.x = x * getFrameWidth();
-        pointerCoords.y = y * getFrameHeight();
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                long now = SystemClock.uptimeMillis();
-                final MotionEvent clone = MotionEvent.obtain(now, now + 1, action, 1,
-                        pointerProperties, pointerCoordsArray, 0, 0, 1f, 1f, 0, 0,
-                        InputDevice.SOURCE_TOUCHSCREEN, 0);
-
-                dispatchMotionEvent(clone);
-            }
-        });
-    }
-
-    int getFrameWidth() {
-        return frameWidth;
-    }
-
-    int getFrameHeight() {
-        return frameHeight;
     }
 
     void show() {
@@ -179,41 +95,25 @@ abstract class BaseView {
 
     void hide() {
         scene.removeSceneObject(layoutSceneObject);
-        layoutSceneObject.getEventReceiver().removeListener(sensorEvents);
     }
 
     void disable() {
         scene.removeSceneObject(layoutSceneObject);
-        layoutSceneObject.getEventReceiver().removeListener(sensorEvents);
     }
 
     void enable() {
         scene.addSceneObject(layoutSceneObject);
-        layoutSceneObject.getEventReceiver().addListener(sensorEvents);
     }
 
     View findViewById(int id) {
         return frameLayout.findViewById(id);
     }
 
-    void dispatchMotionEvent(MotionEvent motionEvent) {
-        frameLayout.dispatchTouchEvent(motionEvent);
-        frameLayout.invalidate();
-        motionEvent.recycle();
-    }
-
-    void onSwipeEvent(KeyEvent keyEvent) {
-    }
-
     void setSettingsCursorId(int settingsCursorId) {
         this.settingsCursorId = settingsCursorId;
     }
 
-    void setSensorEnabled(boolean enabled) {
-        sensorEnabled = enabled;
-    }
-
-    boolean isSensorEnabled() {
-        return sensorEnabled;
+    protected void setGestureDetector(GVRTouchPadGestureDetector detector) {
+        layoutSceneObject.setGestureDetector(detector);
     }
 }

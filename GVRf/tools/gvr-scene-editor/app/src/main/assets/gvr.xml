@@ -28,7 +28,7 @@
         framebufferPixelsWide="DEFAULT"
         showLoadingIcon="true"
         useProtectedFramebuffer="false"
-        useGazeCursorController="true"
+        useControllerTypes="gaze,controller"
         useSrgbFramebuffer="false" >
 
         <mono-mode-parms

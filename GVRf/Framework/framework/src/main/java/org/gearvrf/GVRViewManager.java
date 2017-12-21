@@ -63,8 +63,8 @@ abstract class GVRViewManager extends GVRContext {
         VrAppSettings appSettings = activity.getAppSettings();
         mScriptManager = new GVRScriptManager(this);
         mEventManager = new GVREventManager(this);
-        mInputManager = new GVRInputManagerImpl(this, appSettings.useGazeCursorController(),
-                appSettings.useAndroidWearTouchpad());
+        mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes());
+        mInputManager.scanDevices();
     }
 
     void onPause() {}
@@ -815,7 +815,7 @@ abstract class GVRViewManager extends GVRContext {
     protected SplashScreen mSplashScreen;
 
     private final GVREventManager mEventManager;
-    protected final GVRInputManagerImpl mInputManager;
+    protected final GVRInputManager mInputManager;
     protected IRenderBundle mRenderBundle;
 
     protected GVRMain mMain;

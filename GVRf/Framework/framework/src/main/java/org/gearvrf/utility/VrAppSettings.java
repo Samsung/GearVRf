@@ -17,6 +17,12 @@ package org.gearvrf.utility;
 
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.io.GVRControllerType;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A class that represents overall parameters that we can set with Oculus
@@ -576,15 +582,11 @@ public class VrAppSettings {
     // Current frame buffer's pixels height.
     public int framebufferPixelsHigh;
 
-    // Use this flag to enable the gaze cursor controller whenever
-    // the phone is docked.
-    boolean useGazeCursorController;
-
-    // Use this flag to enable the AndroidWearTouchpad in the scene
-    boolean useAndroidWearTouchpad;
-
     // Use multiview feature
     boolean useMultiview;
+
+    // List of cursor controller types to enable.
+    ArrayList<GVRControllerType> cursorControllerTypes;
 
     public final ModeParams modeParams;
     public final EyeBufferParams eyeBufferParams;
@@ -654,7 +656,7 @@ public class VrAppSettings {
      * @return if current app is using the gaze cursor controller
      */
     public boolean useGazeCursorController() {
-        return useGazeCursorController;
+        return cursorControllerTypes.contains(GVRControllerType.GAZE);
     }
 
     /**
@@ -664,7 +666,48 @@ public class VrAppSettings {
      *            if current app is using the gaze cursor controller
      */
     public void setUseGazeCursorController(boolean useGazeCursorController) {
-        this.useGazeCursorController = useGazeCursorController;
+        if (useGazeCursorController) {
+            removeControllerType(GVRControllerType.GAZE);
+        }
+        else {
+            addControllerType(GVRControllerType.GAZE);
+        }
+    }
+
+    /**
+     * Get the current list of cursor controller types.
+     */
+    public ArrayList<GVRControllerType> getCursorControllerTypes() { return cursorControllerTypes; }
+
+    /**
+     * Enable the use of the given controller type by
+     * adding it to the cursor controller types list.
+     * @param controllerType GVRControllerType to add to the list
+     */
+    public void addControllerType(GVRControllerType controllerType)
+    {
+        if (cursorControllerTypes == null)
+        {
+            cursorControllerTypes = new ArrayList<GVRControllerType>();
+        }
+        else if (cursorControllerTypes.contains(controllerType))
+        {
+            return;
+        }
+        cursorControllerTypes.add(controllerType);
+    }
+
+    /**
+     * Disable the use of the given controller type by
+     * removing it from the cursor controller types list.
+     * @param controllerType GVRControllerType to remove from the list
+     */
+    public void removeControllerType(GVRControllerType controllerType)
+    {
+        if (cursorControllerTypes != null)
+        {
+            cursorControllerTypes.remove(controllerType);
+        }
     }
 
     /**
@@ -673,7 +716,7 @@ public class VrAppSettings {
      * @return if current app is using the AndroidWearTouchpad
      */
     public boolean useAndroidWearTouchpad() {
-        return useAndroidWearTouchpad;
+        return cursorControllerTypes.contains(GVRControllerType.WEARTOUCHPAD);
     }
 
     /**
@@ -683,7 +726,12 @@ public class VrAppSettings {
      *            if current app is using the AndroidWearTouchpad
      */
     public void setUseAndroidWearTouchpad(boolean useAndroidWearTouchpad) {
-        this.useAndroidWearTouchpad = useAndroidWearTouchpad;
+        if (useAndroidWearTouchpad) {
+            removeControllerType(GVRControllerType.WEARTOUCHPAD);
+        }
+        else {
+            addControllerType(GVRControllerType.WEARTOUCHPAD);
+        }
     }
 
     /**

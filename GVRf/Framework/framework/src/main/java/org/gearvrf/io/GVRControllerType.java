@@ -42,6 +42,10 @@ public enum GVRControllerType {
      */
     CONTROLLER,
     /**
+     * This type indicates the Android Wear Touchpad.
+     */
+    WEARTOUCHPAD,
+    /**
      * These are the input devices added externally to the framework using the
      * {@link GVRInputManager}.
      */

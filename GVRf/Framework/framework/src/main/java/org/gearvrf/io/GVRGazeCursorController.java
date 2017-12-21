@@ -45,7 +45,6 @@ final public class GVRGazeCursorController extends GVRCursorController
     private static float TOUCH_SQUARE = 8.0f * 8.0f;
     private static final float DEPTH_SENSITIVITY = 0.1f;
     private int referenceCount;
-    private boolean buttonDownSent;
     private float actionDownX;
     private float actionDownY;
     private float actionDownZ;
@@ -60,8 +59,7 @@ final public class GVRGazeCursorController extends GVRCursorController
         super(context, controllerType, name, vendorId, productId);
         this.context = context;
         thread = new EventHandlerThread();
-        mConnected = isEnabled();
-        mPicker.setEnable(mConnected);
+        mConnected = true;
     }
 
     /*
@@ -80,14 +78,10 @@ final public class GVRGazeCursorController extends GVRCursorController
             thread.start();
             thread.await();
         }
-        mConnected = true;
-        context.getActivity().getEventReceiver().addListener(activityHandler);
     }
 
     private void stop()
     {
-        mConnected = false;
-        context.getActivity().getEventReceiver().removeListener(activityHandler);
     }
 
     /**
@@ -126,10 +120,12 @@ final public class GVRGazeCursorController extends GVRCursorController
 
     @Override
     synchronized public boolean dispatchKeyEvent(KeyEvent event) {
-        if (thread.isAlive()) {
+        if (thread.isAlive())
+        {
             thread.dispatchKeyEvent(event);
+            return !mSendEventsToActivity;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -138,7 +134,7 @@ final public class GVRGazeCursorController extends GVRCursorController
         if (thread.isAlive())
         {
             thread.dispatchMotionEvent(event);
-            return true;
+            return !mSendEventsToActivity;
         }
         return false;
     }
@@ -148,11 +144,6 @@ final public class GVRGazeCursorController extends GVRCursorController
     public synchronized void setEnable(boolean flag) {
         boolean enabled = isEnabled();
         super.setEnable(flag);
-        mPicker.setEnable(flag);
-        if (mCursor != null)
-        {
-            mCursor.setEnable(flag);
-        }
         if (!enabled && flag) {
             if (referenceCount > 0) {
                 start();
@@ -163,7 +154,6 @@ final public class GVRGazeCursorController extends GVRCursorController
                 thread.setEnabled(false);
                 stop();
             }
-            context.getInputManager().removeCursorController(this);
         }
     }
 
@@ -181,14 +171,6 @@ final public class GVRGazeCursorController extends GVRCursorController
             thread.quitSafely();
         }
     }
-
-    private IActivityEvents activityHandler = new GVREventListeners.ActivityEvents()
-    {
-        public void dispatchTouchEvent(MotionEvent event)
-        {
-            GVRGazeCursorController.this.dispatchMotionEvent(event);
-        }
-    };
 
     private final class EventHandlerThread extends HandlerThread {
         private static final String THREAD_NAME = "GVRGazeEventHandlerThread";
@@ -266,12 +248,14 @@ final public class GVRGazeCursorController extends GVRCursorController
                 actionDownX = eventX;
                 actionDownY = eventY;
                 actionDownZ = mCursorDepth;
+                setActive(true);
                 // report ACTION_DOWN as a button
                 setKeyEvent(BUTTON_GAZE_DOWN);
                 break;
 
                 case MotionEvent.ACTION_UP:
                 setKeyEvent(BUTTON_GAZE_UP);
+                setActive(false);
                 break;
 
                 case MotionEvent.ACTION_MOVE:

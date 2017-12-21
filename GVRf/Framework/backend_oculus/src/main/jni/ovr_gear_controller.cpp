@@ -66,7 +66,7 @@ namespace gvr {
             result = vrapi_GetCurrentInputState(ovrMobile_, RemoteDeviceID, &remoteInputState
                     .Header);
         }
-        vrapi_RecenterInputPose(ovrMobile_, RemoteDeviceID);
+        vrapi_SetRemoteEmulation(ovrMobile_, false);
     }
 
     void GearController::onControllerDisconnected(const ovrDeviceID deviceID) {
