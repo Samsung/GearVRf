@@ -15,7 +15,7 @@
 
 package org.gearvrf.x3d;
 
-import org.gearvrf.GVRBaseSensor;
+import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
@@ -29,7 +29,7 @@ import org.joml.Vector3f;
  *         animations based on if an object is touched, visible, within
  *         proximity of the camera.
  */
-public class Sensor extends GVRBaseSensor
+public class Sensor extends GVRSensor
 {
 
   public enum Type

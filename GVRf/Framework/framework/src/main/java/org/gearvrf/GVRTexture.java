@@ -15,31 +15,9 @@
 
 package org.gearvrf;
 
-import android.graphics.Bitmap;
-import android.opengl.GLES30;
-import android.opengl.GLUtils;
-
-import org.gearvrf.GVRCompressedTexture;
-import org.gearvrf.utility.Log;
-
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static android.opengl.GLES20.GL_LINEAR_MIPMAP_NEAREST;
-import static android.opengl.GLES20.GL_NO_ERROR;
-import static android.opengl.GLES20.GL_TEXTURE_2D;
-import static android.opengl.GLES20.GL_TEXTURE_MIN_FILTER;
-import static android.opengl.GLES20.glBindTexture;
-import static android.opengl.GLES20.glGenerateMipmap;
-import static android.opengl.GLES20.glGetError;
-import static android.opengl.GLES20.glTexParameteri;
 
 /**
  * Describes a texture mapped onto a 3D object by a shader.
@@ -62,19 +40,19 @@ import static android.opengl.GLES20.glTexParameteri;
  *      <td>uncompressed RGB or RGBA bitmap data</td>
  *  </tr>
  * <tr>
- *      <td>GVRCompressedTexture</td>
+ *      <td>GVRCompressedImage</td>
  *      <td>compressed bitmap data</td>
  * </tr>
  *  <tr>
- *      <td>GVRCubemapTexture</td>
+ *      <td>GVRCubemapImage</td>
  *      <td>uncompressed cubemap data (6 bitmaps)</td>
  *  </tr>
  * <tr>
- *      <td>GVRCompressedCubemapTexture</td>
+ *      <td>GVRCompressedCubemapImage</td>
  *      <td>compressed cubemmap data (6 compressed bitmaps)</td>
  * </tr>
  * <tr>
- *     <td>GVRFloatTexture</td>
+ *     <td>GVRFloatImage</td>
  *     <td>uncompressed floating point bitmap data</td>
  * </tr>
  * </table>

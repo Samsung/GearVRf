@@ -220,7 +220,7 @@ JNIEXPORT jobjectArray JNICALL
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     const std::vector<Light*> lights = scene->getLightList();
     int nlights = lights.size();
-    jclass elemClass = env->FindClass("org/gearvrf/GVRLightBase");
+    jclass elemClass = env->FindClass("org/gearvrf/GVRLight");
 
     jobjectArray jlights = env->NewObjectArray(nlights, elemClass, NULL);
     int i = 0;

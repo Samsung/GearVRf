@@ -285,7 +285,7 @@ public abstract class GVRContext implements IEventReceiver {
         mesh.setTexCoords(texCoords);
 
         char[] triangles = { 0, 1, 2, 1, 3, 2 };
-        mesh.setTriangles(triangles);
+        mesh.setIndices(triangles);
 
         return mesh;
     }
@@ -477,30 +477,16 @@ public abstract class GVRContext implements IEventReceiver {
             GVRDrawFrameListener frameListener);
 
     /**
-     * The {@linkplain GVRMaterialShaderManager object shader manager}
+     * The {@linkplain GVRShaderManager object shader manager}
      * singleton.
      * 
      * Use the shader manager to define custom GL object shaders, which are used
      * to render a scene object's surface.
      * 
-     * @return The {@linkplain GVRMaterialShaderManager shader manager}
+     * @return The {@linkplain GVRShaderManager shader manager}
      *         singleton.
      */
-    public abstract GVRMaterialShaderManager getMaterialShaderManager();
-
-    /**
-     * The {@linkplain GVRPostEffectShaderManager scene shader manager}
-     * singleton.
-     * 
-     * Use the shader manager to define custom GL scene shaders, which can be
-     * inserted into the rendering pipeline to apply image processing effects to
-     * the rendered scene graph. In classic GL programming, this is often
-     * referred to as a "post effect."
-     * 
-     * @return The {@linkplain GVRPostEffectShaderManager post effect shader
-     *         manager} singleton.
-     */
-    public abstract GVRPostEffectShaderManager getPostEffectShaderManager();
+    public abstract GVRShaderManager getShaderManager();
 
     /**
      * The {@linkplain GVRAnimationEngine animation engine} singleton.

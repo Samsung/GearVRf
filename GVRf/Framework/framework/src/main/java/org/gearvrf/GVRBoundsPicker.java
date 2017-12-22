@@ -18,6 +18,7 @@ package org.gearvrf;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.utility.Log;
 
 /**

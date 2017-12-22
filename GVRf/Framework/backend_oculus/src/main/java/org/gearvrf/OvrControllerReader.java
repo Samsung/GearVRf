@@ -2,6 +2,7 @@ package org.gearvrf;
 
 import android.graphics.PointF;
 
+import org.gearvrf.io.GVRGearCursorController;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -9,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-class OvrControllerReader implements org.gearvrf.io.GearCursorController.ControllerReader {
+class OvrControllerReader implements GVRGearCursorController.ControllerReader {
 
     private FloatBuffer readbackBuffer;
     private final long mPtr;

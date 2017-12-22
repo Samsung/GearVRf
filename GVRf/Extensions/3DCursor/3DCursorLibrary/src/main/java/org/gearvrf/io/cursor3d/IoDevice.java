@@ -19,7 +19,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.io.GVRControllerType;
 
@@ -315,11 +315,6 @@ public class IoDevice {
         if (controllerEventListener != null) {
             gvrCursorController.getEventReceiver().removeListener(controllerEventListener);
         }
-    }
-
-    // TODO this has to go only used by CursorInputManager
-    boolean contains(GVRCursorController gvrCursorController) {
-        return this.gvrCursorController == gvrCursorController;
     }
 
     void setNearDepth(float nearDepth) {

@@ -14,6 +14,7 @@
  */
 package org.gearvrf;
 
+import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.utility.TextFile;
 
 /**
@@ -46,9 +47,9 @@ import org.gearvrf.utility.TextFile;
  * 
  * @see GVRDirectLight
  * @see GVRSpotLight
- * @see GVRLightBase
+ * @see GVRLight
  */
-public class GVRPointLight extends GVRLightBase
+public class GVRPointLight extends GVRLight
 {
     private static String shaderSource = null;
     public GVRPointLight(GVRContext gvrContext, GVRSceneObject owner) {

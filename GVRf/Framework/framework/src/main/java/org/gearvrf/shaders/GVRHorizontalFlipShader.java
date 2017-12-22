@@ -12,14 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf;
+package org.gearvrf.shaders;
 
 import android.content.Context;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRShader;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**
- * Shader which vertically flips a texture and blends it with a color.
+ * Shader which horizontally flips a texture and blends it with a color.
  * This shader assumes the vertex position is in eye coordinates - it
  * does not use the model, view or projection matrices.
  * It also ignores light sources.
@@ -32,13 +36,13 @@ import org.gearvrf.utility.TextFile;
  *     u_texture    texture to blend
  * </code>
  */
-public class GVRVerticalFlipShader extends GVRShader
+public class GVRHorizontalFlipShader extends GVRShader
 {
-    public GVRVerticalFlipShader(GVRContext ctx)
+    public GVRHorizontalFlipShader(GVRContext ctx)
     {
         super("float3 u_color float u_factor", "sampler2D u_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         Context context = ctx.getContext();
-        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.vert_flip_tex));
+        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.horz_flip_tex));
         setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.color_blend_frag));
     }
 
@@ -47,5 +51,4 @@ public class GVRVerticalFlipShader extends GVRShader
         material.setVec3("u_color", 1, 1, 1);
         material.setFloat("u_factor", 0);
     }
-
 }

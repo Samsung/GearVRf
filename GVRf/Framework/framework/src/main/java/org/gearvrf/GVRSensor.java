@@ -17,6 +17,8 @@ package org.gearvrf;
 
 import android.view.MotionEvent;
 
+import org.gearvrf.io.GVRCursorController;
+
 /**
  * Create an instance of this class to receive {@link SensorEvent}s whenever an
  * input device interacts with a {@link GVRSceneObject}.
@@ -36,10 +38,10 @@ import android.view.MotionEvent;
  * @see IPickEvents
  * @see ISensorEvents
  */
-public class GVRBaseSensor extends GVRBehavior
+public class GVRSensor extends GVRBehavior
 {
-    private static final String TAG = GVRBaseSensor.class.getSimpleName();
-    static private long TYPE_SENSOR = newComponentType(GVRBaseSensor.class);
+    private static final String TAG = GVRSensor.class.getSimpleName();
+    static private long TYPE_SENSOR = newComponentType(GVRSensor.class);
 
     private static final float[] EMPTY_HIT_POINT = new float[3];
     private GVRPicker.GVRPickedObject mHit = null;
@@ -56,7 +58,7 @@ public class GVRBaseSensor extends GVRBehavior
     {
         public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision)
         {
-            GVRBaseSensor sensor = findSensor(sceneObj);
+            GVRSensor sensor = findSensor(sceneObj);
             if (sensor != null)
             {
                 sensor.sendSensorEvent(collision, true);
@@ -65,7 +67,7 @@ public class GVRBaseSensor extends GVRBehavior
 
         public void onTouchStart(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision)
         {
-            GVRBaseSensor sensor = findSensor(sceneObj);
+            GVRSensor sensor = findSensor(sceneObj);
             if (sensor != null)
             {
                 sensor.sendSensorEvent(collision, true);
@@ -74,7 +76,7 @@ public class GVRBaseSensor extends GVRBehavior
 
         public void onExit(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision)
         {
-            GVRBaseSensor sensor = findSensor(sceneObj);
+            GVRSensor sensor = findSensor(sceneObj);
             if (sensor != null)
             {
                 sensor.sendSensorEvent(collision, false);
@@ -83,7 +85,7 @@ public class GVRBaseSensor extends GVRBehavior
 
         public void onTouchEnd(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision)
         {
-            GVRBaseSensor sensor = findSensor(sceneObj);
+            GVRSensor sensor = findSensor(sceneObj);
             if (sensor != null)
             {
                 sensor.sendSensorEvent(collision, true);
@@ -92,7 +94,7 @@ public class GVRBaseSensor extends GVRBehavior
 
         public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision)
         {
-            GVRBaseSensor sensor = findSensor(sceneObj);
+            GVRSensor sensor = findSensor(sceneObj);
             if (sensor != null)
             {
                 sensor.sendSensorEvent(collision, true);
@@ -105,11 +107,11 @@ public class GVRBaseSensor extends GVRBehavior
          * Scan up the scene graph from the object hit
          * to find a parent with a sensor attached.
          */
-        public GVRBaseSensor findSensor(GVRSceneObject obj)
+        public GVRSensor findSensor(GVRSceneObject obj)
         {
             while (obj != null)
             {
-                GVRBaseSensor sensor = obj.getSensor();
+                GVRSensor sensor = obj.getSensor();
 
                 if (sensor != null)
                 {
@@ -127,7 +129,7 @@ public class GVRBaseSensor extends GVRBehavior
      * the owning scene object based on {@link ITouchEvents}.
      * @param gvrContext the {@link GVRContext} associated with the application.
      */
-    public GVRBaseSensor(GVRContext gvrContext)
+    public GVRSensor(GVRContext gvrContext)
     {
         super(gvrContext, 0L);
         mType = TYPE_SENSOR;
@@ -141,7 +143,7 @@ public class GVRBaseSensor extends GVRBehavior
      * @param gvrContext the {@link GVRContext} associated with the application.
      * @param sendTouchEvents true to send the touch events to the owning scene object
      */
-    public GVRBaseSensor(GVRContext gvrContext, boolean sendTouchEvents)
+    public GVRSensor(GVRContext gvrContext, boolean sendTouchEvents)
     {
         super(gvrContext, 0L);
         mType = TYPE_SENSOR;

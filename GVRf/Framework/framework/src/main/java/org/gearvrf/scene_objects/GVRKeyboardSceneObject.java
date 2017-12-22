@@ -53,6 +53,7 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.IKeyboardEvents;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.R;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.utility.MeshUtils;
 
 import java.util.ArrayList;
@@ -145,7 +146,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
      * controllers. If you provide a custom picker and you do not enable
      * these options, you will not get the proper keyboard behavior.
      * @param picker GVRPicker used to generate touch events
-     * @see org.gearvrf.GVRCursorController#getPicker()
+     * @see GVRCursorController#getPicker()
      * @see org.gearvrf.GVRPicker.EventOptions
      */
     public void setPicker(GVRPicker picker)

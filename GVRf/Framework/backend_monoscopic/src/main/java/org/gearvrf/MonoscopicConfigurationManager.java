@@ -30,4 +30,5 @@ final class MonoscopicConfigurationManager extends GVRConfigurationManager {
     public boolean isHmtConnected() {
         return false;
     }
+
 }

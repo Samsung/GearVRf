@@ -326,70 +326,22 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
 
     /**
      * Get the triangle vertex indices of the mesh. The indices for each
-     * triangle are represented as a packed {@code char} triplet, where
-     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
-     * <p>
-     * <code>
-     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
-     * </code>
-     * <p>
-     * Face indices may also be {@code int}. If you have specified
-     * integer indices, this function will throw an exception.
-     * @return char array with the packed triangle index data.
-     * @see #setTriangles(char[])
-     * @see #getIndices()
-     * @throws IllegalArgumentException if index buffer is not <i>char</i>
-     */
-    public char[] getTriangles() {
-        return (mIndices != null) ? mIndices.asCharArray() : null;
-    }
-
-    /**
-     * Sets the triangle vertex indices of the mesh. The indices for each
-     * triangle are represented as a packed {@code char} triplet, where
-     * {@code t0} is the first triangle, {@code t1} is the second, etc.:
-     * <p>
-     * <code>
-     * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
-     * </code>
-     * Indices may also be {@code int} values - see {@link #setTriangles(int[])}.
-     *
-     * @param triangles
-     *            char array containing the packed triangle index data.
-     * @see #setTriangles(int[])
-     * @see #getTriangles()
-     */
-    public void setTriangles(char[] triangles)
-    {
-        if ((mIndices == null) && (triangles != null))
-        {
-            mIndices = new GVRIndexBuffer(getGVRContext(), 2, triangles.length);
-            NativeMesh.setIndexBuffer(getNative(), mIndices.getNative());
-        }
-        mIndices.setShortVec(triangles);
-    }
-
-    /**
-     * Sets the triangle vertex indices of the mesh. The indices for each
      * triangle are represented as a packed {@code int} triplet, where
      * {@code t0} is the first triangle, {@code t1} is the second, etc.:
      * <p>
      * <code>
      * { t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], ...}
      * </code>
-     * Indices may also be {@code char} values - see {@link #setTriangles(char[])}.
-     *
-     * @param triangles
-     *            int array containing the packed triangle index data.
+     * <p>
+     * Face indices may also be {@code char}. If you have specified
+     * char indices, this function will throw an exception.
+     * @return int array with the packed triangle index data.
+     * @see #setCharIndices(char[])
+     * @see #getIntIndices()
+     * @throws IllegalArgumentException if index buffer is not <i>int</i>
      */
-    public void setTriangles(int[] triangles)
-    {
-        if ((mIndices == null) && (triangles != null))
-        {
-            mIndices = new GVRIndexBuffer(getGVRContext(), 4, triangles.length);
-            NativeMesh.setIndexBuffer(getNative(), mIndices.getNative());
-        }
-        mIndices.setIntVec(triangles);
+    public char[] getCharIndices() {
+        return (mIndices != null) ? mIndices.asCharArray() : null;
     }
 
     /**
@@ -404,11 +356,11 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * Face indices may also be {@code char}. If you have specified
      * char indices, this function will throw an exception.
      * @return int array with the packed triangle index data.
-     * @see #setTriangles(char[])
-     * @see #getTriangles()
+     * @see #setCharIndices(char[])
+     * @see #getIntIndices()
      * @throws IllegalArgumentException if index buffer is not <i>int</i>
      */
-    public char[] getIndices() {
+    public char[] getIntIndices() {
         return (mIndices != null) ? mIndices.asCharArray() : null;
     }
 
@@ -424,13 +376,80 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      *            int array containing the packed index data or null.
      *            If null is specified, the index buffer is destroyed
      *            and the mesh will have only vertices.
-     * @see #setTriangles(char[])
+     * @see #setCharIndices(char[])
      * @see #setIndexBuffer(GVRIndexBuffer)
-     * @see #getIndices()
+     * @see #getCharIndices()
      * @see #getIndexBuffer()
      *@throws IllegalArgumentException if index buffer is not <i>int</i>
      */
     public void setIndices(int[] indices)
+    {
+        if (indices != null)
+        {
+            if (mIndices == null)
+            {
+                setIndexBuffer(new GVRIndexBuffer(getGVRContext(), 4, indices.length));
+            }
+            mIndices.setIntVec(indices);
+        }
+        else
+        {
+            mIndices = null;
+            NativeMesh.setIndexBuffer(getNative(), 0L);
+        }
+    }
+
+    /**
+     * Sets the vertex indices of the mesh as {@code char} values.
+     * <p>
+     * If no index buffer exists, a new {@link GVRIndexBuffer} is
+     * constructed with {@code char} indices. Otherwise, the existing
+     * index buffer is updated. If that index buffer has been
+     * already constructed with {@code int} indices, this function
+     * will throw an exception.
+     * @param indices
+     *            char array containing the packed index data or null.
+     *            If null is specified, the index buffer is destroyed
+     *            and the mesh will have only vertices.
+     * @see #setIndexBuffer(GVRIndexBuffer)
+     * @see #getCharIndices()
+     * @see #getIndexBuffer()
+     * @throws IllegalArgumentException if index buffer is not <i>char</i>
+     */
+    public void setCharIndices(char[] indices)
+    {
+        if (indices != null)
+        {
+            if (mIndices == null)
+            {
+                setIndexBuffer(new GVRIndexBuffer(getGVRContext(), 2, indices.length));
+            }
+            mIndices.setShortVec(indices);
+        }
+        else
+        {
+            mIndices = null;
+            NativeMesh.setIndexBuffer(getNative(), 0L);
+        }
+    }
+    /**
+     * Sets the vertex indices of the mesh as {@code int} values.
+     * <p>
+     * If no index buffer exists, a new {@link GVRIndexBuffer} is
+     * constructed with {@code int} indices. Otherwise, the existing
+     * index buffer is updated. If that index buffer has been
+     * already constructed with {@code char} indices, this function
+     * will throw an exception.
+     * @param indices
+     *            int array containing the packed index data or null.
+     *            If null is specified, the index buffer is destroyed
+     *            and the mesh will have only vertices.
+     * @see #setIndexBuffer(GVRIndexBuffer)
+     * @see #getIntIndices()
+     * @see #getIndexBuffer()
+     *@throws IllegalArgumentException if index buffer is not <i>int</i>
+     */
+    public void setIntIndices(int[] indices)
     {
         if (indices != null)
         {
@@ -662,7 +681,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
                 5, 4, 2, 7, 3, 2, 6, 7
         };
         meshbox.setVertices(positions);
-        meshbox.setTriangles(indices);
+        meshbox.setIndices(indices);
         return meshbox;
     }
 
@@ -697,7 +716,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         }
 
         char[] triangles = { 0, 1, 2, 1, 3, 2 };
-        setTriangles(triangles);
+        setIndices(triangles);
     }
 
     /**

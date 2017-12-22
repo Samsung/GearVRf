@@ -15,29 +15,18 @@
 
 package org.gearvrf.io;
 
-import android.content.Intent;
-import android.content.res.Configuration;
-import android.graphics.PointF;
 import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRScene;
-import org.gearvrf.IActivityEvents;
-import org.gearvrf.utility.Log;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.concurrent.CountDownLatch;
-import static java.lang.Float.max;
 
 final public class GVRGazeCursorController extends GVRCursorController
 {

@@ -196,13 +196,13 @@ public final class GVRAssetLoader {
                 {
                     resource = mVolume.openResource(request.TextureFile);
                     GVRAsynchronousResourceLoader.loadTexture(mContext, mCacheEnabled ? mTextureCache : null,
-                                                              request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                                                              request, resource, DEFAULT_PRIORITY, GVRCompressedImage.BALANCED);
                 }
                 catch (IOException ex)
                 {
                     GVRAndroidResource r = new GVRAndroidResource(mContext, R.drawable.white_texture);
                     GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                                                              request, r, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                                                              request, r, DEFAULT_PRIORITY, GVRCompressedImage.BALANCED);
 
                     GVRImage whiteTex = getDefaultImage(mContext);
                     if (whiteTex != null)
@@ -266,7 +266,7 @@ public final class GVRAssetLoader {
                     bmap = Bitmap.createBitmap(aitex.getWidth(), aitex.getHeight(), Bitmap.Config.ARGB_8888);
                     bmap.setPixels(aitex.getIntData(), 0, aitex.getWidth(), 0, 0, aitex.getWidth(), aitex.getHeight());
                 }
-                GVRBitmapTexture bmaptex = new GVRBitmapTexture(mContext);
+                GVRBitmapImage bmaptex = new GVRBitmapImage(mContext);
                 bmaptex.setFileName(resource.getResourceFilename());
                 bmaptex.setBitmap(bmap);
                 image = bmaptex;
@@ -555,7 +555,7 @@ public final class GVRAssetLoader {
 
     protected static ResourceCache<GVRImage> mTextureCache = new ResourceCache<GVRImage>();
     protected static HashMap<String, GVRImage> mEmbeddedCache = new HashMap<String, GVRImage>();
-    protected static GVRBitmapTexture mDefaultImage = null;
+    protected static GVRBitmapImage mDefaultImage = null;
 
     protected GVRContext mContext;
     protected ResourceCache<GVRMesh> mMeshCache = new ResourceCache<>();
@@ -608,7 +608,7 @@ public final class GVRAssetLoader {
 
                 Canvas canvas = new Canvas(bmap);
                 canvas.drawRGB(0xff, 0xff, 0xff);
-                mDefaultImage = new GVRBitmapTexture(ctx, bmap);
+                mDefaultImage = new GVRBitmapImage(ctx, bmap);
             }
             catch (Exception ex)
             {
@@ -619,7 +619,7 @@ public final class GVRAssetLoader {
     }
 
     /**
-     * Loads file placed in the assets folder, as a {@link GVRBitmapTexture}
+     * Loads file placed in the assets folder, as a {@link GVRBitmapImage}
      * with the user provided texture parameters.
      * The bitmap is loaded asynchronously.
      * <p>
@@ -648,7 +648,7 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, textureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                                                  request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                                                  request, resource, DEFAULT_PRIORITY, GVRCompressedImage.BALANCED);
         return texture;
     }
     /**
@@ -669,7 +669,7 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                                                  request, resource, DEFAULT_PRIORITY, GVRCompressedImage.BALANCED);
         return texture;
     }
 
@@ -724,11 +724,11 @@ public final class GVRAssetLoader {
      *            textures load so quickly that they are not run through the
      *            request scheduler.
      * @param quality
-     *            The compressed texture {@link GVRCompressedTexture#mQuality
+     *            The compressed texture {@link GVRCompressedImage#mQuality
      *            quality} parameter: should be one of
-     *            {@link GVRCompressedTexture#SPEED},
-     *            {@link GVRCompressedTexture#BALANCED}, or
-     *            {@link GVRCompressedTexture#QUALITY}, but other values are
+     *            {@link GVRCompressedImage#SPEED},
+     *            {@link GVRCompressedImage#BALANCED}, or
+     *            {@link GVRCompressedImage#QUALITY}, but other values are
      *            'clamped' to one of the recognized values. Please note that
      *            this (currently) only applies to compressed textures; normal
      *            {@linkplain GVRBitmapTexture bitmapped textures} don't take a
@@ -792,7 +792,7 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadTexture(mContext, mTextureCache,
-                request, resource, DEFAULT_PRIORITY, GVRCompressedTexture.BALANCED);
+                                                  request, resource, DEFAULT_PRIORITY, GVRCompressedImage.BALANCED);
         return texture;
     }
 
@@ -835,8 +835,8 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
-                mTextureCache, request, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+                                                         mTextureCache, request, resource, DEFAULT_PRIORITY,
+                                                         GVRCubemapImage.faceIndexMap);
         return texture;
     }
 
@@ -851,7 +851,7 @@ public final class GVRAssetLoader {
      *            the cube map texture respectively. The default names of the
      *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
      *            "posz.png", and "negz.png", which can be changed by calling
-     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     *            {@link GVRCubemapImage#setFaceNames(String[])}.
      * @return A {@link GVRTexture} that you can pass to methods like
      *         {@link GVRMaterial#setMainTexture(GVRTexture)}
      *
@@ -880,8 +880,8 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadCubemapTexture(mContext,
-                mTextureCache, request, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+                                                         mTextureCache, request, resource, DEFAULT_PRIORITY,
+                                                         GVRCubemapImage.faceIndexMap);
         return texture;
     }
 
@@ -902,8 +902,8 @@ public final class GVRAssetLoader {
         GVRTexture texture = new GVRTexture(mContext, mDefaultTextureParameters);
         TextureRequest request = new TextureRequest(resource, texture, callback);
         GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
-                mTextureCache, request, resource, DEFAULT_PRIORITY,
-                GVRCubemapTexture.faceIndexMap);
+                                                                   mTextureCache, request, resource, DEFAULT_PRIORITY,
+                                                                   GVRCubemapImage.faceIndexMap);
         return texture;
     }
 
@@ -913,7 +913,7 @@ public final class GVRAssetLoader {
         TextureRequest request = new TextureRequest(resource, texture);
         GVRAsynchronousResourceLoader.loadCompressedCubemapTexture(mContext,
                                                                    mTextureCache, request, resource, DEFAULT_PRIORITY,
-                                                                   GVRCubemapTexture.faceIndexMap);
+                                                                   GVRCubemapImage.faceIndexMap);
         return texture;
     }
 

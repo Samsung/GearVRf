@@ -263,7 +263,7 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
                 gvrContext.getContext().getResources(), //
                 R.drawable.__default_splash_screen__);
         GVRTexture tex = new GVRTexture(gvrContext);
-        tex.setImage(new GVRBitmapTexture(gvrContext, bitmap));
+        tex.setImage(new GVRBitmapImage(gvrContext, bitmap));
         return tex;
     }
 

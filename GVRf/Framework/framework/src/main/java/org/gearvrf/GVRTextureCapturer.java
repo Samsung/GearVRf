@@ -64,7 +64,7 @@ public class GVRTextureCapturer extends GVRHybridObject {
      */
     public GVRTextureCapturer(GVRContext gvrContext, int width, int height, int sampleCount) {
         super(gvrContext, NativeTextureCapturer.ctor(
-                gvrContext.getMaterialShaderManager().getNative()));
+                gvrContext.getShaderManager().getNative()));
         NativeTextureCapturer.setCapturerObject(getNative(), this);
 
         mListeners = new ArrayList<TextureCapturerListener>();

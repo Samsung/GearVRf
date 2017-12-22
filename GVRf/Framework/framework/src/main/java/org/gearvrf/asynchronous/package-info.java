@@ -19,7 +19,7 @@
  * Most classes are hidden, implementation details. You need to implement 
  * {@link org.gearvrf.asynchronous.GVRCompressedTextureLoader}
  * to use compressed texture formats that GVRF does not support; you may find 
- * {@link org.gearvrf.GVRCompressedTexture}
+ * {@link org.gearvrf.GVRCompressedImage}
  * useful for debugging. 
  * 
  * {@link org.gearvrf.asynchronous.GVRAsynchronousResourceLoader} 

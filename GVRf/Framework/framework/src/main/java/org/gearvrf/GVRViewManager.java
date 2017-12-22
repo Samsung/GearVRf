@@ -493,7 +493,7 @@ abstract class GVRViewManager extends GVRContext {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
 
-        makeShadowMaps(mMainScene.getNative(), mMainScene, mRenderBundle.getMaterialShaderManager().getNative(),
+        makeShadowMaps(mMainScene.getNative(), getMainScene(), mRenderBundle.getShaderManager().getNative(),
                 mRenderBundle.getPostEffectRenderTextureA().getWidth(),
                 mRenderBundle.getPostEffectRenderTextureA().getHeight());
     }
@@ -521,8 +521,9 @@ abstract class GVRViewManager extends GVRContext {
 
     void cullAndRender(GVRRenderTarget renderTarget, GVRScene scene)
     {
-        cullAndRender(renderTarget.getNative(), scene.getNative(), scene,
-                mRenderBundle.getMaterialShaderManager().getNative(),
+        cullAndRender(renderTarget.getNative(), scene.getNative(),
+                scene,
+                mRenderBundle.getShaderManager().getNative(),
                 mRenderBundle.getPostEffectRenderTextureA().getNative(),
                 mRenderBundle.getPostEffectRenderTextureB().getNative());
     }
@@ -533,13 +534,8 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     @Override
-    public GVRMaterialShaderManager getMaterialShaderManager() {
-        return mRenderBundle.getMaterialShaderManager();
-    }
-
-    @Override
-    public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return null;
+    public GVRShaderManager getShaderManager() {
+        return mRenderBundle.getShaderManager();
     }
 
     protected GVRScreenshotCallback mScreenshotCenterCallback;
@@ -697,7 +693,7 @@ abstract class GVRViewManager extends GVRContext {
             posteffectRenderTextureA = mRenderBundle.getEyeCapturePostEffectRenderTextureA();
             posteffectRenderTextureB = mRenderBundle.getEyeCapturePostEffectRenderTextureB();
             renderTarget = mRenderBundle.getEyeCaptureRenderTarget();
-            renderTarget.cullFromCamera(mMainScene, centerCamera ,mRenderBundle.getMaterialShaderManager());
+            renderTarget.cullFromCamera(mMainScene, centerCamera ,mRenderBundle.getShaderManager());
             renderTarget.beginRendering(centerCamera);
         }
         else {
@@ -705,7 +701,7 @@ abstract class GVRViewManager extends GVRContext {
             posteffectRenderTextureB = mRenderBundle.getPostEffectRenderTextureB();
         }
 
-        renderTarget.render(mMainScene,centerCamera, mRenderBundle.getMaterialShaderManager(), posteffectRenderTextureA, posteffectRenderTextureB);
+        renderTarget.render(mMainScene,centerCamera, mRenderBundle.getShaderManager(), posteffectRenderTextureA, posteffectRenderTextureB);
         centerCamera.removePostEffect(postEffect);
         readRenderResult(renderTarget, EYE.MULTIVIEW, false);
 
@@ -729,8 +725,8 @@ abstract class GVRViewManager extends GVRContext {
     private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index,
                                              GVRRenderTarget renderTarget, GVRRenderTexture postEffectRenderTextureA, GVRRenderTexture postEffectRenderTextureB ) {
 
-        renderTarget.cullFromCamera(mMainScene,centerCamera,mRenderBundle.getMaterialShaderManager());
-        renderTarget.render(mMainScene,centerCamera,mRenderBundle.getMaterialShaderManager(),postEffectRenderTextureA, postEffectRenderTextureB);
+        renderTarget.cullFromCamera(mMainScene,centerCamera,mRenderBundle.getShaderManager());
+        renderTarget.render(mMainScene,centerCamera,mRenderBundle.getShaderManager(),postEffectRenderTextureA, postEffectRenderTextureB);
         readRenderResult(renderTarget,EYE.CENTER, false);
 
         bitmaps[index] = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);

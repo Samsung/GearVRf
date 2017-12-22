@@ -18,7 +18,7 @@ package org.gearvrf.asynchronous;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.gearvrf.GVRCompressedTexture;
+import org.gearvrf.GVRCompressedImage;
 import org.gearvrf.GVRContext;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.RuntimeAssertion;
@@ -159,7 +159,7 @@ class KTX extends GVRCompressedTextureLoader {
         }
 
         @Override
-        public GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
+        public GVRCompressedImage toTexture(GVRContext gvrContext, int quality) {
 
             ByteBuffer data = getData();
             ByteOrder defaultOrder = data.order();
@@ -177,12 +177,12 @@ class KTX extends GVRCompressedTextureLoader {
                 outOffsets[fileLevel] = data.position();
                 data.position(data.position() + imageSize + imagePadding);
             }
-            GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
-                    width, height, imageSize, internalformat, data.array(), levels, quality);
+            GVRCompressedImage result = new GVRCompressedImage(gvrContext,
+                                                               width, height, imageSize, internalformat, data.array(), levels, quality);
             result.setDataOffsets(outOffsets);
 /*
-            GVRCompressedTexture result = new GVRCompressedTexture(gvrContext,
-                    GVRCompressedTexture.GL_TARGET, levels, quality);
+            GVRCompressedImage result = new GVRCompressedImage(gvrContext,
+                    GVRCompressedImage.GL_TARGET, levels, quality);
             result.rebind();
 
             for (int fileLevel = 0; fileLevel < levels; ++fileLevel) {
@@ -211,8 +211,8 @@ class KTX extends GVRCompressedTextureLoader {
                         Math.max(1, height >> fileLevel), 0, imageSize, data);
                 data.position(data.position() + imageSize + imagePadding);
             }
-            GVRCompressedTexture result2 = new GVRCompressedTexture(gvrContext,
-                    GVRCompressedTexture.GL_TARGET, width, height, outSize, outData, 0, levels, quality);
+            GVRCompressedImage result2 = new GVRCompressedImage(gvrContext,
+                    GVRCompressedImage.GL_TARGET, width, height, outSize, outData, 0, levels, quality);
             result.unbind();
 */
             return result;

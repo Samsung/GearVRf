@@ -23,7 +23,7 @@ import java.util.List;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 
-import org.gearvrf.GVRCompressedTexture;
+import org.gearvrf.GVRCompressedImage;
 
 /**
  * Implement this class to use compressed texture formats that GVRF does not
@@ -156,7 +156,7 @@ public abstract class GVRCompressedTextureLoader {
      * @param dataBytes
      *            Number of bytes of texture data
      * @return An internal buffer that the GL thread can use to create a
-     *         {@link GVRCompressedTexture}
+     *         {@link GVRCompressedImage}
      */
     protected CompressedTexture CompressedTexture(int internalformat,
             int width, int height, int imageSize, int levels, byte[] data,

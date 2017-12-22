@@ -60,7 +60,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * use 4 vec4's instead.
  *  
  * @see GVRPointLight
- * @see GVRLightBase
+ * @see GVRLight
  */
 public class GVRSpotLight extends GVRPointLight
 {

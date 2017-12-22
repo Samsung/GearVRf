@@ -17,7 +17,6 @@ package org.gearvrf.io;
 
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRPerspectiveCamera;
 import org.gearvrf.GVRScene;
 import org.gearvrf.utility.Log;

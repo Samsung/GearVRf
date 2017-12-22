@@ -28,7 +28,6 @@
  */
 
 package org.gearvrf;
-import android.opengl.GLES30;
 
 import static android.opengl.GLES30.GL_RG;
 
@@ -40,7 +39,7 @@ import static android.opengl.GLES30.GL_RG;
  *
  * @since 1.6.3
  */
-public class GVRFloatTexture extends GVRImage
+public class GVRFloatImage extends GVRImage
 {
     /**
      * Create a floating-point image.
@@ -60,14 +59,14 @@ public class GVRFloatTexture extends GVRImage
      *
      * @since 1.6.3
      */
-    public GVRFloatTexture(GVRContext gvrContext, int width, int height, float[] data)
+    public GVRFloatImage(GVRContext gvrContext, int width, int height, float[] data)
             throws IllegalArgumentException
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, GL_RG));
         NativeFloatTexture.update(getNative(), width, height, data);
     }
 
-    public GVRFloatTexture(GVRContext gvrContext)
+    public GVRFloatImage(GVRContext gvrContext)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.FLOAT_BITMAP.Value, GL_RG));
     }
@@ -75,7 +74,7 @@ public class GVRFloatTexture extends GVRImage
     /**
      * Copy new data to an existing float-point texture.
      *
-     * Creating a new {@link GVRFloatTexture} is pretty cheap, but it's still
+     * Creating a new {@link GVRFloatImage} is pretty cheap, but it's still
      * not a totally trivial operation: it does involve some memory management
      * and some GL hardware handshaking. Reusing the texture reduces this
      * overhead (primarily by delaying garbage collection). Do be aware that

@@ -18,14 +18,11 @@ import android.opengl.GLES30;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMaterialShaderManager;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderId;
-import org.gearvrf.GVRShaderTemplate;
-import org.gearvrf.GVRVertexColorShader;
+import org.gearvrf.shaders.GVRVertexColorShader;
 import org.joml.Vector4f;
 
 /***

@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf;
+package org.gearvrf.shaders;
 
 import android.content.Context;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**

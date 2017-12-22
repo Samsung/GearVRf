@@ -12,38 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf;
+package org.gearvrf.shaders;
 
 import android.content.Context;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**
- * Shader which samples from an external texture.
- * This shader does not use light sources.
+ * Shader which renders in a solid color.
+ * This shader ignores light sources.
  * @<code>
- *    a_position    position vertex attribute
- *    a_texcoord    texture coordinate vertex attribute
- *    u_color       color to modulate texture
- *    u_opacity     opacity
- *    u_texture     external texture
+ *     a_position   position vertex attribute
+ *     u_color      color to render
  * </code>
  */
-public class GVROESShader extends GVRShaderTemplate
+public class GVRColorShader extends GVRShaderTemplate
 {
-    public GVROESShader(GVRContext gvrContext)
+    public GVRColorShader(GVRContext gvrContext)
     {
-        super("float3 u_color float u_opacity ",
-              "samplerExternalOES u_texture",
-              "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
+        super("float3 u_color", "", "float3 a_position", GLSLESVersion.VULKAN);
         Context context = gvrContext.getContext();
-        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.ext_tex_frag));
-        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.pos_tex_ubo));
+        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.color_shader_frag));
+        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.color_shader_vert));
     }
 
     protected void setMaterialDefaults(GVRShaderData material)
     {
         material.setVec3("u_color", 1, 1, 1);
-        material.setFloat("u_opacity", 1);
     }
 }

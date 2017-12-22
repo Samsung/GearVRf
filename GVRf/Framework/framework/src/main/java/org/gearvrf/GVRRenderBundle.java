@@ -20,9 +20,9 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
 /** A container for various services and pieces of data required for rendering. */
-class GVRRenderBundle{
-    protected GVRContext mGVRContext;
-    private  GVRMaterialShaderManager mMaterialShaderManager;
+final class GVRRenderBundle {
+    private  GVRContext mGVRContext;
+    private  GVRShaderManager mShaderManager;
     private  GVRRenderTexture mPostEffectRenderTextureA = null;
     private  GVRRenderTexture mPostEffectRenderTextureB = null;
     private  GVRRenderTarget mEyeCaptureRenderTarget = null;
@@ -39,7 +39,7 @@ class GVRRenderBundle{
 
     GVRRenderBundle(GVRContext gvrContext) {
         mGVRContext = gvrContext;
-        mMaterialShaderManager = new GVRMaterialShaderManager(gvrContext);
+        mShaderManager = new GVRShaderManager(gvrContext);
 
         final VrAppSettings appSettings = mGVRContext.getActivity().getAppSettings();
         mSampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
@@ -133,12 +133,8 @@ class GVRRenderBundle{
 
         return mEyeCapturePostEffectRenderTextureB;
     }
-    public GVRMaterialShaderManager getMaterialShaderManager() {
-        return mMaterialShaderManager;
-    }
-
-    public GVRPostEffectShaderManager getPostEffectShaderManager() {
-        return null;
+    public GVRShaderManager getShaderManager() {
+        return mShaderManager;
     }
 
     public GVRRenderTexture getPostEffectRenderTextureA() {

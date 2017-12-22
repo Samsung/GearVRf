@@ -15,12 +15,24 @@
 
 package org.gearvrf;
 
+import org.gearvrf.shaders.GVRColorBlendShader;
+import org.gearvrf.shaders.GVRColorShader;
+import org.gearvrf.shaders.GVRCubemapReflectionShader;
+import org.gearvrf.shaders.GVRCubemapShader;
+import org.gearvrf.shaders.GVRHorizontalFlipShader;
+import org.gearvrf.shaders.GVRLightmapShader;
+import org.gearvrf.shaders.GVROESHorizontalStereoShader;
+import org.gearvrf.shaders.GVROESShader;
+import org.gearvrf.shaders.GVROESVerticalStereoShader;
+import org.gearvrf.shaders.GVRPhongLayeredShader;
+import org.gearvrf.shaders.GVRPhongShader;
+import org.gearvrf.shaders.GVRTextureShader;
+import org.gearvrf.shaders.GVRVerticalFlipShader;
 import org.gearvrf.utility.Colors;
 import org.gearvrf.utility.Log;
 
 import android.graphics.Color;
 
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -141,7 +153,7 @@ public class GVRMaterial extends  GVRShaderData
      *            Current {@link GVRContext}
      * @param shaderId
      *            Id of a {@linkplain GVRShaderType stock} or
-     *            {@linkplain GVRMaterialShaderManager custom} shader.
+     *            {@linkplain GVRShaderManager custom} shader.
      */
     public GVRMaterial(GVRContext gvrContext, GVRShaderId shaderId) {
         super(gvrContext, shaderId);

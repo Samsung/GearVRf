@@ -17,7 +17,7 @@ package org.gearvrf;
 
 /**
  * Use this listener to receive {@link SensorEvent}s for a given
- * {@link GVRBaseSensor}.
+ * {@link GVRSensor}.
  * 
  * Note that the callbacks happen on the main UI thread.
  *
@@ -25,7 +25,7 @@ package org.gearvrf;
 public interface ISensorEvents extends IEvents {
     /**
      * The callback that returns the {@link SensorEvent}s for the corresponding
-     * {@link GVRBaseSensor}.
+     * {@link GVRSensor}.
      * 
      * @param event
      *            The {@link ISensorEvents} returns one

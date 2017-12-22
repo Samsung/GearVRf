@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMaterial.GVRShaderType.Texture;
@@ -121,7 +120,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *            a {@link GVRTexture}
      * @param shaderId
      *            a specific shader Id - see {@link GVRShaderType} and
-     *            {@link GVRMaterialShaderManager}
+     *            {@link GVRShaderManager}
      *
      */
     public GVRSceneObject(GVRContext gvrContext, GVRMesh mesh,
@@ -532,13 +531,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     }
 
     /**
-     * Get the attached light component. Any subclass of GVRLightBase may
+     * Get the attached light component. Any subclass of GVRLight may
      * be attached to a scene object. The light's position and direction will be calculated
      * from the transform attached to the scene object.
      * @return The light attached to the object. If no light is currently attached, returns null.
      */
-    public GVRLightBase getLight() {
-        return (GVRLightBase) getComponent(GVRLightBase.getComponentType());
+    public GVRLight getLight() {
+        return (GVRLight) getComponent(GVRLight.getComponentType());
     }
 
     /**
@@ -550,15 +549,15 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      *
      * @param light New light to attach.
      */
-    public void attachLight(GVRLightBase light) {
+    public void attachLight(GVRLight light) {
         attachComponent(light);
     }
 
     /**
-     * Detach the object's current {@link GVRLightBase}.
+     * Detach the object's current {@link GVRLight}.
      */
     public void detachLight() {
-        detachComponent(GVRLightBase.getComponentType());
+        detachComponent(GVRLight.getComponentType());
     }
 
 
@@ -1030,13 +1029,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
 
 
     /**
-     * Get the {@link GVRBaseSensor} if available.
+     * Get the {@link GVRSensor} if available.
      *
-     * @return The {@link GVRBaseSensor} attached to the node if available,
+     * @return The {@link GVRSensor} attached to the node if available,
      *         <code>null</code> otherwise.
      */
-    public GVRBaseSensor getSensor() {
-        return (GVRBaseSensor) getComponent(GVRBaseSensor.getComponentType());
+    public GVRSensor getSensor() {
+        return (GVRSensor) getComponent(GVRSensor.getComponentType());
     }
 
     /**

@@ -16,7 +16,7 @@
 package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRCursorController;
 
 class IoDeviceLoader {
     private static final String TAG = IoDeviceLoader.class.getSimpleName();

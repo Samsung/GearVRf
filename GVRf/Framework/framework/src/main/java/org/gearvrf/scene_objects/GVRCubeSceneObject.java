@@ -490,7 +490,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             {
                 mesh.setTexCoords(SIMPLE_OUTWARD_TEXCOORDS);
             }
-            mesh.setTriangles(SIMPLE_OUTWARD_INDICES);
+            mesh.setIndices(SIMPLE_OUTWARD_INDICES);
         }
         else
         {
@@ -502,7 +502,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
             {
                 mesh.setTexCoords(SIMPLE_INWARD_TEXCOORDS);
             }
-            mesh.setTriangles(SIMPLE_INWARD_INDICES);
+            mesh.setIndices(SIMPLE_INWARD_INDICES);
         }
         return mesh;
     }
@@ -694,7 +694,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 subMeshes[index].setVertices(vertices);
                 subMeshes[index].setNormals(normals);
                 subMeshes[index].setTexCoords(texCoords);
-                subMeshes[index].setTriangles(indices);
+                subMeshes[index].setIndices(indices);
                 grandchildren[index] = new GVRSceneObject(gvrContext,
                         subMeshes[index],
                         textureList.get(0));
@@ -756,7 +756,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 subMeshes[index].setVertices(vertices);
                 subMeshes[index].setNormals(normals);
                 subMeshes[index].setTexCoords(texCoords);
-                subMeshes[index].setTriangles(indices);
+                subMeshes[index].setIndices(indices);
                 grandchildren[index] = new GVRSceneObject(gvrContext,
                         subMeshes[index],
                         textureList.get(1));
@@ -818,7 +818,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 subMeshes[index].setVertices(vertices);
                 subMeshes[index].setNormals(normals);
                 subMeshes[index].setTexCoords(texCoords);
-                subMeshes[index].setTriangles(indices);
+                subMeshes[index].setIndices(indices);
                 grandchildren[index] = new GVRSceneObject(gvrContext,
                         subMeshes[index],
                         textureList.get(2));
@@ -880,7 +880,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 subMeshes[index].setVertices(vertices);
                 subMeshes[index].setNormals(normals);
                 subMeshes[index].setTexCoords(texCoords);
-                subMeshes[index].setTriangles(indices);
+                subMeshes[index].setIndices(indices);
                 grandchildren[index] = new GVRSceneObject(gvrContext,
                         subMeshes[index],
                         textureList.get(3));
@@ -937,7 +937,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 subMeshes[index].setVertices(vertices);
                 subMeshes[index].setNormals(normals);
                 subMeshes[index].setTexCoords(texCoords);
-                subMeshes[index].setTriangles(indices);
+                subMeshes[index].setIndices(indices);
                 grandchildren[index] = new GVRSceneObject(gvrContext,
                         subMeshes[index],
                         textureList.get(4));
@@ -994,7 +994,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                 subMeshes[index].setVertices(vertices);
                 subMeshes[index].setNormals(normals);
                 subMeshes[index].setTexCoords(texCoords);
-                subMeshes[index].setTriangles(indices);
+                subMeshes[index].setIndices(indices);
                 grandchildren[index] = new GVRSceneObject(gvrContext,
                         subMeshes[index],
                         textureList.get(5));

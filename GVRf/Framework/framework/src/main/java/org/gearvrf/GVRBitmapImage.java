@@ -30,15 +30,16 @@ import static android.opengl.GLES20.GL_LUMINANCE;
 
 
 /**
- * Describes an uncompressed bitmap texture.
+ * Describes an uncompressed bitmap text
+ * ure.
  * <p>
  * A bitmap texture contains 2D uncompressed pixel data in RGB
  * or RGBA format. This type of texture is inefficient because
  * it wastes GPU memory. Mobile GPUs can directly render from
  * compressed textures which use far less memory.
- * @see GVRCompressedTexture
+ * @see GVRCompressedImage
  */
-public class GVRBitmapTexture extends GVRImage
+public class GVRBitmapImage extends GVRImage
 {
     /**
      * Constructs a texture using a pre-existing {@link Bitmap}.
@@ -49,13 +50,13 @@ public class GVRBitmapTexture extends GVRImage
      *            A non-null {@link Bitmap} instance; do *not* call
      *            recycle on the bitmap
      */
-    public GVRBitmapTexture(GVRContext gvrContext, Bitmap bitmap)
+    public GVRBitmapImage(GVRContext gvrContext, Bitmap bitmap)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, bitmap.hasAlpha() ? GL_RGBA : GL_RGB));
         setBitmap(bitmap);
     }
 
-    public GVRBitmapTexture(GVRContext gvrContext)
+    public GVRBitmapImage(GVRContext gvrContext)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_RGBA));
     }
@@ -72,7 +73,7 @@ public class GVRBitmapTexture extends GVRImage
      *            complex tree of subdirectories; the file name can specify any
      *            location in or under the assets directory.
      */
-    public GVRBitmapTexture(GVRContext gvrContext, String assetFile) throws IOException
+    public GVRBitmapImage(GVRContext gvrContext, String assetFile) throws IOException
     {
         this(gvrContext);
         GVRAndroidResource resource = new GVRAndroidResource(gvrContext, assetFile);
@@ -99,7 +100,7 @@ public class GVRBitmapTexture extends GVRImage
      *             {@code grayScaleData} is {@code null}, or if
      *             {@code grayscaleData.length < height * width}
      */
-    public GVRBitmapTexture(GVRContext gvrContext, int width, int height, byte[] grayscaleData)
+    public GVRBitmapImage(GVRContext gvrContext, int width, int height, byte[] grayscaleData)
             throws IllegalArgumentException
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, GL_LUMINANCE));

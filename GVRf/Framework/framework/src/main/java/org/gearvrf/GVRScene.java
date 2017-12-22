@@ -27,10 +27,8 @@ import org.gearvrf.utility.Log;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * Contains a the hierarchy of visible objects, a camera and processes events.
@@ -479,7 +477,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * 
      * @return array of lights or null if no lights in scene.
      */
-    public GVRLightBase[] getLightList()
+    public GVRLight[] getLightList()
     {
         return NativeScene.getLightList(getNative());
     }
@@ -691,7 +689,7 @@ class NativeScene {
 
     static native void clearLights(long scene);
 
-    static native GVRLightBase[] getLightList(long scene);
+    static native GVRLight[] getLightList(long scene);
 
     static native void setMainScene(long scene);
     

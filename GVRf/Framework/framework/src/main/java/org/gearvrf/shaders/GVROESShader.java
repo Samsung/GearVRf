@@ -12,34 +12,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf;
+package org.gearvrf.shaders;
 
 import android.content.Context;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**
- * Shader which samples from either the left or right half of an external texture.
+ * Shader which samples from an external texture.
  * This shader does not use light sources.
  * @<code>
  *    a_position    position vertex attribute
  *    a_texcoord    texture coordinate vertex attribute
  *    u_color       color to modulate texture
  *    u_opacity     opacity
- *    u_right       1 = right eye, 0 = left eye
  *    u_texture     external texture
  * </code>
  */
-public class GVROESHorizontalStereoShader extends GVRShader
+public class GVROESShader extends GVRShaderTemplate
 {
-    public GVROESHorizontalStereoShader(GVRContext gvrContext)
+    public GVROESShader(GVRContext gvrContext)
     {
         super("float3 u_color float u_opacity ",
-                "samplerExternalOES u_texture",
-                "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
+              "samplerExternalOES u_texture",
+              "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
         Context context = gvrContext.getContext();
-        setSegment("VertexTemplate",  TextFile.readTextFile(context, R.raw.pos_tex_ubo));
-        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.oes_horizontal_stereo_frag));
+        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.ext_tex_frag));
+        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.pos_tex_ubo));
     }
 
     protected void setMaterialDefaults(GVRShaderData material)

@@ -65,7 +65,7 @@ public class GVRShaderData extends GVRHybridObject
      * samplers used by the shader.
      * @param gvrContext Current {@link GVRContext}
      * @param shaderId   Shader ID from {@link org.gearvrf.GVRMaterial.GVRShaderType} or
-     *                   {@link GVRContext#getMaterialShaderManager()}.
+     *                   {@link GVRContext#getShaderManager()}.
      * @see GVRShader
      * @see GVRShaderTemplate
      */
@@ -74,7 +74,7 @@ public class GVRShaderData extends GVRHybridObject
         super(gvrContext, NativeShaderData.ctor(shaderId.getUniformDescriptor(gvrContext),
                                                 shaderId.getTextureDescriptor(gvrContext)));
         GVRShader shader = shaderId.getTemplate(gvrContext);
-        GVRShaderManager shaderManager = gvrContext.getMaterialShaderManager();
+        GVRShaderManager shaderManager = gvrContext.getShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
@@ -96,7 +96,7 @@ public class GVRShaderData extends GVRHybridObject
         super(src.getGVRContext(), NativeShaderData.ctor(shaderId.getUniformDescriptor(src.getGVRContext()),
                                                 shaderId.getTextureDescriptor(src.getGVRContext())));
         GVRShader shader = shaderId.getTemplate(src.getGVRContext());
-        GVRShaderManager shaderManager = src.getGVRContext().getMaterialShaderManager();
+        GVRShaderManager shaderManager = src.getGVRContext().getShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
@@ -115,7 +115,7 @@ public class GVRShaderData extends GVRHybridObject
     {
         super(gvrContext, constructor);
         GVRShader shader = shaderId.getTemplate(gvrContext);
-        GVRShaderManager shaderManager = gvrContext.getMaterialShaderManager();
+        GVRShaderManager shaderManager = gvrContext.getShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();

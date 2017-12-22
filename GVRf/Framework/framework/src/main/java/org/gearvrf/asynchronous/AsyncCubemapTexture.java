@@ -23,12 +23,11 @@ import java.util.zip.ZipInputStream;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCubemapTexture;
+import org.gearvrf.GVRCubemapImage;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
 import org.gearvrf.utility.FileNameUtils;
-import org.gearvrf.utility.Log;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -48,7 +47,7 @@ class AsyncCubemapTexture {
      */
 
     static void loadTexture(GVRContext gvrContext,
-                            CancelableCallback<GVRCubemapTexture> callback,
+                            CancelableCallback<GVRCubemapImage> callback,
             GVRAndroidResource resource, int priority, Map<String, Integer> map) {
         faceIndexMap = map;
         AsyncManager.get().getScheduler().registerCallback(gvrContext, TEXTURE_CLASS, callback,
@@ -57,7 +56,7 @@ class AsyncCubemapTexture {
 
     private static Map<String, Integer> faceIndexMap;
     
-    private static final Class<GVRCubemapTexture> TEXTURE_CLASS = GVRCubemapTexture.class;
+    private static final Class<GVRCubemapImage> TEXTURE_CLASS = GVRCubemapImage.class;
     
     /*
      * Singleton
@@ -74,12 +73,12 @@ class AsyncCubemapTexture {
 
     private AsyncCubemapTexture() {
         AsyncManager.get().registerDatatype(TEXTURE_CLASS,
-                new AsyncLoaderFactory<GVRCubemapTexture, Bitmap[]>() {
+                new AsyncLoaderFactory<GVRCubemapImage, Bitmap[]>() {
                     @Override
-                    AsyncLoader<GVRCubemapTexture, Bitmap[]> threadProc(
+                    AsyncLoader<GVRCubemapImage, Bitmap[]> threadProc(
                             GVRContext gvrContext,
                             GVRAndroidResource request,
-                            CancelableCallback<GVRCubemapTexture> cancelableCallback,
+                            CancelableCallback<GVRCubemapImage> cancelableCallback,
                             int priority) {
                         return new AsyncLoadCubemapTextureResource(gvrContext,
                                 request, cancelableCallback, priority);
@@ -92,20 +91,20 @@ class AsyncCubemapTexture {
      */
 
     private static class AsyncLoadCubemapTextureResource extends
-            AsyncLoader<GVRCubemapTexture, Bitmap[]> {
+            AsyncLoader<GVRCubemapImage, Bitmap[]> {
 
-        private static final GlConverter<GVRCubemapTexture, Bitmap[]> sConverter = new GlConverter<GVRCubemapTexture, Bitmap[]>() {
+        private static final GlConverter<GVRCubemapImage, Bitmap[]> sConverter = new GlConverter<GVRCubemapImage, Bitmap[]>() {
 
             @Override
-            public GVRCubemapTexture convert(GVRContext gvrContext,
-                    Bitmap[] bitmapArray) {
-                return new GVRCubemapTexture(gvrContext, bitmapArray);
+            public GVRCubemapImage convert(GVRContext gvrContext,
+                                           Bitmap[] bitmapArray) {
+                return new GVRCubemapImage(gvrContext, bitmapArray);
             }
         };
 
         protected AsyncLoadCubemapTextureResource(GVRContext gvrContext,
-                GVRAndroidResource request,
-                CancelableCallback<GVRCubemapTexture> callback, int priority) {
+                                                  GVRAndroidResource request,
+                                                  CancelableCallback<GVRCubemapImage> callback, int priority) {
             super(gvrContext, sConverter, request, callback);
         }
 

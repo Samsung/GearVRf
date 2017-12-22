@@ -25,7 +25,6 @@ import android.view.Gravity;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
@@ -35,8 +34,6 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.IAssetEvents;
-import org.gearvrf.io.GVRControllerType;
-import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.MovableBehavior;
@@ -54,10 +51,8 @@ import org.gearvrf.utlis.sceneserializer.SceneSerializer.SceneLoaderListener;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Future;
 
 /**
  * This sample can be used with a Laser Cursor as well as an Object Cursor. By default the Object

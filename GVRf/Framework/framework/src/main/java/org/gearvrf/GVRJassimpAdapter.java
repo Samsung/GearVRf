@@ -1,11 +1,6 @@
 package org.gearvrf;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -48,7 +43,6 @@ import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import static java.lang.Integer.parseInt;
 
@@ -443,7 +437,7 @@ class GVRJassimpAdapter {
     public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume, boolean startAnimations)
     {
         List<AiLight> aiLights = scene.getLights();
-        Hashtable<String, GVRLightBase> lightList = new Hashtable<String, GVRLightBase>();
+        Hashtable<String, GVRLight> lightList = new Hashtable<String, GVRLight>();
         GVRSceneObject camera;
 
         EnumSet<GVRImportSettings> settings = request.getImportSettings();
@@ -522,7 +516,7 @@ class GVRJassimpAdapter {
         GVRSceneObject parentSceneObject,
         AiNode node,
         Hashtable<String,
-        GVRLightBase> lightlist) {
+                GVRLight> lightlist) {
         final GVRSceneObject sceneObject;
         final GVRContext context = mContext;
 
@@ -565,9 +559,9 @@ class GVRJassimpAdapter {
         });
      }
 
-    private void attachLights(Hashtable<String, GVRLightBase> lightlist, GVRSceneObject sceneObject){
+    private void attachLights(Hashtable<String, GVRLight> lightlist, GVRSceneObject sceneObject){
         String name = sceneObject.getName();
-        GVRLightBase light =  lightlist.get(name);
+        GVRLight light =  lightlist.get(name);
         if (light != null) {
             Quaternionf q = new Quaternionf();
             q.rotationX((float) Math.PI / 2.0f);
@@ -810,11 +804,11 @@ class GVRJassimpAdapter {
         }
     }
 
-    private void importLights(List<AiLight> lights, Hashtable<String, GVRLightBase> lightlist)
+    private void importLights(List<AiLight> lights, Hashtable<String, GVRLight> lightlist)
     {
         for(AiLight light: lights)
         {
-            GVRLightBase l;
+            GVRLight l;
             AiLightType type = light.getType();
             String name = light.getName();
 
@@ -851,7 +845,7 @@ class GVRJassimpAdapter {
 
     }
 
-    private void setLightProp(GVRLightBase gvrLight, AiLight assimpLight)
+    private void setLightProp(GVRLight gvrLight, AiLight assimpLight)
     {
         float aconstant = assimpLight.getAttenuationConstant();
         float alinear = assimpLight.getAttenuationLinear();
@@ -874,7 +868,7 @@ class GVRJassimpAdapter {
         gvrLight.setFloat("attenuation_quadratic", aquad);
     }
 
-    private void setPhongLightProp(GVRLightBase gvrLight, AiLight assimpLight)
+    private void setPhongLightProp(GVRLight gvrLight, AiLight assimpLight)
     {
         org.gearvrf.jassimp.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
         org.gearvrf.jassimp.AiColor diffuseCol = assimpLight.getColorDiffuse(sWrapperProvider);
