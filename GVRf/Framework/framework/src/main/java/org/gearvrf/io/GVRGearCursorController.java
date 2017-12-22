@@ -27,11 +27,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVREventReceiver;
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRContext;
-
 import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;

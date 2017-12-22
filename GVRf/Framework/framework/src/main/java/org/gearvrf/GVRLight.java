@@ -243,7 +243,7 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * contribution of each light to the final fragment color. It defines the
      * format of the Radiance and Surface structures.
      * @see GVRShaderTemplate
-     * @see GVRLightBase#getUniformDescriptor()
+     * @see GVRLight#getUniformDescriptor()
      * 
      * @return string with source for light fragment shader
      */
@@ -262,7 +262,7 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * by the vertex shader descriptor.
      * 
      * @see GVRShaderTemplate
-     * @see GVRLightBase#getVertexDescriptor()
+     * @see GVRLight#getVertexDescriptor()
      * 
      * @return string with source for light vertex shader
      */
@@ -280,7 +280,7 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * shader when they are updated.
      * 
      * @see GVRShaderTemplate
-     * @see GVRLightBase#getFragmentShaderSource()
+     * @see GVRLight#getFragmentShaderSource()
      * 
      * @return String describing light shader uniforms
      */
@@ -503,8 +503,6 @@ class NativeLight
 
     static native String getLightID(long light);
 
-    static native void setLightID(long light, String id);
-    
     static native void getMat4(long light, String key, float[] matrix);
     
     static native void setMat4(long light, String key, float[] matrix);

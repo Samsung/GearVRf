@@ -5,7 +5,7 @@ import android.graphics.PointF;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-class MonoscopicControllerReader implements org.gearvrf.io.GearCursorController.ControllerReader {
+class MonoscopicControllerReader implements org.gearvrf.io.GVRGearCursorController.ControllerReader {
 
     MonoscopicControllerReader() {
     }

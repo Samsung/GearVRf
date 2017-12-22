@@ -372,9 +372,7 @@ public class GVRInputManager implements IEventReceiver
         return null;
     }
 
-
-    public GVRGearCursorController getGearController()
-    {
+    public GVRGearCursorController getGearController() {
         return gearCursorController;
     }
 
