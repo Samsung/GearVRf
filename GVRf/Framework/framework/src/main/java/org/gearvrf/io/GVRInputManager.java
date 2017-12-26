@@ -170,7 +170,7 @@ public class GVRInputManager implements IEventReceiver
      * Emit "onCursorControllerAdded" events to controller listeners
      * for all connected controllers.
      * <p>
-     * To connect with controllers, the application must add a {@link ICursorControllerEventListener}
+     * To connect with controllers, the application must add a {@link ICursorControllerListener}
      * to listen for onCursorControllerAdded and onCursorControllerRemoved events
      * and then call this function to emit the events.
      * An event is sent immediately if the controller is actually ready

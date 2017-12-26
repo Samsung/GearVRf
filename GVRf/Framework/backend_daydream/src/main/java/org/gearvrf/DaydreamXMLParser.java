@@ -68,15 +68,21 @@ final class DaydreamXMLParser {
                             continue;
                         }
                         String attributeName = xpp.getAttributeName(i);
-                        if (tagName.equals("vr-app-settings")) {
-                            if (attributeName.equals("useGazeCursorController")) {
-                                settings.setUseGazeCursorController(Boolean.parseBoolean(xpp.getAttributeValue(i)));
-                            } else if(attributeName.equals("useAndroidWearTouchpad")) {
-                                settings.setUseAndroidWearTouchpad(Boolean.parseBoolean(xpp
-                                        .getAttributeValue(i)));
-                            } else if (attributeName
-                                    .equals("useGazeCursorController")) {
+                        if (tagName.equals("vr-app-settings"))
+                        {
+                            if (attributeName.equals("useGazeCursorController"))
+                            {
+                                settings.setUseGazeCursorController(
+                                        Boolean.parseBoolean(xpp.getAttributeValue(i)));
+                            }
+                            else if (attributeName.equals("useControllerTypes"))
+                            {
                                 parseControllerTypes(settings, xpp.getAttributeValue(i));
+                            }
+                            else if (attributeName.equals("useAndroidWearTouchpad"))
+                            {
+                                settings.setUseAndroidWearTouchpad(
+                                        Boolean.parseBoolean(xpp.getAttributeValue(i)));
                             }
                         }
                     }
