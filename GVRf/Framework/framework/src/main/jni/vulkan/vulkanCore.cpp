@@ -1177,15 +1177,18 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     VkRenderTexture* VulkanCore::getRenderTexture(VkRenderTarget* renderTarget) {
-
         VkFence fence =  static_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
-        VkRenderTarget* renderTarget1 = renderTarget ;
+        //VkRenderTarget* renderTarget1 = renderTarget ;
         VkResult err;
         err = vkGetFenceStatus(m_device, fence);
-
+        /* Commenting out the code of sending an older image to oculus, if the current one is not yet complete.
+         * Reason for commenting : 1. Even though the FPS is 60 the visuals lag.
+         *                         2. FPS is not affected with or without this logic
+         * /
+/*
         bool found = false;
         VkResult status;
-        // check the status of current fence, if not ready take the previous one, we are incrementing with 2 for left and right frames.
+
         if (err != VK_SUCCESS) {
             renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
             while (renderTarget1!= nullptr && renderTarget1 != renderTarget) {
@@ -1204,7 +1207,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                   4294967295U);
              }
         }
-        return static_cast<VkRenderTexture*>(renderTarget1->getTexture());
+*/
+        while (err != VK_SUCCESS) {
+            err = vkWaitForFences(m_device, 1, &fence , VK_TRUE, 4294967295U);
+        }
+
+        return static_cast<VkRenderTexture*>(renderTarget->getTexture());
     }
 
      int VulkanCore::waitForFence(VkFence fence) {
