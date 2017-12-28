@@ -38,7 +38,7 @@ struct RenderTextureInfo{
 class RenderTexture : public Texture
 {
 public:
-    explicit RenderTexture(int sample_count = 0)
+    explicit RenderTexture(int sample_count = 1)
             : Texture(TextureType::TEXTURE_2D),
               mSampleCount(sample_count),
               mUseStencil(false),
@@ -98,7 +98,7 @@ private:
 protected:
     float   mBackColor[4];
     bool    mUseStencil;
-    int     mSampleCount;
+    int     mSampleCount = 1;
     bool    readback_started_;  // set by startReadBack()
 };
 

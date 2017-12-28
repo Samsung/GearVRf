@@ -81,10 +81,12 @@ class VkRenderTarget;
 class RenderTarget;
 
 class VulkanCore final {
+
 public:
     // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
     static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
         if (!theInstance) {
+
             theInstance = new VulkanCore(newNativeWindow);
             theInstance->initVulkanCore();
         }
@@ -159,6 +161,24 @@ public:
     }
 
     void renderToOculus(RenderTarget* renderTarget);
+    void InitSwapChain();
+
+    VkImage getSwapChainImage(){
+        return mSwapchainBuffers[swapChainImageIndex].image;
+    }
+
+    VkImageView getSwapChainView(){
+        return mSwapchainBuffers[swapChainImageIndex++].view;
+    }
+
+    bool isSwapChainPresent(){
+        return swapChainFlag;
+    }
+    int getSwapChainIndexToRender(){
+        return mSwapchainCurrentIdx;
+    }
+    void SetNextBackBuffer();
+    void PresentBackBuffer();
 private:
 
     static VulkanCore *theInstance;
@@ -192,6 +212,7 @@ private:
                      std::vector<uint32_t>& result_vert, std::vector<uint32_t>& result_frag);
 
     void GetDescriptorPool(VkDescriptorPool& descriptorPool);
+    VkCullModeFlagBits getVulkanCullFace(int);
 
     ANativeWindow *m_androidWindow;
 
@@ -204,7 +225,26 @@ private:
     uint32_t m_physicalDeviceCount;
     uint32_t m_queueFamilyIndex;
     VkQueue m_queue;
+
     VkSurfaceKHR m_surface;
+    VkSurfaceFormatKHR mSurfaceFormat;
+    VkSwapchainKHR mSwapchain;
+    struct SwapchainBuffer
+    {
+        VkImage image;
+        VkImageView view;
+    };
+
+    int swapChainImageIndex = 0;
+    SwapchainBuffer* mSwapchainBuffers;
+    bool swapChainFlag = false;
+    // Vulkan Synchronization objects
+    VkSemaphore mBackBufferSemaphore;
+    VkSemaphore mRenderCompleteSemaphore;
+
+    uint32_t mSwapchainCurrentIdx = 0;
+    uint32_t mSwapchainImageCount;
+
     VkCommandPool m_commandPool;
     VkCommandPool m_commandPoolTrans;
 

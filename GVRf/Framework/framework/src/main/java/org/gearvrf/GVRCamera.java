@@ -220,6 +220,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
             GVRMesh dummyMesh = new GVRMesh(getGVRContext(),"float3 a_position float2 a_texcoord");
             mPostEffects.setMesh(dummyMesh);
             NativeCamera.setPostEffect(getNative(), mPostEffects.getNative());
+            mPostEffects.setCullFace(GVRRenderPass.GVRCullFaceEnum.None);
         }
         else
         {

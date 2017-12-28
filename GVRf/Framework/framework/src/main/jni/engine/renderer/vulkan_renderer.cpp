@@ -22,6 +22,8 @@
 #include <vulkan/vk_cubemap_image.h>
 #include <vulkan/vk_render_to_texture.h>
 #include <vulkan/vk_render_target.h>
+#include <vulkan/vk_render_texture_onscreen.h>
+#include <vulkan/vk_render_texture_offscreen.h>
 #include "renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
@@ -39,9 +41,10 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
+    return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
-    RenderData* VulkanRenderer::createRenderData()
+
+RenderData* VulkanRenderer::createRenderData()
 {
     return new VulkanRenderData();
 }
@@ -96,7 +99,16 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const TextureParameters* texture_parameters, int number_views)
 {
-    return new VkRenderTexture(width, height, sample_count);
+    return new VkRenderTextureOffScreen(width, height, sample_count);
+}
+
+RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
+                                                   int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                   const TextureParameters* texture_parameters, int number_views, bool monoscopic)
+{
+    if(monoscopic)
+        return new VkRenderTextureOnScreen(width, height, sample_count);
+    return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters, number_views);
 }
 
 Shader* VulkanRenderer::createShader(int id, const char* signature,
@@ -119,7 +131,6 @@ IndexBuffer* VulkanRenderer::createIndexBuffer(int bytesPerIndex, int icount)
 
 bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
 {
-
     VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
     UniformBlock& transformUBO = vkRdata->getTransformUbo();
     VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
@@ -152,27 +163,31 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
 
 void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
-    float positions[] = { -1.0f, 1.0f,  1.0f,
-                          -1.0f, -1.0f,  1.0f,
-                          1.0f,  -1.0f,  1.0f,
-                          1.0f,  1.0f,  1.0f,
-                          -1.0f, 1.0f,  1.0f,
-                          1.0f,  -1.0f,  1.0f};
+      float positions[] = { -1.0f, +1.0f, 1.0f,
+                            +1.0f, -1.0f, 1.0f,
+                            -1.0f, -1.0f, 1.0f,
+
+                            +1.0f, +1.0f, 1.0f,
+                            +1.0f, -1.0f, 1.0f,
+                            -1.0f, +1.0f, 1.0f,
+      };
 
     float uvs[] = { 0.0f, 1.0f,
-                    0.0f, 0.0f,
                     1.0f, 0.0f,
+                    0.0f, 0.0f,
+
                     1.0f, 1.0f,
+                    1.0f, 0.0f,
                     0.0f, 1.0f,
-                    1.0f, 0.0f};
+    };
 
     const int position_size = sizeof(positions)/ sizeof(positions[0]);
     const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
 
     copy_mesh->setVertices(positions, position_size);
     copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
-
 }
+
 void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>& render_data_list){
     for (auto rdata = render_data_vector.begin(); rdata != render_data_vector.end(); ++rdata)
     {
@@ -197,8 +212,6 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
 }
 void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                 RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
-
-
     std::vector<RenderData*> render_data_list;
     Camera* camera = renderTarget->getCamera();
     RenderState rstate = renderTarget->getRenderState();
@@ -208,6 +221,8 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
     rstate.uniforms.u_view = camera->getViewMatrix();
     rstate.uniforms.u_proj = camera->getProjectionMatrix();
 
+    if(vulkanCore_->isSwapChainPresent())
+        rstate.uniforms.u_proj = glm::mat4(1,0,0,0,  0,-1,0,0, 0,0,0.5,0, 0,0,0.5,1) * rstate.uniforms.u_proj;
 
     std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
     int postEffectCount = 0;
@@ -217,6 +232,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;
     }
+
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
     VkRenderTarget *vk_renderTarget = static_cast<VkRenderTarget *>(renderTarget);
 
@@ -228,13 +244,13 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         VkRenderTexture* input_texture = renderTexture;
         vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager,
                                                  nullptr, renderTexture, false);
+
         vulkanCore_->submitCmdBuffer(renderTexture->getFenceObject(), renderTexture->getCommandBuffer());
         vulkanCore_->waitForFence(renderTexture->getFenceObject());
 
         postEffectCount = post_effects->pass_count();
         // Call Post Effect
         for (int i = 0; i < postEffectCount-1; i++) {
-
             if (i % 2 == 0)
             {
                 renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_b);
@@ -253,6 +269,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
             vulkanCore_->waitForFence(renderTexture->getFenceObject());
             input_texture = renderTexture;
         }
+
         render_data_list.clear();
         render_data_list.push_back(post_effects);
 

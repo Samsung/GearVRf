@@ -261,7 +261,6 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
     imageMemoryBarrier.dstAccessMask =
             VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
 
-
     // Optimal image will be used as destination for the copy, so we must transfer from our initial undefined image layout to the transfer destination layout
     setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
                    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -415,7 +414,7 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
                                                              VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                             &imageView);
     assert(!err);
-
+    
 }
 
 }
