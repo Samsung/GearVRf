@@ -19,6 +19,7 @@ package org.gearvrf.io;
 import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.view.InputDevice;
@@ -38,11 +39,14 @@ import org.gearvrf.GVRTransform;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.scene_objects.GVRLineSceneObject;
 import org.gearvrf.utility.Log;
+import org.gearvrf.x3d.Key;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 
 /**
@@ -486,6 +490,47 @@ public final class GearCursorController extends GVRCursorController
             });
         }
 
+        class SendEvents implements Runnable
+        {
+            private List<KeyEvent> mKeyEvents = new ArrayList<KeyEvent>();
+            private List<MotionEvent> mMotionEvents = new ArrayList<MotionEvent>();
+
+            public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
+            {
+                if (keyEvents.size() > 0)
+                {
+                    mKeyEvents = new ArrayList<KeyEvent>(keyEvents);
+                }
+                else
+                {
+                    mKeyEvents.clear();
+                }
+                if (motionEvents.size() > 0)
+                {
+                    mMotionEvents = new ArrayList<MotionEvent>(motionEvents);
+                }
+                else
+                {
+                    mMotionEvents.clear();
+                }
+            }
+
+            public void run()
+            {
+                GVRActivity activity = getGVRContext().getActivity();
+                for (KeyEvent e : mKeyEvents)
+                {
+                    activity.dispatchKeyEvent(e);
+                }
+                for (MotionEvent e : mMotionEvents)
+                {
+                    activity.dispatchTouchEvent(MotionEvent.obtain(e));
+                }
+            }
+        }
+
+        private SendEvents mPropagateEvents = new SendEvents();
+
         void handleControllerEvent(final ControllerEvent event) {
             context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerEvent",
                                                 event.position, event.rotation, event.pointF);
@@ -527,16 +572,24 @@ public final class GearCursorController extends GVRCursorController
                                         prevButtonHome, KeyEvent.KEYCODE_HOME);
             prevButtonHome = handleResult == -1 ? prevButtonHome : handleResult;
             event.recycle();
-            if (mSendEventsToActivity)
+            if (mSendEventsToActivity && ((keyEvent.size() > 0) || (motionEvent.size() > 0)))
             {
-                GVRActivity activity = getGVRContext().getActivity();
-                for (KeyEvent e : keyEvent)
+                mPropagateEvents.init(keyEvent, motionEvent);
+                if (Looper.getMainLooper().equals(Looper.myLooper()))
                 {
-                    activity.dispatchKeyEvent(e);
+                    mPropagateEvents.run();
                 }
-                for (MotionEvent e : motionEvent)
+                else
                 {
-                    activity.dispatchTouchEvent(MotionEvent.obtain(e));
+                    GVRActivity activity = getGVRContext().getActivity();
+                    for (KeyEvent e : keyEvent)
+                    {
+                        activity.dispatchKeyEvent(e);
+                    }
+                    for (MotionEvent e : motionEvent)
+                    {
+                        activity.dispatchTouchEvent(MotionEvent.obtain(e));
+                    }
                 }
             }
             GearCursorController.super.invalidate();

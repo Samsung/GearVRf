@@ -77,13 +77,13 @@ public abstract class GVRCursorController implements IEventReceiver
     protected Object eventLock = new Object();
     protected GVRSceneObject mCursor = null;
     protected boolean enable = false;
-    protected boolean mSendEventsToActivity = false;
+    protected boolean mSendEventsToActivity = true;
     protected Object mCursorLock = new Object();
     protected String name;
     protected int vendorId, productId;
     protected GVRScene scene = null;
     protected GVRPicker mPicker = null;
-    protected CursorControl mCursorControl = CursorControl.CURSOR_CONSTANT_DEPTH;
+    protected CursorControl mCursorControl = CursorControl.PROJECT_CURSOR_ON_SURFACE;
     protected float mCursorDepth = 1.0f;
     protected GVRSceneObject mCursorScale;
     protected GVRSceneObject mDragRoot;
@@ -211,9 +211,9 @@ public abstract class GVRCursorController implements IEventReceiver
     /**
      * Enable or disable routing controller MotionEvents to GVRActivity.
      * <p>
-     * When a controller is active, Android MotionEvents are not routed
-     * to your application via {@link GVRActivity#dispatchTouchEvent}.
-     * Instead they are consumed by the controller.
+     * When a controller is active, Android MotionEvents are routed
+     * to your application via {@link GVRActivity#dispatchTouchEvent}
+     * and also consumed by the controller.
      * <p>
      * You can listen for {@link IPickEvents} or {@link ITouchEvents}
      * emitted by the{@link GVRPicker} associated with the controller.
@@ -223,13 +223,10 @@ public abstract class GVRCursorController implements IEventReceiver
      * to listen for controller events. You can get the motion event
      * with {@link GVRCursorController#getMotionEvent()}.
      * <p>
-     * If you enable this option, Android MotionEvent and KeyEvents
-     * are routed to your application even though a controller is active.
-     * This is useful if you are using Android gesture detection or
-     * other Android APIs that rely on getting these events..
-     * <p>
-     * Do not enable this option if you are using {@link org.gearvrf.scene_objects.GVRViewSceneObject}
-     * or {@GVRWidgetPlugin}. These classes route events to the activity for you.
+     * If you disable this option, Android MotionEvent and KeyEvents
+     * are not routed to your application when a controller is active.
+     * If you are using {@link org.gearvrf.scene_objects.GVRViewSceneObject}
+     * disable this option because events are routed to the Android View in this case.
      *
      * @param flag true to send events to GVRActivity, false to not send them
      * @see #sendingEventsToActivity
