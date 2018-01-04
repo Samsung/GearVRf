@@ -15,6 +15,36 @@
 
 package org.gearvrf.resonanceaudio;
 
-public class GVRAudioListener {
+import org.gearvrf.GVRComponent;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRScene;
+
+/**
+ * Represents a listener in the scene. It records the sound around it and plays through the
+ * speakers. It is allowed to have only one listener in the scene.
+ */
+public class GVRAudioListener extends GVRComponent {
+    private static long TYPE_AUDIO = newComponentType(GVRAudioListener.class);
+
+    /**
+     * Constructs a new GVRAudioListener.
+     *
+     * @param gvrContext GVR context.
+     * @param scene Scene of the audio listener.
+     */
+    public GVRAudioListener(GVRContext gvrContext, GVRScene scene) {
+        super(gvrContext, 0L);
+
+        mType = getComponentType();
+    }
+
+    public static long getComponentType() { return TYPE_AUDIO; }
+
+    protected static long newComponentType(Class<? extends GVRAudioListener> clazz) {
+        long hash = (long) clazz.hashCode() << 32;
+        long t = System.currentTimeMillis() & 0xfffffff;
+        long result = hash | t;
+        return result;
+    }
 
 }
