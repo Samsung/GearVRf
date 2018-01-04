@@ -88,6 +88,7 @@ public final class CursorManager implements IEventReceiver
     private List<SelectableBehavior> selectableBehaviors;
     private GVRBoundsPicker objectCursorPicker;
     private GVREventReceiver listeners;
+    private boolean mSendEventsToActivity = true;
 
     /**
      * Create a {@link CursorManager}.
@@ -227,7 +228,10 @@ public final class CursorManager implements IEventReceiver
         }
     }
 
-
+    public void sendEventsToActivity(boolean flag)
+    {
+        mSendEventsToActivity = flag;
+    }
 
     Map<String, CursorTheme> getThemeMap() {
         return themes;
@@ -1155,6 +1159,7 @@ public final class CursorManager implements IEventReceiver
                 }
             }
             controller.setScene(CursorManager.this.scene);
+            controller.sendEventsToActivity(mSendEventsToActivity);
             synchronized (mCursors)
             {
                 for (Cursor c : mCursors)
