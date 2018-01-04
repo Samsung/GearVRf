@@ -533,7 +533,7 @@ public final class GearCursorController extends GVRCursorController
 
         void handleControllerEvent(final ControllerEvent event) {
             context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerEvent",
-                                                event.position, event.rotation, event.pointF);
+                                                event.position, event.rotation, event.pointF, event.touched);
 
             this.currentControllerEvent = event;
             Quaternionf q = event.rotation;
