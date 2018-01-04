@@ -24,6 +24,8 @@ import org.gearvrf.GVRScene;
  * speakers. It is allowed to have only one listener in the scene.
  */
 public class GVRAudioListener extends GVRComponent {
+    private static final String TAG = GVRAudioListener.class.getSimpleName();
+
     private static long TYPE_AUDIO = newComponentType(GVRAudioListener.class);
 
     /**
@@ -47,4 +49,55 @@ public class GVRAudioListener extends GVRComponent {
         return result;
     }
 
+    void addSource(GVRAudioSource audioSource) {
+    }
+
+    void removeSource(GVRAudioSource audioSource) {
+    }
+
+    @Override
+    public void onEnable() {
+        super.onEnable();
+
+        resume();
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+
+        pause();
+    }
+
+    private void pause() {
+    }
+
+    private void resume() {
+
+    }
+
+    void loadSoundFile(GVRAudioSource audioSource) {
+    }
+
+    void unloadSoundFile(GVRAudioSource audioSource) {
+    }
+
+    void playSound(GVRAudioSource audioSource, boolean looping) {
+    }
+
+    void pauseSound(GVRAudioSource audioSource) {
+    }
+
+    void resumeSound(GVRAudioSource audioSource) {
+    }
+
+    void stopSound(GVRAudioSource audioSource) {
+    }
+
+    void setSoundVolume(GVRAudioSource audioSource, float volume) {
+    }
+
+    boolean isSoundPlaying(GVRAudioSource audioSource) {
+        return true;
+    }
 }
