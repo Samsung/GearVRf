@@ -748,13 +748,13 @@ public class GVRInputManager implements IEventReceiver
                 mCursor.getTransform().setPosition(0, 0, 0);
                 controller.setCursor(mCursor);
             }
-            mCursorController = controller;
             mCursorController.setEnable(true);
             ctx.getEventManager().sendEvent(ctx.getInputManager(),
                                             ICursorControllerSelectListener.class,
                                             "onCursorControllerSelected",
                                             controller,
                                             mCursorController);
+            mCursorController = controller;
             Log.d(TAG, "selected " + controller.getClass().getSimpleName());
         }
 
