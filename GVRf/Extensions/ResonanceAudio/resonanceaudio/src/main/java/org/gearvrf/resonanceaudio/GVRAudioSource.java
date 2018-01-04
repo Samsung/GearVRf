@@ -81,76 +81,17 @@ public class GVRAudioSource extends GVRBehavior
      *
      * @param soundFile path/name of the file to be played.
      */
-    public void load(String soundFile)
-    {
-        if (mSoundFile != null)
-        {
-            unload();
-        }
-        mSoundFile = soundFile;
-        if (mAudioListener != null)
-        {
-            mAudioListener.getAudioEngine().preloadSoundFile(soundFile);
-            Log.d("SOUND", "loaded audio file %s", getSoundFile());
-        }
+    public void load(String soundFile) {
     }
 
     /**
-     * Unloads the sound file for this source, if any.
+     * Unload the sound file.
      */
-    public void unload()
-    {
-        if (mAudioListener != null)
-        {
-            Log.d("SOUND", "unloading audio source %d %s", getSourceId(), getSoundFile());
-            mAudioListener.getAudioEngine().unloadSoundFile(getSoundFile());
-        }
-        mSoundFile = null;
-        mSourceId = GvrAudioEngine.INVALID_ID;
+    public void unload() {
     }
 
-    /**
-     * Gets the name of the sound file for this source.
-     * @return sound file name or null if none
-     */
-    public String getSoundFile() {
-        return mSoundFile;
-    }
-
-    int getSourceId() {
-        return mSourceId;
-    }
-
-    void setSourceId(int sourceId) {
-        mSourceId = sourceId;
-    }
-
-    @Override
-    public void onDetach(GVRSceneObject owner)
-    {
-        super.onDetach(owner);
-        if (mAudioListener != null)
-        {
-            stop();
-            mAudioListener.removeSource(this);
-        }
-    }
-
-    @Override
-    public void onDisable()
-    {
-        super.onDisable();
-        stop();
-    }
-
-    public boolean isPlaying()
-    {
-        if ((mAudioListener != null) &&
-            (getSourceId() != GvrAudioEngine.INVALID_ID))
-        {
-            return mAudioListener.getAudioEngine().isSoundPlaying(getSourceId());
-        }
-        return false;
+    public boolean isPlaying() {
+        return true;
     }
 
     /**
