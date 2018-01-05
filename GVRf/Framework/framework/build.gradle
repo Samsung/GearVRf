@@ -9,8 +9,8 @@ repositories {
 android {
     //defaultPublishConfig "debug"
     publishNonDefault !gradle.getStartParameter().taskNames.contains('uploadArchives')
-    compileSdkVersion 24
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.3'
 
     defaultConfig {
         minSdkVersion 21
