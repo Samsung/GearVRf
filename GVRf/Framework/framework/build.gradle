@@ -9,8 +9,8 @@ repositories {
 android {
     //defaultPublishConfig "debug"
     publishNonDefault !gradle.getStartParameter().taskNames.contains('uploadArchives')
-    compileSdkVersion 24
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.3'
 
     defaultConfig {
         minSdkVersion 21
@@ -122,13 +122,14 @@ android {
     }
 }
 
-project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+project.ext.jomlVersion = "1.9.3-SNAPSHOT"
+project.ext.gsonVersion = '2.8.2'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'src/main/libs', include: ['*.jar'])
     compile "org.joml:joml-android:${jomlVersion}"
-    compile 'com.google.code.gson:gson:2.7'
+    compile "com.google.code.gson:gson:$gsonVersion"
 }
 
 clean {}.doLast {

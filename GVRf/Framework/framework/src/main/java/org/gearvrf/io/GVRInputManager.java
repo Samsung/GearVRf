@@ -662,7 +662,6 @@ public class GVRInputManager implements IEventReceiver
         public void onCursorControllerRemoved(GVRCursorController controller);
     };
 
-
     /**
      * Interface to listen for cursor controller selection events.
      * @see GVRInputManager#selectController()
@@ -748,7 +747,7 @@ public class GVRInputManager implements IEventReceiver
                 mCursor.getTransform().setPosition(0, 0, 0);
                 controller.setCursor(mCursor);
             }
-            mCursorController.setEnable(true);
+            controller.setEnable(true);
             ctx.getEventManager().sendEvent(ctx.getInputManager(),
                                             ICursorControllerSelectListener.class,
                                             "onCursorControllerSelected",

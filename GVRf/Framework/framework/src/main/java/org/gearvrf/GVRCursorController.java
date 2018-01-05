@@ -200,6 +200,7 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     public GVRContext getGVRContext() { return context; }
 
+
     /**
      * Get the {@link GVREventReceiver} which dispatches {@link IControllerEvent}s
      * for this controller.

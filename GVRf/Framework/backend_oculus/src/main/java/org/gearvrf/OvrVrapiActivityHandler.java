@@ -223,7 +223,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
         @Override
         public EGLSurface createWindowSurface(final EGL10 egl, final EGLDisplay display, final EGLConfig config,
-                final Object ignoredNativeWindow) {
+                                              final Object ignoredNativeWindow) {
             final int[] surfaceAttribs = {
                     EGL10.EGL_WIDTH, 16,
                     EGL10.EGL_HEIGHT, 16,
@@ -253,7 +253,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
             final int[] configAttribs = {
                     EGL10.EGL_ALPHA_SIZE, 8, // need alpha for the multi-pass
-                                             // timewarp compositor
+                    // timewarp compositor
                     EGL10.EGL_BLUE_SIZE, 8,
                     EGL10.EGL_GREEN_SIZE, 8,
                     EGL10.EGL_RED_SIZE, 8,
@@ -282,7 +282,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
                 }
                 if ((value[0]
                         & (EGL10.EGL_WINDOW_BIT | EGL10.EGL_PBUFFER_BIT)) != (EGL10.EGL_WINDOW_BIT
-                                | EGL10.EGL_PBUFFER_BIT)) {
+                        | EGL10.EGL_PBUFFER_BIT)) {
                     continue;
                 }
 
@@ -460,7 +460,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private static native void nativeOnSurfaceChanged(long ptr);
 
-    private static native void nativeLeaveVrMode(long ptr);
+        private static native void nativeLeaveVrMode(long ptr);
 
     private static native void nativeShowConfirmQuit(long appPtr);
 

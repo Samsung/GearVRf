@@ -248,7 +248,7 @@ public:
         batch_ = nullptr;
     }
 
-    bool cull_face(int pass=0) const ;
+    int cull_face(int pass=0) const ;
 
     bool offset() const {
         return render_data_flags.offset_;

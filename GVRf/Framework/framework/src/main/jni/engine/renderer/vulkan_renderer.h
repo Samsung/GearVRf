@@ -23,14 +23,7 @@
 #include <vector>
 #include <memory>
 
-#define __gl2_h_
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
-#ifndef GL_ES_VERSION_3_0
-#include "GLES3/gl3.h"
-#include <GLES2/gl2ext.h>
-#include "GLES3/gl3ext.h"
-#endif
+
 
 #include "glm/glm.hpp"
 #include "batch.h"
@@ -117,6 +110,9 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const TextureParameters* texture_parameters, int number_views, bool monoscopic);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) { }
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);

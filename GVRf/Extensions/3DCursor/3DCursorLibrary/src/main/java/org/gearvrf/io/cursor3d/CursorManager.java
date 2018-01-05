@@ -364,8 +364,8 @@ public final class CursorManager implements IEventReceiver
             viewMatrix.invert();
             projectionMatrix.identity();
             projectionMatrix.perspective(centerCamera.getFovY(), centerCamera.getAspectRatio(),
-                    centerCamera
-                            .getNearClippingDistance(), centerCamera.getFarClippingDistance());
+                                         centerCamera
+                                                 .getNearClippingDistance(), centerCamera.getFarClippingDistance());
             projectionMatrix.mul(viewMatrix, vpMatrix);
             culler.set(vpMatrix);
 
@@ -388,17 +388,17 @@ public final class CursorManager implements IEventReceiver
                                 savedDepth = getDistance(position.x, position.y, position.z);
                                 savedPosition = new Vector3f(0.0f, 0.0f, -savedDepth);
                                 savedPosition.mulPosition(scene.getMainCameraRig().getHeadTransform()
-                                        .getModelMatrix4f(), result);
+                                                                  .getModelMatrix4f(), result);
                                 rotation = getRotation(result, position);
                             } else {
                                 savedPosition.mulPosition(scene.getMainCameraRig().getHeadTransform()
-                                        .getModelMatrix4f(), result);
+                                                                  .getModelMatrix4f(), result);
                                 temp.getTransform().setPosition(result.x, result.y, result.z);
                                 temp.getTransform().rotateWithPivot(rotation.w, rotation.x, rotation
                                         .y, rotation.z, 0.0f, 0.0f, 0.0f);
                                 cursor.setPosition(temp.getTransform().getPositionX(),
-                                        temp.getTransform().getPositionY(),
-                                        temp.getTransform().getPositionZ());
+                                                   temp.getTransform().getPositionY(),
+                                                   temp.getTransform().getPositionZ());
                             }
                         }
                     }
@@ -563,23 +563,23 @@ public final class CursorManager implements IEventReceiver
             @Override
             public void run() {
                 new SettingsView(context, scene, CursorManager.this,
-                        settingsCursor.getIoDevice().getCursorControllerId(), cursor, new
-                        SettingsChangeListener() {
-                            @Override
-                            public void onBack(boolean cascading) {
-                                disableSettingsCursor();
-                            }
+                                 settingsCursor.getIoDevice().getCursorControllerId(), cursor, new
+                                         SettingsChangeListener() {
+                                             @Override
+                                             public void onBack(boolean cascading) {
+                                                 disableSettingsCursor();
+                                             }
 
-                            @Override
-                            public int onDeviceChanged(IoDevice device) {
-                                // we are changing the io device on the settings cursor
-                                removeCursorFromScene(settingsCursor);
-                                IoDevice clickedDevice = getAvailableIoDevice(device);
-                                settingsCursor.setIoDevice(clickedDevice);
-                                addCursorToScene(settingsCursor);
-                                return device.getCursorControllerId();
-                            }
-                        });
+                                             @Override
+                                             public int onDeviceChanged(IoDevice device) {
+                                                 // we are changing the io device on the settings cursor
+                                                 removeCursorFromScene(settingsCursor);
+                                                 IoDevice clickedDevice = getAvailableIoDevice(device);
+                                                 settingsCursor.setIoDevice(clickedDevice);
+                                                 addCursorToScene(settingsCursor);
+                                                 return device.getCursorControllerId();
+                                             }
+                                         });
             }
         });
     }
@@ -1038,10 +1038,10 @@ public final class CursorManager implements IEventReceiver
     private int attachCursorToDevice(final Cursor cursor, final IoDevice device, int action, int priority)
     {
         getGVRContext().getEventManager().sendEvent(getGVRContext().getInputManager(),
-                GVRInputManager.ICursorControllerSelectListener.class,
-                "onCursorControllerSelected",
-                device.getGvrCursorController(),
-                null);
+                                                    GVRInputManager.ICursorControllerSelectListener.class,
+                                                    "onCursorControllerSelected",
+                                                    device.getGvrCursorController(),
+                                                    null);
         if (action == 0)
         {
             Log.d(TAG, "Replacing ioDevice:" + IoDeviceFactory.getXmlString(cursor.getIoDevice()) + " for cursor:" + cursor.getId() + " with ioDevice:" + IoDeviceFactory.getXmlString(device) + " with priority " + priority);
@@ -1343,8 +1343,8 @@ public final class CursorManager implements IEventReceiver
                 if (depth != cursor.getIoDevice().getGvrCursorController().getCursorDepth())
                 {
                     getGVRContext().getEventManager().sendEvent(cursor.getOwnerObject(),
-                            ICursorEvents.class,
-                            "onCursorScale", cursor);
+                                                                ICursorEvents.class,
+                                                                "onCursorScale", cursor);
                 }
                 getGVRContext().getEventManager().sendEvent(obj,
                                                             ICursorEvents.class,
@@ -1365,8 +1365,8 @@ public final class CursorManager implements IEventReceiver
                     if (depth != cursor.getIoDevice().getGvrCursorController().getCursorDepth())
                     {
                         getGVRContext().getEventManager().sendEvent(cursor.getOwnerObject(),
-                                ICursorEvents.class,
-                                "onCursorScale", cursor);
+                                                                    ICursorEvents.class,
+                                                                    "onCursorScale", cursor);
                     }
                 }
             }

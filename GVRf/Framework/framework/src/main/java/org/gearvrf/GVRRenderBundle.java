@@ -45,7 +45,7 @@ final class GVRRenderBundle implements IRenderBundle {
                 : appSettings.getEyeBufferParams().getMultiSamples();
         if (mSampleCount > 1) {
             int maxSampleCount = GVRMSAA.getMaxSampleCount();
-            if (mSampleCount > maxSampleCount) {
+            if (mSampleCount > maxSampleCount && maxSampleCount > 1) {
                 mSampleCount = maxSampleCount;
             }
         }

@@ -404,6 +404,7 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
         nativeShader = rpass->get_shader(rstate.is_multiview);
         shader = rstate.shader_manager->getShader(nativeShader);
     }
+
     renderWithShader(rstate, shader, post_effect, material, pass);
     post_effect->clearDirty();
     return true;

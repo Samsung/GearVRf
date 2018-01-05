@@ -58,6 +58,11 @@ class vkImageBase
         const VkImageView& getVkImageView(){
             return imageView;
         }
+
+    void setVkImageView(VkImageView img){
+         imageView = img;
+    }
+
         const VkImageLayout& getImageLayout(){
             return imageLayout;
         }
@@ -72,6 +77,10 @@ class vkImageBase
         }
         const VkImage& getVkImage(){
             return image;
+        }
+
+        void setVkImage(VkImage img){
+            image = img;
         }
         VkDeviceSize getSize(){
             return size;

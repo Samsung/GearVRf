@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <engine/renderer/renderer.h>
+#include <engine/renderer/vulkan_renderer.h>
 #include "render_texture.h"
 #include "gl/gl_render_texture.h"
 namespace gvr {
@@ -28,7 +29,7 @@ Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj, jint width,
         jint height);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv * env, jobject obj,
-        jint width, jint height, jint sample_count, jint number_views);
+        jint width, jint height, jint sample_count, jint number_views, jboolean monoscopic);
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorWithParameters(JNIEnv * env,
         jobject obj, jint width, jint height, jint sample_count,
@@ -56,19 +57,19 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj,
                                           jint width, jint height)
 {
-    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 0, ColorFormat::COLOR_8888, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL,1);
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 1, ColorFormat::COLOR_8888, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL,1);
     return reinterpret_cast<jlong>(tex);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorMSAA(JNIEnv* env, jobject obj,
-                                              jint width, jint height, jint sample_count, jint number_views)
+                                              jint width, jint height, jint sample_count, jint number_views, jboolean monoscopic)
 {
     int depth_format = DepthFormat::DEPTH_24_STENCIL_8;
 
     if(number_views > 1) // multiview doesn't work with stencil attachment
         depth_format = DepthFormat::DEPTH_24;
-    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, ColorFormat::COLOR_8888, depth_format , 0, NULL, number_views);
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, ColorFormat::COLOR_8888, depth_format , 0, NULL, number_views, monoscopic);
     return reinterpret_cast<jlong>(tex);
 }
 

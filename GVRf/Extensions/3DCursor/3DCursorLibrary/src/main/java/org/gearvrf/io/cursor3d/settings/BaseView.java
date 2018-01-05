@@ -27,7 +27,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 
-
 abstract class BaseView {
     private static final String TAG = BaseView.class.getSimpleName();
     private static final float QUAD_X = 10.0f;
