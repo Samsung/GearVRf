@@ -50,13 +50,15 @@ android {
     }
 }
 
+project.ext.jomlVersion = "1.9.3-SNAPSHOT"
+
 dependencies {
     if (findProject(':framework')) {
         compile project (':framework')
     } else {
         compile(name: 'framework-debug', ext: 'aar')
     }
-    compile 'org.joml:joml-android:1.9.1-SNAPSHOT'
+    compile "org.joml:joml-android:${jomlVersion}"
 }
 
 clean {}.doLast {
