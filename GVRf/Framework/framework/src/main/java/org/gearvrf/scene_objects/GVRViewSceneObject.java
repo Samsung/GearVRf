@@ -624,7 +624,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
         {
-            if (sceneObject == mSelected)
+            if (mSelected != null)
             {
                 onDrag(pickInfo);
                 mSelected = null;
