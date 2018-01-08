@@ -52,7 +52,8 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
     private GLSurfaceView mSurfaceView;
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
-    boolean mVrApiInitialized;
+    // warning: writable static state; used to determine when vrapi can be safely uninitialized
+    private static int sVrapiActivitiesCount;
     private OvrViewManager mViewManager;
     private int mCurrentSurfaceWidth, mCurrentSurfaceHeight;
 
@@ -73,10 +74,13 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         mActivity = activity;
         mPtr = activityNative.getNative();
 
-        if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
-            throw new VrapiNotAvailableException();
+        if (0 == sVrapiActivitiesCount) {
+            if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
+                throw new VrapiNotAvailableException();
+            }
         }
-        mVrApiInitialized = true;
+
+        ++sVrapiActivitiesCount;
     }
 
     @Override
@@ -105,11 +109,6 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onResume() {
-        if (!mVrApiInitialized) {
-            nativeInitializeVrApi(mPtr);
-            mVrApiInitialized = true;
-        }
-
         if (null != mSurfaceView) {
             mSurfaceView.onResume();
         }
@@ -130,9 +129,9 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onDestroy() {
-        if (mVrApiInitialized) {
-            nativeUninitializeVrApi(mPtr);
-            mVrApiInitialized = false;
+        --sVrapiActivitiesCount;
+        if (0 == sVrapiActivitiesCount) {
+            nativeUninitializeVrApi();
         }
     }
 
@@ -453,13 +452,13 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private static native void nativeOnSurfaceChanged(long ptr);
 
-        private static native void nativeLeaveVrMode(long ptr);
+    private static native void nativeLeaveVrMode(long ptr);
 
     private static native void nativeShowConfirmQuit(long appPtr);
 
     private static native int nativeInitializeVrApi(long ptr);
 
-    private static native int nativeUninitializeVrApi(long ptr);
+    static native int nativeUninitializeVrApi();
 
     private static final int VRAPI_INITIALIZE_UNKNOWN_ERROR = -1;
 

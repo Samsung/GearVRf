@@ -66,8 +66,6 @@ namespace gvr {
         ovrTextureFormat mColorTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
         ovrTextureFormat mDepthTextureFormatConfiguration = VRAPI_TEXTURE_FORMAT_NONE;
 
-        int32_t mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
-
         int x, y, width, height;                // viewport
 
         void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
@@ -83,9 +81,9 @@ namespace gvr {
         void onSurfaceCreated(JNIEnv& env);
         void copyVulkanTexture(int texSwapChainIndex, int eye);
         void onSurfaceChanged(JNIEnv& env);
-    void onDrawFrame(jobject jViewManager);
+        void onDrawFrame(jobject jViewManager);
         int initializeVrApi();
-        void uninitializeVrApi();
+        static void uninitializeVrApi();
         void leaveVrMode();
 
         void showConfirmQuit();
