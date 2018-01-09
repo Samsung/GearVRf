@@ -17,6 +17,6 @@
 
 namespace gvr {
 bool isSystemPropertySet(const char *prop);
+int getSystemProperty(const char *prop);
 }
-
 #endif

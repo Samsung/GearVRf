@@ -16,6 +16,7 @@
 #include <sys/system_properties.h>
 #include <cstring>
 #include <jni.h>
+#include <cstdlib>
 
 namespace gvr {
 
@@ -24,6 +25,15 @@ JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_SystemPropertyUtil_isSystemPropertySet(JNIEnv *env, jclass type, jstring name_) {
     const char *name = env->GetStringUTFChars(name_, 0);
     bool result = isSystemPropertySet(name);
+    env->ReleaseStringUTFChars(name_, name);
+
+    return result;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_gearvrf_SystemPropertyUtil_getSystemProperty(JNIEnv *env, jclass type, jstring name_) {
+    const char *name = env->GetStringUTFChars(name_, 0);
+    int result = getSystemProperty(name);
     env->ReleaseStringUTFChars(name_, name);
 
     return result;
@@ -44,4 +54,16 @@ bool isSystemPropertySet(const char *prop) {
     return false;
 }
 
+int getSystemProperty(const char *prop) {
+    const prop_info *pi = __system_property_find(prop);
+
+    if (pi) {
+        char buffer[PROP_VALUE_MAX];
+        if (0 < __system_property_read(pi, 0, buffer)) {
+            return std::atoi(buffer);
+        }
+    }
+
+    return 0;
+}
 }
