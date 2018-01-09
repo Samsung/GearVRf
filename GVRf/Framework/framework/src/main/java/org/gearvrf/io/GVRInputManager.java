@@ -386,6 +386,22 @@ public class GVRInputManager implements IEventReceiver
     }
 
     /**
+     * Remove all controllers but leave input manager running.
+     * @return number of controllers removed
+     */
+    public int clear()
+    {
+        int n = 0;
+        for (GVRCursorController c : controllers)
+        {
+            c.stopDrag();
+            removeCursorController(c);
+            ++n;
+        }
+        return n;
+    }
+
+    /**
      * Shut down the input manager.
      *
      * After this call, GearVRf will not be able to access IO devices.
@@ -594,6 +610,7 @@ public class GVRInputManager implements IEventReceiver
         if (controller != null) {
             return controller.dispatchMotionEvent(event);
         }
+
         return false;
     }
 
