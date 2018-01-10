@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define VERBOSE_LOGGING 0
+
 #include <cstring>
 #include <sstream>
 #include <istream>
 #include "objects/data_descriptor.h"
 #include "util/gvr_log.h"
-
-#define VERBOSE_LOGGING 0
 
 namespace gvr
 {

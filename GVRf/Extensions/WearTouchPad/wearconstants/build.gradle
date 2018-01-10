@@ -16,7 +16,7 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 26
 
     defaultConfig {
         minSdkVersion 16
@@ -34,5 +34,5 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:appcompat-v7:26.1.0'
 }
