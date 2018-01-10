@@ -182,12 +182,15 @@ public class GVRInputManager implements IEventReceiver
      */
     public void scanControllers()
     {
-        for (GVRCursorController controller : getCursorControllers())
+        synchronized (controllers)
         {
-            controllers.add(controller);
-            if (controller.isConnected())
+            for (GVRCursorController controller : getCursorControllers())
             {
-                addCursorController(controller);
+                controllers.add(controller);
+                if (controller.isConnected())
+                {
+                    addCursorController(controller);
+                }
             }
         }
     }
@@ -273,9 +276,13 @@ public class GVRInputManager implements IEventReceiver
      * @param controller the external {@link GVRCursorController} to be removed from
      *                   the framework.
      */
-    public void removeCursorController(GVRCursorController controller) {
-        controller.setEnable(false);
-        controllers.remove(controller);
+    public void removeCursorController(GVRCursorController controller)
+    {
+        synchronized (controllers)
+        {
+            controller.setEnable(false);
+            controllers.remove(controller);
+        }
         controller.getGVRContext().getEventManager().sendEvent(this, ICursorControllerListener.class,
                 "onCursorControllerRemoved", controller);
     }
@@ -287,10 +294,15 @@ public class GVRInputManager implements IEventReceiver
      * @param scene
      *
      */
-    public void setScene(GVRScene scene) {
-        for (GVRCursorController controller : controllers) {
-            controller.setScene(scene);
-            controller.invalidate();
+    public void setScene(GVRScene scene)
+    {
+        synchronized (controllers)
+        {
+            for (GVRCursorController controller : controllers)
+            {
+                controller.setScene(scene);
+                controller.invalidate();
+            }
         }
     }
 
@@ -392,11 +404,14 @@ public class GVRInputManager implements IEventReceiver
     public int clear()
     {
         int n = 0;
-        for (GVRCursorController c : controllers)
+        synchronized (controllers)
         {
-            c.stopDrag();
-            removeCursorController(c);
-            ++n;
+            for (GVRCursorController c : controllers)
+            {
+                c.stopDrag();
+                removeCursorController(c);
+                ++n;
+            }
         }
         return n;
     }
@@ -409,14 +424,18 @@ public class GVRInputManager implements IEventReceiver
     public void close()
     {
         inputManager.unregisterInputDeviceListener(inputDeviceListener);
-        controllerIds.clear();
-        cache.clear();
         mouseDeviceManager.forceStopThread();
         gamepadDeviceManager.forceStopThread();
-        if (gazeCursorController != null) {
-            gazeCursorController.close();
+        synchronized (controllers)
+        {
+            controllerIds.clear();
+            cache.clear();
+            if (gazeCursorController != null)
+            {
+                gazeCursorController.close();
+            }
+            controllers.clear();
         }
-        controllers.clear();
     }
 
     // returns null if no device is found.
@@ -792,7 +811,8 @@ public class GVRInputManager implements IEventReceiver
              * If we are removing the controller currently being used,
              * switch to the Gaze controller if possible
              */
-            if (mCursorController == gvrCursorController)
+            if ((mCursorController == gvrCursorController) &&
+                (gvrCursorController.getControllerType() != GVRControllerType.GAZE))
             {
                 GVRContext ctx = gvrCursorController.getGVRContext();
                 deselectController();
