@@ -40,6 +40,7 @@ import org.gearvrf.utility.Log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * An instance of this class is obtained using the
@@ -125,7 +126,7 @@ public class GVRInputManager implements IEventReceiver
     // We make use of the vendor and product id to identify a device.
     private final SparseArray<GVRCursorController> cache;
 
-    private List<GVRCursorController> controllers;
+    private CopyOnWriteArrayList<GVRCursorController> controllers;
 
     /**
      * Construct an input manager which manages the designated cursor controllers.
@@ -156,7 +157,7 @@ public class GVRInputManager implements IEventReceiver
         {
             androidWearTouchpad = new GVRAndroidWearTouchpad(context);
         }
-        controllers = new ArrayList<GVRCursorController>();
+        controllers = new CopyOnWriteArrayList<GVRCursorController>();
     }
 
     /**
@@ -182,15 +183,12 @@ public class GVRInputManager implements IEventReceiver
      */
     public void scanControllers()
     {
-        synchronized (controllers)
+        for (GVRCursorController controller : getCursorControllers())
         {
-            for (GVRCursorController controller : getCursorControllers())
+            controllers.add(controller);
+            if (controller.isConnected())
             {
-                controllers.add(controller);
-                if (controller.isConnected())
-                {
-                    addCursorController(controller);
-                }
+                addCursorController(controller);
             }
         }
     }
@@ -278,11 +276,8 @@ public class GVRInputManager implements IEventReceiver
      */
     public void removeCursorController(GVRCursorController controller)
     {
-        synchronized (controllers)
-        {
-            controller.setEnable(false);
-            controllers.remove(controller);
-        }
+        controller.setEnable(false);
+        controllers.remove(controller);
         controller.getGVRContext().getEventManager().sendEvent(this, ICursorControllerListener.class,
                 "onCursorControllerRemoved", controller);
     }
@@ -296,13 +291,10 @@ public class GVRInputManager implements IEventReceiver
      */
     public void setScene(GVRScene scene)
     {
-        synchronized (controllers)
+        for (GVRCursorController controller : controllers)
         {
-            for (GVRCursorController controller : controllers)
-            {
-                controller.setScene(scene);
-                controller.invalidate();
-            }
+            controller.setScene(scene);
+            controller.invalidate();
         }
     }
 
@@ -404,14 +396,11 @@ public class GVRInputManager implements IEventReceiver
     public int clear()
     {
         int n = 0;
-        synchronized (controllers)
+        for (GVRCursorController c : controllers)
         {
-            for (GVRCursorController c : controllers)
-            {
-                c.stopDrag();
-                removeCursorController(c);
-                ++n;
-            }
+            c.stopDrag();
+            removeCursorController(c);
+            ++n;
         }
         return n;
     }
@@ -426,16 +415,13 @@ public class GVRInputManager implements IEventReceiver
         inputManager.unregisterInputDeviceListener(inputDeviceListener);
         mouseDeviceManager.forceStopThread();
         gamepadDeviceManager.forceStopThread();
-        synchronized (controllers)
+        controllerIds.clear();
+        cache.clear();
+        if (gazeCursorController != null)
         {
-            controllerIds.clear();
-            cache.clear();
-            if (gazeCursorController != null)
-            {
-                gazeCursorController.close();
-            }
-            controllers.clear();
+            gazeCursorController.close();
         }
+        controllers.clear();
     }
 
     // returns null if no device is found.
@@ -817,7 +803,7 @@ public class GVRInputManager implements IEventReceiver
                 GVRContext ctx = gvrCursorController.getGVRContext();
                 deselectController();
                 GVRCursorController gaze = ctx.getInputManager().findCursorController(GVRControllerType.GAZE);
-                if (gaze != null)
+                if ((gaze != null) && (gaze != gvrCursorController))
                 {
                     ctx.getInputManager().addCursorController(gaze);
                 }
