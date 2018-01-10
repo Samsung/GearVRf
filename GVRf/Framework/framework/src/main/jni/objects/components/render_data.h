@@ -375,7 +375,7 @@ public:
         render_pass_list_[pass]->set_shader(shaderid, isMultiview);
     }
 
-    int isValid(Renderer* renderer, const RenderState& scene);
+    int isRenderable(Renderer *renderer, const RenderState &scene);
 
     int             get_shader(bool useMultiview =false, int pass =0) const { return render_pass_list_[pass]->get_shader(useMultiview); }
     const std::string&     getHashCode();

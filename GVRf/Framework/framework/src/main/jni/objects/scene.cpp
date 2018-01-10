@@ -22,7 +22,6 @@
 
 #include "engine/exporter/exporter.h"
 #include "gl/gl_material.h"
-#include "objects/components/shadow_map.h"
 
 namespace gvr {
 
@@ -34,7 +33,7 @@ Scene::Scene() :
         javaObj_(0),
         main_camera_rig_(),
         frustum_flag_(false),
-        dirtyFlag_(0),
+        needsBindShaders_(0),
         occlusion_flag_(false),
         pick_visible_(true)
 
@@ -155,8 +154,10 @@ void Scene::exportToFile(std::string filepath) {
 
 bool Scene::addLight(Light* light) {
     auto it = std::find(lightList.begin(), lightList.end(), light);
-    if (it != lightList.end())
+    if (it != lightList.end()) {
         return false;
+    }
+
     int index = std::distance(lightList.begin(), it);
     std::ostringstream os;
     os << "light" << index;
@@ -167,6 +168,8 @@ bool Scene::addLight(Light* light) {
     }
     lightList.push_back(light);
     light->setLightID(os.str());
+
+    needsBindShaders_ = true;
     LOGD("SHADER: light %s added to scene", light->getLightID().c_str());
     return true;
 }
@@ -182,6 +185,29 @@ bool Scene::removeLight(Light* light) {
 
 void Scene::clearLights() {
     lightList.clear();
+}
+
+void Scene::bindShaders() {
+    if (!needsBindShaders_.load()) {
+        return;
+    }
+
+    JNIEnv *env = NULL;
+    int rc = get_java_env(&env);
+    jobject localJavaObject = getJavaObj(*env);
+    assert( nullptr != env && 0 <= rc);
+
+    static jclass sceneClass = env->GetObjectClass(localJavaObject);
+    static jmethodID bindShadersMethod = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
+
+    assert(nullptr != bindShadersMethod && nullptr != localJavaObject);
+
+    env->CallVoidMethod(localJavaObject, bindShadersMethod, localJavaObject);
+    needsBindShaders_ = false;
+
+    if (rc > 0) {
+        getJavaVM()->DetachCurrentThread();
+    }
 }
 
 }

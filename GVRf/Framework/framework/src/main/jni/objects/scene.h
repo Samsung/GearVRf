@@ -21,6 +21,7 @@
 #ifndef SCENE_H_
 #define SCENE_H_
 
+#include <atomic>
 #include <memory>
 #include <vector>
 #include <mutex>
@@ -200,7 +201,8 @@ private:
     jobject javaObj_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;
-    int dirtyFlag_;
+    std::atomic<bool> needsBindShaders_;
+
     bool frustum_flag_;
     bool occlusion_flag_;
     bool pick_visible_;

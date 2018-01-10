@@ -5,8 +5,7 @@
 #include "objects/components/render_target.h"
 
 #include "util/gvr_jni.h"
-#include "util/gvr_log.h"
-#include "glm/gtc/type_ptr.hpp"
+#include "objects/scene.h"
 
 namespace gvr {
     extern "C" {
@@ -52,6 +51,7 @@ Java_org_gearvrf_NativeRenderTarget_render(JNIEnv *env, jobject obj, jlong rende
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     // Do not remote this: need it for screenshot capturer, center camera rendering
     target->setCamera(reinterpret_cast<Camera*>(camera));
+    scene->bindShaders();
     gRenderer->getInstance()->renderRenderTarget(scene, target, reinterpret_cast<ShaderManager*>(shader_manager),
                                                  reinterpret_cast<RenderTexture*>(posteffectrenderTextureA), reinterpret_cast<RenderTexture*>(posteffectRenderTextureB));
 }

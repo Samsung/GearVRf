@@ -237,7 +237,7 @@ const std::string& RenderData::getHashCode()
  * @param scene     Scene this RenderData is rendered to
  * @return true if renderable, else false
  */
-int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
+int RenderData::isRenderable(Renderer* renderer, const RenderState& rstate)
 {
     Mesh* m = mesh();
     bool dirty = isDirty();
@@ -284,12 +284,14 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
             RenderPass *rpass = pass(p);
             if (rpass->get_shader(rstate.is_multiview) <= 0)
             {
-                LOGE("RenderData::isValid shader could not be created");
+                LOGE("RenderData::isRenderable shader could not be created");
                 return -1;
             }
         }
+
+        clearDirty();
     }
-    return dirty ? 0 : 1;
+    return 1;
 }
 
 bool RenderData::updateGPU(Renderer* renderer, Shader* shader)

@@ -195,7 +195,7 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
 
 void Renderer::addRenderData(RenderData *render_data, RenderState& rstate, std::vector<RenderData*>& renderList)
 {
-    if (render_data && (render_data->isValid(this, rstate) >= 0))
+    if (render_data && (render_data->isRenderable(this, rstate) > 0))
     {
         renderList.push_back(render_data);
     }
@@ -387,7 +387,7 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
     int nativeShader = rpass->get_shader(rstate.is_multiview);
     Shader* shader = rstate.shader_manager->getShader(nativeShader);
 
-    if(post_effect->isValid(this, rstate) < 0)
+    if(post_effect->isRenderable(this, rstate) < 0)
     {
         LOGE("Renderer::renderPostEffectData is dirty");
         return false;             // no shader available
