@@ -71,6 +71,7 @@ private:
     gvr::Mat4f head_view_;
     float* mBuffer;
     jmethodID onDrawEyeMethodId_ = nullptr;
+    jmethodID onViewChangeMethodId_ = nullptr;
     jobject rendererObject_ = nullptr;
 
     gvr::CameraRig *cameraRig_;

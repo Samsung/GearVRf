@@ -72,6 +72,11 @@ class DaydreamRenderer implements GLSurfaceView.Renderer {
         }
     }
 
+    public void onViewChange()
+    {
+        mViewManager.getEventManager().sendEvent(mViewManager, ICameraEvents.class, "onViewChange", this.cameraRig);
+    }
+
     public void setCameraRig(GVRCameraRig cameraRig) {
         this.cameraRig = cameraRig;
         nativeSetCameraRig(nativeDaydreamRenderer, cameraRig.getNative());

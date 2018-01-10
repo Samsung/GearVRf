@@ -63,6 +63,7 @@ DaydreamRenderer::DaydreamRenderer(JNIEnv &env, jclass clazz,
     jclass rendererClass = env.GetObjectClass(clazz);
     rendererObject_ = env.NewGlobalRef(clazz);
     onDrawEyeMethodId_ = env.GetMethodID(rendererClass, "onDrawEye", "(I)V");
+    onViewChangeMethodId_ = env.GetMethodID(rendererClass, "onViewChange", "()V");
     env.DeleteLocalRef(rendererClass);
 }
 
@@ -129,6 +130,7 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
 
     cameraRig_->getHeadTransform()->setModelMatrix(MatrixToGLMMatrix(head_view_));
 
+    env.CallVoidMethod(rendererObject_, onViewChangeMethodId_);
     // Render the eye images.
     for (int eye = 0; eye < 2; eye++) {
         frame.BindBuffer(eye);

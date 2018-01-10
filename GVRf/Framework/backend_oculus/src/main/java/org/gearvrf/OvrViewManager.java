@@ -372,6 +372,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
             cameraRig.setRotationSensorData(timeStamp, rotationW, rotationX, rotationY, rotationZ, gyroX, gyroY, gyroZ);
             updateSensoredScene();
         }
+        getEventManager().sendEvent(this, ICameraEvents.class, "onViewChange", cameraRig);
     }
 
     private native void drawEyes(long ptr);
