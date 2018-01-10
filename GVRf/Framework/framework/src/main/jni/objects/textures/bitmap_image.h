@@ -66,6 +66,7 @@ namespace gvr {
         jobject mBitmap;
         bool mIsBuffer;
         bool mHasTransparency;
+        jbyte* mPixels;
     };
 
 }
