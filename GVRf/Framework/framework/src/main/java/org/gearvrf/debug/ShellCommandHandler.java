@@ -43,11 +43,6 @@ public class ShellCommandHandler implements ShellDependent {
     }
 
     @Command
-    public String lua() {
-        return enterLanguage(GVRScriptManager.LANG_LUA);
-    }
-
-    @Command
     public String js() {
         return enterLanguage(GVRScriptManager.LANG_JAVASCRIPT);
     }

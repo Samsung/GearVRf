@@ -92,7 +92,9 @@ public class X3Dobject {
     // Default is true to use Universal lights shader.
     public final static boolean UNIVERSAL_LIGHTS = true;
 
-    private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)";
+    //private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)";
+    //private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)\nimportPackage(org.gearvrf)\nimportPackage(org.gearvrf.gvrx3d360video)";
+    private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)\nimportPackage(org.gearvrf)";
 
     // Strings appended to GVRScene names when there are multiple
     // animations on the same <Transform> or GVRSceneObject
@@ -273,6 +275,10 @@ public class X3Dobject {
             this.gvrContext = assetRequest.getContext();
             this.activityContext = gvrContext.getContext();
             this.root = root;
+
+            // Inform GVRScriptMgr that the JavaScript code will
+            // be cming from X3D scripts, so use v8 engine at this time.
+            gvrContext.getScriptManager().setJavaScriptFromX3D();
 
             // Camera rig setup code based on GVRScene::init()
             GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
@@ -3400,16 +3406,10 @@ public class X3Dobject {
                 ;
             } else if (qName.equalsIgnoreCase("Script")) {
                 javaScriptCode = JAVASCRIPT_IMPORT_PACKAGE + '\n' + javaScriptCode  + '\n';
+                GVRJavascriptV8File gvrJavascriptV8File = new GVRJavascriptV8File(gvrContext);
+                javaScriptCode = gvrJavascriptV8File.buildImportStatement(javaScriptCode);
                 currentScriptObject.setJavaScriptCode(javaScriptCode);
-                if ( animationInteractivityManager.V8JavaScriptEngine) {
-                    GVRJavascriptV8File gvrJavascriptV8File = new GVRJavascriptV8File(gvrContext, javaScriptCode);
-                    currentScriptObject.setGVRJavascriptV8File( gvrJavascriptV8File );
-                }
-                else {
-                    // using Mozila Rhino js engine
-                    GVRJavascriptScriptFile gvrJavascriptScriptFile = new GVRJavascriptScriptFile(gvrContext, javaScriptCode);
-                    currentScriptObject.setGVRJavascriptScriptFile(gvrJavascriptScriptFile);
-                }
+                currentScriptObject.setGVRJavascriptV8File( gvrJavascriptV8File );
                 scriptObjects.add(currentScriptObject);
 
                 parseJavaScript = false;
