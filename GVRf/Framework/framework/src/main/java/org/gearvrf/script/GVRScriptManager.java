@@ -18,16 +18,14 @@ package org.gearvrf.script;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRContextProxy;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IScriptEvents;
-import org.gearvrf.script.javascript.RhinoScriptEngineFactory;
-
 import org.gearvrf.script.javascript.GVRJavascriptV8File;
+import org.gearvrf.script.javascript.RhinoScriptEngineFactory;
 import org.gearvrf.utility.Log;
 
 import java.io.IOException;
@@ -112,7 +110,7 @@ public class GVRScriptManager {
         Thread.currentThread().setContextClassLoader(
                 gvrContext.getActivity().getClassLoader());
 
-        mGlobalVariables.put(VAR_NAME_GVRF, new GVRContextProxy(mGvrContext));
+        mGlobalVariables.put(VAR_NAME_GVRF, mGvrContext);
         initializeEngines();
     }
 
