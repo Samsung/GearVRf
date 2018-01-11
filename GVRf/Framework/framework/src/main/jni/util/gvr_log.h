@@ -29,8 +29,16 @@
 #define  LOG_TAG    "gvrf"
 
 #define VERBOSE_LOGGING_GLOBAL 1
+//#define NO_LOGGING 1
 
+#ifdef NO_LOGGING
+#define  LOGD(...)
+#define  LOGI(...)
+#define  LOGV(...)
+#define  LOGW(...)
+#define  LOGE(...)
 
+#else
 #if VERBOSE_LOGGING_GLOBAL
     #ifdef VERBOSE_LOGGING
         #if VERBOSE_LOGGING
@@ -45,10 +53,12 @@
     #define  LOGV(...)
 #endif
 
+
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+#endif
 
 //#define STOP_ON_ERROR
 //#define GL( func )      func; checkGLError(#func);
@@ -98,18 +108,18 @@ static void checkGLError(const char* name)
 
 static const char* frameBufferStatusString(GLenum status) {
     switch (status) {
-    case GL_FRAMEBUFFER_UNDEFINED:
-        return "GL_FRAMEBUFFER_UNDEFINED";
-    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-        return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
-    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-        return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
-    case GL_FRAMEBUFFER_UNSUPPORTED:
-        return "GL_FRAMEBUFFER_UNSUPPORTED";
-    case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-        return "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
-    default:
-        return "unknown";
+        case GL_FRAMEBUFFER_UNDEFINED:
+            return "GL_FRAMEBUFFER_UNDEFINED";
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            return "GL_FRAMEBUFFER_UNSUPPORTED";
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            return "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
+        default:
+            return "unknown";
     }
 }
 

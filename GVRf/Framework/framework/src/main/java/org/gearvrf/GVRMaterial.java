@@ -135,7 +135,7 @@ public class GVRMaterial extends  GVRShaderData
     };
 
     /**
-     * A new holder for a shader's uniforms.
+     * Create a new holder for a shader's uniforms.
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
@@ -162,6 +162,21 @@ public class GVRMaterial extends  GVRShaderData
      */
     public GVRMaterial(GVRContext gvrContext) {
         this(gvrContext, GVRShaderType.Texture.ID);
+    }
+
+    /**
+     * Create a new holder for a shader's uniforms from an existing material.
+     *
+     * @param src   GVRMaterial to copy from
+     * @param shaderId  shader ID
+      */
+    public GVRMaterial(GVRMaterial src, GVRShaderId shaderId)
+    {
+        super(src, shaderId);
+        if (hasTexture(mMainTextureName))
+        {
+            mMainTextureName = src.mMainTextureName;
+        }
     }
 
     /**

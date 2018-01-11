@@ -168,6 +168,7 @@ public:
     }
 
     JavaVM* getJavaVM() const { return javaVM_; }
+    
 
     /**
      * @return new local reference to the java object or nullptr if the object has been collected
@@ -198,6 +199,7 @@ private:
     static Scene* main_scene_;
     JavaVM* javaVM_;
     jobject javaObj_;
+    jmethodID bindShadersMethod_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;

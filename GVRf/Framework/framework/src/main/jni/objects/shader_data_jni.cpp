@@ -110,7 +110,14 @@ Java_org_gearvrf_NativeShaderData_hasTexture(JNIEnv*, jobject, jlong, jstring);
 
 JNIEXPORT jstring JNICALL
 Java_org_gearvrf_NativeShaderData_makeShaderLayout(JNIEnv*, jobject, jlong shader_data);
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeShaderData_copyUniforms(JNIEnv* env,
+                                             jobject obj, jlong jdest, jlong jsrc);
+
 };
+
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeShaderData_useGpuBuffer(JNIEnv* env,
                                                jobject obj, jlong jshader_data, jboolean  flag){
@@ -344,6 +351,18 @@ Java_org_gearvrf_NativeShaderData_makeShaderLayout(JNIEnv* env, jobject, jlong j
     const std::string& layout = shader_data->makeShaderLayout();
     return env->NewStringUTF(layout.c_str());
 }
+
+JNIEXPORT jboolean JNICALL
+Java_org_gearvrf_NativeShaderData_copyUniforms(JNIEnv* env,
+                                               jobject obj, jlong jdest, jlong jsrc)
+{
+    const ShaderData* src = reinterpret_cast<ShaderData*>(jsrc);
+    ShaderData* dest = reinterpret_cast<ShaderData*>(jdest);
+
+    return dest->copyUniforms(src);
+}
+
+
 
 }
 

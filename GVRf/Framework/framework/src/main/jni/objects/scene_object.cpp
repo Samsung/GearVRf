@@ -71,37 +71,32 @@ bool SceneObject::attachComponent(Component* component) {
     return true;
 }
 
-bool SceneObject::detachComponent(Component* component) {
-    auto it = std::find(components_.begin(), components_.end(), component);
-    if (it == components_.end())
-        return false;
-    SceneObject* par = parent();
-    if (par)
-    {
-        Scene* scene = Scene::main_scene();
-        SceneObject* root = scene->getRoot();
-        if (scene != NULL)
-        {
-            while (par)
-            {
-                if (par == root)
-                {
-                    component->onRemovedFromScene(scene);
-                    break;
-                }
-                par = par->parent();
-            }
-        }
-    }
-    (*it)->set_owner_object(NULL);
-    components_.erase(it);
-    return true;
-}
 
-Component* SceneObject::detachComponent(long long type) {
-    for (auto it = components_.begin(); it != components_.end(); ++it) {
-        if ((*it)->getType() == type) {
+Component* SceneObject::detachComponent(long long type)
+{
+    for (auto it = components_.begin(); it != components_.end(); ++it)
+    {
+        if ((*it)->getType() == type)
+        {
             Component* component = *it;
+            SceneObject* par = parent();
+            if (par)
+            {
+                Scene* scene = Scene::main_scene();
+                SceneObject* root = scene->getRoot();
+                if (scene != NULL)
+                {
+                    while (par)
+                    {
+                        if (par == root)
+                        {
+                            component->onRemovedFromScene(scene);
+                            break;
+                        }
+                        par = par->parent();
+                    }
+                }
+            }
             component->set_owner_object(NULL);
             components_.erase(it);
             return component;

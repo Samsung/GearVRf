@@ -74,6 +74,7 @@ public:
     bool    isDirty(DIRTY_BITS bits);
     bool    hasTexture(const char* key) const;
     bool    hasUniform(const char* key) const;
+    bool    copyUniforms(const ShaderData* src);
     virtual int updateGPU(Renderer* rendere, RenderData* rdata);
     std::string makeShaderLayout();
     u_int32_t getNumTextures() const { return mTextures.size(); }

@@ -230,7 +230,7 @@ namespace gvr
             if(rstate.is_multiview)
                 rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
 
-            rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+            rstate.uniforms.u_right = ((camera->render_mask() & RenderData::RenderMaskBit::Right) != 0) ? 1 : 0;
             rstate.material_override = NULL;
             GL(glEnable (GL_BLEND));
             GL(glBlendEquation (GL_FUNC_ADD));
@@ -491,31 +491,34 @@ namespace gvr
                 pass->set_material(bbox_material);
                 bounding_box_render_data->set_mesh(bounding_box_mesh);
                 bounding_box_render_data->add_pass(pass);
+                if (bounding_box_render_data->isValid(this, rstate) >= 0)
+                {
+                    GLuint* query = scene_object->get_occlusion_array();
 
-                GLuint *query = scene_object->get_occlusion_array();
+                    glDepthFunc(GL_LEQUAL);
+                    glEnable(GL_DEPTH_TEST);
+                    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-                glDepthFunc(GL_LEQUAL);
-                glEnable(GL_DEPTH_TEST);
-                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+                    rstate.uniforms.u_model = scene_object->transform()->getModelMatrix();
+                    rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
+                    rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
+                    rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
 
-                rstate.uniforms.u_model = scene_object->transform()->getModelMatrix();
-                rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
-                rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
-                rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;
+                    //Issue the query only with a bounding box
+                    glBeginQuery(GL_ANY_SAMPLES_PASSED, query[0]);
+                    renderWithShader(rstate, bboxShader, bounding_box_render_data,
+                                     bounding_box_render_data->material(0), 0);
+                    glEndQuery(GL_ANY_SAMPLES_PASSED);
+                    scene_object->set_query_issued(true);
 
-                //Issue the query only with a bounding box
-                glBeginQuery(GL_ANY_SAMPLES_PASSED, query[0]);
-                renderWithShader(rstate, bboxShader, bounding_box_render_data, bounding_box_render_data->material(0), 0);
-                glEndQuery(GL_ANY_SAMPLES_PASSED);
-                scene_object->set_query_issued(true);
+                    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-                //Delete the generated bounding box mesh
-                delete bounding_box_mesh;
-                delete bbox_material;
-                delete pass;
-                delete bounding_box_render_data;
+                    //Delete the generated bounding box mesh
+                    delete bounding_box_mesh;
+                    delete bbox_material;
+                    delete pass;
+                    delete bounding_box_render_data;
+                }
             }
 
             GLuint query_result = GL_FALSE;
@@ -583,6 +586,7 @@ namespace gvr
             shader = rstate.shader_manager->getShader(shader_id);
             renderWithShader(rstate, shader, render_data, curr_material, curr_pass);
         }
+        render_data->clearDirty();
     }
 
     void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_data,

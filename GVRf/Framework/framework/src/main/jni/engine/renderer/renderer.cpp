@@ -160,7 +160,13 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     render_data_vector->clear();
     scene_objects.clear();
     RenderState rstate;
+    int lightCount = scene->getLightList().size();
 
+    if (lightCount != numLights)
+    {
+        scene->bindShaders();
+        numLights = lightCount;
+    }
     rstate.is_multiview = is_multiview;
     rstate.material_override = NULL;
     rstate.shader_manager = shader_manager;
@@ -332,8 +338,9 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
 {
     Transform* model = renderData->owner_object() ? renderData->owner_object()->transform() : nullptr;
     rstate.uniforms.u_model = model ? model->getModelMatrix() : glm::mat4();
-    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+//    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
     transform_ubo->setMat4("u_model", rstate.uniforms.u_model);
+    transform_ubo->setFloat("u_right", rstate.uniforms.u_right);
 
     if (rstate.is_multiview)
     {
@@ -350,7 +357,6 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
             rstate.uniforms.u_view_inv_[0] = glm::inverse(rstate.uniforms.u_view_[0]);
             rstate.uniforms.u_view_inv_[1] = glm::inverse(rstate.uniforms.u_view_[1]);
         }
-
         transform_ubo->setMat4("u_view_", rstate.uniforms.u_view_[0]);
         transform_ubo->setMat4("u_mvp_", rstate.uniforms.u_mvp_[0]);
         transform_ubo->setMat4("u_mv_", rstate.uniforms.u_mv_[0]);
@@ -385,26 +391,28 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
 
     material->setTexture("u_texture", input_texture);
     int nativeShader = rpass->get_shader(rstate.is_multiview);
-    Shader* shader = rstate.shader_manager->getShader(nativeShader);
+    Shader* shader;
 
     if(post_effect->isValid(this, rstate) < 0)
     {
         LOGE("Renderer::renderPostEffectData is dirty");
         return false;             // no shader available
     }
-    if(shader == NULL){
+    shader = rstate.shader_manager->getShader(nativeShader);
+    if (shader == NULL)
+    {
         //@todo implementation details leaked; unify common JNI reqs of Scene and RenderData
         //@todo duped in render_data.cpp
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
         post_effect->bindShader(env, rstate.scene->getJavaObj(*env), rstate.is_multiview);
-        if (rc > 0) {
+        if (rc > 0)
+        {
             rstate.scene->detach_java_env();
         }
         nativeShader = rpass->get_shader(rstate.is_multiview);
         shader = rstate.shader_manager->getShader(nativeShader);
     }
-
     renderWithShader(rstate, shader, post_effect, material, pass);
     post_effect->clearDirty();
     return true;
