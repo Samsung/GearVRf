@@ -314,7 +314,12 @@ public class GVRShader
         GVRMaterial mtl = rdata.getMaterial();
         synchronized (shaderManager)
         {
-            int nativeShader = addShader(shaderManager, signature, mtl);
+            int nativeShader = shaderManager.getShader(signature);
+
+            if (nativeShader == 0)
+            {
+                nativeShader = addShader(shaderManager, signature, mtl);
+            }
             if (nativeShader > 0)
             {
                 rdata.setShader(nativeShader, isMultiview);
@@ -343,36 +348,10 @@ public class GVRShader
 
         synchronized (shaderManager)
         {
-            int nativeShader = addShader(shaderManager, signature, material);
-            return nativeShader;
-        }
-    }
-
-    /**
-     * Select the specific vertex and fragment shader to use with a shader
-     * template that does not generate variants.
-     *
-     * This is the only way to bind a post-effect shader (because it
-     * does not have a material).
-     *
-     * @param context
-     *            GVRContext
-     * @param shaderManager
-     *          shader manager to use
-     * @return ID of vertex/fragment shader set or 0 if shader template has variants.
-     *
-     * @see GVRContext#getMaterialShaderManager()
-     */
-    public int bindShader(GVRContext context, GVRShaderManager shaderManager)
-    {
-        String signature = getClass().getSimpleName();
-        int nativeShader = shaderManager.getShader(signature);
-
-        synchronized (shaderManager)
-        {
+            int nativeShader = shaderManager.getShader(signature);
             if (nativeShader == 0)
             {
-                nativeShader = addShader(shaderManager, signature, null);
+                nativeShader = addShader(shaderManager, signature, material);
             }
             return nativeShader;
         }

@@ -16,15 +16,13 @@
 package org.gearvrf;
 
 import android.content.res.AssetManager;
-import android.content.res.Configuration;
-import android.view.KeyEvent;
 
 import org.gearvrf.utility.VrAppSettings;
 
 /**
  * {@inheritDoc}
  */
-final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
+final class OvrActivityDelegate extends GVRActivity.ActivityDelegateStubs {
     private GVRActivity mActivity;
     private OvrViewManager mActiveViewManager;
     private OvrActivityNative mActivityNative;
@@ -90,7 +88,10 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    public void onDestroy() {
+        if (null != mActivityHandler) {
+            mActivityHandler.onDestroy();
+        }
     }
 
     @Override
@@ -108,27 +109,8 @@ final class OvrActivityDelegate implements GVRActivity.GVRActivityDelegate {
     }
 
     @Override
-    public void onInitAppSettings(VrAppSettings appSettings) {
-    }
-
-    @Override
     public VrAppSettings makeVrAppSettings() {
         return new OvrVrAppSettings();
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        return false;
     }
 
     private OvrXMLParser mXmlParser;

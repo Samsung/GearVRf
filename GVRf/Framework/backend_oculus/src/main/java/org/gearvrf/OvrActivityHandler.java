@@ -1,15 +1,15 @@
 package org.gearvrf;
 
 interface OvrActivityHandler {
-    public void onPause();
+    void onPause();
 
-    public void onResume();
+    void onResume();
 
-    public void onSetScript();
+    void onDestroy();
 
-    public boolean onBack();
+    void onSetScript();
 
-    public boolean onBackLongPress();
+    boolean onBack();
 
     void setViewManager(GVRViewManager viewManager);
 }

@@ -94,9 +94,8 @@ namespace gvr {
         return activity->initializeVrApi();
     }
     
-    JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeUninitializeVrApi(JNIEnv * jni, jclass clazz, jlong appPtr) {
-        GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-        activity->uninitializeVrApi();
+    JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeUninitializeVrApi(JNIEnv *, jclass) {
+        GVRActivity::uninitializeVrApi();
     }
     
     JNIEXPORT jboolean JNICALL Java_org_gearvrf_OvrConfigurationManager_nativeIsHmtConnected(JNIEnv* jni, jclass clazz, jlong appPtr) {

@@ -217,6 +217,44 @@ bool ShaderData::hasUniform(const char* key) const
     return (uniforms().getByteSize(key) > 0);
 }
 
+bool ShaderData::copyUniforms(const ShaderData* src)
+{
+    const UniformBlock* srcBlock = &src->uniforms();
+    UniformBlock*dstBlock = &uniforms();
+    bool rc = true;
+
+    srcBlock->forEachEntry([dstBlock, srcBlock, rc, this](const DataDescriptor::DataEntry& entry) mutable
+    {
+        if (entry.NotUsed || !hasUniform(entry.Name))
+        {
+            return;
+        }
+        if (entry.IsInt)
+        {
+            int n = entry.Size / sizeof(int);
+            int v[n];
+            if (srcBlock->getIntVec(entry.Name, v, n))
+            {
+                dstBlock->setIntVec(entry.Name, v, n);
+                return;
+            }
+        }
+        else
+        {
+            int n = entry.Size / sizeof(int);
+            float v[n];
+            if (srcBlock->getFloatVec(entry.Name, v, n))
+            {
+                dstBlock->setFloatVec(entry.Name, v, n);
+                return;
+            }
+        }
+        LOGE("ERROR: ShaderData::copyUniforms failed to copy uniform %s", entry.Name);
+        rc = false;
+    });
+    return rc;
+}
+
 /**
  * Updates the values of the uniforms and textures
  * by copying the relevant data from the CPU to the GPU.
@@ -236,10 +274,6 @@ int ShaderData::updateGPU(Renderer* renderer, RenderData* rdata)
         if (tex != NULL)
         {
             bool ready = tex->isReady();
-            if (Shader::LOG_SHADER)
-            {
-                const std::string& name = mTextureNames[texIndex];
-            }
             if (!ready)
             {
                 return -1;

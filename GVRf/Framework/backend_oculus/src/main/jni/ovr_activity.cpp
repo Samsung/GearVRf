@@ -59,28 +59,25 @@ namespace gvr {
         initializeOculusJava(*envMainThread_, oculusJavaMainThread_);
 
         const ovrInitParms initParms = vrapi_DefaultInitParms(&oculusJavaMainThread_);
-        mVrapiInitResult = vrapi_Initialize(&initParms);
-        if (VRAPI_INITIALIZE_UNKNOWN_ERROR == mVrapiInitResult) {
+        ovrInitializeStatus vrapiInitResult = vrapi_Initialize(&initParms);
+        if (VRAPI_INITIALIZE_UNKNOWN_ERROR == vrapiInitResult) {
             LOGE("Oculus is probably not present on this device");
-            return mVrapiInitResult;
+            return vrapiInitResult;
         }
 
-        if (VRAPI_INITIALIZE_PERMISSIONS_ERROR == mVrapiInitResult) {
-            char const * msg =
-                    mVrapiInitResult == VRAPI_INITIALIZE_PERMISSIONS_ERROR ?
-                    "Thread priority security exception. Make sure the APK is signed." :
-                    "VrApi initialization error.";
+        if (VRAPI_INITIALIZE_PERMISSIONS_ERROR == vrapiInitResult) {
+            char const * msg = "Thread priority security exception. Make sure the APK is signed.";
             vrapi_ShowFatalError(&oculusJavaMainThread_, nullptr, msg, __FILE__, __LINE__);
         }
 
-        return mVrapiInitResult;
+        return vrapiInitResult;
     }
 
+    /**
+     * Do not call unless vrapi has been successfully initialized prior to that.
+     */
     void GVRActivity::uninitializeVrApi() {
-        if (VRAPI_INITIALIZE_UNKNOWN_ERROR != mVrapiInitResult) {
-            vrapi_Shutdown();
-        }
-        mVrapiInitResult = VRAPI_INITIALIZE_UNKNOWN_ERROR;
+        vrapi_Shutdown();
     }
 
     void GVRActivity::showConfirmQuit() {
