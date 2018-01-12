@@ -45,14 +45,15 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Keep Oculus-specifics here
  */
-class OvrVrapiActivityHandler implements OvrActivityHandler {
+final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private final GVRActivity mActivity;
     private long mPtr;
     private GLSurfaceView mSurfaceView;
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
-    boolean mVrApiInitialized;
+    // warning: writable static state; used to determine when vrapi can be safely uninitialized
+    private static int sVrapiActivitiesCount;
     private OvrViewManager mViewManager;
     private int mCurrentSurfaceWidth, mCurrentSurfaceHeight;
 
@@ -73,20 +74,22 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
         mActivity = activity;
         mPtr = activityNative.getNative();
 
-        if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
-            throw new VrapiNotAvailableException();
+        if (0 == sVrapiActivitiesCount) {
+            if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
+                throw new VrapiNotAvailableException();
+            }
         }
-        mVrApiInitialized = true;
+
+        ++sVrapiActivitiesCount;
     }
 
     @Override
     public void onPause() {
         stopChoreographerThread();
 
-        final CountDownLatch cdl;
         if (null != mSurfaceView) {
+            final CountDownLatch cdl = new CountDownLatch(1);
             mSurfaceView.onPause();
-            cdl = new CountDownLatch(1);
             mSurfaceView.queueEvent(new Runnable() {
                 @Override
                 public void run() {
@@ -96,30 +99,16 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
                     cdl.countDown();
                 }
             });
-        } else {
-            cdl = null;
-        }
-
-        if (mVrApiInitialized) {
-            if (null != cdl) {
-                try {
-                    cdl.await();
-                } catch (final InterruptedException ignored) {
-                }
+            try {
+                cdl.await();
+            } catch (final InterruptedException e) {
             }
-            nativeUninitializeVrApi(mPtr);
-            mVrApiInitialized = false;
         }
         mCurrentSurfaceWidth = mCurrentSurfaceHeight = 0;
     }
 
     @Override
     public void onResume() {
-        if (!mVrApiInitialized) {
-            nativeInitializeVrApi(mPtr);
-            mVrApiInitialized = true;
-        }
-
         if (null != mSurfaceView) {
             mSurfaceView.onResume();
         }
@@ -139,8 +128,11 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
     }
 
     @Override
-    public boolean onBackLongPress() {
-        return false;
+    public void onDestroy() {
+        --sVrapiActivitiesCount;
+        if (0 == sVrapiActivitiesCount) {
+            nativeUninitializeVrApi();
+        }
     }
 
     @Override
@@ -460,13 +452,13 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private static native void nativeOnSurfaceChanged(long ptr);
 
-        private static native void nativeLeaveVrMode(long ptr);
+    private static native void nativeLeaveVrMode(long ptr);
 
     private static native void nativeShowConfirmQuit(long appPtr);
 
     private static native int nativeInitializeVrApi(long ptr);
 
-    private static native int nativeUninitializeVrApi(long ptr);
+    static native int nativeUninitializeVrApi();
 
     private static final int VRAPI_INITIALIZE_UNKNOWN_ERROR = -1;
 
