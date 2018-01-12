@@ -201,12 +201,18 @@ final class GVRMouseDeviceManager {
             if (action == MotionEvent.ACTION_DOWN)
             {
                 setKeyEvent(BUTTON_1_DOWN);
-                setActive(true);
+                if ((mTouchButtons & e.getButtonState()) != 0)
+                {
+                    setActive(true);
+                }
             }
             else if (action == MotionEvent.ACTION_UP)
             {
                 setKeyEvent(BUTTON_1_UP);
-                setActive(false);
+                if ((mTouchButtons & e.getButtonState()) != 0)
+                {
+                    setActive(false);
+                }
             }
             setMotionEvent(e);
             if (mCursorControl == CursorControl.CURSOR_DEPTH_FROM_CONTROLLER)

@@ -91,6 +91,7 @@ public abstract class GVRCursorController implements IEventReceiver
     protected GVRSceneObject mDragMe = null;
     protected GVRContext context;
     protected volatile boolean mConnected = false;
+    protected int mTouchButtons = MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_PRIMARY;
     protected Vector3f pickDir = new Vector3f(0, 0, -1);
 
     /**
@@ -156,6 +157,24 @@ public abstract class GVRCursorController implements IEventReceiver
         mDragRoot.setName("CursorController_DragRoot");
         mDragRoot.addChildObject(mCursorScale);
     }
+
+    /**
+     * By default both primary and secondary buttons will cause a touch event.
+     * This function allows you to set which buttons are "active" and
+     * will produce ITouchEvents.
+     *
+     * @param button Android button states for touch (e.g. MotionEvent.BUTTON_PRIMARY)
+     *                    * @see ITouchEvents
+     * @see #getTouchButtons()
+     */
+    public void setTouchButtons(int button) { mTouchButtons = button; }
+
+    /*
+     * Gets the button states which will cause touch events.
+     * @see ITouchEvents
+     * @see #setTouchButtons(int)
+     */
+    public int getTouchButtons() { return mTouchButtons; }
 
     /**
      * Dispatch a key event for this controller.
@@ -245,7 +264,6 @@ public abstract class GVRCursorController implements IEventReceiver
      * @return true if events are sent to the activity, else false
      */
     public boolean sendingEventsToActivity() { return mSendEventsToActivity; }
-
 
     /**
      * Set a {@link GVRSceneObject} to be controlled by the

@@ -135,6 +135,7 @@ public final class GearCursorController extends GVRCursorController
     private float touchDownX = 0.0f;
     private static final float DEPTH_SENSITIVITY = 0.01f;
 
+
     public GearCursorController(GVRContext context)
     {
         super(context, GVRControllerType.CONTROLLER);
@@ -637,7 +638,10 @@ public final class GearCursorController extends GVRCursorController
                     MotionEvent.ACTION_UP, 1, pointerPropertiesArray, pointerCoordsArray,
                     0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
-            setActive(false);
+            if ((mTouchButtons & MotionEvent.BUTTON_PRIMARY) != 0)
+            {
+                setActive(false);
+            }
         }
         else if ((handled == KeyEvent.ACTION_DOWN) || (touched && !actionDown))
         {
@@ -650,7 +654,10 @@ public final class GearCursorController extends GVRCursorController
                                                          0, MotionEvent.BUTTON_PRIMARY, 1f, 1f,
                                                          0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
-            setActive(true);
+            if ((mTouchButtons & MotionEvent.BUTTON_PRIMARY) != 0)
+            {
+                setActive(true);
+            }
             prevEnterTime = time;
         }
         else if (actionDown && touched)
@@ -697,7 +704,10 @@ public final class GearCursorController extends GVRCursorController
         int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A, thread.prevButtonA, KeyEvent.KEYCODE_A);
         if (handled == KeyEvent.ACTION_UP)
         {
-            setActive(false);
+            if ((mTouchButtons & MotionEvent.BUTTON_SECONDARY) != 0)
+            {
+                setActive(false);
+            }
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(prevATime, time,
@@ -709,7 +719,6 @@ public final class GearCursorController extends GVRCursorController
         }
         else if (handled == KeyEvent.ACTION_DOWN)
         {
-            setActive(true);
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(time, time,
@@ -717,6 +726,10 @@ public final class GearCursorController extends GVRCursorController
                     0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             prevATime = time;
+            if ((mTouchButtons & MotionEvent.BUTTON_SECONDARY) != 0)
+            {
+                setActive(true);
+            }
             Log.d("EVENT:", "handleAButton action=%d button=%d x=%f y=%f",
                   motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(), motionEvent.getY());
         }

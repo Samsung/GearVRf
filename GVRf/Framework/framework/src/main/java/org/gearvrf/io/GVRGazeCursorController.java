@@ -248,14 +248,20 @@ final public class GVRGazeCursorController extends GVRCursorController
                 actionDownX = eventX;
                 actionDownY = eventY;
                 actionDownZ = mCursorDepth;
-                setActive(true);
+                if ((mTouchButtons & event.getButtonState()) != 0)
+                {
+                    setActive(true);
+                }
                 // report ACTION_DOWN as a button
                 setKeyEvent(BUTTON_GAZE_DOWN);
                 break;
 
                 case MotionEvent.ACTION_UP:
+                if ((mTouchButtons & event.getButtonState()) != 0)
+                {
+                    setActive(false);
+                }
                 setKeyEvent(BUTTON_GAZE_UP);
-                setActive(false);
                 break;
 
                 case MotionEvent.ACTION_MOVE:
