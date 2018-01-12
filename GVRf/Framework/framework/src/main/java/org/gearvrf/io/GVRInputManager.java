@@ -612,10 +612,9 @@ public class GVRInputManager implements IEventReceiver
      */
     public boolean dispatchMotionEvent(MotionEvent event) {
         GVRCursorController controller = getUniqueControllerId(event.getDeviceId());
-        if (controller != null) {
+        if ((controller != null) && controller.isEnabled()) {
             return controller.dispatchMotionEvent(event);
         }
-
         return false;
     }
 

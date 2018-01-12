@@ -44,6 +44,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -497,21 +498,15 @@ public final class GearCursorController extends GVRCursorController
 
             public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
             {
+                mKeyEvents.clear();
+                mMotionEvents.clear();
                 if (keyEvents.size() > 0)
                 {
-                    mKeyEvents = new ArrayList<KeyEvent>(keyEvents);
-                }
-                else
-                {
-                    mKeyEvents.clear();
+                    mKeyEvents.addAll(keyEvents);
                 }
                 if (motionEvents.size() > 0)
                 {
-                    mMotionEvents = new ArrayList<MotionEvent>(motionEvents);
-                }
-                else
-                {
-                    mMotionEvents.clear();
+                    mMotionEvents.addAll(motionEvents);
                 }
             }
 
@@ -575,22 +570,7 @@ public final class GearCursorController extends GVRCursorController
             if (mSendEventsToActivity && ((keyEvent.size() > 0) || (motionEvent.size() > 0)))
             {
                 mPropagateEvents.init(keyEvent, motionEvent);
-                if (Looper.getMainLooper().equals(Looper.myLooper()))
-                {
-                    mPropagateEvents.run();
-                }
-                else
-                {
-                    GVRActivity activity = getGVRContext().getActivity();
-                    for (KeyEvent e : keyEvent)
-                    {
-                        activity.dispatchKeyEvent(e);
-                    }
-                    for (MotionEvent e : motionEvent)
-                    {
-                        activity.dispatchTouchEvent(MotionEvent.obtain(e));
-                    }
-                }
+                getGVRContext().getActivity().runOnUiThread(mPropagateEvents);
             }
             GearCursorController.super.invalidate();
         }
