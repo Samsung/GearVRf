@@ -417,6 +417,57 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     public CursorControl getCursorControl() { return mCursorControl; }
 
+
+    private Runnable mStartDrag = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            synchronized (mCursorLock)
+            {
+                GVRTransform objTrans = mDragMe.getTransform();
+                Matrix4f cursorMtx = mDragRoot.getTransform().getModelMatrix4f();
+                Matrix4f objMatrix = objTrans.getModelMatrix4f();
+
+                mDragParent = mDragMe.getParent();
+                if (mDragParent != null)
+                {
+                    mDragParent.removeChildObject(mDragMe);
+                }
+                cursorMtx.invert();
+                objTrans.setModelMatrix(cursorMtx.mul(objMatrix));
+                mDragRoot.addChildObject(mDragMe);
+            }
+        }
+    };
+
+    private Runnable mStopDrag = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            synchronized (mCursorLock)
+            {
+                GVRTransform objTrans = mDragMe.getTransform();
+                Matrix4f cursorMatrix = mDragRoot.getTransform().getModelMatrix4f();
+                mDragRoot.removeChildObject(mDragMe);
+                Matrix4f objMatrix = objTrans.getModelMatrix4f();
+
+                objTrans.setModelMatrix(cursorMatrix.mul(objMatrix));
+                if (mDragParent != null)
+                {
+                    mDragParent.addChildObject(mDragMe);
+                }
+                else
+                {
+                    scene.addSceneObject(mDragMe);
+                }
+                mDragMe = null;
+                mDragParent = null;
+            }
+        }
+    };
+
     /**
      * Allows a single {@link GVRSceneObject} to be dragged by the controller.
      * <p>
@@ -439,22 +490,8 @@ public abstract class GVRCursorController implements IEventReceiver
         {
             return false;
         }
-        synchronized (mCursorLock)
-        {
-            GVRTransform objTrans = dragMe.getTransform();
-            Matrix4f cursorMtx = mDragRoot.getTransform().getModelMatrix4f();
-            Matrix4f objMatrix = objTrans.getModelMatrix4f();
-
-            mDragMe = dragMe;
-            mDragParent = dragMe.getParent();
-            if (mDragParent != null)
-            {
-                mDragParent.removeChildObject(dragMe);
-            }
-            cursorMtx.invert();
-            objTrans.setModelMatrix(cursorMtx.mul(objMatrix));
-            mDragRoot.addChildObject(dragMe);
-        }
+        mDragMe = dragMe;
+        getGVRContext().runOnGlThreadPostRender(0, mStartDrag);
         return true;
     }
 
@@ -476,28 +513,9 @@ public abstract class GVRCursorController implements IEventReceiver
         {
             return false;
         }
-        synchronized (mCursorLock)
-        {
-            GVRTransform objTrans = mDragMe.getTransform();
-            Matrix4f cursorMatrix = mDragRoot.getTransform().getModelMatrix4f();
-            mDragRoot.removeChildObject(mDragMe);
-            Matrix4f objMatrix = objTrans.getModelMatrix4f();
-
-            objTrans.setModelMatrix(cursorMatrix.mul(objMatrix));
-            if (mDragParent != null)
-            {
-                mDragParent.addChildObject(mDragMe);
-            }
-            else
-            {
-                scene.addSceneObject(mDragMe);
-            }
-            mDragMe = null;
-            mDragParent = null;
-        }
+        getGVRContext().runOnGlThreadPostRender(0, mStopDrag);
         return true;
     }
-
 
     /**
      * Get the all the key events processed by the {@link GVRCursorController}
