@@ -179,6 +179,10 @@ public abstract class GVRContext implements IEventReceiver {
         mHandlerThread = new HandlerThread("gvrf-main");
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
+
+        mV8HandlerThread = new HandlerThread("gvrf-v8");
+        mV8HandlerThread.start();
+        mV8Handler = new Handler(mV8HandlerThread.getLooper());
     }
 
     /**
@@ -188,6 +192,8 @@ public abstract class GVRContext implements IEventReceiver {
         mContext = null;
         mHandler = null;
         mHandlerThread = null;
+        mV8Handler = null;
+        mV8HandlerThread = null;
     }
 
     /**
@@ -307,6 +313,13 @@ public abstract class GVRContext implements IEventReceiver {
 
     public boolean isCurrentThreadGLThread() {
         return Thread.currentThread().getId() == mGLThreadID;
+    }
+
+    public boolean isCurrentThreadV8Thread() {
+        if (mV8HandlerThread != null) {
+            return Thread.currentThread().getId() == mV8HandlerThread.getId();
+        }
+        return false;
     }
 
     /**
@@ -700,6 +713,9 @@ public abstract class GVRContext implements IEventReceiver {
     private final HandlerThread mHandlerThread;
     private final Handler mHandler;
 
+    private final HandlerThread mV8HandlerThread;
+    private final Handler mV8Handler;
+
     /**
      * Execute on the so called framework thread. For now this is mostly for
      * internal use. To actually enable the use of this framework thread you
@@ -707,6 +723,13 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public void runOnTheFrameworkThread(final Runnable runnable) {
         mHandler.post(runnable);
+    }
+
+    /**
+     * Execute a runnable on the dedicated V8 thread
+     */
+    public void runOnV8Thread(final Runnable runnable) {
+        mV8Handler.post(runnable);
     }
 
     /**
@@ -829,6 +852,9 @@ public abstract class GVRContext implements IEventReceiver {
     void onDestroy() {
         if (null != mHandlerThread) {
             mHandlerThread.getLooper().quitSafely();
+        }
+        if (null != mV8HandlerThread) {
+            mV8HandlerThread.getLooper().quitSafely();
         }
 
         final String threadName = "Undertaker-" + Integer.toHexString(hashCode());
