@@ -51,15 +51,16 @@ bool VkTexture::isReady()
 void VkTexture::updateSampler()
 {
     int numlod = 1;
-    if (mImage)
+    Image* image = getImage();
+    if (image)
     {
-        numlod = mImage->getLevels();
+        numlod = image->getLevels();
     }
     createSampler(mTexParams, numlod);
 }
 VkSampler VkTexture::getVkSampler(){
     uint64_t index = mTexParams.getHashCode();
-    index = (index << 32) | mImage->getLevels();
+    index = (index << 32) | getImage()->getLevels();
     return getSampler(index);
 }
 void VkTexture::createSampler(TextureParameters& textureParameters, int maxLod) {
@@ -107,19 +108,20 @@ void VkTexture::createSampler(TextureParameters& textureParameters, int maxLod) 
 }
 const VkImageView& VkTexture::getVkImageView()
 {
-    if (mImage == NULL)
+    Image* image = getImage();
+    if (image == NULL)
         LOGE("GetImageView : image is NULL");
 
     VkCubemapImage* cubemapImage;
     VkBitmapImage* bitmapImage;
-    switch(mImage->getType()){
+    switch(image->getType()){
 
         case Image::ImageType::CUBEMAP:
-            cubemapImage = static_cast<VkCubemapImage*>(mImage);
+            cubemapImage = static_cast<VkCubemapImage*>(image);
             return cubemapImage->getVkImageView();
 
         case Image::ImageType::BITMAP:
-            bitmapImage = static_cast<VkBitmapImage*>(mImage);
+            bitmapImage = static_cast<VkBitmapImage*>(image);
             return bitmapImage->getVkImageView();
     }
 }
