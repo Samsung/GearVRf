@@ -49,8 +49,6 @@ namespace gvr {
 
     GVRActivity::~GVRActivity() {
         LOGV("GVRActivity::~GVRActivity");
-        uninitializeVrApi();
-
         envMainThread_->DeleteGlobalRef(activityClass_);
         envMainThread_->DeleteGlobalRef(activity_);
     }

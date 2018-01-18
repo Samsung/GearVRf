@@ -32,6 +32,7 @@ import android.view.SurfaceHolder;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
@@ -53,7 +54,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
     private EGLSurface mPixelBuffer;
     private EGLSurface mMainSurface;
     // warning: writable static state; used to determine when vrapi can be safely uninitialized
-    private static int sVrapiActivitiesCount;
+    private static WeakReference<OvrVrapiActivityHandler> sVrapiOwner = new WeakReference<>(null);
     private OvrViewManager mViewManager;
     private int mCurrentSurfaceWidth, mCurrentSurfaceHeight;
 
@@ -74,13 +75,13 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         mActivity = activity;
         mPtr = activityNative.getNative();
 
-        if (0 == sVrapiActivitiesCount) {
-            if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
-                throw new VrapiNotAvailableException();
-            }
+        if (null != sVrapiOwner.get()) {
+            nativeUninitializeVrApi();
         }
-
-        ++sVrapiActivitiesCount;
+        if (VRAPI_INITIALIZE_UNKNOWN_ERROR == nativeInitializeVrApi(mPtr)) {
+            throw new VrapiNotAvailableException();
+        }
+        sVrapiOwner = new WeakReference<>(this);
     }
 
     @Override
@@ -109,6 +110,13 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onResume() {
+        final OvrVrapiActivityHandler currentOwner = sVrapiOwner.get();
+        if (this != currentOwner) {
+            nativeUninitializeVrApi();
+            nativeInitializeVrApi(mPtr);
+            sVrapiOwner = new WeakReference<>(this);
+        }
+
         if (null != mSurfaceView) {
             mSurfaceView.onResume();
         }
@@ -129,8 +137,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onDestroy() {
-        --sVrapiActivitiesCount;
-        if (0 == sVrapiActivitiesCount) {
+        if (this == sVrapiOwner.get()) {
             nativeUninitializeVrApi();
         }
     }
