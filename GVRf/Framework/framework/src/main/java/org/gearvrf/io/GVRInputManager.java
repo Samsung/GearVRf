@@ -38,6 +38,7 @@ import org.gearvrf.R;
 import org.gearvrf.utility.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -196,6 +197,8 @@ public class GVRInputManager implements IEventReceiver
     /**
      * Select an input controller based on the list of controller types in gvr.xml.
      * The list is in priority order with the highest priority controller last.
+     * If you call this function and no controllers are specified in gvr.xml
+     * it will default to "gaze,controller" (Gear controller first, then Gaze).
      * <p>
      * The "onCursorControllerSelected" event is emitted when
      * a cursor controller is chosen. The controller chosen is
@@ -211,9 +214,10 @@ public class GVRInputManager implements IEventReceiver
      */
     public void selectController(ICursorControllerSelectListener listener)
     {
-        if (mEnabledControllerTypes == null)
+        if ((mEnabledControllerTypes == null) || (mEnabledControllerTypes.size() == 0))
         {
-            throw new UnsupportedOperationException("Cannot select controllers if none are enabled in gvr.xml settings");
+            mEnabledControllerTypes = new ArrayList<GVRControllerType> (Arrays.asList(GVRControllerType.GAZE, GVRControllerType.CONTROLLER));
+            scanDevices();
         }
         GVRInputManager.SingleControllerSelector
                 selector = new GVRInputManager.SingleControllerSelector(context, mEnabledControllerTypes);
@@ -223,7 +227,10 @@ public class GVRInputManager implements IEventReceiver
     }
 
     /**
-     * Select an input controller based on a prioritized list type names.
+     * Select an input controller based on the list of controller types in gvr.xml.
+     * The list is in priority order with the highest priority controller last.
+     * If you call this function and no controllers are specified in gvr.xml
+     * it will default to "gaze,controller" (Gear controller first, then Gaze).
      * <p>
      * The "onCursorControllerSelected" event is emitted when
      * a cursor controller is chosen. The controller chosen is
@@ -243,9 +250,10 @@ public class GVRInputManager implements IEventReceiver
      */
     public void selectController()
     {
-        if (mEnabledControllerTypes == null)
+        if ((mEnabledControllerTypes == null) || (mEnabledControllerTypes.size() == 0))
         {
-            throw new UnsupportedOperationException("Cannot select controllers if none are enabled in gvr.xml settings");
+            mEnabledControllerTypes = new ArrayList<GVRControllerType> (Arrays.asList(GVRControllerType.GAZE, GVRControllerType.CONTROLLER));
+            scanDevices();
         }
         GVRInputManager.SingleControllerSelector
                 selector = new GVRInputManager.SingleControllerSelector(context, mEnabledControllerTypes);

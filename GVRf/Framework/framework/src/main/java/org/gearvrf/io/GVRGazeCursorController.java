@@ -241,6 +241,7 @@ final public class GVRGazeCursorController extends GVRCursorController
             float eventZ;
             int action = event.getAction();
             float deltaX;
+            int button = event.getButtonState();
 
             switch (action)
             {
@@ -248,7 +249,7 @@ final public class GVRGazeCursorController extends GVRCursorController
                 actionDownX = eventX;
                 actionDownY = eventY;
                 actionDownZ = mCursorDepth;
-                if ((mTouchButtons & event.getButtonState()) != 0)
+                if (((mTouchButtons & button) != 0) || (button == 0))
                 {
                     setActive(true);
                 }
