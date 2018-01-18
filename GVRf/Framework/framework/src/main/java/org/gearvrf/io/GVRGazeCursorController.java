@@ -257,10 +257,7 @@ final public class GVRGazeCursorController extends GVRCursorController
                 break;
 
                 case MotionEvent.ACTION_UP:
-                if ((mTouchButtons & event.getButtonState()) != 0)
-                {
-                    setActive(false);
-                }
+                setActive(false);
                 setKeyEvent(BUTTON_GAZE_UP);
                 break;
 

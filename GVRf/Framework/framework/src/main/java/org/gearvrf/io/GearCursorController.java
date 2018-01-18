@@ -618,10 +618,7 @@ public final class GearCursorController extends GVRCursorController
                     MotionEvent.ACTION_UP, 1, pointerPropertiesArray, pointerCoordsArray,
                     0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
-            if ((mTouchButtons & MotionEvent.BUTTON_PRIMARY) != 0)
-            {
-                setActive(false);
-            }
+            setActive(false);
         }
         else if ((handled == KeyEvent.ACTION_DOWN) || (touched && !actionDown))
         {
@@ -684,10 +681,7 @@ public final class GearCursorController extends GVRCursorController
         int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A, thread.prevButtonA, KeyEvent.KEYCODE_A);
         if (handled == KeyEvent.ACTION_UP)
         {
-            if ((mTouchButtons & MotionEvent.BUTTON_SECONDARY) != 0)
-            {
-                setActive(false);
-            }
+            setActive(false);
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(prevATime, time,
