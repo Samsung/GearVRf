@@ -25,6 +25,7 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
 {
     private final float mAngle, mX, mY, mZ;
     private final Quaternionf mRotation = new Quaternionf();
+    private final Quaternionf mStartRotation = new Quaternionf();
 
 
     /**
@@ -48,10 +49,11 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
             float angle, float x, float y, float z)
     {
         super(target, duration);
-        mAngle = (float) Math.toRadians(angle);
+        mAngle = angle;
         mX = x;
         mY = y;
         mZ = z;
+        mStartRotation.set(target.getRotationX(), target.getRotationY(), target.getRotationZ(), target.getRotationW());
     }
 
     /**
@@ -82,7 +84,7 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     {
         float angle = ratio * mAngle;
         mRotation.fromAxisAngleDeg(mX, mY, mZ, angle);
-        mRotation.mul(mTransform.getRotationX(), mTransform.getRotationY(), mTransform.getRotationZ(), mTransform.getRotationW());
+        mRotation.mul(mStartRotation);
         mTransform.setRotation(mRotation.w, mRotation.x, mRotation.y, mRotation.z);
     }
 }
