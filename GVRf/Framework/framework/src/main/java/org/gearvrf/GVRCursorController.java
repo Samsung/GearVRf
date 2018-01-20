@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import android.test.InstrumentationTestRunner;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -149,8 +150,7 @@ public abstract class GVRCursorController implements IEventReceiver
         {
             mPicker = new GVRPicker(this, false);
         }
-        addPickEventListener(mPickHandler);
-        addPickEventListener(GVRBaseSensor.getPickHandler());
+        //addPickEventListener(GVRBaseSensor.getPickHandler());
         mCursorScale = new GVRSceneObject(context);
         mCursorScale.setName("CursorController_CursorScale");
         mDragRoot = new GVRSceneObject(context);
@@ -628,8 +628,7 @@ public abstract class GVRCursorController implements IEventReceiver
      * This call sets the position of the {@link GVRCursorController}.
      *
      * Use this call to also set an initial position for the Cursor when a new
-     * {@link GVRCursorController} is returned by the
-     * {@link ICursorControllerListener}.
+     * {@link GVRCursorController} is selected.
      *
      * @param x the x value of the position.
      * @param y the y value of the position.
@@ -1019,34 +1018,6 @@ public abstract class GVRCursorController implements IEventReceiver
         return false;
     }
 
-
-    /**
-     * Handler for surface projection of the cursor.
-     * Listens for pick events and updates the cursor
-     * position on the closest picked object.
-     * Also propagates cursor controller events to listeners.
-     */
-    private IPickEvents mPickHandler = new GVREventListeners.PickEvents()
-    {
-        public void onPick(GVRPicker picker)
-        {
-            GVRPicker.GVRPickedObject hit = picker.getPicked()[0];
-            if (hit != null)
-            {
-                updateCursor(hit);
-             }
-            else
-            {
-                onNoPick(picker);
-            }
-        }
-
-        public void onNoPick(GVRPicker picker)
-        {
-            moveCursor();
-       }
-    };
-
     /**
      * Set a key event. Note that this call can be used in lieu of
      * {@link GVRCursorController#setActive(boolean)}.
@@ -1086,21 +1057,54 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
+    private class ControllerPick implements Runnable
+    {
+        public MotionEvent mEvent;
+        public GVRPicker mPicker;
+        public boolean mActive;
+
+        public void init(GVRPicker picker, MotionEvent event, boolean active)
+        {
+            mPicker = picker;
+            mEvent = event;
+            mActive = active;
+        }
+        public void run()
+        {
+            mPicker.processPick(mActive, mEvent);
+            GVRPicker.GVRPickedObject[] picked = mPicker.getPicked();
+            if (picked.length > 0)
+            {
+                GVRPicker.GVRPickedObject hit = mPicker.getPicked()[0];
+                if (hit != null)
+                {
+                    updateCursor(hit);
+                    return;
+                }
+            }
+            moveCursor();
+        }
+    }
+
+    private ControllerPick mControllerPick = new ControllerPick();
+
     /**
      * Update the state of the picker. If it has an owner, the picker
-     * will use that object to derive its position and orientations.
+     * will use that object to derive its position and orientation.
      * The "active" state of this controller is used to indicate touch.
+     * The cursor position is updated after picking.
      */
     protected void updatePicker(MotionEvent event)
     {
         float l = position.length();
         boolean isActive = active;
+        int numPicked;
 
         if (!mPicker.isEnabled() && (l > 0.00001f))
         {
             mPicker.setPickRay(0, 0, 0, pickDir.x, pickDir.y, pickDir.z);
         }
-        mPicker.processPick(isActive, event); // move cursor if there is a pick
+        context.runOnGlThread(mControllerPick);
     }
 
     /**
