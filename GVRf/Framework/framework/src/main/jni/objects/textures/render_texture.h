@@ -57,8 +57,8 @@ public:
     }
 
     virtual ~RenderTexture() { }
-    virtual int width() const { mImage->getWidth(); }
-    virtual int height() const { return mImage->getHeight(); }
+    virtual int width() const { return getImage()->getWidth(); }
+    virtual int height() const { return getImage()->getHeight(); }
     virtual unsigned int getFrameBufferId() const = 0;
     virtual void bind() = 0;
     virtual void beginRendering(Renderer*) = 0;

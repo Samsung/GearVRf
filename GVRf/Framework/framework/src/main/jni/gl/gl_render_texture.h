@@ -42,10 +42,6 @@ public:
 
     virtual ~GLRenderTexture();
 
-    virtual int getId() { return mImage->getId(); }
-    virtual int width() const { return mImage->getWidth(); }
-    virtual int height() const { return mImage->getHeight(); }
-
     virtual unsigned int getFrameBufferId() const {
         return renderTexture_gl_frame_buffer_->id();
     }
@@ -66,7 +62,7 @@ public:
     // it returns, the pixels have been copied to PBO and then to the client memory.
     virtual bool readRenderResult(uint8_t* readback_buffer, long capacity);
     virtual bool readRenderResult(uint8_t* readback_buffer);
-    bool bindTexture(int gl_location, int texIndex);
+    void bindTexture(int gl_location, int texIndex);
     void setLayerIndex(int layerIndex);
 
 private:
