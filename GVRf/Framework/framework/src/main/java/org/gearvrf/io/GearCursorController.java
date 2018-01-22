@@ -19,7 +19,6 @@ package org.gearvrf.io;
 import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.view.InputDevice;
@@ -44,7 +43,6 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -498,8 +496,6 @@ public final class GearCursorController extends GVRCursorController
 
             public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
             {
-                mKeyEvents.clear();
-                mMotionEvents.clear();
                 if (keyEvents.size() > 0)
                 {
                     mKeyEvents.addAll(keyEvents);
@@ -520,7 +516,10 @@ public final class GearCursorController extends GVRCursorController
                 for (MotionEvent e : mMotionEvents)
                 {
                     activity.dispatchTouchEvent(MotionEvent.obtain(e));
+                    e.recycle();
                 }
+                mKeyEvents.clear();
+                mMotionEvents.clear();
             }
         }
 

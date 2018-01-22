@@ -1062,20 +1062,43 @@ public abstract class GVRCursorController implements IEventReceiver
         public MotionEvent mEvent;
         public GVRPicker mPicker;
         public boolean mActive;
+        public boolean mDoPick;
 
         public void init(GVRPicker picker, MotionEvent event, boolean active)
         {
             mPicker = picker;
             mEvent = event;
             mActive = active;
+            if (!mPicker.isEnabled())
+            {
+                mDoPick = true;
+            }
+            else if (mEvent != null)
+            {
+                mDoPick = true;
+            }
         }
+
         public void run()
         {
-            mPicker.processPick(mActive, mEvent);
-            GVRPicker.GVRPickedObject[] picked = mPicker.getPicked();
-            if (picked.length > 0)
+            GVRPicker.GVRPickedObject[] picked = null;
+
+            if (mDoPick)
             {
-                GVRPicker.GVRPickedObject hit = mPicker.getPicked()[0];
+                if (position.length() > 0.00001f)
+                {
+                    mPicker.setPickRay(0, 0, 0, pickDir.x, pickDir.y, pickDir.z);
+                }
+                mPicker.processPick(mActive, mEvent);
+                picked = mPicker.getPicked();
+            }
+            if (mEvent != null)
+            {
+                mEvent.recycle();
+            }
+            if ((picked != null) && (picked.length > 0))
+            {
+                GVRPicker.GVRPickedObject hit = picked[0];
                 if (hit != null)
                 {
                     updateCursor(hit);
@@ -1096,15 +1119,12 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     protected void updatePicker(MotionEvent event)
     {
-        float l = position.length();
-        boolean isActive = active;
-        int numPicked;
-
-        if (!mPicker.isEnabled() && (l > 0.00001f))
+        if (mPicker != null)
         {
-            mPicker.setPickRay(0, 0, 0, pickDir.x, pickDir.y, pickDir.z);
+            MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
+            mControllerPick.init(mPicker, newEvent, active);
+            context.runOnGlThread(mControllerPick);
         }
-        context.runOnGlThread(mControllerPick);
     }
 
     /**
@@ -1112,9 +1132,11 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     private void update()
     {
+        boolean hasEvents = false;
         // set the newly received key and motion events.
         synchronized (eventLock)
         {
+            hasEvents = (keyEvent.size() > 0) || (motionEvent.size() > 0);
             processedKeyEvent.addAll(keyEvent);
             keyEvent.clear();
             processedMotionEvent.addAll(motionEvent);
