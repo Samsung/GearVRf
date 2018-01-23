@@ -241,21 +241,29 @@ final public class GVRGazeCursorController extends GVRCursorController
             float eventZ;
             int action = event.getAction();
             float deltaX;
+            int button = event.getButtonState();
 
+            if (button == 0)
+            {
+                button = MotionEvent.BUTTON_PRIMARY;
+            }
             switch (action)
             {
                 case MotionEvent.ACTION_DOWN:
                 actionDownX = eventX;
                 actionDownY = eventY;
                 actionDownZ = mCursorDepth;
-                setActive(true);
+                if ((mTouchButtons & button) != 0)
+                {
+                    setActive(true);
+                }
                 // report ACTION_DOWN as a button
                 setKeyEvent(BUTTON_GAZE_DOWN);
                 break;
 
                 case MotionEvent.ACTION_UP:
-                setKeyEvent(BUTTON_GAZE_UP);
                 setActive(false);
+                setKeyEvent(BUTTON_GAZE_UP);
                 break;
 
                 case MotionEvent.ACTION_MOVE:
@@ -276,8 +284,7 @@ final public class GVRGazeCursorController extends GVRCursorController
                 }
                 break;
             }
-            MotionEvent clone = MotionEvent.obtain(event);
-            GVRGazeCursorController.this.setMotionEvent(clone);
+            GVRGazeCursorController.this.setMotionEvent(event);
             GVRGazeCursorController.super.invalidate();
         }
 
@@ -298,7 +305,7 @@ final public class GVRGazeCursorController extends GVRCursorController
         }
 
         public void dispatchMotionEvent(MotionEvent motionEvent) {
-            Message msg = Message.obtain(gazeEventHandler, SET_MOTION_EVENT, motionEvent);
+            Message msg = Message.obtain(gazeEventHandler, SET_MOTION_EVENT, MotionEvent.obtain(motionEvent));
             msg.sendToTarget();
         }
 

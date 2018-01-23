@@ -184,7 +184,6 @@ public class GVRBaseSensor extends GVRBehavior
         if (controller != null)
         {
             event.setCursorController(controller);
-            controller.setEventHandledBySensor();
         }
         event.setActive(collision.touched);
         event.setPickedObject(collision);

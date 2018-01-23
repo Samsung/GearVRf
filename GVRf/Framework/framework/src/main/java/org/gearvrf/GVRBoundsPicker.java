@@ -15,17 +15,10 @@
 
 package org.gearvrf;
 
-import android.view.MotionEvent;
-
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.gearvrf.utility.Log;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 
 /**
  * Finds the scene objects in a scene which collide with the bounding volumes
@@ -72,7 +65,7 @@ public class GVRBoundsPicker extends GVRPicker
     final ArrayList<GVRSceneObject>   mCollidables = new ArrayList<GVRSceneObject>();
     static private GVRPickedObject[] sEmptyList = new GVRPickedObject[0];
 
-    protected GVRCursorController.ControllerEventListener listener = new GVRCursorController.ControllerEventListener()
+    protected GVRCursorController.IControllerEvent listener = new GVRCursorController.IControllerEvent()
     {
         public void onEvent(GVRCursorController controller, boolean isActive)
         {
@@ -97,12 +90,14 @@ public class GVRBoundsPicker extends GVRPicker
 
     public void setController(GVRCursorController controller)
     {
-        if (mController != null) {
-            mController.removeControllerEventListener(listener);
+        if (mController != null)
+        {
+            mController.getEventReceiver().removeListener(listener);
         }
         mController = controller;
-        if (controller != null) {
-            controller.addControllerEventListener(listener);
+        if (controller != null)
+        {
+            controller.getEventReceiver().addListener(listener);
         }
     }
 
@@ -171,7 +166,10 @@ public class GVRBoundsPicker extends GVRPicker
     {
         synchronized (mCollidables)
         {
-            mCollidables.remove(index);
+            if (index < mCollidables.size())
+            {
+                mCollidables.remove(index);
+            }
         }
     }
 

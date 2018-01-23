@@ -130,7 +130,10 @@ public class GVRTexture extends GVRHybridObject implements GVRAndroidResource.Te
         mImage = null;
         mTextureId = 0;
         mLock = new ReentrantLock();
-        updateTextureParameters(texparams);
+        if (texparams != null)
+        {
+            updateTextureParameters(texparams);
+        }
     }
 
     public boolean stillWanted(GVRAndroidResource r)

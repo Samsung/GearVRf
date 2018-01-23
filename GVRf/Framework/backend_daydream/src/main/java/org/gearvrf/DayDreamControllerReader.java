@@ -24,6 +24,7 @@ class DayDreamControllerReader implements GearCursorController.ControllerReader 
     private int mConnectionState = ConnectionStates.DISCONNECTED;
     private FloatBuffer readbackBuffer = null;
     private GVRActivity mActivity = null;
+    private final float OCULUS_SCALE = 256.0f;
 
     DayDreamControllerReader(GVRActivity gvrActivity) {
         EventListener listener = new EventListener();
@@ -89,7 +90,7 @@ class DayDreamControllerReader implements GearCursorController.ControllerReader 
 
     @Override
     public void updateTouchpad(PointF pt) {
-        pt.set(mController.touch.x, mController.touch.y);
+        pt.set(mController.touch.x * OCULUS_SCALE, mController.touch.y * OCULUS_SCALE);
     }
 
     @Override

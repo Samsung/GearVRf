@@ -88,8 +88,59 @@ ColliderData SphereCollider::isHit(const glm::vec3& rayStart, const glm::vec3& r
  */
 ColliderData SphereCollider::isHit(const float sphere[])
 {
-    ColliderData data = MeshCollider::isHit(owner_object()->getBoundingVolume(), sphere);
-    data.ColliderHit = this;
+    ColliderData data;
+    glm::vec3    colliderCenter(0, 0, 0);
+    float        radius = radius_;
+    SceneObject* owner = owner_object();
+    glm::mat4    model_matrix;
+
+    /*
+     * If we have a scene object with a mesh
+     * get the sphere center and radius from that.
+     */
+    RenderData* rd = owner->render_data();
+    Transform* t = owner->transform();
+    glm::mat4 model_inverse = glm::affineInverse(t->getModelMatrix());
+    float s[4] = { sphere[0], sphere[1], sphere[2], sphere[3] };
+
+    transformSphere(model_inverse, s);
+
+    /*
+     * If there is a mesh attached to the scene object
+     * use the bounding sphere of the mesh to compute
+     * the sphere center and radius in mesh coordinates.
+     */
+    if (rd != NULL)
+    {
+        Mesh* mesh = rd->mesh();
+        if (mesh != NULL)
+        {
+            const BoundingVolume& meshbv = mesh->getBoundingVolume();
+            colliderCenter = meshbv.center();
+            if (radius <= 0)
+            {
+                radius = meshbv.radius();
+            }
+        }
+    }
+    if (radius <= 0)
+    {
+        radius = 1;
+    }
+    glm::vec3 sphereCenter(s[0], s[1], s[2]);
+    float r = s[3] + radius;
+    glm::vec3 h = colliderCenter - sphereCenter;  // vector from collider to sphere
+    float dist = (h.x * h.x) + (h.y * h.y) + (h.z * h.z);
+
+    dist = sqrt(dist);
+    if (dist <= r)                       // bounding sphere intersects collision sphere?
+    {
+        h *= radius / dist;          // hit point on collision sphere
+        data.IsHit = true;
+        data.ColliderHit = this;
+        data.HitPosition = h;
+        data.Distance = dist;
+    }
     return data;
 }
 

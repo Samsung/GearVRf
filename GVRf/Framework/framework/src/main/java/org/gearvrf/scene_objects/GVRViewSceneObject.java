@@ -22,14 +22,10 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.inputmethodservice.Keyboard;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
-import android.text.InputType;
 import android.view.ActionMode;
 import android.view.GestureDetector;
-import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,8 +37,6 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.ViewTreeObserver;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -60,12 +54,9 @@ import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.IKeyboardEvents;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.IViewEvents;
-import org.gearvrf.R;
 import org.gearvrf.io.GVRControllerType;
-import org.gearvrf.io.GVRTouchPadGestureDetector;
 import org.gearvrf.utility.Log;
 
 /**
@@ -76,7 +67,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
     private View mView;
     private RootViewGroup mRootViewGroup;
     private IViewEvents mEventsListener;
-    private GVRTouchPadGestureDetector mGestureDetector = null;
+    private GestureDetector mGestureDetector = null;
 
     /**
      * Constructs a scene object that inflate a view from an XML resource. The scene object
@@ -150,12 +141,12 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
     public RootViewGroup getRootView() { return mRootViewGroup; }
 
-    public void setGestureDetector(GVRTouchPadGestureDetector gestureDetector)
+    public void setGestureDetector(GestureDetector gestureDetector)
     {
         mGestureDetector = gestureDetector;
     }
 
-    GVRTouchPadGestureDetector getGestureDetector() { return mGestureDetector; }
+    GestureDetector getGestureDetector() { return mGestureDetector; }
 
     private void inflateView(final int viewId) {
         final  GVRActivity activity = getGVRContext().getActivity();
@@ -633,7 +624,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
         {
-            if (sceneObject == mSelected)
+            if (mSelected != null)
             {
                 onDrag(pickInfo);
                 mSelected = null;

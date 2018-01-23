@@ -562,7 +562,7 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
         {
             Log.d("TOUCH", "onTouchEnd");
-            if (sceneObject == mTouched)
+            if (mTouched != null)
             {
                 onDrag(pickInfo);
                 mTouched = null;

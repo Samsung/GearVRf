@@ -115,6 +115,7 @@ public class SceneEditorMain extends GVRMain {
         cubeSceneObject.getTransform().setPosition(position[0], position[1], position[2]);
         addToSceneEditor(cubeSceneObject);
         addSceneEditorMenu();
+        cursorManager.sendEventsToActivity(false);
         gvrContext.getEventReceiver().addListener(assetEventListener);
         sceneSerializer.importScene(gvrContext, mainScene, sceneLoaderListener);
     }

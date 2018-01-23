@@ -23,7 +23,6 @@ allprojects {
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "25.0.0"
 
     buildTypes {
         debug {
@@ -43,10 +42,8 @@ android {
     }
 
     applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            output.outputFile = new File(
-                    output.outputFile.parent,
-                    System.getProperty("appName") + ".apk")
+        variant.outputs.all { output ->
+            output.outputFileName = System.getProperty("appName") + ".apk"
         }
     }
 
@@ -150,4 +147,7 @@ if(project.hasProperty("useLocalDependencies") && project.useLocalDependencies) 
         }
     }
 }
+
+
+
 
