@@ -17,7 +17,7 @@ package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRScene;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.io.cursor3d.CursorAsset.Action;
@@ -39,7 +39,7 @@ import java.util.List;
  * {@link CursorManager#getActiveCursors()}. This call requests the {@link CursorManager} for
  * all the active {@link Cursor} objects with the {@link CursorManager}.</li>
  * <li> Use the {@link
- * CursorActivationListener} to know about {@link Cursor} objects added or removed from the
+ * ICursorActivationListener} to know about {@link Cursor} objects added or removed from the
  * {@link CursorManager} during runtime.</li> </ul> </p>
  * <p>
  * As a general rule it an application would query the {@link CursorManager} for all available
@@ -58,8 +58,8 @@ public abstract class Cursor extends GVRBehavior
     protected ITouchEvents mTouchListener = null;
     protected IoDevice mIODevice;
     protected float mCursorDepth;
+    protected final CursorType mCursorType;
 
-    private final CursorType mCursorType;
     private IoDevice mSavedIODevice;
     private Position mStartPosition;
     private String mSavedThemeID;
@@ -109,24 +109,21 @@ public abstract class Cursor extends GVRBehavior
         return TYPE_CURSOR;
     }
 
-    void setIoDevice(IoDevice newIoDevice) {
-        if (mIODevice != null)
-        {
-            destroyIoDevice(mIODevice);
-        }
+    void setIoDevice(IoDevice newIoDevice)
+    {
         mIODevice = newIoDevice;
-        if (isEnabled()) {
-            setupIoDevice(newIoDevice);
-        }
+        setupIoDevice(newIoDevice);
     }
 
-    void resetIoDevice(IoDevice ioDevice) {
-        if (mIODevice == ioDevice) {
-            if (isEnabled()) {
-                destroyIoDevice(ioDevice);
-            }
+    void resetIoDevice(IoDevice ioDevice)
+    {
+        if (mIODevice == ioDevice)
+        {
             mIODevice = null;
         }
+        ioDevice.setEnable(false);
+        ioDevice.getGvrCursorController().removePickEventListener(getTouchListener());
+        ioDevice.resetSceneObject();
     }
 
     /**
@@ -180,7 +177,7 @@ public abstract class Cursor extends GVRBehavior
 
     // Means that the ioDevice is active
     boolean isActive() {
-        return mIODevice != null && mIODevice.isEnabled();
+        return isEnabled() && (mIODevice != null) && mIODevice.isEnabled();
     }
 
     /**
@@ -202,10 +199,8 @@ public abstract class Cursor extends GVRBehavior
      * @param z z value of the position
      */
     public void setPosition(float x, float y, float z) {
-        if (isActive() && isEnabled()) {
-            if (mIODevice != null) {
-                mIODevice.setPosition(x, y, z);
-            }
+        if (isActive()) {
+            mIODevice.setPosition(x, y, z);
         }
     }
 
@@ -519,7 +514,7 @@ public abstract class Cursor extends GVRBehavior
      * Determines whether the input {@link IoDevice} is compatible with the {@link Cursor}.
      * @return true if device is compatible, else false
      */
-    boolean isDeviceCompatible(final IoDevice device)
+    public boolean isDeviceCompatible(final IoDevice device)
     {
         List<IoDevice> ioDevices = new LinkedList<IoDevice>();
         for (PriorityIoDeviceTuple tuple : mCompatibleDevices)
@@ -586,26 +581,21 @@ public abstract class Cursor extends GVRBehavior
 
     public ITouchEvents getTouchListener() { return mTouchListener; }
 
-
-    public void onEnable()
+    public void activate()
     {
         Log.d(TAG, Integer.toHexString(hashCode()) + " enabled");
-        mCursorManager.assignDeviceToCursor(this);
+        if (isEnabled() && (getIoDevice() == null))
+        {
+            mCursorManager.attachDevice(this);
+        }
     }
 
-    public void onDisable()
+    public void deactivate()
     {
-        if (mIODevice == null) {
-            Log.d(TAG, Integer.toHexString(hashCode()) + " disabled; ioDevice == null");
-        }
-        else
-        {
-            IoDevice device = getIoDevice();
-            Log.d(TAG, Integer.toHexString(hashCode()) + " disabled");
-            Log.d(TAG, "Destroying Iodevice:" + device.getDeviceId());
-            mCursorManager.markCursorUnused(this);
-            mCursorManager.markIoDeviceUnused(device);
-        }
+        Log.d(TAG, Integer.toHexString(hashCode()) + " disabled");
+        markIoDeviceUnused();
+        mCursorManager.markCursorUnused(this);
+        close();
     }
 
     void setupIoDevice(IoDevice ioDevice) {
@@ -616,23 +606,25 @@ public abstract class Cursor extends GVRBehavior
         ioDevice.getGvrCursorController().addPickEventListener(getTouchListener());
     }
 
-    void destroyIoDevice(IoDevice ioDevice) {
-        ioDevice.setEnable(false);
-        ioDevice.getGvrCursorController().removePickEventListener(getTouchListener());
-        ioDevice.resetSceneObject();
+    void transferIoDevice(Cursor oldCursor) {
+        IoDevice targetIoDevice = oldCursor.getIoDevice();
+        mCursorManager.removeCursorFromScene(oldCursor);
+        setIoDevice(targetIoDevice);
+        mCursorManager.addCursorToScene(this);
     }
 
-    void transferIoDevice(Cursor targetCursor) {
+
+    void markIoDeviceUnused()
+    {
         if (mIODevice != null)
         {
-            mIODevice.getGvrCursorController().removePickEventListener(targetCursor.getTouchListener());
-        }
-        IoDevice targetIoDevice = targetCursor.getIoDevice();
-        targetIoDevice.resetSceneObject();
-        mIODevice = targetIoDevice;
-        setupIoDevice(targetIoDevice);
-    }
+            Log.d(TAG, "Marking ioDevice:" + mIODevice.getName() + " unused");
+            GVRCursorController controller = mIODevice.getGvrCursorController();
 
+            controller.setCursor(null);
+            controller.setEnable(false);
+        }
+    }
 
     IoDevice getIoDeviceForPriority(int priorityLevel) {
         if (priorityLevel < mCompatibleDevices.size()) {
@@ -658,7 +650,7 @@ public abstract class Cursor extends GVRBehavior
             if (compatibleIoDevice.equals(mIODevice)) {
                 returnList.add(mIODevice);
             } else {
-                IoDevice ioDevice = mCursorManager.getAvailableIoDevice(compatibleIoDevice);
+                IoDevice ioDevice = mCursorManager.getIoDevice(compatibleIoDevice);
                 if (ioDevice != null) {
                     returnList.add(ioDevice);
                 }
@@ -699,12 +691,12 @@ public abstract class Cursor extends GVRBehavior
                    + mCursorID);
 
         mCursorManager.removeCursorFromScene(this);
-        if (oldDevice != null)
-        {
-            mCursorManager.markIoDeviceUnused(oldDevice);
-        }
         setIoDevice(availableIoDevice);
         mCursorManager.addCursorToScene(this);
+        if (oldDevice != null)
+        {
+            resetIoDevice(oldDevice);
+        }
     }
 
     private boolean isIoDeviceCompatible(IoDevice ioDevice) {

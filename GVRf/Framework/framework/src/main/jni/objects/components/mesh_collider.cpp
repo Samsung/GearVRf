@@ -159,7 +159,7 @@ namespace gvr
             {
                 data = MeshCollider::isHit(bounds, s);
             }
-             else
+            else
             {
                 data = MeshCollider::isHit(*mesh, s);
             }
@@ -322,7 +322,7 @@ static void populateSurfaceCoords(const Mesh& mesh, ColliderData& colliderData) 
 
 
     /*
-     * Determine if the ray penetrates an axially aligned bounding box
+     * Determine if the sphere penetrates the mesh collider bounds
      * @param bounds    bounding volume
      * @param sphere    sphere center and radius
      */
@@ -336,9 +336,14 @@ static void populateSurfaceCoords(const Mesh& mesh, ColliderData& colliderData) 
         float dist = (h.x * h.x) + (h.y * h.y) + (h.z * h.z);
 
         dist = sqrt(dist);
-        if (dist <= r)                       // bounding sphere intersects this sphere?
+        if (dist <= r)                       // bounding sphere intersects collision sphere?
         {
-            h *= bounds.radius() / dist;     // hit point on bounding sphere
+            h *= bounds.radius() / dist;           // hit point on collision sphere
+            LOGE("COLLIDER: sphere(%f, %f, %f) collider(%f, %f, %f) hit(%f, %f, %f) dist = %f radius = %f",
+                 sphere[0], sphere[1], sphere[2],
+                 colliderCenter.x, colliderCenter.y, colliderCenter.z,
+                 h.x, h.y, h.z,
+                 dist, r);
             data.IsHit = true;
             data.HitPosition = h;
             data.Distance = dist;

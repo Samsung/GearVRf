@@ -30,14 +30,11 @@ import java.util.Set;
 
 class ObjectCursor extends Cursor {
     private static final String TAG = ObjectCursor.class.getSimpleName();
-    private static final float POINT_CURSOR_NEAR_DEPTH = 1.0f;
-    private static final float[] EMPTY_HIT_POINT = new float[3];
-    private Set<GVRSceneObject> intersecting;
-    private int cursorID = -1;
+    private static final float POINT_CURSOR_NEAR_DEPTH = 3.0f;
+    private int mColliderID = -1;
 
     ObjectCursor(GVRContext context, CursorManager cursorManager) {
         super(context, CursorType.OBJECT, cursorManager);
-        intersecting = new HashSet<GVRSceneObject>();
 
         Log.d(TAG, Integer.toHexString(hashCode()) + " constructed");
         mTouchListener = new ITouchEvents()
@@ -68,9 +65,9 @@ class ObjectCursor extends Cursor {
         };
     }
 
-    public int getCursorID() { return cursorID; }
+    public int getColliderID() { return mColliderID; }
 
-    public void setCursorID(int id) { cursorID = id; }
+    public void setColliderID(int id) { mColliderID = id; }
 
 
     @Override

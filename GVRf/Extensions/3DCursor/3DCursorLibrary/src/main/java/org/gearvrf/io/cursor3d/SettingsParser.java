@@ -94,7 +94,7 @@ class SettingsParser {
                 cursorManager.addCursor(CursorFactory.readCursor(parser, context, cursorManager));
             }
         }
-        if (0 == cursorManager.getUnusedCursorsCount()) {
+        if (0 == cursorManager.getCursorCount()) {
             throw new XmlPullParserException("No cursors specified in settings.xml");
         }
     }

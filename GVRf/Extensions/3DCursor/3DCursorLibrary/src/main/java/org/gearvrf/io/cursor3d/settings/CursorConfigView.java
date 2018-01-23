@@ -18,7 +18,7 @@ package org.gearvrf.io.cursor3d.settings;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.view.KeyEvent;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,12 +31,11 @@ import android.widget.TextView;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
-import org.gearvrf.io.GVRTouchPadGestureDetector;
+import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.CursorTheme;
 import org.gearvrf.io.cursor3d.CursorType;
-import org.gearvrf.io.cursor3d.CustomKeyEvent;
 import org.gearvrf.io.cursor3d.IoDevice;
 import org.gearvrf.io.cursor3d.R;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
@@ -117,7 +116,7 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         }
         ioDeviceViews = new ArrayList<View>();
         for (IoDevice ioDevice : ioDevicesDisplayed) {
-            addIoDevice(ioDevice, llIoDevices, ioDevice == cursor.getIoDevice());
+            addIoDevice(ioDevice, llIoDevices, cursorManager.isDeviceActive(ioDevice));
         }
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
     }
@@ -125,7 +124,7 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
     @Override
     void show() {
         super.show();
-        setGestureDetector(new GVRTouchPadGestureDetector(swipeListener));
+        setGestureDetector(new GestureDetector(swipeListener));
     }
 
     private void loadDrawables(Context context) {
@@ -296,17 +295,12 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         changeListener.onBack(cascading);
     }
 
-    GVRTouchPadGestureDetector.OnTouchPadGestureListener swipeListener =
-            new GVRTouchPadGestureDetector.OnTouchPadGestureListener()
+    GVRTouchPadGestureListener swipeListener =
+            new GVRTouchPadGestureListener()
             {
-                public boolean onSingleTap(MotionEvent e) { return false; }
-
-                public void onLongPress(MotionEvent e) { }
-
-                public boolean onSwipe(MotionEvent e, GVRTouchPadGestureDetector.SwipeDirection swipeDirection,
-                                       float velocityX, float velocityY)
+                public boolean onSwipe(MotionEvent e, GVRTouchPadGestureListener.Action action, float vx, float vy)
                 {
-                    if (swipeDirection == GVRTouchPadGestureDetector.SwipeDirection.Forward)
+                    if (action == GVRTouchPadGestureListener.Action.SwipeForward)
                     {
                         navigateBack(false);
                     }
@@ -316,7 +310,5 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
                     }
                     return true;
                 }
-
-                public boolean onScroll(MotionEvent arg0, MotionEvent arg1, float arg2, float arg3) { return false; }
             };
 }

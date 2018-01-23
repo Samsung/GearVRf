@@ -18,12 +18,15 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
+import org.joml.Quaternionf;
 
 /** Rotation animation. */
-public class GVRRotationByAxisAnimation extends GVRTransformAnimation {
-
-    private final Orientation mOrientation;
+public class GVRRotationByAxisAnimation extends GVRTransformAnimation
+{
     private final float mAngle, mX, mY, mZ;
+    private final Quaternionf mRotation = new Quaternionf();
+    private final Quaternionf mStartRotation = new Quaternionf();
+
 
     /**
      * Use {@link GVRTransform#rotateByAxis(float, float, float, float)} to do
@@ -43,15 +46,14 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation {
      *            the normalized axis z component
      */
     public GVRRotationByAxisAnimation(GVRTransform target, float duration,
-            float angle, float x, float y, float z) {
+            float angle, float x, float y, float z)
+    {
         super(target, duration);
-
-        mOrientation = new Orientation();
-
         mAngle = angle;
         mX = x;
         mY = y;
         mZ = z;
+        mStartRotation.set(target.getRotationX(), target.getRotationY(), target.getRotationZ(), target.getRotationW());
     }
 
     /**
@@ -72,19 +74,17 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation {
      *            the normalized axis z component
      */
     public GVRRotationByAxisAnimation(GVRSceneObject target, float duration,
-            float angle, float x, float y, float z) {
+            float angle, float x, float y, float z)
+    {
         this(getTransform(target), duration, angle, x, y, z);
     }
 
     @Override
-    protected void animate(GVRHybridObject target, float ratio) {
-        // Reset rotation (this is pretty cheap - GVRF uses a 'lazy update'
-        // policy on the matrix, so two changes don't cost all that much more
-        // than one)
-        mOrientation.setOrientation();
-
-        // Rotate from start
+    protected void animate(GVRHybridObject target, float ratio)
+    {
         float angle = ratio * mAngle;
-        mTransform.rotateByAxis(angle, mX, mY, mZ);
+        mRotation.fromAxisAngleDeg(mX, mY, mZ, angle);
+        mRotation.mul(mStartRotation);
+        mTransform.setRotation(mRotation.w, mRotation.x, mRotation.y, mRotation.z);
     }
 }

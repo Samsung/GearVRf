@@ -18,29 +18,14 @@ package org.gearvrf.io.cursor3d.settings;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
-import android.view.InputDevice;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.MotionEvent.PointerCoords;
-import android.view.MotionEvent.PointerProperties;
+import android.view.GestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
 
 import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
-import org.gearvrf.ISensorEvents;
-import org.gearvrf.SensorEvent;
-import org.gearvrf.io.GVRTouchPadGestureDetector;
-import org.gearvrf.io.cursor3d.CustomKeyEvent;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRFrameLayout;
-import org.gearvrf.utility.Log;
-
-import java.util.List;
 
 abstract class BaseView {
     private static final String TAG = BaseView.class.getSimpleName();
@@ -113,7 +98,7 @@ abstract class BaseView {
         this.settingsCursorId = settingsCursorId;
     }
 
-    protected void setGestureDetector(GVRTouchPadGestureDetector detector) {
+    protected void setGestureDetector(GestureDetector detector) {
         layoutSceneObject.setGestureDetector(detector);
     }
 }

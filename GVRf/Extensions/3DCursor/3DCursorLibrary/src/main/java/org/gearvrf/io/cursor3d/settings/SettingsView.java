@@ -16,6 +16,7 @@
 package org.gearvrf.io.cursor3d.settings;
 
 import android.content.Context;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -37,7 +38,7 @@ import org.gearvrf.io.cursor3d.CursorType;
 import org.gearvrf.io.cursor3d.IoDevice;
 import org.gearvrf.io.cursor3d.R;
 import org.gearvrf.utility.Log;
-import org.gearvrf.io.GVRTouchPadGestureDetector;
+import org.gearvrf.io.GVRTouchPadGestureListener;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -105,7 +106,7 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
     @Override
     void show() {
         super.show();
-        setGestureDetector(new GVRTouchPadGestureDetector(swipeListener));
+        setGestureDetector(new GestureDetector(currentCursor.getGVRContext().getContext(), swipeListener));
     }
 
     SettingsChangeListener configChangeListener = new SettingsChangeListener()
@@ -158,22 +159,15 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
 
     };
 
-    GVRTouchPadGestureDetector.OnTouchPadGestureListener swipeListener =
-            new GVRTouchPadGestureDetector.OnTouchPadGestureListener()
+    GVRTouchPadGestureListener swipeListener =
+            new GVRTouchPadGestureListener()
             {
-                public boolean onSingleTap(MotionEvent e) { return false; }
-
-                public void onLongPress(MotionEvent e) { }
-
-                public boolean onSwipe(MotionEvent e, GVRTouchPadGestureDetector.SwipeDirection swipeDirection,
-                                float velocityX, float velocityY)
+                public boolean onSwipe(MotionEvent e, GVRTouchPadGestureListener.Action action, float vx, float vy)
                 {
                     hide();
                     changeListener.onBack(false);
                     return true;
                 }
-
-                public boolean onScroll(MotionEvent arg0, MotionEvent arg1, float arg2, float arg3) { return false; }
             };
 
     @Override
@@ -235,16 +229,26 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (isChecked) {
                         Log.d(TAG, "Setting cursor:" + cursor.getName() + " to enable");
+                        boolean enabled = cursor.isEnabled();
                         cursor.setEnable(true);
+                        if (!enabled)
+                        {
+                            cursor.activate();
+                        }
                         notifyDataSetChanged();
                     } else {
-                        IoDevice ioDevice = cursor.getIoDevice();
-                        if (ioDevice != null && cursor == currentCursor) {
+                        if (cursor == currentCursor) {
                             Log.d(TAG, "Cannot disable :" + cursor.getName());
                             tbCursorEnable.setChecked(true);
                         } else {
                             Log.d(TAG, "Setting cursor:" + cursor.getName() + " to disable");
+                            boolean enabled = cursor.isEnabled();
+
                             cursor.setEnable(false);
+                            if (enabled)
+                            {
+                                cursor.deactivate();
+                            }
                             notifyDataSetChanged();
                         }
                     }

@@ -16,6 +16,8 @@
 
 package org.gearvrf.io.cursor3d;
 
+import org.gearvrf.IEvents;
+
 /**
  * Register this listener to receive callbacks whenever a {@link Cursor} is activated or
  * deactivated from the application.
@@ -27,7 +29,8 @@ package org.gearvrf.io.cursor3d;
  * {@link CursorManager#getActiveCursors()} call to get a list of all the cursors currently
  * active
  */
-public interface CursorActivationListener {
+public interface ICursorActivationListener extends IEvents
+{
     /**
      * Called when a {@link Cursor} has been activated. i.e when a {@link Cursor} is enabled and
      * has a compatible {@link IoDevice} attached.
