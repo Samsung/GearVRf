@@ -97,7 +97,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctorArray(JNIEnv * env,
           jobject obj, jint width, jint height, jint samples, jint numLayers)
 {
-    RenderTexture* texarray = Renderer::getInstance()->createRenderTexture(width, height, samples, numLayers);
+    RenderTexture* texarray = Renderer::getInstance()->createRenderTexture(width, height, samples, numLayers, 0);
     return reinterpret_cast<jlong>(texarray);
 }
 

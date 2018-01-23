@@ -148,9 +148,9 @@ namespace gvr
         return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texparams, number_views);
     }
 
-    RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers)
+    RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int depthformat)
     {
-        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, DepthFormat::DEPTH_24_STENCIL_8);
+        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, depthformat);
         return tex;
     }
 
