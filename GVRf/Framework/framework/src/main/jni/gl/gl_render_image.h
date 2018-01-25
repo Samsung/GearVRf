@@ -46,8 +46,11 @@ public:
 
     virtual void texParamsChanged(const TextureParameters& texparams)
     {
-        mTexParams = texparams;
-        mTexParamsDirty = true;
+        if (mTexParams != texparams)
+        {
+            mTexParams = texparams;
+            mTexParamsDirty = true;
+        }
     }
     virtual void updateTexParams();
     void setupReadback(GLuint buffer, int);
