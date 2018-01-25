@@ -2612,7 +2612,7 @@ public class X3Dobject {
                         solid = parseBooleanString(attributeValue);
                     }
                     GVRSphereSceneObject gvrSphereSceneObject = new GVRSphereSceneObject(
-                            gvrContext, solid, radius);
+                            gvrContext, solid, new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID), radius);
                     currentSceneObject.addChildObject(gvrSphereSceneObject);
                     meshAttachedSceneObject = gvrSphereSceneObject;
 

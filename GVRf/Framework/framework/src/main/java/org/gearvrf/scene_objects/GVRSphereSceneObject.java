@@ -82,20 +82,6 @@ public class GVRSphereSceneObject extends GVRSceneObject {
     }
 
     /**
-     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
-     * slices.
-     *
-     * The sphere's triangles and normals are facing either in or out and the
-     * same texture will be applied to each side of the sphere.
-     *
-     * @param gvrContext
-     *            current {@link GVRContext}
-     *
-     * @param facingOut
-     *            whether the triangles and normals should be facing in or
-     *            facing out.
-     */
-    /**
      * Constructs a sphere scene object 18 stacks, and 36
      * slices.
      *
@@ -231,6 +217,35 @@ public class GVRSphereSceneObject extends GVRSceneObject {
 
         generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
                 material, 1);
+    }
+
+    /**
+     * Constructs a sphere scene object with a radius of 1 and 18 stacks, and 36
+     * slices.
+     *
+     * The sphere's triangles and normals are facing either in or out and the
+     * same material will be applied to each side of the sphere.
+     *
+     * @param gvrContext
+     *            current {@link GVRContext}
+     *
+     * @param facingOut
+     *            whether the triangles and normals should be facing in or
+     *            facing out.
+     *
+     * @param material
+     *            the material for the sphere.
+     * @param radius
+     *          sets the sphere with the radius parameter.  Radius must be > 0
+     *          otherwise, set it to the default of 1
+     */
+    public GVRSphereSceneObject(GVRContext gvrContext, boolean facingOut,
+                                GVRMaterial material, float radius)
+    {
+        super(gvrContext);
+
+        generateSphereObject(gvrContext, STACK_NUMBER, SLICE_NUMBER, facingOut,
+                             material, radius);
     }
 
     /**
