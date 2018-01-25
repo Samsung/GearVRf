@@ -16,6 +16,7 @@
 
 package org.gearvrf.io;
 
+import android.app.Activity;
 import android.graphics.PointF;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -25,9 +26,9 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
+import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRPicker;
@@ -41,10 +42,12 @@ import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 /**
@@ -159,6 +162,7 @@ public final class GearCursorController extends GVRCursorController
         mControllerReader = reader;
     }
 
+    @SuppressWarnings("unused")
     public GVRSceneObject getControllerModel() { return mControllerModel; }
 
 
@@ -409,6 +413,7 @@ public final class GearCursorController extends GVRCursorController
      * @return returns whether the user is using the controller left or right handed. This function
      * returns <code>null</code> if the controller is unavailable or the data is stale.
      */
+    @SuppressWarnings("unused")
     public Handedness getHandedness() {
         if (thread == null || thread.currentControllerEvent == null || thread
                 .currentControllerEvent.isRecycled()) {
@@ -431,7 +436,7 @@ public final class GearCursorController extends GVRCursorController
         }
     }
 
-    private class EventHandlerThread extends HandlerThread {
+    private final class EventHandlerThread extends HandlerThread {
         private static final String THREAD_NAME = "GVREventHandlerThread";
         private Handler handler;
         private Vector3f result = new Vector3f();
@@ -489,41 +494,7 @@ public final class GearCursorController extends GVRCursorController
             });
         }
 
-        class SendEvents implements Runnable
-        {
-            private List<KeyEvent> mKeyEvents = new ArrayList<KeyEvent>();
-            private List<MotionEvent> mMotionEvents = new ArrayList<MotionEvent>();
-
-            public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
-            {
-                if (keyEvents.size() > 0)
-                {
-                    mKeyEvents.addAll(keyEvents);
-                }
-                if (motionEvents.size() > 0)
-                {
-                    mMotionEvents.addAll(motionEvents);
-                }
-            }
-
-            public void run()
-            {
-                GVRActivity activity = getGVRContext().getActivity();
-                for (KeyEvent e : mKeyEvents)
-                {
-                    activity.dispatchKeyEvent(e);
-                }
-                for (MotionEvent e : mMotionEvents)
-                {
-                    activity.dispatchTouchEvent(MotionEvent.obtain(e));
-                    e.recycle();
-                }
-                mKeyEvents.clear();
-                mMotionEvents.clear();
-            }
-        }
-
-        private SendEvents mPropagateEvents = new SendEvents();
+        private final SendEvents mPropagateEvents = new SendEvents(getGVRContext().getActivity());
 
         void handleControllerEvent(final ControllerEvent event) {
             context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerEvent",
@@ -727,7 +698,7 @@ public final class GearCursorController extends GVRCursorController
         return -1;
     }
 
-    private static class ControllerEvent {
+    private static final class ControllerEvent {
         private static final int MAX_RECYCLED = 5;
         private static final Object recyclerLock = new Object();
         private static int recyclerUsed;
@@ -769,6 +740,41 @@ public final class GearCursorController extends GVRCursorController
 
         boolean isRecycled() {
             return recycled;
+        }
+    }
+}
+
+final class SendEvents implements Runnable
+{
+    private final ConcurrentLinkedQueue<KeyEvent> mKeyEvents = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<MotionEvent> mMotionEvents = new ConcurrentLinkedQueue<>();
+    private final Activity mActivity;
+
+    SendEvents(final Activity activity) {
+        mActivity = activity;
+    }
+
+    public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
+    {
+        mKeyEvents.addAll(keyEvents);
+        mMotionEvents.addAll(motionEvents);
+    }
+
+    public void run()
+    {
+        for (final Iterator<KeyEvent> it = mKeyEvents.iterator(); it.hasNext(); ) {
+            final KeyEvent e = it.next();
+            mActivity.dispatchKeyEvent(e);
+            it.remove();
+        }
+
+        for (Iterator<MotionEvent> it = mMotionEvents.iterator(); it.hasNext(); ) {
+            final MotionEvent e = it.next();
+            final MotionEvent dupe = MotionEvent.obtain(e);
+            it.remove();
+
+            mActivity.dispatchTouchEvent(dupe);
+            dupe.recycle();
         }
     }
 }
