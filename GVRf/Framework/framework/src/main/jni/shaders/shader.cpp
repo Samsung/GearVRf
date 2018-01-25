@@ -21,9 +21,7 @@
 #include "shader.h"
 
 namespace gvr {
-
-const bool Shader::LOG_SHADER = false;
-
+    
 Shader::Shader(int id,
                const char* signature,
                const char* uniformDescriptor,

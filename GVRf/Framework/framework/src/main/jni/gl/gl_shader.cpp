@@ -147,7 +147,9 @@ bool GLShader::useShader(bool is_multiview)
         LOGE("SHADER: shader could not be generated %s", mSignature.c_str());
         return false;
     }
-    if (LOG_SHADER) LOGV("SHADER: rendering with program %d", programID);
+#ifdef DEBUG_SHADER
+    LOGV("SHADER: rendering with program %d", programID);
+#endif
     glUseProgram(programID);
 
     if(!mTextureLocs.size())
@@ -231,11 +233,15 @@ void GLShader::findUniforms(const DataDescriptor& desc, int bindingPoint)
         if (loc >= 0)
         {
             uniformLocs[entry.Index] = loc;
+#ifdef DEBUG_SHADER
             LOGV("SHADER: program %d uniform %s loc %d", getProgramId(), entry.Name, loc);
+#endif
         }
         else
         {
+#ifdef DEBUG_SHADER
             LOGV("SHADER: uniform %s has no location in shader %d", entry.Name, getProgramId());
+#endif
         }
     });
     checkGLError("GLShader::findUniforms");
@@ -269,11 +275,15 @@ void GLShader::findTextures()
         if (loc >= 0)
         {
             mTextureLocs[entry.Index] = loc;
+#ifdef DEBUG_SHADER
             LOGV("SHADER: program %d texture %s loc %d", getProgramId(), entry.Name, loc);
+#endif
         }
         else
         {
+#ifdef DEBUG_SHADER
             LOGV("SHADER: texture %s has no location in shader %d", entry.Name, getProgramId());
+#endif
         }
     });
     checkGLError("GLShader::findTextures");

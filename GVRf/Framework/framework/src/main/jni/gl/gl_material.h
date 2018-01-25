@@ -39,40 +39,34 @@ namespace gvr
             uniforms_.useGPUBuffer(false);
         }
 
+        explicit GLMaterial(const char* uniform_desc, const char* texture_desc, int bindingPoint, const char* blockName)
+                : ShaderData(texture_desc),
+                  uniforms_(uniform_desc, bindingPoint, blockName)
+        {
+            uniforms_.useGPUBuffer(true);
+        }
+
         virtual ~GLMaterial() {}
 
         virtual UniformBlock& uniforms()
         {
             return uniforms_;
         }
-        void useGPUBuffer(bool flag){
+
+        void useGPUBuffer(bool flag)
+        {
             uniforms_.useGPUBuffer(flag);
         }
+
         virtual const UniformBlock& uniforms() const
         {
             return uniforms_;
         }
 
-        int getNumUniforms() const
-        {
-            return uniforms_.getNumEntries();
-        }
-
         virtual int bindToShader(Shader* shader, Renderer* renderer);
 
-        void forEachEntry(std::function< void(const DataDescriptor::DataEntry&) > func) const
-        {
-            return uniforms_.forEachEntry(func);
-        }
-
-        void forEachEntry(std::function< void(DataDescriptor::DataEntry&) > func)
-        {
-            return uniforms_.forEachEntry(func);
-        }
-
-        bool bindTexture(Texture* tex, int texUnit, int loc);
-
     protected:
+
         GLUniformBlock uniforms_;
     };
 }

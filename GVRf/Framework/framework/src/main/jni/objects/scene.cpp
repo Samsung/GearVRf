@@ -125,9 +125,6 @@ void Scene::removeAllSceneObjects() {
     clearAllColliders();
 }
 
-void Scene::deleteLightsAndDepthTextureOnRenderThread() {
-    lightList.clear();
-}
 
 void Scene::clearAllColliders() {
     lockColliders();
@@ -182,35 +179,19 @@ void Scene::exportToFile(std::string filepath) {
     Exporter::writeToFile(this, filepath);
 }
 
-bool Scene::addLight(Light* light) {
-    auto it = std::find(lightList.begin(), lightList.end(), light);
-    if (it != lightList.end())
-        return false;
-    int index = std::distance(lightList.begin(), it);
-    std::ostringstream os;
-    os << "light" << index;
-    if (lightList.size() >= MAX_LIGHTS)
-    {
-        LOGD("SHADER: light %s not added, more than %d lights not allowed", os.str().c_str(), MAX_LIGHTS);
-        return false;
-    }
-    lightList.push_back(light);
-    light->setLightID(os.str());
-    LOGD("SHADER: light %s added to scene", light->getLightID().c_str());
-    return true;
+bool Scene::addLight(Light* light)
+{
+    return lights_.addLight(light);
 }
 
-bool Scene::removeLight(Light* light) {
-    auto it = std::find(lightList.begin(), lightList.end(), light);
-    if (it == lightList.end())
-        return false;
-    lightList.erase(it);
-    LOGD("SHADER: light %s removed from scene", light->getLightID().c_str());
-    return true;
+bool Scene::removeLight(Light* light)
+{
+    return lights_.removeLight(light);
 }
 
-void Scene::clearLights() {
-    lightList.clear();
+void Scene::clearLights()
+{
+    lights_.clear();
 }
 
 }

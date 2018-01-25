@@ -90,7 +90,7 @@ private:
 
     GLProgram* mProgram;
     bool mIsReady;
-    std::vector<int> mShaderLocs[BONES_UBO_INDEX + 1];
+    std::vector<int> mShaderLocs[LAST_UBO_INDEX + 1];
     std::vector<int> mTextureLocs;
 };
 

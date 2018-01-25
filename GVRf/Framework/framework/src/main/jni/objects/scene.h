@@ -30,13 +30,14 @@
 #include "components/camera_rig.h"
 #include "engine/renderer/renderer.h"
 #include "objects/light.h"
+#include "objects/lightlist.h"
 
 
 namespace gvr {
 
 class Scene: public HybridObject {
 public:
-    const int MAX_LIGHTS = 16;
+    static const int MAX_LIGHTS = 16;
     Scene();
     virtual ~Scene();
     void set_java(JavaVM* javaVM, jobject javaScene);
@@ -44,7 +45,6 @@ public:
     void addSceneObject(SceneObject* scene_object);
     void removeSceneObject(SceneObject* scene_object);
     void removeAllSceneObjects();
-    void deleteLightsAndDepthTextureOnRenderThread();
 
     const CameraRig* main_camera_rig() {
         return main_camera_rig_;
@@ -101,8 +101,14 @@ public:
 
     void exportToFile(std::string filepath);
 
-    const std::vector<Light*>& getLightList() const {
-        return lightList;
+    const LightList& getLights() const
+    {
+        return lights_;
+    }
+
+    LightList& getLights()
+    {
+        return lights_;
     }
 
     /*
@@ -207,7 +213,7 @@ private:
     bool occlusion_flag_;
     bool pick_visible_;
     std::mutex collider_mutex_;
-    std::vector<Light*> lightList;
+    LightList lights_;
     std::vector<Component*> allColliders;
     std::vector<Component*> visibleColliders;
 };

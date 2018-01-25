@@ -27,7 +27,8 @@
 #define TRANSFORM_UBO_INDEX 0
 #define MATERIAL_UBO_INDEX  1
 #define BONES_UBO_INDEX     2
-#define SAMPLER_UBO_INDEX   3
+#define LIGHT_UBO_INDEX     3
+#define LAST_UBO_INDEX      3
 
 namespace gvr
 {
@@ -322,6 +323,11 @@ namespace gvr
          * @return string describing the uniform block.
          */
         std::string toString();
+
+        /*
+         * Dumps the entire uniform block as raw floats
+         */
+        std::string dumpFloats();
 
         /**
          * Get a pointer to the entire uniform data area.

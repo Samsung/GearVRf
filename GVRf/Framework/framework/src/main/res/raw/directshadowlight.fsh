@@ -1,12 +1,12 @@
-Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType vertex)
+Radiance @LightType(Surface s, in U@LightType data, int index)
 {
 #ifdef HAS_MULTIVIEW
-	vec4 L = u_view_[gl_ViewID_OVR] * vec4(data.world_direction.xyz, 0.0);
+	vec4 L = u_view_[gl_ViewID_OVR] * data.world_direction;
 #else
-    vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
+    vec4 L = u_view * data.world_direction;
 #endif
 	float attenuation = 1.0;
-    vec4 ShadowCoord = vertex.shadow_position;
+    vec4 ShadowCoord = @LightType_shadow_position[index];
     vec3 lightdir = normalize(L.xyz);
 
  #ifdef HAS_SHADOWS

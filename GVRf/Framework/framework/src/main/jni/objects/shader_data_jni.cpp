@@ -109,6 +109,9 @@ JNIEXPORT jboolean JNICALL
 Java_org_gearvrf_NativeShaderData_hasTexture(JNIEnv*, jobject, jlong, jstring);
 
 JNIEXPORT jstring JNICALL
+Java_org_gearvrf_NativeShaderData_getShaderType(JNIEnv*, jobject, jlong shader_data, jstring name);
+
+JNIEXPORT jstring JNICALL
 Java_org_gearvrf_NativeShaderData_makeShaderLayout(JNIEnv*, jobject, jlong shader_data);
 
 JNIEXPORT jboolean JNICALL
@@ -342,6 +345,16 @@ Java_org_gearvrf_NativeShaderData_hasUniform(JNIEnv* env, jobject obj, jlong jsh
     env->ReleaseStringUTFChars(key, char_key);
     return (jboolean) hasUniform;
 
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_gearvrf_NativeShaderData_getShaderType(JNIEnv* env, jobject, jlong jshader_data, jstring jname)
+{
+    ShaderData* shader_data = reinterpret_cast<ShaderData*>(jshader_data);
+    const char* char_key = env->GetStringUTFChars(jname, 0);
+    std::string type = shader_data->getShaderType(char_key);
+    env->ReleaseStringUTFChars(jname, char_key);
+    return env->NewStringUTF(type.c_str());
 }
 
 JNIEXPORT jstring JNICALL

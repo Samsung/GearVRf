@@ -31,8 +31,10 @@ namespace gvr
             GLUniformBlock* glbones = static_cast<GLUniformBlock*>(bones_ubo_);
             glbones->bindBuffer(shader, renderer);
         }
-        if (Shader::LOG_SHADER) LOGV("RenderData::render binding vertex arrays to program %d %p %d vertices, %d indices",
+#ifdef DEBUG_SHADER
+        LOGV("SHADER: RenderData::render binding vertex arrays to program %d %p %d vertices, %d indices",
                                      programId, this, vertexCount, indexCount);
+#endif
         mesh_->getVertexBuffer()->bindToShader(shader, mesh_->getIndexBuffer());
         checkGLError("renderMesh::mesh_->getVertexBuffer()->bindToShader(");
         switch (mesh_->getIndexSize())

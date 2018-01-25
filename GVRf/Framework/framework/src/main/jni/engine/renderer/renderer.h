@@ -133,7 +133,7 @@ public:
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
     virtual RenderData* createRenderData() = 0;
     virtual RenderData* createRenderData(RenderData*) = 0;
-    virtual UniformBlock* createUniformBlock(const char* desc, int, const char* name, int) = 0;
+    virtual UniformBlock* createUniformBlock(const char* desc, int bindingPoint, const char* name, int numElems) = 0;
     virtual Image* createImage(int type, int format) = 0;
     virtual RenderPass* createRenderPass() = 0;
     virtual Texture* createTexture(int target = GL_TEXTURE_2D) = 0;
@@ -143,7 +143,7 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views, bool monoscopic) = 0;
-    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) = 0;
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format) = 0;
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&)=0;
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
@@ -168,7 +168,7 @@ public:
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
     virtual Texture* createSharedTexture(int id) = 0;
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int) = 0;
-
+    virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor) = 0;
     virtual void makeShadowMaps(Scene* scene, ShaderManager* shader_manager) = 0;
     virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) = 0;
     virtual void updatePostEffectMesh(Mesh*) = 0;

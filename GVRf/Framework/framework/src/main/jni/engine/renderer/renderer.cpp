@@ -17,7 +17,9 @@
  * Renders a scene, a screen.
  ***************************************************************************/
 
-#include <contrib/glm/gtc/type_ptr.hpp>
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
 #include "renderer.h"
 #include "objects/scene.h"
 
@@ -160,12 +162,10 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     render_data_vector->clear();
     scene_objects.clear();
     RenderState rstate;
-    int lightCount = scene->getLightList().size();
 
-    if (lightCount != numLights)
+    if (scene->getLights().isDirty())
     {
         scene->bindShaders();
-        numLights = lightCount;
     }
     rstate.is_multiview = is_multiview;
     rstate.material_override = NULL;

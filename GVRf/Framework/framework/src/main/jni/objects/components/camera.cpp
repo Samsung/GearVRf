@@ -47,6 +47,7 @@ void Camera::setPostEffect(RenderData* post_effects)
     if (post_effects)
     {
         post_effects->set_depth_test(false);
+        post_effects->disable_light();
         Renderer::getInstance()->updatePostEffectMesh(post_effects->mesh());
     }
 }

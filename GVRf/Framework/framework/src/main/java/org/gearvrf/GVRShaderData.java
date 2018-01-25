@@ -383,6 +383,18 @@ public class GVRShaderData extends GVRHybridObject
     }
 
     /**
+     * Get the value for a floating point 4x4 matrix.
+     * @param key name of uniform to get.
+     * @return floating array with 16 elements
+     * @see #getFloatVec(String)
+     */
+    public float[] getMat4(String key)
+    {
+        checkKeyIsUniform(key);
+        return NativeShaderData.getMat4(getNative(), key);
+    }
+
+    /**
      * Set the value for a floating point 4x4 matrix.
      * @param key name of uniform to set.
      * @see #getFloatVec(String)
@@ -503,11 +515,17 @@ public class GVRShaderData extends GVRHybridObject
         return null;
     }
 
+    String getShaderType(String name)
+    {
+        return NativeShaderData.getShaderType(getNative(), name);
+    }
+
     /**
      * Construct a string describing the shader layout of this material.
      * @return shader layout string
      */
     String makeShaderLayout() { return NativeShaderData.makeShaderLayout(getNative()); }
+
     void useGpuBuffer(boolean flag) { NativeShaderData.useGpuBuffer(getNative(), flag);}
 }
 
@@ -549,6 +567,8 @@ class NativeShaderData {
             float y1, float z1, float w1, float x2, float y2, float z2,
             float w2, float x3, float y3, float z3, float w3, float x4,
             float y4, float z4, float w4);
+
+    static native String getShaderType(long shaderData, String key);
 
     static native String makeShaderLayout(long shaderData);
 

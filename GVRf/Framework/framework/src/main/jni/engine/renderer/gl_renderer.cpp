@@ -26,6 +26,7 @@
 #include "gl/gl_external_image.h"
 #include "gl/gl_float_image.h"
 #include "gl/gl_imagetex.h"
+#include "gl/gl_light.h"
 #include "gl_renderer.h"
 #include "objects/scene.h"
 
@@ -148,9 +149,9 @@ namespace gvr
         return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texparams, number_views);
     }
 
-    RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers)
+    RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format)
     {
-        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, DepthFormat::DEPTH_24_STENCIL_8);
+        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, jdepth_format);
         return tex;
     }
 
@@ -183,6 +184,12 @@ namespace gvr
         LOGV("Renderer::createIndexBuffer(%d, %d) = %p", bytesPerIndex, icount, ibuf);
         return ibuf;
     }
+
+    Light* GLRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
+    {
+        return new GLLight(uniformDescriptor, textureDescriptor);
+    }
+
 
     GLRenderer::GLRenderer() : transform_ubo_{nullptr, nullptr}
     {
@@ -419,16 +426,11 @@ namespace gvr
     void GLRenderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
     {
         checkGLError("makeShadowMaps");
-        const std::vector<Light*> lights = scene->getLightList();
         GLint drawFB, readFB;
-        int texIndex = 0;
 
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFB);
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFB);
-        for (auto it = lights.begin(); it != lights.end(); ++it) {
-            (*it)->makeShadowMap(scene, shader_manager, texIndex);
-            ++texIndex;
-        }
+        scene->getLights().makeShadowMaps(scene, shader_manager);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readFB);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFB);
     }
@@ -662,49 +664,37 @@ namespace gvr
 
     void GLRenderer::updateLights(RenderState& rstate, Shader* shader, int texIndex)
     {
-        const std::vector<Light*>& lightlist = rstate.scene->getLightList();
-        ShadowMap* shadowMap = nullptr;
+        ShadowMap* shadowMap = rstate.scene->getLights().updateLights(this, shader);
 
-        for (auto it = lightlist.begin();
-             it != lightlist.end();
-             ++it)
-        {
-            Light* light = (*it);
-            if (light != NULL)
-            {
-                light->render(shader);
-                ShadowMap* sm = light->getShadowMap();
-                if (sm != nullptr)
-                {
-                    shadowMap = sm;
-                }
-            }
-        }
         if (shadowMap)
         {
             GLShader* glshader = static_cast<GLShader*>(shader);
             int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
             if (loc >= 0)
             {
+#ifdef DEBUG_LIGHT
+                LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
+#endif
                 shadowMap->bindTexture(loc, texIndex);
             }
         }
         checkGLError("GLRenderer::updateLights");
     }
-void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
-{
-    float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
-    float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
-    unsigned short faces[] = { 0, 2, 1, 1, 2, 3 };
 
-    const int position_size = sizeof(positions)/ sizeof(positions[0]);
-    const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
-    const int faces_size = sizeof(faces)/ sizeof(faces[0]);
+    void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
+    {
+        float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
+        float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
+        unsigned short faces[] = { 0, 2, 1, 1, 2, 3 };
 
-    copy_mesh->setVertices(positions, position_size);
-    copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
-    copy_mesh->setTriangles(faces, faces_size);
-}
+        const int position_size = sizeof(positions)/ sizeof(positions[0]);
+        const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
+        const int faces_size = sizeof(faces)/ sizeof(faces[0]);
+
+        copy_mesh->setVertices(positions, position_size);
+        copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
+        copy_mesh->setTriangles(faces, faces_size);
+    }
 
 }
 

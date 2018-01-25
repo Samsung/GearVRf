@@ -47,7 +47,6 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
     private GVRMesh mMesh;
     private ArrayList<GVRRenderPass> mRenderPassList;
     private static final String TAG = "GearVRf";
-    private GVRLight mLight;
     private boolean mLightMapEnabled;
     private boolean isLightEnabled;
     private HashMap<String, Integer> mShaderFeatures = new HashMap<String, Integer>();
@@ -371,7 +370,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Enable lighting effect for the render_data. Note that it is different from
-     * GVRLight.enable(). GVRLight.enable turns on a light, while this method
+     * GVRLightBase.enable(). GVRLightBase.enable turns on a light, while this method
      * enables the lighting effect for the render_data.
      */
     public void enableLight()
@@ -387,8 +386,8 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
 
     /**
      * Disable lighting effect for the render_data.
-     * Note that it is different from GVRLight.disable().
-     * GVRLight.disable turns off a light, while this method
+     * Note that it is different from GVRLightBase.disable().
+     * GVRLightBase.disable turns off a light, while this method
      * disables the lighting effect for the render_data.
      */
     public void disableLight()
@@ -868,10 +867,7 @@ public class GVRRenderData extends GVRJavaComponent implements IRenderable, Pret
             sb.append("Mesh: ");
             mMesh.prettyPrint(sb, indent);
         }
-        sb.append(Log.getSpaces(indent));
-        sb.append("Light: " + mLight);
         sb.append(System.lineSeparator());
-
         sb.append(Log.getSpaces(indent));
         sb.append("Light enabled: " + isLightEnabled);
         sb.append(System.lineSeparator());

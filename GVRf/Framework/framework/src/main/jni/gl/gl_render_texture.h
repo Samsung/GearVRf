@@ -145,8 +145,7 @@ public:
     explicit GLNonMultiviewRenderTexture(int width, int height, int sample_count,
                              int jcolor_format, int jdepth_format, bool resolve_depth,
                              const TextureParameters* texture_parameters);
-    void generateRenderTextureLayer(GLenum depth_format, int width, int height);
-    void bindFrameBufferToLayer(int layerIndex);
+    void generateRenderTextureLayer(int width, int height);
     virtual ~GLNonMultiviewRenderTexture(){
 
     }

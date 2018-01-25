@@ -14,16 +14,6 @@
  */
 package org.gearvrf;
 
-import static android.opengl.GLES20.GL_EXTENSIONS;
-import static android.opengl.GLES20.glGetString;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,10 +21,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.gearvrf.utility.VrAppSettings;
-
 import org.gearvrf.utility.Log;
-import android.os.Environment;
 
 /**
  * Generates a set of native vertex and fragment shaders from source code segments.
@@ -84,17 +71,18 @@ public class GVRShaderTemplate extends GVRShader
         {
             Count = 1;
             FragmentUniforms = "";
-            VertexUniforms = null;
+            VertexStruct = null;
             VertexOutputs = null;
             FragmentShader = null;
             VertexShader = null;
         }
         public Integer Count;
         public String FragmentUniforms;
-        public String VertexUniforms;
-        public String VertexOutputs;
+        public String VertexStruct;
         public String VertexShader;
+        public String VertexOutputs;
         public String FragmentShader;
+        public String VertexDescriptor;
     };
 
     /**
@@ -315,15 +303,15 @@ public class GVRShaderTemplate extends GVRShader
      *            "Fragment" or "Vertex" indicating shader type.
      * @param definedNames
      *            set of names to define for this shader.
-     * @param lightlist
-     *            list of lights in the scene
+     * @param scene
+     *            scene being rendered
      * @param lightClasses
      *            map of existing light classes used in scene
      * @param material
      *            GVRMaterial shader is being used with
      * @return GL shader code with parameters substituted.
      */
-    private String generateShaderVariant(String type, HashMap<String, Integer> definedNames, GVRLightBase[] lightlist, Map<String, LightClass> lightClasses, GVRShaderData material)
+    private String generateShaderVariant(String type, HashMap<String, Integer> definedNames, GVRScene scene, Map<String, LightClass> lightClasses, GVRShaderData material)
     {
         String template = getSegment(type + "Template");
         StringBuilder shaderSource = new StringBuilder();
@@ -333,7 +321,7 @@ public class GVRShaderTemplate extends GVRShader
             throw new IllegalArgumentException(type + "Template segment missing - cannot make shader");
         }
         String combinedSource = replaceTransforms(template);
-        boolean useLights = (lightlist != null) && (lightlist.length > 0);
+        boolean useLights = (scene != null) && (scene.getLightList().length > 0);
         String lightShaderSource = "";
 
         shaderSource.append("#version " + mGLSLVersion.toString() + "\n");
@@ -346,11 +334,11 @@ public class GVRShaderTemplate extends GVRShader
         {
             if (type.equals("Vertex"))
             {
-                lightShaderSource = generateLightVertexShader(lightlist, lightClasses);
+                lightShaderSource = generateLightVertexShaderLoop(scene, lightClasses);
             }
             else
             {
-                lightShaderSource = generateLightFragmentShader(lightlist, lightClasses);
+                lightShaderSource = generateLightFragmentShaderLoop(scene, lightClasses);
             }
             shaderSource.append("#define HAS_LIGHTSOURCES 1\n");
         }
@@ -458,9 +446,9 @@ public class GVRShaderTemplate extends GVRShader
                 Map<String, LightClass> lightClasses = scanLights(lightlist);
 
                 String vertexShaderSource = generateShaderVariant("Vertex", variantDefines,
-                                                                  lightlist, lightClasses, material);
+                                                                  scene, lightClasses, material);
                 String fragmentShaderSource = generateShaderVariant("Fragment", variantDefines,
-                                                                    lightlist, lightClasses, material);
+                                                                    scene, lightClasses, material);
                 StringBuilder uniformDescriptor = new StringBuilder();
                 StringBuilder textureDescriptor = new StringBuilder();
                 StringBuilder vertexDescriptor = new StringBuilder();
@@ -567,115 +555,146 @@ public class GVRShaderTemplate extends GVRShader
         defines.put("SHADOWS", castShadow);
         return defines;
     }
-    
-     /**
+
+
+    /**
      * Generates the shader code to compute fragment lighting for each light source.
      * The fragment shader defines a <LightPixel> function which computes the effect of all
      * light sources on the fragment color. This function calls the
      * <AddLight> function which integrates the light sources. This function
      * is defined in the fragment shader template.
-     * 
-     * @param lightlist
-     *            list of lights in the scene
+     *
+     * This functon emits specific code for individual lights but will
+     * produce a loop if there is more than one light of a specific type.
+     *
+     * @param lightClasses
+     *            list of light classes generated by scanLights
      * @return string with shader source code for fragment lighting
      */
-    private String generateLightFragmentShader(GVRLightBase[] lightlist, Map<String, LightClass> lightClasses)
+    private String generateLightFragmentShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
-        String lightFunction = "vec4 LightPixel(Surface s) {\n"
-                + "   vec4 color = vec4(0.0, 0.0, 0.0, 0.0);\n"
-                + "   vec4 c;\n"
-                + "   float enable;\n"
-                + "   Radiance r;\n";
+        String lightFunction = "\nvec4 LightPixel(Surface s)\n{\n"
+                               + "    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);\n"
+                               + "    vec4 c;\n"
+                               + "    Radiance r;\n";
         String lightDefs = "\n";
-        String lightSources = "\n";
-        Integer index = 0;
+        String lightSources = GVRLightBase.makeShaderBlock(scene);
+        String addLightFunc = "            c = AddLight(s, r);\n";
 
-        for (GVRLightBase light : lightlist)
-        {
-            String lightClassName = light.getClass().getSimpleName();
-            String uniformId = light.getLightID();
-            String vertexId = "v" + uniformId;
-
-            if (light.getFragmentShaderSource() != null)
-            {
-                String vertDesc = light.getVertexDescriptor();
-                if (vertDesc != null)
-                {
-                    lightFunction += makeVertexCopy(vertDesc, vertexId, vertexId);
-                    lightFunction += "   r = " + lightClassName + "(s, " + uniformId + ", " + vertexId;
-                    lightFunction += ");\n";
-                    lightDefs += makeVertexOutputs(vertDesc, vertexId, "in ");                    
-                    lightSources += "Vertex" + lightClassName + " " + vertexId + ";\n";
-                }
-                else
-                    lightFunction += "   r = " + lightClassName + "(s, " + uniformId + ");\n";
-                lightFunction += "   enable = " + uniformId + ".enabled;\n";
-                lightFunction += "   c = vec4(enable, enable, enable, 1) * AddLight(s, r);\n";
-                lightFunction += "   color.xyz += c.xyz;\n";
-                lightFunction += "   color.w = c.w;\n";
-                lightSources += "\nuniform Uniform" + lightClassName + " " + uniformId + ";\n";
-            }
-            ++index;
-        }
+        addLightFunc += "            color.xyz += c.xyz;\n";
+        addLightFunc += "            color.w = c.w;\n";
         for (Map.Entry<String, LightClass> entry : lightClasses.entrySet())
         {
             LightClass lclass = entry.getValue();
-            
-            if (lclass.FragmentShader == null)
+            String lightType = entry.getKey();
+            String ulightData = lightType + "s";
+            String elemIndex = "[0]";
+            String index = "0";
+            String lightShader = lclass.FragmentShader;
+
+            lightDefs += "\n" + lclass.FragmentUniforms;
+            if (lightShader == null)
                 continue;
-            lightDefs += "\n" + lclass.FragmentUniforms;            
-            if (lclass.VertexOutputs != null)
-                lightDefs += "\n" + lclass.VertexOutputs;
-            lightDefs += lclass.FragmentShader;
+            lightShader = lightShader.replace("@LIGHTIN", ulightData + elemIndex);
+            if (lclass.Count > 1)
+            {
+                index = "i";
+                elemIndex = "[i]";
+                lightFunction += "    for (int i = 0; i < " + lclass.Count + "; ++i)\n    {\n";
+            }
+            if (lclass.VertexDescriptor != null)
+            {
+                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "in");
+
+                lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
+            }
+            lightDefs += "\n" + lightShader + "\n";
+            lightFunction += "        if (" + ulightData + elemIndex + ".enabled != 0.0)\n        {\n";
+            lightFunction += "            r = " + lightType + "(s, " + ulightData + elemIndex + ", " + index + ");\n";
+            lightFunction += addLightFunc;
+            lightFunction += "    }\n";
+            if (lclass.Count > 1)
+            {
+                lightFunction += "  }\n";
+            }
         }
-        lightFunction += "   return color; }\n";
+        lightFunction += "   return color;\n}\n";
         return lightDefs + lightSources + lightFunction;
     }
 
     /**
      * Generates the shader code to compute vertex lighting for each light source.
-     * The vertex shader defines a <LightVertex> function which computes
-     * vertex output information for each light
-     * 
-     * @param lightlist
-     *            list of lights in the scene
+     * The vertex shader defines a "LightVertex" function which computes
+     * vertex output information for each light. The generated shader emits
+     * a loop for each different type of light.
+     *
+     * @param lightClasses
+     *            list of light classes generated by scanLights
      * @return string with shader source code for vertex lighting
      */
-    private String generateLightVertexShader(GVRLightBase[] lightlist, Map<String, LightClass> lightClasses)
+    private String generateLightVertexShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
         String lightSources = "";
         String lightDefs = "";
-        String lightFunction = "void LightVertex(Vertex vertex) {\n";
-        Integer index = 0;
+        String lightFunction = "\nvoid LightVertex(Vertex vertex)\n{\n";
 
-        for (GVRLightBase light : lightlist)
-        {
-            String lightShader = light.getVertexShaderSource();
-            String lightid = light.getLightID();
-
-            if (lightid.isEmpty())
-                continue;
-            if (lightShader != null)
-            {
-                String vertexId = "v" + lightid;
-                
-                lightShader = lightShader.replace("@LIGHTOUT", vertexId);
-                lightShader = lightShader.replace("@LIGHTIN", lightid);
-                lightFunction += lightShader;
-                lightDefs += makeVertexOutputs(light.getVertexDescriptor(), vertexId, "out ");
-                lightSources += "\nuniform Uniform" + light.getClass().getSimpleName() + " " + lightid + ";\n";
-            }
-            ++index;
-        }
-        lightFunction += "}\n";
         for (Map.Entry<String, LightClass> entry : lightClasses.entrySet())
         {
             LightClass lclass = entry.getValue();
-            
-            if (lclass.VertexShader != null)
-                lightDefs += lclass.FragmentUniforms;
+            String lightType = entry.getKey();
+            String ulightArrayName = lightType + "s";
+            String lightShader = lclass.VertexShader;
+            String lightIndex;
+            String vertexOutputs = lclass.VertexOutputs;
+
+            if (lightSources.equals(""))
+            {
+                lightSources = GVRLightBase.makeShaderBlock(scene);
+            }
+            lightDefs += "\n" + lclass.FragmentUniforms + "\n";
+            if (lightShader == null)
+            {
+                continue;
+            }
+            if (vertexOutputs != null)
+            {
+                vertexOutputs = vertexOutputs.replace("$PREFIX", "out");
+                lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
+            }
+            if (lclass.Count > 1)
+            {
+                lightIndex = "[i]";
+                lightFunction += "   for (int i = 0; i < " + lclass.Count + "; ++i)\n    {\n";
+            }
+            else
+            {
+                lightIndex = "[0]";
+            }
+            lightShader = processLightShader(lightShader, lightType, lightIndex, ulightArrayName);
+            lightFunction += "        if (" + ulightArrayName + lightIndex + ".enabled != 0.0)\n        {\n";
+            lightFunction += lightShader + "        }\n";
+            if (lclass.Count > 1)
+            {
+                lightFunction += "    }\n";
+            }
         }
+        lightFunction += "}\n";
         return lightDefs + lightSources + lightFunction;
+    }
+
+
+    private String processLightShader(String lightShader, String lightType, String lightIndex, String lightArray)
+    {
+        Pattern pattern = Pattern.compile("@LIGHTOUT.([A-Za-z0-9_]+)*");
+        lightShader = lightShader.replace("@LIGHTIN", lightArray + lightIndex);
+        Matcher m = pattern.matcher(lightShader);
+
+        while (m.find(0))
+        {
+            lightShader = m.replaceFirst(lightType + "_" + m.group(1) + lightIndex);
+            m.reset(lightShader);
+        }
+        return lightShader;
     }
 
     private Map<String, LightClass> scanLights(GVRLightBase[] lightlist)
@@ -683,36 +702,40 @@ public class GVRShaderTemplate extends GVRShader
         Map<String, LightClass> lightClasses = new HashMap<String, LightClass>();
 
         if (lightlist == null)
+        {
             return lightClasses;
+        }
         for (GVRLightBase light : lightlist)
         {
-            String lightClassName = light.getClass().getSimpleName();
-            String lightid = light.getLightID();
             String lightShader = light.getFragmentShaderSource();
- 
-            if ((lightShader == null) || lightid.isEmpty())
+
+            if (lightShader == null)
+            {
                 continue;
-            LightClass lightClass = lightClasses.get(lightClassName);
+            }
+            String lightType = light.getLightClass();
+            LightClass lightClass = lightClasses.get(lightType);
+
             if (lightClass != null)
+            {
                 ++lightClass.Count;
+            }
             else
             {
                 lightClass = new LightClass();
-                lightClass.FragmentShader = lightShader.replace("@LightType", lightClassName);
-                lightClass.FragmentUniforms = makeShaderStruct(light.getUniformDescriptor(), "Uniform" + lightClassName, null);
+                lightClass.FragmentShader = lightShader.replace("@LightType", lightType);
+                lightClass.FragmentUniforms = makeUniformStruct(light);
                 if (light.getVertexShaderSource() != null)
                 {
-                    lightClass.VertexShader = light.getVertexShaderSource().replace("@LightType", lightClassName);
+                    lightClass.VertexShader = light.getVertexShaderSource().replace("@LightType", lightType);
+                    if (light.getVertexDescriptor() != null)
+                    {
+                        lightClass.VertexDescriptor = light.getVertexDescriptor();
+                        lightClass.VertexStruct = makeShaderStruct(light.getVertexDescriptor(), "V" + lightType, lightClass.VertexShader);
+                        lightClass.VertexOutputs = makeVertexOutputsLoop(light);
+                    }
                 }
-                if (light.getVertexDescriptor() != null)
-                {
-                    lightClass.VertexOutputs = makeShaderStruct(light.getVertexDescriptor(), "Vertex" + lightClassName, lightClass.VertexShader);
-                }
-                if (light.getUniformDescriptor() != null)
-                {
-                    lightClass.VertexUniforms = makeShaderStruct(light.getUniformDescriptor(), "Uniform" + lightClassName, lightClass.VertexShader);
-                }
-                lightClasses.put(lightClassName, lightClass);
+                lightClasses.put(lightType, lightClass);
             }
         }
         return lightClasses;
@@ -736,22 +759,32 @@ public class GVRShaderTemplate extends GVRShader
         return structDesc;
     }
 
-    private String makeVertexOutputs(String descriptor, String baseName, String prefix)
+    private String makeUniformStruct(GVRLightBase light)
     {
+        String structDesc = "struct U" + light.getLightClass() + "\n{\n";
+        structDesc += light.makeShaderLayout();
+        structDesc += "};\n";
+        return structDesc;
+    }
+
+    private String makeVertexOutputsLoop(GVRLightBase light)
+    {
+        String lightClassName = light.getLightClass();
         Pattern pattern = Pattern.compile("[ ]*([a-zA-Z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
-        Matcher matcher = pattern.matcher(descriptor);
+        Matcher matcher = pattern.matcher(light.getVertexDescriptor());
         String desc = "";
         while (matcher.find())
         {
             String name = matcher.group(2);
             String type = matcher.group(1);
 
-            desc += prefix + type + " " + baseName + "_" + name + ";\n";
+            type = light.getShaderType(type);
+            desc += "$PREFIX " + type + " " + lightClassName + "_" + name + "[$COUNT];\n";
         }
         return desc;
     }
 
-    private String makeVertexCopy(String descriptor, String inBase, String outBase)
+    private String makeVertexCopyLoop(String descriptor, String inBase, String outBase, String elemIndex)
     {
         Pattern pattern = Pattern.compile("[ ]*([a-zA-Z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");
         Matcher matcher = pattern.matcher(descriptor);
@@ -760,7 +793,7 @@ public class GVRShaderTemplate extends GVRShader
         {
             String name = matcher.group(2);
 
-            desc += "   " + outBase + "." + name + " = " +  inBase + "_" + name + ";\n";
+            desc += "        " + outBase + elemIndex + "." + name + " = " +  inBase + "_" + name + elemIndex + ";\n";
         }
         return desc;
     }

@@ -251,25 +251,50 @@ namespace gvr
     std::string UniformBlock::makeShaderLayout()
     {
         std::ostringstream stream;
-        if (mUseBuffer) {
+        if (mUseBuffer)
+        {
             stream << "layout (std140) uniform " << getBlockName() << " {" << std::endl;
         }
-            DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
+        DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
+        {
+            int nelems = entry.Count;
+            if (entry.IsSet)
             {
-                int nelems = entry.Count;
-                if (entry.IsSet)
+                stream << "uniform " << entry.Type << " " << entry.Name;
+                if (nelems > 1)
                 {
-                    if(nelems > 1)
-                    stream << "uniform " << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
-                    else
-                    stream << "uniform " << entry.Type << " " << entry.Name << ";" << std::endl;
+                    stream << "[" << nelems << "]";
                 }
-            });
+                stream << ";" << std::endl;
+            }
+        });
 
-        if (mUseBuffer) {
+        if (mUseBuffer)
+        {
             stream << "};" << std::endl;
         }
         return stream.str();
+    }
+
+    std::string UniformBlock::dumpFloats()
+    {
+        std::ostringstream os;
+        const float* ptr = (const float*) mUniformData;
+        int n = 16;
+        int offset = 0;
+        int totalsize = getTotalSize() / sizeof(float);
+        while (offset < totalsize)
+        {
+            os << *ptr++ << " ";
+            offset++;
+            if (--n <= 0)
+            {
+                os << std::endl;
+                n = 16;
+            }
+        }
+        os << std::endl;
+        return os.str();
     }
 
     std::string UniformBlock::toString()
@@ -279,18 +304,20 @@ namespace gvr
         {
             forEachEntry([this, &os, i](const DataEntry& e) mutable
             {
-                os << e.Name << ": " << i * e.Offset;
+                os << e.Name << ": ";
                 for (int j = 0; j < e.Size / sizeof(float); j++)
                 {
-                    char* d = ((char*) mUniformData) + e.Offset;
+                    char* d = ((char*) mUniformData) + e.Offset + (i * mElemSize);
                     os << " ";
                     if (e.Name[0] == 'i')
                     {
-                        os << *(((int*) d) + i);
+                        int* ip = ((int*) d) + j;
+                        os << *ip;
                     }
                     else
                     {
-                        os << *(((float*) d) + i);
+                        float* fp = ((float*) d) + j;
+                        os << *fp;
                     }
                 }
                 os << ';' << std::endl;
@@ -357,21 +384,23 @@ namespace gvr
 
     bool UniformBlock::setAt(int elemIndex, UniformBlock& srcBlock)
     {
+        int nelems = srcBlock.getTotalSize() / mElemSize;
         if ((elemIndex >= 0) &&
-            (elemIndex < mMaxElems) &&
-            (srcBlock.getTotalSize() == mElemSize))
+            (elemIndex + nelems <= mMaxElems))
         {
             const char* src = (const char*) srcBlock.getData();
-            memcpy(mUniformData + mElemSize * elemIndex, src, mElemSize);
+            memcpy(mUniformData + mElemSize * elemIndex, src, nelems * mElemSize);
+            elemIndex += nelems;
             if (elemIndex >= mNumElems)
             {
-                setNumElems(elemIndex + 1);
+                setNumElems(elemIndex);
             }
             return true;
         }
         LOGE("UniformBlock::setAt ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);
         return false;
     }
+
 
     const char* UniformBlock::getDataAt(int elemIndex)
     {
