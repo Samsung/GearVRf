@@ -84,6 +84,24 @@ public:
         setPadding();
     }
 
+    bool operator==(const TextureParameters& src)
+    {
+        return ((Params.MinFilter == src.Params.MinFilter) &&
+                (Params.MagFilter == src.Params.MagFilter) &&
+                (Params.WrapU == src.Params.WrapU) &&
+                (Params.WrapV == src.Params.WrapV) &&
+                (MaxAnisotropy == src.MaxAnisotropy));
+    }
+
+    bool operator!=(const TextureParameters& src)
+    {
+        return ((Params.MinFilter != src.Params.MinFilter) ||
+                (Params.MagFilter != src.Params.MagFilter) ||
+                (Params.WrapU != src.Params.WrapU) ||
+                (Params.WrapV != src.Params.WrapV) ||
+                (MaxAnisotropy != src.MaxAnisotropy));
+    }
+
     int getMinFilter() const { return Params.MinFilter; }
     int getMagFilter() const { return Params.MagFilter; }
     int getWrapU() const { return Params.WrapU; }
@@ -107,7 +125,7 @@ protected:
         unsigned short int WrapU : 2;
         unsigned short int WrapV : 2;
         unsigned short int Padding : 6;
-    }BitFields;
+    } BitFields;
 
     BitFields Params;
     float MaxAnisotropy;
