@@ -15,47 +15,56 @@
 
 package org.gearvrf.resonanceaudio;
 
-import org.gearvrf.GVRComponent;
+import com.google.vr.sdk.audio.GvrAudioEngine;
+
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTransform;
 
 /**
  * Represents a spatial sound source in the scene.
  */
-public class GVRAudioSource extends GVRComponent {
+public class GVRAudioSource extends GVRBehavior
+{
     static private long TYPE_AUDIO = newComponentType(GVRAudioSource.class);
 
     private String mSoundFile;
     private volatile int mSourceId;
-    private GVRAudioListener mAudioListener;
-
+    private GVRAudioManager mAudioListener;
     private float mVolume;
+    private boolean mLoop = false;
 
     /**
      * Constructs a new sound source.
      *
      * @param gvrContext GVR context.
      */
-    public GVRAudioSource(GVRContext gvrContext) {
-        super(gvrContext, 0);
-
+    public GVRAudioSource(GVRContext gvrContext)
+    {
+        super(gvrContext);
+        mHasFrameCallback = false;
         mType = getComponentType();
-
         mAudioListener = null;
         mSoundFile = null;
         mSourceId = -1;
-
         mVolume = 1f;
     }
 
     static public long getComponentType() { return TYPE_AUDIO; }
 
-    static protected long newComponentType(Class<? extends GVRAudioSource> clazz)
+    private boolean canPlay()
     {
-        long hash = (long) clazz.hashCode() << 32;
-        long t = ((long) System.currentTimeMillis() & 0xfffffff);
-        long result = hash | t;
-        return result;
+        return (isEnabled() && (mAudioListener != null) && (getOwnerObject() != null));
+    }
+
+    void setListener(GVRAudioManager listener)
+    {
+        mAudioListener = listener;
+        if (canPlay())
+        {
+            play();
+        }
     }
 
     /**
@@ -63,24 +72,24 @@ public class GVRAudioSource extends GVRComponent {
      *
      * @param soundFile path/name of the file to be played.
      */
-    public void load(String soundFile) {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
-        }
-
+    public void load(String soundFile)
+    {
         mSoundFile = soundFile;
-        mAudioListener.loadSoundFile(this);
+        if (mAudioListener != null)
+        {
+            mAudioListener.getAudioEngine().preloadSoundFile(soundFile);
+        }
     }
 
     /**
      * Unload the sound file.
      */
-    public void unload() {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
+    public void unload()
+    {
+        if (mAudioListener != null)
+        {
+            mAudioListener.getAudioEngine().unloadSoundFile(getSoundFile());
         }
-
-        mAudioListener.unloadSoundFile(this);
         mSoundFile = null;
         mSourceId = -1;
     }
@@ -98,64 +107,38 @@ public class GVRAudioSource extends GVRComponent {
     }
 
     @Override
-    public void setOwnerObject(GVRSceneObject owner) {
-        GVRAudioListener newListener = null;
-
-        if (owner != null && owner.getParent() != null) {
-            newListener = (GVRAudioListener)owner.getParent().getComponent(GVRAudioListener.getComponentType());
+    public void onDetach(GVRSceneObject owner)
+    {
+        super.onDetach(owner);
+        if (mAudioListener != null)
+        {
+            stop();
+            mAudioListener.removeSource(this);
         }
-
-        switchListener(newListener);
-
-        this.owner = owner;
-    }
-
-    private void switchListener(GVRAudioListener newListener) {
-        if (mAudioListener != newListener) {
-            if (mAudioListener != null) {
-                stop();
-                mAudioListener.removeSource(this);
-            }
-
-            if (newListener != null) {
-                newListener.addSource(this);
-            }
-        }
-
-        mAudioListener = newListener;
     }
 
     @Override
-    public void onDisable() {
+    public void onDisable()
+    {
         super.onDisable();
-
         stop();
     }
 
-    @Override
-    public void onNewOwnersParent(GVRSceneObject newOwnersParent) {
-        GVRAudioListener newListener = (GVRAudioListener)newOwnersParent.getComponent(GVRAudioListener.getComponentType());
-        switchListener(newListener);
-    }
-
-    @Override
-    public void onRemoveOwnersParent(GVRSceneObject oldOwnersParent) {
-        switchListener(null);
-    }
-
-    public boolean isPlaying() {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
+    public boolean isPlaying()
+    {
+        if ((mAudioListener != null) &&
+            (getSourceId() != GvrAudioEngine.INVALID_ID))
+        {
+            return mAudioListener.getAudioEngine().isSoundPlaying(getSourceId());
         }
-
-        return mAudioListener.isSoundPlaying(this);
+        return false;
     }
 
     /**
      * Starts the playback of a preloaded sound.
      */
     public void play() {
-        play(false);
+        play(mLoop);
     }
 
     /**
@@ -163,9 +146,12 @@ public class GVRAudioSource extends GVRComponent {
      *
      * @param looped enables looped playback
      */
-    public void play(boolean looped) {
-        if (isEnabled()) {
-            onPlay(looped);
+    public void play(boolean looped)
+    {
+        mLoop = looped;
+        if (canPlay())
+        {
+            onPlay();
         }
     }
 
@@ -174,56 +160,102 @@ public class GVRAudioSource extends GVRComponent {
      *
      * @param looped enables looped playback
      */
-    public void play(String soundFile, boolean looped) {
+    public void play(String soundFile, boolean looped)
+    {
         mSoundFile = soundFile;
-        play(looped);
+        play();
     }
 
-    protected void onPlay(boolean looped) {
-        mAudioListener.playSound(this, looped);
+    protected void onPlay()
+    {
+        String fileName = getSoundFile();
+        if ((fileName == null) || (fileName.equals("")))
+        {
+            return;
+        }
+        GvrAudioEngine audioEngine = mAudioListener.getAudioEngine();
+        int sourceId = audioEngine.createSoundObject(fileName);
+        if (sourceId != GvrAudioEngine.INVALID_ID)
+        {
+            setSourceId(sourceId);
+            audioEngine.setSoundVolume(sourceId, getVolume());
+            updatePosition(audioEngine);
+            audioEngine.playSound(sourceId, mLoop);
+        }
+    }
+
+    void updatePosition(GvrAudioEngine audioEngine)
+    {
+        int sourceId = getSourceId();
+        if (sourceId != GvrAudioEngine.INVALID_ID)
+        {
+            GVRTransform t = getTransform();
+            audioEngine.setSoundObjectPosition(sourceId, t.getPositionX(), t.getPositionY(), t.getPositionZ());
+        }
     }
 
     /**
      * Pauses the playback of a sound.
      */
-    public void pause() {
-        mAudioListener.pauseSound(this);
+    public void pause()
+    {
+        if (mAudioListener != null)
+        {
+            int sourceId = getSourceId();
+            if (sourceId != GvrAudioEngine.INVALID_ID)
+            {
+                mAudioListener.getAudioEngine().pauseSound(sourceId);
+            }
+        }
     }
 
     /**
      * Resumes the playback of a sound.
      */
-    public void resume() {
-        if (isEnabled()) {
+    public void resume()
+    {
+        if (canPlay())
+        {
             onResume();
         }
     }
 
-    protected void onResume() {
-        mAudioListener.resumeSound(this);
+    protected void onResume()
+    {
+        GvrAudioEngine audioEngine = mAudioListener.getAudioEngine();
+        int sourceId = getSourceId();
+        if (sourceId != GvrAudioEngine.INVALID_ID)
+        {
+            audioEngine.setSoundVolume(sourceId, mVolume);
+            updatePosition(audioEngine);
+            audioEngine.resumeSound(sourceId);
+        }
     }
 
     /**
      * Stops the playback of a sound and destroys the corresponding Sound Object or Soundfield.
      */
-    public void stop() {
-        mAudioListener.stopSound(this);
+    public void stop()
+    {
+        if (mAudioListener != null)
+        {
+            mAudioListener.getAudioEngine().stopSound(getSourceId());
+        }
     }
 
     /**
      * Changes the volume of an existing sound.
      * @param volume volume value. Should range from 0 (mute) to 1 (max)
      */
-    public void setVolume(float volume) {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
-        }
-
+    public void setVolume(float volume)
+    {
         // Save this in case this audio source is not being played yet
         mVolume = volume;
-
-        // This will actually work only if the sound file is being played
-        mAudioListener.setSoundVolume(this, volume);
+        if (isPlaying() && (getSourceId() != GvrAudioEngine.INVALID_ID))
+        {
+            // This will actually work only if the sound file is being played
+            mAudioListener.getAudioEngine().setSoundVolume(getSourceId(), getVolume());
+        }
     }
 
     /**

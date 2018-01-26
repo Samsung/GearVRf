@@ -15,7 +15,7 @@ repositories {
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '25.0.2'
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 21
@@ -42,12 +42,14 @@ project.ext.daydreamVersion = "1.120.0"
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-
-    debugCompile(name: 'framework-debug', ext: 'aar')
-    releaseCompile(name: 'framework-release', ext: 'aar')
-
+    if (findProject(':framework')) {
+        compile project (':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
     compile "org.joml:joml-android:${jomlVersion}"
     compile "com.google.vr:sdk-audio:${daydreamVersion}"
+    compile project(path: ':framework')
 }
 
 clean {}.doLast {
