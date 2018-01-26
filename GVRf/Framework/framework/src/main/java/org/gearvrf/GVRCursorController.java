@@ -1095,6 +1095,7 @@ public abstract class GVRCursorController implements IEventReceiver
             if (mEvent != null)
             {
                 mEvent.recycle();
+                mEvent = null;
             }
             if ((picked != null) && (picked.length > 0))
             {
