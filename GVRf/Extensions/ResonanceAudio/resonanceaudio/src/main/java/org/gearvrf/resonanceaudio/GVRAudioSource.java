@@ -16,6 +16,7 @@
 package org.gearvrf.resonanceaudio;
 
 import com.google.vr.sdk.audio.GvrAudioEngine;
+
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
@@ -81,24 +82,24 @@ public class GVRAudioSource extends GVRBehavior
      *
      * @param soundFile path/name of the file to be played.
      */
-    public void load(String soundFile) {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
-        }
-
+    public void load(String soundFile)
+    {
         mSoundFile = soundFile;
-        mAudioListener.loadSoundFile(this);
+        if (mAudioListener != null)
+        {
+            mAudioListener.getAudioEngine().preloadSoundFile(soundFile);
+        }
     }
 
     /**
      * Unload the sound file.
      */
-    public void unload() {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
+    public void unload()
+    {
+        if (mAudioListener != null)
+        {
+            mAudioListener.getAudioEngine().unloadSoundFile(getSoundFile());
         }
-
-        mAudioListener.unloadSoundFile(this);
         mSoundFile = null;
         mSourceId = -1;
     }
@@ -116,57 +117,31 @@ public class GVRAudioSource extends GVRBehavior
     }
 
     @Override
-    public void setOwnerObject(GVRSceneObject owner) {
-        GVRAudioListener newListener = null;
-
-        if (owner != null && owner.getParent() != null) {
-            newListener = (GVRAudioListener)owner.getParent().getComponent(GVRAudioListener.getComponentType());
+    public void onDetach(GVRSceneObject owner)
+    {
+        super.onDetach(owner);
+        if (mAudioListener != null)
+        {
+            stop();
+            mAudioListener.removeSource(this);
         }
-
-        switchListener(newListener);
-
-        this.owner = owner;
-    }
-
-    private void switchListener(GVRAudioListener newListener) {
-        if (mAudioListener != newListener) {
-            if (mAudioListener != null) {
-                stop();
-                mAudioListener.removeSource(this);
-            }
-
-            if (newListener != null) {
-                newListener.addSource(this);
-            }
-        }
-
-        mAudioListener = newListener;
     }
 
     @Override
-    public void onDisable() {
+    public void onDisable()
+    {
         super.onDisable();
-
         stop();
     }
 
-    @Override
-    public void onNewOwnersParent(GVRSceneObject newOwnersParent) {
-        GVRAudioListener newListener = (GVRAudioListener)newOwnersParent.getComponent(GVRAudioListener.getComponentType());
-        switchListener(newListener);
-    }
-
-    @Override
-    public void onRemoveOwnersParent(GVRSceneObject oldOwnersParent) {
-        switchListener(null);
-    }
-
-    public boolean isPlaying() {
-        if (mAudioListener == null) {
-            throw new UnsupportedOperationException("Audio source not connected to audio listener");
+    public boolean isPlaying()
+    {
+        if ((mAudioListener != null) &&
+            (getSourceId() != GvrAudioEngine.INVALID_ID))
+        {
+            return mAudioListener.getAudioEngine().isSoundPlaying(getSourceId());
         }
-
-        return mAudioListener.isSoundPlaying(this);
+        return false;
     }
 
     /**
