@@ -39,6 +39,7 @@ typedef void (GL_APIENTRY *PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(G
                                                                                GLsizei numViews);
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId):
         RenderTexture(sample_count),
+        layer_index_(0),
         renderTexture_gl_render_buffer_(nullptr),
         renderTexture_gl_frame_buffer_(nullptr),
         renderTexture_gl_resolve_buffer_(nullptr),
@@ -49,6 +50,7 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int la
 }
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format) :
         RenderTexture(sample_count),
+        layer_index_(0),
         renderTexture_gl_render_buffer_(nullptr),
         renderTexture_gl_frame_buffer_(nullptr),
         renderTexture_gl_resolve_buffer_(nullptr),
@@ -80,6 +82,7 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
         int jcolor_format, int jdepth_format, bool resolve_depth,
         const TextureParameters* texparams)
         : RenderTexture(sample_count),
+          layer_index_(0),
           renderTexture_gl_render_buffer_(nullptr),
           renderTexture_gl_frame_buffer_(new GLFrameBuffer()),
           renderTexture_gl_resolve_buffer_(nullptr),
