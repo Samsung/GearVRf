@@ -25,6 +25,10 @@ import org.gearvrf.utility.Log;
 
 /**
  * Represents a spatial sound source in the scene.
+ * An audio source is attached to a scene object and derives
+ * its position from the transform of the scene objects.
+ * An audio source must be added to the {@link GVRAudioManager}
+ * in order to play it.
  */
 public class GVRAudioSource extends GVRBehavior
 {
@@ -59,6 +63,11 @@ public class GVRAudioSource extends GVRBehavior
         return (isEnabled() && (mAudioListener != null) && (getOwnerObject() != null));
     }
 
+    /**
+     * Internal function to associate the audio source with
+     * a specific GVRAudioManager
+     * @param listener GVRAudioManager to use for this source
+     */
     void setListener(GVRAudioManager listener)
     {
         if ((listener == null) && isPlaying())
@@ -88,7 +97,7 @@ public class GVRAudioSource extends GVRBehavior
     }
 
     /**
-     * Unload the sound file.
+     * Unloads the sound file for this source, if any.
      */
     public void unload()
     {
@@ -101,6 +110,10 @@ public class GVRAudioSource extends GVRBehavior
         mSourceId = GvrAudioEngine.INVALID_ID;
     }
 
+    /**
+     * Gets the name of the sound file for this source.
+     * @return sound file name or null if none
+     */
     public String getSoundFile() {
         return mSoundFile;
     }

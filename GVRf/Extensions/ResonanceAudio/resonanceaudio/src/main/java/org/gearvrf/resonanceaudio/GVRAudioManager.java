@@ -29,8 +29,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a listener in the scene. It records the sound around it and plays through the
- * speakers. It is allowed to have only one listener in the scene.
+ * Manages audio sources for the applications.
+ * Handles pausing and resuming sound and maintains
+ * a list of {@link GVRAudioSource} objects which are attached
+ * to scene objects. The position of each audio source is
+ * obtained from the {@link GVRTransform} of the {@GVRSceneObject}
+ * the audio source is attached to. The audio manager also
+ * tracks the head transform so the sound will be spatially
+ * correct.
  */
 public class GVRAudioManager extends GVREventListeners.ActivityEvents
         implements GVRDrawFrameListener
@@ -55,6 +61,12 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         mAudioEngine.pause();
     }
 
+    /**
+     * Enables or disables sound.
+     * When sound is disabled, nothing is played but the
+     * audio sources remain intact.
+     * @param flag true to enable sound, false to disable.
+     */
     public void setEnable(boolean flag)
     {
         if (mEnabled == flag)
@@ -76,11 +88,22 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         }
     }
 
+    /**
+     * Determine if audio engine is enabled.
+     * @return true if enabled, false if not
+     */
     public boolean isEnabled()
     {
         return mEnabled;
     }
 
+    /**
+     * Adds an audio source to the audio manager.
+     * An audio source cannot be played unless it is
+     * added to the audio manager. A source cannot be
+     * added twice.
+     * @param audioSource audio source to add
+     */
     public void addSource(GVRAudioSource audioSource)
     {
         synchronized (mAudioSources)
@@ -93,6 +116,10 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         }
     }
 
+    /**
+     * Removes an audio source from the audio manager.
+     * @param audioSource audio source to remove
+     */
     public void removeSource(GVRAudioSource audioSource)
     {
         synchronized (mAudioSources)
@@ -102,6 +129,11 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         }
     }
 
+    /**
+     * Stops all of the audio sources playing.
+     * The sources are still associated with this
+     * audio manager and their sound files remain loaded.
+     */
     public void stop()
     {
         synchronized (mAudioSources)
@@ -113,6 +145,10 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         }
     }
 
+    /**
+     * Remove all of the audio sources from the audio manager.
+     * This will stop all sound from playing.
+     */
     public void clearSources()
     {
         synchronized (mAudioSources)
@@ -125,6 +161,10 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         }
     }
 
+    /**
+     * Gets the underlying GvrAudioEngine
+     * @return GvrAudioEngine for this audio manager
+     */
     GvrAudioEngine getAudioEngine()
     {
         return mAudioEngine;
