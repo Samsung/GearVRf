@@ -97,7 +97,7 @@ public class GVRAudioSource extends GVRBehavior
     }
 
     /**
-     * Unload the sound file.
+     * Unloads the sound file for this source, if any.
      */
     public void unload()
     {
@@ -110,6 +110,10 @@ public class GVRAudioSource extends GVRBehavior
         mSourceId = GvrAudioEngine.INVALID_ID;
     }
 
+    /**
+     * Gets the name of the sound file for this source.
+     * @return sound file name or null if none
+     */
     public String getSoundFile() {
         return mSoundFile;
     }
