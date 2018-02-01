@@ -117,7 +117,12 @@ abstract class GVRViewManager extends GVRContext {
             if (mState == ViewManagerState.SHOWING_SPLASH) {
                 mPendingMainScene = scene;
             } else {
+                boolean needInit = (mFrameHandler == normalFrames);
                 setMainSceneImpl(scene);
+                if (needInit)
+                {
+                    notifyMainSceneReady();
+                }
             }
         } finally {
             mMainSceneLock.unlock();
