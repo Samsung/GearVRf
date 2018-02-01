@@ -85,8 +85,11 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
     {
         synchronized (mAudioSources)
         {
-            audioSource.setListener(this);
-            mAudioSources.add(audioSource);
+            if (!mAudioSources.contains(audioSource))
+            {
+                audioSource.setListener(this);
+                mAudioSources.add(audioSource);
+            }
         }
     }
 
@@ -96,6 +99,29 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         {
             audioSource.setListener(null);
             mAudioSources.remove(audioSource);
+        }
+    }
+
+    public void stop()
+    {
+        synchronized (mAudioSources)
+        {
+            for (GVRAudioSource source : mAudioSources)
+            {
+                source.stop();
+            }
+        }
+    }
+
+    public void clearSources()
+    {
+        synchronized (mAudioSources)
+        {
+            for (GVRAudioSource source : mAudioSources)
+            {
+                source.setListener(null);
+            }
+            mAudioSources.clear();
         }
     }
 

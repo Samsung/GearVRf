@@ -21,6 +21,7 @@ import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.utility.Log;
 
 /**
  * Represents a spatial sound source in the scene.
@@ -47,7 +48,7 @@ public class GVRAudioSource extends GVRBehavior
         mType = getComponentType();
         mAudioListener = null;
         mSoundFile = null;
-        mSourceId = -1;
+        mSourceId = GvrAudioEngine.INVALID_ID;
         mVolume = 1f;
     }
 
@@ -60,11 +61,11 @@ public class GVRAudioSource extends GVRBehavior
 
     void setListener(GVRAudioManager listener)
     {
-        mAudioListener = listener;
-        if (canPlay())
+        if ((listener == null) && isPlaying())
         {
-            play();
+            stop();
         }
+        mAudioListener = listener;
     }
 
     /**
@@ -74,10 +75,15 @@ public class GVRAudioSource extends GVRBehavior
      */
     public void load(String soundFile)
     {
+        if (mSoundFile != null)
+        {
+            unload();
+        }
         mSoundFile = soundFile;
         if (mAudioListener != null)
         {
             mAudioListener.getAudioEngine().preloadSoundFile(soundFile);
+            Log.d("SOUND", "loaded audio file %s", getSoundFile());
         }
     }
 
@@ -88,10 +94,11 @@ public class GVRAudioSource extends GVRBehavior
     {
         if (mAudioListener != null)
         {
+            Log.d("SOUND", "unloading audio source %d %s", getSourceId(), getSoundFile());
             mAudioListener.getAudioEngine().unloadSoundFile(getSoundFile());
         }
         mSoundFile = null;
-        mSourceId = -1;
+        mSourceId = GvrAudioEngine.INVALID_ID;
     }
 
     public String getSoundFile() {
@@ -174,13 +181,18 @@ public class GVRAudioSource extends GVRBehavior
             return;
         }
         GvrAudioEngine audioEngine = mAudioListener.getAudioEngine();
-        int sourceId = audioEngine.createSoundObject(fileName);
+        int sourceId = getSourceId();
+        if (sourceId == GvrAudioEngine.INVALID_ID)
+        {
+            sourceId = audioEngine.createSoundObject(fileName);
+        }
         if (sourceId != GvrAudioEngine.INVALID_ID)
         {
             setSourceId(sourceId);
             audioEngine.setSoundVolume(sourceId, getVolume());
             updatePosition(audioEngine);
             audioEngine.playSound(sourceId, mLoop);
+            Log.d("SOUND", "playing audio source %d %s", sourceId, fileName);
         }
     }
 
@@ -239,6 +251,7 @@ public class GVRAudioSource extends GVRBehavior
     {
         if (mAudioListener != null)
         {
+            Log.d("SOUND", "stopping audio source %d %s", getSourceId(), getSoundFile());
             mAudioListener.getAudioEngine().stopSound(getSourceId());
         }
     }
