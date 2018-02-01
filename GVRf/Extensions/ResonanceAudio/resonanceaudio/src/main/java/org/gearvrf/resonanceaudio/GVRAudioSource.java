@@ -52,7 +52,7 @@ public class GVRAudioSource extends GVRBehavior
         mType = getComponentType();
         mAudioListener = null;
         mSoundFile = null;
-        mSourceId = -1;
+        mSourceId = GvrAudioEngine.INVALID_ID;
         mVolume = 1f;
     }
 
@@ -84,10 +84,15 @@ public class GVRAudioSource extends GVRBehavior
      */
     public void load(String soundFile)
     {
+        if (mSoundFile != null)
+        {
+            unload();
+        }
         mSoundFile = soundFile;
         if (mAudioListener != null)
         {
             mAudioListener.getAudioEngine().preloadSoundFile(soundFile);
+            Log.d("SOUND", "loaded audio file %s", getSoundFile());
         }
     }
 
@@ -98,10 +103,11 @@ public class GVRAudioSource extends GVRBehavior
     {
         if (mAudioListener != null)
         {
+            Log.d("SOUND", "unloading audio source %d %s", getSourceId(), getSoundFile());
             mAudioListener.getAudioEngine().unloadSoundFile(getSoundFile());
         }
         mSoundFile = null;
-        mSourceId = -1;
+        mSourceId = GvrAudioEngine.INVALID_ID;
     }
 
     public String getSoundFile() {
