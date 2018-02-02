@@ -794,7 +794,7 @@ public class X3Dobject {
             animationInteractivityManager = new AnimationInteractivityManager(
                     this, gvrContext, root, mDefinedItems, interpolators,
                     sensors, timeSensors, eventUtilities, scriptObjects,
-                    viewpoints
+                    viewpoints, this.assetRequest
             );
         } catch (Exception e) {
             Log.e(TAG, "X3Dobject constructor error: " + e);
@@ -3629,6 +3629,15 @@ public class X3Dobject {
                             if (shaderSettings.texture != null) {
                                 gvrMaterial.setTexture("diffuseTexture",
                                         shaderSettings.texture);
+                                // if the TextureMap is a DEFined item, then set the
+                                // GVRMaterial to it as well to help if we set the
+                                // in a SCRIPT node.
+                                for (DefinedItem definedItem: mDefinedItems) {
+                                    if ( definedItem.getGVRTexture() == shaderSettings.texture) {
+                                        definedItem.setGVRMaterial(gvrMaterial);
+                                        break;
+                                    }
+                                }
                             }
 
                             // Appearance node thus far contains properties of GVRMaterial

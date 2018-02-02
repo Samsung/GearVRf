@@ -16,8 +16,10 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRImage;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRSpotLight;
@@ -25,6 +27,8 @@ import org.gearvrf.GVRDirectLight;
 import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSwitch;
+import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.animation.GVRAnimation;
@@ -47,6 +51,7 @@ import org.gearvrf.x3d.data_types.SFInt32;
 import org.gearvrf.x3d.data_types.SFTime;
 import org.gearvrf.x3d.data_types.SFVec3f;
 import org.gearvrf.x3d.data_types.SFRotation;
+import org.gearvrf.x3d.data_types.MFString;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -102,6 +107,7 @@ public class AnimationInteractivityManager {
 
     private AnchorImplementation anchorImplementation = null;
     private GVRAnimator gvrAnimator = null;
+    private GVRAssetLoader.AssetRequest assetRequest = null;
 
 
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
@@ -119,7 +125,8 @@ public class AnimationInteractivityManager {
                                          Vector<TimeSensor> timeSensors,
                                          Vector<EventUtility> eventUtilities,
                                          ArrayList<ScriptObject> scriptObjects,
-                                         Vector<Viewpoint> viewpoints
+                                         Vector<Viewpoint> viewpoints,
+                                         GVRAssetLoader.AssetRequest assetRequest
 
     ) {
         this.x3dObject = x3dObject;
@@ -131,6 +138,7 @@ public class AnimationInteractivityManager {
         this.timeSensors = timeSensors;
         this.eventUtilities = eventUtilities;
         this.scriptObjects = scriptObjects;
+        this.assetRequest = assetRequest;
 
         gvrAnimator = new GVRAnimator(this.gvrContext, true);
         root.attachComponent(gvrAnimator);
@@ -1158,6 +1166,24 @@ public class AnimationInteractivityManager {
                         }
                         scriptParameters.add(parameter);
                     }
+                    else if (fieldType.equalsIgnoreCase("MFString")) {
+                        //TODO: will need to handle multiple strings particularly for Text node
+                        GVRTexture gvrTexture = definedItem.getGVRTexture();
+                        if (gvrTexture != null) {
+                            // have a url containting a texture map
+                            if (scriptObject.getFromDefinedItemField(field).equalsIgnoreCase("url") ) {
+                                GVRImage gvrImage = gvrTexture.getImage();
+                                if ( gvrImage != null ) {
+                                    if ( gvrImage.getFileName() != null) {
+                                        scriptParameters.add("\'" + gvrImage.getFileName() + "\'");
+                                    }
+                                }
+                                else Log.e(TAG, "ImageTexture name not DEFined");
+                            }
+                            else Log.e(TAG, "ImageTexture SCRIPT node url field not found");
+                        }
+                        else Log.e(TAG, "Unable to set MFString in SCRIPT node");
+                    } // end MFString
                 }  //  end if definedItem != null
             }  //  end INPUT_ONLY, INPUT_OUTPUT (only ways to pass parameters to JS parser
         }  // for loop checking for parameters passed to the JavaScript parser
@@ -1307,6 +1333,16 @@ public class AnimationInteractivityManager {
                                 "( params[" + argumentNum + "]);\n";
                         argumentNum += 1;
                     }  // end if SFFloat, SFBool or SFInt32 - a single parameter
+                    else if (fieldType.equalsIgnoreCase("MFString") ) {
+                        // TODO: need MFString to support more than one argument due to being used for Text Strings
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                            "( params[" + argumentNum + "]);\n";
+                        argumentNum += 1;
+                    }  // end if MFString
+                    else {
+                        Log.e(TAG, "Error unsupported field type '" + fieldType + "' in SCRIPT '" +
+                            interactiveObject.getScriptObject().getName() + "'");
+                    }
                 }
                 else if (scriptObject.getFromEventUtility(field) != null) {
                     if (fieldType.equalsIgnoreCase("SFBool")) {
@@ -1687,8 +1723,37 @@ public class AnimationInteractivityManager {
                                 Log.e(TAG, "Error: Not setting SFInt32 '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT " + scriptObject.getName() + "'.");
                                 Log.e(TAG, "Exception: " + e);
                             }
-
                         }  //  end SFInt32
+                        else if (fieldType.equalsIgnoreCase("MFString")) {
+                            MFString mfString = (MFString) returnedJavaScriptValue;
+                            GVRTexture gvrTexture = scriptObjectToDefinedItem.getGVRTexture();
+                            if (gvrTexture != null) {
+                                //  MFString change to a GVRTexture object
+                                if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("url")) {
+                                    if (scriptObjectToDefinedItem.getGVRMaterial() != null) {
+                                        // We have the GVRMaterial that contains a GVRTexture
+                                        if ( ! gvrTexture.getImage().getFileName().equals(mfString.get1Value(0))) {
+                                            // Only loadTexture if it is different than the current
+                                            GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest,
+                                                    gvrTexture, mfString.get1Value(0));
+                                            assetRequest.loadTexture(request);
+                                        }
+                                    } // end having GVRMaterial containing GVRTexture
+                                    else {
+                                        Log.e(TAG, "Error: No GVRMaterial associated with MFString Texture url '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                                    }
+                                }  //  definedItem != null
+                                else {
+                                    Log.e(TAG, "Error: No url associated with MFString '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                                }
+                            }  // end GVRTexture != null
+                            else {
+                                Log.e(TAG, "Error: Not setting MFString '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
+                        }  //  end MFString
+                        else {
+                            Log.e(TAG, "Error: " + fieldType + " in '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "' not supported." );
+                        }
                     }  //  end value != null
                 }  //  end OUTPUT-ONLY or INPUT_OUTPUT
             }  // end for-loop list of fields for a single script
