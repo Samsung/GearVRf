@@ -49,7 +49,6 @@ dependencies {
     }
     compile "org.joml:joml-android:${jomlVersion}"
     compile "com.google.vr:sdk-audio:${daydreamVersion}"
-    compile project(path: ':framework')
 }
 
 clean {}.doLast {
