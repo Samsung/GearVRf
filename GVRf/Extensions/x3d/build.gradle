@@ -1,0 +1,64 @@
+apply plugin: 'com.android.library'
+
+allprojects {
+    repositories {
+        jcenter()
+        flatDir {
+            dirs '../../../gearvrf-libs'
+        }
+    }
+}
+
+android {
+    compileSdkVersion 26
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+project.ext.jomlVersion = "1.9.3-SNAPSHOT"
+project.ext.gsonVersion = '2.8.2'
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile "org.joml:joml-android:${jomlVersion}"
+    compile "com.google.code.gson:gson:$gsonVersion"
+    if (findProject(':framework')) {
+        compile project (':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
+}
+
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
+}
