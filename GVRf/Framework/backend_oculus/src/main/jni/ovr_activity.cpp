@@ -224,76 +224,80 @@ void GVRActivity::copyVulkanTexture(int texSwapChainIndex, int eye){
     frameBuffer_[eye].advance();
 
 }
+
 void GVRActivity::onDrawFrame(jobject jViewManager) {
-        ovrFrameParms parms = vrapi_DefaultFrameParms(&oculusJavaGlThread_, VRAPI_FRAME_INIT_DEFAULT, vrapi_GetTimeInSeconds(),
-                                                      NULL);
-        parms.FrameIndex = ++frameIndex;
-        parms.SwapInterval = 1;
-        parms.PerformanceParms = oculusPerformanceParms_;
+    ovrFrameParms parms = vrapi_DefaultFrameParms(&oculusJavaGlThread_, VRAPI_FRAME_INIT_DEFAULT,
+                                                  vrapi_GetTimeInSeconds(),
+                                                  NULL);
+    parms.FrameIndex = ++frameIndex;
+    parms.SwapInterval = 1;
+    parms.PerformanceParms = oculusPerformanceParms_;
 
-        const double predictedDisplayTime = vrapi_GetPredictedDisplayTime(oculusMobile_, frameIndex);
-        const ovrTracking tracking = vrapi_GetPredictedTracking(oculusMobile_, predictedDisplayTime);
+    const double predictedDisplayTime = vrapi_GetPredictedDisplayTime(oculusMobile_, frameIndex);
+    const ovrTracking tracking = vrapi_GetPredictedTracking(oculusMobile_, predictedDisplayTime);
 
-        ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_, tracking.HeadPose.TimeInSeconds);
-        updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;
+    ovrTracking updatedTracking = vrapi_GetPredictedTracking(oculusMobile_,
+                                                             tracking.HeadPose.TimeInSeconds);
+    updatedTracking.HeadPose.Pose.Position = tracking.HeadPose.Pose.Position;
 
-        for ( int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++ )
-        {
-        ovrFrameLayerTexture& eyeTexture = parms.Layers[0].Textures[eye];
+    for (int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++) {
+        ovrFrameLayerTexture &eyeTexture = parms.Layers[0].Textures[eye];
 
-            eyeTexture.ColorTextureSwapChain = frameBuffer_[use_multiview ? 0 : eye].mColorTextureSwapChain;
-            eyeTexture.DepthTextureSwapChain = frameBuffer_[use_multiview ? 0 : eye].mDepthTextureSwapChain;
-            eyeTexture.TextureSwapChainIndex = frameBuffer_[use_multiview ? 0 : eye].mTextureSwapChainIndex;
-            eyeTexture.TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
-            eyeTexture.HeadPose = updatedTracking.HeadPose;
-        }
+        eyeTexture.ColorTextureSwapChain = frameBuffer_[use_multiview ? 0
+                                                                      : eye].mColorTextureSwapChain;
+        eyeTexture.DepthTextureSwapChain = frameBuffer_[use_multiview ? 0
+                                                                      : eye].mDepthTextureSwapChain;
+        eyeTexture.TextureSwapChainIndex = frameBuffer_[use_multiview ? 0
+                                                                      : eye].mTextureSwapChainIndex;
+        eyeTexture.TexCoordsFromTanAngles = texCoordsTanAnglesMatrix_;
+        eyeTexture.HeadPose = updatedTracking.HeadPose;
+    }
+
     parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
     if (CameraRig::CameraRigType::FREEZE == cameraRig_->camera_rig_type()) {
         parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_FIXED_TO_VIEW;
     }
 
-        if (docked_) {
-            const ovrQuatf& orientation = updatedTracking.HeadPose.Pose.Orientation;
-            const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
-            const glm::quat quat = glm::conjugate(glm::inverse(tmp));
+    if (docked_) {
+        const ovrQuatf &orientation = updatedTracking.HeadPose.Pose.Orientation;
+        const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
+        const glm::quat quat = glm::conjugate(glm::inverse(tmp));
 
-            cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
-            cameraRig_->updateRotation();
-        } else if (nullptr != cameraRig_) {
-            cameraRig_->updateRotation();
-        } else {
-            cameraRig_->setRotation(glm::quat());
-        }
-
-        if (!sensoredSceneUpdated_ && docked_) {
-            sensoredSceneUpdated_ = updateSensoredScene();
-        }
-
-        // Render the eye images.
-        for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
-            int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-            if(!gRenderer->isVulkanInstance()) {
-                beginRenderingEye(eye);
-            }
-            oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye, textureSwapChainIndex, use_multiview);
-
-            if(gRenderer->isVulkanInstance()){
-                copyVulkanTexture(textureSwapChainIndex,eye);
-            }
-            else {
-                endRenderingEye(eye);
-                FrameBufferObject::unbind();
-            }
-        }
-
-        // check if the controller is available
-        if (gearController != nullptr && gearController->findConnectedGearController()) {
-            // collect the controller input if available
-            gearController->onFrame(predictedDisplayTime);
-        }
-
-        vrapi_SubmitFrame(oculusMobile_, &parms);
+        cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
+        cameraRig_->updateRotation();
+    } else if (nullptr != cameraRig_) {
+        cameraRig_->updateRotation();
     }
+
+    if (!sensoredSceneUpdated_ && docked_) {
+        sensoredSceneUpdated_ = updateSensoredScene();
+    }
+
+    // Render the eye images.
+    for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+        int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
+        if (!gRenderer->isVulkanInstance()) {
+            beginRenderingEye(eye);
+        }
+        oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye,
+                                                textureSwapChainIndex, use_multiview);
+
+        if (gRenderer->isVulkanInstance()) {
+            copyVulkanTexture(textureSwapChainIndex, eye);
+        } else {
+            endRenderingEye(eye);
+            FrameBufferObject::unbind();
+        }
+    }
+
+    // check if the controller is available
+    if (gearController != nullptr && gearController->findConnectedGearController()) {
+        // collect the controller input if available
+        gearController->onFrame(predictedDisplayTime);
+    }
+
+    vrapi_SubmitFrame(oculusMobile_, &parms);
+}
 
     static const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
 

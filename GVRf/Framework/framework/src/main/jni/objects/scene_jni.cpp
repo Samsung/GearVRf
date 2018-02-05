@@ -27,7 +27,7 @@ extern "C" {
     Java_org_gearvrf_NativeScene_ctor(JNIEnv * env, jobject obj);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeScene_setJava(JNIEnv* env, jlong nativeScene, jobject javaScene);
+    Java_org_gearvrf_NativeScene_setJava(JNIEnv *env, jclass, jlong nativeScene, jobject javaScene);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
@@ -102,7 +102,7 @@ Java_org_gearvrf_NativeScene_ctor(JNIEnv* env, jobject obj) {
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_setJava(JNIEnv* env, jlong nativeScene, jobject javaScene) {
+Java_org_gearvrf_NativeScene_setJava(JNIEnv *env, jclass, jlong nativeScene, jobject javaScene) {
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
     Scene* scene = reinterpret_cast<Scene*>(nativeScene);
