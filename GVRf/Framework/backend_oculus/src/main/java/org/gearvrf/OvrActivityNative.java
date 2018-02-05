@@ -15,11 +15,11 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.VrAppSettings;
-
 import android.app.Activity;
 
-class OvrActivityNative implements IActivityNative {
+import org.gearvrf.utility.VrAppSettings;
+
+class OvrActivityNative extends ActivityNativeStub {
     static {
         System.loadLibrary("gvrf-oculus");
     }

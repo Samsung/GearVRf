@@ -17,8 +17,54 @@ package org.gearvrf;
 
 interface IActivityNative {
     void onDestroy();
+
     void setCameraRig(GVRCameraRig cameraRig);
+
     void onUndock();
+
     void onDock();
+
     long getNative();
+
+    void onPause();
+
+    void onResume();
+}
+
+class ActivityNativeStub implements IActivityNative {
+
+    @Override
+    public void onDestroy() {
+
+    }
+
+    @Override
+    public void setCameraRig(GVRCameraRig cameraRig) {
+
+    }
+
+    @Override
+    public void onUndock() {
+
+    }
+
+    @Override
+    public void onDock() {
+
+    }
+
+    @Override
+    public long getNative() {
+        return 0;
+    }
+
+    @Override
+    public void onPause() {
+
+    }
+
+    @Override
+    public void onResume() {
+
+    }
 }

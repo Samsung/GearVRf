@@ -184,12 +184,21 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     IActivityEvents.class,
                     "onPause");
         }
+
+        if (null != mActivityNative) {
+            mActivityNative.onPause();
+        }
+
         super.onPause();
     }
 
     @Override
     protected void onResume() {
         android.util.Log.i(TAG, "onResume " + Integer.toHexString(hashCode()));
+
+        if (null != mActivityNative) {
+            mActivityNative.onResume();
+        }
 
         mDelegate.onResume();
         mPaused = false;
