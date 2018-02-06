@@ -405,7 +405,9 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
         //@todo duped in render_data.cpp
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
-        post_effect->bindShader(env, rstate.scene->getJavaObj(*env), rstate.is_multiview);
+        jobject localSceneObject = rstate.scene->getJavaObj(*env);
+        post_effect->bindShader(env, localSceneObject, rstate.is_multiview);
+        env->DeleteLocalRef(localSceneObject);
         if (rc > 0)
         {
             rstate.scene->detach_java_env();
