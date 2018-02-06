@@ -16,33 +16,32 @@
 package org.gearvrf;
 
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
+import android.view.KeyEvent;
 
 import org.gearvrf.utility.VrAppSettings;
 
 /**
  * {@inheritDoc}
  */
-final class OvrActivityDelegate extends GVRActivity.ActivityDelegateStubs {
-    private GVRActivity mActivity;
-    private OvrViewManager mActiveViewManager;
-    private OvrActivityNative mActivityNative;
-
+final class MonoscopicActivityDelegate implements GVRActivity.GVRActivityDelegate {
     @Override
     public void onCreate(GVRActivity activity) {
-        mActivity = activity;
+        if (null == activity) {
+            throw new IllegalArgumentException();
+        }
 
-        mActivityNative = new OvrActivityNative(mActivity, mActivity.getAppSettings());
-        mActivityHandler = new OvrVrapiActivityHandler(activity, mActivityNative);
+        mActivity = activity;
     }
 
     @Override
-    public OvrActivityNative getActivityNative() {
-        return mActivityNative;
+    public IActivityNative getActivityNative() {
+        return null;
     }
 
     @Override
     public GVRViewManager makeViewManager() {
-        return new OvrViewManager(mActivity, mActivity.getMain(), mXmlParser);
+        return new MonoscopicViewManager(mActivity, mActivity.getMain(), mXmlParser);
     }
 
     @Override
@@ -52,62 +51,66 @@ final class OvrActivityDelegate extends GVRActivity.ActivityDelegateStubs {
 
     @Override
     public GVRConfigurationManager makeConfigurationManager(GVRActivity activity) {
-        return new OvrConfigurationManager(activity);
+        return new MonoscopicConfigurationManager(activity);
     }
 
     @Override
     public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
-        mXmlParser = new OvrXMLParser(assetManager, dataFilename, mActivity.getAppSettings());
+        mXmlParser = new MonoscopicXMLParser(assetManager, dataFilename, mActivity.getAppSettings());
     }
 
     @Override
     public boolean onBackPress() {
-        if (null != mActivityHandler) {
-            return mActivityHandler.onBack();
-        }
-        return false;
+        return true;
     }
 
     @Override
     public void onPause() {
-        if (null != mActivityHandler) {
-            mActivityHandler.onPause();
-        }
     }
 
     @Override
     public void onResume() {
-        if (null != mActivityHandler) {
-            mActivityHandler.onResume();
-        }
     }
 
     @Override
-    public void onDestroy() {
-        if (null != mActivityHandler) {
-            mActivityHandler.onDestroy();
-        }
+    public void onConfigurationChanged(Configuration newConfig) {
     }
 
     @Override
     public boolean setMain(GVRMain gvrMain, String dataFileName) {
-        if (null != mActivityHandler) {
-            mActivityHandler.onSetScript();
-        }
         return true;
     }
 
     @Override
     public void setViewManager(GVRViewManager viewManager) {
-        mActiveViewManager = (OvrViewManager)viewManager;
-        mActivityHandler.setViewManager(mActiveViewManager);
+    }
+
+    @Override
+    public void onInitAppSettings(VrAppSettings appSettings) {
     }
 
     @Override
     public VrAppSettings makeVrAppSettings() {
-        return new OvrVrAppSettings();
+        return new MonoscopicVrAppSettings();
     }
 
-    private OvrXMLParser mXmlParser;
-    private OvrActivityHandler mActivityHandler;
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return false;
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        return false;
+    }
+
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        return false;
+    }
+
+    private GVRActivity mActivity;
+    private MonoscopicXMLParser mXmlParser;
+
+    private static final String TAG = "MonoscopicActivityDelegate";
 }

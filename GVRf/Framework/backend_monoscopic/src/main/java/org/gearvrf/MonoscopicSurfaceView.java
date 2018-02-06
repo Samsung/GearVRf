@@ -19,53 +19,54 @@
 
 package org.gearvrf;
 
+import android.content.Context;
+import android.graphics.PixelFormat;
+import android.opengl.GLSurfaceView;
+import android.view.Choreographer;
+import android.view.SurfaceHolder;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 
-import android.content.Context;
-import android.graphics.PixelFormat;
-import android.opengl.GLSurfaceView;
-import android.view.Choreographer;
-import android.view.KeyEvent;
-import android.view.SurfaceHolder;
-
 /**
  * This GVRSurfaceView class extends from {@link GLSurfaceView} which is used
  * for OpenGL rendering. In GVR, GVRSurfaceView acts the same way
  * {@link GLSurfaceView} does to render object and scene. GVRSurfaceView
- * requires a valid {@link OvrViewManager} which holds the main scene details to
+ * requires a valid {@link MonoscopicViewManager} which holds the main scene details to
  * be rendered
  */
-class OvrSurfaceView extends GLSurfaceView implements
+class MonoscopicSurfaceView extends GLSurfaceView implements
         android.view.Choreographer.FrameCallback {
+    private MonoscopicViewManager mViewManager = null;
 
     /**
      * Constructs a GVRSurfaceView given by current GVR context without
-     * OvrViewManager
+     * MonoscopicViewManager
      *
      * @param context
      *            current context
      */
-    public OvrSurfaceView(Context context) {
+    public MonoscopicSurfaceView(Context context) {
         super(context);
     }
 
     /**
-     * Constructs a {@link OvrSurfaceView} given by current {@link GVRContext}
-     * with {@link OvrViewManager}
+     * Constructs a {@link MonoscopicSurfaceView} given by current {@link GVRContext}
+     * with {@link MonoscopicViewManager}
      *
      * @param context
      *            current context
      * @param viewManager
-     *            a given {@link OvrViewManager} object to be used in
-     *            {@link OvrSurfaceView}
+     *            a given {@link MonoscopicViewManager} object to be used in
+     *            {@link MonoscopicSurfaceView}
      */
-    public OvrSurfaceView(Context context,
-                          OvrViewManager viewManager,
-                          OvrSurfaceViewRenderer renderer) {
+    public MonoscopicSurfaceView(Context context,
+                          MonoscopicViewManager viewManager,
+                          MonoscopicSurfaceViewRenderer renderer) {
         super(context);
+        mViewManager = viewManager;
         /*
          * To access inputs by onKeyDown().
          */
@@ -76,13 +77,13 @@ class OvrSurfaceView extends GLSurfaceView implements
          */
         setEGLContextClientVersion(3);
         setPreserveEGLContextOnPause(true);
-        setEGLContextFactory(new OvrContextFactory());
-        setEGLConfigChooser(new OvrConfigChooser(8, 8, 8, 8, 24, 8));
+        setEGLContextFactory(new MonoscopicContextFactory());
+        setEGLConfigChooser(new MonoscopicConfigChooser(8, 8, 8, 8, 24, 8));
         if (renderer != null) {
             renderer.setViewManager(viewManager);
             setRenderer(renderer);
         } else {
-            setRenderer(new OvrSurfaceViewRenderer(viewManager));
+            setRenderer(new MonoscopicSurfaceViewRenderer(viewManager));
         }
         /*
          * requestRender() will be called efficiently with VSync.
@@ -133,7 +134,7 @@ class OvrSurfaceView extends GLSurfaceView implements
  * the License.
  */
 
-class OvrContextFactory implements GLSurfaceView.EGLContextFactory {
+class MonoscopicContextFactory implements GLSurfaceView.EGLContextFactory {
 
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
@@ -152,10 +153,10 @@ class OvrContextFactory implements GLSurfaceView.EGLContextFactory {
     }
 }
 
-class OvrConfigChooser implements GLSurfaceView.EGLConfigChooser {
+class MonoscopicConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
     /**
-     * Constructs a OvrConfigChooser class with initial set-ups for EGL
+     * Constructs a MonoscopicConfigChooser class with initial set-ups for EGL
      *
      * @param r
      *            size of red in bits
@@ -170,7 +171,7 @@ class OvrConfigChooser implements GLSurfaceView.EGLConfigChooser {
      * @param stencil
      *            size of stencil buffer in bits
      */
-    public OvrConfigChooser(int r, int g, int b, int a, int depth, int stencil) {
+    public MonoscopicConfigChooser(int r, int g, int b, int a, int depth, int stencil) {
         mRedSize = r;
         mGreenSize = g;
         mBlueSize = b;

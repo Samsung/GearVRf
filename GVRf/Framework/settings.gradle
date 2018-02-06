@@ -1,8 +1,10 @@
 include ':framework'
 if (hasProperty('only_daydream') && (only_daydream == "true")) {
     include ':backend_daydream'
-}
-else {
+} else if (hasProperty('only_monoscopic') && (only_monoscopic == "true")) {
+    include ':backend_monoscopic'
+} else {
+    include ':backend_monoscopic'
     include ':backend_daydream'
     include ':backend_oculus'
 }
