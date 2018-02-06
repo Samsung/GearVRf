@@ -769,11 +769,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         }
 
         @Override
-        public GVRViewManager makeMonoscopicViewManager() {
-            return null;
-        }
-
-        @Override
         public GVRCameraRig makeCameraRig(GVRContext context) {
             return null;
         }

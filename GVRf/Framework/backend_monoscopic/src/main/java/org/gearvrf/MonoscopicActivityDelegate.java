@@ -16,15 +16,13 @@
 package org.gearvrf;
 
 import android.content.res.AssetManager;
-import android.content.res.Configuration;
-import android.view.KeyEvent;
 
 import org.gearvrf.utility.VrAppSettings;
 
 /**
  * {@inheritDoc}
  */
-final class MonoscopicActivityDelegate implements GVRActivity.GVRActivityDelegate {
+final class MonoscopicActivityDelegate extends GVRActivity.ActivityDelegateStubs {
     @Override
     public void onCreate(GVRActivity activity) {
         if (null == activity) {
@@ -32,11 +30,6 @@ final class MonoscopicActivityDelegate implements GVRActivity.GVRActivityDelegat
         }
 
         mActivity = activity;
-    }
-
-    @Override
-    public IActivityNative getActivityNative() {
-        return null;
     }
 
     @Override
@@ -65,28 +58,8 @@ final class MonoscopicActivityDelegate implements GVRActivity.GVRActivityDelegat
     }
 
     @Override
-    public void onPause() {
-    }
-
-    @Override
-    public void onResume() {
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-    }
-
-    @Override
     public boolean setMain(GVRMain gvrMain, String dataFileName) {
         return true;
-    }
-
-    @Override
-    public void setViewManager(GVRViewManager viewManager) {
-    }
-
-    @Override
-    public void onInitAppSettings(VrAppSettings appSettings) {
     }
 
     @Override
@@ -94,23 +67,6 @@ final class MonoscopicActivityDelegate implements GVRActivity.GVRActivityDelegat
         return new MonoscopicVrAppSettings();
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        return false;
-    }
-
     private GVRActivity mActivity;
     private MonoscopicXMLParser mXmlParser;
-
-    private static final String TAG = "MonoscopicActivityDelegate";
 }
