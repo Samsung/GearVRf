@@ -1,0 +1,5 @@
+GearVR framework exporter
+
+A Blender addon to export scene components from Blender to a GVRf application
+that provides a JavaScript interface, similar to Remote Scriptint demo.
+
