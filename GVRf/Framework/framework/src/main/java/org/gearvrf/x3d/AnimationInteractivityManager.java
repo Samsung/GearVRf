@@ -908,7 +908,7 @@ public class AnimationInteractivityManager {
                     final GVRJavascriptV8File gvrJavascriptV8FileFinal = gvrJavascriptV8File;
                     final Object[] parametersFinal = parameters;
                     final String paramStringFinal = paramString;
-                    gvrContext.runOnGlThread(new Runnable() {
+                    gvrContext.runOnV8Thread(new Runnable() {
                         @Override
                         public void run() {
                             RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
@@ -1260,7 +1260,7 @@ public class AnimationInteractivityManager {
                             final InteractiveObject interactiveObjectFinal = interactiveObject;
                             final Object[] parametersFinal = parameters;
                             final String paramStringFinal = paramString;
-                            gvrContext.runOnGlThread(new Runnable() {
+                            gvrContext.runOnV8Thread(new Runnable() {
                                 @Override
                                 public void run() {
                                     RunInitializeScriptThread( gvrJavascriptV8FileFinal, interactiveObjectFinal, parametersFinal, paramStringFinal);
@@ -1446,7 +1446,7 @@ public class AnimationInteractivityManager {
             final String functionNameFinal = functionName;
             final Object[] parametersFinal = parameters;
             final String paramStringFinal = paramString;
-            gvrContext.runOnGlThread(new Runnable() {
+            gvrContext.runOnV8Thread(new Runnable() {
                 @Override
                 public void run() {
                     RunScriptThread (gvrJavascriptV8FileFinal, interactiveObjectFinal, functionNameFinal, parametersFinal, paramStringFinal);
