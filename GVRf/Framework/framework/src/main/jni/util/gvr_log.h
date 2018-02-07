@@ -18,16 +18,6 @@
  * Logging macros.
  ***************************************************************************/
 
-#ifndef LOG_H_
-#define LOG_H_
-
-#include <android/log.h>
-#include <exception>
-
-#include "gl/gl_headers.h"
-
-#define  LOG_TAG    "gvrf"
-
 #define VERBOSE_LOGGING_GLOBAL 1
 //#define NO_LOGGING 1
 
@@ -37,28 +27,38 @@
 #define  LOGV(...)
 #define  LOGW(...)
 #define  LOGE(...)
-
 #else
-#if VERBOSE_LOGGING_GLOBAL
-    #ifdef VERBOSE_LOGGING
-        #if VERBOSE_LOGGING
-            #define  LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG,__VA_ARGS__)
+    #if VERBOSE_LOGGING_GLOBAL
+        #ifdef VERBOSE_LOGGING
+            #undef LOGV
+            #if VERBOSE_LOGGING
+                #define  LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG,__VA_ARGS__)
+            #else
+                #define  LOGV(...)
+            #endif
         #else
-            #define  LOGV(...)
+            #undef LOGV
+            #define  LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG,__VA_ARGS__)
         #endif
     #else
-        #define  LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,LOG_TAG,__VA_ARGS__)
+        #define  LOGV(...)
     #endif
-#else
-    #define  LOGV(...)
-#endif
-
 
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 #endif
+
+#ifndef LOG_H_
+#define LOG_H_
+
+#include <android/log.h>
+#include <exception>
+
+#include "gl/gl_headers.h"
+
+#define  LOG_TAG    "gvrf"
 
 //#define STOP_ON_ERROR
 //#define GL( func )      func; checkGLError(#func);

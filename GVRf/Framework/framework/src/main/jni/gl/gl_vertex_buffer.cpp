@@ -8,6 +8,9 @@
 #include "gl_index_buffer.h"
 #include "gl_shader.h"
 
+#define VERBOSE_LOGGING 0
+#include "util/gvr_log.h"
+
 namespace gvr {
     GLVertexBuffer::GLVertexBuffer(const char* layout_desc, int vertexCount)
     : VertexBuffer(layout_desc, vertexCount),
@@ -71,7 +74,7 @@ namespace gvr {
                         glEnableVertexAttribArray(loc); // enable this attribute in GL
                         glVertexAttribPointer(loc, entry->Size / sizeof(float),
                                               entry->IsInt ? GL_INT : GL_FLOAT, GL_FALSE,
-                                              getTotalSize(), (GLvoid*) entry->Offset);
+                                              getTotalSize(), reinterpret_cast<GLvoid*>(entry->Offset));
                         LOGV("VertexBuffer: vertex attrib #%d %s loc %d ofs %d",
                              e.Index, e.Name, loc, entry->Offset);
                         checkGLError("VertexBuffer::bindToShader");
