@@ -44,17 +44,18 @@ namespace gvr {
         GLuint programId = static_cast<GLShader*>(shader)->getProgramId();
 
         glBindVertexArray(mVArrayID);
-        if (mProgramID == programId)
-        {
-            return;
-        }
-        mProgramID = programId;
         if (ibuf)
         {
             ibuf->bindBuffer(shader);
         }
         LOGV("VertexBuffer::bindToShader bind vertex array %d to shader %d", mVBufferID, programId);
         glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
+
+        if (mProgramID == programId)
+        {
+            return;
+        }
+        mProgramID = programId;
 
         shader->getVertexDescriptor().forEachEntry([this, programId](const DataDescriptor::DataEntry &e)
         {
