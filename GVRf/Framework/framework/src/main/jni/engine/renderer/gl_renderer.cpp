@@ -248,12 +248,16 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.shadow_map)
+                {
+                    GL(renderRenderData(rstate, rdata));
+                    rdata->clearDirty();
+                }
+                else if (rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
             }
-
         }
         else
         {
@@ -272,7 +276,12 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.shadow_map)
+                {
+                    GL(renderRenderData(rstate, rdata));
+                    rdata->clearDirty();
+                }
+                else if (rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
@@ -586,7 +595,6 @@ namespace gvr
             shader = rstate.shader_manager->getShader(shader_id);
             renderWithShader(rstate, shader, render_data, curr_material, curr_pass);
         }
-        render_data->clearDirty();
     }
 
     void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_data,
@@ -640,7 +648,6 @@ namespace gvr
             }
             checkGLError("renderMesh:before render");
             rdata->render(shader, this);
-            rdata->clearDirty();
         }
         checkGLError("renderMesh::renderMaterialShader");
     }
