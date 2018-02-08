@@ -30,12 +30,21 @@ class gvrf_client:
     def disconnect(self):
         self._conn.close()
 
+    def reconnect(self):
+        self.connect(self._addr, self._port)
+
     def exec_command(self, command, wait_for = b"js>"):
+        self.send_command(command)
+        self.wait_completion(wait_for)
+
+    def send_command(self, command):
         if type(command) != bytes:
             command = bytes(command, encoding='utf8')
         if command[-1] != 10: # CR
             command = command + b'\n'
         self._conn.write(command)
+
+    def wait_completion(self, wait_for = b"js>"):
         if type(wait_for) != bytes:
             wait_for = bytes(wait_for, encoding='utf8')
         r = self._conn.read_until(wait_for)
