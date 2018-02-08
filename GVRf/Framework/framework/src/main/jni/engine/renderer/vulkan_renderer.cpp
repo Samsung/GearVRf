@@ -155,9 +155,9 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
         }
         else{
             vkRdata->setPipeline(pipeline, pass);
-            vkRdata->clearDirty();
         }
     }
+    vkRdata->clearDirty();
     return true;
 }
 

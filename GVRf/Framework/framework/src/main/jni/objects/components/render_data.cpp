@@ -236,6 +236,11 @@ const std::string& RenderData::getHashCode()
  * and a material with a valid shader and all textures loaded.
  * After validation, this RenderData will have the correct
  * rendering order based on the texture transparency.
+ *
+ * This function leaves the RenderData marked as dirty if
+ * its shader has changed since last render.
+ * The Renderer clears this dirty flag after rendering.
+ *
  * @param renderer  Renderer used to render this RenderData
  * @param scene     Scene this RenderData is rendered to
  * @return true if renderable, else false
@@ -280,10 +285,10 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
         jobject localSceneObject = rstate.scene->getJavaObj(*env);
         bindShader(env, localSceneObject, rstate.is_multiview);
         env->DeleteLocalRef(localSceneObject);
-        if (rc > 0) {
+        if (rc > 0)
+        {
             rstate.scene->detach_java_env();
         }
-
         for (int p = 0; p < pass_count(); ++p)
         {
             RenderPass *rpass = pass(p);

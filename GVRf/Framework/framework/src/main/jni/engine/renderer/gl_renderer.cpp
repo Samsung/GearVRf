@@ -640,6 +640,7 @@ namespace gvr
             }
             checkGLError("renderMesh:before render");
             rdata->render(shader, this);
+            rdata->clearDirty();
         }
         checkGLError("renderMesh::renderMaterialShader");
     }

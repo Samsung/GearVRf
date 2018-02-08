@@ -416,7 +416,6 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
         shader = rstate.shader_manager->getShader(nativeShader);
     }
     renderWithShader(rstate, shader, post_effect, material, pass);
-    post_effect->clearDirty();
     return true;
 }
 
