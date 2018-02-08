@@ -248,12 +248,16 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.shadow_map)
+                {
+                    GL(renderRenderData(rstate, rdata));
+                    rdata->clearDirty();
+                }
+                else if (rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
             }
-
         }
         else
         {
@@ -272,7 +276,12 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.shadow_map)
+                {
+                    GL(renderRenderData(rstate, rdata));
+                    rdata->clearDirty();
+                }
+                else if (rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
@@ -425,9 +434,15 @@ namespace gvr
 
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFB);
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFB);
-        for (auto it = lights.begin(); it != lights.end(); ++it) {
-            (*it)->makeShadowMap(scene, shader_manager, texIndex);
-            ++texIndex;
+        for (auto it = lights.begin(); it != lights.end(); ++it)
+        {
+            Light* light = *it;
+
+            if (light->enabled())
+            {
+                light->makeShadowMap(scene, shader_manager, texIndex);
+                ++texIndex;
+            }
         }
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readFB);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFB);
@@ -562,7 +577,7 @@ namespace gvr
                 LOGE("Renderer::renderMesh cannot find depth shader %s", depthShaderName);
                 return;
             }
-            if (curr_material->updateGPU(this,render_data) >= 0)
+            if (curr_material->updateGPU(this, render_data) >= 0)
             {
                 numberTriangles += indexCount;
                 numberDrawCalls++;
@@ -586,7 +601,6 @@ namespace gvr
             shader = rstate.shader_manager->getShader(shader_id);
             renderWithShader(rstate, shader, render_data, curr_material, curr_pass);
         }
-        render_data->clearDirty();
     }
 
     void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_data,
@@ -640,7 +654,6 @@ namespace gvr
             }
             checkGLError("renderMesh:before render");
             rdata->render(shader, this);
-            rdata->clearDirty();
         }
         checkGLError("renderMesh::renderMaterialShader");
     }
@@ -689,9 +702,14 @@ namespace gvr
             {
                 shadowMap->bindTexture(loc, texIndex);
             }
+            else
+            {
+                LOGE("ERROR: shader location for u_shadow_maps not found");
+            }
         }
         checkGLError("GLRenderer::updateLights");
     }
+
 void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
     float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
