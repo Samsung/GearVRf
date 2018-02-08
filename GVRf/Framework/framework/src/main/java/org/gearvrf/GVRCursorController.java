@@ -418,55 +418,143 @@ public abstract class GVRCursorController implements IEventReceiver
     public CursorControl getCursorControl() { return mCursorControl; }
 
 
-    private Runnable mStartDrag = new Runnable()
+    /**
+     * Internal class to implemented dragging an object with
+     * the cursor controller in a thread-safe way.
+     * Drag operations change the hierarchy and must be performed
+     * in the GL thread.
+     */
+    private static class Dragger implements Runnable
     {
+        GVRCursorController mOwner;
+        Object mLock;
+        GVRSceneObject mDragMe = null;
+        GVRSceneObject mDragParent = null;
+        boolean mStopDrag = false;
+
+        /**
+         * Create a dragger to support dragging objects with the cursor controller
+         * @param owner cursor controller doing the dragging
+         * @param lock  synchronization lock (this should be whatever lock
+         *              is being used for cursor hierarchy operations)
+         */
+        public Dragger(GVRCursorController owner, Object lock)
+        {
+            mOwner = owner;
+            mLock = lock;
+        }
+
+        /**
+         * Start a drag operation on the GL thread.
+         * This function will fail if a drag operation is already in progreass.
+         *
+         * @param dragme    object to drag
+         * @returns true if drag operation successful, false if another object already being dragged
+         */
+        public boolean startDrag(GVRSceneObject dragme)
+        {
+            synchronized (mLock)
+            {
+                if ((mDragMe == null) && !mStopDrag)
+                {
+                    mDragMe = dragme;
+                    mOwner.getGVRContext().runOnGlThreadPostRender(0, this);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /**
+         * Stop a drag operation on the GL thread.
+         * This function will fail if a drag operation is not in progreass.
+         *
+         * @returns true if successful, false if nothing being dragged
+         */
+        public boolean stopDrag()
+        {
+            synchronized (mLock)
+            {
+                if (mDragMe != null)
+                {
+                    mStopDrag = true;
+                    mOwner.getGVRContext().runOnGlThreadPostRender(0, this);
+                    return true;
+                }
+                return false;
+            }
+        }
+
         @Override
         public void run()
         {
-            synchronized (mCursorLock)
+            synchronized (mLock)
             {
-                GVRTransform objTrans = mDragMe.getTransform();
-                Matrix4f cursorMtx = mDragRoot.getTransform().getModelMatrix4f();
-                Matrix4f objMatrix = objTrans.getModelMatrix4f();
-
-                mDragParent = mDragMe.getParent();
-                if (mDragParent != null)
+                if (mStopDrag)
                 {
-                    mDragParent.removeChildObject(mDragMe);
+                    mOwner.dragStop(mDragMe, mDragParent);
+                    mStopDrag = false;
+                    mDragMe = null;
+                    mDragParent = null;
                 }
-                cursorMtx.invert();
-                objTrans.setModelMatrix(cursorMtx.mul(objMatrix));
-                mDragRoot.addChildObject(mDragMe);
+                else if (mDragMe != null)
+                {
+                    mDragParent = mOwner.dragStart(mDragMe);
+                }
             }
         }
     };
 
-    private Runnable mStopDrag = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            synchronized (mCursorLock)
-            {
-                GVRTransform objTrans = mDragMe.getTransform();
-                Matrix4f cursorMatrix = mDragRoot.getTransform().getModelMatrix4f();
-                mDragRoot.removeChildObject(mDragMe);
-                Matrix4f objMatrix = objTrans.getModelMatrix4f();
+    private Dragger mDragger = new Dragger(this, mCursorLock);
 
-                objTrans.setModelMatrix(cursorMatrix.mul(objMatrix));
-                if (mDragParent != null)
-                {
-                    mDragParent.addChildObject(mDragMe);
-                }
-                else
-                {
-                    scene.addSceneObject(mDragMe);
-                }
-                mDragMe = null;
-                mDragParent = null;
-            }
+    /**
+     * Internal routine to start dragging by reparenting the dragged
+     * object to the cursor hierarchy.
+     *
+     * @param dragme        object being dragged
+     * @returns dragParent  previous parent of the dragged object
+     */
+    GVRSceneObject dragStart(GVRSceneObject dragme)
+    {
+        GVRTransform objTrans = dragme.getTransform();
+        Matrix4f cursorMtx = dragme.getTransform().getModelMatrix4f();
+        Matrix4f objMatrix = objTrans.getModelMatrix4f();
+        GVRSceneObject dragParent = dragme.getParent();
+
+        if (dragParent != null)
+        {
+            dragParent.removeChildObject(dragme);
         }
-    };
+        cursorMtx.invert();
+        objTrans.setModelMatrix(cursorMtx.mul(objMatrix));
+        mDragRoot.addChildObject(dragme);
+        return dragParent;
+    }
+
+    /**
+     * Internal routine to stop dragging by reparenting the dragged
+     * object to its original parent and removing it from the cursor hierarchy.
+     *
+     * @param dragme        object being dragged
+     * @param dragParent    previous parent of the dragged object
+     */
+    void dragStop(GVRSceneObject dragme, GVRSceneObject dragParent)
+    {
+        GVRTransform objTrans = dragme.getTransform();
+        Matrix4f cursorMatrix = mDragRoot.getTransform().getModelMatrix4f();
+        mDragRoot.removeChildObject(dragme);
+        Matrix4f objMatrix = objTrans.getModelMatrix4f();
+
+        objTrans.setModelMatrix(cursorMatrix.mul(objMatrix));
+        if (dragParent != null)
+        {
+            dragParent.addChildObject(dragme);
+        }
+        else
+        {
+            scene.addSceneObject(dragme);
+        }
+    }
 
     /**
      * Allows a single {@link GVRSceneObject} to be dragged by the controller.
@@ -486,13 +574,7 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     public boolean startDrag(GVRSceneObject dragMe)
     {
-        if (mDragMe != null)
-        {
-            return false;
-        }
-        mDragMe = dragMe;
-        getGVRContext().runOnGlThreadPostRender(0, mStartDrag);
-        return true;
+        return mDragger.startDrag(dragMe);
     }
 
     /**
@@ -509,12 +591,7 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     public boolean stopDrag()
     {
-        if (mDragMe == null)
-        {
-            return false;
-        }
-        getGVRContext().runOnGlThreadPostRender(0, mStopDrag);
-        return true;
+        return mDragger.stopDrag();
     }
 
     /**
