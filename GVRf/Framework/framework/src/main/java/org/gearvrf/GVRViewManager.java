@@ -112,20 +112,21 @@ abstract class GVRViewManager extends GVRContext {
         if (null == scene) {
             throw new IllegalArgumentException();
         }
+        GVRScene oldScene = null;
         mMainSceneLock.lock();
         try {
             if (mState == ViewManagerState.SHOWING_SPLASH) {
                 mPendingMainScene = scene;
             } else {
-                boolean needInit = (mFrameHandler == normalFrames);
+                oldScene = mMainScene;
                 setMainSceneImpl(scene);
-                if (needInit)
-                {
-                    notifyMainSceneReady();
-                }
             }
         } finally {
             mMainSceneLock.unlock();
+            if (oldScene != null)
+            {
+                mEventManager.sendEvent(this, IContextEvents.class, "onSceneChange", oldScene, mMainScene);
+            }
         }
     }
 
@@ -359,9 +360,10 @@ abstract class GVRViewManager extends GVRContext {
                     }
 
                     // Trigger event "onAfterInit" for post-processing of scene
-                    // graph after initialization.
+                    // graph after initialization. Also trigger "onInit" for the GVRContext.
                     getEventManager().sendEvent(mMain, IScriptEvents.class,
                             "onAfterInit");
+                    getEventManager().sendEvent(this, IContextEvents.class, "onInit", this);
                 }
             });
 
