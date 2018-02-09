@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-if(file("../../../extra_properties.gradle").exists()) {
+if (file("../../../extra_properties.gradle").exists()) {
     apply from: '../../../extra_properties.gradle'
 }
- 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -27,7 +26,6 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.0.1'
     }
 }
-
 allprojects {
     repositories {
         jcenter()
@@ -38,12 +36,10 @@ allprojects {
         google()
     }
 }
-
 subprojects {
-        loadExtraProperties("$project.rootDir/../Framework/maven.properties");
-        apply from: "$project.rootDir/../Framework/maven_upload.gradle"
+    loadExtraProperties("$project.rootDir/../Framework/maven.properties");
+    apply from: "$project.rootDir/../Framework/maven_upload.gradle"
 }
-
 def loadExtraProperties(String fileName) {
     def props = new Properties()
     props.load(new FileInputStream(fileName))
