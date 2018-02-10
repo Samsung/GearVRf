@@ -193,11 +193,11 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             ArrayList<GVRTexture> textureList) {
         super(gvrContext);
         CylinderParams params = new CylinderParams();
-      
-        // assert length of ftextureList is 3
+
+        params.FacingOut = facingOut;
         if (textureList.size() != 3) {
             throw new IllegalArgumentException(
-                    "The length of futureTextureList is not 3.");
+                    "The length of the texture list is not 3.");
         }
 
         generateCylinderObjectThreeMeshes(gvrContext, params, textureList);
@@ -608,10 +608,6 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
             createCapMesh(gvrContext, params, params.BottomRadius, -halfHeight,
                           -1.0f, textureList.get(2));
         }
-
-        // attached an empty renderData for parent object, so that we can set some common properties
-        GVRRenderData renderData = new GVRRenderData(gvrContext);
-        attachRenderData(renderData);
     }
 
     private void generateCylinder(CylinderParams params) {
@@ -731,6 +727,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         float length = (float) Math.sqrt(difference*difference + params.Height * params.Height);
         float ratio = params.Height / length;
         float halfHeight = params.Height / 2.0f;
+        float normalDirection = params.FacingOut ? 1 : -1;
 
         for (int stack = 0; stack < params.StackNumber; stack++) {
 
@@ -796,21 +793,21 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 float nz0 = (float) (-ratio * sinTheta0);
                 float nz1 = (float) (-ratio * sinTheta0);
                 
-                normals[vertexCount + 0] = nx0;
-                normals[vertexCount + 1] = ny;
-                normals[vertexCount + 2] = nz0;
+                normals[vertexCount + 0] = normalDirection * nx0;
+                normals[vertexCount + 1] = normalDirection * ny;
+                normals[vertexCount + 2] = normalDirection * nz0;
                 
-                normals[vertexCount + 3] = nx1;
-                normals[vertexCount + 4] = ny;
-                normals[vertexCount + 5] = nz1;
+                normals[vertexCount + 3] = normalDirection * nx1;
+                normals[vertexCount + 4] = normalDirection * ny;
+                normals[vertexCount + 5] = normalDirection * nz1;
                 
-                normals[vertexCount + 6] = nx0;
-                normals[vertexCount + 7] = ny;
-                normals[vertexCount + 8] = nz0;
+                normals[vertexCount + 6] = normalDirection * nx0;
+                normals[vertexCount + 7] = normalDirection * ny;
+                normals[vertexCount + 8] = normalDirection * nz0;
                 
-                normals[vertexCount + 9] = nx1;
-                normals[vertexCount + 10] = ny;
-                normals[vertexCount + 11] = nz1;
+                normals[vertexCount + 9] = normalDirection * nx1;
+                normals[vertexCount + 10] = normalDirection * ny;
+                normals[vertexCount + 11] = normalDirection * nz1;
 
                 texCoords[texCoordCount + 0] = s0;
                 texCoords[texCoordCount + 1] = t0;
@@ -839,7 +836,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
                 //
                 // Note that tex_coord t increase from top to bottom because the
                 // texture image is loaded upside down.
-                if (params.FacingOut) {
+                if (normalDirection > 0) {
                     indices[indexCount + 0] = (char) (triangleCount + 0); // 0
                     indices[indexCount + 1] = (char) (triangleCount + 1); // 1
                     indices[indexCount + 2] = (char) (triangleCount + 2); // 2
@@ -918,7 +915,7 @@ public class GVRCylinderSceneObject extends GVRSceneObject {
         }
         vertices = new float[3 * bodyVertexNumber];
         normals = hasNormals ? new float[3 * bodyVertexNumber] : null;
-        texCoords = hasTexCoords ? new float[2 * triangleNumber] : null;
+        texCoords = hasTexCoords ? new float[2 * bodyVertexNumber] : null;
         indices = new char[triangleNumber];
 
         vertexCount = 0;
