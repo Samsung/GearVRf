@@ -150,7 +150,7 @@ public abstract class GVRCursorController implements IEventReceiver
         {
             mPicker = new GVRPicker(this, false);
         }
-        //addPickEventListener(GVRBaseSensor.getPickHandler());
+        addPickEventListener(GVRBaseSensor.getPickHandler());
         mCursorScale = new GVRSceneObject(context);
         mCursorScale.setName("CursorController_CursorScale");
         mDragRoot = new GVRSceneObject(context);
