@@ -1057,7 +1057,7 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
-    private class ControllerPick implements Runnable
+    protected class ControllerPick implements Runnable
     {
         public MotionEvent mEvent;
         public GVRPicker mPicker;
@@ -1110,7 +1110,7 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
-    private ControllerPick mControllerPick = new ControllerPick();
+    protected ControllerPick mControllerPick = new ControllerPick();
 
     /**
      * Update the state of the picker. If it has an owner, the picker
@@ -1118,14 +1118,11 @@ public abstract class GVRCursorController implements IEventReceiver
      * The "active" state of this controller is used to indicate touch.
      * The cursor position is updated after picking.
      */
-    protected void updatePicker(MotionEvent event)
+    protected void updatePicker(MotionEvent event, boolean isActive)
     {
-        if (mPicker != null)
-        {
-            MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
-            mControllerPick.init(mPicker, newEvent, active);
-            context.runOnGlThread(mControllerPick);
-        }
+        MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
+        mControllerPick.init(mPicker, newEvent, isActive);
+        context.runOnGlThread(mControllerPick);
     }
 
     /**
@@ -1144,9 +1141,9 @@ public abstract class GVRCursorController implements IEventReceiver
             motionEvent.clear();
         }
         previousActive = active;
-        if (scene != null)
+        if ((scene != null) && (mPicker != null))
         {
-            updatePicker(getMotionEvent());
+            updatePicker(getMotionEvent(), active);
         }
         context.getEventManager().sendEvent(this, IControllerEvent.class, "onEvent", this, active);
 

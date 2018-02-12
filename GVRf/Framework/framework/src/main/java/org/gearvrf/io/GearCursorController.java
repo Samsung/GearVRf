@@ -36,6 +36,7 @@ import org.gearvrf.GVRTransform;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.scene_objects.GVRLineSceneObject;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -122,6 +123,8 @@ public final class GearCursorController extends GVRCursorController
     private GVRSceneObject mControllerGroup;
     private ControllerReader mControllerReader;
     private boolean mShowControllerModel = false;
+    private Matrix4f mTempPivotMtx = new Matrix4f();
+    private Quaternionf mTempRotation = new Quaternionf();
     private final Vector3f FORWARD = new Vector3f(0, 0, -1);
     private final MotionEvent.PointerCoords pointerCoords = new MotionEvent.PointerCoords();
     private final MotionEvent.PointerProperties[] pointerPropertiesArray;
@@ -420,19 +423,25 @@ public final class GearCursorController extends GVRCursorController
                                             event.touched);
 
         this.currentControllerEvent = event;
+        int key = event.key;
         Quaternionf q = event.rotation;
         Vector3f pos = event.position;
-        int key = event.key;
-        GVRTransform camTrans = context.getMainScene().getMainCameraRig().getTransform();
-        float cameraX = camTrans.getPositionX();
-        float cameraY = camTrans.getPositionY();
-        float cameraZ = camTrans.getPositionZ();
+        Matrix4f camMtx = context.getMainScene().getMainCameraRig().getTransform().getModelMatrix4f();
+        float x = camMtx.m30();
+        float y = camMtx.m31();
+        float z = camMtx.m32();
 
         q.normalize();
-        mPivotRoot.getTransform().setRotation(q.w, q.x, q.y, q.z);
-        q.transform(FORWARD, result);
-        setOrigin(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
-        mPivotRoot.getTransform().setPosition(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
+        camMtx.getNormalizedRotation(mTempRotation);
+        mTempRotation.transform(pos);       // rotate controller position by camera orientation
+        x += pos.x;
+        y += pos.y;
+        z += pos.z;
+        q.mul(mTempRotation);               // rotate pivot by combined event and camera rotation
+        mTempPivotMtx.rotation(q);          // translate pivot by combine event and camera translation
+        mTempPivotMtx.setTranslation(x, y, z);
+        mPivotRoot.getTransform().setModelMatrix(mTempPivotMtx);
+        setOrigin(x, y, z);
 
         int handleResult = handleEnterButton(key, event.pointF, event.touched);
         prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
