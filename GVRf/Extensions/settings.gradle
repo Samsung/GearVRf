@@ -43,3 +43,6 @@ else{
     include ':platformsdk_support'
     project(':platformsdk_support').projectDir = new File('platformsdk_support')
 }
+
+include ':ResonanceAudio'
+project(':ResonanceAudio').projectDir = new File('ResonanceAudio/resonanceaudio')
