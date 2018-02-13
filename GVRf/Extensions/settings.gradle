@@ -37,9 +37,8 @@ project(':gvrf-physics').projectDir = new File('gvrf-physics')
 include ':gvrf-particlesystem'
 project(':gvrf-particlesystem').projectDir = new File('gvrf-particlesystem')
 
-if (hasProperty('only_daydream') && (only_daydream == "true")) {
-}
-else{
-    include ':platformsdk_support'
-    project(':platformsdk_support').projectDir = new File('platformsdk_support')
-}
+include ':x3d'
+project(':x3d').projectDir = new File('x3d')
+
+include ':platformsdk_support'
+project(':platformsdk_support').projectDir = new File('platformsdk_support')
