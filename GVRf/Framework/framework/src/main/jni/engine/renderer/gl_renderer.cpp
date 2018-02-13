@@ -59,12 +59,12 @@ namespace gvr
     RenderTarget* GLRenderer::createRenderTarget(RenderTexture* renderTexture, const RenderTarget* renderTarget){
         return new GLRenderTarget(renderTexture, renderTarget);
     }
-    RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo){
+    RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo* renderTextureInfo){
 
-        if(renderTextureInfo.useMultiview)
-            return  new GLMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,2, renderTextureInfo.fboId, renderTextureInfo.texId);
+        if(renderTextureInfo->useMultiview)
+            return  new GLMultiviewRenderTexture(renderTextureInfo->fdboWidth,renderTextureInfo->fboHeight,renderTextureInfo->multisamples,2, renderTextureInfo->fboId, renderTextureInfo->texId);
 
-        return new GLNonMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,renderTextureInfo.fboId, renderTextureInfo.texId);
+        return new GLNonMultiviewRenderTexture(renderTextureInfo->fdboWidth,renderTextureInfo->fboHeight,renderTextureInfo->multisamples,renderTextureInfo->fboId, renderTextureInfo->texId);
     }
     void GLRenderer::clearBuffers(const Camera &camera) const
     {

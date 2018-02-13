@@ -63,6 +63,17 @@ extern "C" {
         if(!gRenderer->isVulkanInstance())
             renderTarget->endRendering(gRenderer);
     }
+     void Java_org_gearvrf_GVRRenderBundle_addRenderTarget(JNIEnv* jni, jclass clazz, jlong jrenderTarget , jint eye, jint index){
+        RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
+         Renderer::getInstance()->addRenderTarget(renderTarget, EYE(eye), index);
+    }
+    long Java_org_gearvrf_GVRRenderBundle_getRenderTextureNative(JNIEnv *jni, jclass clazz, jlong jrenderTextureInfo)
+    {
+        RenderTextureInfo* renderTextureInfo = reinterpret_cast<RenderTextureInfo*>(jrenderTextureInfo);
+        RenderTexture* renderTexture = (Renderer::getInstance()->createRenderTexture(renderTextureInfo));
+        delete renderTextureInfo; // free up the resource as it is no longer needed
+        return reinterpret_cast<long>(renderTexture);
+    }
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,

@@ -583,7 +583,7 @@ public class VrAppSettings {
     public int framebufferPixelsHigh;
 
     // Use multiview feature
-    boolean useMultiview;
+    protected boolean useMultiview;
 
     // List of cursor controller types to enable.
     ArrayList<GVRControllerType> cursorControllerTypes;

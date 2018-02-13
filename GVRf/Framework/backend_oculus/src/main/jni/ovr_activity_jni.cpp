@@ -26,15 +26,11 @@ namespace gvr {
         return reinterpret_cast<long>(gvrActivity);
     }
 
-    JNIEXPORT long JNICALL Java_org_gearvrf_GVRRenderBundle_getRenderTexture(JNIEnv* jni, jclass clazz, jlong jactivity , jint eye, jint index){
+    JNIEXPORT long JNICALL Java_org_gearvrf_OvrViewManager_getRenderTextureInfo(JNIEnv* jni, jclass clazz, jlong jactivity ,  jint index, jint eye){
         GVRActivity* gvrActivity = reinterpret_cast<GVRActivity*>(jactivity);
-        RenderTextureInfo renderTextureInfo = std::move(gvrActivity->getRenderTextureInfo(eye, index));
-        return reinterpret_cast<long>(Renderer::getInstance()->createRenderTexture(renderTextureInfo));
+        return reinterpret_cast<long>(gvrActivity->getRenderTextureInfo(eye, index));
     }
-    JNIEXPORT void JNICALL Java_org_gearvrf_GVRRenderBundle_addRenderTarget(JNIEnv* jni, jclass clazz, jlong jrenderTarget , jint eye, jint index){
-        RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
-        gRenderer->addRenderTarget(renderTarget, EYE(eye), index);
-    }
+
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDestroy(JNIEnv * jni, jclass clazz, jlong appPtr) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         delete activity;

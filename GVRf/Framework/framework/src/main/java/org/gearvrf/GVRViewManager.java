@@ -197,11 +197,13 @@ abstract class GVRViewManager extends GVRContext {
         }
 
         mPreviousTimeNanos = GVRTime.getCurrentTime();
+
+
+        final GVRScene scene = null == mMainScene ? new GVRScene(GVRViewManager.this) : mMainScene;
+        setMainSceneImpl(scene);
         mRenderBundle = makeRenderBundle();
         final DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
         getActivity().getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
-        final GVRScene scene = null == mMainScene ? new GVRScene(GVRViewManager.this) : mMainScene;
-        setMainSceneImpl(scene);
     }
 
     private void createMainScene() {
@@ -226,9 +228,8 @@ abstract class GVRViewManager extends GVRContext {
      * Called on surface creation to create a properly configured render bundle
      * @return
      */
-    protected IRenderBundle makeRenderBundle() {
-        final VrAppSettings.EyeBufferParams eyeBufferParams = getActivity().getAppSettings().getEyeBufferParams();
-        return new GVRRenderBundle(this, eyeBufferParams.getResolutionWidth(), eyeBufferParams.getResolutionHeight());
+    protected GVRRenderBundle makeRenderBundle() {
+        return new GVRRenderBundle(this);
     }
 
     /**
@@ -816,7 +817,7 @@ abstract class GVRViewManager extends GVRContext {
 
     private final GVREventManager mEventManager;
     protected final GVRInputManager mInputManager;
-    protected IRenderBundle mRenderBundle;
+    protected GVRRenderBundle mRenderBundle;
 
     protected GVRMain mMain;
 

@@ -90,7 +90,7 @@ public:
     virtual RenderTarget* createRenderTarget(Scene*) ;
     virtual RenderTarget* createRenderTarget(RenderTexture*, bool);
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*);
-    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo*);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int depthformat);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,

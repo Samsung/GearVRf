@@ -103,14 +103,45 @@ public class GVRRenderTexture extends GVRTexture {
                             int sampleCount, int colorFormat, int depthFormat,
                             boolean resolveDepth, GVRTextureParameters parameters)
     {
+        this(gvrContext, width, height, sampleCount, colorFormat, depthFormat, resolveDepth, parameters, 1);
+    }
+    /**
+     * Constructs a GVRRenderTexture for a frame buffer of the specified size,
+     * with MSAA enabled at the specified sample count, and with specified color
+     * format, depth format, resolution depth and texture parameters.
+     *
+     * @param gvrContext
+     *            Current gvrContext
+     * @param width
+     *            Width of the frame buffer.
+     * @param height
+     *            Height of the frame buffer.
+     * @param sampleCount
+     *            MSAA sample count.
+     * @param colorFormat
+     *            GVR color format.
+     *            See {@linkplain org.gearvrf.utility.VrAppSettings.EyeBufferParams.ColorFormat ColorFormat}.
+     * @param depthFormat
+     *            Depth format.
+     *            See {@linkplain org.gearvrf.utility.VrAppSettings.EyeBufferParams.DepthFormat DepthFormat}.
+     * @param resolveDepth
+     *            If true, resolves the depth buffer into a texture.
+     * @param parameters
+     *            Texture parameters. See {@link GVRTextureParameters}.
+     * @param numberViews
+     *            If multiview, it should be 2 or else 1.
+     */
+    public GVRRenderTexture(GVRContext gvrContext, int width, int height,
+                            int sampleCount, int colorFormat, int depthFormat,
+                            boolean resolveDepth, GVRTextureParameters parameters, int numberViews)
+    {
         super(gvrContext, NativeRenderTexture.ctorWithParameters(width, height,
-                                                                 sampleCount, colorFormat,
-                                                                 depthFormat, resolveDepth,
-                                                                 parameters.getCurrentValuesArray()));
+                sampleCount, colorFormat,
+                depthFormat, resolveDepth,
+                parameters.getCurrentValuesArray(), numberViews));
         mWidth = width;
         mHeight = height;
     }
-
     GVRRenderTexture(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
@@ -170,7 +201,7 @@ class NativeRenderTexture {
 
     static native long ctorWithParameters(int width, int height,
                                           int sampleCount, int colorFormat, int depthFormat,
-                                          boolean resolveDepth, int[] parameters);
+                                          boolean resolveDepth, int[] parameters, int number_views);
 
     static native long ctorArray(int width, int height, int samples, int layers);
 
