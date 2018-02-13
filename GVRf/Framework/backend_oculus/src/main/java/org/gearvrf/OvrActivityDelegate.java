@@ -46,11 +46,6 @@ final class OvrActivityDelegate extends GVRActivity.ActivityDelegateStubs {
     }
 
     @Override
-    public OvrMonoscopicViewManager makeMonoscopicViewManager() {
-        return new OvrMonoscopicViewManager(mActivity, mActivity.getMain(), mXmlParser);
-    }
-
-    @Override
     public GVRCameraRig makeCameraRig(GVRContext context) {
         return new GVRCameraRig(context);
     }

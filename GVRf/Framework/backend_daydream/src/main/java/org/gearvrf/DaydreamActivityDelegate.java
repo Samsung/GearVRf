@@ -42,11 +42,6 @@ final class DaydreamActivityDelegate extends GVRActivity.ActivityDelegateStubs i
     }
 
     @Override
-    public GVRViewManager makeMonoscopicViewManager() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public GVRCameraRig makeCameraRig(GVRContext context) {
         return new DaydreamCameraRig(context);
     }

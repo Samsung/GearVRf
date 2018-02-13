@@ -12,19 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gearvrf;
 
-interface IRenderBundle {
+final class MonoscopicConfigurationManager extends GVRConfigurationManager {
 
-    GVRMaterialShaderManager getMaterialShaderManager();
+    MonoscopicConfigurationManager(GVRActivity gvrActivity) {
+        super(gvrActivity);
+    }
 
-    GVRPostEffectShaderManager getPostEffectShaderManager();
+    @Override
+    public boolean isDockListenerRequired() {
+        return false;
+    }
 
-    GVRRenderTexture getPostEffectRenderTextureA();
-    GVRRenderTexture getEyeCapturePostEffectRenderTextureA();
-    GVRRenderTexture getEyeCapturePostEffectRenderTextureB();
-    GVRRenderTexture getPostEffectRenderTextureB();
-    GVRRenderTarget getEyeCaptureRenderTarget();
-
-    GVRRenderTarget getRenderTarget(GVRViewManager.EYE eye, int index);
+    @Override
+    public boolean isHmtConnected() {
+        return false;
+    }
 }

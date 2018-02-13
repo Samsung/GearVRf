@@ -139,6 +139,9 @@ void RenderData::bindShader(JNIEnv* env, jobject localSceneObject, bool isMultiv
     if (nullptr != localJavaObject && nullptr != localSceneObject) {
         env->CallVoidMethod(localJavaObject, bindShaderMethod_, localSceneObject, isMultiview);
     }
+    if (localJavaObject) {
+        env->DeleteLocalRef(localJavaObject);
+    }
 }
 
 bool compareRenderDataByShader(RenderData *i, RenderData *j)
@@ -274,7 +277,9 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
         //@todo implementation details leaked; unify common JNI reqs of Scene and RenderData
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
-        bindShader(env, rstate.scene->getJavaObj(*env), rstate.is_multiview);
+        jobject localSceneObject = rstate.scene->getJavaObj(*env);
+        bindShader(env, localSceneObject, rstate.is_multiview);
+        env->DeleteLocalRef(localSceneObject);
         if (rc > 0) {
             rstate.scene->detach_java_env();
         }

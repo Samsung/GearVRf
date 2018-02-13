@@ -114,7 +114,7 @@ public:
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views, bool monoscopic);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int depthformat) { }
-    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo*);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual Shader* createShader(int id, const char* signature,

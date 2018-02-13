@@ -35,25 +35,22 @@ import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.ResourceCacheBase;
 import org.gearvrf.utility.ResourceReader;
 import org.gearvrf.utility.Threads;
-import org.gearvrf.x3d.ShaderSettings;
-import org.gearvrf.x3d.X3Dobject;
-import org.gearvrf.x3d.X3DparseLights;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Future;
 
 /**
  * {@link GVRAssetLoader} provides methods for importing 3D models and textures.
@@ -1068,10 +1065,16 @@ public final class GVRAssetLoader {
 
         assetRequest.setImportSettings(GVRImportSettings.getRecommendedSettings());
         model.setName(assetRequest.getBaseName());
-        if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model);
-        else
+        if (ext.equals("x3d")) {
+            try {
+                loadX3DModel(assetRequest, model);
+            } catch (final Exception e) {
+                throw new RuntimeException("X3D extension not available; can't load X3D models!");
+            }
+        }
+        else {
             loadJassimpModel(assetRequest, model);
+        }
         return model;
     }
 
@@ -1107,10 +1110,15 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         assetRequest.setImportSettings(GVRImportSettings.getRecommendedSettings());
-        if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model);
-        else
+        if (ext.equals("x3d")) {
+            try {
+                loadX3DModel(assetRequest, model);
+            } catch (final Exception e) {
+                throw new RuntimeException("X3D extension not available; can't load X3D models!");
+            }
+        } else {
             loadJassimpModel(assetRequest, model);
+        }
         return model;
     }
 
@@ -1148,15 +1156,17 @@ public final class GVRAssetLoader {
 
                 assetRequest.setImportSettings(GVRImportSettings.getRecommendedSettings());
                 model.setName(assetRequest.getBaseName());
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model);
-                    else
+                try {
+                    if (ext.equals("x3d")) {
+                        try {
+                            loadX3DModel(assetRequest, model);
+                        } catch (final Exception e) {
+                            throw new RuntimeException("X3D extension not available; can't load X3D models!");
+                        }
+                    } else {
                         loadJassimpModel(assetRequest, model);
-                }
-                catch (IOException ex)
-                {
+                    }
+                } catch (IOException ex) {
                     // onModelError is generated in this case
                 }
             }
@@ -1199,15 +1209,17 @@ public final class GVRAssetLoader {
 
                 assetRequest.setImportSettings(settings);
                 model.setName(assetRequest.getBaseName());
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model);
-                    else
+                try {
+                    if (ext.equals("x3d")) {
+                        try {
+                            loadX3DModel(assetRequest, model);
+                        } catch (final Exception e) {
+                            throw new RuntimeException("X3D extension not available; can't load X3D models!");
+                        }
+                    } else {
                         loadJassimpModel(assetRequest, model);
-                }
-                catch (IOException ex)
-                {
+                    }
+                } catch (IOException ex) {
                     // onModelError is generated in this case
                 }
             }
@@ -1250,15 +1262,17 @@ public final class GVRAssetLoader {
 
                 model.setName(assetRequest.getBaseName());
                 assetRequest.setImportSettings(GVRImportSettings.getRecommendedSettings());
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model);
-                    else
+                try {
+                    if (ext.equals("x3d")) {
+                        try {
+                            loadX3DModel(assetRequest, model);
+                        } catch (final Exception e) {
+                            throw new RuntimeException("X3D extension not available; can't load X3D models!");
+                        }
+                    } else {
                         loadJassimpModel(assetRequest, model);
-                }
-                catch (IOException ex)
-                {
+                    }
+                } catch (IOException ex) {
                     // onModelError is generated in this case.
                 }
             }
@@ -1303,15 +1317,17 @@ public final class GVRAssetLoader {
 
                 model.setName(assetRequest.getBaseName());
                 assetRequest.setImportSettings(settings);
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model);
-                    else
+                try {
+                    if (ext.equals("x3d")) {
+                        try {
+                            loadX3DModel(assetRequest, model);
+                        } catch (final Exception e) {
+                            throw new RuntimeException("X3D extension not available; can't load X3D models!");
+                        }
+                    } else {
                         loadJassimpModel(assetRequest, model);
-                }
-                catch (IOException ex)
-                {
+                    }
+                } catch (IOException ex) {
                     // onModelError is generated in this case.
                 }
             }
@@ -1353,10 +1369,15 @@ public final class GVRAssetLoader {
 
         model.setName(assetRequest.getBaseName());
         assetRequest.setImportSettings(GVRImportSettings.getRecommendedSettings());
-        if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model);
-        else
+        if (ext.equals("x3d")) {
+            try {
+                loadX3DModel(assetRequest, model);
+            } catch (final Exception e) {
+                throw new RuntimeException("X3D extension not available; can't load X3D models!");
+            }
+        } else {
             loadJassimpModel(assetRequest, model);
+        }
         return model;
     }
 
@@ -1406,10 +1427,15 @@ public final class GVRAssetLoader {
         model.setName(assetRequest.getBaseName());
         assetRequest.setImportSettings(settings);
         assetRequest.useCache(cacheEnabled);
-        if (ext.equals("x3d"))
-		    loadX3DModel(assetRequest, model);
-		else
-		    loadJassimpModel(assetRequest, model);
+        if (ext.equals("x3d")) {
+            try {
+                loadX3DModel(assetRequest, model);
+            } catch (final Exception e) {
+                throw new RuntimeException("X3D extension not available; can't load X3D models!");
+            }
+        } else {
+            loadJassimpModel(assetRequest, model);
+        }
         return model;
     }
 
@@ -1467,10 +1493,15 @@ public final class GVRAssetLoader {
         model.setName(assetRequest.getBaseName());
         assetRequest.setImportSettings(settings);
         assetRequest.useCache(cacheEnabled);
-        if (ext.equals("x3d"))
-            loadX3DModel(assetRequest, model);
-        else
+        if (ext.equals("x3d")) {
+            try {
+                loadX3DModel(assetRequest, model);
+            } catch (final Exception e) {
+                throw new RuntimeException("X3D extension not available; can't load X3D models!");
+            }
+        } else {
             loadJassimpModel(assetRequest, model);
+        }
         return model;
     }
 
@@ -1519,15 +1550,17 @@ public final class GVRAssetLoader {
                 model.setName(assetRequest.getBaseName());
                 assetRequest.setImportSettings(settings);
                 assetRequest.useCache(cacheEnabled);
-                try
-                {
-                    if (ext.equals("x3d"))
-                        loadX3DModel(assetRequest, model);
-                    else
+                try {
+                    if (ext.equals("x3d")) {
+                        try {
+                            loadX3DModel(assetRequest, model);
+                        } catch (final Exception e) {
+                            throw new RuntimeException("X3D extension not available; can't load X3D models!");
+                        }
+                    } else {
                         loadJassimpModel(assetRequest, model);
-                }
-                catch (IOException ex)
-                {
+                    }
+                } catch (IOException ex) {
                     // onModelError is generated in this case
                 }
             }
@@ -1774,45 +1807,11 @@ public final class GVRAssetLoader {
 
 
     GVRSceneObject loadX3DModel(GVRAssetLoader.AssetRequest assetRequest,
-            GVRSceneObject root) throws IOException
-    {
-        GVRResourceVolume volume = assetRequest.getVolume();
-        InputStream inputStream = null;
-        String fileName = assetRequest.getBaseName();
-        GVRAndroidResource resource = volume.openResource(fileName);
+                                GVRSceneObject root) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-        root.setName(fileName);
-        org.gearvrf.x3d.X3Dobject x3dObject = new org.gearvrf.x3d.X3Dobject(assetRequest, root);
-        try
-        {
-            ShaderSettings shaderSettings = new ShaderSettings(new GVRMaterial(mContext));
-            if (!X3Dobject.UNIVERSAL_LIGHTS)
-            {
-                X3DparseLights x3dParseLights = new X3DparseLights(mContext, root);
-                inputStream = resource.getStream();
-                if (inputStream == null)
-                {
-                    throw new FileNotFoundException(fileName + " not found");
-                }
-                Log.d(TAG, "Parse: " + fileName);
-                x3dParseLights.Parse(inputStream, shaderSettings);
-                inputStream.close();
-            }
-            inputStream = resource.getStream();
-            if (inputStream == null)
-            {
-              	throw new FileNotFoundException(fileName + " not found");
-            }
-            x3dObject.Parse(inputStream, shaderSettings);
-            inputStream.close();
-            assetRequest.onModelLoaded(mContext, root, fileName);
-        }
-        catch (Exception ex)
-        {
-            assetRequest.onModelError(mContext, ex.getMessage(), fileName);
-            throw ex;
-        }
-        return root;
+        final Class<?> loaderClass = Class.forName("org.gearvrf.x3d.X3DLoader");
+        final Method loadMethod = loaderClass.getDeclaredMethod("load", GVRContext.class, GVRAssetLoader.AssetRequest.class, GVRSceneObject.class);
+        return (GVRSceneObject)loadMethod.invoke(null, mContext, assetRequest, root);
     }
 
     public static File downloadFile(Context context, String urlString) {

@@ -35,16 +35,15 @@ import android.view.SurfaceHolder;
  * This GVRSurfaceView class extends from {@link GLSurfaceView} which is used
  * for OpenGL rendering. In GVR, GVRSurfaceView acts the same way
  * {@link GLSurfaceView} does to render object and scene. GVRSurfaceView
- * requires a valid {@link OvrMonoscopicViewManager} which holds the main scene details to
+ * requires a valid {@link OvrViewManager} which holds the main scene details to
  * be rendered
  */
 class OvrSurfaceView extends GLSurfaceView implements
         android.view.Choreographer.FrameCallback {
-    private OvrMonoscopicViewManager mViewManager = null;
 
     /**
      * Constructs a GVRSurfaceView given by current GVR context without
-     * OvrMonoscopicViewManager
+     * OvrViewManager
      *
      * @param context
      *            current context
@@ -55,19 +54,18 @@ class OvrSurfaceView extends GLSurfaceView implements
 
     /**
      * Constructs a {@link OvrSurfaceView} given by current {@link GVRContext}
-     * with {@link OvrMonoscopicViewManager}
+     * with {@link OvrViewManager}
      *
      * @param context
      *            current context
      * @param viewManager
-     *            a given {@link OvrMonoscopicViewManager} object to be used in
+     *            a given {@link OvrViewManager} object to be used in
      *            {@link OvrSurfaceView}
      */
     public OvrSurfaceView(Context context,
-                          OvrMonoscopicViewManager viewManager,
+                          OvrViewManager viewManager,
                           OvrSurfaceViewRenderer renderer) {
         super(context);
-        mViewManager = viewManager;
         /*
          * To access inputs by onKeyDown().
          */

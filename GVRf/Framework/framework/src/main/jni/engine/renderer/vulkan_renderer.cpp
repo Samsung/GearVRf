@@ -40,8 +40,8 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
 {
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
-RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
+RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo* renderTextureInfo) {
+    return new VkRenderTextureOffScreen(renderTextureInfo->fdboWidth, renderTextureInfo->fboHeight, renderTextureInfo->multisamples);
 }
 
 RenderData* VulkanRenderer::createRenderData()

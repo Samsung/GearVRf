@@ -34,7 +34,7 @@ import android.opengl.GLSurfaceView.Renderer;
  * {@link GVRActivity#setMain(GVRMain, String)}.
  */
 class OvrSurfaceViewRenderer implements GLSurfaceView.Renderer {
-    private OvrMonoscopicViewManager mViewManager = null;
+    private OvrViewManager mViewManager = null;
 
     /**
      * Constructs an empty OvrSurfaceViewRenderer
@@ -46,21 +46,21 @@ class OvrSurfaceViewRenderer implements GLSurfaceView.Renderer {
      * Constructs {@link OvrSurfaceViewRenderer} given by {@link OvrViewManager}
      * 
      * @param viewManager
-     *            a {@link OvrMonoscopicViewManager} object to be used in
+     *            a {@link OvrViewManager} object to be used in
      *            {@link OvrSurfaceViewRenderer}
      */
-    public OvrSurfaceViewRenderer(OvrMonoscopicViewManager viewManager) {
+    public OvrSurfaceViewRenderer(OvrViewManager viewManager) {
         mViewManager = viewManager;
     }
 
     /**
-     * Sets {@link OvrMonoscopicViewManager} for the {@link OvrSurfaceViewRenderer}
+     * Sets {@link OvrViewManager} for the {@link OvrSurfaceViewRenderer}
      * 
      * @param viewManager
-     *            a {@link OvrMonoscopicViewManager} object to be used in
+     *            a {@link OvrViewManager} object to be used in
      *            {@link OvrSurfaceViewRenderer}
      */
-    public void setViewManager(OvrMonoscopicViewManager viewManager) {
+    public void setViewManager(OvrViewManager viewManager) {
         mViewManager = viewManager;
     }
 

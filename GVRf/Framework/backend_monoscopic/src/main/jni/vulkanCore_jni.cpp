@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 #include <engine/renderer/renderer.h>
-#include "vulkan_headers.h"
+#include "vulkan/vulkan_headers.h"
 
 namespace gvr {
 extern "C" {

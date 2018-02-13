@@ -1,0 +1,165 @@
+apply plugin: 'com.android.library'
+
+repositories {
+    flatDir {
+        dirs 'src/main/libs'
+    }
+}
+
+android {
+    //defaultPublishConfig "debug"
+    publishNonDefault !gradle.getStartParameter().taskNames.contains('uploadArchives')
+    compileSdkVersion 24
+    buildToolsVersion '25.0.2'
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 24
+
+        externalNativeBuild {
+            ndkBuild {
+                arguments = ["-j" + Runtime.runtime.availableProcessors()]
+                arguments += ['PROJECT_ROOT=' + rootProject.projectDir]
+                arguments += ['PROJECT_DIR=' + projectDir.absolutePath]
+                arguments += ['BUILDTYPE=Release']      
+                if (rootProject.hasProperty("ARM64")) {
+                    arguments += ['ARM64=true']
+                }
+            }
+        }
+
+        ndk {
+            moduleName "gvrf-monoscopic"
+            if (rootProject.hasProperty("ARM64")) {
+                abiFilters = ['arm64-v8a']
+            } else {
+                abiFilters = ['armeabi-v7a']
+            }
+        }
+    }
+
+    task buildInfo() {
+        def commitId
+
+        File head = new File(projectDir.absolutePath + '/../../../.git/HEAD')
+        if (head.exists()) {
+            def elements = head.text.split()
+            if (elements.length > 0) {
+                File commit = new File(projectDir.absolutePath + '/../../../.git/' + elements[elements.length-1])
+                if (commit.exists()) {
+                    commitId = commit.text.trim();
+                } else {
+                    return
+                }
+            } else {
+                return
+            }
+        } else {
+            return
+        }
+
+        def source = new File(projectDir.absolutePath + '/src/main/jni', 'buildinfo.cpp')
+        if (source.exists() && source.text.contains(commitId)) {
+            return
+        }
+        def javaSource = new File(projectDir.absolutePath + '/src/main/java/org/gearvrf/', 'MonoscopicBuildInfo.java')
+
+        source.text = '#include "util/gvr_log.h"\n'
+        source.text += '#include <jni.h>\n\n'
+        source.text += 'jint JNI_OnLoad(JavaVM *vm, void *reserved) {\n'
+        source.text += '    LOGI("BACKEND_MONOSCOPIC-CPP  HEAD: ' + commitId + '");\n'
+        source.text += '    JNIEnv* env;\n';
+        source.text += '    if(JNI_OK == vm->AttachCurrentThread(&env, 0)) {\n'
+        source.text += '        jclass java_class = env->FindClass("org/gearvrf/OvrBuildInfo");\n'
+        source.text += '        if (env->ExceptionCheck()) {\n'
+        source.text += '            env->ExceptionClear();\n'
+        source.text += '        }\n'
+        source.text += '        if(nullptr != java_class) {\n'
+        source.text += '            env->GetStaticFieldID(java_class, "HEAD", "java/lang/String");\n'
+        source.text += '            if (env->ExceptionCheck()) {\n'
+        source.text += '                env->ExceptionClear();\n'
+        source.text += '            }\n'
+        source.text += '            env->DeleteLocalRef(java_class);\n'
+        source.text += '        }\n'
+        source.text += '    }\n'
+        source.text += '    return JNI_VERSION_1_6;\n'
+        source.text += '}'
+
+        javaSource.text = 'package org.gearvrf;\n'
+        javaSource.text += 'public class MonoscopicBuildInfo {\n'
+        javaSource.text += '    public final static String HEAD="' + commitId + '";\n'
+        javaSource.text += '    static { android.util.Log.i("gvrf", "BACKEND_MONOSCOPIC-JAVA HEAD: " + HEAD); }\n'
+        javaSource.text += '}\n'
+    }
+
+    buildTypes {
+        debug {
+            debuggable = true
+            jniDebuggable = true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+
+    sourceSets.main {
+        java.srcDirs = ['src/main/java']
+        jni.srcDirs = [] // no auto generation of Android.mk
+        // pre-compiled libraries
+        jniLibs {
+            srcDir 'src/main/libs'
+        }
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            if (rootProject.hasProperty("GVRF_USE_CLANG") && rootProject.property("GVRF_USE_CLANG")) {
+                path 'src/main/clang/Android.mk'
+            } else {
+                path 'src/main/jni/Android.mk'
+            }
+        }
+    }
+
+    packagingOptions {
+        exclude 'lib/*/libgvrf.so'
+    }
+}
+
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
+    compile project(':framework')
+    compile "org.joml:joml-android:${jomlVersion}"
+}
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'externalNativeBuildDebug') {
+        task.dependsOn ":framework:externalNativeBuildDebug"
+        task.dependsOn 'buildInfo'
+    } else if (task.name == 'externalNativeBuildRelease') {
+        task.dependsOn ":framework:externalNativeBuildRelease"
+        task.dependsOn 'buildInfo'
+    } else if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
+}

@@ -422,7 +422,7 @@ public class GVRCubeSceneObject extends GVRSceneObject {
                     "The length of textureList is not 6.");
         }
 
-        createSimpleCubeSixMeshes(gvrContext, facingOut, "float a_position float a_texcoord float a_normal", textureList);
+        createSimpleCubeSixMeshes(gvrContext, facingOut, "float3 a_position float2 a_texcoord float3 a_normal", textureList);
     }
 
     /**
@@ -555,34 +555,36 @@ public class GVRCubeSceneObject extends GVRSceneObject {
     {
         GVRSceneObject[] children = new GVRSceneObject[6];
         GVRMesh[] meshes = new GVRMesh[6];
-        GVRVertexBuffer vbuf = new GVRVertexBuffer(gvrContext, vertexDesc, SIMPLE_VERTICES.length);
+        GVRVertexBuffer vbuf = new GVRVertexBuffer(gvrContext, vertexDesc, SIMPLE_VERTICES.length / 3);
 
         if (facingOut)
         {
-            vbuf.setFloatArray("a_normal", SIMPLE_OUTWARD_NORMALS);
-            vbuf.setFloatArray("a_texcoord", SIMPLE_OUTWARD_TEXCOORDS);
-            meshes[0] = createMesh(vbuf, 0, SIMPLE_OUTWARD_FRONT_INDICES);
-            meshes[1] = createMesh(vbuf, 6, SIMPLE_OUTWARD_RIGHT_INDICES);
-            meshes[2] = createMesh(vbuf, 12, SIMPLE_OUTWARD_BACK_INDICES);
-            meshes[3] = createMesh(vbuf, 18, SIMPLE_OUTWARD_LEFT_INDICES);
-            meshes[4] = createMesh(vbuf, 24, SIMPLE_OUTWARD_TOP_INDICES);
-            meshes[5] = createMesh(vbuf, 30, SIMPLE_OUTWARD_BOTTOM_INDICES);
+            vbuf.setFloatArray("a_position", SIMPLE_VERTICES, 3, 0);
+            vbuf.setFloatArray("a_normal", SIMPLE_OUTWARD_NORMALS, 3, 0);
+            vbuf.setFloatArray("a_texcoord", SIMPLE_OUTWARD_TEXCOORDS, 2, 0);
+            meshes[0] = createMesh(vbuf, SIMPLE_OUTWARD_FRONT_INDICES);
+            meshes[1] = createMesh(vbuf, SIMPLE_OUTWARD_RIGHT_INDICES);
+            meshes[2] = createMesh(vbuf, SIMPLE_OUTWARD_BACK_INDICES);
+            meshes[3] = createMesh(vbuf, SIMPLE_OUTWARD_LEFT_INDICES);
+            meshes[4] = createMesh(vbuf, SIMPLE_OUTWARD_TOP_INDICES);
+            meshes[5] = createMesh(vbuf, SIMPLE_OUTWARD_BOTTOM_INDICES);
         }
         else
         {
-            vbuf.setFloatArray("a_normal", SIMPLE_INWARD_NORMALS);
-            vbuf.setFloatArray("a_texcoord", SIMPLE_INWARD_TEXCOORDS);
-            meshes[0] = createMesh(vbuf, 0, SIMPLE_INWARD_FRONT_INDICES);
-            meshes[1] = createMesh(vbuf, 6, SIMPLE_INWARD_RIGHT_INDICES);
-            meshes[2] = createMesh(vbuf, 12, SIMPLE_INWARD_BACK_INDICES);
-            meshes[3] = createMesh(vbuf, 18, SIMPLE_INWARD_LEFT_INDICES);
-            meshes[4] = createMesh(vbuf, 24, SIMPLE_INWARD_TOP_INDICES);
-            meshes[5] = createMesh(vbuf, 30, SIMPLE_INWARD_BOTTOM_INDICES);
+            vbuf.setFloatArray("a_position", SIMPLE_VERTICES, 3, 0);
+            vbuf.setFloatArray("a_normal", SIMPLE_INWARD_NORMALS, 3, 0);
+            vbuf.setFloatArray("a_texcoord", SIMPLE_INWARD_TEXCOORDS, 2, 0);
+            meshes[0] = createMesh(vbuf, SIMPLE_INWARD_FRONT_INDICES);
+            meshes[1] = createMesh(vbuf, SIMPLE_INWARD_RIGHT_INDICES);
+            meshes[2] = createMesh(vbuf, SIMPLE_INWARD_BACK_INDICES);
+            meshes[3] = createMesh(vbuf, SIMPLE_INWARD_LEFT_INDICES);
+            meshes[4] = createMesh(vbuf, SIMPLE_INWARD_TOP_INDICES);
+            meshes[5] = createMesh(vbuf, SIMPLE_INWARD_BOTTOM_INDICES);
         }
+
         for (int i = 0; i < 6; i++)
         {
-            children[i] = new GVRSceneObject(gvrContext,
-                    meshes[i], textureList.get(i));
+            children[i] = new GVRSceneObject(gvrContext, meshes[i], textureList.get(i));
             addChildObject(children[i]);
         }
 
@@ -591,18 +593,11 @@ public class GVRCubeSceneObject extends GVRSceneObject {
         attachRenderData(renderData);
     }
 
-    private GVRMesh createMesh(GVRVertexBuffer vbuf, int offset, char[] indices)
+    private GVRMesh createMesh(GVRVertexBuffer vbuf, char[] indices)
     {
-        char[] temp = new char[6];
-        GVRIndexBuffer ibuf = new GVRIndexBuffer(vbuf.getGVRContext(), 2, 6);
-        GVRMesh mesh = new GVRMesh(vbuf, ibuf);
-        for (int i = 0; i < 6; ++i)
-        {
-            temp[i] = indices[i];
-            temp[i] += offset;
-        }
-        ibuf.setShortVec(temp);
-        return mesh;
+        final GVRIndexBuffer ibuf = new GVRIndexBuffer(vbuf.getGVRContext(), 2, 6);
+        ibuf.setShortVec(indices);
+        return new GVRMesh(vbuf, ibuf);
     }
 
     private void createComplexCube(GVRContext gvrContext,

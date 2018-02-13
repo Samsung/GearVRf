@@ -8,6 +8,9 @@
 #include "gl_index_buffer.h"
 #include "gl_shader.h"
 
+#define VERBOSE_LOGGING 0
+#include "util/gvr_log.h"
+
 namespace gvr {
     GLVertexBuffer::GLVertexBuffer(const char* layout_desc, int vertexCount)
     : VertexBuffer(layout_desc, vertexCount),
@@ -44,17 +47,18 @@ namespace gvr {
         GLuint programId = static_cast<GLShader*>(shader)->getProgramId();
 
         glBindVertexArray(mVArrayID);
-        if (mProgramID == programId)
-        {
-            return;
-        }
-        mProgramID = programId;
         if (ibuf)
         {
             ibuf->bindBuffer(shader);
         }
         LOGV("VertexBuffer::bindToShader bind vertex array %d to shader %d", mVBufferID, programId);
         glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
+
+        if (mProgramID == programId)
+        {
+            return;
+        }
+        mProgramID = programId;
 
         shader->getVertexDescriptor().forEachEntry([this, programId](const DataDescriptor::DataEntry &e)
         {
@@ -70,7 +74,7 @@ namespace gvr {
                         glEnableVertexAttribArray(loc); // enable this attribute in GL
                         glVertexAttribPointer(loc, entry->Size / sizeof(float),
                                               entry->IsInt ? GL_INT : GL_FLOAT, GL_FALSE,
-                                              getTotalSize(), (GLvoid*) entry->Offset);
+                                              getTotalSize(), reinterpret_cast<GLvoid*>(entry->Offset));
                         LOGV("VertexBuffer: vertex attrib #%d %s loc %d ofs %d",
                              e.Index, e.Name, loc, entry->Offset);
                         checkGLError("VertexBuffer::bindToShader");

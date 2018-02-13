@@ -442,6 +442,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
             startChoreographerThreadIfNotStarted();
             mViewManager.onSurfaceChanged(width, height);
+            mViewManager.createSwapChain();
         }
 
         @Override

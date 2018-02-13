@@ -15,13 +15,16 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.VrAppSettings;
-
 import android.app.Activity;
 import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import org.gearvrf.debug.GVRFPSTracer;
+import org.gearvrf.debug.GVRMethodCallTracer;
+import org.gearvrf.debug.GVRStatsLine;
+import org.gearvrf.io.GearCursorController;
+import org.gearvrf.utility.Log;
 
 /*
  * This is the most important part of gvrf.
@@ -60,13 +63,33 @@ import android.view.SurfaceView;
  * {@link #onRotationSensor(long, float, float, float, float, float, float, float)
  * onRotationSensor()} to draw the scene graph properly.
  */
-class OvrMonoscopicViewManager extends OvrViewManager {
+class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotationSensorListener {
 
-    // private static final String TAG =
-    // Log.tag(OvrMonoscopicViewManager.class);
+    static {
+        System.loadLibrary("gvrf-monoscopic");
+    }
 
-    private OvrSurfaceView mView;
-    private int mViewportX, mViewportY, mViewportWidth, mViewportHeight, sampleCount;
+    private static final String TAG = Log.tag(MonoscopicViewManager.class);
+    protected MonoscopicRotationSensor mRotationSensor;
+    protected MonoscopicLensInfo mLensInfo;
+
+    protected int mCurrentEye;
+
+    // Statistic debug info
+    private GVRStatsLine mStatsLine;
+    private GVRFPSTracer mFPSTracer;
+    private GVRMethodCallTracer mTracerBeforeDrawEyes;
+    private GVRMethodCallTracer mTracerAfterDrawEyes;
+    private GVRMethodCallTracer mTracerDrawEyes;
+    private GVRMethodCallTracer mTracerDrawEyes1;
+    private GVRMethodCallTracer mTracerDrawEyes2;
+    private GVRMethodCallTracer mTracerDrawFrame;
+    private GVRMethodCallTracer mTracerDrawFrameGap;
+    private GearCursorController mGearController;
+
+
+    private MonoscopicSurfaceView mView;
+    private int mViewportWidth, mViewportHeight, sampleCount;
     private GVRRenderTarget mRenderTarget[] = new GVRRenderTarget[3];
     private boolean isVulkanInstance = false;
     volatile boolean  activeFlag = true;
@@ -76,7 +99,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     private SurfaceView vulkanSurfaceView;
 
     /**
-     * Constructs OvrMonoscopicViewManager object with GVRMain which controls
+     * Constructs MonoscopicViewManager object with GVRMain which controls
      * GL activities
      *
      * @param gvrActivity
@@ -84,16 +107,33 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      * @param gvrMain
      *            {@link GVRMain} which describes
      */
-    OvrMonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
-                             OvrXMLParser xmlParser) {
-        super(gvrActivity, gvrMain, xmlParser);
+    MonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
+                             MonoscopicXMLParser xmlParser) {
+        super(gvrActivity, gvrMain);
+
+        // Apply view manager preferences
+        GVRPreference prefs = GVRPreference.get();
+        DEBUG_STATS = prefs.getBooleanProperty(GVRPreference.KEY_DEBUG_STATS, false);
+        DEBUG_STATS_PERIOD_MS = prefs.getIntegerProperty(GVRPreference.KEY_DEBUG_STATS_PERIOD_MS, 1000);
+        try {
+            GVRStatsLine.sFormat = GVRStatsLine.FORMAT
+                    .valueOf(prefs.getProperty(GVRPreference.KEY_STATS_FORMAT, GVRStatsLine.FORMAT.DEFAULT.toString()));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+
+        /*
+         * Starts listening to the sensor.
+         */
+        mRotationSensor = new MonoscopicRotationSensor(gvrActivity, this);
+
 
         /*
          * Sets things with the numbers in the xml.
          */
 
         mRenderTarget[0] = null;
-        mView = new OvrSurfaceView(gvrActivity, this, null);
+        mView = new MonoscopicSurfaceView(gvrActivity, this, null);
 
         DisplayMetrics metrics = new DisplayMetrics();
         gvrActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -106,7 +146,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         float screenHeightMeters = (float) screenHeightPixels / metrics.ydpi
                 * INCH_TO_METERS;
 
-        mLensInfo = new OvrLensInfo(screenWidthPixels, screenHeightPixels,
+        mLensInfo = new MonoscopicLensInfo(screenWidthPixels, screenHeightPixels,
                 screenWidthMeters, screenHeightMeters,
                 gvrActivity.getAppSettings());
 
@@ -116,31 +156,41 @@ class OvrMonoscopicViewManager extends OvrViewManager {
                 .getResolutionWidth();
         int fboHeight = gvrActivity.getAppSettings().getEyeBufferParams()
                 .getResolutionHeight();
-        if (gvrActivity.getAppSettings().getMonoscopicModeParams()
-                .isMonoFullScreenMode()) {
-            fboWidth = screenWidthPixels;
-            fboHeight = screenHeightPixels;
-        } else if (fboWidth <= 0 || fboHeight <= 0) {
-            fboWidth = fboHeight = VrAppSettings.DEFAULT_FBO_RESOLUTION;
-        }
+
+        // let's default to fullscreen
+        fboWidth = screenWidthPixels;
+        fboHeight = screenHeightPixels;
+
         float aspect = (float) fboWidth / (float) fboHeight;
         GVRPerspectiveCamera.setDefaultAspectRatio(aspect);
-        mViewportX = 0;
-        mViewportY = 0;
         mViewportWidth = fboWidth;
         mViewportHeight = fboHeight;
 
         mLensInfo.setFBOWidth(mViewportWidth);
         mLensInfo.setFBOHeight(mViewportHeight);
 
-        if (fboWidth != screenWidthPixels) {
-            mViewportX = (screenWidthPixels / 2) - (fboWidth / 2);
-        }
-        if (fboHeight != screenHeightPixels) {
-            mViewportY = (screenHeightPixels / 2) - (fboHeight / 2);
-        }
-
         sampleCount = gvrActivity.getAppSettings().getEyeBufferParams().getMultiSamples();
+
+        // Debug statistics
+        mStatsLine = new GVRStatsLine("gvrf-stats");
+
+        mFPSTracer = new GVRFPSTracer("DrawFPS");
+        mTracerDrawFrame = new GVRMethodCallTracer("drawFrame");
+        mTracerDrawFrameGap = new GVRMethodCallTracer("drawFrameGap");
+        mTracerBeforeDrawEyes = new GVRMethodCallTracer("beforeDrawEyes");
+        mTracerDrawEyes = new GVRMethodCallTracer("drawEyes");
+        mTracerDrawEyes1 = new GVRMethodCallTracer("drawEyes1");
+        mTracerDrawEyes2 = new GVRMethodCallTracer("drawEyes2");
+        mTracerAfterDrawEyes = new GVRMethodCallTracer("afterDrawEyes");
+
+        mStatsLine.addColumn(mFPSTracer.getStatColumn());
+        mStatsLine.addColumn(mTracerDrawFrame.getStatColumn());
+        mStatsLine.addColumn(mTracerDrawFrameGap.getStatColumn());
+        mStatsLine.addColumn(mTracerBeforeDrawEyes.getStatColumn());
+        mStatsLine.addColumn(mTracerDrawEyes.getStatColumn());
+        mStatsLine.addColumn(mTracerDrawEyes1.getStatColumn());
+        mStatsLine.addColumn(mTracerDrawEyes2.getStatColumn());
+        mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
 
         if(NativeVulkanCore.useVulkanInstance()){
             isVulkanInstance = true;
@@ -158,7 +208,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
                     vulkanDrawThread = new Thread(workerObj, "vulkanThread");
                     if(!initialized) {
                         mRenderBundle = makeRenderBundle();
-                        final GVRScene scene = null == mMainScene ? new GVRScene(OvrMonoscopicViewManager.this) : mMainScene;
+                        final GVRScene scene = null == mMainScene ? new GVRScene(MonoscopicViewManager.this) : mMainScene;
                         mMainScene = scene;
                         NativeScene.setMainScene(scene.getNative());
                         getActivity().setCameraRig(scene.getMainCameraRig());
@@ -210,6 +260,67 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         }
     }
 
+    /**
+     * Called when the system is about to start resuming a previous activity.
+     * This is typically used to commit unsaved changes to persistent data, stop
+     * animations and other things that may be consuming CPU, etc.
+     * Implementations of this method must be very quick because the next
+     * activity will not be resumed until this method returns.
+     */
+    @Override
+    void onPause() {
+        super.onPause();
+        Log.v(TAG, "onPause");
+        mRotationSensor.onPause();
+    }
+
+    /**
+     * Called when the activity will start interacting with the user. At this
+     * point your activity is at the top of the activity stack, with user input
+     * going to it.
+     */
+    void onResume() {
+        super.onResume();
+        Log.v(TAG, "onResume");
+    }
+
+    /**
+     * The final call you receive before your activity is destroyed.
+     */
+    void onDestroy() {
+        Log.v(TAG, "onDestroy");
+        mRotationSensor.onDestroy();
+        super.onDestroy();
+    }
+
+    /**
+     * Called when the surface is created or recreated. Avoided because this can
+     * be called twice at the beginning.
+     */
+    void onSurfaceChanged(int width, int height) {
+        Log.v(TAG, "onSurfaceChanged");
+        mRotationSensor.onResume();
+    }
+
+    @Override
+    protected void beforeDrawEyes() {
+        if (DEBUG_STATS) {
+            mStatsLine.startLine();
+
+            mTracerDrawFrame.enter();
+            mTracerDrawFrameGap.leave();
+
+            mTracerBeforeDrawEyes.enter();
+        }
+
+        super.beforeDrawEyes();
+
+        if (DEBUG_STATS) {
+            mTracerBeforeDrawEyes.leave();
+        }
+    }
+
+
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
             mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
@@ -221,14 +332,47 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
         return (isVulkanInstance ? mRenderTarget[NativeVulkanCore.getSwapChainIndexToRender()] : mRenderTarget[0]);
     }
+
     /*
      * GL life cycle
      */
-    @Override
     protected void onDrawFrame() {
         beforeDrawEyes();
         drawEyes();
         afterDrawEyes();
+    }
+
+    @Override
+    protected void afterDrawEyes() {
+        if (DEBUG_STATS) {
+            // Time afterDrawEyes from here
+            mTracerAfterDrawEyes.enter();
+        }
+
+        super.afterDrawEyes();
+
+        if (DEBUG_STATS) {
+            mTracerAfterDrawEyes.leave();
+
+            mTracerDrawFrame.leave();
+            mTracerDrawFrameGap.enter();
+
+            mFPSTracer.tick();
+            mStatsLine.printLine(DEBUG_STATS_PERIOD_MS);
+
+            mMainScene.addStatMessage(System.lineSeparator() + mStatsLine.getStats(GVRStatsLine.FORMAT.MULTILINE));
+        }
+    }
+
+    @Override
+    void onSurfaceCreated() {
+        super.onSurfaceCreated();
+        mRotationSensor.onResume();
+        mGearController = mInputManager.getGearController();
+        if (mGearController != null)
+        {
+            mGearController.attachReader(new MonoscopicControllerReader());
+        }
     }
 
     public class Worker implements Runnable {
@@ -252,6 +396,41 @@ class OvrMonoscopicViewManager extends OvrViewManager {
                 mRenderBundle.getPostEffectRenderTextureB());
 
     }
+
+    /**
+     * Called to reset current sensor data.
+     *
+     * @param timeStamp
+     *            current time stamp
+     * @param rotationW
+     *            Quaternion rotation W
+     * @param rotationX
+     *            Quaternion rotation X
+     * @param rotationY
+     *            Quaternion rotation Y
+     * @param rotationZ
+     *            Quaternion rotation Z
+     * @param gyroX
+     *            Gyro rotation X
+     * @param gyroY
+     *            Gyro rotation Y
+     * @param gyroZ
+     *            Gyro rotation Z
+     */
+    @Override
+    public void onRotationSensor(long timeStamp, float rotationW, float rotationX, float rotationY, float rotationZ,
+                                 float gyroX, float gyroY, float gyroZ) {
+        GVRCameraRig cameraRig = null;
+        if (mMainScene != null) {
+            cameraRig = mMainScene.getMainCameraRig();
+        }
+
+        if (cameraRig != null) {
+            cameraRig.setRotationSensorData(timeStamp, rotationW, rotationX, rotationY, rotationZ, gyroX, gyroY, gyroZ);
+            updateSensoredScene();
+        }
+    }
+
 
 }
 
