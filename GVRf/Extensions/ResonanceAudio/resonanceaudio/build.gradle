@@ -1,0 +1,74 @@
+apply plugin: 'com.android.library'
+
+repositories {
+    jcenter()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+    maven {
+        url "http://google.bintray.com/googlevr"
+    }
+    flatDir {
+        dirs '../../../gearvrf-libs'
+    }
+}
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion '26.0.2'
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // ignore the x86 and arm-v8 files from the google audio libraries
+    packagingOptions {
+        exclude 'lib/x86/libgvr_audio.so'
+        exclude 'lib/arm64-v8a/libgvr_audio.so'
+    }
+}
+
+project.ext.jomlVersion = "1.9.3-SNAPSHOT"
+project.ext.daydreamVersion = "1.120.0"
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    if (findProject(':framework')) {
+        compile project (':framework')
+    } else {
+        compile(name: 'framework-debug', ext: 'aar')
+    }
+    compile "org.joml:joml-android:${jomlVersion}"
+    compile "com.google.vr:sdk-audio:${daydreamVersion}"
+}
+
+clean {}.doLast {
+    def gearvrfLibs = project.rootDir.absolutePath + "/../gearvrf-libs"
+    if (file(gearvrfLibs).exists()) {
+        project.delete(gearvrfLibs + '/' + project.name + '-release.aar')
+        project.delete(gearvrfLibs + '/' + project.name + '-debug.aar')
+    }
+}
+
+task copyJarToBin(type: Copy) {
+    outputs.upToDateWhen { false }
+    from tasks.matching { it.name.startsWith('bundle') }
+    into project.rootDir.absolutePath + "/../gearvrf-libs"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleDebug') {
+        task.finalizedBy(copyJarToBin)
+    } else if (task.name == 'bundleRelease') {
+        task.finalizedBy(copyJarToBin)
+    }
+}
