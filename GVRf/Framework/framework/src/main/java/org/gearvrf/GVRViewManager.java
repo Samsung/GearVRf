@@ -336,8 +336,8 @@ abstract class GVRViewManager extends GVRContext {
                 @Override
                 public void run() {
                     try {
-                        getEventManager().sendEvent(mMain, IScriptEvents.class, "onEarlyInit", GVRViewManager.this);
-                        getEventManager().sendEvent(mMain, IScriptEvents.class, "onInit", GVRViewManager.this);
+                        mEventManager.sendEvent(mMain, IScriptEvents.class, "onEarlyInit", GVRViewManager.this);
+                        mEventManager.sendEvent(mMain, IScriptEvents.class, "onInit", GVRViewManager.this);
 
                         if (null != mSplashScreen && GVRMain.SplashMode.AUTOMATIC == mMain
                                 .getSplashMode() && mMain.getSplashDisplayTime() < 0f) {
@@ -362,9 +362,8 @@ abstract class GVRViewManager extends GVRContext {
 
                     // Trigger event "onAfterInit" for post-processing of scene
                     // graph after initialization. Also trigger "onInit" for the GVRContext.
-                    getEventManager().sendEvent(mMain, IScriptEvents.class,
-                            "onAfterInit");
-                    getEventManager().sendEvent(this, IContextEvents.class, "onInit", this);
+                    mEventManager.sendEvent(mMain, IScriptEvents.class, "onAfterInit");
+                    mEventManager.sendEvent(GVRViewManager.this, IContextEvents.class, "onInit", GVRViewManager.this);
                 }
             });
 
