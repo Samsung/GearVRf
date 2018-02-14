@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 
 import org.gearvrf.GVRIndexBuffer;
 import org.gearvrf.GVRMaterial;
-
+import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 /*
  * Used in Array List for items DEFined in X3D (using the DEF="...." parameter).
  * Another item using the USE="...." parameter will search the array list for the 
@@ -60,6 +60,7 @@ public class DefinedItem {
     private GVRRenderData gvrRenderData = null;
     private GVRMaterial gvrMaterial = null;
     private Viewpoint viewpoint = null;
+    private GVRTextViewSceneObject gvrTextViewSceneObject = null;
     /**
      * X3D Transforms use AxisAngle format for rotations,
      * and float3 for the SpotLight, DirectionalLight direction
@@ -172,6 +173,15 @@ public class DefinedItem {
 
     public GVRMaterial getGVRMaterial() {
         return this.gvrMaterial;
+    }
+
+
+    public void setGVRTextViewSceneObject(GVRTextViewSceneObject gvrTextViewSceneObject) {
+        this.gvrTextViewSceneObject = gvrTextViewSceneObject;
+    }
+
+    public GVRTextViewSceneObject getGVRTextViewSceneObject() {
+        return this.gvrTextViewSceneObject;
     }
 
     public void setGVRSceneObject(GVRSceneObject gvrSceneObject) {
