@@ -665,7 +665,7 @@ public final class GearCursorController extends GVRCursorController
         }
     }
 
-    final class SendEvents implements Runnable
+    public static final class SendEvents implements Runnable
     {
         private final ConcurrentLinkedQueue<KeyEvent> mKeyEvents = new ConcurrentLinkedQueue<>();
         private final ConcurrentLinkedQueue<MotionEvent> mMotionEvents =
