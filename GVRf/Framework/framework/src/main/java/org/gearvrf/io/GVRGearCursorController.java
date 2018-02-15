@@ -27,7 +27,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
@@ -58,16 +57,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * of this controller to get notified when the controller is available to use.
  * To query the device specific information from the
  * Gear Controller make sure to type cast the returned {@link GVRCursorController} to
- * {@link GearCursorController} like below:
+ * {@link GVRGearCursorController} like below:
  *
  * <code>
  * GearController controller = (GearController) gvrCursorController;
  * </code>
  *
- * AYou can add a listener for {@link IControllerEvent} to receive
+ * You can add a listener for {@link IControllerEvent} to receive
  * notification whenever the controller information is updated.
  */
-public final class GearCursorController extends GVRCursorController
+public final class GVRGearCursorController extends GVRCursorController
 {
     public interface ControllerReader
     {
@@ -137,8 +136,7 @@ public final class GearCursorController extends GVRCursorController
     private float touchDownX = 0.0f;
     private static final float DEPTH_SENSITIVITY = 0.01f;
 
-
-    public GearCursorController(GVRContext context)
+    public GVRGearCursorController(GVRContext context)
     {
         super(context, GVRControllerType.CONTROLLER);
         mPivotRoot = new GVRSceneObject(context);
@@ -280,7 +278,7 @@ public final class GearCursorController extends GVRCursorController
         }
         catch (IOException ex)
         {
-            Log.e("GearCursorController", "ERROR: cannot load controller model gear_vr_controller.obj");
+            Log.e("GVRGearCursorController", "ERROR: cannot load controller model gear_vr_controller.obj");
             return;
         }
         mControllerGroup.addChildObject(mControllerModel);
@@ -320,12 +318,7 @@ public final class GearCursorController extends GVRCursorController
         mConnected = (mControllerReader != null) && mControllerReader.isConnected();
         if (!mConnected)
         {
-            if (initialized)
-            {
-                thread.uninitialize();
-                initialized = false;
-            }
-            return;
+            context.getInputManager().addCursorController(GVRGearCursorController.this);
         }
         if (!initialized)
         {
@@ -469,22 +462,22 @@ public final class GearCursorController extends GVRCursorController
                 public boolean handleMessage(Message message) {
                     switch (message.what) {
                         case MSG_INITIALIZE:
-                            context.getInputManager().addCursorController(GearCursorController.this);
+                            context.getInputManager().addCursorController(GVRGearCursorController.this);
                             break;
                         case MSG_EVENT:
                             handleControllerEvent((ControllerEvent) message.obj);
                             break;
                         case MSG_UNINITIALIZE:
-                            context.getInputManager().removeCursorController(GearCursorController.this);
+                            context.getInputManager().removeCursorController(GVRGearCursorController.this);
                             break;
                         case MSG_SET_ENABLE:
-                            GearCursorController.super.setEnable(message.arg1 == ENABLE);
+                            GVRGearCursorController.super.setEnable(message.arg1 == ENABLE);
                             break;
                         case MSG_SET_SCENE:
-                            GearCursorController.super.setScene((GVRScene) message.obj);
+                            GVRGearCursorController.super.setScene((GVRScene) message.obj);
                             break;
                         case MSG_SEND_INVALIDATE:
-                            GearCursorController.super.invalidate();
+                            GVRGearCursorController.super.invalidate();
                             break;
                         default:
                             break;
@@ -542,7 +535,7 @@ public final class GearCursorController extends GVRCursorController
                 mPropagateEvents.init(keyEvent, motionEvent);
                 getGVRContext().getActivity().runOnUiThread(mPropagateEvents);
             }
-            GearCursorController.super.invalidate();
+            GVRGearCursorController.super.invalidate();
         }
 
         void sendEvent(ControllerEvent event) {

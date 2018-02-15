@@ -21,7 +21,7 @@ import android.view.WindowManager;
 import com.google.vr.ndk.base.AndroidCompat;
 import com.google.vr.ndk.base.GvrLayout;
 
-import org.gearvrf.io.GearCursorController;
+import org.gearvrf.io.GVRGearCursorController;
 
 class DaydreamViewManager extends GVRViewManager {
     private static final String TAG = DaydreamViewManager.class.getSimpleName();
@@ -31,7 +31,7 @@ class DaydreamViewManager extends GVRViewManager {
     private GVRCameraRig cameraRig;
     private boolean sensoredSceneUpdated = false;
     private  GVRRenderTarget mDaydreamRenderTarget = null;
-    private GearCursorController mGearController;
+    private GVRGearCursorController mGearController;
     private DayDreamControllerReader mControllerReader;
 
     // This is done on the GL thread because refreshViewerProfile isn't thread-safe.
@@ -136,11 +136,11 @@ class DaydreamViewManager extends GVRViewManager {
         if (eye == 0) {
             GVRRenderTarget renderTarget = getRenderTarget();
             GVRCamera leftCamera = cameraRig.getLeftCamera();
-            renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getMaterialShaderManager());
+            renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getShaderManager());
             captureCenterEye(renderTarget, false);
             capture3DScreenShot(renderTarget, false);
 
-            renderTarget.render(mMainScene,leftCamera,mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+            renderTarget.render(mMainScene,leftCamera,mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
                     mRenderBundle.getPostEffectRenderTextureB());
 
 
@@ -149,7 +149,7 @@ class DaydreamViewManager extends GVRViewManager {
             GVRCamera rightCamera = cameraRig.getRightCamera();
             GVRRenderTarget renderTarget = getRenderTarget();
 
-            renderTarget.render(mMainScene, rightCamera, mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+            renderTarget.render(mMainScene, rightCamera, mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
                     mRenderBundle.getPostEffectRenderTextureB());
             captureRightEye(renderTarget,false);
         }

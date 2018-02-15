@@ -162,7 +162,7 @@ public class MeshUtils {
         mesh.setTexCoords(texCoords);
 
         char[] triangles = { 0, 1, 2, 1, 3, 2 };
-        mesh.setTriangles(triangles);
+        mesh.setIndices(triangles);
 
         return mesh;
     }

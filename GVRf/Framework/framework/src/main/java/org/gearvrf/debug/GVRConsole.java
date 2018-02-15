@@ -18,7 +18,7 @@ package org.gearvrf.debug;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRBitmapImage;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
@@ -400,16 +400,16 @@ public class GVRConsole extends GVRMaterial
         GVRImage image = texture.getImage();
         if (image != null)
         {
-            if (GVRBitmapTexture.class.isAssignableFrom(image.getClass()))
+            if (GVRBitmapImage.class.isAssignableFrom(image.getClass()))
             {
-                GVRBitmapTexture bmapImage = (GVRBitmapTexture) image;
+                GVRBitmapImage bmapImage = (GVRBitmapImage) image;
                 bmapImage.setBitmap(HUD);
                 textureUpdated = true;
             }
         }
         if (!textureUpdated)
         {
-            image = new GVRBitmapTexture(getGVRContext(), HUD);
+            image = new GVRBitmapImage(getGVRContext(), HUD);
             texture.setImage(image);
             setTexture("u_overlay", texture);
         }
@@ -418,7 +418,7 @@ public class GVRConsole extends GVRMaterial
     private static synchronized GVRShaderId getShaderId(GVRContext gvrContext) {
         if (shaderId == null)
         {
-            shaderId = gvrContext.getMaterialShaderManager().getShaderType(ConsoleShader.class);
+            shaderId = gvrContext.getShaderManager().getShaderType(ConsoleShader.class);
         }
         return shaderId;
     }

@@ -2,11 +2,9 @@ package org.gearvrf.io.cursor3d;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRComponent;
-import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;

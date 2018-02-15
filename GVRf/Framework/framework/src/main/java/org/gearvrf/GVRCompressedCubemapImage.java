@@ -26,16 +26,16 @@ package org.gearvrf;
  * should contain compressed data. This type of texture is very efficient because
  * it uses less memory. Mobile GPUs can directly render from
  * compressed textures.
- * @see GVRCubemapTexture
+ * @see GVRCubemapImage
  */
-public class GVRCompressedCubemapTexture extends GVRImage
+public class GVRCompressedCubemapImage extends GVRImage
 {
     protected int mWidth;
     protected int mHeight;
     protected int mImageSize;
 
-    public GVRCompressedCubemapTexture(GVRContext gvrContext, int internalFormat, int width,
-                                        int height, int imageSize, byte[][] data, int[] dataOffsets)
+    public GVRCompressedCubemapImage(GVRContext gvrContext, int internalFormat, int width,
+                                     int height, int imageSize, byte[][] data, int[] dataOffsets)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.CUBEMAP.Value, internalFormat));
         mWidth = width;

@@ -540,8 +540,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     /**
      * It is a convenient function to add a {@link GVRView} to Android hierarchy
-     * view. UI thread will call {@link GVRView#draw(android.graphics.Canvas)}
-     * to refresh the view when necessary.
+     * view. UI thread will refresh the view when necessary.
      *
      * @param view Is a {@link GVRView} that draw itself into some
      *            {@link GVRViewSceneObject}.

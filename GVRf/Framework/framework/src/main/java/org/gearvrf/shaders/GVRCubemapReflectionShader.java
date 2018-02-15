@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf;
+package org.gearvrf.shaders;
 
 // OpenGL Cube map texture uses coordinate system different to other OpenGL functions:
 // Positive x pointing right, positive y pointing up, positive z pointing inward.
@@ -51,34 +51,39 @@ package org.gearvrf;
 
 import android.content.Context;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
 /**
- * Shader which renders a cubemap texture modulated by a color.
+ * Shader which renders a cubemap texture as a reflection map.
  * This shader ignores light sources.
  * @<code>
  *     a_position   position vertex attribute
  *     a_normal     normal vertex attribute
+ *     u_mv         model/view matrix
+ *     u_mv_it      model/view inverse matrix
  *     u_mvp        model/view/projection matrix
- *     u_color      color to modulate texture map
- *     u_opacity    opacity
+ *     u_color      color to modulate reflection map
+ *     u_opacity    opacity of reflection map
  *     u_texture    cubemap texture
+ *     u_view_i     view inverse matrix???
  * </code>
  */
-public class GVRCubemapShader extends GVRShaderTemplate
+public class GVRCubemapReflectionShader extends GVRShaderTemplate
 {
-    public GVRCubemapShader(GVRContext gvrContext)
+    public GVRCubemapReflectionShader(GVRContext gvrContext)
     {
-        super("float3 u_color float u_opacity", "samplerCube u_texture", "float3 a_position float2 a_texcoord", GLSLESVersion.VULKAN);
+        super("float3 u_color float u_opacity", "samplerCube u_texture", "float3 a_position float3 a_normal", GLSLESVersion.VULKAN);
         Context context = gvrContext.getContext();
-        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.cubemap_frag));
-        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.cubemap_vert));
+        setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.cubemap_reflection_frag));
+        setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.cubemap_reflection_vert));
     }
-
     protected void setMaterialDefaults(GVRShaderData material)
     {
-        material.setVec3("u_color", 1.0f, 1.0f, 1.0f);
         material.setFloat("u_opacity", 1.0f);
+        material.setVec3("u_color", 1.0f, 1.0f, 1.0f);
     }
 }
-

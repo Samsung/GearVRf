@@ -18,9 +18,9 @@ package org.gearvrf.io.cursor3d;
 
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRBaseSensor;
+import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRMesh;
@@ -34,7 +34,7 @@ import org.gearvrf.IEventReceiver;
 import org.gearvrf.IEvents;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.io.GVRInputManager;
-import org.gearvrf.io.GearCursorController;
+import org.gearvrf.io.GVRGearCursorController;
 import org.gearvrf.io.cursor3d.settings.SettingsView;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
@@ -686,9 +686,9 @@ public final class CursorManager implements IEventReceiver
 
         controller.setEnable(true);
         controller.setCursor(cursor.getOwnerObject());
-        if (controller instanceof GearCursorController)
+        if (controller instanceof GVRGearCursorController)
         {
-            ((GearCursorController) controller).showControllerModel(true);
+            ((GVRGearCursorController) controller).showControllerModel(true);
         }
         cursor.setCursorDepth(mCursorDepth);
         if (cursor instanceof ObjectCursor)
@@ -697,7 +697,7 @@ public final class CursorManager implements IEventReceiver
             if (objectCursorPicker == null)
             {
                 objectCursorPicker = new GVRBoundsPicker(scene, false);
-                objectCursorPicker.getEventReceiver().addListener(GVRBaseSensor.getPickHandler());
+                objectCursorPicker.getEventReceiver().addListener(GVRSensor.getPickHandler());
                 objectCursorPicker.getEventReceiver().addListener(touchListener);
             }
             if (ocurs.getColliderID() < 0)
@@ -706,13 +706,13 @@ public final class CursorManager implements IEventReceiver
             }
             objectCursorPicker.setController(controller);
             controller.removePickEventListener(touchListener);
-            controller.removePickEventListener(GVRBaseSensor.getPickHandler());
+            controller.removePickEventListener(GVRSensor.getPickHandler());
             controller.setCursorControl(GVRCursorController.CursorControl.CURSOR_DEPTH_FROM_CONTROLLER);
         }
         else
         {
             controller.addPickEventListener(touchListener);
-            controller.addPickEventListener(GVRBaseSensor.getPickHandler());
+            controller.addPickEventListener(GVRSensor.getPickHandler());
             controller.setCursorControl(GVRCursorController.CursorControl.PROJECT_CURSOR_ON_SURFACE);
         }
     }

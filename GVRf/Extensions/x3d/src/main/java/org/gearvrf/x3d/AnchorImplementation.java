@@ -18,11 +18,11 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalScene;
 import org.gearvrf.GVRMeshCollider;
-import org.gearvrf.GVRPhongShader;
+import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
@@ -381,9 +381,7 @@ public class AnchorImplementation {
 
                         gvrWebViewSceneObject.getRenderData().getMaterial().setOpacity(1.0f);
                         gvrWebViewSceneObject.getTransform().setPosition(0.0f, 0.0f, 0.0f);
-
                         gvrWebViewSceneObject.getRenderData().setRenderMask(0);
-
                         gvrWebViewSceneObject.getRenderData().setRenderMask(
                                 GVRRenderData.GVRRenderMaskBit.Left
                                         | GVRRenderData.GVRRenderMaskBit.Right);

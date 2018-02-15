@@ -18,7 +18,7 @@ package org.gearvrf.x3d;
 import android.content.Context;
 import android.graphics.Color;
 
-import org.gearvrf.GVRCursorController;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
@@ -75,8 +75,6 @@ import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
 import org.joml.Vector3f;
-import org.joml.AxisAngle4f;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 public class X3Dobject {

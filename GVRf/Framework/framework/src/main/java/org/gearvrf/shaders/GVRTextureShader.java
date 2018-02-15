@@ -12,11 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gearvrf;
+package org.gearvrf.shaders;
 
 import java.util.HashMap;
 import java.util.List;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRShaderData;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.IRenderable;
 import org.gearvrf.utility.TextFile;
 
 import android.content.Context;

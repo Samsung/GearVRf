@@ -15,8 +15,6 @@
 
 package org.gearvrf;
 
-import static android.opengl.GLES20.*;
-
 import org.gearvrf.utility.Log;
 
 /**
@@ -28,17 +26,17 @@ import org.gearvrf.utility.Log;
  * compressed textures.
  * @see GVRBitmapeTexture
  */
-public class GVRCompressedTexture extends GVRImage
+public class GVRCompressedImage extends GVRImage
 {
-    private static final String TAG = Log.tag(GVRCompressedTexture.class);
+    private static final String TAG = Log.tag(GVRCompressedImage.class);
 
     /**
      * The speed/quality parameter passed to
      * {@link GVRAssetLoader#loadTexture(GVRAndroidResource, GVRAndroidResource.TextureCallback, GVRTextureParameters, int, int)}
      * 
      * This copy has been 'clamped' to one of the
-     * {@linkplain GVRCompressedTexture#SPEED public constants} in
-     * {@link GVRCompressedTexture}.
+     * {@linkplain GVRCompressedImage#SPEED public constants} in
+     * {@link GVRCompressedImage}.
      */
     protected int mQuality;
     private byte[] mData;
@@ -58,10 +56,10 @@ public class GVRCompressedTexture extends GVRImage
      * @param levels        number of mip-map levels
      * @param quality       compression quality
      */
-    public GVRCompressedTexture(GVRContext gvrContext, int width, int height,  int imageSize, int format, byte[] data, int levels, int quality)
+    public GVRCompressedImage(GVRContext gvrContext, int width, int height, int imageSize, int format, byte[] data, int levels, int quality)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.BITMAP.Value, format));
-        mQuality = GVRCompressedTexture.clamp(quality);
+        mQuality = GVRCompressedImage.clamp(quality);
         mData = data;
         mWidth = width;
         mHeight = height;

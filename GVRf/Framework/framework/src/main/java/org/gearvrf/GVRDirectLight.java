@@ -15,6 +15,7 @@
 
 package org.gearvrf;
 
+import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 
@@ -47,9 +48,9 @@ import org.joml.Matrix4f;
  * 
  * @see GVRPointLight
  * @see GVRSpotLight
- * @see GVRLightBase
+ * @see GVRLight
  */
-public class GVRDirectLight extends GVRLightBase
+public class GVRDirectLight extends GVRLight
 {
     private static String fragmentShader = null;
     private static String vertexShader = null;

@@ -23,7 +23,7 @@ import android.view.SurfaceView;
 import org.gearvrf.debug.GVRFPSTracer;
 import org.gearvrf.debug.GVRMethodCallTracer;
 import org.gearvrf.debug.GVRStatsLine;
-import org.gearvrf.io.GearCursorController;
+import org.gearvrf.io.GVRGearCursorController;
 import org.gearvrf.utility.Log;
 
 /*
@@ -85,7 +85,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     private GVRMethodCallTracer mTracerDrawEyes2;
     private GVRMethodCallTracer mTracerDrawFrame;
     private GVRMethodCallTracer mTracerDrawFrameGap;
-    private GearCursorController mGearController;
+    private GVRGearCursorController mGearController;
 
 
     private MonoscopicSurfaceView mView;
@@ -390,9 +390,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     private void drawEyes() {
         mMainScene.getMainCameraRig().updateRotation();
         GVRRenderTarget renderTarget = getRenderTarget();
-        renderTarget.cullFromCamera(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle.getMaterialShaderManager());
+        renderTarget.cullFromCamera(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle.getShaderManager());
         renderTarget.render(mMainScene, mMainScene
-                        .getMainCameraRig().getLeftCamera(), mRenderBundle.getMaterialShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
+                        .getMainCameraRig().getLeftCamera(), mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
                 mRenderBundle.getPostEffectRenderTextureB());
 
     }

@@ -375,7 +375,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
         mesh.setVertices(vertices);
         mesh.setNormals(normals);
         mesh.setTexCoords(texCoords);
-        mesh.setTriangles(indices);
+        mesh.setIndices(indices);
 
         GVRRenderData renderData = new GVRRenderData(gvrContext, material);
         attachComponent(renderData);
@@ -824,7 +824,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 mesh.setVertices(vertices);
                 mesh.setNormals(normals);
                 mesh.setTexCoords(texCoords);
-                mesh.setTriangles(indices);
+                mesh.setIndices(indices);
                 GVRSceneObject childObject = new GVRSceneObject(gvrContext, mesh, material);
                 addChildObject(childObject);
 
@@ -1015,7 +1015,7 @@ public class GVRSphereSceneObject extends GVRSceneObject {
                 mesh.setVertices(vertices);
                 mesh.setNormals(normals);
                 mesh.setTexCoords(texCoords);
-                mesh.setTriangles(indices);
+                mesh.setIndices(indices);
                 GVRSceneObject childObject = new GVRSceneObject(gvrContext,
                         mesh);
                 childObject.getRenderData().setMaterial(material);

@@ -13,14 +13,29 @@
  * limitations under the License.
  */
 
-package org.gearvrf;
+package org.gearvrf.io;
 
-import android.test.InstrumentationTestRunner;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.io.GVRControllerType;
-import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.GVREventReceiver;
+import org.gearvrf.IEventReceiver;
+import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRCamera;
+import org.gearvrf.GVRCollider;
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRPicker;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRSensor;
+import org.gearvrf.GVRTransform;
+import org.gearvrf.IEvents;
+import org.gearvrf.IPickEvents;
+import org.gearvrf.ISensorEvents;
+import org.gearvrf.ITouchEvents;
+import org.gearvrf.SensorEvent;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -47,7 +62,7 @@ import java.util.List;
  * manipulate the {@link GVRSceneObject} based on the input coming in to the
  * {@link GVRCursorController}.
  * @see GVRInputManager
- * @see org.gearvrf.io.GearCursorController
+ * @see org.gearvrf.io.GVRGearCursorController
  * @see org.gearvrf.io.GVRGazeCursorController
  */
 public abstract class GVRCursorController implements IEventReceiver
@@ -150,7 +165,7 @@ public abstract class GVRCursorController implements IEventReceiver
         {
             mPicker = new GVRPicker(this, false);
         }
-        addPickEventListener(GVRBaseSensor.getPickHandler());
+        addPickEventListener(GVRSensor.getPickHandler());
         mCursorScale = new GVRSceneObject(context);
         mCursorScale.setName("CursorController_CursorScale");
         mDragRoot = new GVRSceneObject(context);
@@ -341,7 +356,7 @@ public abstract class GVRCursorController implements IEventReceiver
     /**
      * The method will force a process cycle that may result in
      * {@link ISensorEvents} being generated if there is a significant event
-     * that affects a {@link GVRBaseSensor} or {@link IPickEvents} if the
+     * that affects a {@link GVRSensor} or {@link IPickEvents} if the
      * cursor pick ray intersects a collider.
      * <p>
      * In most cases when a new position
@@ -351,7 +366,7 @@ public abstract class GVRCursorController implements IEventReceiver
      * {@link #invalidate()} call can help force the {@link GVRCursorController}
      * to run a new process loop on its existing information against the changed
      * scene graph to generate possible {@link ISensorEvents} for
-     * {@link GVRBaseSensor}s.
+     * {@link GVRSensor}s.
      */
     public void invalidate() {
         // check if the controller is enabled
@@ -717,7 +732,7 @@ public abstract class GVRCursorController implements IEventReceiver
      *
      * By default the {@link GVRCursorController} is enabled. If disabled, the
      * controller would not report new positions for the cursor and would not
-     * generate {@link SensorEvent}s to {@link GVRBaseSensor}s.
+     * generate {@link SensorEvent}s to {@link GVRSensor}s.
      *
      * @param flag <code>true</code> to enable the {@link GVRCursorController},
      *               <code>false</code> to disable.

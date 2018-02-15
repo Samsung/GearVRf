@@ -21,9 +21,9 @@ import android.util.DisplayMetrics;
 import org.gearvrf.debug.GVRFPSTracer;
 import org.gearvrf.debug.GVRMethodCallTracer;
 import org.gearvrf.debug.GVRStatsLine;
+import org.gearvrf.io.GVRGearCursorController;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
-import org.gearvrf.io.GearCursorController;
 
 /*
  * This is the most important part of gvrf.
@@ -77,7 +77,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     private GVRMethodCallTracer mTracerDrawEyes2;
     private GVRMethodCallTracer mTracerDrawFrame;
     private GVRMethodCallTracer mTracerDrawFrameGap;
-    private GearCursorController mGearController;
+    private GVRGearCursorController mGearController;
 
     /**
      * Constructs OvrViewManager object with GVRMain which controls GL
@@ -223,15 +223,15 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     mTracerDrawEyes1.enter(); // this eye is drawn first
                     mTracerDrawEyes2.enter();
                 }
-                GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.MULTIVIEW, swapChainIndex);
-                GVRCamera camera = mMainScene.getMainCameraRig().getCenterCamera();
-                GVRCamera left_camera = mMainScene.getMainCameraRig().getLeftCamera();
-                renderTarget.cullFromCamera(mMainScene, camera,mRenderBundle.getMaterialShaderManager());
+                 GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.MULTIVIEW, swapChainIndex);
+                 GVRCamera camera = mMainScene.getMainCameraRig().getCenterCamera();
+                 GVRCamera left_camera = mMainScene.getMainCameraRig().getLeftCamera();
+                 renderTarget.cullFromCamera(mMainScene, camera,mRenderBundle.getShaderManager());
 
                 captureCenterEye(renderTarget, true);
                 capture3DScreenShot(renderTarget, true);
 
-                renderTarget.render(mMainScene, left_camera, mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                renderTarget.render(mMainScene, left_camera, mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
                         mRenderBundle.getPostEffectRenderTextureB());
 
                 captureRightEye(renderTarget, true);
@@ -252,11 +252,10 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                         mTracerDrawEyes1.enter();
                     }
 
-                    GVRCamera rightCamera = mainCameraRig.getRightCamera();
-                    GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.RIGHT, swapChainIndex);
-                    renderTarget.render(mMainScene, rightCamera, mRenderBundle.getMaterialShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
-                            mRenderBundle.getPostEffectRenderTextureB());
-
+                     GVRCamera rightCamera = mainCameraRig.getRightCamera();
+                     GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.RIGHT, swapChainIndex);
+                     renderTarget.render(mMainScene, rightCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
+                             mRenderBundle.getPostEffectRenderTextureB());
                     captureRightEye(renderTarget, false);
 
                     captureFinish();
@@ -266,27 +265,29 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     }
                 } else {
                     if (DEBUG_STATS) {
-                        mTracerDrawEyes.enter(); // this eye is drawn first
-                        mTracerDrawEyes2.enter();
-                    }
-                    GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.LEFT, swapChainIndex);
-                    GVRCamera leftCamera = mainCameraRig.getLeftCamera();
+                         mTracerDrawEyes1.leave();
+                         mTracerDrawEyes.leave();
+                     }
+                 }
 
-                    capture3DScreenShot(renderTarget, false);
+                 GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.LEFT, swapChainIndex);
+                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
 
-                    renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getMaterialShaderManager());
-                    captureCenterEye(renderTarget, false);
-                    renderTarget.render(mMainScene, leftCamera, mRenderBundle.getMaterialShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
+                 capture3DScreenShot(renderTarget, false);
 
-                    captureLeftEye(renderTarget, false);
+                 renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getShaderManager());
+                 captureCenterEye(renderTarget, false);
+                 renderTarget.render(mMainScene, leftCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
 
-                    if (DEBUG_STATS) {
-                        mTracerDrawEyes2.leave();
-                    }
-                }
-            }
+                 captureLeftEye(renderTarget, false);
+
+                 if (DEBUG_STATS) {
+                     mTracerDrawEyes2.leave();
+                 }
+             }
         }
     }
+
 
     /** Called once per frame */
     protected void onDrawFrame() {

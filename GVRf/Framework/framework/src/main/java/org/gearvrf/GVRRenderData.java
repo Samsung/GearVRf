@@ -337,7 +337,7 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
 
     /**
      * Enable lighting effect for the render_data. Note that it is different from
-     * GVRLight.enable(). GVRLight.enable turns on a light, while this method
+     * GVRLight.setEnable(true) which turns on a light, while this method
      * enables the lighting effect for the render_data.
      */
     public void enableLight()
@@ -353,8 +353,8 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
 
     /**
      * Disable lighting effect for the render_data.
-     * Note that it is different from GVRLight.disable().
-     * GVRLight.disable turns off a light, while this method
+     * Note that it is different from GVRLight.setEnable(false)
+     * which turns off a light, while this method
      * disables the lighting effect for the render_data.
      */
     public void disableLight()
@@ -781,7 +781,7 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
      * Checks if a renderable object can cast shadows.
      * @return true if shadows are cast, false if not.
      * @see #setCastShadows(boolean)
-     * @see GVRLightBase#getCastShadow()
+     * @see GVRLight#getCastShadow()
      */
     public boolean getCastShadows() {
         return NativeRenderData.getCastShadows(getNative());

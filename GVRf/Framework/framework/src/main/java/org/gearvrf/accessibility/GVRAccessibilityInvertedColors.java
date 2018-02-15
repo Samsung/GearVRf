@@ -31,7 +31,7 @@ public class GVRAccessibilityInvertedColors {
      */
     public GVRAccessibilityInvertedColors(final GVRContext gvrContext) {
         mGvrContext = gvrContext;
-        GVRShaderId shaderId = gvrContext.getMaterialShaderManager().getShaderType(GVRAccessibilityPostEffectShader.class);
+        GVRShaderId shaderId = gvrContext.getShaderManager().getShaderType(GVRAccessibilityPostEffectShader.class);
         postEffect = new GVRMaterial(gvrContext, shaderId);
     }
 

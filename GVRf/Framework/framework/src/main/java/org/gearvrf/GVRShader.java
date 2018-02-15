@@ -191,7 +191,7 @@ public class GVRShader
      * are ignored.
      *
      * @return String with descriptor.
-     *         {@link GVRLightBase#getUniformDescriptor()}  }
+     *         {@link GVRLight#getUniformDescriptor()}  }
      */
     public String getUniformDescriptor()
     {
@@ -208,7 +208,7 @@ public class GVRShader
      * are ignored.
      *
      * @return String with uniform descriptor.
-     * {@link GVRLightBase#getVertexDescriptor()}  }
+     * {@link GVRLight#getVertexDescriptor()}  }
      */
     public String getVertexDescriptor()
     {
@@ -241,7 +241,7 @@ public class GVRShader
      * @return string signature for shader
      * @see GVRShaderTemplate
      */
-    public String generateSignature(HashMap<String, Integer> defined, GVRLightBase[] lightlist)
+    public String generateSignature(HashMap<String, Integer> defined, GVRLight[] lightlist)
     {
         return getClass().getSimpleName();
     }
@@ -310,7 +310,7 @@ public class GVRShader
     public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene, boolean isMultiview)
     {
         String signature = getClass().getSimpleName();
-        GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRShaderManager shaderManager = context.getShaderManager();
         GVRMaterial mtl = rdata.getMaterial();
         synchronized (shaderManager)
         {
@@ -344,7 +344,7 @@ public class GVRShader
     public int bindShader(GVRContext context, GVRShaderData material, String vertexDesc)
     {
         String signature = getClass().getSimpleName();
-        GVRShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRShaderManager shaderManager = context.getShaderManager();
 
         synchronized (shaderManager)
         {
@@ -356,6 +356,7 @@ public class GVRShader
             return nativeShader;
         }
     }
+
 
     /**
      * Replaces @MATRIX_UNIFORMS in shader source with the

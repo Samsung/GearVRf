@@ -17,12 +17,10 @@ package org.gearvrf.particlesystem;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMaterialShaderManager;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderId;
-import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.GVRTexture;
 import org.joml.Vector3f;
 import org.joml.Vector4f;

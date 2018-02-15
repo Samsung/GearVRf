@@ -26,7 +26,6 @@ import android.view.MotionEvent;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRRenderData;
@@ -40,8 +39,8 @@ import org.gearvrf.utility.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 
 /**
  * An instance of this class is obtained using the
@@ -93,7 +92,7 @@ public class GVRInputManager implements IEventReceiver
     private GVRAndroidWearTouchpad androidWearTouchpad;
     private GVRGamepadDeviceManager gamepadDeviceManager;
     private GVRMouseDeviceManager mouseDeviceManager;
-    private GearCursorController gearCursorController;
+    private GVRGearCursorController gearCursorController;
     private GVREventReceiver mListeners;
     private ArrayList<GVRControllerType> mEnabledControllerTypes;
 
@@ -151,7 +150,7 @@ public class GVRInputManager implements IEventReceiver
         cache = new SparseArray<GVRCursorController>();
         mouseDeviceManager = new GVRMouseDeviceManager(context);
         gamepadDeviceManager = new GVRGamepadDeviceManager();
-        gearCursorController = new GearCursorController(context);
+        gearCursorController = new GVRGearCursorController(context);
         if ((enabledTypes != null) &&
             enabledTypes.contains(GVRControllerType.WEARTOUCHPAD) &&
             checkIfWearTouchPadServiceInstalled(context))
@@ -373,15 +372,7 @@ public class GVRInputManager implements IEventReceiver
         return null;
     }
 
-    /**
-     * Return an instance of the Gear cursor controller.
-     * <p>
-     * This function will always return an instance of a class that
-     * can manage the Gear cursor controller. This does not indicate
-     * a controller is present or connected.
-     * @return Gear cursor controller
-     */
-    public GearCursorController getGearController() {
+    public GVRGearCursorController getGearController() {
         return gearCursorController;
     }
 
@@ -730,9 +721,9 @@ public class GVRInputManager implements IEventReceiver
             {
                 deselectController();
                 selectController(gvrCursorController);
-                if (gvrCursorController instanceof GearCursorController)
+                if (gvrCursorController instanceof GVRGearCursorController)
                 {
-                    ((GearCursorController) gvrCursorController).showControllerModel(true);
+                    ((GVRGearCursorController) gvrCursorController).showControllerModel(true);
                 }
                 mCurrentControllerPriority = priority;
             }

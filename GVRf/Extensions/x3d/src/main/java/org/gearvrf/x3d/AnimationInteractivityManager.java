@@ -20,11 +20,11 @@ import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRImage;
+import org.gearvrf.GVRLight;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
-import org.gearvrf.GVRLightBase;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSwitch;
 import org.gearvrf.GVRTexture;
@@ -660,7 +660,8 @@ public class AnimationInteractivityManager {
                                         if (interactiveObject.getEventUtility() == interactiveObjectFinal.getEventUtility()) {
                                             GVRSceneObject gvrSceneObject = root
                                                     .getSceneObjectByName(interactiveObject.getDefinedItem().getName());
-                                            GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+                                            GVRComponent gvrComponent = gvrSceneObject.getComponent(
+                                                    GVRLight.getComponentType());
                                             gvrComponent.setEnable(eventUtility.getToggle());
                                         }
                                     }
@@ -774,7 +775,7 @@ public class AnimationInteractivityManager {
                             //Setup SensorEvent callback here
                             GVRSceneObject gvrSceneObject = root
                                     .getSceneObjectByName(interactiveObjectFinal.getDefinedItem().getName());
-                            GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+                            GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLight.getComponentType());
 
                             if (event.isOver() && interactiveObjectFinal.getSensorFromField().equals(Sensor.IS_OVER)) {
                                 if (gvrComponent != null) gvrComponent.setEnable(true);
@@ -955,7 +956,8 @@ public class AnimationInteractivityManager {
                 if (fieldType.equalsIgnoreCase("SFBool")) {
                     if (definedItem != null) {
                         if (definedItem.getGVRSceneObject() != null) {
-                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(GVRLightBase.getComponentType());
+                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(
+                                    GVRLight.getComponentType());
                             if (gvrComponent != null) {
                                 scriptParameters.add(gvrComponent.isEnabled());
                             }
@@ -1003,7 +1005,8 @@ public class AnimationInteractivityManager {
                             }
                         } else if (definedItem.getGVRSceneObject() != null) {
                             // likely a light object so get its properties
-                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(GVRLightBase.getComponentType());
+                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(
+                                    GVRLight.getComponentType());
                             if (gvrComponent != null) {
                                 float[] lightColor = {0, 0, 0, 0};
                                 if (gvrComponent instanceof GVRSpotLight) {
@@ -1056,7 +1059,8 @@ public class AnimationInteractivityManager {
                     }  // end if SFRotation
                     else if (fieldType.equalsIgnoreCase("SFVec3f")) {
                         if (definedItem.getGVRSceneObject() != null) {
-                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(GVRLightBase.getComponentType());
+                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(
+                                    GVRLight.getComponentType());
                             if (gvrComponent != null) {
                                 // it's a light
                                 float[] parameter = {0, 0, 0};
@@ -1131,7 +1135,8 @@ public class AnimationInteractivityManager {
                             }
                         } else if (definedItem.getGVRSceneObject() != null) {
                             // checking if it's a light
-                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(GVRLightBase.getComponentType());
+                            GVRComponent gvrComponent = definedItem.getGVRSceneObject().getComponent(
+                                    GVRLight.getComponentType());
                             if (gvrComponent != null) {
                                 float parameter = 0;
                                 if (gvrComponent instanceof GVRSpotLight) {
@@ -1498,7 +1503,8 @@ public class AnimationInteractivityManager {
                             SFBool sfBool = (SFBool) returnedJavaScriptValue;
                             if ( scriptObjectToDefinedItem != null) {
                                 if (scriptObjectToDefinedItem.getGVRSceneObject() != null) {
-                                    GVRComponent gvrComponent = scriptObjectToDefinedItem.getGVRSceneObject().getComponent(GVRLightBase.getComponentType());
+                                    GVRComponent gvrComponent = scriptObjectToDefinedItem.getGVRSceneObject().getComponent(
+                                            GVRLight.getComponentType());
                                     if (gvrComponent != null) {
                                         gvrComponent.setEnable(sfBool.getValue());
                                     }
@@ -1529,7 +1535,8 @@ public class AnimationInteractivityManager {
                                     scriptObjectToDefinedItem.getGVRMaterial().setOpacity(sfFloat.getValue());
                                 }
                             } else if (scriptObjectToDefinedItem.getGVRSceneObject() != null) {
-                                GVRComponent gvrComponent = scriptObjectToDefinedItem.getGVRSceneObject().getComponent(GVRLightBase.getComponentType());
+                                GVRComponent gvrComponent = scriptObjectToDefinedItem.getGVRSceneObject().getComponent(
+                                        GVRLight.getComponentType());
                                 if (gvrComponent != null) {
                                     if (gvrComponent instanceof GVRSpotLight) {
                                         GVRSpotLight gvrSpotLightBase = (GVRSpotLight) gvrComponent;
@@ -1592,7 +1599,7 @@ public class AnimationInteractivityManager {
                             else if (scriptObjectToDefinedItem.getGVRSceneObject() != null) {
                                 // GVRSceneObject
                                 GVRSceneObject gvrSceneObject = scriptObjectToDefinedItem.getGVRSceneObject();
-                                GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+                                GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLight.getComponentType());
                                 if (gvrComponent != null) {
                                     if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("color")) {
                                         // SFColor change to a GVRSceneObject (likely a Light Component)
@@ -1636,7 +1643,8 @@ public class AnimationInteractivityManager {
                                         gvrSceneObject.getTransform().setScale(sfVec3f.x, sfVec3f.y, sfVec3f.z);
                                 } else {
                                     // could be parameters for a light
-                                    GVRComponent gvrComponent = gvrSceneObject.getComponent(GVRLightBase.getComponentType());
+                                    GVRComponent gvrComponent = gvrSceneObject.getComponent(
+                                            GVRLight.getComponentType());
                                     if (gvrComponent != null) {
                                         if (gvrComponent instanceof GVRSpotLight) {
                                             GVRSpotLight gvrSpotLightBase = (GVRSpotLight) gvrComponent;

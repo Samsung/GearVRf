@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -178,7 +179,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
      * @see #getController()
      * @see #setEventOptions(EnumSet)
      */
-    GVRPicker(GVRCursorController controller, boolean enable)
+    public GVRPicker(GVRCursorController controller, boolean enable)
     {
         super(controller.getGVRContext());
         mScene = null;
@@ -353,7 +354,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
         GVRSceneObject owner = getOwnerObject();
 
         if (owner == null)              // should never come here, picker always
-        {                               // owned by GearCursorController pivot
+        {                               // owned by GVRGearCursorController pivot
             owner = mScene.getMainCameraRig().getHeadTransformObject();
         }
         Matrix4f mtx = owner.getTransform().getModelMatrix4f();

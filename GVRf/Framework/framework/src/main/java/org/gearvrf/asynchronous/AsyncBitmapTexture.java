@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
-import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRBitmapImage;
 import org.gearvrf.GVRContext;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
@@ -74,13 +74,13 @@ class AsyncBitmapTexture {
      */
 
     static void loadTexture(GVRContext gvrContext,
-            CancelableCallback<GVRBitmapTexture> callback,
+            CancelableCallback<GVRBitmapImage> callback,
             GVRAndroidResource resource, int priority) {
         AsyncManager.get().getScheduler().registerCallback(gvrContext, TEXTURE_CLASS, callback,
                 resource, priority);
     }
 
-    private static final Class<GVRBitmapTexture> TEXTURE_CLASS = GVRBitmapTexture.class;
+    private static final Class<GVRBitmapImage> TEXTURE_CLASS = GVRBitmapImage.class;
     /*
      * Singleton
      */
@@ -96,11 +96,11 @@ class AsyncBitmapTexture {
 
     private AsyncBitmapTexture() {
         AsyncManager.get().registerDatatype(TEXTURE_CLASS,
-                new AsyncLoaderFactory<GVRBitmapTexture, Bitmap>() {
+                new AsyncLoaderFactory<GVRBitmapImage, Bitmap>() {
             @Override
-            AsyncLoader<GVRBitmapTexture, Bitmap> threadProc(GVRContext gvrContext,
+            AsyncLoader<GVRBitmapImage, Bitmap> threadProc(GVRContext gvrContext,
                     GVRAndroidResource request,
-                    CancelableCallback<GVRBitmapTexture> callback,
+                    CancelableCallback<GVRBitmapImage> callback,
                     int priority) {
                 return new AsyncLoadTextureResource(gvrContext,
                         request, callback, priority);
@@ -327,19 +327,19 @@ class AsyncBitmapTexture {
      */
 
     private static class AsyncLoadTextureResource extends
-            AsyncLoader<GVRBitmapTexture, Bitmap> {
+            AsyncLoader<GVRBitmapImage, Bitmap> {
 
-        private static final GlConverter<GVRBitmapTexture, Bitmap> sConverter = new GlConverter<GVRBitmapTexture, Bitmap>() {
+        private static final GlConverter<GVRBitmapImage, Bitmap> sConverter = new GlConverter<GVRBitmapImage, Bitmap>() {
 
             @Override
-            public GVRBitmapTexture convert(GVRContext gvrContext, Bitmap bitmap) {
-                return new GVRBitmapTexture(gvrContext, bitmap);
+            public GVRBitmapImage convert(GVRContext gvrContext, Bitmap bitmap) {
+                return new GVRBitmapImage(gvrContext, bitmap);
             }
         };
 
         protected AsyncLoadTextureResource(GVRContext gvrContext,
                 GVRAndroidResource request,
-                CancelableCallback<GVRBitmapTexture> callback, int priority) {
+                CancelableCallback<GVRBitmapImage> callback, int priority) {
             super(gvrContext, sConverter, request, callback);
         }
 

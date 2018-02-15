@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
-import org.gearvrf.GVRCompressedTexture;
+import org.gearvrf.GVRCompressedImage;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader.Reader;
@@ -118,18 +118,18 @@ public class CompressedTexture {
         return data;
     }
 
-    GVRCompressedTexture toTexture(GVRContext gvrContext, int quality) {
-        GVRCompressedTexture tex = new GVRCompressedTexture(gvrContext, width,
-                height, imageSize, internalformat, getArray(), levels, quality);
+    GVRCompressedImage toTexture(GVRContext gvrContext, int quality) {
+        GVRCompressedImage tex = new GVRCompressedImage(gvrContext, width,
+                                                        height, imageSize, internalformat, getArray(), levels, quality);
         tex.setDataOffsets(new int[] { dataOffset });
         return tex;
     }
 
     // Texture parameters
-    GVRCompressedTexture toTexture(GVRContext gvrContext, int quality,
-            GVRTextureParameters textureParameters) {
-        GVRCompressedTexture tex = new GVRCompressedTexture(gvrContext, width,
-                height, imageSize, internalformat, getArray(), levels, quality);
+    GVRCompressedImage toTexture(GVRContext gvrContext, int quality,
+                                 GVRTextureParameters textureParameters) {
+        GVRCompressedImage tex = new GVRCompressedImage(gvrContext, width,
+                                                        height, imageSize, internalformat, getArray(), levels, quality);
         tex.setDataOffsets(new int[] { dataOffset });
         return tex;
     }

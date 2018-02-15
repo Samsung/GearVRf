@@ -18,7 +18,7 @@ package org.gearvrf.asynchronous;
 import java.io.IOException;
 
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRCompressedTexture;
+import org.gearvrf.GVRCompressedImage;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
@@ -38,7 +38,7 @@ class AsyncCompressedTexture {
      * The API
      */
     static void loadTexture(GVRContext gvrContext,
-            CancelableCallback<GVRCompressedTexture> callback,
+            CancelableCallback<GVRCompressedImage> callback,
             GVRAndroidResource resource, int priority) {
         AsyncManager.get().getScheduler().registerCallback(gvrContext,
                 TEXTURE_CLASS, callback, resource, priority);
@@ -48,7 +48,7 @@ class AsyncCompressedTexture {
      * Singleton
      */
 
-    private static final Class<GVRCompressedTexture> TEXTURE_CLASS = GVRCompressedTexture.class;
+    private static final Class<GVRCompressedImage> TEXTURE_CLASS = GVRCompressedImage.class;
     
     private static AsyncCompressedTexture sInstance = new AsyncCompressedTexture();
 
@@ -63,11 +63,11 @@ class AsyncCompressedTexture {
 
     private AsyncCompressedTexture() {
         AsyncManager.get().registerDatatype(TEXTURE_CLASS,
-                new AsyncLoaderFactory<GVRCompressedTexture, CompressedTexture>() {
+                new AsyncLoaderFactory<GVRCompressedImage, CompressedTexture>() {
                     @Override
-                    AsyncLoader<GVRCompressedTexture, CompressedTexture> threadProc(
+                    AsyncLoader<GVRCompressedImage, CompressedTexture> threadProc(
                             GVRContext gvrContext, GVRAndroidResource request,
-                            CancelableCallback<GVRCompressedTexture> callback,
+                            CancelableCallback<GVRCompressedImage> callback,
                             int priority) {
                         return new AsyncLoadTextureResource(gvrContext, request,
                                 callback, priority);
@@ -80,22 +80,22 @@ class AsyncCompressedTexture {
      */
 
     private static class AsyncLoadTextureResource
-            extends AsyncLoader<GVRCompressedTexture, CompressedTexture> {
+            extends AsyncLoader<GVRCompressedImage, CompressedTexture> {
 
-        private static final GlConverter<GVRCompressedTexture, CompressedTexture> sConverter = new GlConverter<GVRCompressedTexture, CompressedTexture>() {
+        private static final GlConverter<GVRCompressedImage, CompressedTexture> sConverter = new GlConverter<GVRCompressedImage, CompressedTexture>() {
 
             @Override
-            public GVRCompressedTexture convert(GVRContext gvrContext,
-                    CompressedTexture compressedTexture) {
+            public GVRCompressedImage convert(GVRContext gvrContext,
+                                              CompressedTexture compressedTexture) {
                 return compressedTexture == null ? null
                         : compressedTexture.toTexture(gvrContext,
-                                GVRCompressedTexture.BALANCED);
+                                                      GVRCompressedImage.BALANCED);
             }
         };
 
         protected AsyncLoadTextureResource(GVRContext gvrContext,
                 GVRAndroidResource request,
-                CancelableCallback<GVRCompressedTexture> callback,
+                CancelableCallback<GVRCompressedImage> callback,
                 int priority) {
             super(gvrContext, sConverter, request, callback);
         }

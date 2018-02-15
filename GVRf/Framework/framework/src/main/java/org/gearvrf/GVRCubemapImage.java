@@ -32,9 +32,9 @@ import static android.opengl.GLES30.GL_RGBA;
  * should contain uncompressed data. This type of texture is inefficient because
  * it wastes GPU memory. Mobile GPUs can directly render from
  * compressed textures which use far less memory.
- * @see GVRCompressedCubemapTexture
+ * @see GVRCompressedCubemapImage
  */
-public class GVRCubemapTexture extends GVRImage
+public class GVRCubemapImage extends GVRImage
 {
     /**
      * Constructs a cube map texture using six pre-existing {@link Bitmap}s and
@@ -48,9 +48,9 @@ public class GVRCubemapTexture extends GVRImage
      *            the cube map texture respectively. The default names of the
      *            six images are "posx.png", "negx.png", "posy.png", "negx.png",
      *            "posz.png", and "negz.png", which can be changed by calling
-     *            {@link GVRCubemapTexture#setFaceNames(String[])}.
+     *            {@link GVRCubemapImage#setFaceNames(String[])}.
      */
-    public GVRCubemapTexture(GVRContext gvrContext, Bitmap[] bitmapArray)
+    public GVRCubemapImage(GVRContext gvrContext, Bitmap[] bitmapArray)
     {
         super(gvrContext, NativeBitmapImage.constructor(ImageType.CUBEMAP.Value, GL_RGBA));
         update(bitmapArray);

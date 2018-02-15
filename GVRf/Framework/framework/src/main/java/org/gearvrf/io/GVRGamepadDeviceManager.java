@@ -22,14 +22,10 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCursorController;
-import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
-import org.joml.Vector3f;
 
 import java.util.HashSet;
 import java.util.Set;

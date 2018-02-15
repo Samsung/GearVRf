@@ -15,11 +15,9 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.ResourceCache;
+import org.gearvrf.shaders.GVRDepthShader;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-
-import java.util.HashMap;
 
 /**
  * Causes a shadow map to be rendered from the viewpoint
@@ -132,7 +130,7 @@ public class GVRShadowMap extends GVRRenderTarget
      * @param modelMtx  light model transform (to world coordinates)
      * @param light     spot light component to update
      */
-    void setPerspShadowMatrix(Matrix4f modelMtx, GVRLightBase light)
+    void setPerspShadowMatrix(Matrix4f modelMtx, GVRLight light)
     {
         GVRPerspectiveCamera camera = (GVRPerspectiveCamera) getCamera();
 
@@ -168,7 +166,7 @@ public class GVRShadowMap extends GVRRenderTarget
      * @param modelMtx  light model transform (to world coordinates)
      * @param light     direct light component to update
      */
-    void setOrthoShadowMatrix(Matrix4f modelMtx, GVRLightBase light)
+    void setOrthoShadowMatrix(Matrix4f modelMtx, GVRLight light)
     {
         GVROrthogonalCamera camera = (GVROrthogonalCamera) getCamera();
         if (camera == null)
@@ -208,7 +206,7 @@ public class GVRShadowMap extends GVRRenderTarget
     {
         if (sShadowMaterial == null)
         {
-            GVRShaderId depthShader = ctx.getMaterialShaderManager().getShaderType(GVRDepthShader.class);
+            GVRShaderId depthShader = ctx.getShaderManager().getShaderType(GVRDepthShader.class);
             sShadowMaterial = new GVRMaterial(ctx, depthShader);
             GVRShader shaderTemplate = depthShader.getTemplate(ctx);
             shaderTemplate.bindShader(ctx, sShadowMaterial, "float3 a_position float3 a_normal");

@@ -22,10 +22,8 @@ import java.util.zip.ZipInputStream;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAndroidResource.CancelableCallback;
-import org.gearvrf.GVRCompressedCubemapTexture;
+import org.gearvrf.GVRCompressedCubemapImage;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRCubemapTexture;
-import org.gearvrf.GVRTexture;
 import org.gearvrf.asynchronous.Throttler.AsyncLoader;
 import org.gearvrf.asynchronous.Throttler.AsyncLoaderFactory;
 import org.gearvrf.asynchronous.Throttler.GlConverter;
@@ -46,7 +44,7 @@ class AsyncCompressedCubemapTexture {
      */
 
     static void loadTexture(GVRContext gvrContext,
-            CancelableCallback<GVRCompressedCubemapTexture> callback,
+            CancelableCallback<GVRCompressedCubemapImage> callback,
             GVRAndroidResource resource, int priority, Map<String, Integer> map) {
         faceIndexMap = map;
         AsyncManager.get().getScheduler().registerCallback(gvrContext, TEXTURE_CLASS, callback,
@@ -55,7 +53,7 @@ class AsyncCompressedCubemapTexture {
 
     private static Map<String, Integer> faceIndexMap;
     
-    private static final Class<GVRCompressedCubemapTexture> TEXTURE_CLASS = GVRCompressedCubemapTexture.class;
+    private static final Class<GVRCompressedCubemapImage> TEXTURE_CLASS = GVRCompressedCubemapImage.class;
 
     /*
      * Singleton
@@ -72,13 +70,13 @@ class AsyncCompressedCubemapTexture {
 
     private AsyncCompressedCubemapTexture() {
         AsyncManager.get().registerDatatype(TEXTURE_CLASS,
-                new AsyncLoaderFactory<GVRCompressedCubemapTexture, CompressedTexture[]>() {
+                new AsyncLoaderFactory<GVRCompressedCubemapImage, CompressedTexture[]>() {
 
                     @Override
-                    AsyncLoader<GVRCompressedCubemapTexture, CompressedTexture[]> threadProc(
+                    AsyncLoader<GVRCompressedCubemapImage, CompressedTexture[]> threadProc(
                             GVRContext gvrContext,
                             GVRAndroidResource request,
-                            CancelableCallback<GVRCompressedCubemapTexture> cancelableCallback,
+                            CancelableCallback<GVRCompressedCubemapImage> cancelableCallback,
                             int priority) {
                         return new AsyncLoadCompressedCubemapTextureResource(gvrContext,
                                 request, cancelableCallback, priority);
@@ -95,14 +93,14 @@ class AsyncCompressedCubemapTexture {
      */
 
     private static class AsyncLoadCompressedCubemapTextureResource extends
-    AsyncLoader<GVRCompressedCubemapTexture, CompressedTexture[]> {
+    AsyncLoader<GVRCompressedCubemapImage, CompressedTexture[]> {
 
-      private static final GlConverter<GVRCompressedCubemapTexture, CompressedTexture[]> sConverter =
-          new GlConverter<GVRCompressedCubemapTexture, CompressedTexture[]>() {
+      private static final GlConverter<GVRCompressedCubemapImage, CompressedTexture[]> sConverter =
+          new GlConverter<GVRCompressedCubemapImage, CompressedTexture[]>() {
 
         @Override
-        public GVRCompressedCubemapTexture convert(GVRContext gvrContext,
-            CompressedTexture[] textureArray) {
+        public GVRCompressedCubemapImage convert(GVRContext gvrContext,
+                                                 CompressedTexture[] textureArray) {
           CompressedTexture texture = textureArray[0];
           byte[][] data = new byte[6][];
           int[] dataOffset = new int[6];
@@ -110,15 +108,15 @@ class AsyncCompressedCubemapTexture {
             data[i] = textureArray[i].getArray();
             dataOffset[i] = textureArray[i].getArrayOffset();
           }
-          return new GVRCompressedCubemapTexture(gvrContext, texture.internalformat,
-                  texture.width, texture.height,
-                  texture.imageSize, data, dataOffset);
+          return new GVRCompressedCubemapImage(gvrContext, texture.internalformat,
+                                               texture.width, texture.height,
+                                               texture.imageSize, data, dataOffset);
         }
       };
 
       protected AsyncLoadCompressedCubemapTextureResource(GVRContext gvrContext,
-          GVRAndroidResource request,
-          CancelableCallback<GVRCompressedCubemapTexture> callback, int priority) {
+                                                          GVRAndroidResource request,
+                                                          CancelableCallback<GVRCompressedCubemapImage> callback, int priority) {
         super(gvrContext, sConverter, request, callback);
       }
 
