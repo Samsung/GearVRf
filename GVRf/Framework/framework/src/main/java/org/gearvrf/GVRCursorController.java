@@ -639,7 +639,6 @@ public abstract class GVRCursorController implements IEventReceiver
         if (isEnabled())
         {
             position.set(x, y, z);
-            update();
         }
     }
 
