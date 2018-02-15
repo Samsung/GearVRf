@@ -65,7 +65,7 @@ extern "C" {
 
         if(!gRenderer->isVulkanInstance())
             renderTarget->beginRendering(gRenderer);
-        gRenderer->renderRenderTarget(scene, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
+        gRenderer->renderRenderTarget(scene, javaSceneObject, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
         if(!gRenderer->isVulkanInstance())
             renderTarget->endRendering(gRenderer);
     }

@@ -66,6 +66,10 @@ Java_org_gearvrf_NativePicker_pickScene(JNIEnv * env,
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     std::vector<ColliderData> colliders;
     Transform* t = scene->main_camera_rig()->getHeadTransform();
+    if (nullptr == t) {
+        return nullptr;
+    }
+
     Picker::pickScene(scene, colliders, t, ox, oy, oz, dx, dy, dz);
     jlongArray jcolliders = env->NewLongArray(colliders.size());
     jlong* ptrArray = env->GetLongArrayElements(jcolliders, 0);
@@ -96,6 +100,9 @@ Java_org_gearvrf_NativePicker_pickObjects(JNIEnv * env,
 
     if (t == NULL) {
         t = scene->main_camera_rig()->getHeadTransform();
+        if (nullptr == t) {
+            return nullptr;
+        }
     }
     Picker::pickScene(scene, colliders, t, ox, oy, oz, dx, dy, dz);
 
@@ -147,6 +154,9 @@ Java_org_gearvrf_NativePicker_pickClosest(JNIEnv * env,
     if (t == NULL)
     {
         t = scene->main_camera_rig()->getHeadTransform();
+        if (nullptr == t) {
+            return nullptr;
+        }
     }
     Picker::pickClosest(scene, data, t, ox, oy, oz, dx, dy, dz);
     if (!data.IsHit)

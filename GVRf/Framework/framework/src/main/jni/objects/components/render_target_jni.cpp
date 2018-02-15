@@ -3,13 +3,11 @@
  ***************************************************************************/
 
 #include "objects/components/render_target.h"
-
 #include "util/gvr_jni.h"
-#include "util/gvr_log.h"
-#include "glm/gtc/type_ptr.hpp"
 
 namespace gvr {
-    extern "C" {
+
+extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeRenderTarget_ctorMultiview(JNIEnv *env, jobject obj, jlong jtexture, jboolean isMultiview);
 
@@ -42,18 +40,23 @@ namespace gvr {
     Java_org_gearvrf_NativeRenderTarget_cullFromCamera(JNIEnv *env, jobject obj, jlong jscene, jobject javaSceneObject, jlong ptr, jlong jcamera, jlong jshaderManager);
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderTarget_render(JNIEnv *env, jobject obj, jlong renderTarget, jlong camera,
-                                               jlong shader_manager, jlong posteffectrenderTextureA, jlong posteffectRenderTextureB, jlong jscene);
-    };
+                                               jlong shader_manager, jlong posteffectrenderTextureA, jlong posteffectRenderTextureB, jlong jscene,
+                                               jobject javaSceneObject);
+};
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderTarget_render(JNIEnv *env, jobject obj, jlong renderTarget, jlong camera,
-                                           jlong shader_manager, jlong posteffectrenderTextureA, jlong posteffectRenderTextureB, jlong jscene){
+Java_org_gearvrf_NativeRenderTarget_render(JNIEnv *env, jobject obj, jlong renderTarget,
+                                           jlong camera,
+                                           jlong shader_manager, jlong posteffectrenderTextureA,
+                                           jlong posteffectRenderTextureB, jlong jscene, jobject javaSceneObject) {
     RenderTarget* target = reinterpret_cast<RenderTarget*>(renderTarget);
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     // Do not remote this: need it for screenshot capturer, center camera rendering
     target->setCamera(reinterpret_cast<Camera*>(camera));
-    gRenderer->getInstance()->renderRenderTarget(scene, target, reinterpret_cast<ShaderManager*>(shader_manager),
+    javaSceneObject = env->NewLocalRef(javaSceneObject);
+    gRenderer->getInstance()->renderRenderTarget(scene, javaSceneObject, target, reinterpret_cast<ShaderManager*>(shader_manager),
                                                  reinterpret_cast<RenderTexture*>(posteffectrenderTextureA), reinterpret_cast<RenderTexture*>(posteffectRenderTextureB));
+    env->DeleteLocalRef(javaSceneObject);
 }
 
 JNIEXPORT jlong JNICALL

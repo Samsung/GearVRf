@@ -127,7 +127,11 @@ void DaydreamRenderer::DrawFrame(JNIEnv &env) {
 
     head_view_ = gvr_api_->GetHeadSpaceFromStartSpaceRotation(target_time);
 
-    cameraRig_->getHeadTransform()->setModelMatrix(MatrixToGLMMatrix(head_view_));
+    gvr::Transform* t = cameraRig_->getHeadTransform();
+    if (nullptr == t) {
+        return;
+    }
+    t->setModelMatrix(MatrixToGLMMatrix(head_view_));
 
     // Render the eye images.
     for (int eye = 0; eye < 2; eye++) {

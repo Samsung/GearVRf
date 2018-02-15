@@ -85,7 +85,7 @@ struct RenderState {
     int                     viewportHeight;
     bool                    invalidateShaders;
     Scene*                  scene;
-    jobject                 javaSceneObject;
+    jobject                 javaSceneObject = nullptr;
     ShaderData*             material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
@@ -163,7 +163,7 @@ public:
     virtual RenderTarget* createRenderTarget(RenderTexture*, bool) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*) = 0;
 
-    virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
+    virtual void renderRenderTarget(Scene*, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b)=0;
     virtual void restoreRenderStates(RenderData* render_data) = 0;
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;

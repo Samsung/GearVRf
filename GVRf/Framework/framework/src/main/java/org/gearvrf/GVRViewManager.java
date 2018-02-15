@@ -500,8 +500,7 @@ abstract class GVRViewManager extends GVRContext {
         mFrameHandler.beforeDrawEyes();
 
         makeShadowMaps(mMainScene.getNative(), getMainScene(), mRenderBundle.getShaderManager().getNative(),
-                mRenderBundle.getPostEffectRenderTextureA().getWidth(),
-                mRenderBundle.getPostEffectRenderTextureA().getHeight());
+                       mRenderBundle.getPostEffectRenderTextureA().getWidth(), mRenderBundle.getPostEffectRenderTextureA().getHeight());
     }
 
     protected void afterDrawEyes() {
@@ -527,8 +526,7 @@ abstract class GVRViewManager extends GVRContext {
 
     void cullAndRender(GVRRenderTarget renderTarget, GVRScene scene)
     {
-        cullAndRender(renderTarget.getNative(), scene.getNative(),
-                scene,
+        cullAndRender(renderTarget.getNative(), scene.getNative(), scene,
                 mRenderBundle.getShaderManager().getNative(),
                 mRenderBundle.getPostEffectRenderTextureA().getNative(),
                 mRenderBundle.getPostEffectRenderTextureB().getNative());

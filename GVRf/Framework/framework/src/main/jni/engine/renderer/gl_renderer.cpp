@@ -199,7 +199,7 @@ namespace gvr
     }
 
 
-    void GLRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget,
+    void GLRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, RenderTarget* renderTarget,
                             ShaderManager* shader_manager,
                             RenderTexture* post_effect_render_texture_a,
                             RenderTexture* post_effect_render_texture_b)
@@ -216,6 +216,8 @@ namespace gvr
         GL(glDisable(GL_POLYGON_OFFSET_FILL));
         Camera* camera = renderTarget->getCamera();
         RenderState rstate = renderTarget->getRenderState();
+        //@todo makes it clear this is a hack
+        rstate.javaSceneObject = javaSceneObject;
         RenderData* post_effects = camera->post_effect_data();
         rstate.scene = scene;
         rstate.shader_manager = shader_manager;

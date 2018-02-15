@@ -75,7 +75,7 @@ public:
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount);
 
-    virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
+    virtual void renderRenderTarget(Scene*, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
             RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
     void makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager);
 
