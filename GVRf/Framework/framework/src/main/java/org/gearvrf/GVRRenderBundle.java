@@ -20,8 +20,8 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
 /** A container for various services and pieces of data required for rendering. */
-final class GVRRenderBundle {
-    private  GVRContext mGVRContext;
+class GVRRenderBundle {
+    protected GVRContext mGVRContext;
     private  GVRShaderManager mShaderManager;
     private  GVRRenderTexture mPostEffectRenderTextureA = null;
     private  GVRRenderTexture mPostEffectRenderTextureB = null;
