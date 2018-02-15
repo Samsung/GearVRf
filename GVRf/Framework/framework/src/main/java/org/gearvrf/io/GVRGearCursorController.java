@@ -316,7 +316,7 @@ public final class GVRGearCursorController extends GVRCursorController
         boolean wasConnected = mConnected;
 
         mConnected = (mControllerReader != null) && mControllerReader.isConnected();
-        if (!mConnected)
+        if (!wasConnected && mConnected)
         {
             context.getInputManager().addCursorController(GVRGearCursorController.this);
         }
