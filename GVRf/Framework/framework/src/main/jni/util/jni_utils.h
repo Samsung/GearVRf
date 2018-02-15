@@ -65,6 +65,7 @@ static JNIEnv* getCurrentEnv(JavaVM* javaVm) {
     return result;
 }
 
+static const int SUPPORTED_JNI_VERSION = JNI_VERSION_1_6;
 }
 
 #endif

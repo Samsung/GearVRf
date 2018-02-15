@@ -82,10 +82,10 @@ glm::mat4 Transform::getModelMatrix(bool forceRecalculate) {
         glm::mat4 scale_matrix = glm::scale(glm::mat4(), scale_);
         mutex_.unlock();
 
-        glm::mat4 trs_matrix = translation_matrix * rotation_matrix
-                               * scale_matrix;
-        if (owner_object()->parent() != 0) {
-            Transform *const t = owner_object()->parent()->transform();
+        glm::mat4 trs_matrix = translation_matrix * rotation_matrix * scale_matrix;
+        SceneObject* owner = owner_object();
+        if (nullptr != owner && nullptr != owner->parent()) {
+            Transform *const t = owner->parent()->transform();
             if (nullptr != t) {
                 glm::mat4 model_matrix = t->getModelMatrix() * trs_matrix;
                 mutex_.lock();

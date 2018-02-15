@@ -210,7 +210,7 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
         }
     }
 }
-void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget, ShaderManager* shader_manager,
+void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                 RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
     std::vector<RenderData*> render_data_list;
     Camera* camera = renderTarget->getCamera();
@@ -220,6 +220,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
     rstate.shader_manager = shader_manager;
     rstate.uniforms.u_view = camera->getViewMatrix();
     rstate.uniforms.u_proj = camera->getProjectionMatrix();
+    rstate.javaSceneObject = javaSceneObject;
 
     if(vulkanCore_->isSwapChainPresent())
         rstate.uniforms.u_proj = glm::mat4(1,0,0,0,  0,-1,0,0, 0,0,0.5,0, 0,0,0.5,1) * rstate.uniforms.u_proj;

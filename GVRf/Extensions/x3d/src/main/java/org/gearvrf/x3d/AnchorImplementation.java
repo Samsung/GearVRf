@@ -380,7 +380,6 @@ public class AnchorImplementation {
                         gvrWebViewSceneObject.setName("Web View");
 
                         gvrWebViewSceneObject.getRenderData().getMaterial().setOpacity(1.0f);
-                        gvrWebViewSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
                         gvrWebViewSceneObject.getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
                         gvrWebViewSceneObject.getRenderData().setRenderMask(0);
@@ -445,7 +444,6 @@ public class AnchorImplementation {
         GVRCubeSceneObject gvrUICubeSceneObject = new GVRCubeSceneObject(gvrContext, true, cubeUISize);
         gvrUICubeSceneObject.getTransform().setPosition(cubeUIPosition[0], cubeUIPosition[1], cubeUIPosition[2]);
         gvrUICubeSceneObject.getRenderData().getMaterial().setDiffuseColor(.3f, .5f, .7f, 1);
-        gvrUICubeSceneObject.getRenderData().setShaderTemplate(GVRPhongShader.class);
 
         // Add the icons to close, scale, translate and rotate
         gvrTextExitObject = new GVRTextViewSceneObject(gvrContext, 0.5f, 0.45f, " x ");

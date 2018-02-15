@@ -152,7 +152,7 @@ bool isRenderPassEqual(RenderData* rdata1, RenderData* rdata2){
 /*
  * Perform view frustum culling from a specific camera viewpoint
  */
-void Renderer::cullFromCamera(Scene *scene, Camera* camera,
+void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* camera,
         ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector, bool is_multiview)
 {
     std::vector<SceneObject*> scene_objects;
@@ -160,13 +160,14 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     render_data_vector->clear();
     scene_objects.clear();
     RenderState rstate;
-    int lightCount = scene->getLightList().size();
 
+    int lightCount = scene->getLightList().size();
     if (lightCount != numLights)
     {
-        scene->bindShaders();
+        scene->bindShaders(javaSceneObject);
         numLights = lightCount;
     }
+
     rstate.is_multiview = is_multiview;
     rstate.material_override = NULL;
     rstate.shader_manager = shader_manager;
@@ -176,6 +177,8 @@ void Renderer::cullFromCamera(Scene *scene, Camera* camera,
     rstate.scene = scene;
     rstate.render_mask = camera->render_mask();
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+    rstate.javaSceneObject = javaSceneObject;
+
     glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj * rstate.uniforms.u_view);
     glm::vec3 campos(rstate.uniforms.u_view[3]);
 
@@ -405,9 +408,7 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
         //@todo duped in render_data.cpp
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
-        jobject localSceneObject = rstate.scene->getJavaObj(*env);
-        post_effect->bindShader(env, localSceneObject, rstate.is_multiview);
-        env->DeleteLocalRef(localSceneObject);
+        post_effect->bindShader(env, rstate.javaSceneObject, rstate.is_multiview);
         if (rc > 0)
         {
             rstate.scene->detach_java_env();

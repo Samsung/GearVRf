@@ -63,8 +63,12 @@ void CameraRig::setPosition(const glm::vec3& transform_position) {
 
 Transform* CameraRig::getHeadTransform() const {
     SceneObject* sceneObject = owner_object();
-    sceneObject = sceneObject->getChildByIndex(0);
-    return sceneObject->transform();
+    if (nullptr != sceneObject) {
+        sceneObject = sceneObject->getChildByIndex(0);
+        return sceneObject->transform();
+    } else {
+        return nullptr;
+    }
 }
 
 void CameraRig::attachLeftCamera(Camera* const left_camera) {
@@ -165,6 +169,9 @@ void CameraRig::setRotationSensorData(long long time_stamp, float w, float x,
 void CameraRig::setRotation(const glm::quat& transform_rotation) {
     // Get head transform (a child of camera rig object)
     Transform* transform = getHeadTransform();
+    if (nullptr == transform) {
+        return;
+    }
 
     if (camera_rig_type_ == FREE) {
         transform->set_rotation(transform_rotation);

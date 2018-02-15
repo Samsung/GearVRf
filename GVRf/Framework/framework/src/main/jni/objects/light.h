@@ -167,7 +167,7 @@ public:
      * Internal function called at the start of each frame
      * to update the shadow map.
      */
-    bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
+    bool makeShadowMap(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager, int texIndex);
     /**
      * Internal function called at the start of each shader
      * to update the light uniforms (if necessary).

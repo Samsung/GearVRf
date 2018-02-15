@@ -31,7 +31,6 @@ Scene* Scene::main_scene_ = NULL;
 Scene::Scene() :
         HybridObject(),
         javaVM_(NULL),
-        javaObj_(0),
         bindShadersMethod_(0),
         main_camera_rig_(),
         frustum_flag_(false),
@@ -42,15 +41,6 @@ Scene::Scene() :
 { }
 
 Scene::~Scene() {
-    if (javaVM_ && javaObj_)
-    {
-        JNIEnv* env;
-        //@todo strictly speaking if you attach you must detach
-        jint rs = javaVM_->AttachCurrentThread(&env, NULL);
-        if (rs == JNI_OK) {
-            env->DeleteWeakGlobalRef(javaObj_);
-        }
-    }
 }
 
 void Scene::set_java(JavaVM* javaVM, jobject javaScene)
@@ -59,7 +49,6 @@ void Scene::set_java(JavaVM* javaVM, jobject javaScene)
     javaVM_ = javaVM;
     if (env)
     {
-        javaObj_ = env->NewWeakGlobalRef(javaScene);
         jclass sceneClass = env->GetObjectClass(javaScene);
         bindShadersMethod_ = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
         if (bindShadersMethod_ == 0)
@@ -92,11 +81,10 @@ int Scene::get_java_env(JNIEnv** envptr)
 /**
  * Called when the shaders need to be generated on the Java side
  * (usually because a light is added or removed).
- * This function spawns a Java task on the Framework thread which generates the shaders.
  */
-void Scene::bindShaders()
+void Scene::bindShaders(jobject javaSceneObject)
 {
-    if ((bindShadersMethod_ == NULL) || (javaObj_ == NULL))
+    if ((bindShadersMethod_ == NULL))
     {
         LOGE("SHADER: Could not call GVRScene::bindShadersNative");
     }
@@ -104,7 +92,7 @@ void Scene::bindShaders()
     int rc = get_java_env(&env);
     if (env && (rc >= 0))
     {
-        env->CallVoidMethod(javaObj_, bindShadersMethod_, getJavaObj(*env));
+        env->CallVoidMethod(javaSceneObject, bindShadersMethod_);
         if (rc > 0)
         {
             getJavaVM()->DetachCurrentThread();

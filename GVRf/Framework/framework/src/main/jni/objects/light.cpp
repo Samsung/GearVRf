@@ -143,7 +143,7 @@ namespace gvr {
         scene->removeLight(this);
     }
 
-    bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex)
+    bool Light::makeShadowMap(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager, int texIndex)
     {
         ShadowMap* shadowMap = getShadowMap();
         if ((shadowMap == nullptr) || !shadowMap->hasTexture())
@@ -155,9 +155,9 @@ namespace gvr {
         setFloat("shadow_map_index", (float) texIndex);
         Renderer* renderer = gRenderer->getInstance();
         shadowMap->setMainScene(scene);
-        shadowMap->cullFromCamera(scene, shadowMap->getCamera(),renderer, shader_manager);
+        shadowMap->cullFromCamera(scene, javaSceneObject, shadowMap->getCamera(),renderer, shader_manager);
         shadowMap->beginRendering(renderer);
-        renderer->renderRenderTarget(scene, shadowMap,shader_manager, nullptr, nullptr);
+        renderer->renderRenderTarget(scene, javaSceneObject, shadowMap,shader_manager, nullptr, nullptr);
         shadowMap->endRendering(renderer);
         return true;
     }

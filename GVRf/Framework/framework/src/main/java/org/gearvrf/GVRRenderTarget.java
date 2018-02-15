@@ -95,10 +95,11 @@ public class GVRRenderTarget extends GVRBehavior
         NativeRenderTarget.endRendering(getNative());
     }
     public void cullFromCamera(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager){
-        NativeRenderTarget.cullFromCamera(scene.getNative(), getNative(),camera.getNative(), shaderManager.getNative());
+        NativeRenderTarget.cullFromCamera(scene.getNative(), scene, getNative(),camera.getNative(), shaderManager.getNative());
     }
-    public void render(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager, GVRRenderTexture posteffectRenderTextureA, GVRRenderTexture posteffectRenderTextureB){
-        NativeRenderTarget.render(getNative(), camera.getNative(), shaderManager.getNative(), posteffectRenderTextureA.getNative(), posteffectRenderTextureB.getNative(), scene.getNative());
+
+    public void render(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager, GVRRenderTexture posteffectRenderTextureA, GVRRenderTexture posteffectRenderTextureB) {
+        NativeRenderTarget.render(getNative(), camera.getNative(), shaderManager.getNative(), posteffectRenderTextureA.getNative(), posteffectRenderTextureB.getNative(), scene.getNative(), scene);
     }
 
     public void setMainScene(GVRScene scene){
@@ -153,8 +154,8 @@ class NativeRenderTarget
     static native long ctorMultiview(long texture, boolean isMultiview);
     static native void setCamera(long rendertarget, long camera);
     static native long ctor(long texture, long sourceRendertarget);
-    static native void cullFromCamera(long scene, long renderTarget,long camera, long shader_manager );
-    static native void render(long renderTarget, long camera, long shader_manager, long posteffectrenderTextureA, long posteffectRenderTextureB, long scene);
+    static native void cullFromCamera(long scene, GVRScene javaSceneObject, long renderTarget,long camera, long shader_manager );
+    static native void render(long renderTarget, long camera, long shader_manager, long posteffectrenderTextureA, long posteffectRenderTextureB, long scene, GVRScene javaSceneObject);
     static native void setTexture(long rendertarget, long texture);
     static native void attachRenderTarget(long renderTarget, long nextRenderTarget);
 }

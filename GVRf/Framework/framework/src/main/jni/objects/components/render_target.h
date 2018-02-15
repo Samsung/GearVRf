@@ -65,7 +65,7 @@ public:
     std::vector<RenderData*>* getRenderDataVector(){
         return mRenderDataVector.get();
     }
-    virtual void cullFromCamera(Scene*, Camera* camera, Renderer* renderer, ShaderManager* shader_manager);
+    virtual void cullFromCamera(Scene*, jobject javaSceneObject, Camera* camera, Renderer* renderer, ShaderManager* shader_manager);
 private:
     RenderTarget(const RenderTarget& render_texture) = delete;
     RenderTarget(RenderTarget&& render_texture) = delete;

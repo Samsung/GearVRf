@@ -55,7 +55,7 @@ std::string to_string(T value) {
     return os.str();
 }
 
-class RenderData: public JavaComponent {
+class RenderData: public Component {
 public:
     enum Queue {
         Stencil = -1000, Background = 1000, Geometry = 2000, Transparent = 3000, Overlay = 4000
@@ -70,7 +70,7 @@ public:
     };
 
     RenderData() :
-            JavaComponent(RenderData::getComponentType()), mesh_(0),
+            Component(RenderData::getComponentType()), mesh_(0),
             render_mask_(DEFAULT_RENDER_MASK), batch_(nullptr),
             rendering_order_(DEFAULT_RENDERING_ORDER),
             offset_factor_(0.0f), offset_units_(0.0f),
@@ -96,9 +96,7 @@ public:
         render_data_flags.padding = 0;
     }
 
-    virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
-
-    RenderData(const RenderData& rdata) : JavaComponent(rdata.getComponentType())
+    RenderData(const RenderData& rdata) : Component(rdata.getComponentType())
     {
         hash_code = rdata.hash_code;
         mesh_ = rdata.mesh_;
@@ -460,9 +458,12 @@ protected:
     }Bitfields;
 
     Bitfields render_data_flags;
+    jobject bindShaderObject_ = nullptr;
+    JavaVM* javaVm_ = nullptr;
 
 public:
     void setStencilTest(bool flag);
+    void setBindShaderObject(JNIEnv* env, jobject bindShaderObject);
 };
 
 bool compareRenderDataByOrderShaderDistance(RenderData* i, RenderData* j);

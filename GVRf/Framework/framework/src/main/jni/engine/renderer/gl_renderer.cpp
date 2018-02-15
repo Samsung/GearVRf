@@ -199,7 +199,7 @@ namespace gvr
     }
 
 
-    void GLRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget,
+    void GLRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, RenderTarget* renderTarget,
                             ShaderManager* shader_manager,
                             RenderTexture* post_effect_render_texture_a,
                             RenderTexture* post_effect_render_texture_b)
@@ -216,6 +216,8 @@ namespace gvr
         GL(glDisable(GL_POLYGON_OFFSET_FILL));
         Camera* camera = renderTarget->getCamera();
         RenderState rstate = renderTarget->getRenderState();
+        //@todo makes it clear this is a hack
+        rstate.javaSceneObject = javaSceneObject;
         RenderData* post_effects = camera->post_effect_data();
         rstate.scene = scene;
         rstate.shader_manager = shader_manager;
@@ -409,14 +411,13 @@ namespace gvr
         }
     }
 
-
     /**
      * Generate shadow maps for all the lights that cast shadows.
      * The scene is rendered from the viewpoint of the light using a
      * special depth shader (GVRDepthShader) to create the shadow map.
      * @see Renderer::renderShadowMap Light::makeShadowMap
      */
-    void GLRenderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
+    void GLRenderer::makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager)
     {
         checkGLError("makeShadowMaps");
         const std::vector<Light*> lights = scene->getLightList();
@@ -426,7 +427,7 @@ namespace gvr
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFB);
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFB);
         for (auto it = lights.begin(); it != lights.end(); ++it) {
-            (*it)->makeShadowMap(scene, shader_manager, texIndex);
+            (*it)->makeShadowMap(scene, javaSceneObject, shader_manager, texIndex);
             ++texIndex;
         }
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readFB);
