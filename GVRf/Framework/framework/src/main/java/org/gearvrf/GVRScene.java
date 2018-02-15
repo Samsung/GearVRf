@@ -666,7 +666,7 @@ class NativeScene {
 
     static native long ctor();
 
-    static native void setJava(long scene, Object javaScene);
+    static native void setJava(long scene, GVRScene javaScene);
 
     static native void addSceneObject(long scene, long sceneObject);
    

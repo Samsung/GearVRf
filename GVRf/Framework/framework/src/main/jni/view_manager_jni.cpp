@@ -61,18 +61,23 @@ extern "C" {
 
         javaSceneObject = jni->NewLocalRef(javaSceneObject);
         renderTarget->cullFromCamera(scene, javaSceneObject, renderTarget->getCamera(),gRenderer,shader_manager);
-        jni->DeleteLocalRef(javaSceneObject);
 
         if(!gRenderer->isVulkanInstance())
             renderTarget->beginRendering(gRenderer);
         gRenderer->renderRenderTarget(scene, javaSceneObject, renderTarget,shader_manager,post_effect_render_texture_a,post_effect_render_texture_b);
         if(!gRenderer->isVulkanInstance())
             renderTarget->endRendering(gRenderer);
+
+        jni->DeleteLocalRef(javaSceneObject);
     }
-     void Java_org_gearvrf_GVRRenderBundle_addRenderTarget(JNIEnv* jni, jclass clazz, jlong jrenderTarget , jint eye, jint index){
-        RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
-         Renderer::getInstance()->addRenderTarget(renderTarget, EYE(eye), index);
+
+    void
+    Java_org_gearvrf_GVRRenderBundle_addRenderTarget(JNIEnv *jni, jclass clazz, jlong jrenderTarget,
+                                                     jint eye, jint index) {
+        RenderTarget *renderTarget = reinterpret_cast<RenderTarget *>(jrenderTarget);
+        Renderer::getInstance()->addRenderTarget(renderTarget, EYE(eye), index);
     }
+
     long Java_org_gearvrf_GVRRenderBundle_getRenderTextureNative(JNIEnv *jni, jclass clazz, jlong jrenderTextureInfo)
     {
         RenderTextureInfo* renderTextureInfo = reinterpret_cast<RenderTextureInfo*>(jrenderTextureInfo);
