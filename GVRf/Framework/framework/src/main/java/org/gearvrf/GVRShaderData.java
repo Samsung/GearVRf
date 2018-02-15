@@ -220,10 +220,7 @@ public class GVRShaderData extends GVRHybridObject
         synchronized (textures)
         {
             textures.put(key, texture);
-            if (texture != null)
-            {
-                NativeShaderData.setTexture(getNative(), key, texture.getNative());
-            }
+            NativeShaderData.setTexture(getNative(), key, texture != null ? texture.getNative() : 0);
         }
     }
 
