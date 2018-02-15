@@ -51,6 +51,14 @@ void main()
 	color = clamp(color, vec4(0), vec4(1));
 	fragColor = color;
 #else
-	fragColor = s.diffuse;
+    float t = s.emission.x + s.emission.y + s.emission.z;
+    if (t != 0.0)
+    {
+        fragColor = s.emission; // X3D uses emissive color when not lit
+    }
+    else
+    {
+	    fragColor = s.diffuse;  // JASSIMP uses diffuse color when not lit
+	}
 #endif
 }

@@ -18,5 +18,5 @@ vec4 AddLight(Surface s, Radiance r)
 			kS *= pow(cosAngle, specular_exponent);
 		}
 	}
-	return vec4(kE + r.attenuation * (kA + kD + kS), alpha);
+	return vec4(kE + kA + r.attenuation * (kD + kS), alpha);
 }
