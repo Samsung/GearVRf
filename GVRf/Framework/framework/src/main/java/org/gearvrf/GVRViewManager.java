@@ -112,15 +112,21 @@ abstract class GVRViewManager extends GVRContext {
         if (null == scene) {
             throw new IllegalArgumentException();
         }
+        GVRScene oldScene = null;
         mMainSceneLock.lock();
         try {
             if (mState == ViewManagerState.SHOWING_SPLASH) {
                 mPendingMainScene = scene;
             } else {
+                oldScene = mMainScene;
                 setMainSceneImpl(scene);
             }
         } finally {
             mMainSceneLock.unlock();
+            if (oldScene != null)
+            {
+                mEventManager.sendEvent(this, IContextEvents.class, "onSceneChange", oldScene, mMainScene);
+            }
         }
     }
 
@@ -330,8 +336,8 @@ abstract class GVRViewManager extends GVRContext {
                 @Override
                 public void run() {
                     try {
-                        getEventManager().sendEvent(mMain, IScriptEvents.class, "onEarlyInit", GVRViewManager.this);
-                        getEventManager().sendEvent(mMain, IScriptEvents.class, "onInit", GVRViewManager.this);
+                        mEventManager.sendEvent(mMain, IScriptEvents.class, "onEarlyInit", GVRViewManager.this);
+                        mEventManager.sendEvent(mMain, IScriptEvents.class, "onInit", GVRViewManager.this);
 
                         if (null != mSplashScreen && GVRMain.SplashMode.AUTOMATIC == mMain
                                 .getSplashMode() && mMain.getSplashDisplayTime() < 0f) {
@@ -355,9 +361,9 @@ abstract class GVRViewManager extends GVRContext {
                     }
 
                     // Trigger event "onAfterInit" for post-processing of scene
-                    // graph after initialization.
-                    getEventManager().sendEvent(mMain, IScriptEvents.class,
-                            "onAfterInit");
+                    // graph after initialization. Also trigger "onInit" for the GVRContext.
+                    mEventManager.sendEvent(mMain, IScriptEvents.class, "onAfterInit");
+                    mEventManager.sendEvent(GVRViewManager.this, IContextEvents.class, "onInit", GVRViewManager.this);
                 }
             });
 
