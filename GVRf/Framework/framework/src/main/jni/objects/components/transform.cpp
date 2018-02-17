@@ -36,6 +36,7 @@ Transform::Transform() :
 Transform::~Transform() {
     if(owner_object_) {
         owner_object_->onTransformChanged();
+        owner_object_->dirtyHierarchicalBoundingVolume();
     }
 }
 
@@ -222,9 +223,11 @@ void Transform::rotateWithPivot(float w, float x, float y, float z,
 
 void Transform::onAttach(SceneObject *owner_object) {
     owner_object->onTransformChanged();
+    owner_object->dirtyHierarchicalBoundingVolume();
 }
 
 void Transform::onDetach(SceneObject *owner_object) {
     owner_object->onTransformChanged();
+    owner_object->dirtyHierarchicalBoundingVolume();
 }
 }

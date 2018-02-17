@@ -109,11 +109,6 @@ public:
     }
     void setTransformDirty() {
     	transform_dirty_ = true;
-        Transform* t = transform();
-        if (t)
-        {
-            t->invalidate();
-        }
     }
 
     bool isTransformDirty() {
@@ -145,6 +140,18 @@ public:
             float rdy, float rdz);
     bool intersectsBoundingVolume(SceneObject *scene_object);
 
+    /*
+     * Called before camera rig view matrix is updated to suppress
+     * making the entire hierarchy dirty when matrix is changed.
+     */
+    void dirtyMyBoundingVolume() { bounding_volume_dirty_ = true; }
+
+    /*
+     * Called after camera rig view matrix is updated to
+     * mark camera rig as clean. Updating the view matrix
+     * does not change the bounding hierarchy.
+     */
+    void cleanMyBoundingVolume() { bounding_volume_dirty_ = false; }
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
     void onTransformChanged();
