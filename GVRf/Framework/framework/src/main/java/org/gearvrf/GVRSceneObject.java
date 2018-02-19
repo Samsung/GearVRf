@@ -776,9 +776,14 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see #forAllComponents(ComponentVisitor, long)
      */
     public void forAllDescendants(SceneVisitor visitor) {
-        if (visitor.visit(this)) {
-            for (GVRSceneObject child : mChildren) {
-                child.forAllDescendants(visitor);
+        synchronized (mChildren)
+        {
+            if (visitor.visit(this))
+            {
+                for (GVRSceneObject child : mChildren)
+                {
+                    child.forAllDescendants(visitor);
+                }
             }
         }
     }
@@ -802,13 +807,21 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see #getComponent(long)
      */
     public void forAllComponents(ComponentVisitor visitor, long componentType) {
-        GVRComponent comp = getComponent(componentType);
-        if ((comp != null) && !visitor.visit(comp)) {
-            return;
+        synchronized (mComponents)
+        {
+            GVRComponent comp = getComponent(componentType);
+            if ((comp != null) && !visitor.visit(comp))
+            {
+                return;
+            }
         }
-        for (int i = 0; i < mChildren.size(); ++i) {
-            GVRSceneObject child = mChildren.get(i);
-            child.forAllComponents(visitor, componentType);
+        synchronized (mChildren)
+        {
+            for (int i = 0; i < mChildren.size(); ++i)
+            {
+                GVRSceneObject child = mChildren.get(i);
+                child.forAllComponents(visitor, componentType);
+            }
         }
     }
 
@@ -829,15 +842,25 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see #forAllDescendants(SceneVisitor)
      * @see #getComponent(long)
      */
-    public void forAllComponents(ComponentVisitor visitor) {
-        for (GVRComponent comp : mComponents.values()) {
-            if (!visitor.visit(comp)) {
-                return;
+    public void forAllComponents(ComponentVisitor visitor)
+    {
+        synchronized (mComponents)
+        {
+            for (GVRComponent comp : mComponents.values())
+            {
+                if (!visitor.visit(comp))
+                {
+                    return;
+                }
             }
         }
-        for (int i = 0; i < mChildren.size(); ++i) {
-            GVRSceneObject child = mChildren.get(i);
-            child.forAllComponents(visitor);
+        synchronized (mChildren)
+        {
+            for (int i = 0; i < mChildren.size(); ++i)
+            {
+                GVRSceneObject child = mChildren.get(i);
+                child.forAllComponents(visitor);
+            }
         }
     }
 

@@ -498,7 +498,6 @@ abstract class GVRViewManager extends GVRContext {
     protected void beforeDrawEyes() {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
-
         makeShadowMaps(mMainScene.getNative(), getMainScene(), mRenderBundle.getShaderManager().getNative(),
                        mRenderBundle.getPostEffectRenderTextureA().getWidth(), mRenderBundle.getPostEffectRenderTextureA().getHeight());
     }

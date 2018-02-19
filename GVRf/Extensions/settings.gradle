@@ -45,4 +45,3 @@ project(':x3d').projectDir = new File('x3d')
 
 include ':platformsdk_support'
 project(':platformsdk_support').projectDir = new File('platformsdk_support')
-
