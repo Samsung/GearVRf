@@ -23,7 +23,7 @@ import android.os.Environment;
 import android.view.Gravity;
 
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRBitmapTexture;
+import org.gearvrf.GVRBitmapImage;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
@@ -406,7 +406,7 @@ public class SceneEditorMain extends GVRMain {
                 R.mipmap.ic_launcher);
         // return the correct splash screen bitmap
         GVRTexture tex = new GVRTexture(gvrContext);
-        tex.setImage(new GVRBitmapTexture(gvrContext, bitmap));
+        tex.setImage(new GVRBitmapImage(gvrContext, bitmap));
         return tex;
     }
 
