@@ -1,5 +1,18 @@
-GearVR framework exporter
+# GearVR framework exporter
 
 A Blender addon to export scene components from Blender to a GVRf application
 that provides a JavaScript interface, similar to Remote Scriptint demo.
 
+## How to install
+
+Copy the gvr-exporter directory to Blender's addon directory
+
+## How to use
+
+Run the gvr-remove-scripting client application on a device.
+
+In the *\_\_init.py\_\_* file change the *\_ip* address to reflect the client's device IP.
+
+Enable the gvr-exporter addon on Blender through user preferences menu.
+
+Press space bar to open the search menu, look for the gvrf addon, and click on "Export Scene to GVRf".

@@ -1,41 +1,65 @@
 #!/usr/bin/python3
 
 __version__ = '0.0.1'
-__all__ = [ 'gvrf_client', 'file_server', ]
+__all__ = [ 'gvrf_client', 'file_server', 'scene_exporter']
 
 __author__ = 'Sidia'
 
-from .gvrf_client import gvrf_client 
-from .fileserver import file_server 
+bl_info = {
+    "name": "Export to GVRf",
+    "category": "Import-Export",
+}
 
-def simple_test(addr = "192.168.0.118", port = 1645):
-    a = gvrf_client(addr, port, do_debug = True)
-    a.exec_command("importPackage(org.gearvrf)")
-    a.exec_command("importPackage(org.gearvrf.scene_objects)")
-    a.exec_command("var mainScene = gvrf.getMainScene();")
-    a.exec_command("var mat = new GVRMaterial(gvrf, GVRMaterial.GVRShaderType.Phong.ID);")
-    a.exec_command("mat.setDiffuseColor(1.0, 0.0, 0.0, 1.0);")
-    a.exec_command("var cube = new GVRCubeSceneObject(gvrf, true, mat);")
-    a.exec_command("cube.getTransform().setPosition(1.0, 1.0, -9.0);")
-    a.exec_command("mainScene.addSceneObject(cube);")
-    a.disconnect()
+if "bpy" in locals():
+    import imp
+    imp.reload(gvrf_client)
+    imp.reload(file_server)
+    imp.reload(scene_exporter)
+    print("Reloaded multifiles")
+else:
+    from . import gvrf_client, file_server, scene_exporter
+    print("Imported multifiles")
 
-def test1():
-    fs = file_server()
-    a = gvrf_client("192.168.0.118", 1645, do_debug = True)
-    a.exec_command("importPackage(org.gearvrf);")
-    a.exec_command("var mainScene = gvrf.getMainScene();")
-    a.exec_command("var mat = new GVRMaterial(gvrf, GVRMaterial.GVRShaderType.Phong.ID);")
-    a.exec_command("mat.setDiffuseColor(1.0, 0.0, 0.0, 1.0);")
-    url = "http://" + fs.get_current_ipv4() + ":" + str(fs.get_port())
-    url = url + "/SM_SuperGun.FBX"
-    a.exec_command('var url = new java.net.URL("' + url + '");')
-    a.send_command('var gun = gvrf.getAssetLoader().loadModel(url);')
-    fs.handle_request()
-    fs.handle_request()
-    a.wait_completion()
-    a.exec_command("gun.getTransform().setPosition(1.0, 1.0, -9.0);")
-    #a.exec_command("mainScene.addSceneObject(gun);")
-    #a.exec_command("gun.getRenderData().setMaterial(mat);")
-    return a, fs, url
+import bpy, os, threading
+from pathlib import Path
 
+dirpath = str(Path.home()) + "\\GvrfExporterWorkspace"
+if not os.path.exists(dirpath):
+    os.makedirs(dirpath)
+os.chdir(dirpath)
+
+
+class SceneExporter(bpy.types.Operator):
+    """Export Scene to GVRf"""
+    bl_idname = "export.gvrf"
+    bl_label = "Export Scene to GVRf"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        fs = file_server.file_server()
+        t = threading.Thread(target = fs.start_server)
+        t.start()
+        
+
+        # IP and port of gvrf client device
+        _addr = "192.168.0.99"
+        _port = 1645
+        scene_exporter.export(gvrf_client.gvrf_client(_addr, _port, do_debug = True))
+
+        fs.stop_server()
+        t.join()
+        
+        
+        return {'FINISHED'}
+
+
+def register():
+    bpy.utils.register_module(__name__)
+
+
+def unregister():
+    bpy.utils.unregister_module(__name__)
+
+
+if __name__ == "__main__":
+    register()

@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer
-import socket
+import socket, threading
 
 class file_server:
     def __init__(self, port = 8000):
         self._port = port
         self._handler = SimpleHTTPRequestHandler
         self._server = HTTPServer(("", self._port), self._handler)
+        self._own_thread = None
         self.update_ipv4()
 
     def handle_request(self):
@@ -24,3 +25,8 @@ class file_server:
     def get_port(self):
         return self._port
 
+    def start_server(self):
+        self._server.serve_forever()
+
+    def stop_server(self):
+        self._server.shutdown()
