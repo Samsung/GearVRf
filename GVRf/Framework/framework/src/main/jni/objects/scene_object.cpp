@@ -150,7 +150,7 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     }
     child->parent_ = self;
     child->onTransformChanged();
-    child->dirtyHierarchicalBoundingVolume();
+//    child->dirtyHierarchicalBoundingVolume();
 }
 
 /**
@@ -245,7 +245,6 @@ void SceneObject::removeChildObject(SceneObject* child) {
         }
         child->parent_ = NULL;
         child->onTransformChanged();
-        dirtyHierarchicalBoundingVolume();
     }
 }
 
@@ -256,6 +255,7 @@ void SceneObject::onTransformChanged() {
         t->invalidate();
     }
     setTransformDirty();
+    dirtyHierarchicalBoundingVolume();
     if (getChildrenCount() > 0)
     {
         std::lock_guard<std::mutex> lock(children_mutex_);
@@ -285,7 +285,6 @@ void SceneObject::clear() {
         }
         child->parent_ = NULL;
         child->onTransformChanged();
-        dirtyHierarchicalBoundingVolume();
     }
     children_.clear();
 }
