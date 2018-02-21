@@ -380,9 +380,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         final GVRViewSceneObject mSceneObject;
         Surface mSurface;
         SurfaceTexture mSurfaceTexture;
-        float mViewSize;
-        float mQuadWidth;
-        float mQuadHeight;
+
         float mHitX;
         float mHitY;
         float mActionDownX;
@@ -398,10 +396,6 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
             mGVRContext = gvrActivity.getGVRContext();
             mSceneObject = sceneObject;
-            // Default values to quad size. See onLayoutReady()
-            mViewSize = 0.0f;
-            mQuadWidth = 1.0f;
-            mQuadHeight = 1.0f;
 
             // To optimization
             setWillNotDraw(true);
@@ -513,10 +507,6 @@ public class GVRViewSceneObject extends GVRSceneObject {
         }
 
         private void onRenderDataReady() {
-            mViewSize = Math.max(getWidth(), getHeight());
-            mQuadWidth = getWidth() / mViewSize;
-            mQuadHeight = getHeight() / mViewSize;
-
             /**
              * Makes the view visible to call draw(...) and start rendering it.
              */
@@ -557,10 +547,15 @@ public class GVRViewSceneObject extends GVRSceneObject {
             final GVRCollider collider;
 
             if (mSceneObject.getRenderData() == null) {
+                float viewSize = Math.max(getWidth(), getHeight());
+                float quadWidth = getWidth() / viewSize;
+                float quadHeight = getHeight() / viewSize;
+
                 final GVRRenderData renderData = new GVRRenderData(mGVRContext);
-                renderData.setMesh(mGVRContext.createQuad(mQuadWidth, mQuadHeight));
+                renderData.setMesh(mGVRContext.createQuad(quadWidth, quadHeight));
                 mSceneObject.attachComponent(renderData);
             }
+
             collider = new GVRMeshCollider(mGVRContext, mSceneObject.getRenderData().getMesh(),true);
             material.setMainTexture(texture);
             mSceneObject.getRenderData().setMaterial(material);
