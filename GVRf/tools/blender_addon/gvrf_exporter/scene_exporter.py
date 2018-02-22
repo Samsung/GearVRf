@@ -15,7 +15,6 @@ def export(gvrf_app):
 
     gvrf_app.exec_command('importPackage(org.gearvrf);')
     gvrf_app.exec_command('var mainScene = gvrf.getMainScene();')
-    gvrf_app.exec_command('mainScene.removeAllSceneObjects();')
 
     for obj in scene.objects:
         if obj.type != 'MESH':
@@ -46,3 +45,8 @@ def export(gvrf_app):
 
     for obj in selection:
         obj.select = True
+
+def clear_scene(gvrf_app):
+    gvrf_app.exec_command('importPackage(org.gearvrf);')
+    gvrf_app.exec_command('var mainScene = gvrf.getMainScene();')
+    gvrf_app.exec_command('mainScene.removeAllSceneObjects();')
