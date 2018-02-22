@@ -40,6 +40,7 @@ class SceneExporterPanel(bpy.types.Panel):
         column = self.layout.column(align = True)
         column.prop(context.scene, 'dirpath')
         column.prop(context.scene, 'clientip')
+        column.prop(context.scene, 'selectedobjects')
         column.operator('export.gvrf', text='Export')
         column.operator('clearscene.gvrf', text='Clear Scene')
 
@@ -55,7 +56,8 @@ class SceneExporter(bpy.types.Operator):
         create_server()
         _addr = context.scene.clientip
         _port = 1645
-        scene_exporter.export(gvrf_client.GvrfClient(_addr, _port, do_debug = True))
+        _selected_objects = context.scene.selectedobjects
+        scene_exporter.export(gvrf_client.GvrfClient(_addr, _port, do_debug = True), selected_objects = _selected_objects)
 
         
         return {'FINISHED'}
@@ -85,13 +87,13 @@ def check_running_server():
 
 def create_server():
     global fs
-    if (not check_running_server()):
+    if not check_running_server():
         fs = file_server.FileServer()
         fs.start_server()
 
 def end_server():
     global fs
-    if (check_running_server()):
+    if check_running_server():
         try:
             fs.stop_server()
         except:
@@ -105,8 +107,9 @@ def register():
     bpy.utils.register_class(SceneExporter)
     bpy.utils.register_class(SceneClear)
     bpy.utils.register_class(SceneExporterPanel)
-    bpy.types.Scene.dirpath = bpy.props.StringProperty(name='Export Dir', description='', default=default_dirpath, subtype='DIR_PATH', update=change_dir)
-    bpy.types.Scene.clientip = bpy.props.StringProperty(name='Client\'s IP', description='', default='0.0.0.0', subtype='NONE')
+    bpy.types.Scene.dirpath = bpy.props.StringProperty(name = 'Export Dir', description = '', default = default_dirpath, subtype = 'DIR_PATH', update = change_dir)
+    bpy.types.Scene.clientip = bpy.props.StringProperty(name = 'Client\'s IP', description = '', default = '0.0.0.0', subtype = 'NONE')
+    bpy.types.Scene.selectedobjects = bpy.props.BoolProperty(name = 'Selected Objects', description = '', default = False)
 
 
 def unregister():
@@ -115,6 +118,7 @@ def unregister():
     bpy.utils.unregister_class(SceneExporterPanel)
     del bpy.types.Scene.dirpath
     del bpy.types.Scene.clientip
+    del bpy.types.Scene.selectedobjects
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 
 import bpy, socket
 
-def export(gvrf_app):
+def export(gvrf_app, selected_objects):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
     server_url = 'http://' + ipv4 + ':8000/'
 
@@ -11,13 +11,14 @@ def export(gvrf_app):
 
     selection = bpy.context.selected_objects
 
-    bpy.ops.object.select_all(action='DESELECT')
-
     gvrf_app.exec_command('importPackage(org.gearvrf);')
     gvrf_app.exec_command('var mainScene = gvrf.getMainScene();')
 
     for obj in scene.objects:
         if obj.type != 'MESH':
+            continue
+
+        if selected_objects and not obj.select:
             continue
 
         was_selected = obj.select
@@ -31,7 +32,7 @@ def export(gvrf_app):
         # Exporting object as FBX file
         #fn = os.path.join(assetsDir, name)
         fn = name
-        bpy.ops.export_scene.fbx(filepath=fn, use_selection=True, object_types ={'MESH'}, path_mode = 'STRIP')
+        bpy.ops.export_scene.fbx(filepath = fn, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP')
 
         url = server_url + name
         gvrf_app.exec_command('var url = new java.net.URL("' + url + '");')
