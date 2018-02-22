@@ -3,8 +3,8 @@
 import bpy, socket
 
 def export(gvrf_app):
-    _ipv4 = socket.gethostbyname_ex(socket.getfqdn(""))[2][0]
-    serverUrl = "http://" + _ipv4 + ":8000/"
+    ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
+    server_url = 'http://' + ipv4 + ':8000/'
 
     scene = bpy.context.scene
     obj_active = scene.objects.active
@@ -34,7 +34,7 @@ def export(gvrf_app):
         fn = name
         bpy.ops.export_scene.fbx(filepath=fn, use_selection=True, object_types ={'MESH'}, path_mode = 'STRIP')
 
-        url = serverUrl + name
+        url = server_url + name
         gvrf_app.exec_command('var url = new java.net.URL("' + url + '");')
         gvrf_app.exec_command('var object = gvrf.getAssetLoader().loadModel(url, mainScene);')
 

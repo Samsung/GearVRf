@@ -2,7 +2,7 @@
 
 from telnetlib import Telnet
 
-class gvrf_client:
+class GvrfClient:
     _addr = None
     _port = 0
 
