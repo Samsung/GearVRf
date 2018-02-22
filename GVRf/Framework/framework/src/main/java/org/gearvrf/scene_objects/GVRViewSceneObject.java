@@ -235,19 +235,19 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
     /**
      * To set initial properties before attach the view to the View three;
-     *
-     * @param sceneObject This scene object
-     * @param view The view to be initialized;
      */
-    private void onInitView(GVRViewSceneObject sceneObject, View view) {
+    protected void onInitView() {
         if (mEventsListener != null) {
-            mEventsListener.onInitView(sceneObject, mView);
+            mEventsListener.onInitView(this, mView);
         }
     }
 
-    private void onStartDraw(GVRViewSceneObject sceneObject, View view) {
+    /**
+     * To set initial properties before start rendering {@link GVRViewSceneObject};
+     */
+    protected void onStartRendering() {
         if (mEventsListener != null) {
-            mEventsListener.onStartDraw(sceneObject, mView);
+            mEventsListener.onStartRendering(this, mView);
         }
     }
 
@@ -470,7 +470,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         public void startRendering() {
             setChildrenInputController(this);
 
-            mSceneObject.onInitView(mSceneObject, this);
+            mSceneObject.onInitView();
 
             // To just set the layout's dimensions but don't call draw(...) after it
             setVisibility(INVISIBLE);
@@ -520,7 +520,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
                 }
             });
 
-            mSceneObject.onStartDraw(mSceneObject, this);
+            mSceneObject.onStartRendering();
         }
 
         private void onViewVisible() {
