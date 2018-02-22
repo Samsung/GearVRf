@@ -21,13 +21,15 @@ else:
     from . import gvrf_client, file_server, scene_exporter
     print("Imported multifiles")
 
-import bpy, os, threading
+import bpy, os
 from pathlib import Path
 
 default_dirpath = str(Path.home()) + "\\GvrfExporterWorkspace"
 if not os.path.exists(default_dirpath):
     os.makedirs(default_dirpath)
 os.chdir(default_dirpath)
+
+fs = None
 
 class SceneExporterPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
@@ -50,27 +52,25 @@ class SceneExporter(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def invoke(self, context, event):
-        fs = file_server.file_server()
-        t = threading.Thread(target = fs.start_server)
-        t.start()
-
         # IP and port of gvrf client device
         _addr = context.scene.clientip
         _port = 1645
         scene_exporter.export(gvrf_client.gvrf_client(_addr, _port, do_debug = True))
 
-        fs.stop_server()
-        t.join()
-        
         
         return {'FINISHED'}
 
-
 def change_dir(self, context):
-    print(context.scene.dirpath)
+    global fs
+    fs.stop_server()
     os.chdir(context.scene.dirpath)
+    fs = file_server.file_server()
+    fs.start_server()
 
 def register():
+    global fs
+    fs = file_server.file_server()
+    fs.start_server()
     bpy.utils.register_class(SceneExporter)
     bpy.utils.register_class(SceneExporterPanel)
     bpy.types.Scene.dirpath = bpy.props.StringProperty(name="Export Dir", description="", default=default_dirpath, subtype='DIR_PATH', update=change_dir)
@@ -78,6 +78,8 @@ def register():
 
 
 def unregister():
+    global fs
+    fs.stop_server()
     bpy.utils.unregister_class(SceneExporter)
     bpy.utils.unregister_class(SceneExporterPanel)
     del bpy.types.Scene.dirpath

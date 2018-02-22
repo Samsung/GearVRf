@@ -1,14 +1,18 @@
 #!/usr/bin/python3
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
 import socket, threading
+
+class ThreadingServer(ThreadingMixIn, HTTPServer):
+    pass
 
 class file_server:
     def __init__(self, port = 8000):
         self._port = port
         self._handler = SimpleHTTPRequestHandler
-        self._server = HTTPServer(("", self._port), self._handler)
-        self._own_thread = None
+        self._server = ThreadingServer(("", self._port), self._handler)
+        self._thread = None
         self.update_ipv4()
 
     def handle_request(self):
@@ -26,7 +30,12 @@ class file_server:
         return self._port
 
     def start_server(self):
-        self._server.serve_forever()
+        print('start server')
+        self._thread = threading.Thread(target = self._server.serve_forever)
+        self._thread.start()
 
     def stop_server(self):
+        print('stop server')
         self._server.shutdown()
+        self._server.server_close()
+        self._thread.join()

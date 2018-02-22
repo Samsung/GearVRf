@@ -37,7 +37,6 @@ def export(gvrf_app):
         url = serverUrl + name
         gvrf_app.exec_command('var url = new java.net.URL("' + url + '");')
         gvrf_app.exec_command('var object = gvrf.getAssetLoader().loadModel(url, mainScene);')
-        gvrf_app.exec_command('mainScene.addSceneObject(object);')
 
         obj.select = was_selected
 
