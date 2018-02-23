@@ -798,7 +798,7 @@ public class GVRInputManager implements IEventReceiver
                 GVRContext ctx = gvrCursorController.getGVRContext();
                 deselectController();
                 GVRCursorController gaze = ctx.getInputManager().findCursorController(GVRControllerType.GAZE);
-                if ((gaze != null) && (gaze != gvrCursorController))
+                if (gaze != gvrCursorController)
                 {
                     ctx.getInputManager().addCursorController(gaze);
                 }
