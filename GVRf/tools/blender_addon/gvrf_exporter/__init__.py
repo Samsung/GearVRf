@@ -78,9 +78,12 @@ class SceneClear(bpy.types.Operator):
         return {'FINISHED'}
 
 def check_running_server():
-    url = 'http://' + socket.gethostbyname_ex(socket.getfqdn(''))[2][0] + ':8000/'
+    a = socket.getaddrinfo("", 8000, socket.AF_INET, socket.SOCK_STREAM)
+    family, socktype, proto, canonname, sockaddr = a[0]
+    s = socket.socket(family, socktype, proto)
     try:
-        requests.get(url)
+        s.connect(sockaddr)
+        s.close()
         return True
     except:
         return False
