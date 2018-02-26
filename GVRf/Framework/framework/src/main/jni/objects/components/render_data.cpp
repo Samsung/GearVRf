@@ -78,6 +78,11 @@ void RenderData::set_mesh(Mesh* mesh)
     {
         mesh_ = mesh;
         markDirty();
+        SceneObject* owner = owner_object();
+        if (owner)
+        {
+            owner->dirtyHierarchicalBoundingVolume();
+        }
     }
 }
 
