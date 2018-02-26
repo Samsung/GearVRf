@@ -150,7 +150,6 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
     }
     child->parent_ = self;
     child->onTransformChanged();
-//    child->dirtyHierarchicalBoundingVolume();
 }
 
 /**
