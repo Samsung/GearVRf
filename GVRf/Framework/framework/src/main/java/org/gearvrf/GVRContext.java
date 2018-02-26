@@ -84,10 +84,10 @@ import java.util.concurrent.Future;
  */
 public abstract class GVRContext implements IEventReceiver {
     private static final String TAG = Log.tag(GVRContext.class);
-
     private final GVRActivity mContext;
-
     private GVREventReceiver mEventReceiver;
+    protected GVRShaderManager mShaderManager;
+
     /*
      * Fields and constants
      */
@@ -143,7 +143,7 @@ public abstract class GVRContext implements IEventReceiver {
      * The priority used by
      * {@link GVRAssetLoader#loadTexture(GVRAndroidResource)}
      * and
-     * {@link #loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource)}
+     * {@link GVRAssetLoader#loadMesh(GVRAndroidResource)}
      *
      * @since 1.6.1
      * @deprecated use GVRAssetLoader.DEFAULT_PRIORITY instead
@@ -486,7 +486,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @return The {@linkplain GVRShaderManager shader manager}
      *         singleton.
      */
-    public abstract GVRShaderManager getShaderManager();
+    public GVRShaderManager getShaderManager() { return mShaderManager; }
 
     /**
      * The {@linkplain GVRAnimationEngine animation engine} singleton.

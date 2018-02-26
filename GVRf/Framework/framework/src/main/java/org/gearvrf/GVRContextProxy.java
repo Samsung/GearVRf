@@ -116,10 +116,6 @@ public final class GVRContextProxy extends GVRContext {
         mContext.get().unregisterDrawFrameListener(frameListener);
     }
 
-    public GVRShaderManager getShaderManager() {
-        return mContext.get().getShaderManager();
-    }
-
     public GVRAnimationEngine getAnimationEngine() {
         return mContext.get().getAnimationEngine();
     }

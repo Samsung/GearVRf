@@ -390,9 +390,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     private void drawEyes() {
         mMainScene.getMainCameraRig().updateRotation();
         GVRRenderTarget renderTarget = getRenderTarget();
-        renderTarget.cullFromCamera(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle.getShaderManager());
+        renderTarget.cullFromCamera(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mShaderManager);
         renderTarget.render(mMainScene, mMainScene
-                        .getMainCameraRig().getLeftCamera(), mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
+                        .getMainCameraRig().getLeftCamera(), mShaderManager, mRenderBundle.getPostEffectRenderTextureA(),
                 mRenderBundle.getPostEffectRenderTextureB());
 
     }

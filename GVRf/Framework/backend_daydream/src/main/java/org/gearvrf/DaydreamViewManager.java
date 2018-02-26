@@ -136,11 +136,11 @@ class DaydreamViewManager extends GVRViewManager {
         if (eye == 0) {
             GVRRenderTarget renderTarget = getRenderTarget();
             GVRCamera leftCamera = cameraRig.getLeftCamera();
-            renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getShaderManager());
+            renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(), mShaderManager);
             captureCenterEye(renderTarget, false);
             capture3DScreenShot(renderTarget, false);
 
-            renderTarget.render(mMainScene,leftCamera,mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+            renderTarget.render(mMainScene,leftCamera, mShaderManager, mRenderBundle.getPostEffectRenderTextureA(),
                     mRenderBundle.getPostEffectRenderTextureB());
 
 
@@ -149,7 +149,7 @@ class DaydreamViewManager extends GVRViewManager {
             GVRCamera rightCamera = cameraRig.getRightCamera();
             GVRRenderTarget renderTarget = getRenderTarget();
 
-            renderTarget.render(mMainScene, rightCamera, mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+            renderTarget.render(mMainScene, rightCamera, mShaderManager, mRenderBundle.getPostEffectRenderTextureA(),
                     mRenderBundle.getPostEffectRenderTextureB());
             captureRightEye(renderTarget,false);
         }

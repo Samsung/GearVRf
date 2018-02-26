@@ -97,6 +97,12 @@ public class GVRShaderManager extends GVRHybridObject
     }
 
     /**
+     * Destroy all the GPU shader resources and clear the shader list.
+     * This function should only be called on the GL thread.
+     */
+    void clear()    { NativeShaderManager.clear(getNative()); }
+
+    /**
      * Make a string with the shader layout for a uniform block
      * with a given descriptor. The format of the descriptor is
      * the same as for a @{link GVRShaderData} - a string of
@@ -131,5 +137,6 @@ class NativeShaderManager {
                                 String vertexShader, String fragmentShader);
     static native void bindCalcMatrix(long shaderManager, int nativeShader, Class<? extends GVRShader> javaShaderClass);
     static native int getShader(long shaderManager, String signature);
+    static native void clear(long shaderManager);
     static native String makeLayout(String descriptor, String blockName, boolean useUBO);
 }

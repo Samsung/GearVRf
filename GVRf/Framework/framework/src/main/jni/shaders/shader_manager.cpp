@@ -7,8 +7,14 @@
 namespace gvr {
     ShaderManager::~ShaderManager()
     {
+        clear();
+    }
+
+    void ShaderManager::clear()
+    {
         if (Shader::LOG_SHADER) LOGE("SHADER: deleting ShaderManager");
-        for (auto it = shadersByID.begin(); it != shadersByID.end(); ++it) {
+        for (auto it = shadersByID.begin(); it != shadersByID.end(); ++it)
+        {
             Shader *shader = it->second;
             delete shader;
         }
