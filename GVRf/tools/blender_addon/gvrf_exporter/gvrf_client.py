@@ -1,8 +1,7 @@
-#!/usr/bin/python3
-
 from telnetlib import Telnet
+from .base_client import BaseClient
 
-class GvrfClient:
+class GvrfClient(BaseClient):
     _addr = None
     _port = 0
 
@@ -26,6 +25,8 @@ class GvrfClient:
             self._conn.write(b'js\n')
             r = self._conn.read_until(b'js>')
             self._debug and print(r)
+        
+        self.prepare_scene()
 
     def disconnect(self):
         self._conn.close()
@@ -53,3 +54,32 @@ class GvrfClient:
         r = self._conn.read_until(wait_for)
         self._debug and print(r)
 
+    def prepare_scene(self):
+        self.exec_command('importPackage(org.gearvrf);')
+        self.exec_command('var mainScene = gvrf.getMainScene();')
+
+    def load_mesh(self, url):
+        self.exec_command('var url = new java.net.URL("' + url + '");')
+        # self.exec_command('var object = mainScene.getSceneObjectByName("' + name + '");')
+        # self.exec_command('if (object != null) { mainScene.removeSceneObject(object); }')
+        self.exec_command('object = gvrf.getAssetLoader().loadModel(url, mainScene);')
+    
+    def load_light(self):
+        pass
+    
+    def clear_scene(self):
+        self.exec_command('mainScene.clear();')
+
+    def create_light(gvrf_app):
+        gvrf_app.exec_command('var lightNode = new GVRSceneObject(gvrContext);')
+        create_direct_ligh()
+        gvrf_app.exec_command('lightNode.attachLigh(light);')
+
+    def create_direct_ligh():
+        gvrf_app.exec_command('var light = new GVRDirectLight(gvrContext);')
+
+    def create_spot_light():
+        gvrf_app.exec_command('var light = new GVRDirectLight(gvrContext);')
+
+    def create_point_light():
+        gvrf_app.exec_command('var light = new GVRDirectLight(gvrContext);')

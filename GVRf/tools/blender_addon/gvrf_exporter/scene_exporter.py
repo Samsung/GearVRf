@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-
+from abc import ABC, abstractmethod
 import bpy, socket
 import os.path, filecmp, shutil
 
@@ -26,7 +25,38 @@ def __copy_textures(all_objects=True):
             shutil.copy(abspath, bn)
 
 
-def export(gvrf_app, selected_objects):
+class BaseExporter(ABC):
+    @abstractmethod
+    def export(self):
+        pass
+
+class MeshExporter(BaseExporter):
+    def __init__(self, client, server_url, obj):
+        self._client = client
+        self._server_url = server_url
+        self._obj = obj
+        self.export()
+    
+    def export(self):
+        name = bpy.path.clean_name(self._obj.name) + ".fbx"
+
+        # Export fbx file
+        bpy.ops.export_scene.fbx(filepath = name, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP')
+
+        url = self._server_url + name
+
+        self._client.load_mesh(url)
+
+class LightExport(BaseExporter):
+    def __init__(self, client, light):
+        self._client = client)
+        self._light = light
+        self.export()
+
+    def export(self):
+        pass
+
+def export(client, selected_objects):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
     server_url = 'http://' + ipv4 + ':8000/'
 
@@ -37,13 +67,7 @@ def export(gvrf_app, selected_objects):
 
     selection = bpy.context.selected_objects
 
-    gvrf_app.exec_command('importPackage(org.gearvrf);')
-    gvrf_app.exec_command('var mainScene = gvrf.getMainScene();')
-
     for obj in scene.objects:
-        if obj.type != 'MESH':
-            continue
-
         if selected_objects and not obj.select:
             continue
 
@@ -53,27 +77,20 @@ def export(gvrf_app, selected_objects):
         # some exporters only use the active object
         scene.objects.active = obj
 
-        name = bpy.path.clean_name(obj.name) + ".fbx"
-        
-        # Exporting object as FBX file
-        #fn = os.path.join(assetsDir, name)
-        fn = name
-        bpy.ops.export_scene.fbx(filepath = fn, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP')
+        if obj.type == 'MESH':
+            MeshExporter(client, server_url, obj)
 
-        url = server_url + name
-        gvrf_app.exec_command('var url = new java.net.URL("' + url + '");')
-        gvrf_app.exec_command('var object = gvrf.getAssetLoader().loadModel(url, mainScene);')
+        elif obj.type == 'LAMP':
+            LightExport(client, obj)
 
         obj.select = was_selected
 
-    gvrf_app.disconnect()
+    client.disconnect()
 
     scene.objects.active = obj_active
 
     for obj in selection:
         obj.select = True
 
-def clear_scene(gvrf_app):
-    gvrf_app.exec_command('importPackage(org.gearvrf);')
-    gvrf_app.exec_command('var mainScene = gvrf.getMainScene();')
-    gvrf_app.exec_command('mainScene.removeAllSceneObjects();')
+def clear_scene(client):
+    client.clear_scene()

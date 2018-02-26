@@ -13,21 +13,19 @@ bl_info = {
 
 if 'bpy' in locals():
     import imp
-    imp.reload(gvrf_client)
-    imp.reload(file_server)
+    imp.reload(gvrf_client.GvrfClient)
+    imp.reload(file_server.FileServer)
     imp.reload(scene_exporter)
 else:
-    from . import gvrf_client, file_server, scene_exporter
+    from .gvrf_client import GvrfClient
+    from .file_server import FileServer
+    from . import scene_exporter
 
-import bpy, os, socket, requests
+import bpy, os
 from pathlib import Path
 
-default_dirpath = str(Path.home()) + '\\GvrfExporterWorkspace'
-if not os.path.exists(default_dirpath):
-    os.makedirs(default_dirpath)
-os.chdir(default_dirpath)
 
-fs = None
+fs = FileServer()
 
 class SceneExporterPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -53,14 +51,13 @@ class SceneExporter(bpy.types.Operator):
 
     def invoke(self, context, event):
         # IP and port of gvrf client device
-        create_server()
+        fs.create_server()
         _addr = context.scene.clientip
         _port = 1645
         _selected_objects = context.scene.selectedobjects
-        scene_exporter.export(gvrf_client.GvrfClient(_addr, _port, do_debug = True), selected_objects = _selected_objects)
+        scene_exporter.export(GvrfClient(_addr, _port, do_debug = True), selected_objects = _selected_objects)
 
-        
-        return {'FINISHED'}
+        return { 'FINISHED' }
 
 class SceneClear(bpy.types.Operator):
     """Clear Scene on GVRf"""
@@ -72,38 +69,19 @@ class SceneClear(bpy.types.Operator):
         # IP and port of gvrf client device
         _addr = context.scene.clientip
         _port = 1645
-        scene_exporter.clear_scene(gvrf_client.GvrfClient(_addr, _port, do_debug = True))
 
-        
-        return {'FINISHED'}
+        scene_exporter.clear_scene(GvrfClient(_addr, _port, do_debug = True))
 
-def check_running_server():
-    a = socket.getaddrinfo("", 8000, socket.AF_INET, socket.SOCK_STREAM)
-    family, socktype, proto, canonname, sockaddr = a[0]
-    s = socket.socket(family, socktype, proto)
-    try:
-        s.connect(sockaddr)
-        s.close()
-        return True
-    except:
-        return False
+        return { 'FINISHED' }
 
-def create_server():
-    global fs
-    if not check_running_server():
-        fs = file_server.FileServer()
-        fs.start_server()
-
-def end_server():
-    global fs
-    if check_running_server():
-        try:
-            fs.stop_server()
-        except:
-            print('Can\'t close the server')
+def set_default_path():
+    default_dirpath = str(Path.home()) + '\\GvrfExporterWorkspace'
+    if not os.path.exists(default_dirpath):
+        os.makedirs(default_dirpath)
+    os.chdir(default_dirpath)
 
 def change_dir(self, context):
-    end_server()
+    fs.end_server()
     os.chdir(context.scene.dirpath)
 
 def register():
@@ -113,7 +91,6 @@ def register():
     bpy.types.Scene.dirpath = bpy.props.StringProperty(name = 'Export Dir', description = '', default = default_dirpath, subtype = 'DIR_PATH', update = change_dir)
     bpy.types.Scene.clientip = bpy.props.StringProperty(name = 'Client\'s IP', description = '', default = '0.0.0.0', subtype = 'NONE')
     bpy.types.Scene.selectedobjects = bpy.props.BoolProperty(name = 'Selected Objects', description = '', default = False)
-
 
 def unregister():
     bpy.utils.unregister_class(SceneExporter)
@@ -125,4 +102,5 @@ def unregister():
 
 
 if __name__ == '__main__':
+    set_default_path()
     register()

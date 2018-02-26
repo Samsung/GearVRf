@@ -2,7 +2,8 @@
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-import socket, threading
+from threading import Thread
+import socket
 
 class ThreadingServer(ThreadingMixIn, HTTPServer):
     _thread = None
@@ -19,7 +20,7 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
     def start_server(self):
         print('start server')
         self._is_running = True
-        self._thread = threading.Thread(target = self.request_handler)
+        self._thread = Thread(target = self.request_handler)
         self._thread.start()
 
     def stop_server(self):
@@ -28,20 +29,42 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
         self.server_close()
 
 class FileServer:
+    _server = None
+
     def __init__(self, port = 8000):
         self._port = port
         self._handler = SimpleHTTPRequestHandler
-        self._server = ThreadingServer(("", self._port), self._handler)
-        self._server.timeout = 60
         self.update_ipv4()
+        self.update_url()
 
     def update_ipv4(self):
         ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[-1]
         self._ipv4 = ipv4[0]
         return ipv4
 
+    def update_url(self):
+        self._url = 'http://' + self._ipv4 + ':8000/'
+
     def start_server(self):
+        self._server = ThreadingServer(("", self._port), self._handler)
+        self._server.timeout = 60
         self._server.start_server()
 
     def stop_server(self):
-        self._server.stop_server()
+        if self.check_running_server():
+            try:
+                self._server.stop_server()
+            except:
+                print('Can\'t close the server')
+
+    def check_running_server(self):
+        a = socket.getaddrinfo("", 8000, socket.AF_INET, socket.SOCK_STREAM)
+        family, socktype, proto, canonname, sockaddr = a[0]
+        s = socket.socket(family, socktype, proto)
+        try:
+            s.connect(sockaddr)
+            s.close()
+            return True
+        except:
+            return False
+
