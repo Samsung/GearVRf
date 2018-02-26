@@ -1,10 +1,36 @@
 #!/usr/bin/python3
 
 import bpy, socket
+import os.path, filecmp, shutil
+
+def __copy_textures(all_objects=True):
+    if all_objects:
+        col = bpy.data.objects
+    else:
+        col = bpy.context.selected_objects
+
+    imgs = set()
+    for o in col:
+        for ms in o.material_slots:
+            for ts in ms.material.texture_slots:
+                if ts:
+                    if hasattr(ts.texture, 'image'):
+                        img_name = ts.texture.image.filepath[2:]
+                        imgs.add(img_name)
+
+    filepath = bpy.path.abspath('//')
+    for img_name in imgs:
+        bn = os.path.basename(img_name)
+        abspath = os.path.abspath(os.path.join(filepath, img_name))
+        if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
+            shutil.copy(abspath, bn)
+
 
 def export(gvrf_app, selected_objects):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
     server_url = 'http://' + ipv4 + ':8000/'
+
+    __copy_textures()
 
     scene = bpy.context.scene
     obj_active = scene.objects.active
