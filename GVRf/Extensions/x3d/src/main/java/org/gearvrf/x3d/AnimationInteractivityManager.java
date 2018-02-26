@@ -39,6 +39,7 @@ import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
+import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.script.GVRJavascriptScriptFile;
 
 import org.gearvrf.GVRDrawFrameListener;
@@ -48,6 +49,7 @@ import org.gearvrf.x3d.data_types.SFBool;
 import org.gearvrf.x3d.data_types.SFColor;
 import org.gearvrf.x3d.data_types.SFFloat;
 import org.gearvrf.x3d.data_types.SFInt32;
+import org.gearvrf.x3d.data_types.SFString;
 import org.gearvrf.x3d.data_types.SFTime;
 import org.gearvrf.x3d.data_types.SFVec3f;
 import org.gearvrf.x3d.data_types.SFRotation;
@@ -1171,6 +1173,25 @@ public class AnimationInteractivityManager {
                         }
                         scriptParameters.add(parameter);
                     }
+                    else if (fieldType.equalsIgnoreCase("SFString")) {
+                        if ( definedItem.getGVRTextViewSceneObject() != null) {
+                            if (scriptObject.getFromDefinedItemField(field).equalsIgnoreCase("style")) {
+                                GVRTextViewSceneObject.fontStyleTypes styleType =
+                                        definedItem.getGVRTextViewSceneObject().getStyleType();
+                                String fontStyle = "";
+                                if (styleType == GVRTextViewSceneObject.fontStyleTypes.PLAIN)
+                                    fontStyle = "PLAIN";
+                                else if (styleType == GVRTextViewSceneObject.fontStyleTypes.BOLD)
+                                    fontStyle = "BOLD";
+                                else if (styleType == GVRTextViewSceneObject.fontStyleTypes.BOLDITALIC)
+                                    fontStyle = "BOLDITALIC";
+                                else if (styleType == GVRTextViewSceneObject.fontStyleTypes.ITALIC)
+                                    fontStyle = "ITALIC";
+                                if (fontStyle != "") scriptParameters.add("\'" + fontStyle + "\'");
+                                else Log.e(TAG, "style in ROUTE not recognized.");
+                            }
+                        }
+                    }  //  end SFString
                     else if (fieldType.equalsIgnoreCase("MFString")) {
                         //TODO: will need to handle multiple strings particularly for Text node
                         GVRTexture gvrTexture = definedItem.getGVRTexture();
@@ -1338,6 +1359,11 @@ public class AnimationInteractivityManager {
                                 "( params[" + argumentNum + "]);\n";
                         argumentNum += 1;
                     }  // end if SFFloat, SFBool or SFInt32 - a single parameter
+                    else if (fieldType.equalsIgnoreCase("SFString") ) {
+                        gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
+                                "( params[" + argumentNum + "]);\n";
+                        argumentNum += 1;
+                    }  // end if SFString
                     else if (fieldType.equalsIgnoreCase("MFString") ) {
                         // TODO: need MFString to support more than one argument due to being used for Text Strings
                         gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
@@ -1732,10 +1758,36 @@ public class AnimationInteractivityManager {
                                 Log.e(TAG, "Exception: " + e);
                             }
                         }  //  end SFInt32
+                        else if (fieldType.equalsIgnoreCase("SFString")) {
+                            SFString sfString = (SFString) returnedJavaScriptValue;
+                            if (scriptObjectToDefinedItem.getGVRTextViewSceneObject() != null) {
+                                GVRTextViewSceneObject gvrTextViewSceneObject = scriptObjectToDefinedItem.getGVRTextViewSceneObject();
+                                if (scriptObject.getToDefinedItemField(fieldNode).endsWith("style")) {
+                                    String value = sfString.getValue().toUpperCase();
+                                    GVRTextViewSceneObject.fontStyleTypes fontStyle = null;
+                                    if ( value.equals("BOLD")) fontStyle = GVRTextViewSceneObject.fontStyleTypes.BOLD;
+                                    else if ( value.equals("ITALIC")) fontStyle = GVRTextViewSceneObject.fontStyleTypes.ITALIC;
+                                    else if ( value.equals("BOLDITALIC")) fontStyle = GVRTextViewSceneObject.fontStyleTypes.BOLDITALIC;
+                                    else if ( value.equals("PLAIN")) fontStyle = GVRTextViewSceneObject.fontStyleTypes.PLAIN;
+                                    if ( fontStyle != null ) {
+                                        gvrTextViewSceneObject.setTypeface(gvrContext,
+                                                gvrTextViewSceneObject.getFontFamily(), fontStyle);
+                                    }
+                                    else {
+                                        Log.e(TAG, "Error: " + value + " + not recognized X3D FontStyle style in SCRIPT '" + scriptObject.getName() + "'." );
+                                    }
+                                }
+                                else Log.e(TAG, "Error: Setting not SFString  value'" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
+                            else {
+                                Log.e(TAG, "Error: Not setting SFString '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
+                        }  //  end SFString
                         else if (fieldType.equalsIgnoreCase("MFString")) {
                             MFString mfString = (MFString) returnedJavaScriptValue;
-                            GVRTexture gvrTexture = scriptObjectToDefinedItem.getGVRTexture();
-                            if (gvrTexture != null) {
+
+                            if (scriptObjectToDefinedItem.getGVRTexture() != null) {
+                                GVRTexture gvrTexture = scriptObjectToDefinedItem.getGVRTexture();
                                 //  MFString change to a GVRTexture object
                                 if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("url")) {
                                     if (scriptObjectToDefinedItem.getGVRMaterial() != null) {
@@ -1755,6 +1807,15 @@ public class AnimationInteractivityManager {
                                     Log.e(TAG, "Error: No url associated with MFString '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
                                 }
                             }  // end GVRTexture != null
+
+                            if (scriptObjectToDefinedItem.getGVRTextViewSceneObject() != null) {
+                                GVRTextViewSceneObject gvrTextViewSceneObject = scriptObjectToDefinedItem.getGVRTextViewSceneObject();
+                                if (scriptObject.getToDefinedItemField(fieldNode).equalsIgnoreCase("string")) {
+                                    gvrTextViewSceneObject.setText(mfString.get1Value(0));
+                                }
+                                else Log.e(TAG, "Error: Setting not MFString string '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
+                            }
+
                             else {
                                 Log.e(TAG, "Error: Not setting MFString '" + scriptObject.getFieldName(fieldNode) + "' value from SCRIPT '" + scriptObject.getName() + "'." );
                             }

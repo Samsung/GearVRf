@@ -137,28 +137,34 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * Remove all scene objects.
      */
     public void removeAllSceneObjects() {
-        GVRCameraRig rig = getMainCameraRig();
-        GVRSceneObject head = rig.getOwnerObject();
-        int numControllers = getGVRContext().getInputManager().clear();
-
+        final GVRCameraRig rig = getMainCameraRig();
+        final GVRSceneObject head = rig.getOwnerObject();
         rig.removeAllChildren();
-        for (GVRSceneObject child : mSceneRoot.getChildren()) {
-            child.detachAllComponents();
-            child.getParent().removeChildObject(child);
-        }
+        final GVRSceneObject oldRoot = mSceneRoot;
         NativeScene.removeAllSceneObjects(getNative());
+
         mSceneRoot = new GVRSceneObject(getGVRContext());
         if (null != head) {
+            head.getParent().removeChildObject(head);
             mSceneRoot.addChildObject(head);
         }
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
+
+        final int numControllers = getGVRContext().getInputManager().clear();
         if (numControllers > 0)
         {
             getGVRContext().getInputManager().selectController();
         }
+
         getGVRContext().runOnGlThread(new Runnable() {
             @Override
             public void run() {
+                //to prevent components from being deleted concurrently
+                for (final GVRSceneObject child : oldRoot.getChildren()) {
+                    child.detachAllComponents();
+                    child.getParent().removeChildObject(child);
+                }
+
                 NativeScene.deleteLightsAndDepthTextureOnRenderThread(getNative());
             }
         });

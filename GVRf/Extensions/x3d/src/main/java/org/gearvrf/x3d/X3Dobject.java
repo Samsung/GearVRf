@@ -1265,7 +1265,7 @@ public class X3Dobject {
                     }
                     attributeValue = attributes.getValue("scale");
                     if (attributeValue != null) {
-                        scale = parseFixedLengthFloatString(attributeValue, 3, false, true);
+                        scale = parseFixedLengthFloatString(attributeValue, 3, false, false);
                     }
 
                     currentSceneObject = AddGVRSceneObject();
@@ -3759,6 +3759,20 @@ public class X3Dobject {
 
                 GVRRenderData gvrRenderData = gvrTextViewSceneObject.getRenderData();
                 gvrRenderData.setRenderingOrder(GVRRenderData.GVRRenderingOrder.TRANSPARENT);
+
+
+                if ( !Text_FontParams.nameTextAttribute.equals("")) {
+                    // add it to the list of DEFined objects
+                        DefinedItem definedItem = new DefinedItem(Text_FontParams.nameTextAttribute);
+                        definedItem.setGVRTextViewSceneObject(gvrTextViewSceneObject);
+                        mDefinedItems.add(definedItem); // Array list of DEFined items
+                }
+                if ( !Text_FontParams.nameFontStyle.equals("")) {
+                    // add FontStyle to the list of DEFined objects
+                    DefinedItem definedItem = new DefinedItem(Text_FontParams.nameFontStyle);
+                    definedItem.setGVRTextViewSceneObject(gvrTextViewSceneObject);
+                    mDefinedItems.add(definedItem); // Array list of DEFined items
+                }
 
                 gvrTextViewSceneObject.setTextColor(Color.WHITE); // default
                 gvrTextViewSceneObject.setBackgroundColor(Color.TRANSPARENT); // default

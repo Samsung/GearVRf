@@ -416,16 +416,11 @@ public final class GVRGearCursorController extends GVRCursorController
                 .RIGHT;
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (initialized) {
-                thread.uninitialize();
-                thread.quitSafely();
-                initialized = false;
-            }
-        } finally {
-            super.finalize();
+    public void onDestroy() {
+        if (initialized) {
+            thread.uninitialize();
+            thread.quitSafely();
+            initialized = false;
         }
     }
 
