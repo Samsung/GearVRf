@@ -207,6 +207,8 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     @Override
     protected void onDestroy() {
         android.util.Log.i(TAG, "onDestroy " + Integer.toHexString(hashCode()));
+        mDelegate.onDestroy();
+
         if (mViewManager != null) {
             mViewManager.onDestroy();
             mViewManager.getEventManager().sendEventWithMask(

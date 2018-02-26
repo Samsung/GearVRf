@@ -139,6 +139,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
     public void onDestroy() {
         if (this == sVrapiOwner.get()) {
             nativeUninitializeVrApi();
+            sVrapiOwner.clear();
         }
     }
 
