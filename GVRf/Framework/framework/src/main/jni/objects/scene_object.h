@@ -109,11 +109,6 @@ public:
     }
     void setTransformDirty() {
     	transform_dirty_ = true;
-        Transform* t = transform();
-        if (t)
-        {
-            t->invalidate();
-        }
     }
 
     bool isTransformDirty() {
@@ -144,7 +139,6 @@ public:
     bool intersectsBoundingVolume(float rox, float roy, float roz, float rdx,
             float rdy, float rdz);
     bool intersectsBoundingVolume(SceneObject *scene_object);
-
     void dirtyHierarchicalBoundingVolume();
     BoundingVolume& getBoundingVolume();
     void onTransformChanged();
