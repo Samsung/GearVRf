@@ -19,7 +19,7 @@ namespace gvr {
     {
         if (mIBufferID != -1)
         {
-            glDeleteBuffers(1, &mIBufferID);
+            GL(glDeleteBuffers(1, &mIBufferID));
             mIBufferID == -1;
         }
     }
@@ -29,7 +29,7 @@ namespace gvr {
         if (mIBufferID != -1)
         {
             LOGV("IndexBuffer::bindBuffer %d", mIBufferID);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBufferID);
+            GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBufferID));
             checkGLError("IndexBuffer::bindBuffer");
             return true;
         }
@@ -48,15 +48,15 @@ namespace gvr {
         }
         if (mIBufferID == -1)
         {
-            glGenBuffers(1, (GLuint*) &mIBufferID);
+            GL(glGenBuffers(1, (GLuint*) &mIBufferID));
             mIsDirty = true;
             LOGV("IndexBuffer::updateGPU created index buffer %d with %d indices", mIBufferID, getIndexCount());
         }
         if (mIsDirty)
         {
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBufferID);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, getDataSize(), mIndexData, GL_STATIC_DRAW);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBufferID));
+            GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, getDataSize(), mIndexData, GL_STATIC_DRAW));
+            GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
             mIsDirty = false;
             LOGV("IndexBuffer::updateGPU updated index buffer %d", mIBufferID);
         }

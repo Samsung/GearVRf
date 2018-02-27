@@ -22,12 +22,12 @@ namespace gvr {
     {
         if (mVArrayID != -1)
         {
-            glDeleteBuffers(1, &mVArrayID);
+            GL(glDeleteVertexArrays(1, &mVArrayID));
             mVArrayID = -1;
         }
         if (mVBufferID != -1)
         {
-            glDeleteBuffers(1, &mVBufferID);
+            GL(glDeleteBuffers(1, &mVBufferID));
             mVBufferID = -1;
         }
     }
@@ -46,13 +46,13 @@ namespace gvr {
     {
         GLuint programId = static_cast<GLShader*>(shader)->getProgramId();
 
-        glBindVertexArray(mVArrayID);
+        GL(glBindVertexArray(mVArrayID));
         if (ibuf)
         {
             ibuf->bindBuffer(shader);
         }
         LOGV("VertexBuffer::bindToShader bind vertex array %d to shader %d", mVBufferID, programId);
-        glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
+        GL(glBindBuffer(GL_ARRAY_BUFFER, mVBufferID));
 
         if (mProgramID == programId)
         {
@@ -71,10 +71,10 @@ namespace gvr {
                 {
                     if (loc >= 0)                       // attribute found in shader?
                     {
-                        glEnableVertexAttribArray(loc); // enable this attribute in GL
-                        glVertexAttribPointer(loc, entry->Size / sizeof(float),
+                        GL(glEnableVertexAttribArray(loc)); // enable this attribute in GL
+                        GL(glVertexAttribPointer(loc, entry->Size / sizeof(float),
                                               entry->IsInt ? GL_INT : GL_FLOAT, GL_FALSE,
-                                              getTotalSize(), reinterpret_cast<GLvoid*>(entry->Offset));
+                                              getTotalSize(), reinterpret_cast<GLvoid*>(entry->Offset)));
                         LOGV("VertexBuffer: vertex attrib #%d %s loc %d ofs %d",
                              e.Index, e.Name, loc, entry->Offset);
                         checkGLError("VertexBuffer::bindToShader");
@@ -86,7 +86,7 @@ namespace gvr {
                 }
                 else if (loc >= 0)                      // shader uses attribute but mesh does not
                 {
-                    glDisableVertexAttribArray(loc);
+                    GL(glDisableVertexAttribArray(loc));
                     LOGE("SHADER: shader needs vertex attribute %s but it is not found", e.Name);
                 }
             }
@@ -104,7 +104,7 @@ namespace gvr {
         }
         if (mVArrayID == -1)
         {
-            glGenVertexArrays(1, &mVArrayID);
+            GL(glGenVertexArrays(1, &mVArrayID));
             LOGD("VertexBuffer::updateGPU creating vertex array %d", mVArrayID);
         }
         if (ibuf)
@@ -113,19 +113,19 @@ namespace gvr {
         }
         if (mVBufferID == -1)
         {
-            glGenBuffers(1, &mVBufferID);
-            glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
-            glBufferData(GL_ARRAY_BUFFER, getDataSize(), mVertexData, GL_STATIC_DRAW);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            GL(glGenBuffers(1, &mVBufferID));
+            GL(glBindBuffer(GL_ARRAY_BUFFER, mVBufferID));
+            GL(glBufferData(GL_ARRAY_BUFFER, getDataSize(), mVertexData, GL_STATIC_DRAW));
+            GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
             LOGV("VertexBuffer::updateGPU created vertex buffer %d with %d vertices", mVBufferID, getVertexCount());
             mIsDirty = false;
         }
         else if (mIsDirty)
         {
-            glBindBuffer(GL_ARRAY_BUFFER, mVBufferID);
-            glBufferData(GL_ARRAY_BUFFER, getDataSize(), NULL, GL_STATIC_DRAW);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, getDataSize(), mVertexData);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            GL(glBindBuffer(GL_ARRAY_BUFFER, mVBufferID));
+            GL(glBufferData(GL_ARRAY_BUFFER, getDataSize(), NULL, GL_STATIC_DRAW));
+            GL(glBufferSubData(GL_ARRAY_BUFFER, 0, getDataSize(), mVertexData));
+            GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
             mIsDirty = false;
             LOGV("VertexBuffer::updateGPU updated vertex buffer %d", mVBufferID);
         }
