@@ -46,6 +46,8 @@ class FileServer:
         self._url = 'http://' + self._ipv4 + ':8000/'
 
     def start_server(self):
+        if self.check_running_server():
+            return
         self._server = ThreadingServer(("", self._port), self._handler)
         self._server.timeout = 60
         self._server.start_server()
