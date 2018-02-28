@@ -26,6 +26,10 @@ from pathlib import Path
 
 
 fs = FileServer()
+default_dirpath = str(Path.home()) + '\\GvrfExporterWorkspace'
+if not os.path.exists(default_dirpath):
+    os.makedirs(default_dirpath)
+os.chdir(default_dirpath)
 
 class SceneExporterPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -51,7 +55,7 @@ class SceneExporter(bpy.types.Operator):
 
     def invoke(self, context, event):
         # IP and port of gvrf client device
-        fs.create_server()
+        fs.start_server()
         _addr = context.scene.clientip
         _port = 1645
         _selected_objects = context.scene.selectedobjects
@@ -74,14 +78,9 @@ class SceneClear(bpy.types.Operator):
 
         return { 'FINISHED' }
 
-def set_default_path():
-    default_dirpath = str(Path.home()) + '\\GvrfExporterWorkspace'
-    if not os.path.exists(default_dirpath):
-        os.makedirs(default_dirpath)
-    os.chdir(default_dirpath)
 
 def change_dir(self, context):
-    fs.end_server()
+    fs.stop_server()
     os.chdir(context.scene.dirpath)
 
 def register():
@@ -102,5 +101,4 @@ def unregister():
 
 
 if __name__ == '__main__':
-    set_default_path()
     register()

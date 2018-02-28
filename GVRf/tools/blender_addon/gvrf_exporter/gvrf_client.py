@@ -58,28 +58,69 @@ class GvrfClient(BaseClient):
         self.exec_command('importPackage(org.gearvrf);')
         self.exec_command('var mainScene = gvrf.getMainScene();')
 
-    def load_mesh(self, url):
-        self.exec_command('var url = new java.net.URL("' + url + '");')
-        # self.exec_command('var object = mainScene.getSceneObjectByName("' + name + '");')
-        # self.exec_command('if (object != null) { mainScene.removeSceneObject(object); }')
-        self.exec_command('object = gvrf.getAssetLoader().loadModel(url, mainScene);')
-    
-    def load_light(self):
-        pass
-    
     def clear_scene(self):
         self.exec_command('mainScene.clear();')
 
-    def create_light(gvrf_app):
-        gvrf_app.exec_command('var lightNode = new GVRSceneObject(gvrContext);')
-        create_direct_ligh()
-        gvrf_app.exec_command('lightNode.attachLigh(light);')
+    def load_mesh(self, url, name):
+        self.exec_command('var url = new java.net.URL("%s");' % url)
+        #self.exec_command('var object = mainScene.getSceneObjectByName("%s");' % name)
+        #self.exec_command('if ("undefined" != typeof object) { mainScene.clear(); }')
+        self.exec_command('object = gvrf.getAssetLoader().loadModel(url, mainScene);')
+        #self.exec_command('object.setName("%s");' % name)
+    
+    def load_light(self, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone = None, inner_cone = None):
+        self.create_light_node(position, rotation)
+        
+        if (light_type == 'POINT'):
+            self.create_point_light(color, use_diffuse, use_specular)
 
-    def create_direct_ligh():
-        gvrf_app.exec_command('var light = new GVRDirectLight(gvrContext);')
+        elif (light_type == 'SUN'):
+            self.create_direct_light(color, use_diffuse, use_specular)
 
-    def create_spot_light():
-        gvrf_app.exec_command('var light = new GVRDirectLight(gvrContext);')
+        elif (light_type == 'SPOT'):
+            self.create_spot_light(color, use_diffuse, use_specular, outer_cone, inner_cone)
 
-    def create_point_light():
-        gvrf_app.exec_command('var light = new GVRDirectLight(gvrContext);')
+        else:
+            print(light_type + ' light type is not supported in GVRf.')
+
+
+    def create_light_node(self, position, rotation):
+        self.exec_command('var lightNode = new GVRSceneObject(gvrf);')
+        self.exec_command('lightNode.getTransform().setPosition(%s, %s, %s);' % (position[0], position[2], position[1] * -1))
+        self.exec_command('lightNode.getTransform().setRotation(%s, %s, %s, %s);' % (-rotation[1], rotation[2], -rotation[3],   rotation[0]))
+        self.exec_command('mainScene.addSceneObject(lightNode);')
+
+    def create_point_light(self, color, use_diffuse, use_specular):
+        self.exec_command('var pointLight = new GVRPointLight(gvrf);')
+        if (use_diffuse):
+            self.exec_command('pointLight.setDiffuseIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+
+        if (use_specular):
+            self.exec_command('pointLight.setSpecularIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+
+        self.exec_command('pointLight.setAmbientIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+        self.exec_command('lightNode.attachLight(pointLight);')
+
+    def create_direct_light(self, color, use_diffuse, use_specular):
+        self.exec_command('var directLight = new GVRDirectLight(gvrf);')
+        if (use_diffuse):
+            self.exec_command('directLight.setDiffuseIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+
+        if (use_specular):
+            self.exec_command('directLight.setSpecularIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+
+        self.exec_command('directLight.setAmbientIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+        self.exec_command('lightNode.attachLight(directLight);')
+
+    def create_spot_light(self, color, use_diffuse, use_specular, outer_cone, inner_cone):
+        self.exec_command('var spotLight = new GVRSpotLight(gvrf);')
+        if (use_diffuse):
+            self.exec_command('spotLight.setDiffuseIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+
+        if (use_specular):
+            self.exec_command('spotLight.setSpecularIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+
+        self.exec_command('spotLight.setAmbientIntensity(%s, %s, %s, %s);' % (color[0], color[1], color[2], 1.0))
+        self.exec_command('spotLight.setInnerConeAngle(%s);' % inner_cone)
+        self.exec_command('spotLight.setOuterConeAngle(%s);' % outer_cone)
+        self.exec_command('lightNode.attachLight(spotLight);')
