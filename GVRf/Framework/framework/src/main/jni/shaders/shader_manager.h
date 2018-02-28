@@ -85,6 +85,11 @@ public:
     Shader* getShader(int id);
 
     /*
+     * Free all the GPU shader resources and clear the shader list
+     */
+    void clear();
+
+    /*
      * Print signatures and IDS of all shaders to logcat
      */
     void dump();

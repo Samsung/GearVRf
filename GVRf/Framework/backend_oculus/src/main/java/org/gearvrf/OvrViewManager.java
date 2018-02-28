@@ -227,12 +227,12 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                  GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.MULTIVIEW, swapChainIndex);
                  GVRCamera camera = mMainScene.getMainCameraRig().getCenterCamera();
                  GVRCamera left_camera = mMainScene.getMainCameraRig().getLeftCamera();
-                 renderTarget.cullFromCamera(mMainScene, camera,mRenderBundle.getShaderManager());
+                 renderTarget.cullFromCamera(mMainScene, camera, mShaderManager);
 
                 captureCenterEye(renderTarget, true);
                 capture3DScreenShot(renderTarget, true);
 
-                renderTarget.render(mMainScene, left_camera, mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+                renderTarget.render(mMainScene, left_camera, mShaderManager, mRenderBundle.getPostEffectRenderTextureA(),
                         mRenderBundle.getPostEffectRenderTextureB());
 
                 captureRightEye(renderTarget, true);
@@ -255,7 +255,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
                      GVRCamera rightCamera = mainCameraRig.getRightCamera();
                      GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.RIGHT, swapChainIndex);
-                     renderTarget.render(mMainScene, rightCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
+                     renderTarget.render(mMainScene, rightCamera, mShaderManager, mRenderBundle.getPostEffectRenderTextureA(),
                              mRenderBundle.getPostEffectRenderTextureB());
                     captureRightEye(renderTarget, false);
 
@@ -276,9 +276,9 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
                  capture3DScreenShot(renderTarget, false);
 
-                 renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getShaderManager());
+                 renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mShaderManager);
                  captureCenterEye(renderTarget, false);
-                 renderTarget.render(mMainScene, leftCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
+                 renderTarget.render(mMainScene, leftCamera, mShaderManager, mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
 
                  captureLeftEye(renderTarget, false);
 

@@ -61,6 +61,7 @@ abstract class GVRViewManager extends GVRContext {
 
         GVRAsynchronousResourceLoader.setup(this);
         VrAppSettings appSettings = activity.getAppSettings();
+        mShaderManager = new GVRShaderManager(this);
         mScriptManager = new GVRScriptManager(this);
         mEventManager = new GVREventManager(this);
         mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes());
@@ -72,6 +73,7 @@ abstract class GVRViewManager extends GVRContext {
     void onResume() {}
 
     void onDestroy() {
+        mShaderManager.clear();
         mInputManager.close();
         mScriptManager.destroy();
 
@@ -499,7 +501,7 @@ abstract class GVRViewManager extends GVRContext {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
 
-        makeShadowMaps(mMainScene.getNative(), getMainScene(), mRenderBundle.getShaderManager().getNative(),
+        makeShadowMaps(mMainScene.getNative(), getMainScene(), mShaderManager.getNative(),
                        mRenderBundle.getPostEffectRenderTextureA().getWidth(), mRenderBundle.getPostEffectRenderTextureA().getHeight());
     }
 
@@ -527,7 +529,7 @@ abstract class GVRViewManager extends GVRContext {
     void cullAndRender(GVRRenderTarget renderTarget, GVRScene scene)
     {
         cullAndRender(renderTarget.getNative(), scene.getNative(), scene,
-                mRenderBundle.getShaderManager().getNative(),
+                mShaderManager.getNative(),
                 mRenderBundle.getPostEffectRenderTextureA().getNative(),
                 mRenderBundle.getPostEffectRenderTextureB().getNative());
     }
@@ -535,11 +537,6 @@ abstract class GVRViewManager extends GVRContext {
     @Override
     public GVRScriptManager getScriptManager() {
         return mScriptManager;
-    }
-
-    @Override
-    public GVRShaderManager getShaderManager() {
-        return mRenderBundle.getShaderManager();
     }
 
     protected GVRScreenshotCallback mScreenshotCenterCallback;
@@ -697,7 +694,7 @@ abstract class GVRViewManager extends GVRContext {
             posteffectRenderTextureA = mRenderBundle.getEyeCapturePostEffectRenderTextureA();
             posteffectRenderTextureB = mRenderBundle.getEyeCapturePostEffectRenderTextureB();
             renderTarget = mRenderBundle.getEyeCaptureRenderTarget();
-            renderTarget.cullFromCamera(mMainScene, centerCamera ,mRenderBundle.getShaderManager());
+            renderTarget.cullFromCamera(mMainScene, centerCamera, mShaderManager);
             renderTarget.beginRendering(centerCamera);
         }
         else {
@@ -705,7 +702,7 @@ abstract class GVRViewManager extends GVRContext {
             posteffectRenderTextureB = mRenderBundle.getPostEffectRenderTextureB();
         }
 
-        renderTarget.render(mMainScene,centerCamera, mRenderBundle.getShaderManager(), posteffectRenderTextureA, posteffectRenderTextureB);
+        renderTarget.render(mMainScene,centerCamera, mShaderManager, posteffectRenderTextureA, posteffectRenderTextureB);
         centerCamera.removePostEffect(postEffect);
         readRenderResult(renderTarget, EYE.MULTIVIEW, false);
 
@@ -729,8 +726,8 @@ abstract class GVRViewManager extends GVRContext {
     private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index,
                                              GVRRenderTarget renderTarget, GVRRenderTexture postEffectRenderTextureA, GVRRenderTexture postEffectRenderTextureB ) {
 
-        renderTarget.cullFromCamera(mMainScene,centerCamera,mRenderBundle.getShaderManager());
-        renderTarget.render(mMainScene,centerCamera,mRenderBundle.getShaderManager(),postEffectRenderTextureA, postEffectRenderTextureB);
+        renderTarget.cullFromCamera(mMainScene,centerCamera, mShaderManager);
+        renderTarget.render(mMainScene,centerCamera, mShaderManager, postEffectRenderTextureA, postEffectRenderTextureB);
         readRenderResult(renderTarget,EYE.CENTER, false);
 
         bitmaps[index] = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
