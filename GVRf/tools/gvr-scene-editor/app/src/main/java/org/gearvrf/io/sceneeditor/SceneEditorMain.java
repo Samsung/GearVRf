@@ -220,22 +220,17 @@ public class SceneEditorMain extends GVRMain {
                         if (current == ObjectState.CLICKED) {
                             setMenuVisibility(false);
                             cursorManager.enableSettingsCursor(cursor);
-                                gvrContext.getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(fileBrowserView == null) {
-                                            fileBrowserView = new FileBrowserView(mainScene, environFileViewListener, FileBrowserView
-                                                    .ENVIRONMENT_EXTENSIONS, resources.getString(R.string
-                                                    .environment_picker_title));
-                                        } else {
-                                            fileBrowserView.reset(environFileViewListener,
-                                                    FileBrowserView.ENVIRONMENT_EXTENSIONS,
-                                                    resources.getString(R.string.environment_picker_title),
-                                                    "environments");
-                                        }
-                                        fileBrowserView.render();
-                                    }
-                                });
+                            if(fileBrowserView == null) {
+                                fileBrowserView = new FileBrowserView(mainScene, environFileViewListener, FileBrowserView
+                                        .ENVIRONMENT_EXTENSIONS, resources.getString(R.string
+                                        .environment_picker_title));
+                            }
+                            fileBrowserView.reset(getGVRContext().getActivity(),
+                                    environFileViewListener,
+                                    FileBrowserView.ENVIRONMENT_EXTENSIONS,
+                                    resources.getString(R.string.environment_picker_title),
+                                    "environments");
+                            fileBrowserView.render();
                         }
                         if (current == ObjectState.BEHIND) {
                             behavior.getOwnerObject().getRenderData().getMaterial().
@@ -252,23 +247,18 @@ public class SceneEditorMain extends GVRMain {
                             prev, ObjectState current, Cursor cursor, GVRPicker.GVRPickedObject hit) {
                         if (current == ObjectState.CLICKED) {
                             cursorManager.enableSettingsCursor(cursor);
-                            gvrContext.getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if(fileBrowserView == null) {
-                                        fileBrowserView = new FileBrowserView(mainScene, modelFileViewListener,
-                                                FileBrowserView.MODEL_EXTENSIONS, resources.getString(R
-                                                .string.model_picker_title));
-                                    } else {
-                                        fileBrowserView.reset(modelFileViewListener,
-                                                FileBrowserView.MODEL_EXTENSIONS,
-                                                resources.getString(R.string.model_picker_title),
-                                                "models");
-                                    }
-                                    fileBrowserView.render();
-                                    setMenuVisibility(false);
-                                }
-                            });
+                            if(fileBrowserView == null) {
+                                fileBrowserView = new FileBrowserView(mainScene, modelFileViewListener,
+                                        FileBrowserView.MODEL_EXTENSIONS, resources.getString(R
+                                        .string.model_picker_title));
+                            }
+                            fileBrowserView.reset(getGVRContext().getActivity(),
+                                    modelFileViewListener,
+                                    FileBrowserView.MODEL_EXTENSIONS,
+                                    resources.getString(R.string.model_picker_title),
+                                    "models");
+                            fileBrowserView.render();
+                            setMenuVisibility(false);
                         }
                         if (current == ObjectState.BEHIND) {
                             behavior.getOwnerObject().getRenderData().getMaterial()
