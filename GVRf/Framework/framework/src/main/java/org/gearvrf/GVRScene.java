@@ -134,6 +134,32 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     }
 
     /**
+     * Removes from scene root the first {@linkplain GVRSceneObject scene object}
+     * that has the given name.
+     *
+     * @param name name of scene object to be removed.
+     *
+     * @return true if child was removed, false if it was not found.
+     *
+     * @see GVRSceneObject#removeChildObjectByName(String)
+     */
+    public boolean removeSceneObjectByName(final String name) {
+        return mSceneRoot.removeChildObjectByName(name);
+    }
+    
+    /**
+     * Removes from scene root any {@linkplain GVRSceneObject scene object}
+     * that has the given name by performing case-sensitive search.
+     *
+     * @param name name of scene object to be removed.
+     *
+     * @return number of removed objects, 0 if none was found.
+     */
+    public int removeSceneObjectsByName(final String name) {
+        return mSceneRoot.removeChildObjectsByName(name);
+    }
+
+    /**
      * Remove all scene objects.
      */
     public void removeAllSceneObjects() {
