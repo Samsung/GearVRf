@@ -246,11 +246,23 @@ public class GVRViewSceneObject extends GVRSceneObject {
     @Override
     protected void onNewParentObject(GVRSceneObject parent) {
         super.onNewParentObject(parent);
+
+        synchronized (mLock) {
+            if (mRootViewGroup.getParent() == null && getRenderData() != null) {
+                getGVRContext().getActivity().registerView(mRootViewGroup);
+            }
+        }
     }
 
     @Override
     protected void onRemoveParentObject(GVRSceneObject parent) {
         super.onRemoveParentObject(parent);
+
+        synchronized (mLock) {
+            if (mRootViewGroup.getParent() != null && getRenderData() != null) {
+                getGVRContext().getActivity().unregisterView(mRootViewGroup);
+            }
+        }
     }
 
     public View getView() {
@@ -580,7 +592,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
                         }
                     });
 
-            mGVRContext.getActivity().registerView(RootViewGroup.this);
+            mGVRContext.getActivity().registerView(this);
         }
 
         private void onLayoutReady() {
