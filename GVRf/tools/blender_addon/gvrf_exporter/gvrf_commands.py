@@ -20,6 +20,9 @@ def load_model_from_url(var_obj, var_url):
 def create_scene_obj(var_obj):
     return 'var %s = new GVRSceneObject(%s);' % (var_obj, _var_context)
 
+def remove_scene_obj(obj_name):
+    return '%s.removeSceneObjectByName("%s");' % (_var_scene, obj_name)
+
 def set_position(var_obj, x, y, z):
     return '%s.getTransform().setPosition(%s, %s, %s);' % (var_obj, x, y, z)
 

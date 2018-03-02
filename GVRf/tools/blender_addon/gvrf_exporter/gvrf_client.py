@@ -66,10 +66,8 @@ class GvrfClient(BaseClient):
         var_url = 'url'
         var_obj = 'obj'
         self.exec_command(gvrf_commands.create_url(var_url, url))
-        #self.exec_command('var object = mainScene.getSceneObjectByName("%s");' % name)
-        #self.exec_command('if ("undefined" != typeof object) { mainScene.clear(); }')
+        self.exec_command(gvrf_commands.remove_scene_obj(name))
         self.exec_command(gvrf_commands.load_model_from_url(var_obj, var_url))
-        #self.exec_command('object.setName("%s");' % name)
 
     def load_light(self, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone = None, inner_cone = None):
         self.create_light_node(position, rotation)
