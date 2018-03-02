@@ -260,6 +260,7 @@ FenceCreateInfo::FenceCreateInfo(VkFenceCreateFlags aFlags)
     : mInfo()
 {
     mInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    mInfo.flags = aFlags;
 }
 
     FramebufferCreateInfo::FramebufferCreateInfo(VkFramebufferCreateFlags flags, VkRenderPass renderPass, uint32_t attachmentCount,

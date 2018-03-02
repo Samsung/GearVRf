@@ -266,25 +266,26 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
                     }
                 } else {
                     if (DEBUG_STATS) {
-                         mTracerDrawEyes1.leave();
-                         mTracerDrawEyes.leave();
-                     }
-                 }
+                        mTracerDrawEyes1.leave();
+                        mTracerDrawEyes.leave();
+                    }
 
-                 GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.LEFT, swapChainIndex);
-                 GVRCamera leftCamera = mainCameraRig.getLeftCamera();
 
-                 capture3DScreenShot(renderTarget, false);
+                    GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.LEFT, swapChainIndex);
+                    GVRCamera leftCamera = mainCameraRig.getLeftCamera();
 
-                 renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getShaderManager());
-                 captureCenterEye(renderTarget, false);
-                 renderTarget.render(mMainScene, leftCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
+                    capture3DScreenShot(renderTarget, false);
 
-                 captureLeftEye(renderTarget, false);
+                    renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getShaderManager());
+                    captureCenterEye(renderTarget, false);
+                    renderTarget.render(mMainScene, leftCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
 
-                 if (DEBUG_STATS) {
-                     mTracerDrawEyes2.leave();
-                 }
+                    captureLeftEye(renderTarget, false);
+
+                    if (DEBUG_STATS) {
+                        mTracerDrawEyes2.leave();
+                    }
+                }
              }
         }
     }

@@ -308,7 +308,7 @@ class SemaphoreCreateInfo final
 class FenceCreateInfo final
     {
     public:
-        explicit FenceCreateInfo(VkFenceCreateFlags aFlags = 0);
+        explicit FenceCreateInfo(VkFenceCreateFlags aFlags = VK_FENCE_CREATE_SIGNALED_BIT);
 
         operator const VkFenceCreateInfo*() const
         {
