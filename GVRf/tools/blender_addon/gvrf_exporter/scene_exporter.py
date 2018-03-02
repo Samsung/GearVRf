@@ -32,17 +32,18 @@ class BaseExporter(ABC):
         pass
 
 class MeshExporter(BaseExporter):
-    def __init__(self, client, server_url, obj):
+    def __init__(self, client, server_url, obj, globalscale = 0.01):
         self._client = client
         self._server_url = server_url
         self._obj = obj
+        self._globalscale = globalscale
         self.export()
 
     def export(self):
         name = bpy.path.clean_name(self._obj.name) + ".fbx"
 
         # Export fbx file
-        bpy.ops.export_scene.fbx(filepath = name, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP', global_scale = 0.01)
+        bpy.ops.export_scene.fbx(filepath = name, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP', global_scale = self._globalscale)
 
         url = self._server_url + name
 
@@ -89,7 +90,7 @@ class LightExport(BaseExporter):
         return inner_angle * 2
 
 
-def export(client, selected_objects):
+def export(client, selected_objects, globalscale):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
     server_url = 'http://' + ipv4 + ':8000/'
 
@@ -111,7 +112,7 @@ def export(client, selected_objects):
         scene.objects.active = obj
 
         if obj.type == 'MESH':
-            MeshExporter(client, server_url, obj)
+            MeshExporter(client, server_url, obj, globalscale)
 
         elif obj.type == 'LAMP':
             LightExport(client, obj)
