@@ -7,7 +7,7 @@ __author__ = 'Sidia'
 
 bl_info = {
     'name': 'Export to GVRf',
-    'location': 'File > Export > GVRf Client',
+    'location': 'Toolshelf > Import-Exportt > Export Scene to GVRf',
     'category': 'Import-Export',
 }
 

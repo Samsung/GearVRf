@@ -61,6 +61,11 @@ class LightExport(BaseExporter):
             outer_angle = math.degrees(self._light.spot_size)
             inner_angle = self.calc_inner_cone(self._light.distance, outer_angle, self._light.spot_blend)
 
+            # GVRf sets spot light angle size on half of the cone
+            outer_angle = outer_angle / 2.0
+            inner_angle = inner_angle / 2.0
+
+            self.export_to_file(outer_angle, inner_angle)
             self._client.load_light(
                 self._obj.location,
                 self._obj.rotation_quaternion,
@@ -72,6 +77,7 @@ class LightExport(BaseExporter):
                 inner_cone = inner_angle
             )
         else:
+            self.export_to_file()
             self._client.load_light(
                 self._obj.location,
                 self._obj.rotation_quaternion,
@@ -80,7 +86,7 @@ class LightExport(BaseExporter):
                 self._light.use_diffuse,
                 self._light.use_specular,
             )
-    
+
     def calc_inner_cone(self, distance, size, blend):
         outer_r = math.tan(math.radians(size / 2.0)) * distance
         outer_area = math.pi * math.pow(outer_r, 2)
@@ -89,6 +95,20 @@ class LightExport(BaseExporter):
         inner_angle = math.degrees(math.atan(inner_r / distance))
         return inner_angle * 2
 
+    def export_to_file(self, outer_angle = None, inner_angle = None):
+        f = open(self._obj.name + '.txt', 'w')
+        f.write('name: %s\n' % self._obj.name)
+        # Change coordinate system to Y-Up and -Z foward
+        f.write('location: %s, %s, %s\n' % (self._obj.location[0], self._obj.location[2], self._obj.location[1] * -1))
+        f.write('rotation: %s, %s, %s, %s\n' % (-self._obj.rotation_quaternion[1], self._obj.rotation_quaternion[2], -self._obj.rotation_quaternion[3], self._obj.rotation_quaternion[0]))
+        f.write('type: %s\n' % self._light.type)
+        f.write('color: %s, %s, %s\n' % (self._light.color[0], self._light.color[1], self._light.color[2]))
+        f.write('use_diffuse: %s\n' % self._light.use_diffuse)
+        f.write('use_specular: %s\n' % self._light.use_specular)
+        if outer_angle and inner_angle:
+            f.write('outer_cone_angle: %s\n' % outer_angle)
+            f.write('inner_cone_angle: %s\n' % inner_angle)
+        f.close()
 
 def export(client, selected_objects, globalscale):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]

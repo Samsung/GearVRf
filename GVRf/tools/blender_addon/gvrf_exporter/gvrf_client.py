@@ -88,6 +88,7 @@ class GvrfClient(BaseClient):
         var_obj = 'lightNode'
 
         self.exec_command(gvrf_commands.create_scene_obj(var_obj))
+        # Change coordinate system to Y-Up and -Z foward
         self.exec_command(gvrf_commands.set_position(var_obj, position[0], position[2], position[1] * -1))
         self.exec_command(gvrf_commands.set_rotation(var_obj, -rotation[1], rotation[2], -rotation[3], rotation[0]))
         self.exec_command(gvrf_commands.add_on_scene(var_obj))
@@ -102,7 +103,6 @@ class GvrfClient(BaseClient):
             self.exec_command(gvrf_commands.set_diffuse(var_light, color[0], color[1], color[2], 1.0))
         if (use_specular):
             self.exec_command(gvrf_commands.set_specular(var_light, color[0], color[1], color[2], 1.0))
-        self.exec_command(gvrf_commands.set_ambient(var_light, color[0], color[1], color[2], 1.0))
         
         self.exec_command(gvrf_commands.attach_light(var_obj, var_light))
 
@@ -116,7 +116,6 @@ class GvrfClient(BaseClient):
             self.exec_command(gvrf_commands.set_diffuse(var_light, color[0], color[1], color[2], 1.0))
         if (use_specular):
             self.exec_command(gvrf_commands.set_specular(var_light, color[0], color[1], color[2], 1.0))
-        self.exec_command(gvrf_commands.set_ambient(var_light, color[0], color[1], color[2], 1.0))
         
         self.exec_command(gvrf_commands.attach_light(var_obj, var_light))
 
@@ -130,7 +129,6 @@ class GvrfClient(BaseClient):
             self.exec_command(gvrf_commands.set_diffuse(var_light, color[0], color[1], color[2], 1.0))
         if (use_specular):
             self.exec_command(gvrf_commands.set_specular(var_light, color[0], color[1], color[2], 1.0))
-        self.exec_command(gvrf_commands.set_ambient(var_light, color[0], color[1], color[2], 1.0))
 
         self.exec_command(gvrf_commands.set_inner_cone(var_light, inner_cone))
         self.exec_command(gvrf_commands.set_outer_cone(var_light, outer_cone))
