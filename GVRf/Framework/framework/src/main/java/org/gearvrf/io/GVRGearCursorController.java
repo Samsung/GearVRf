@@ -18,9 +18,6 @@ package org.gearvrf.io;
 
 import android.app.Activity;
 import android.graphics.PointF;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
 import android.os.SystemClock;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -38,6 +35,7 @@ import org.gearvrf.GVRTransform;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.scene_objects.GVRLineSceneObject;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -87,13 +85,13 @@ public final class GVRGearCursorController extends GVRCursorController
 
     public enum CONTROLLER_KEYS
     {
-        BUTTON_A (0x00000001),
-        BUTTON_ENTER (0x00100000),
-        BUTTON_BACK (0x00200000),
-        BUTTON_UP (0x00010000),
+        BUTTON_A(0x00000001),
+        BUTTON_ENTER(0x00100000),
+        BUTTON_BACK(0x00200000),
+        BUTTON_UP(0x00010000),
         BUTTON_DOWN(0x00020000),
-        BUTTON_LEFT (0x00040000),
-        BUTTON_RIGHT (0x00080000),
+        BUTTON_LEFT(0x00040000),
+        BUTTON_RIGHT(0x00080000),
         BUTTON_VOLUME_UP(0x00400000),
         BUTTON_VOLUME_DOWN(0x00800000),
         BUTTON_HOME(0x01000000);
@@ -117,16 +115,16 @@ public final class GVRGearCursorController extends GVRCursorController
     {
         LEFT, RIGHT
     }
+
     private GVRSceneObject mControllerModel;
     private GVRSceneObject mRayModel;
     private GVRSceneObject mPivotRoot;
     private GVRSceneObject mControllerGroup;
     private ControllerReader mControllerReader;
     private boolean mShowControllerModel = false;
-
+    private Matrix4f mTempPivotMtx = new Matrix4f();
+    private Quaternionf mTempRotation = new Quaternionf();
     private final Vector3f FORWARD = new Vector3f(0, 0, -1);
-    private EventHandlerThread thread;
-    private boolean initialized;
     private final MotionEvent.PointerCoords pointerCoords = new MotionEvent.PointerCoords();
     private final MotionEvent.PointerProperties[] pointerPropertiesArray;
     private final MotionEvent.PointerCoords[] pointerCoordsArray;
@@ -135,6 +133,15 @@ public final class GVRGearCursorController extends GVRCursorController
     private boolean actionDown = false;
     private float touchDownX = 0.0f;
     private static final float DEPTH_SENSITIVITY = 0.01f;
+
+    private Vector3f result = new Vector3f();
+    private int prevButtonEnter = KeyEvent.ACTION_UP;
+    private int prevButtonA = KeyEvent.ACTION_UP;
+    private int prevButtonBack = KeyEvent.ACTION_UP;
+    private int prevButtonVolumeUp = KeyEvent.ACTION_UP;
+    private int prevButtonVolumeDown = KeyEvent.ACTION_UP;
+    private int prevButtonHome = KeyEvent.ACTION_UP;
+    private ControllerEvent currentControllerEvent;
 
     public GVRGearCursorController(GVRContext context)
     {
@@ -146,7 +153,6 @@ public final class GVRGearCursorController extends GVRCursorController
         mPivotRoot.addChildObject(mControllerGroup);
         mControllerGroup.addChildObject(mDragRoot);
         mControllerGroup.attachComponent(mPicker);
-        thread = new EventHandlerThread();
         position.set(0.0f, 0.0f, -1.0f);
         MotionEvent.PointerProperties properties = new MotionEvent.PointerProperties();
         properties.id = 0;
@@ -166,8 +172,9 @@ public final class GVRGearCursorController extends GVRCursorController
 
     /**
      * Show or hide the controller model and picking ray.
-     *
+     * <p>
      * The scene objects remain in the scene but they are not rendered.
+     *
      * @param flag true to show the model and ray, false to hide it.
      */
     public void showControllerModel(boolean flag)
@@ -234,32 +241,16 @@ public final class GVRGearCursorController extends GVRCursorController
     @Override
     public void setEnable(boolean flag)
     {
+        super.setEnable(flag);
         mControllerGroup.setEnable(flag);
-        if (!enable && flag)
-        {
-            //set the enabled flag on the handler thread
-            enable = true;
-            if (initialized)
-            {
-                thread.setEnabled(true);
-            }
-        }
-        else if (enable && !flag)
-        {
-            enable = false;
-            if (initialized)
-            {
-                //set the disabled flag on the handler thread
-                thread.setEnabled(false);
-            }
-        }
     }
 
     private void createControllerModel()
     {
         if (mRayModel == null)
         {
-            mRayModel = new GVRLineSceneObject(context, 1, new Vector4f(1, 0, 0, 1), new Vector4f(1, 0, 0, 0));
+            mRayModel = new GVRLineSceneObject(context, 1, new Vector4f(1, 0, 0, 1),
+                                               new Vector4f(1, 0, 0, 0));
             final GVRRenderData renderData = mRayModel.getRenderData();
             final GVRMaterial rayMaterial = renderData.getMaterial();
 
@@ -273,12 +264,16 @@ public final class GVRGearCursorController extends GVRCursorController
         }
         try
         {
-            EnumSet<GVRImportSettings> settings = GVRImportSettings.getRecommendedSettingsWith(EnumSet.of(GVRImportSettings.NO_LIGHTING));
-            mControllerModel = context.getAssetLoader().loadModel("gear_vr_controller.obj", settings, true, null);
+            EnumSet<GVRImportSettings> settings = GVRImportSettings.getRecommendedSettingsWith(
+                    EnumSet.of(GVRImportSettings.NO_LIGHTING));
+            mControllerModel =
+                    context.getAssetLoader().loadModel("gear_vr_controller.obj", settings, true,
+                                                       null);
         }
         catch (IOException ex)
         {
-            Log.e("GVRGearCursorController", "ERROR: cannot load controller model gear_vr_controller.obj");
+            Log.e("GearCursorController",
+                  "ERROR: cannot load controller model gear_vr_controller.obj");
             return;
         }
         mControllerGroup.addChildObject(mControllerModel);
@@ -286,7 +281,8 @@ public final class GVRGearCursorController extends GVRCursorController
     }
 
     @Override
-    public void setScene(GVRScene scene) {
+    public void setScene(GVRScene scene)
+    {
         GVRSceneObject parent = mPivotRoot.getParent();
 
         mPicker.setScene(scene);
@@ -302,15 +298,6 @@ public final class GVRGearCursorController extends GVRCursorController
         showControllerModel(mShowControllerModel);
     }
 
-    @Override
-    public void invalidate() {
-        if (!initialized) {
-            //do nothing
-            return;
-        }
-        thread.sendInvalidate();
-    }
-
     public void onDrawFrame()
     {
         boolean wasConnected = mConnected;
@@ -318,20 +305,12 @@ public final class GVRGearCursorController extends GVRCursorController
         mConnected = (mControllerReader != null) && mControllerReader.isConnected();
         if (!wasConnected && mConnected)
         {
-            context.getInputManager().addCursorController(GVRGearCursorController.this);
+            context.getInputManager().addCursorController(this);
         }
-        if (!initialized)
+        else if (wasConnected && !mConnected)
         {
-            if (!thread.isAlive())
-            {
-                thread.start();
-                thread.prepareHandler();
-            }
-            if (!wasConnected && mConnected)
-            {
-                thread.initialize();
-            }
-            initialized = true;
+            context.getInputManager().removeCursorController(this);
+            return;
         }
         if (isEnabled())
         {
@@ -343,7 +322,7 @@ public final class GVRGearCursorController extends GVRCursorController
             event.key = mControllerReader.getKey();
             event.handedness = mControllerReader.getHandedness();
             mControllerReader.updateTouchpad(event.pointF);
-            thread.sendEvent(event);
+            handleControllerEvent(event);
         }
     }
 
@@ -363,12 +342,14 @@ public final class GVRGearCursorController extends GVRCursorController
      * @return a {@link Vector3f} representing the position of the controller. This function
      * returns <code>null</code> if the controller is unavailable or the data is stale.
      */
-    public Vector3f getPosition() {
-        if (thread == null || thread.currentControllerEvent == null || thread
-                .currentControllerEvent.isRecycled()) {
+    public Vector3f getPosition()
+    {
+        if ((currentControllerEvent == null) ||
+            currentControllerEvent.isRecycled())
+        {
             return null;
         }
-        return thread.currentControllerEvent.position;
+        return currentControllerEvent.position;
     }
 
     /**
@@ -377,12 +358,14 @@ public final class GVRGearCursorController extends GVRCursorController
      * @return a {@link Quaternionf} representing the rotation of the controller. This function
      * returns <code>null</code> if the controller is unavailable or the data is stale.
      */
-    public Quaternionf getRotation() {
-        if (thread == null || thread.currentControllerEvent == null || thread
-                .currentControllerEvent.isRecycled()) {
+    public Quaternionf getRotation()
+    {
+        if ((currentControllerEvent == null) ||
+            currentControllerEvent.isRecycled())
+        {
             return null;
         }
-        return thread.currentControllerEvent.rotation;
+        return currentControllerEvent.rotation;
     }
 
     /**
@@ -392,12 +375,14 @@ public final class GVRGearCursorController extends GVRCursorController
      * user is not using the touchpad (0.0f, 0.0f) is returned. This function
      * returns <code>null</code> if the controller is unavailable or the data is stale.
      */
-    public PointF getTouch() {
-        if (thread == null || thread.currentControllerEvent == null || thread
-                .currentControllerEvent.isRecycled()) {
+    public PointF getTouch()
+    {
+        if ((currentControllerEvent == null) ||
+            currentControllerEvent.isRecycled())
+        {
             return null;
         }
-        return thread.currentControllerEvent.pointF;
+        return currentControllerEvent.pointF;
     }
 
     /**
@@ -407,174 +392,98 @@ public final class GVRGearCursorController extends GVRCursorController
      * returns <code>null</code> if the controller is unavailable or the data is stale.
      */
     @SuppressWarnings("unused")
-    public Handedness getHandedness() {
-        if (thread == null || thread.currentControllerEvent == null || thread
-                .currentControllerEvent.isRecycled()) {
+    public Handedness getHandedness()
+    {
+        if ((currentControllerEvent == null) || currentControllerEvent.isRecycled())
+        {
             return null;
         }
-        return thread.currentControllerEvent.handedness == 0.0f ? Handedness.LEFT : Handedness
-                .RIGHT;
+        return currentControllerEvent.handedness == 0.0f ?
+                Handedness.LEFT : Handedness.RIGHT;
     }
 
-    public void onDestroy() {
-        if (initialized) {
-            thread.uninitialize();
-            thread.quitSafely();
-            initialized = false;
-        }
+    private final SendEvents mPropagateEvents = new SendEvents(getGVRContext().getActivity());
+
+    @Override
+    protected void updatePicker(MotionEvent event, boolean isActive)
+    {
+        MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
+        mControllerPick.init(mPicker, newEvent,isActive);
+        mControllerPick.run();
     }
 
-    private final class EventHandlerThread extends HandlerThread {
-        private static final String THREAD_NAME = "GVREventHandlerThread";
-        private Handler handler;
-        private Vector3f result = new Vector3f();
-        private int prevButtonEnter = KeyEvent.ACTION_UP;
-        private int prevButtonA = KeyEvent.ACTION_UP;
-        private int prevButtonBack = KeyEvent.ACTION_UP;
-        private int prevButtonVolumeUp = KeyEvent.ACTION_UP;
-        private int prevButtonVolumeDown = KeyEvent.ACTION_UP;
-        private int prevButtonHome = KeyEvent.ACTION_UP;
+    private void handleControllerEvent(final ControllerEvent event)
+    {
+        context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class,
+                                            "onControllerEvent",
+                                            event.position, event.rotation, event.pointF,
+                                            event.touched);
 
-        private static final int MSG_INITIALIZE = 1;
-        private static final int MSG_UNINITIALIZE = 2;
-        private static final int MSG_EVENT = 3;
-        public static final int MSG_SET_ENABLE = 4;
-        public static final int MSG_SET_SCENE = 5;
-        public static final int MSG_SEND_INVALIDATE = 6;
+        this.currentControllerEvent = event;
+        int key = event.key;
+        Quaternionf q = event.rotation;
+        Vector3f pos = event.position;
+        Matrix4f camMtx = context.getMainScene().getMainCameraRig().getTransform().getModelMatrix4f();
+        float x = camMtx.m30();
+        float y = camMtx.m31();
+        float z = camMtx.m32();
 
-        public static final int ENABLE = 0;
-        public static final int DISABLE = 1;
+        q.normalize();
+        camMtx.getNormalizedRotation(mTempRotation);
+        mTempRotation.transform(pos);       // rotate controller position by camera orientation
+        x += pos.x;
+        y += pos.y;
+        z += pos.z;
+        q.mul(mTempRotation);               // rotate pivot by combined event and camera rotation
+        mTempPivotMtx.rotation(q);          // translate pivot by combine event and camera translation
+        mTempPivotMtx.setTranslation(x, y, z);
+        mPivotRoot.getTransform().setModelMatrix(mTempPivotMtx);
+        setOrigin(x, y, z);
 
-        private ControllerEvent currentControllerEvent;
+        int handleResult = handleEnterButton(key, event.pointF, event.touched);
+        prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
 
-        EventHandlerThread() {
-            super(THREAD_NAME);
+        handleResult = handleAButton(key);
+        prevButtonA = handleResult == -1 ? prevButtonA : handleResult;
+
+        handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK,
+                                    prevButtonBack, KeyEvent.KEYCODE_BACK);
+        prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
+
+        handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_UP,
+                                    prevButtonVolumeUp, KeyEvent.KEYCODE_VOLUME_UP);
+        prevButtonVolumeUp = handleResult == -1 ? prevButtonVolumeUp : handleResult;
+
+        handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_DOWN,
+                                    prevButtonVolumeDown, KeyEvent.KEYCODE_VOLUME_DOWN);
+        prevButtonVolumeDown = handleResult == -1 ? prevButtonVolumeDown : handleResult;
+
+        handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_HOME,
+                                    prevButtonHome, KeyEvent.KEYCODE_HOME);
+        prevButtonHome = handleResult == -1 ? prevButtonHome : handleResult;
+        event.recycle();
+        if (mSendEventsToActivity && ((keyEvent.size() > 0) || (motionEvent.size() > 0)))
+        {
+            mPropagateEvents.init(keyEvent, motionEvent);
+            getGVRContext().getActivity().runOnUiThread(mPropagateEvents);
         }
-
-        void prepareHandler() {
-            handler = new Handler(getLooper(), new Handler.Callback() {
-                @Override
-                public boolean handleMessage(Message message) {
-                    switch (message.what) {
-                        case MSG_INITIALIZE:
-                            context.getInputManager().addCursorController(GVRGearCursorController.this);
-                            break;
-                        case MSG_EVENT:
-                            handleControllerEvent((ControllerEvent) message.obj);
-                            break;
-                        case MSG_UNINITIALIZE:
-                            context.getInputManager().removeCursorController(GVRGearCursorController.this);
-                            break;
-                        case MSG_SET_ENABLE:
-                            GVRGearCursorController.super.setEnable(message.arg1 == ENABLE);
-                            break;
-                        case MSG_SET_SCENE:
-                            GVRGearCursorController.super.setScene((GVRScene) message.obj);
-                            break;
-                        case MSG_SEND_INVALIDATE:
-                            GVRGearCursorController.super.invalidate();
-                            break;
-                        default:
-                            break;
-                    }
-                    return true;
-                }
-            });
-        }
-
-        private final SendEvents mPropagateEvents = new SendEvents(getGVRContext().getActivity());
-
-        void handleControllerEvent(final ControllerEvent event) {
-            context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class, "onControllerEvent",
-                                                event.position, event.rotation, event.pointF, event.touched);
-
-            this.currentControllerEvent = event;
-            Quaternionf q = event.rotation;
-            Vector3f pos = event.position;
-            int key = event.key;
-            GVRTransform camTrans = context.getMainScene().getMainCameraRig().getTransform();
-            float cameraX = camTrans.getPositionX();
-            float cameraY = camTrans.getPositionY();
-            float cameraZ = camTrans.getPositionZ();
-
-            q.normalize();
-            mPivotRoot.getTransform().setRotation(q.w, q.x, q.y, q.z);
-            q.transform(FORWARD, result);
-            setOrigin(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
-            mPivotRoot.getTransform().setPosition(cameraX + pos.x, cameraY + pos.y, cameraZ + pos.z);
-
-            int handleResult = handleEnterButton(key, event.pointF, event.touched);
-            prevButtonEnter = handleResult == -1 ? prevButtonEnter : handleResult;
-
-            handleResult = handleAButton(key);
-            prevButtonA = handleResult == -1 ? prevButtonA : handleResult;
-
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_BACK,
-                                        prevButtonBack, KeyEvent.KEYCODE_BACK);
-            prevButtonBack = handleResult == -1 ? prevButtonBack : handleResult;
-
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_UP,
-                                        prevButtonVolumeUp, KeyEvent.KEYCODE_VOLUME_UP);
-            prevButtonVolumeUp = handleResult == -1 ? prevButtonVolumeUp : handleResult;
-
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_VOLUME_DOWN,
-                                        prevButtonVolumeDown, KeyEvent.KEYCODE_VOLUME_DOWN);
-            prevButtonVolumeDown = handleResult == -1 ? prevButtonVolumeDown : handleResult;
-
-            handleResult = handleButton(key, CONTROLLER_KEYS.BUTTON_HOME,
-                                        prevButtonHome, KeyEvent.KEYCODE_HOME);
-            prevButtonHome = handleResult == -1 ? prevButtonHome : handleResult;
-            event.recycle();
-            if (mSendEventsToActivity && ((keyEvent.size() > 0) || (motionEvent.size() > 0)))
-            {
-                mPropagateEvents.init(keyEvent, motionEvent);
-                getGVRContext().getActivity().runOnUiThread(mPropagateEvents);
-            }
-            GVRGearCursorController.super.invalidate();
-        }
-
-        void sendEvent(ControllerEvent event) {
-            handler.sendMessage(Message.obtain(null, MSG_EVENT, event));
-        }
-
-        void initialize() {
-            handler.sendMessage(Message.obtain(null, MSG_INITIALIZE));
-        }
-
-        void uninitialize() {
-            handler.sendMessage(Message.obtain(null, MSG_UNINITIALIZE));
-        }
-
-        public void setEnabled(boolean enable) {
-            handler.removeMessages(MSG_SET_ENABLE);
-            Message msg = Message.obtain(handler, MSG_SET_ENABLE, enable ? ENABLE : DISABLE, 0);
-            msg.sendToTarget();
-        }
-
-        void setScene(GVRScene scene) {
-            handler.removeMessages(MSG_SET_SCENE);
-            Message msg = Message.obtain(handler, MSG_SET_SCENE, scene);
-            msg.sendToTarget();
-        }
-
-        void sendInvalidate() {
-            handler.removeMessages(MSG_SEND_INVALIDATE);
-            Message msg = Message.obtain(handler, MSG_SEND_INVALIDATE);
-            msg.sendToTarget();
-        }
+        invalidate();
     }
 
     private int handleEnterButton(int key, PointF pointF, boolean touched)
     {
         long time = SystemClock.uptimeMillis();
-        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_ENTER, thread.prevButtonEnter, KeyEvent.KEYCODE_ENTER);
+        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_ENTER, prevButtonEnter,
+                                   KeyEvent.KEYCODE_ENTER);
         if ((handled == KeyEvent.ACTION_UP) || (actionDown && !touched))
         {
             pointerCoords.x = pointF.x;
             pointerCoords.y = pointF.y;
             MotionEvent motionEvent = MotionEvent.obtain(prevEnterTime, time,
-                    MotionEvent.ACTION_UP, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
+                                                         MotionEvent.ACTION_UP, 1,
+                                                         pointerPropertiesArray, pointerCoordsArray,
+                                                         0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0,
+                                                         0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             setActive(false);
         }
@@ -600,8 +509,10 @@ public final class GVRGearCursorController extends GVRCursorController
             pointerCoords.x = pointF.x;
             pointerCoords.y = pointF.y;
             MotionEvent motionEvent = MotionEvent.obtain(prevEnterTime, time,
-                    MotionEvent.ACTION_MOVE, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
+                                                         MotionEvent.ACTION_MOVE, 1,
+                                                         pointerPropertiesArray, pointerCoordsArray,
+                                                         0, MotionEvent.BUTTON_PRIMARY, 1f, 1f, 0,
+                                                         0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
         }
         /*
@@ -636,26 +547,31 @@ public final class GVRGearCursorController extends GVRCursorController
     private int handleAButton(int key)
     {
         long time = SystemClock.uptimeMillis();
-        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A, thread.prevButtonA, KeyEvent.KEYCODE_A);
+        int handled = handleButton(key, CONTROLLER_KEYS.BUTTON_A, prevButtonA, KeyEvent.KEYCODE_A);
         if (handled == KeyEvent.ACTION_UP)
         {
             setActive(false);
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(prevATime, time,
-                    MotionEvent.ACTION_UP, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
+                                                         MotionEvent.ACTION_UP, 1,
+                                                         pointerPropertiesArray, pointerCoordsArray,
+                                                         0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0,
+                                                         0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             Log.d("EVENT:", "handleAButton action=%d button=%d x=%f y=%f",
-                  motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(), motionEvent.getY());
+                  motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(),
+                  motionEvent.getY());
         }
         else if (handled == KeyEvent.ACTION_DOWN)
         {
             pointerCoords.x = 0;
             pointerCoords.y = 0;
             MotionEvent motionEvent = MotionEvent.obtain(time, time,
-                    MotionEvent.ACTION_DOWN, 1, pointerPropertiesArray, pointerCoordsArray,
-                    0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHPAD, 0);
+                                                         MotionEvent.ACTION_DOWN, 1,
+                                                         pointerPropertiesArray, pointerCoordsArray,
+                                                         0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0,
+                                                         0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
             prevATime = time;
             if ((mTouchButtons & MotionEvent.BUTTON_SECONDARY) != 0)
@@ -663,21 +579,28 @@ public final class GVRGearCursorController extends GVRCursorController
                 setActive(true);
             }
             Log.d("EVENT:", "handleAButton action=%d button=%d x=%f y=%f",
-                  motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(), motionEvent.getY());
+                  motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(),
+                  motionEvent.getY());
         }
         return handled;
     }
 
-    private int handleButton(int key, CONTROLLER_KEYS button, int prevButton, int keyCode) {
-        if ((key & button.getNumVal()) != 0) {
+    private int handleButton(int key, CONTROLLER_KEYS button, int prevButton, int keyCode)
+    {
+        if ((key & button.getNumVal()) != 0)
+        {
             Log.d("EVENT:", "keyPress button=%d code=%d", button.getNumVal(), keyCode);
-            if (prevButton != KeyEvent.ACTION_DOWN) {
+            if (prevButton != KeyEvent.ACTION_DOWN)
+            {
                 KeyEvent keyEvent = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
                 setKeyEvent(keyEvent);
                 return KeyEvent.ACTION_DOWN;
             }
-        } else {
-            if (prevButton != KeyEvent.ACTION_UP) {
+        }
+        else
+        {
+            if (prevButton != KeyEvent.ACTION_UP)
+            {
                 KeyEvent keyEvent = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
                 setKeyEvent(keyEvent);
                 return KeyEvent.ACTION_UP;
@@ -686,7 +609,8 @@ public final class GVRGearCursorController extends GVRCursorController
         return -1;
     }
 
-    private static final class ControllerEvent {
+    private static final class ControllerEvent
+    {
         private static final int MAX_RECYCLED = 5;
         private static final Object recyclerLock = new Object();
         private static int recyclerUsed;
@@ -700,11 +624,14 @@ public final class GVRGearCursorController extends GVRCursorController
         private boolean recycled = false;
         private boolean touched = false;
 
-        static ControllerEvent obtain() {
+        static ControllerEvent obtain()
+        {
             final ControllerEvent event;
-            synchronized (recyclerLock) {
+            synchronized (recyclerLock)
+            {
                 event = recyclerTop;
-                if (event == null) {
+                if (event == null)
+                {
                     return new ControllerEvent();
                 }
                 event.recycled = false;
@@ -715,9 +642,12 @@ public final class GVRGearCursorController extends GVRCursorController
             return event;
         }
 
-        final void recycle() {
-            synchronized (recyclerLock) {
-                if (recyclerUsed < MAX_RECYCLED) {
+        final void recycle()
+        {
+            synchronized (recyclerLock)
+            {
+                if (recyclerUsed < MAX_RECYCLED)
+                {
                     recyclerUsed++;
                     next = recyclerTop;
                     recyclerTop = this;
@@ -726,43 +656,48 @@ public final class GVRGearCursorController extends GVRCursorController
             }
         }
 
-        boolean isRecycled() {
+        boolean isRecycled()
+        {
             return recycled;
         }
     }
-}
 
-final class SendEvents implements Runnable
-{
-    private final ConcurrentLinkedQueue<KeyEvent> mKeyEvents = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<MotionEvent> mMotionEvents = new ConcurrentLinkedQueue<>();
-    private final Activity mActivity;
-
-    SendEvents(final Activity activity) {
-        mActivity = activity;
-    }
-
-    public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
+    public static final class SendEvents implements Runnable
     {
-        mKeyEvents.addAll(keyEvents);
-        mMotionEvents.addAll(motionEvents);
-    }
+        private final ConcurrentLinkedQueue<KeyEvent> mKeyEvents = new ConcurrentLinkedQueue<>();
+        private final ConcurrentLinkedQueue<MotionEvent> mMotionEvents =
+                new ConcurrentLinkedQueue<>();
+        private final Activity mActivity;
 
-    public void run()
-    {
-        for (final Iterator<KeyEvent> it = mKeyEvents.iterator(); it.hasNext(); ) {
-            final KeyEvent e = it.next();
-            mActivity.dispatchKeyEvent(e);
-            it.remove();
+        SendEvents(final Activity activity)
+        {
+            mActivity = activity;
         }
 
-        for (Iterator<MotionEvent> it = mMotionEvents.iterator(); it.hasNext(); ) {
-            final MotionEvent e = it.next();
-            final MotionEvent dupe = MotionEvent.obtain(e);
-            it.remove();
+        public void init(List<KeyEvent> keyEvents, List<MotionEvent> motionEvents)
+        {
+            mKeyEvents.addAll(keyEvents);
+            mMotionEvents.addAll(motionEvents);
+        }
 
-            mActivity.dispatchTouchEvent(dupe);
-            dupe.recycle();
+        public void run()
+        {
+            for (final Iterator<KeyEvent> it = mKeyEvents.iterator(); it.hasNext(); )
+            {
+                final KeyEvent e = it.next();
+                mActivity.dispatchKeyEvent(e);
+                it.remove();
+            }
+
+            for (Iterator<MotionEvent> it = mMotionEvents.iterator(); it.hasNext(); )
+            {
+                final MotionEvent e = it.next();
+                final MotionEvent dupe = MotionEvent.obtain(e);
+                it.remove();
+
+                mActivity.dispatchTouchEvent(dupe);
+                dupe.recycle();
+            }
         }
     }
 }

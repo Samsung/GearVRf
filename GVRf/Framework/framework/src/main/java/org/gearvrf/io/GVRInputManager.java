@@ -416,10 +416,6 @@ public class GVRInputManager implements IEventReceiver
         gamepadDeviceManager.forceStopThread();
         controllerIds.clear();
         cache.clear();
-        if (gazeCursorController != null)
-        {
-            gazeCursorController.close();
-        }
         controllers.clear();
     }
 
@@ -511,7 +507,6 @@ public class GVRInputManager implements IEventReceiver
                         GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_VENDOR_ID,
                         GVRDeviceConstants.OCULUS_GEARVR_TOUCHPAD_PRODUCT_ID);
             }
-            gazeCursorController.incrementReferenceCount();
             // use the cached gaze key
             key = GAZE_CACHED_KEY;
         } else {
@@ -551,7 +546,8 @@ public class GVRInputManager implements IEventReceiver
         return null;
     }
 
-    private GVRCursorController removeDevice(int deviceId) {
+    private GVRCursorController removeDevice(int deviceId)
+    {
         /*
          * We can't use the inputManager here since the device has already been
          * detached and the inputManager would return a null. Instead use the
@@ -560,31 +556,32 @@ public class GVRInputManager implements IEventReceiver
          */
         GVRCursorController controller = controllerIds.get(deviceId);
 
-        if (controller != null) {
-            // Do a reverse lookup and remove the controller
-            for (int index = 0; index < cache.size(); index++) {
-                int key = cache.keyAt(index);
-                GVRCursorController cachedController = cache.get(key);
-                if (cachedController == controller) {
-                    controllerIds.remove(deviceId);
-                    if (controller.getControllerType() == GVRControllerType.MOUSE) {
-                        mouseDeviceManager.removeCursorController(controller);
-                    } else if (controller
-                            .getControllerType() == GVRControllerType.GAMEPAD) {
-                        gamepadDeviceManager.removeCursorController(controller);
-                    } else if (controller.getControllerType() == GVRControllerType.GAZE) {
-                        if(!((GVRGazeCursorController) controller).decrementReferenceCount()){
-                            // do not remove the controller yet.
-                            return null;
-                        }
-                    }
-                    cache.remove(key);
-                    return controller;
-                }
-            }
-            controllerIds.remove(deviceId);
+        if (controller == null)
+        {
+            return null;
         }
-        return null;
+        // Do a reverse lookup and remove the controller
+        for (int index = 0; index < cache.size(); index++)
+        {
+            int key = cache.keyAt(index);
+            GVRCursorController cachedController = cache.get(key);
+            if (cachedController == controller)
+            {
+                controllerIds.remove(deviceId);
+                if (controller.getControllerType() == GVRControllerType.MOUSE)
+                {
+                    mouseDeviceManager.removeCursorController(controller);
+                }
+                else if (controller.getControllerType() == GVRControllerType.GAMEPAD)
+                {
+                    gamepadDeviceManager.removeCursorController(controller);
+                }
+                cache.remove(key);
+                return controller;
+            }
+        }
+        controllerIds.remove(deviceId);
+        return controller;
     }
 
     /**
@@ -801,7 +798,7 @@ public class GVRInputManager implements IEventReceiver
                 GVRContext ctx = gvrCursorController.getGVRContext();
                 deselectController();
                 GVRCursorController gaze = ctx.getInputManager().findCursorController(GVRControllerType.GAZE);
-                if ((gaze != null) && (gaze != gvrCursorController))
+                if (gaze != gvrCursorController)
                 {
                     ctx.getInputManager().addCursorController(gaze);
                 }
