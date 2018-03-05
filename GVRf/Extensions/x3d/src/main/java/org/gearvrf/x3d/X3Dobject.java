@@ -51,6 +51,7 @@ import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDirectLight;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRIndexBuffer;
 import org.gearvrf.GVRLODGroup;
 import org.gearvrf.GVRMaterial;
@@ -76,6 +77,7 @@ import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
 import org.joml.Vector3f;
 import org.joml.Quaternionf;
+import java.util.EnumSet;
 
 public class X3Dobject {
     /**
@@ -230,11 +232,15 @@ public class X3Dobject {
         private FloatArray mOutputTexCoords = new FloatArray(64 * 3);
         private GVRContext mContext;
         private DefinedItem mVertexBufferDefine;
+        private boolean mUseNormals;
+        private boolean mUseTexCoords;
 
-        MeshCreator(GVRContext ctx)
+        MeshCreator(GVRContext ctx, EnumSet<GVRImportSettings> settings)
         {
             mContext = ctx;
             mVertexBufferDefine = null;
+            mUseNormals = !settings.contains(GVRImportSettings.NO_LIGHTING);
+            mUseTexCoords = !settings.contains(GVRImportSettings.NO_TEXTURING);
         }
 
         void clear()
@@ -270,7 +276,10 @@ public class X3Dobject {
          */
         void addNormalIndex(int index)
         {
-            mNormalIndices.add(index);
+            if (mUseNormals)
+            {
+                mNormalIndices.add(index);
+            }
         }
 
         /*
@@ -279,7 +288,9 @@ public class X3Dobject {
          */
         void addTexcoordIndex(int index)
         {
-            mTexcoordIndices.add(index);
+            if (mUseTexCoords) {
+                mTexcoordIndices.add(index);
+            }
         }
 
         /*
@@ -305,7 +316,9 @@ public class X3Dobject {
          */
         void addInputNormal(float[] norm)
         {
-            mInputNormals.add(norm);
+            if (mUseNormals) {
+                mInputNormals.add(norm);
+            }
         }
 
         /*
@@ -318,7 +331,9 @@ public class X3Dobject {
          */
         void addInputTexcoord(float[] tc)
         {
-            mInputTexCoords.add(tc);
+            if (mUseTexCoords) {
+                        mInputTexCoords.add(tc);
+            }
         }
 
         /*
@@ -406,9 +421,9 @@ public class X3Dobject {
          * and texture coordinates. This function converts the
          * X3D input data into a GVRVertexBuffer and GVRIndexBuffer.
          */
-        GVRVertexBuffer organizeVertices(GVRIndexBuffer ibuf, boolean makeNormals)
+        GVRVertexBuffer organizeVertices(GVRIndexBuffer ibuf)
         {
-            boolean hasTexCoords = mInputTexCoords.getSize() > 0;
+            boolean hasTexCoords = mUseTexCoords & (mInputTexCoords.getSize() > 0);;
             boolean hasNormals = mInputNormals.getSize() > 0;
             String descriptor = "float3 a_position";
 
@@ -416,7 +431,7 @@ public class X3Dobject {
             {
                 descriptor += " float2 a_texcoord";
             }
-            if (hasNormals || makeNormals)
+            if (mUseNormals && hasNormals)
             {
                 descriptor += " float3 a_normal";
             }
@@ -427,7 +442,7 @@ public class X3Dobject {
              */
             if (!hasTexCoords && !hasNormals)
             {
-                return copyVertices(descriptor, ibuf, makeNormals);
+                return copyVertices(descriptor, ibuf, mUseNormals);
             }
             /*
              * If the X3D file does not have normal or texcoord indices,
@@ -438,7 +453,7 @@ public class X3Dobject {
             if ((mTexcoordIndices.getSize() == 0) &&
                 (mNormalIndices.getSize() == 0))
             {
-                return copyVertices(descriptor, ibuf, makeNormals);
+                return copyVertices(descriptor, ibuf, mUseNormals);
             }
 
             /*
@@ -508,7 +523,7 @@ public class X3Dobject {
             {
                 generateNormals(newIndices, newIndices.length, mOutputPositions);
             }
-            if (hasNormals || makeNormals)
+            else if (mUseNormals)
             {
                 vbuffer.setFloatArray("a_normal", mOutputNormals.array(), 3, 0);
             }
@@ -589,7 +604,7 @@ public class X3Dobject {
     // Default is true to use Universal lights shader.
     public final static boolean UNIVERSAL_LIGHTS = true;
 
-    private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)";
+    private final static String JAVASCRIPT_IMPORT_PACKAGE = "importPackage(org.gearvrf.x3d.data_types)\nimportPackage(org.joml)\nimportPackage(org.gearvrf)";
 
     // Strings appended to GVRScene names when there are multiple
     // animations on the same <Transform> or GVRSceneObject
@@ -717,6 +732,11 @@ public class X3Dobject {
     private String indexedSetDEFName = "";
     private String indexedSetUSEName = "";
 
+    // Internal settings from AssetRequest
+    private boolean blockLighting = false;
+    private boolean blockTexturing = false;
+
+
 
 
     // The Text_Font Params class and Reset() function handle
@@ -769,7 +789,12 @@ public class X3Dobject {
             this.activityContext = gvrContext.getContext();
             this.root = root;
 
-            meshCreator = new MeshCreator(this.gvrContext);
+
+            EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
+            blockLighting = settings.contains(GVRImportSettings.NO_LIGHTING);
+            blockTexturing = settings.contains(GVRImportSettings.NO_TEXTURING);
+
+            meshCreator = new MeshCreator(this.gvrContext, settings);
             // Camera rig setup code based on GVRScene::init()
             GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
             leftCamera.setRenderMask(GVRRenderMaskBit.Left);
@@ -778,8 +803,7 @@ public class X3Dobject {
             rightCamera.setRenderMask(GVRRenderMaskBit.Right);
 
             GVRPerspectiveCamera centerCamera = new GVRPerspectiveCamera(gvrContext);
-            centerCamera
-                    .setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
+            centerCamera.setRenderMask(GVRRenderMaskBit.Left | GVRRenderMaskBit.Right);
             cameraRigAtRoot = GVRCameraRig.makeInstance(gvrContext);
             cameraRigAtRoot.getOwnerObject().setName("MainCamera");
             cameraRigAtRoot.attachLeftCamera(leftCamera);
@@ -1560,60 +1584,60 @@ public class X3Dobject {
 
             /********** ImageTexture **********/
             else if (qName.equalsIgnoreCase("ImageTexture")) {
-
-                attributeValue = attributes.getValue("USE");
-                if (attributeValue != null) {
-                    DefinedItem useItem = null;
-                    for (DefinedItem definedItem : mDefinedItems) {
-                        if (attributeValue.equals(definedItem.getName())) {
-                            useItem = definedItem;
-                            break;
-                        }
-                    }
-                    if (useItem != null) {
-                        gvrTexture = useItem.getGVRTexture();
-                        shaderSettings.setTexture(gvrTexture);
-                    }
-                    else {
-                        Log.e(TAG, "Error: ImageTexture USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
-                    }
-                } else {
-                    gvrTextureParameters = new GVRTextureParameters(gvrContext);
-                    gvrTextureParameters.setWrapSType(TextureWrapType.GL_REPEAT);
-                    gvrTextureParameters.setWrapTType(TextureWrapType.GL_REPEAT);
-                    gvrTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
-
-                    String urlAttribute = attributes.getValue("url");
-                    if (urlAttribute != null) {
-                        urlAttribute = urlAttribute.replace("\"", ""); // remove double and
-                        // single quotes
-                        urlAttribute = urlAttribute.replace("\'", "");
-
-                        final String filename = urlAttribute;
-                        String repeatSAttribute = attributes.getValue("repeatS");
-                        if (repeatSAttribute != null) {
-                            if (!parseBooleanString(repeatSAttribute)) {
-                                gvrTextureParameters
-                                        .setWrapSType(TextureWrapType.GL_CLAMP_TO_EDGE);
+                if ( !blockTexturing ) {
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) {
+                        DefinedItem useItem = null;
+                        for (DefinedItem definedItem : mDefinedItems) {
+                            if (attributeValue.equals(definedItem.getName())) {
+                                useItem = definedItem;
+                                break;
                             }
                         }
-                        String repeatTAttribute = attributes.getValue("repeatT");
-                        if (repeatTAttribute != null) {
-                            if (!parseBooleanString(repeatTAttribute)) {
-                                gvrTextureParameters
-                                        .setWrapTType(TextureWrapType.GL_CLAMP_TO_EDGE);
-                            }
+                        if (useItem != null) {
+                            gvrTexture = useItem.getGVRTexture();
+                            shaderSettings.setTexture(gvrTexture);
+                        } else {
+                            Log.e(TAG, "Error: ImageTexture USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
                         }
+                    } else {
+                        gvrTextureParameters = new GVRTextureParameters(gvrContext);
+                        gvrTextureParameters.setWrapSType(TextureWrapType.GL_REPEAT);
+                        gvrTextureParameters.setWrapTType(TextureWrapType.GL_REPEAT);
+                        gvrTextureParameters.setMinFilterType(GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_NEAREST);
 
-                        final String defValue = attributes.getValue("DEF");
+                        String urlAttribute = attributes.getValue("url");
+                        if (urlAttribute != null) {
+                            urlAttribute = urlAttribute.replace("\"", ""); // remove double and
+                            // single quotes
+                            urlAttribute = urlAttribute.replace("\'", "");
+
+                            final String filename = urlAttribute;
+                            String repeatSAttribute = attributes.getValue("repeatS");
+                            if (repeatSAttribute != null) {
+                                if (!parseBooleanString(repeatSAttribute)) {
+                                    gvrTextureParameters
+                                            .setWrapSType(TextureWrapType.GL_CLAMP_TO_EDGE);
+                                }
+                            }
+                            String repeatTAttribute = attributes.getValue("repeatT");
+                            if (repeatTAttribute != null) {
+                                if (!parseBooleanString(repeatTAttribute)) {
+                                    gvrTextureParameters
+                                            .setWrapTType(TextureWrapType.GL_CLAMP_TO_EDGE);
+                                }
+                            }
+
+                            final String defValue = attributes.getValue("DEF");
                             gvrTexture = new GVRTexture(gvrContext, gvrTextureParameters);
                             GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest, gvrTexture, (inlineSubdirectory + filename));
                             assetRequest.loadTexture(request);
                             shaderSettings.setTexture(gvrTexture);
-                        if (defValue != null) {
-                            DefinedItem item = new DefinedItem(defValue);
+                            if (defValue != null) {
+                                DefinedItem item = new DefinedItem(defValue);
                                 item.setGVRTexture(gvrTexture);
-                            mDefinedItems.add(item);
+                                mDefinedItems.add(item);
+                            }
                         }
                     }
                 }
@@ -1841,7 +1865,7 @@ public class X3Dobject {
             /********** LIGHTS **********/
             /********** PointLight **********/
             else if (qName.equalsIgnoreCase("PointLight")) {
-                if (UNIVERSAL_LIGHTS) {
+                if (UNIVERSAL_LIGHTS && !blockLighting) {
                     attributeValue = attributes.getValue("USE");
                     if (attributeValue != null) { // shared PointLight
                         DefinedItem useItem = null;
@@ -1989,7 +2013,7 @@ public class X3Dobject {
 
             /********** DirectionalLight **********/
             else if (qName.equalsIgnoreCase("DirectionalLight")) {
-                if (UNIVERSAL_LIGHTS) {
+                if (UNIVERSAL_LIGHTS && !blockLighting) {
                     attributeValue = attributes.getValue("USE");
                     if (attributeValue != null) { // shared PointLight
                         DefinedItem useItem = null;
@@ -2118,7 +2142,7 @@ public class X3Dobject {
 
             /********** SpotLight **********/
             else if (qName.equalsIgnoreCase("SpotLight")) {
-                if (UNIVERSAL_LIGHTS) {
+                if (UNIVERSAL_LIGHTS && !blockLighting) {
                     attributeValue = attributes.getValue("USE");
                     if (attributeValue != null) { // shared PointLight
                         DefinedItem useItem = null;
@@ -2893,7 +2917,8 @@ public class X3Dobject {
 
                     // LOD has it's own GVRSceneObject which has a
                     // GVRLODGroup component attached
-                    if (lodManager.transformLODSceneObject == null) {
+                    if (lodManager.isActive() && lodManager.transformLODSceneObject == null) {
+                    //if (lodManager.transformLODSceneObject == null) {
                         lodManager.transformLODSceneObject = AddGVRSceneObject();
                         lodManager.transformLODSceneObject.attachComponent(new GVRLODGroup(gvrContext));
                         currentSceneObject = lodManager.transformLODSceneObject;
@@ -3709,7 +3734,7 @@ public class X3Dobject {
                 }
                 else {
                     if (reorganizeVerts) {
-                        gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer, true);
+                        gvrVertexBuffer = meshCreator.organizeVertices(gvrIndexBuffer);
                         reorganizeVerts = false;
                     }
                     GVRMesh mesh = new GVRMesh(gvrContext, gvrVertexBuffer.getDescriptor());
