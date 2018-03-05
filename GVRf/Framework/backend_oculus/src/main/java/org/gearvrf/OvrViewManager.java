@@ -177,7 +177,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      */
     void onDestroy() {
         Log.v(TAG, "onDestroy");
-        mGearController.onDestroy();
         mRotationSensor.onDestroy();
         super.onDestroy();
     }
