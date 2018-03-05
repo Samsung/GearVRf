@@ -58,6 +58,7 @@ class GvrfClient(BaseClient):
     def prepare_scene(self):
         self.exec_command(gvrf_commands.import_package())
         self.exec_command(gvrf_commands.get_scene())
+        self.exec_command(gvrf_commands.get_camera())
 
     def clear_scene(self):
         self.exec_command(gvrf_commands.clear_scene())
@@ -84,13 +85,19 @@ class GvrfClient(BaseClient):
         else:
             print(light_type + ' light type is not supported in GVRf.')
 
+    def load_camera(self, position, rotation):
+        var_obj = gvrf_commands._var_camera
+
+        self.exec_command(gvrf_commands.set_position(var_obj, position[0], position[2], position[1] * -1))
+        self.exec_command(gvrf_commands.set_rotation(var_obj, rotation[0], rotation[1], rotation[2], rotation[3]))
+
     def create_light_node(self, position, rotation):
         var_obj = 'lightNode'
 
         self.exec_command(gvrf_commands.create_scene_obj(var_obj))
-        # Change coordinate system to Y-Up and -Z foward
+
         self.exec_command(gvrf_commands.set_position(var_obj, position[0], position[2], position[1] * -1))
-        self.exec_command(gvrf_commands.set_rotation(var_obj, -rotation[1], rotation[2], -rotation[3], rotation[0]))
+        self.exec_command(gvrf_commands.set_rotation(var_obj, rotation[0], rotation[1], rotation[2], rotation[3]))
         self.exec_command(gvrf_commands.add_on_scene(var_obj))
 
     def create_point_light(self, color, use_diffuse, use_specular):

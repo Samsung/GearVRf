@@ -1,12 +1,16 @@
 
 _var_context = 'gvrf'
 _var_scene = 'scene'
+_var_camera = 'camera'
 
 def import_package():
     return 'importPackage(org.gearvrf);'
 
 def get_scene():
     return 'var %s = %s.getMainScene();' % (_var_scene, _var_context)
+
+def get_camera():
+    return 'var %s = %s.getMainCameraRig();' % (_var_camera, _var_scene)
 
 def clear_scene():
     return '%s.clear();' % _var_scene

@@ -18,5 +18,9 @@ class BaseClient(ABC):
         pass
 
     @abstractmethod
+    def load_camera(self, position, rotation):
+        pass
+
+    @abstractmethod
     def clear_scene(self):
         pass
