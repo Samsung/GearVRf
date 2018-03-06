@@ -26,7 +26,7 @@ from pathlib import Path
 
 
 fs = FileServer()
-default_dirpath = str(Path.home()) + '\\GvrfExporterWorkspace'
+default_dirpath = os.path.join(str(Path.home()), 'GvrfExporterWorkspace')
 if not os.path.exists(default_dirpath):
     os.makedirs(default_dirpath)
 os.chdir(default_dirpath)
