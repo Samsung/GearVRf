@@ -2,30 +2,6 @@ from abc import ABC, abstractmethod
 import bpy, socket, math
 import os.path, filecmp, shutil
 
-def __copy_textures(all_objects=True):
-    if all_objects:
-        col = bpy.data.objects
-    else:
-        col = bpy.context.selected_objects
-
-    imgs = set()
-    for o in col:
-        for ms in o.material_slots:
-            for ts in ms.material.texture_slots:
-                if ts:
-                    if hasattr(ts.texture, 'image'):
-                        img_name = ts.texture.image.filepath[2:]
-                        imgs.add(img_name)
-
-    filepath = bpy.path.abspath('//')
-    for img_name in imgs:
-        bn = os.path.basename(img_name)
-        abspath = os.path.abspath(os.path.join(filepath, img_name))
-        if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
-            shutil.copy(abspath, bn)
-
-
-
 class BaseExporter(ABC):
     @abstractmethod
     def export(self):
@@ -70,7 +46,23 @@ class MeshExporter(BaseExporter):
     def export_to_file(self, name):
         # Export fbx file
         bpy.ops.export_scene.fbx(filepath = name, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP', global_scale = self._globalscale)
+        self.copy_textures()
 
+    def copy_textures(self):
+        imgs = set()
+        for ms in self._obj.material_slots:
+            for ts in ms.material.texture_slots:
+                if ts:
+                    if hasattr(ts.texture, 'image'):
+                        img_name = ts.texture.image.filepath[2:]
+                        imgs.add(img_name)
+
+        filepath = bpy.path.abspath('//')
+        for img_name in imgs:
+            bn = os.path.basename(img_name)
+            abspath = os.path.abspath(os.path.join(filepath, img_name))
+            if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
+                shutil.copy(abspath, bn)
 
 class LightExporter(BaseExporter):
     def __init__(self, client, obj):
@@ -158,8 +150,6 @@ class CameraExporter(BaseExporter):
 def export(client, selected_objects, globalscale):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
     server_url = 'http://' + ipv4 + ':8000/'
-
-    __copy_textures()
 
     scene = bpy.context.scene
     obj_active = scene.objects.active
