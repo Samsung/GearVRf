@@ -185,7 +185,10 @@ public class GVRInputManager implements IEventReceiver
     {
         for (GVRCursorController controller : getCursorControllers())
         {
-            controllers.add(controller);
+            if (!controllers.contains(controller))
+            {
+                controllers.add(controller);
+            }
             if (controller.isConnected())
             {
                 addCursorController(controller);

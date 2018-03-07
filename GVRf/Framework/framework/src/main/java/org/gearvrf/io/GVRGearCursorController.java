@@ -430,12 +430,12 @@ public final class GVRGearCursorController extends GVRCursorController
 
         q.normalize();
         camMtx.getNormalizedRotation(mTempRotation);
-        mTempRotation.transform(pos);       // rotate controller position by camera orientation
+        mTempRotation.transform(pos);           // rotate controller position by camera orientation
         x += pos.x;
         y += pos.y;
         z += pos.z;
-        q.mul(mTempRotation);               // rotate pivot by combined event and camera rotation
-        mTempPivotMtx.rotation(q);          // translate pivot by combine event and camera translation
+        mTempRotation.mul(q);
+        mTempPivotMtx.rotation(mTempRotation);  // translate pivot by combined event and camera translation
         mTempPivotMtx.setTranslation(x, y, z);
         mPivotRoot.getTransform().setModelMatrix(mTempPivotMtx);
         setOrigin(x, y, z);
