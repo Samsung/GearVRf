@@ -86,8 +86,12 @@ class LightExporter(BaseExporter):
         self.export()
 
     def export(self):
+        prev_rotation_mode = self._obj.rotation_mode
+        # Set rotation mode to quaternion to get the correct rotation values
+        self._obj.rotation_mode = 'QUATERNION'
         # Rotate -90 degrees on X axis to ajust coordinate system to Y up and -Z foward
         self._new_rotation = self.rotate_90_degree_x(self._obj.rotation_quaternion)
+        self._obj.rotation_mode = prev_rotation_mode
 
         if self._light.type == 'SPOT':
             outer_angle = math.degrees(self._light.spot_size)
@@ -148,8 +152,12 @@ class CameraExporter(BaseExporter):
         self.export()
 
     def export(self):
+        prev_rotation_mode = self._obj.rotation_mode
+        # Set rotation mode to quaternion to get the correct rotation values
+        self._obj.rotation_mode = 'QUATERNION'
         # Rotate -90 degrees on X axis to ajust coordinate system to Y up and -Z foward
         self._new_rotation = self.rotate_90_degree_x(self._obj.rotation_quaternion)
+        self._obj.rotation_mode = prev_rotation_mode
         
         self.export_to_file()
         self._client.load_camera(self._obj.location, self._new_rotation)
