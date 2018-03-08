@@ -51,12 +51,15 @@ import org.gearvrf.x3d.data_types.SFFloat;
 import org.gearvrf.x3d.data_types.SFInt32;
 import org.gearvrf.x3d.data_types.SFString;
 import org.gearvrf.x3d.data_types.SFTime;
+import org.gearvrf.x3d.data_types.SFVec2f;
 import org.gearvrf.x3d.data_types.SFVec3f;
 import org.gearvrf.x3d.data_types.SFRotation;
 import org.gearvrf.x3d.data_types.MFString;
 import org.joml.AxisAngle4f;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -1894,8 +1897,37 @@ public class AnimationInteractivityManager {
         return q;
     } // end ConvertDirectionalVectorToQuaternion
 
+    public Matrix3f SetTextureTransformMatrix(SFVec2f translation, SFVec2f center, SFVec2f scale, SFFloat rotation) {
+        // Texture Transform Matrix equation:
+        // TC' = -C * S * R * C * T * TC
 
-}  //  end AnimationInteractivityManager class
+        Matrix3f translationMatrix = new Matrix3f();
+        translationMatrix.identity();
+        translationMatrix.m02 = translation.x;
+        translationMatrix.m12 = translation.y;
+
+        Matrix3f centerMatrix = new Matrix3f();
+        centerMatrix.identity();
+        centerMatrix.m02 = center.x;
+        centerMatrix.m12 = center.y;
+        Matrix3f negCenterMatrix = new Matrix3f(centerMatrix).invert();
+
+        Matrix3f scaleMatrix = new Matrix3f();
+        scaleMatrix.scale(scale.x, scale.y, 1);
+
+        Matrix3f rotationMatrix = new Matrix3f();
+        rotationMatrix.rotateZ(rotation.getValue());
+
+        Matrix3f textureTransformMatrix = new Matrix3f().identity();
+
+        textureTransformMatrix.mul(negCenterMatrix).mul(scaleMatrix).mul(rotationMatrix).mul(centerMatrix).mul(translationMatrix);
+
+        return textureTransformMatrix;
+    }
+
+
+
+    }  //  end AnimationInteractivityManager class
 
 
 
