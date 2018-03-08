@@ -13,8 +13,13 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-import bpy, socket, math
-import os.path, filecmp, shutil
+import bpy
+import socket
+import math
+import os.path
+import filecmp
+import shutil
+
 
 class BaseExporter(ABC):
     @abstractmethod
@@ -24,9 +29,12 @@ class BaseExporter(ABC):
     @abstractmethod
     def export_to_file(self):
         pass
-    
+
     def normalize_quaternion(self, rotation):
-        magnitude = math.sqrt(rotation[0] * rotation[0] + rotation[1] * rotation[1] + rotation[2] * rotation[2] + rotation[3] * rotation[3])
+        magnitude = math.sqrt(
+            rotation[0] * rotation[0] + rotation[1] * rotation[1]
+            + rotation[2] * rotation[2] + rotation[3] * rotation[3])
+
         w = rotation[0] / magnitude
         x = rotation[1] / magnitude
         y = rotation[2] / magnitude
@@ -43,7 +51,7 @@ class BaseExporter(ABC):
 
 
 class MeshExporter(BaseExporter):
-    def __init__(self, client, server_url, obj, globalscale = 0.01):
+    def __init__(self, client, server_url, obj, globalscale=0.01):
         self._client = client
         self._server_url = server_url
         self._obj = obj
@@ -59,7 +67,8 @@ class MeshExporter(BaseExporter):
 
     def export_to_file(self, name):
         # Export fbx file
-        bpy.ops.export_scene.fbx(filepath = name, use_selection = True, object_types = { 'MESH' }, path_mode = 'STRIP', global_scale = self._globalscale)
+        bpy.ops.export_scene.fbx(
+            filepath=name, use_selection=True, object_types={'MESH'}, path_mode='STRIP', global_scale=self._globalscale)
         self.copy_textures()
 
     def copy_textures(self):
@@ -77,6 +86,7 @@ class MeshExporter(BaseExporter):
             abspath = os.path.abspath(os.path.join(filepath, img_name))
             if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
                 shutil.copy(abspath, bn)
+
 
 class LightExporter(BaseExporter):
     def __init__(self, client, obj):
@@ -103,25 +113,13 @@ class LightExporter(BaseExporter):
 
             self.export_to_file(outer_angle, inner_angle)
             self._client.load_light(
-                self._obj.location,
-                self._new_rotation,
-                self._light.type,
-                self._light.color,
-                self._light.use_diffuse,
-                self._light.use_specular,
-                outer_cone = outer_angle,
-                inner_cone = inner_angle
-            )
+                self._obj.location, self._new_rotation, self._light.type, self._light.color, self._light.use_diffuse,
+                self._light.use_specular, outer_cone=outer_angle, inner_cone=inner_angle)
         else:
             self.export_to_file()
             self._client.load_light(
-                self._obj.location,
-                self._new_rotation,
-                self._light.type,
-                self._light.color,
-                self._light.use_diffuse,
-                self._light.use_specular,
-            )
+                self._obj.location, self._new_rotation, self._light.type, self._light.color, self._light.use_diffuse,
+                self._light.use_specular)
 
     def calc_inner_cone(self, distance, size, blend):
         outer_r = math.tan(math.radians(size / 2.0)) * distance
@@ -131,11 +129,12 @@ class LightExporter(BaseExporter):
         inner_angle = math.degrees(math.atan(inner_r / distance))
         return inner_angle * 2
 
-    def export_to_file(self, outer_angle = None, inner_angle = None):
+    def export_to_file(self, outer_angle=None, inner_angle=None):
         f = open(self._obj.name + '.txt', 'w')
         f.write('name: %s\n' % self._obj.name)
         f.write('location: %s, %s, %s\n' % (self._obj.location[0], self._obj.location[2], self._obj.location[1] * -1))
-        f.write('rotation: %s, %s, %s, %s\n' % (self._new_rotation[0], self._new_rotation[1], self._new_rotation[2], self._new_rotation[3]))
+        f.write('rotation: %s, %s, %s, %s\n' % (
+            self._new_rotation[0], self._new_rotation[1], self._new_rotation[2], self._new_rotation[3]))
         f.write('type: %s\n' % self._light.type)
         f.write('color: %s, %s, %s\n' % (self._light.color[0], self._light.color[1], self._light.color[2]))
         f.write('use_diffuse: %s\n' % self._light.use_diffuse)
@@ -144,6 +143,7 @@ class LightExporter(BaseExporter):
             f.write('outer_cone_angle: %s\n' % outer_angle)
             f.write('inner_cone_angle: %s\n' % inner_angle)
         f.close()
+
 
 class CameraExporter(BaseExporter):
     def __init__(self, client, obj):
@@ -158,7 +158,7 @@ class CameraExporter(BaseExporter):
         # Rotate -90 degrees on X axis to ajust coordinate system to Y up and -Z foward
         self._new_rotation = self.rotate_90_degree_x(self._obj.rotation_quaternion)
         self._obj.rotation_mode = prev_rotation_mode
-        
+
         self.export_to_file()
         self._client.load_camera(self._obj.location, self._new_rotation)
 
@@ -166,8 +166,10 @@ class CameraExporter(BaseExporter):
         f = open(self._obj.name + '.txt', 'w')
         f.write('name: %s\n' % self._obj.name)
         f.write('location: %s, %s, %s\n' % (self._obj.location[0], self._obj.location[2], self._obj.location[1] * -1))
-        f.write('rotation: %s, %s, %s, %s\n' % (self._new_rotation[0], self._new_rotation[1], self._new_rotation[2], self._new_rotation[3]))
+        f.write('rotation: %s, %s, %s, %s\n' % (
+            self._new_rotation[0], self._new_rotation[1], self._new_rotation[2], self._new_rotation[3]))
         f.close()
+
 
 def export(client, selected_objects, globalscale):
     ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
@@ -205,6 +207,7 @@ def export(client, selected_objects, globalscale):
 
     for obj in selection:
         obj.select = True
+
 
 def clear_scene(client):
     client.clear_scene()

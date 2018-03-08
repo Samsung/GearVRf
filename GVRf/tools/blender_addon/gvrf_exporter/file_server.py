@@ -17,6 +17,7 @@ from socketserver import ThreadingMixIn
 from threading import Thread
 import socket
 
+
 class ThreadingServer(ThreadingMixIn, HTTPServer):
     _thread = None
     _is_running = False
@@ -32,7 +33,7 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
     def start_server(self):
         print('start server')
         self._is_running = True
-        self._thread = Thread(target = self.request_handler)
+        self._thread = Thread(target=self.request_handler)
         self._thread.start()
 
     def stop_server(self):
@@ -40,10 +41,11 @@ class ThreadingServer(ThreadingMixIn, HTTPServer):
         self._is_running = False
         self.server_close()
 
+
 class FileServer:
     _server = None
 
-    def __init__(self, port = 8000):
+    def __init__(self, port=8000):
         self._port = port
         self._handler = SimpleHTTPRequestHandler
         self.update_ipv4()
@@ -68,7 +70,7 @@ class FileServer:
         if self.check_running_server():
             try:
                 self._server.stop_server()
-            except:
+            except AttributeError:
                 print('Can\'t close the server')
 
     def check_running_server(self):
@@ -79,6 +81,5 @@ class FileServer:
             s.connect(sockaddr)
             s.close()
             return True
-        except:
+        except OSError:
             return False
-

@@ -14,9 +14,10 @@
 
 from abc import ABC, abstractmethod
 
+
 class BaseClient(ABC):
     @abstractmethod
-    def connect(self, address = None, port = 0):
+    def connect(self, address=None, port=0):
         pass
 
     @abstractmethod
@@ -28,7 +29,8 @@ class BaseClient(ABC):
         pass
 
     @abstractmethod
-    def load_light(self, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone = None, inner_cone = None):
+    def load_light(
+            self, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone=None, inner_cone=None):
         pass
 
     @abstractmethod
