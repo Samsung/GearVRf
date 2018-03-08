@@ -3669,13 +3669,16 @@ public class X3Dobject {
                                         break;
                                     }
                                 }
-                                if (shaderSettings.textureMatrix != null)
+                                if (shaderSettings.textureMatrix == null)
                                 {
-                                    float[] texMtx = new float[9];
-                                    shaderSettings.textureMatrix.get(texMtx);
-                                    gvrMaterial.setFloatArray("texture_matrix", texMtx);
-                                    shaderSettings.textureMatrix = null;
+                                    shaderSettings.textureMatrix = new Matrix3f();
                                 }
+                                shaderSettings.textureMatrix.identity();
+                                float[] texMtx = new float[9];
+
+                                // TODO: put the proper stuff in the matrix here
+                                shaderSettings.textureMatrix.get(texMtx);
+                                gvrMaterial.setFloatArray("texture_matrix", texMtx);
                             }
 
                             // Appearance node thus far contains properties of GVRMaterial

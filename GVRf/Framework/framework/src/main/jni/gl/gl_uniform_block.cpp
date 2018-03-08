@@ -131,6 +131,7 @@ namespace gvr {
                     elemsize /= sizeof(float);
                     switch (elemsize)
                     {
+                        case 9: glUniformMatrix3fv(loc, e.Count, false, (const float*) data); break;
                         case 12: glUniformMatrix3x4fv(loc, e.Count, false, (const float*) data); break;
                         case 16: glUniformMatrix4fv(loc, e.Count, false, (const float*) data); break;
                         default: LOGE("UniformBlock: ERROR invalid integer matrix size %d", elemsize); break;
