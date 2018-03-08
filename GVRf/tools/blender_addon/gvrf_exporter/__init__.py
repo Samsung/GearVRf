@@ -71,7 +71,11 @@ class SceneExporter(bpy.types.Operator):
         _port = 1645
         _selected_objects = context.scene.selectedobjects
         _global_scale = context.scene.globalscale
-        scene_exporter.export(GvrfClient(_addr, _port, do_debug = True), selected_objects = _selected_objects, globalscale = _global_scale)
+
+        try:
+            scene_exporter.export(GvrfClient(_addr, _port, do_debug = True), selected_objects = _selected_objects, globalscale = _global_scale)
+        except TimeoutError:
+            self.report({ 'ERROR' }, 'Connection attempt failed. Check the clinet\'s IP address and if the gvr-remote-scripting application is running.')
 
         return { 'FINISHED' }
 
@@ -86,7 +90,10 @@ class SceneClear(bpy.types.Operator):
         _addr = context.scene.clientip
         _port = 1645
 
-        scene_exporter.clear_scene(GvrfClient(_addr, _port, do_debug = True))
+        try:
+            scene_exporter.clear_scene(GvrfClient(_addr, _port, do_debug = True))
+        except TimeoutError:
+            self.report({ 'ERROR' }, 'Connection attempt failed. Check the clinet\'s IP address and if the gvr-remote-scripting application is running.')
 
         return { 'FINISHED' }
 
