@@ -346,7 +346,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
     /**
      * To set initial properties before start rendering {@link GVRViewSceneObject};
-     * Called at GL thread.
+     * Called at Framework thread.
      */
     protected void onStartRendering() {
         if (mEventsListener != null) {
@@ -606,7 +606,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         }
 
         private void onRenderDataReady() {
-            mGVRContext.runOnGlThread(new Runnable() {
+            mGVRContext.runOnTheFrameworkThread(new Runnable() {
                 @Override
                 public void run() {
                     mSceneObject.onStartRendering();
