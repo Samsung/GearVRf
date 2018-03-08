@@ -34,6 +34,6 @@ set_property(TARGET gvrf PROPERTY IMPORTED_LOCATION
 
 add_library(Bullet SHARED IMPORTED)
 set_property(TARGET Bullet PROPERTY IMPORTED_LOCATION
-             ${CMAKE_CURRENT_SOURCE_DIR}/prebuilt/armeabi-v7a/libBullet.so)
+             ${CMAKE_CURRENT_SOURCE_DIR}/prebuilt/${ANDROID_ABI}/libBullet.so)
 
 target_link_libraries(gvrf-physics gvrf log Bullet GLESv3)

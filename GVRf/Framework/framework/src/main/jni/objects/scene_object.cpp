@@ -173,7 +173,6 @@ void SceneObject::onAddedToScene(Scene* scene)
  */
 bool SceneObject::onAddChild(SceneObject* addme, SceneObject* root)
 {
-    bounding_volume_dirty_ = true;
     if (addme == this)
     {
         std::string error =  "SceneObject::addChildObject() : cycle of scene objects is not allowed.";
@@ -249,7 +248,13 @@ void SceneObject::removeChildObject(SceneObject* child) {
 }
 
 void SceneObject::onTransformChanged() {
+    Transform* t = transform();
+    if (t)
+    {
+        t->invalidate();
+    }
     setTransformDirty();
+    dirtyHierarchicalBoundingVolume();
     if (getChildrenCount() > 0)
     {
         std::lock_guard<std::mutex> lock(children_mutex_);
@@ -467,7 +472,7 @@ bool SceneObject::intersectsBoundingVolume(SceneObject *scene_object) {
 
 
 BoundingVolume& SceneObject::getBoundingVolume() {
-    if (!bounding_volume_dirty_ && !transform_dirty_) {
+    if (!bounding_volume_dirty_) {
         return transformed_bounding_volume_;
     }
     RenderData* rdata = render_data();
