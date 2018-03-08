@@ -36,8 +36,6 @@ abstract class BaseView implements IViewEvents {
 
         GVRContext ctx = this.scene.getGVRContext();
         mViewSceneObject = new GVRViewSceneObject(ctx, layoutID, this);
-        // Wait for layout view be inflated at UI thread.
-        mViewSceneObject.waitFor();
     }
 
     @Override
