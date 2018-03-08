@@ -43,9 +43,12 @@ import javax.xml.parsers.SAXParserFactory;
 import org.gearvrf.script.GVRJavascriptScriptFile;
 import org.gearvrf.script.javascript.GVRJavascriptV8File;
 import org.joml.Matrix3f;
+import org.joml.Vector2f;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import org.gearvrf.x3d.data_types.SFVec2f;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAssetLoader;
@@ -1651,11 +1654,9 @@ public class X3Dobject {
 
             /********** TextureTransform **********/
             else if (qName.equalsIgnoreCase("TextureTransform")) {
-                Log.e(TAG, "X3D TextureTransform not currently implemented");
                 attributeValue = attributes.getValue("DEF");
                 if (attributeValue != null) {
-                    Log.e(TAG,
-                            "TextureTransform DEF attribute not currently implemented");
+                    shaderSettings.setTextureTransformName(attributeValue);
                 }
                 String centerAttribute = attributes.getValue("center");
                 if (centerAttribute != null) {
@@ -1667,7 +1668,7 @@ public class X3Dobject {
                 if (rotationAttribute != null) {
                     float[] rotation = parseFixedLengthFloatString(rotationAttribute, 1,
                             false, false);
-                    shaderSettings.setTextureRotation(rotation[0]);
+                    shaderSettings.setTextureRotation( -rotation[0] );
                 }
                 String scaleAttribute = attributes.getValue("scale");
                 if (scaleAttribute != null) {
@@ -1681,10 +1682,7 @@ public class X3Dobject {
                             2, false, false);
                     shaderSettings.setTextureTranslation(translation);
                 }
-                // TODO: make this matrix from the TextureTransform settings
-//                Matrix3f texMatrix = new Matrix3f();
-//                shaderSettings.textureMatrix = texMatrix;
-            }
+            }  // end TextureTransform
 
             /********** IndexedFaceSet **********/
 
@@ -3669,18 +3667,48 @@ public class X3Dobject {
                                         break;
                                     }
                                 }
-                                if (shaderSettings.textureMatrix == null)
+                                if (shaderSettings.textureMatrix != null)
                                 {
-                                    shaderSettings.textureMatrix = new Matrix3f();
-                                }
-                                shaderSettings.textureMatrix.identity();
-                                float[] texMtx = new float[9];
+                                    float[] texMtx = new float[9];
 
-                                // TODO: put the proper stuff in the matrix here
-                                shaderSettings.textureMatrix.get(texMtx);
-                                gvrMaterial.setFloatArray("texture_matrix", texMtx);
+                                    // TODO: put the proper stuff in the matrix here
+                                    shaderSettings.textureMatrix.get(texMtx);
+                                    gvrMaterial.setFloatArray("texture_matrix", texMtx);
+                                    shaderSettings.textureMatrix = null;
+                                }
                             }
 
+                            // Texture Transform
+                            // If DEFined iteam, add to the DeFinedItem list. Maay be interactive
+                             if ( shaderSettings.getTextureTransformName() != null); {
+                                DefinedItem definedItem = new DefinedItem(
+                                        shaderSettings.getTextureTransformName());
+                                definedItem.setGVRMaterial(gvrMaterial);
+                                definedItem.setTextureTranslation( shaderSettings.getTextureTranslation());
+                                definedItem.setTextureCenter( shaderSettings.getTextureCenter() );
+                                definedItem.setTextureScale( shaderSettings.getTextureScale() );
+                                definedItem.setTextureRotation( shaderSettings.getTextureRotation().getValue());
+                                mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
+                            }
+                            Matrix3f textureTransform = animationInteractivityManager.SetTextureTransformMatrix(
+                                    shaderSettings.getTextureTranslation(),
+                                    shaderSettings.getTextureCenter(),
+                                    shaderSettings.getTextureScale(),
+                                    shaderSettings.getTextureRotation() );
+
+                        // TODO: make this matrix from the TextureTransform settings
+                        Matrix3f texMatrix = new Matrix3f();
+                        shaderSettings.textureMatrix = texMatrix;
+
+                        float[] texMtx = new float[9];
+                        shaderSettings.textureMatrix.get(texMtx);
+                        gvrMaterial.setFloatArray("texture_matrix", texMtx);
+                        shaderSettings.textureMatrix = null;
+                            // Texture Transform Matrix equation:
+                            // TC' = -C * S * R * C * T * TC
+                            //where TC' is the transformed texture coordinate
+                            //   TC is the original Texture Coordinate
+                            //   C = center, S = scale, R = rotation, T = translation
                             // Appearance node thus far contains properties of GVRMaterial
                             // node
                             if (!shaderSettings.getAppearanceName().isEmpty()) {

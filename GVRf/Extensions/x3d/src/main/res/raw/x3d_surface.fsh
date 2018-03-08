@@ -23,6 +23,9 @@ Surface @ShaderName()
     diffuse = emission;
 #endif
 #ifdef HAS_diffuseTexture
+#ifdef HAS_texture_matrix
+    diffuse_coord.xy = texture_matrix * diffuse;
+#endif
     diffuse *= texture(diffuseTexture, diffuse_coord.xy);
 #endif
     diffuse.xyz *= diffuse.w;
