@@ -248,8 +248,9 @@ public class GVRViewSceneObject extends GVRSceneObject {
         super.onNewParentObject(parent);
 
         synchronized (mLock) {
-            if (mRootViewGroup.getParent() == null && getRenderData() != null) {
-                getGVRContext().getActivity().registerView(mRootViewGroup);
+            if (getRenderData() != null) {
+                // Do call View#onDraw().
+                mRootViewGroup.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -259,8 +260,9 @@ public class GVRViewSceneObject extends GVRSceneObject {
         super.onRemoveParentObject(parent);
 
         synchronized (mLock) {
-            if (mRootViewGroup.getParent() != null && getRenderData() != null) {
-                getGVRContext().getActivity().unregisterView(mRootViewGroup);
+            if (getRenderData() != null) {
+                // Don't call View#onDraw() anymore.
+                mRootViewGroup.setVisibility(View.INVISIBLE);
             }
         }
     }
@@ -614,7 +616,9 @@ public class GVRViewSceneObject extends GVRSceneObject {
             });
 
             // To call draw(...) after renderData has been created
-            setVisibility(VISIBLE);
+            if (mSceneObject.getParent() != null) {
+                setVisibility(VISIBLE);
+            }
 
             onViewVisible();
         }
