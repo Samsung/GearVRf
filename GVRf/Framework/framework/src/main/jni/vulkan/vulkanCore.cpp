@@ -882,11 +882,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     if(rdata->alpha_blend()) {
         att_state[0].blendEnable = VK_TRUE;
-        att_state[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-        att_state[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        att_state[0].srcColorBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
+        att_state[0].dstColorBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->dest_alpha_blend_func()));
         att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
-        att_state[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        att_state[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        att_state[0].srcAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
+        att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
         att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
     }
     std::vector<uint32_t> result_vert = shader->getVkVertexShader();
@@ -922,14 +922,23 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             getVKSampleBit(sampleCount), VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
             VK_NULL_HANDLE, VK_NULL_HANDLE);
 
-    pipelineCreateInfo.pDepthStencilState = gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                                                                     rdata->depth_mask() ? VK_TRUE : VK_FALSE,
-                                                                                     VK_COMPARE_OP_LESS_OR_EQUAL,
-                                                                                     VK_FALSE,
-                                                                                     VK_STENCIL_OP_KEEP,
-                                                                                     VK_STENCIL_OP_KEEP,
-                                                                                     VK_COMPARE_OP_ALWAYS,
-                                                                                     VK_FALSE);
+
+
+    pipelineCreateInfo.pDepthStencilState =
+            gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
+                                                     rdata->depth_mask() ? VK_TRUE : VK_FALSE,
+                                                     VK_COMPARE_OP_LESS_OR_EQUAL,
+                                                     VK_FALSE,
+                                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_sfail())),  //stencil pass
+                                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dppass())), //depth pass, stencil pass
+                                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dpfail())), //depth fail, stencil pass
+                                                     static_cast<VkCompareOp>(m_conversionFlags.getFromGL(rdata->stencil_func_func())), //compare function
+                                                     rdata->stencil_func_mask(), //compare mask
+                                                     rdata->getStencilMask(), //stencil mask
+                                                     rdata->stencil_func_ref(),  //reference value
+                                                     rdata->stencil_test());
+
+
     pipelineCreateInfo.pStages = &shaderStages[0];
 
     pipelineCreateInfo.renderPass = renderPass;

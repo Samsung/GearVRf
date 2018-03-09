@@ -23,6 +23,8 @@
 #include <unordered_map>
 #include "objects/components/camera.h"
 #include "vk_texture.h"
+#include "vulkan_flags.h"
+
 
 #define GVR_VK_CHECK(X) if (!(X)) { LOGD("VK_CHECK Failure"); assert((X));}
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
@@ -224,6 +226,7 @@ private:
     uint32_t m_physicalDeviceCount;
     uint32_t m_queueFamilyIndex;
     VkQueue m_queue;
+    VulkanConversionFlags m_conversionFlags;
 
     VkSurfaceKHR m_surface;
     VkSurfaceFormatKHR mSurfaceFormat;
