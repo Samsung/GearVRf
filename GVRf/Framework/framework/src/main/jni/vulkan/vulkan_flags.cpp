@@ -35,9 +35,9 @@ namespace  gvr {
         glToVulkan[ GL_DST_ALPHA ]                          = VkBlendFactor::VK_BLEND_FACTOR_DST_ALPHA;
         glToVulkan[ GL_ONE_MINUS_DST_ALPHA ]                = VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA ;
         glToVulkan[ GL_CONSTANT_COLOR ]                     = VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_COLOR;
-        glToVulkan[ GL_ONE_MINUS_CONSTANT_COLOR ]           = VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_ALPHA;
-        glToVulkan[ GL_CONSTANT_ALPHA ]                     = VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
-        glToVulkan[ GL_ONE_MINUS_CONSTANT_ALPHA ]           = VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+        glToVulkan[ GL_ONE_MINUS_CONSTANT_COLOR ]           = VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+        glToVulkan[ GL_CONSTANT_ALPHA ]                     = VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_ALPHA;
+        glToVulkan[ GL_ONE_MINUS_CONSTANT_ALPHA ]           = VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
         glToVulkan[GL_SRC_ALPHA_SATURATE]                   = VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
 
 

@@ -319,7 +319,7 @@ namespace gvr {
             imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
             imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
             imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT|VK_IMAGE_ASPECT_DEPTH_BIT|VK_IMAGE_ASPECT_STENCIL_BIT;
             imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
             imageViewCreateInfo.subresourceRange.levelCount = 1;
             imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
@@ -923,10 +923,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             VK_NULL_HANDLE, VK_NULL_HANDLE);
 
 
+    bool depthWrite = (rdata->rendering_order() == RenderData::Queue::Stencil) ? false : true;
 
     pipelineCreateInfo.pDepthStencilState =
             gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                                     rdata->depth_mask() ? VK_TRUE : VK_FALSE,
+                                                     (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
                                                      VK_COMPARE_OP_LESS_OR_EQUAL,
                                                      VK_FALSE,
                                                      static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_sfail())),  //stencil pass
@@ -1036,7 +1037,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
-            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, mWidth,
+            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D24_UNORM_S8_UINT, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
             depthImage->createImageView(false);
