@@ -192,6 +192,22 @@ public final class GVRGearCursorController extends GVRCursorController
         }
     }
 
+    /**
+     * Replaces the model used to depict the controller in the scene.
+     *
+     * @param controllerModel root of hierarchy to use for controller model
+     */
+    public void setControllerModel(GVRSceneObject controllerModel)
+    {
+        if (mControllerModel != null)
+        {
+            mControllerGroup.removeChildObject(mControllerModel);
+        }
+        mControllerModel = controllerModel;
+        mControllerGroup.addChildObject(mControllerModel);
+        mControllerModel.setEnable(mShowControllerModel);
+    }
+
     @Override
     public void setCursorDepth(float depth)
     {
@@ -430,12 +446,12 @@ public final class GVRGearCursorController extends GVRCursorController
 
         q.normalize();
         camMtx.getNormalizedRotation(mTempRotation);
-        mTempRotation.transform(pos);       // rotate controller position by camera orientation
+        mTempRotation.transform(pos);           // rotate controller position by camera orientation
         x += pos.x;
         y += pos.y;
         z += pos.z;
-        q.mul(mTempRotation);               // rotate pivot by combined event and camera rotation
-        mTempPivotMtx.rotation(q);          // translate pivot by combine event and camera translation
+        mTempRotation.mul(q);
+        mTempPivotMtx.rotation(mTempRotation);  // translate pivot by combined event and camera translation
         mTempPivotMtx.setTranslation(x, y, z);
         mPivotRoot.getTransform().setModelMatrix(mTempPivotMtx);
         setOrigin(x, y, z);
