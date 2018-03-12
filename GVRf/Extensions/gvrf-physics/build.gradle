@@ -27,6 +27,7 @@ android {
                 //gcc and clang hence overriding the default toolchain to match the one used
                 //by the other modules
                 arguments.add('-DANDROID_TOOLCHAIN=gcc')
+                arguments.add('-DANDROID_STL=gnustl_static')
                 if (rootProject.hasProperty("buildGvrfAndDemos")) {
                     arguments.add('-DCMAKE_BUILD_TYPE=Debug')
                 }
