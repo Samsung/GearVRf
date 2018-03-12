@@ -22,6 +22,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 #include "vulkanCore.h"
+#include "vulkan.h"
 #include "vulkan_uniform_block.h"
 
 

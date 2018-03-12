@@ -25,6 +25,7 @@
 #include "vk_imagebase.h"
 #include "vk_render_target.h"
 #include "vk_render_texture_offscreen.h"
+#include "vulkanCore.h"
 #include <array>
 
 #define TEXTURE_BIND_START 4
@@ -1176,45 +1177,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
     }
 
-    VkRenderTexture* VulkanCore::getRenderTexture(VkRenderTarget* renderTarget) {
-        VkFence fence =  static_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
-        //VkRenderTarget* renderTarget1 = renderTarget ;
-        VkResult err;
-        err = vkGetFenceStatus(m_device, fence);
-        /* Commenting out the code of sending an older image to oculus, if the current one is not yet complete.
-         * Reason for commenting : 1. Even though the FPS is 60 the visuals lag.
-         *                         2. FPS is not affected with or without this logic
-         * /
-/*
-        bool found = false;
-        VkResult status;
-
-        if (err != VK_SUCCESS) {
-            renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
-            while (renderTarget1!= nullptr && renderTarget1 != renderTarget) {
-                VkFence fence1 = static_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
-                status = vkGetFenceStatus(m_device, fence1);
-                if (VK_SUCCESS == status) {
-                    found = true;
-                    break;
-                }
-                renderTarget1 = static_cast<VkRenderTarget*>(renderTarget1->getNextRenderTarget());
-            }
-             if (!found) {
-                 renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
-                 VkFence fence1 = static_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
-                err = vkWaitForFences(m_device, 1, &fence1 , VK_TRUE,
-                                  4294967295U);
-             }
-        }
-*/
-        while (err != VK_SUCCESS) {
-            err = vkWaitForFences(m_device, 1, &fence , VK_TRUE, 4294967295U);
-        }
-
-        return static_cast<VkRenderTexture*>(renderTarget->getTexture());
-    }
-
      int VulkanCore::waitForFence(VkFence fence) {
         if(VK_SUCCESS == vkWaitForFences(m_device, 1, &fence, VK_TRUE,
                         4294967295U))
@@ -1224,8 +1186,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     }
     void VulkanCore::renderToOculus(RenderTarget* renderTarget){
-        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(getRenderTexture(static_cast<VkRenderTarget*>(renderTarget)));
-        renderTexture->readRenderResult(&oculusTexData);
+        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
+        renderTexture->accessRenderResult(&oculusTexData);
+        renderTexture->unmapDeviceMemory();
     }
 
     void VulkanCore::GetDescriptorPool(VkDescriptorPool& descriptorPool){
@@ -1325,13 +1288,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
+
+        if(m_androidWindow != NULL) {
+            InitSurface();
+        }
+
         if (InitDevice() == false) {
             m_Vulkan_Initialised = false;
             return;
         }
 
         if(m_androidWindow != NULL) {
-            InitSurface();
             InitSwapChain();
             InitSync();
             SetNextBackBuffer();

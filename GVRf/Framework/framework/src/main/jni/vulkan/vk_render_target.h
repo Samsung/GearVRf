@@ -15,7 +15,7 @@
 #ifndef FRAMEWORK_VK_RENDER_TARGET_H
 #define FRAMEWORK_VK_RENDER_TARGET_H
 #include "../objects/components/render_target.h"
-#include "vulkan.h"
+#include "vulkan_headers.h"
 
 namespace gvr{
 
@@ -31,6 +31,8 @@ public:
     explicit  VkRenderTarget(){}
     virtual ~VkRenderTarget(){}
     virtual void    beginRendering(Renderer* renderer);
+
+    VkRenderTexture* getTexture();
     VkCommandBuffer& getCommandBuffer();
 };
 }

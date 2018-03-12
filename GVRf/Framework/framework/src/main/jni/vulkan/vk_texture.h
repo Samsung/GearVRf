@@ -16,10 +16,9 @@
 #ifndef FRAMEWORK_VK_TEXTURE_H
 #define FRAMEWORK_VK_TEXTURE_H
 #include <cstdlib>
-#include "vulkan/vulkanInfoWrapper.h"
+#include "vulkan_headers.h"
 #include "../objects/textures/image.h"
 #include "../objects/textures/texture.h"
-#include "vulkan/vulkan_image.h"
 
 
 namespace gvr {

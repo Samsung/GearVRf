@@ -18,7 +18,7 @@
 
 #include <vector>
 #include <memory>
-#include "vulkan_wrapper.h"
+#include "vulkan_headers.h"
 
 namespace gvr {
     struct ImageInfo
@@ -89,7 +89,7 @@ class vkImageBase
     private:
         VkImageViewType imageType;
         VkImage image;
-        VkDeviceMemory dev_memory, host_memory;
+        VkDeviceMemory dev_memory = 0, host_memory = 0;
         VkImageLayout imageLayout;
         VkImageView imageView;
         VkFormat format_;
@@ -97,10 +97,10 @@ class vkImageBase
         int width_, height_, depth_,  mLayers;
         VkImageTiling tiling_;
         VkImageUsageFlags usage_flags_;
-        std::unique_ptr<VkBuffer> outBuffer;
-        VkBuffer hostBuffer;
+        std::unique_ptr<VkBuffer> outBuffer = nullptr;
+        VkBuffer hostBuffer = 0;
         VkDeviceSize size;
-        bool host_accessible_;
+        bool host_accessible_ = false;
 };
 }
 #endif

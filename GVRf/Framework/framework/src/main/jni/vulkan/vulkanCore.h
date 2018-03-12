@@ -111,7 +111,6 @@ public:
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*,VkRenderTexture*, bool);
     void BuildCmdBufferForRenderDataPE(VkCommandBuffer &cmdBuffer, ShaderManager*, Camera*, RenderData* rdata, VkRenderTexture*, int);
 
-    VkRenderTexture* getRenderTexture(VkRenderTarget*);
     int waitForFence(VkFence fence);
 
     VkFence createFenceObject();

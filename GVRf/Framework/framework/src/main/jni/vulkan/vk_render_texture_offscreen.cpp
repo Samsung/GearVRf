@@ -48,7 +48,16 @@ namespace gvr{
         return true;
     }
 
-    bool VkRenderTextureOffScreen::readRenderResult(uint8_t **readback_buffer) {
+    bool VkRenderTextureOffScreen::readRenderResult(uint8_t* readback_buffer){
+
+        uint8_t *data;
+        bool result = accessRenderResult(&data);
+        memcpy(readback_buffer, data, mWidth*mHeight*4);
+        unmapDeviceMemory();
+        return result;
+    }
+
+    bool VkRenderTextureOffScreen::accessRenderResult(uint8_t **readback_buffer) {
 
         if(!fbo)
             return false;
@@ -89,9 +98,23 @@ namespace gvr{
         VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         err = vkMapMemory(device, mem, 0,
                           fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
+
         *readback_buffer = data;
         //GVR_VK_CHECK(!err);
 
+        return true;
+
+    }
+
+
+    void VkRenderTextureOffScreen::unmapDeviceMemory()
+    {
+        if(!fbo)
+            return;
+
+        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+        VkDevice device = vk_renderer->getDevice();
+        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         vkUnmapMemory(device, mem);
     }
 

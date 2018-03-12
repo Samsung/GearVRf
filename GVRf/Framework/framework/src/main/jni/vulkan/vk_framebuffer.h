@@ -15,7 +15,6 @@
 #ifndef FRAMEWORK_VK_FRAMEBUFFER_H
 #define FRAMEWORK_VK_FRAMEBUFFER_H
 #include "vulkan/vk_imagebase.h"
-#include "vulkan/vulkan.h"
 #include <unordered_map>
 
 namespace gvr {

@@ -18,7 +18,7 @@
 
 #include "vulkan_headers.h"
 #include "objects/textures/bitmap_image.h"
-
+#include "vulkan/vulkan_image.h"
 namespace gvr {
     class VkBitmapImage : public vkImageBase, public BitmapImage
     {

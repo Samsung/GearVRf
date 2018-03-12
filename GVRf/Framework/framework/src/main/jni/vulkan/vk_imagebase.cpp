@@ -36,14 +36,19 @@ int getComponentsNumber(VkFormat format){
         vkDestroyImageView(device, imageView, nullptr);
         vkDestroyImage(device, image, nullptr);
 
-        vkDestroyBuffer(device, hostBuffer, nullptr);
-        vkFreeMemory(device, host_memory, nullptr);
+        if(host_memory != 0)
+            vkFreeMemory(device, host_memory, nullptr);
+
+        if(hostBuffer != 0)
+            vkDestroyBuffer(device, hostBuffer, nullptr);
+
 
         if(host_accessible_) {
             vkDestroyBuffer(device, *outBuffer, nullptr);
             vkFreeMemory(device, dev_memory, nullptr);
         }
-    }
+
+      }
 
 void vkImageBase::createImageView(bool host_accessible) {
     host_accessible_ = host_accessible;
@@ -218,11 +223,11 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
     assert(pass);
 
     /* allocate memory */
-    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &dev_memory);
+    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &host_memory);
     assert(!err);
 
     /* bind memory */
-    err = vkBindImageMemory(device, image, dev_memory, 0);
+    err = vkBindImageMemory(device, image, host_memory, 0);
     assert(!err);
 
     // Reset the setup command buffer
