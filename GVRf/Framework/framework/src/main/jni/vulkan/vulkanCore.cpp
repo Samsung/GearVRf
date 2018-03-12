@@ -319,7 +319,7 @@ namespace gvr {
             imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
             imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
             imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT|VK_IMAGE_ASPECT_DEPTH_BIT|VK_IMAGE_ASPECT_STENCIL_BIT;
+            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
             imageViewCreateInfo.subresourceRange.levelCount = 1;
             imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
@@ -701,7 +701,7 @@ void VulkanCore::InitCommandPools(){
         // Depth Attachment
         attachment = {};
         attachment.flags = 0;
-        attachment.format = VK_FORMAT_D16_UNORM;
+        attachment.format = VK_FORMAT_D24_UNORM_S8_UINT;
         attachment.samples = getVKSampleBit(sample_count);
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

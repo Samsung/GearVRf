@@ -98,11 +98,14 @@ void vkImageBase::createImageView(bool host_accessible) {
     ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
     GVR_VK_CHECK(!ret);
 
+    VkImageAspectFlagBits aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
+    if (usage_flags_ == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        aspectFlag = static_cast<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
     ret = vkCreateImageView(
             device,
             gvr::ImageViewCreateInfo(image, imageType,
                                      format_, 1, mLayers,
-                                     VK_IMAGE_ASPECT_COLOR_BIT|VK_IMAGE_ASPECT_STENCIL_BIT|VK_IMAGE_ASPECT_DEPTH_BIT),
+                                     aspectFlag),
             nullptr, &imageView
     );
     GVR_VK_CHECK(!ret);
@@ -416,7 +419,7 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
                                                              target,
                                                              internalFormat, mipLevels,
                                                              pixels.size(),
-                                                             VK_IMAGE_ASPECT_COLOR_BIT|VK_IMAGE_ASPECT_DEPTH_BIT|VK_IMAGE_ASPECT_STENCIL_BIT), NULL,
+                                                             VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                             &imageView);
     assert(!err);
     
