@@ -15,23 +15,6 @@
 
 package org.gearvrf;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRView;
-import org.gearvrf.script.IScriptable;
-import org.gearvrf.script.javascript.GVRJavascriptV8File;
-import org.gearvrf.utility.DockEventReceiver;
-import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.Threads;
-import org.gearvrf.utility.VrAppSettings;
-
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
@@ -45,6 +28,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+
+import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRView;
+import org.gearvrf.script.IScriptable;
+import org.gearvrf.utility.DockEventReceiver;
+import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
+import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
+import org.gearvrf.utility.VrAppSettings;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -138,6 +137,15 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        // Set Immersive Sticky as described here:
+        // https://developer.android.com/training/system-ui/immersive.html
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
 
@@ -528,21 +536,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         }
 
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            setImmersiveSticky();
-        }
-    }
-
-    // Set Immersive Sticky as described here:
-    // https://developer.android.com/training/system-ui/immersive.html
-    private void setImmersiveSticky() {
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
     /**
