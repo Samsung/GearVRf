@@ -192,6 +192,22 @@ public final class GVRGearCursorController extends GVRCursorController
         }
     }
 
+    /**
+     * Replaces the model used to depict the controller in the scene.
+     *
+     * @param controllerModel root of hierarchy to use for controller model
+     */
+    public void setControllerModel(GVRSceneObject controllerModel)
+    {
+        if (mControllerModel != null)
+        {
+            mControllerGroup.removeChildObject(mControllerModel);
+        }
+        mControllerModel = controllerModel;
+        mControllerGroup.addChildObject(mControllerModel);
+        mControllerModel.setEnable(mShowControllerModel);
+    }
+
     @Override
     public void setCursorDepth(float depth)
     {
