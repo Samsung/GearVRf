@@ -21,7 +21,6 @@ namespace  gvr {
         createMap();
     }
 
-    //todo: create separate maps if number of flags increase
     void VulkanConversionFlags::createMap() {
 
         glToVulkan[GL_ONE]                                  = VkBlendFactor::VK_BLEND_FACTOR_ONE;
