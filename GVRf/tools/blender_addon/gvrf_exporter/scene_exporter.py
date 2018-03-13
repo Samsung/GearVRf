@@ -19,6 +19,7 @@ import math
 import os.path
 import filecmp
 import shutil
+import json
 
 
 class BaseExporter(ABC):
@@ -84,9 +85,11 @@ class MeshExporter(BaseExporter):
         for img_name in imgs:
             bn = os.path.basename(img_name)
             abspath = os.path.abspath(os.path.join(filepath, img_name))
+#            try:
             if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
                 shutil.copy(abspath, bn)
-
+#            except FileNotFoundError:
+#                bpy.ops.object.message_operator('EXEC_DEFAULT', message='Cannot find the texture file "%s"' % abspath)
 
 class LightExporter(BaseExporter):
     def __init__(self, client, obj):
@@ -130,20 +133,39 @@ class LightExporter(BaseExporter):
         return inner_angle * 2
 
     def export_to_file(self, outer_angle=None, inner_angle=None):
-        f = open(self._obj.name + '.txt', 'w')
-        f.write('name: %s\n' % self._obj.name)
-        f.write('location: %s, %s, %s\n' % (self._obj.location[0], self._obj.location[2], self._obj.location[1] * -1))
-        f.write('rotation: %s, %s, %s, %s\n' % (
-            self._new_rotation[0], self._new_rotation[1], self._new_rotation[2], self._new_rotation[3]))
-        f.write('type: %s\n' % self._light.type)
-        f.write('color: %s, %s, %s\n' % (self._light.color[0], self._light.color[1], self._light.color[2]))
-        f.write('use_diffuse: %s\n' % self._light.use_diffuse)
-        f.write('use_specular: %s\n' % self._light.use_specular)
-        if outer_angle and inner_angle:
-            f.write('outer_cone_angle: %s\n' % outer_angle)
-            f.write('inner_cone_angle: %s\n' % inner_angle)
+        f = open(self._obj.name + '.json', 'w')
+        json_string = self.create_json(
+            self._obj.name, self._obj.location, self._new_rotation, self._light.type, self._light.color,
+            self._light.use_diffuse, self._light.use_specular, outer=outer_angle, inner=inner_angle)
+        f.write(json_string)
         f.close()
 
+    def create_json(self, name, location, rotation, light_type, color, diffuse, specular, outer=None, inner=None):
+        return json.dumps({
+            'type': 'Light',
+            'name': name,
+            'location': [
+                location[0],
+                location[2],
+                location[1] * -1
+            ],
+            'rotation': [
+                rotation[0],
+                rotation[1],
+                rotation[2],
+                rotation[3]
+            ],
+            'lightType': light_type,
+            'color': [
+                color[0],
+                color[1],
+                color[2]
+            ],
+            'use_diffuse': diffuse,
+            'use_specular': specular,
+            'outer_cone_angle': outer,
+            'inner_cone_angle': inner
+        }, indent=4)
 
 class CameraExporter(BaseExporter):
     def __init__(self, client, obj):
@@ -163,12 +185,29 @@ class CameraExporter(BaseExporter):
         self._client.load_camera(self._obj.location, self._new_rotation)
 
     def export_to_file(self):
-        f = open(self._obj.name + '.txt', 'w')
-        f.write('name: %s\n' % self._obj.name)
-        f.write('location: %s, %s, %s\n' % (self._obj.location[0], self._obj.location[2], self._obj.location[1] * -1))
-        f.write('rotation: %s, %s, %s, %s\n' % (
-            self._new_rotation[0], self._new_rotation[1], self._new_rotation[2], self._new_rotation[3]))
+        f = open(self._obj.name + '.json', 'w')
+        json_string = self.create_json(self._obj.name, self._obj.location, self._new_rotation)
+        f.write(json_string)
         f.close()
+
+    def create_json(self, name, location, rotation):
+        return json.dumps({
+            'type': 'Camera',
+            'name': name,
+            'location': [
+                location[0],
+                location[2],
+                location[1] * -1
+            ],
+            'rotation': [
+                rotation[0],
+                rotation[1],
+                rotation[2],
+                rotation[3]
+            ],
+            'near_clipping': 0,
+            'far_clipping': 0
+        }, indent=4)
 
 
 def export(client, selected_objects, globalscale):
