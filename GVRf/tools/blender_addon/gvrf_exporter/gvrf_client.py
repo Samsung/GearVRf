@@ -102,11 +102,13 @@ class GvrfClient(BaseClient):
         else:
             print(light_type + ' light type is not supported in GVRf.')
 
-    def load_camera(self, position, rotation):
+    def load_camera(self, position, rotation, near_clipping, far_clipping):
         var_obj = gvrf_commands._var_camera
 
         self.exec_command(gvrf_commands.set_position(var_obj, position[0], position[2], position[1] * -1))
         self.exec_command(gvrf_commands.set_rotation(var_obj, rotation[0], rotation[1], rotation[2], rotation[3]))
+        self.exec_command(gvrf_commands.set_near_clipping(near_clipping))
+        self.exec_command(gvrf_commands.set_far_clipping(far_clipping))
 
     def create_light_node(self, position, rotation):
         var_obj = 'lightNode'

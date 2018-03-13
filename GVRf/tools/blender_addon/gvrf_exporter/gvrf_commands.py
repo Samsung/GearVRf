@@ -95,3 +95,11 @@ def set_outer_cone(var_light, angle):
 
 def attach_light(var_obj, var_light):
     return '%s.attachLight(%s);' % (var_obj, var_light)
+
+
+def set_near_clipping(near_clipping):
+    return '%s.setNearClippingDistance(%s);' % (_var_camera, near_clipping)
+
+
+def set_far_clipping(far_clipping):
+    return '%s.setFarClippingDistance(%s);' % (_var_camera, far_clipping)

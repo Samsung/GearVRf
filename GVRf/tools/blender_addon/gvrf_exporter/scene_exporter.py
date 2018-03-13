@@ -171,6 +171,7 @@ class CameraExporter(BaseExporter):
     def __init__(self, client, obj):
         self._client = client
         self._obj = obj
+        self._camera = bpy.data.cameras[self._obj.name]
         self.export()
 
     def export(self):
@@ -182,15 +183,16 @@ class CameraExporter(BaseExporter):
         self._obj.rotation_mode = prev_rotation_mode
 
         self.export_to_file()
-        self._client.load_camera(self._obj.location, self._new_rotation)
+        self._client.load_camera(self._obj.location, self._new_rotation, self._camera.clip_start, self._camera.clip_end)
 
     def export_to_file(self):
         f = open(self._obj.name + '.json', 'w')
-        json_string = self.create_json(self._obj.name, self._obj.location, self._new_rotation)
+        json_string = self.create_json(
+            self._obj.name, self._obj.location, self._new_rotation, self._camera.clip_start, self._camera.clip_end)
         f.write(json_string)
         f.close()
 
-    def create_json(self, name, location, rotation):
+    def create_json(self, name, location, rotation, near_clipping, far_clipping):
         return json.dumps({
             'type': 'Camera',
             'name': name,
@@ -205,8 +207,8 @@ class CameraExporter(BaseExporter):
                 rotation[2],
                 rotation[3]
             ],
-            'near_clipping': 0,
-            'far_clipping': 0
+            'near_clipping': near_clipping,
+            'far_clipping': far_clipping
         }, indent=4)
 
 
