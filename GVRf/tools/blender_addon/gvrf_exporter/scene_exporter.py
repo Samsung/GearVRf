@@ -85,11 +85,11 @@ class MeshExporter(BaseExporter):
         for img_name in imgs:
             bn = os.path.basename(img_name)
             abspath = os.path.abspath(os.path.join(filepath, img_name))
-#            try:
-            if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
-                shutil.copy(abspath, bn)
-#            except FileNotFoundError:
-#                bpy.ops.object.message_operator('EXEC_DEFAULT', message='Cannot find the texture file "%s"' % abspath)
+            try:
+                if not os.path.exists(bn) or not filecmp.cmp(abspath, bn):
+                    shutil.copy(abspath, bn)
+            except FileNotFoundError:
+                print('Cannot find the texture file "%s"' % abspath)
 
 class LightExporter(BaseExporter):
     def __init__(self, client, obj):

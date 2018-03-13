@@ -122,9 +122,9 @@ def change_dir(self, context):
 
 
 def register():
+    bpy.utils.register_class(SceneExporterPanel)
     bpy.utils.register_class(SceneExporter)
     bpy.utils.register_class(SceneClear)
-    bpy.utils.register_class(SceneExporterPanel)
     bpy.types.Scene.dirpath = bpy.props.StringProperty(
         name='Export Dir', description='', default=default_dirpath, subtype='DIR_PATH', update=change_dir)
 
@@ -139,9 +139,9 @@ def register():
 
 
 def unregister():
+    bpy.utils.unregister_class(SceneExporterPanel)
     bpy.utils.unregister_class(SceneExporter)
     bpy.utils.unregister_class(SceneClear)
-    bpy.utils.unregister_class(SceneExporterPanel)
     del bpy.types.Scene.dirpath
     del bpy.types.Scene.clientip
     del bpy.types.Scene.selectedobjects
