@@ -235,7 +235,7 @@ protected:
 
     int numberDrawCalls;
     int numberTriangles;
-    bool useStencilBuffer_ = true;
+    bool useStencilBuffer_ = false;
 public:
     virtual void state_sort(std::vector<RenderData*>* render_data_vector) ;
     int numLights;

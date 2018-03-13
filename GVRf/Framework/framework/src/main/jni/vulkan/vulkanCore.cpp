@@ -701,7 +701,8 @@ void VulkanCore::InitCommandPools(){
         // Depth Attachment
         attachment = {};
         attachment.flags = 0;
-        attachment.format = VK_FORMAT_D24_UNORM_S8_UINT;
+
+        attachment.format = Renderer::getInstance()->useStencilBuffer() ? VK_FORMAT_D24_UNORM_S8_UINT: VK_FORMAT_D16_UNORM;
         attachment.samples = getVKSampleBit(sample_count);
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -927,17 +928,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     pipelineCreateInfo.pDepthStencilState =
             gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                                     (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
-                                                     VK_COMPARE_OP_LESS_OR_EQUAL,
-                                                     VK_FALSE,
-                                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_sfail())),  //stencil pass
-                                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dppass())), //depth pass, stencil pass
-                                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dpfail())), //depth fail, stencil pass
-                                                     static_cast<VkCompareOp>(m_conversionFlags.getFromGL(rdata->stencil_func_func())), //compare function
-                                                     rdata->stencil_func_mask(), //compare mask
-                                                     rdata->getStencilMask(), //stencil mask
-                                                     rdata->stencil_func_ref(),  //reference value
-                                                     rdata->stencil_test());
+                                     (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
+                                     VK_COMPARE_OP_LESS_OR_EQUAL,
+                                     VK_FALSE,
+                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_sfail())),  //stencil pass
+                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dppass())), //depth pass, stencil pass
+                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dpfail())), //depth fail, stencil pass
+                                     static_cast<VkCompareOp>(m_conversionFlags.getFromGL(rdata->stencil_func_func())), //compare function
+                                     rdata->stencil_func_mask(), //compare mask
+                                     rdata->getStencilMask(), //stencil mask
+                                     rdata->stencil_func_ref(),  //reference value
+                                     rdata->stencil_test());
 
 
     pipelineCreateInfo.pStages = &shaderStages[0];
@@ -1037,7 +1038,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
-            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D24_UNORM_S8_UINT, mWidth,
+
+            VkFormat depthFormat =  Renderer::getInstance()->useStencilBuffer() ? VK_FORMAT_D24_UNORM_S8_UINT: VK_FORMAT_D16_UNORM;
+            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, depthFormat, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
             depthImage->createImageView(false);
