@@ -1900,29 +1900,28 @@ public class AnimationInteractivityManager {
     public Matrix3f SetTextureTransformMatrix(SFVec2f translation, SFVec2f center, SFVec2f scale, SFFloat rotation) {
         // Texture Transform Matrix equation:
         // TC' = -C * S * R * C * T * TC
+        // matrix is:
+        //    moo m10 m20
+        //    m01 m11 m21
+        //    m02 m12 m22
 
-        Matrix3f translationMatrix = new Matrix3f();
-        translationMatrix.identity();
+        Matrix3f translationMatrix = new Matrix3f().identity();
         translationMatrix.m02 = translation.x;
         translationMatrix.m12 = translation.y;
 
-        Matrix3f centerMatrix = new Matrix3f();
-        centerMatrix.identity();
+        Matrix3f centerMatrix = new Matrix3f().identity();
         centerMatrix.m02 = center.x;
         centerMatrix.m12 = center.y;
-        Matrix3f negCenterMatrix = new Matrix3f(centerMatrix).invert();
+        Matrix3f negCenterMatrix = new Matrix3f().identity();
+        negCenterMatrix.m02 = -center.x;
+        negCenterMatrix.m12 = -center.y;
 
-        Matrix3f scaleMatrix = new Matrix3f();
-        scaleMatrix.scale(scale.x, scale.y, 1);
+        Matrix3f scaleMatrix = new Matrix3f().scale(scale.x, scale.y, 1);
 
-        Matrix3f rotationMatrix = new Matrix3f();
-        rotationMatrix.rotateZ(rotation.getValue());
+        Matrix3f rotationMatrix = new Matrix3f().identity().rotateZ(rotation.getValue());
 
         Matrix3f textureTransformMatrix = new Matrix3f().identity();
-
-        textureTransformMatrix.mul(negCenterMatrix).mul(scaleMatrix).mul(rotationMatrix).mul(centerMatrix).mul(translationMatrix);
-
-        return textureTransformMatrix;
+        return textureTransformMatrix.mul(negCenterMatrix).mul(scaleMatrix).mul(rotationMatrix).mul(centerMatrix).mul(translationMatrix);
     }
 
 

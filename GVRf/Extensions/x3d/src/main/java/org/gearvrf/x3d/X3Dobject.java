@@ -1662,6 +1662,7 @@ public class X3Dobject {
                 if (centerAttribute != null) {
                     float[] center = parseFixedLengthFloatString(centerAttribute, 2,
                             false, false);
+                    center[0] = -center[0];
                     shaderSettings.setTextureCenter(center);
                 }
                 String rotationAttribute = attributes.getValue("rotation");
@@ -1680,6 +1681,7 @@ public class X3Dobject {
                 if (translationAttribute != null) {
                     float[] translation = parseFixedLengthFloatString(translationAttribute,
                             2, false, false);
+                    translation[0] = -translation[0];
                     shaderSettings.setTextureTranslation(translation);
                 }
             }  // end TextureTransform
@@ -3667,15 +3669,6 @@ public class X3Dobject {
                                         break;
                                     }
                                 }
-                                if (shaderSettings.textureMatrix != null)
-                                {
-                                    float[] texMtx = new float[9];
-
-                                    // TODO: put the proper stuff in the matrix here
-                                    shaderSettings.textureMatrix.get(texMtx);
-                                    gvrMaterial.setFloatArray("texture_matrix", texMtx);
-                                    shaderSettings.textureMatrix = null;
-                                }
                             }
 
                             // Texture Transform
@@ -3690,25 +3683,22 @@ public class X3Dobject {
                                 definedItem.setTextureRotation( shaderSettings.getTextureRotation().getValue());
                                 mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
                             }
+                            // Texture Transform Matrix equation:
+                            // TC' = -C * S * R * C * T * TC
+                            //where TC' is the transformed texture coordinate
+                            //   TC is the original Texture Coordinate
+                            //   C = center, S = scale, R = rotation, T = translation
                             Matrix3f textureTransform = animationInteractivityManager.SetTextureTransformMatrix(
                                     shaderSettings.getTextureTranslation(),
                                     shaderSettings.getTextureCenter(),
                                     shaderSettings.getTextureScale(),
                                     shaderSettings.getTextureRotation() );
 
-                        // TODO: make this matrix from the TextureTransform settings
-                        Matrix3f texMatrix = new Matrix3f();
-                        shaderSettings.textureMatrix = texMatrix;
+                            shaderSettings.textureMatrix = textureTransform;
+                            float[] texMtx = new float[9];
+                            shaderSettings.textureMatrix.get(texMtx);
+                            gvrMaterial.setFloatArray("texture_matrix", texMtx);
 
-                        float[] texMtx = new float[9];
-                        shaderSettings.textureMatrix.get(texMtx);
-                        gvrMaterial.setFloatArray("texture_matrix", texMtx);
-                        shaderSettings.textureMatrix = null;
-                            // Texture Transform Matrix equation:
-                            // TC' = -C * S * R * C * T * TC
-                            //where TC' is the transformed texture coordinate
-                            //   TC is the original Texture Coordinate
-                            //   C = center, S = scale, R = rotation, T = translation
                             // Appearance node thus far contains properties of GVRMaterial
                             // node
                             if (!shaderSettings.getAppearanceName().isEmpty()) {
@@ -4032,6 +4022,7 @@ public class X3Dobject {
                             }
                             gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
                             inputStream = gvrAndroidResource.getStream();
+
                             currentSceneObject = inlineObject.getInlineGVRSceneObject();
                             saxParser.parse(inputStream, userhandler);
                         } catch (FileNotFoundException e) {

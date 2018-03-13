@@ -112,6 +112,7 @@ public class ShaderSettings
     }
 
     texture = null;
+    textureMatrix = null;
   }
 
 
