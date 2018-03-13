@@ -44,6 +44,7 @@ namespace gvr {
         jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail
 
         jmethodID onDrawEyeMethodId = nullptr;
+        jmethodID onBeforeDrawEyesMethodId = nullptr;
         jmethodID updateSensoredSceneMethodId = nullptr;
 
         jobject activity_;

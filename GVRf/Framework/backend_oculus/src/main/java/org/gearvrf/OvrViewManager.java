@@ -292,7 +292,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
     /** Called once per frame */
     protected void onDrawFrame() {
-        beforeDrawEyes();
 
         // update the gear controller
         if (mGearController != null)
