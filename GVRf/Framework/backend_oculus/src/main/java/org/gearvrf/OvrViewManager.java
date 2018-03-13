@@ -187,6 +187,10 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      */
     void onSurfaceChanged(int width, int height) {
         Log.v(TAG, "onSurfaceChanged");
+
+        final VrAppSettings.EyeBufferParams.DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
+        getActivity().getConfigurationManager().configureRendering(VrAppSettings.EyeBufferParams.DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
+
         mRotationSensor.onResume();
     }
 
