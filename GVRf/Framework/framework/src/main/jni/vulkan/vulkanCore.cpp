@@ -704,9 +704,9 @@ void VulkanCore::InitCommandPools(){
         attachment.format = VK_FORMAT_D24_UNORM_S8_UINT;
         attachment.samples = getVKSampleBit(sample_count);
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
