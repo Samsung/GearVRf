@@ -258,7 +258,7 @@ namespace gvr
         {
             if (type[3] == '3')
             {
-                return 12 * sizeof(float);
+                return 9 * sizeof(float);
             }
             else if (type[3] == '4')
             {
