@@ -887,7 +887,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         att_state[0].dstColorBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->dest_alpha_blend_func()));
         att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
         att_state[0].srcAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
-        att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
+        att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->dest_alpha_blend_func()));
         att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
     }
     std::vector<uint32_t> result_vert = shader->getVkVertexShader();
