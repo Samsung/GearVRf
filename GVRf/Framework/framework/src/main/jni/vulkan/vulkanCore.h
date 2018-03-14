@@ -34,7 +34,6 @@
 namespace gvr {
 class VulkanUniformBlock;
 
-
 extern  void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange,
                             VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 enum ShaderType{
@@ -226,7 +225,6 @@ private:
     uint32_t m_physicalDeviceCount;
     uint32_t m_queueFamilyIndex;
     VkQueue m_queue;
-    VulkanConversionFlags m_conversionFlags;
 
     VkSurfaceKHR m_surface;
     VkSurfaceFormatKHR mSurfaceFormat;

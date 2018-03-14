@@ -17,23 +17,18 @@
 #define FRAMEWORK_VULKAN_FLAGS_H
 
 
-#include <map>
+#include <unordered_map>
 #include "vulkan.h"
 #include "GLES3/gl3.h"
 
 namespace  gvr {
-    class VulkanConversionFlags {
 
-    public:
+    namespace vkflags {
 
-        VulkanConversionFlags();
-        int getFromGL(int GlFlag);
+        extern std::unordered_map<int, int> glToVulkan;
 
-    private:
-        std::map<int, int> glToVulkan;
-        void createMap();
-    };
-
+        extern void initVkRenderFlags();
+    }
 }
 #endif //FRAMEWORK_VULKAN_FLAGS_H
 

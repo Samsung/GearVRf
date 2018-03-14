@@ -705,7 +705,7 @@ void VulkanCore::InitCommandPools(){
         attachment.format = Renderer::getInstance()->useStencilBuffer() ? VK_FORMAT_D24_UNORM_S8_UINT: VK_FORMAT_D16_UNORM;
         attachment.samples = getVKSampleBit(sample_count);
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -883,11 +883,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     if(rdata->alpha_blend()) {
         att_state[0].blendEnable = VK_TRUE;
-        att_state[0].srcColorBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
-        att_state[0].dstColorBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->dest_alpha_blend_func()));
+        att_state[0].srcColorBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->source_alpha_blend_func()]);
+        att_state[0].dstColorBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->dest_alpha_blend_func()]);
         att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
-        att_state[0].srcAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->source_alpha_blend_func()));
-        att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(m_conversionFlags.getFromGL(rdata->dest_alpha_blend_func()));
+        att_state[0].srcAlphaBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->source_alpha_blend_func()]);
+        att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->dest_alpha_blend_func()]);
         att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
     }
     std::vector<uint32_t> result_vert = shader->getVkVertexShader();
@@ -931,10 +931,10 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                      (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
                                      VK_COMPARE_OP_LESS_OR_EQUAL,
                                      VK_FALSE,
-                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_sfail())),  //stencil pass
-                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dppass())), //depth pass, stencil pass
-                                     static_cast<VkStencilOp>(m_conversionFlags.getFromGL(rdata->stencil_op_dpfail())), //depth fail, stencil pass
-                                     static_cast<VkCompareOp>(m_conversionFlags.getFromGL(rdata->stencil_func_func())), //compare function
+                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_sfail()]),  //stencil pass
+                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dppass()]), //depth pass, stencil pass
+                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dpfail()]), //depth fail, stencil pass
+                                     static_cast<VkCompareOp>(vkflags::glToVulkan[rdata->stencil_func_func()]), //compare function
                                      rdata->stencil_func_mask(), //compare mask
                                      rdata->getStencilMask(), //stencil mask
                                      rdata->stencil_func_ref(),  //reference value
