@@ -34,7 +34,7 @@ extern "C" {
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeRenderTarget_defaultCtr(JNIEnv *env, jobject obj, jlong jscene);
-    JNIEXPORT jlong JNICALL
+    JNIEXPORT void JNICALL
             Java_org_gearvrf_NativeRenderTarget_attachRenderTarget(JNIEnv *env, jobject obj, jlong jrendertarget, jlong jnextrendertarget);
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderTarget_cullFromCamera(JNIEnv *env, jobject obj, jlong jscene, jobject javaSceneObject, jlong ptr, jlong jcamera, jlong jshaderManager);
@@ -85,12 +85,14 @@ Java_org_gearvrf_NativeRenderTarget_setMainScene(JNIEnv *env, jobject obj, jlong
     Scene* scene = reinterpret_cast<Scene*>(Sceneptr);
     target->setMainScene(scene);
 }
-JNIEXPORT jlong JNICALL
+
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderTarget_attachRenderTarget(JNIEnv *env, jobject obj, jlong jrendertarget, jlong jnextrendertarget){
     RenderTarget* target = reinterpret_cast<RenderTarget*>(jrendertarget);
     RenderTarget* nextrendertarget = reinterpret_cast<RenderTarget*>(jnextrendertarget);
     target->attachNextRenderTarget(nextrendertarget);
 }
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderTarget_beginRendering(JNIEnv *env, jobject obj, jlong ptr, jlong jcamera){
     RenderTarget* target = reinterpret_cast<RenderTarget*>(ptr);
