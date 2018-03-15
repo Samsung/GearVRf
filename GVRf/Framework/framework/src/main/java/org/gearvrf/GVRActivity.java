@@ -85,44 +85,20 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         android.util.Log.i(TAG, "onCreate " + Integer.toHexString(hashCode()));
         super.onCreate(savedInstanceState);
 
-        InputStream inputStream = null;
-        BufferedReader reader = null;
-        try {
-            for (int i = 0; i < 10; ++i) {
-                try {
-                    inputStream = getAssets().open("backend_" + i + ".txt");
-                    reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                    final String line = reader.readLine();
-                    Log.i(TAG, "trying backend " + line);
-                    final Class<?> aClass = Class.forName(line);
-
-                    mDelegate = (GVRActivityDelegate) aClass.newInstance();
-                    mAppSettings = mDelegate.makeVrAppSettings();
-                    mDelegate.onCreate(this);
-
+        final int backendId = SystemPropertyUtil.getSystemProperty(DEBUG_GEARVRF_BACKEND);
+        if (-1 != backendId) {
+            mDelegate = tryBackend(backendId);
+        } else {
+            for (int i = 0; i <= MAX_BACKEND_ID; ++i) {
+                mDelegate = tryBackend(i);
+                if (null != mDelegate) {
                     break;
-                } catch (final Exception exc) {
-                    mDelegate = null;
                 }
             }
+        }
 
-            if (null == mDelegate) {
-                throw new IllegalStateException("Fatal error: no backend available");
-            }
-        } finally {
-            if (null != reader) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                }
-            }
-            if (null != inputStream) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                }
-            }
+        if (null == mDelegate) {
+            throw new IllegalStateException("Fatal error: no backend available");
         }
 
         if (null != Threads.getThreadPool()) {
@@ -141,6 +117,40 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
 
         mActivityNative = mDelegate.getActivityNative();
+    }
+
+    private final GVRActivityDelegate tryBackend(final int backendId) {
+        InputStream inputStream = null;
+        BufferedReader reader = null;
+        try {
+            inputStream = getAssets().open("backend_" + backendId + ".txt");
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            final String line = reader.readLine();
+            Log.i(TAG, "trying backend " + line);
+            final Class<?> aClass = Class.forName(line);
+
+            GVRActivityDelegate delegate = (GVRActivityDelegate) aClass.newInstance();
+            mAppSettings = delegate.makeVrAppSettings();
+            delegate.onCreate(this);
+
+            return delegate;
+        } catch (final Exception exc) {
+            return null;
+        } finally {
+            if (null != reader) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
+            if (null != inputStream) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
 
     protected void onInitAppSettings(VrAppSettings appSettings) {
@@ -789,4 +799,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             return false;
         }
     }
+
+    private final static String DEBUG_GEARVRF_BACKEND = "debug.gearvrf.backend";
+    private final static int MAX_BACKEND_ID = 9;
 }

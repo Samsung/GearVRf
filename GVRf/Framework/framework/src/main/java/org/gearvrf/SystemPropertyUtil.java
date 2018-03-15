@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GVR_UTIL_H
-#define GVR_UTIL_H
 
-namespace gvr {
-bool isSystemPropertySet(const char *prop);
-int getSystemProperty(const char *prop);
+package org.gearvrf;
+
+public class SystemPropertyUtil {
+    public static native boolean isSystemPropertySet(String name);
+    public static native int getSystemProperty(String name);
 }
-#endif
