@@ -115,7 +115,7 @@ public:
         return 0;
     }
 
-    bool setDataOffsets(const int* offsets, int n)
+    void setDataOffsets(const int* offsets, int n)
     {
         mDataOffsets.resize(n);
         for (int i = 0; i < n; ++i)
