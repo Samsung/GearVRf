@@ -533,13 +533,13 @@ public class GVRViewSceneObject extends GVRSceneObject {
         }
 
         public void dispatchPickerInputEvent(final MotionEvent e, final float x, final float y) {
+            final MotionEvent enew = MotionEvent.obtain(e);
+            enew.setLocation(x, y);
+
             mGVRContext.getActivity().runOnUiThread(new Runnable()
             {
                 public void run()
                 {
-                    MotionEvent enew = MotionEvent.obtain(e);
-
-                    enew.setLocation(x, y);
                     RootViewGroup.super.dispatchTouchEvent(enew);
                     enew.recycle();
                 }
@@ -698,7 +698,10 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         }
 
+        @Override
         public void onEnter(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) { }
+
+        @Override
         public void onExit(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
         {
             if (sceneObject == mSelected)
@@ -708,10 +711,9 @@ public class GVRViewSceneObject extends GVRSceneObject {
            }
         }
 
-        public void onTouchStart(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
-        {
-            if ((mSelected == null) && (pickInfo.motionEvent != null))
-            {
+        @Override
+        public void onTouchStart(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
+            if ((mSelected == null) && (pickInfo.motionEvent != null)) {
                 final MotionEvent event = pickInfo.motionEvent;
                 final float[] texCoords = pickInfo.getTextureCoords();
 
@@ -722,16 +724,16 @@ public class GVRViewSceneObject extends GVRSceneObject {
                 mSelected = sceneObject;
                 dispatchPickerInputEvent(event, mHitX, mHitY);
             }
-       }
+        }
 
-        public void onInside(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
-        {
-            if (sceneObject == mSelected)
-            {
+        @Override
+        public void onInside(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
+            if (sceneObject == mSelected) {
                 onDrag(pickInfo);
             }
         }
 
+        @Override
         public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
         {
             if (mSelected != null)
@@ -775,8 +777,17 @@ public class GVRViewSceneObject extends GVRSceneObject {
             }
         }
 
+        @Override
         public void onMotionOutside(GVRPicker picker, MotionEvent event)
         {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_MOVE:
+                    break;
+                default:
+                    return;
+            }
             dispatchPickerInputEvent(event, event.getX(), event.getY());
         }
     }

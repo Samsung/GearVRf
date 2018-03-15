@@ -424,8 +424,8 @@ public final class GVRGearCursorController extends GVRCursorController
     protected void updatePicker(MotionEvent event, boolean isActive)
     {
         MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
-        mControllerPick.init(mPicker, newEvent,isActive);
-        mControllerPick.run();
+        final ControllerPick controllerPick = new ControllerPick(mPicker, newEvent,isActive);
+        controllerPick.run();
     }
 
     private void handleControllerEvent(final ControllerEvent event)

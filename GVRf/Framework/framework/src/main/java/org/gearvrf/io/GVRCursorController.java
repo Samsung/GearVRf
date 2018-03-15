@@ -1099,14 +1099,14 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
-    protected class ControllerPick implements Runnable
+    protected final class ControllerPick implements Runnable
     {
         public MotionEvent mEvent;
         public GVRPicker mPicker;
         public boolean mActive;
         public boolean mDoPick;
 
-        public void init(GVRPicker picker, MotionEvent event, boolean active)
+        public ControllerPick(GVRPicker picker, MotionEvent event, boolean active)
         {
             mPicker = picker;
             mEvent = event;
@@ -1152,8 +1152,6 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
-    protected ControllerPick mControllerPick = new ControllerPick();
-
     /**
      * Update the state of the picker. If it has an owner, the picker
      * will use that object to derive its position and orientation.
@@ -1162,9 +1160,9 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     protected void updatePicker(MotionEvent event, boolean isActive)
     {
-        MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
-        mControllerPick.init(mPicker, newEvent, isActive);
-        context.runOnGlThread(mControllerPick);
+        final MotionEvent newEvent = (event != null) ? event : null;
+        final ControllerPick controllerPick = new ControllerPick(mPicker, newEvent, isActive);
+        context.runOnGlThread(controllerPick);
     }
 
     /**
@@ -1193,11 +1191,6 @@ public abstract class GVRCursorController implements IEventReceiver
         synchronized (eventLock)
         {
             processedKeyEvent.clear();
-            // done processing, recycle
-            for (MotionEvent event : processedMotionEvent)
-            {
-                event.recycle();
-            }
             processedMotionEvent.clear();
         }
     }
