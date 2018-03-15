@@ -23,13 +23,9 @@ android {
         }
         externalNativeBuild {
             cmake {
-                //difference in sign extension when reinterpret_cast-ing a pointer between
-                //gcc and clang hence overriding the default toolchain to match the one used
-                //by the other modules
-                arguments.add('-DANDROID_TOOLCHAIN=gcc')
-                arguments.add('-DANDROID_STL=gnustl_static')
-                if (rootProject.hasProperty("buildGvrfAndDemos")) {
-                    arguments.add('-DCMAKE_BUILD_TYPE=Debug')
+                if (!rootProject.hasProperty("GVRF_USE_CLANG") || !rootProject.property("GVRF_USE_CLANG")) {
+                    arguments.add('-DANDROID_TOOLCHAIN=gcc')
+                    arguments.add('-DANDROID_STL=gnustl_static')
                 }
             }
         }

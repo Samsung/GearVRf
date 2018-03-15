@@ -7,8 +7,6 @@ repositories {
 }
 
 android {
-    //defaultPublishConfig "debug"
-    publishNonDefault !gradle.getStartParameter().taskNames.contains('uploadArchives')
     compileSdkVersion 26
 
     defaultConfig {
@@ -24,6 +22,9 @@ android {
                 arguments += ['BUILDTYPE=Release']      // for oculus
                 if (rootProject.hasProperty("ARM64")) {
                     arguments += ['ARM64=true']
+                }
+                if (rootProject.hasProperty("GVRF_USE_CLANG") && rootProject.property("GVRF_USE_CLANG")) {
+                    arguments += ['GVRF_USE_CLANG=true']
                 }
             }
         }
@@ -114,11 +115,7 @@ android {
 
     externalNativeBuild {
         ndkBuild {
-            if (rootProject.hasProperty("GVRF_USE_CLANG") && rootProject.property("GVRF_USE_CLANG")) {
-                path 'src/main/clang/Android.mk'
-            } else {
-                path 'src/main/jni/Android.mk'
-            }
+            path 'src/main/jni/Android.mk'
         }
     }
 
