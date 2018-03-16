@@ -334,6 +334,7 @@ bool GLRenderTexture::readRenderResult(uint8_t* readback_buffer){
         return false;
     }
     readRenderResult(readback_buffer,neededCapacity);
+    return true;
 }
 
 bool GLRenderTexture::readRenderResult(uint8_t *readback_buffer, long capacity) {

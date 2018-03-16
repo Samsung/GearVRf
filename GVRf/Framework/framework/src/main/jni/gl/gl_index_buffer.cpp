@@ -20,7 +20,7 @@ namespace gvr {
         if (mIBufferID != -1)
         {
             GL(glDeleteBuffers(1, &mIBufferID));
-            mIBufferID == -1;
+            mIBufferID = -1;
         }
     }
 

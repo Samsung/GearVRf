@@ -70,6 +70,7 @@ const RenderPass* RenderData::pass(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass];
     }
+    return nullptr;
 }
 
 void RenderData::set_mesh(Mesh* mesh)

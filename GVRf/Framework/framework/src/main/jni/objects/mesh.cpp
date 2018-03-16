@@ -214,7 +214,7 @@ namespace gvr
 
     bool Mesh::setIntVec(const char* attrName, const int *src, int nelems)
     {
-        mVertices->setIntVec(attrName, src, nelems, 1);
+        return mVertices->setIntVec(attrName, src, nelems, 1);
     }
 
     bool Mesh::getFloatVec(const char* attrName, float *dest, int nelems)

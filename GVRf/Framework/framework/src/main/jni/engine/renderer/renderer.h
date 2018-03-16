@@ -198,8 +198,9 @@ public:
             case MULTIVIEW:
                 return mMultiviewRenderTarget[index];
             default:
-                LOGE("invalid Eye");
+                FAIL("invalid eye");
         }
+        return nullptr;
     }
 private:
     RenderTarget* mLeftRenderTarget[3];
