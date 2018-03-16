@@ -64,12 +64,13 @@ class MeshExporter(BaseExporter):
         url = self._server_url + name
 
         self.export_to_file(name)
-        self._client.load_mesh(url, name)
+        self._client.load_mesh(url, name, True)
 
     def export_to_file(self, name):
         # Export fbx file
         bpy.ops.export_scene.fbx(
-            filepath=name, use_selection=True, object_types={'MESH'}, path_mode='STRIP', global_scale=self._globalscale)
+            filepath=name, use_selection=True, object_types={'MESH', 'ARMATURE'}, path_mode='STRIP',
+            global_scale=self._globalscale)
         self.copy_textures()
 
     def copy_textures(self):
@@ -221,17 +222,30 @@ def export(client, selected_objects, globalscale):
 
     selection = bpy.context.selected_objects
 
+    root_objects = []
     for obj in scene.objects:
+        if not obj.parent:
+            root_objects.append(obj)
+
+    for obj in root_objects:
         if selected_objects and not obj.select:
             continue
 
         was_selected = obj.select
         obj.select = True
 
+        child_selection = []
+        for child in obj.children:
+            if selected_objects and not child.select:
+                continue
+
+            child_selection.append(child.select)
+            child.select = True
+
         # some exporters only use the active object
         scene.objects.active = obj
 
-        if obj.type == 'MESH':
+        if obj.type == 'MESH' or 'ARMATURE':
             MeshExporter(client, server_url, obj, globalscale)
 
         elif obj.type == 'LAMP':

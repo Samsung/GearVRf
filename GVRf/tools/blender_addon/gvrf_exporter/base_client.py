@@ -25,7 +25,7 @@ class BaseClient(ABC):
         pass
 
     @abstractmethod
-    def load_mesh(self, url, name):
+    def load_mesh(self, url, name, is_animated):
         pass
 
     @abstractmethod

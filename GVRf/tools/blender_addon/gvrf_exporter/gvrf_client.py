@@ -72,18 +72,25 @@ class GvrfClient(BaseClient):
 
     def prepare_scene(self):
         self.exec_command(gvrf_commands.import_package())
+        self.exec_command(gvrf_commands.import_package_animation())
         self.exec_command(gvrf_commands.get_scene())
         self.exec_command(gvrf_commands.get_camera())
 
     def clear_scene(self):
         self.exec_command(gvrf_commands.clear_scene())
 
-    def load_mesh(self, url, name):
+    def load_mesh(self, url, name, is_animated):
         var_url = 'url'
         var_obj = 'obj'
         self.exec_command(gvrf_commands.create_url(var_url, url))
         self.exec_command(gvrf_commands.remove_scene_obj(name))
         self.exec_command(gvrf_commands.load_model_from_url(var_obj, var_url))
+        if is_animated:
+            self.exec_command(gvrf_commands.get_animator(var_obj))
+            self.exec_command(gvrf_commands.animator_start())
+            self.exec_command(gvrf_commands.animator_set_repeat_mode())
+            # set repeat count -1 to repeat infinitely
+            self.exec_command(gvrf_commands.animator_set_repeat_count(-1))
 
     def load_light(
             self, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone=None, inner_cone=None):

@@ -15,10 +15,15 @@
 _var_context = 'gvrf'
 _var_scene = 'scene'
 _var_camera = 'camera'
+_var_animator = 'animator'
 
 
 def import_package():
     return 'importPackage(org.gearvrf);'
+
+
+def import_package_animation():
+    return 'importPackage(org.gearvrf.animation);'
 
 
 def get_scene():
@@ -103,3 +108,19 @@ def set_near_clipping(near_clipping):
 
 def set_far_clipping(far_clipping):
     return '%s.setFarClippingDistance(%s);' % (_var_camera, far_clipping)
+
+
+def get_animator(var_obj):
+    return 'var %s = %s.getComponent(GVRAnimator.getComponentType());' % (_var_animator, var_obj)
+
+
+def animator_start():
+    return '%s.start()' % _var_animator
+
+
+def animator_set_repeat_mode():
+    return '%s.setRepeatMode(GVRRepeatMode.REPEATED);' % _var_animator
+
+
+def animator_set_repeat_count(repeat_count):
+    return '%s.setRepeatCount(%s);' % (_var_animator, repeat_count)
