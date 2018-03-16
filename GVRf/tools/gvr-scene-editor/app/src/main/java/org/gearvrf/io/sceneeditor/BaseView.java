@@ -15,83 +15,45 @@
 
 package org.gearvrf.io.sceneeditor;
 
-import android.graphics.Color;
 import android.view.View;
-import android.widget.FrameLayout;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRRenderData.GVRRenderingOrder;
 import org.gearvrf.GVRScene;
+import org.gearvrf.IViewEvents;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 
-abstract class BaseView  {
-    private static final String TAG = BaseView.class.getSimpleName();
-    private static final float QUAD_X = 10.0f;
-    private static final float QUAD_Y = 8f;
-
-    private float quadHeight;
-    private float quadWidth;
+abstract class BaseView implements IViewEvents {
+    protected final GVRViewSceneObject mViewSceneObject;
     protected GVRScene scene;
-    protected FrameLayout frameLayout;
-    protected GVRViewSceneObject viewSceneObject;
-    private boolean scrollable;
 
     interface WindowChangeListener {
         void onClose();
     }
 
-    BaseView(GVRScene scene, int layoutID, boolean scrollable) {
-        this(scene, layoutID, QUAD_Y, QUAD_X, scrollable);
-    }
-
-    BaseView(GVRScene scene, int layoutID, float
-            quadHeight, float quadWidth, boolean scrollable) {
+    BaseView(GVRScene scene, int layoutID) {
         this.scene = scene;
-        this.quadHeight = quadHeight;
-        this.quadWidth = quadWidth;
-        this.scrollable = scrollable;
 
-        GVRContext context = scene.getGVRContext();
-        GVRActivity activity = context.getActivity();
-        frameLayout = new FrameLayout(activity);
-        context.getActivity().registerView(frameLayout);
-        frameLayout.setBackgroundColor(Color.TRANSPARENT);
-        View.inflate(activity, layoutID, frameLayout);
-    }
-
-    void setScrollable(boolean scrollable) {
-        this.scrollable = scrollable;
-    }
-
-    boolean getScrollable() {
-        return scrollable;
-    }
-
-    void initializeViewSceneObject() {
         GVRContext ctx = this.scene.getGVRContext();
-        viewSceneObject = new GVRViewSceneObject(ctx, frameLayout,quadWidth, quadHeight);
-        viewSceneObject.getRenderData().setRenderingOrder(GVRRenderingOrder.OVERLAY);
-        viewSceneObject.getRenderData().setDepthTest(false);
+        mViewSceneObject = new GVRViewSceneObject(ctx, layoutID, this);
     }
 
-    int getFrameWidth() {
-        return frameLayout.getWidth();
-    }
-
-    int getFrameHeight() {
-        return frameLayout.getHeight();
+    @Override
+    // GL Thread
+    public void onStartRendering(GVRViewSceneObject gvrViewSceneObject, View view) {
+        gvrViewSceneObject.getRenderData().setRenderingOrder(GVRRenderingOrder.OVERLAY);
+        gvrViewSceneObject.getRenderData().setDepthTest(false);
     }
 
     void show() {
-        scene.addSceneObject(viewSceneObject);
+        scene.addSceneObject(mViewSceneObject);
     }
 
     void hide() {
-        scene.removeSceneObject(viewSceneObject);
+        scene.removeSceneObject(mViewSceneObject);
     }
 
     View findViewById(int id) {
-        return frameLayout.findViewById(id);
+        return mViewSceneObject.findViewById(id);
     }
 }

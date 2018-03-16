@@ -23,6 +23,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -65,39 +66,97 @@ import org.gearvrf.utility.Log;
  */
 public class GVRViewSceneObject extends GVRSceneObject {
     private View mView;
-    private RootViewGroup mRootViewGroup;
-    private IViewEvents mEventsListener;
+    private final RootViewGroup mRootViewGroup;
+    private final IViewEvents mEventsListener;
     private GestureDetector mGestureDetector = null;
+    private final Object mLock;
 
     /**
-     * Constructs a scene object that inflate a view from an XML resource. The scene object
-     * notifies the {@linkplain IViewEvents listener} of the view to set its initial properties
-     * after it has been inflated.
-     * Internally the scene object uses the {@linkplain GVRContext context} to create
-     * its own quad mesh based on the the width and height of the view:
-     *     gvrContext.createQuad(getWidth() / Math.max(getWidth(), getHeight()),
+     * Create a new {@link GVRViewSceneObject} instance with its corresponding {@link View}
+     * inflated from specified xml resource.
+     * Android {@link View} will be rendered as {@link GVRTexture} of a default
+     * {@linkplain GVRMesh quad} created internally based on width and height of the {@link View}:
+     *     GVRMesh.createQuad(getWidth() / Math.max(getWidth(), getHeight()),
      *                           getHeight() / Math.max(getWidth(), getHeight()));
+     *
+     * Android {@link View} must be inflated at UI thread so
+     * see {@link #GVRViewSceneObject(GVRContext, int, IViewEvents)} whether you want
+     * to be notified or {@link GVRViewSceneObject#waitFor()} to wait for the instance be ready.
+     *
+     * See {@link GVRMesh#createQuad(float, float)}, {@link IViewEvents}
+     *     and {@link GVRViewSceneObject#waitFor()}
+     *
+     * @param gvrContext current {@link GVRContext}.
+     * @param viewId The resource ID to be inflated. See {@link LayoutInflater}.
+     */
+    public GVRViewSceneObject(GVRContext gvrContext, int viewId) {
+        this(gvrContext, null, viewId, null, null);
+    }
+
+    /**
+     * Create a new {@link GVRViewSceneObject} instance with its corresponding {@link View}.
+     * Android {@link View} will be rendered as {@link GVRTexture} of a default
+     * {@linkplain GVRMesh quad} created internally based on width and height of the {@link View}:
+     *     GVRMesh.createQuad(getWidth() / Math.max(getWidth(), getHeight()),
+     *                           getHeight() / Math.max(getWidth(), getHeight()));
+     *
+     * Android {@link View} must be handled at UI thread so
+     * see {@link #GVRViewSceneObject(GVRContext, int, IViewEvents)} whether you want
+     * to be notified or {@link GVRViewSceneObject#waitFor()} to wait for the instance be ready.
+     *
+     * See {@link GVRMesh#createQuad(float, float)}, {@link IViewEvents}
+     *     and {@link GVRViewSceneObject#waitFor()}
+     *
+     * @param gvrContext current {@link GVRContext}.
+     * @param view The {@link View} to be shown.
+     */
+    public GVRViewSceneObject(GVRContext gvrContext, View view) {
+        this(gvrContext, view, View.NO_ID, null, null);
+    }
+
+    /**
+     * Create a new {@link GVRViewSceneObject} instance with its corresponding {@link View}
+     * inflated from specified xml resource.
+     * Android {@link View} will be rendered as {@link GVRTexture} of an arbitrarily complex geometry.
+     *
+     * @param gvrContext current {@link GVRContext}.
+     * @param viewId The resource ID to inflate. See {@link LayoutInflater}.
+     * @param mesh a {@link GVRMesh} - see
+     *            {@link GVRContext#getAssetLoader()#loadMesh(org.gearvrf.GVRAndroidResource)} and
+     *            {@link GVRMesh#createQuad(float, float)}
+     */
+    public GVRViewSceneObject(GVRContext gvrContext, int viewId, GVRMesh mesh) {
+        this(gvrContext, null, viewId, null, mesh);
+    }
+
+    /**
+     * Create a new {@link GVRViewSceneObject} instance with its corresponding {@link View}
+     * inflated from specified xml resource and notifies its listener when the instance
+     * has been ready.
      *
      * @param gvrContext current {@link GVRContext}.
      * @param viewId The resource ID to inflate. See {@link LayoutInflater}.
      * @param eventsListener Listener to be notified after the view has been inflated.
      */
     public GVRViewSceneObject(GVRContext gvrContext, int viewId, IViewEvents eventsListener) {
-        this(gvrContext, null, null);
-
-        mEventsListener = eventsListener;
-
-        inflateView(viewId);
+        this(gvrContext, null, viewId, eventsListener, null);
     }
 
     /**
-     * Shows {@link View} in a 2D, rectangular {@linkplain GVRViewSceneObject scene object.}
+     * Create a new {@link GVRViewSceneObject} instance with its corresponding {@link View}
+     * inflated from specified xml resource with an arbitrarily complex geometry and
+     * notifies its listener when the instance has been ready.
      *
      * @param gvrContext current {@link GVRContext}.
-     * @param view The {@link View} to be shown.
+     * @param viewId The resource ID to inflate. See {@link LayoutInflater}.
+     * @param eventsListener Listener to be notified after the view has been inflated.
+     * @param mesh a {@link GVRMesh} - see
+     *            {@link GVRContext#getAssetLoader()#loadMesh(org.gearvrf.GVRAndroidResource)} and
+     *            {@link GVRContext#createQuad(float, float)}
      */
-    public GVRViewSceneObject(GVRContext gvrContext, View view) {
-        this(gvrContext, view, null);
+    public GVRViewSceneObject(GVRContext gvrContext, int viewId,
+                                   IViewEvents eventsListener, GVRMesh mesh) {
+        this(gvrContext, null, viewId, eventsListener, mesh);
     }
 
     /**
@@ -108,8 +167,11 @@ public class GVRViewSceneObject extends GVRSceneObject {
      * @param width the rectangle's width
      * @param height the rectangle's height
      */
-    public GVRViewSceneObject(GVRContext gvrContext, View view, float width, float height) {
-        this(gvrContext, view, GVRMesh.createQuad(gvrContext, "float3 a_position float2 a_texcoord", width, height));
+    public GVRViewSceneObject(GVRContext gvrContext, View view,
+                              float width, float height) {
+        this(gvrContext, view,
+                GVRMesh.createQuad(gvrContext, "float3 a_position float2 a_texcoord",
+                        width, height));
     }
 
     /**
@@ -122,21 +184,54 @@ public class GVRViewSceneObject extends GVRSceneObject {
      *            {@link GVRContext#getAssetLoader()#loadMesh(org.gearvrf.GVRAndroidResource)} and
      *            {@link GVRContext#createQuad(float, float)}
      */
-    public GVRViewSceneObject(final GVRContext gvrContext, final View view, final GVRMesh mesh) {
+    public GVRViewSceneObject(GVRContext gvrContext, View view, GVRMesh mesh) {
+        this(gvrContext, view, View.NO_ID, null, mesh);
+    }
+
+    private GVRViewSceneObject(GVRContext gvrContext, final View view, final int viewId,
+                               IViewEvents eventsListener, GVRMesh mesh) {
         super(gvrContext, mesh);
+        final GVRActivity activity = gvrContext.getActivity();
+
+        mEventsListener = eventsListener;
+        mLock = new Object();
+
+        mRootViewGroup = new RootViewGroup(activity, this);
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (viewId != View.NO_ID) {
+                    addView(activity, viewId);
+                } else {
+                    addView(activity, view);
+                }
+            }
+        });
+    }
+
+    // UI thread
+    private void addView(GVRActivity gvrActivity, int viewId) {
+        addView(gvrActivity, View.inflate(gvrActivity, viewId, null));
+    }
+
+    // UI thread
+    private void addView(GVRActivity gvrActivity, View view) {
+        if (view == null) {
+            throw new IllegalArgumentException("Android view cannot be null.");
+        } else if (view.getParent() != null) {
+            // To keep compatibility with GVRView
+            ((ViewGroup)view.getParent()).removeView(view);
+        }
 
         mView = view;
-        mEventsListener = null;
 
-        if (view != null) {
-            getGVRContext().getActivity().runOnUiThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            startRenderingView();
-                        }
-                    });
-        }
+        mRootViewGroup.addView(mView);
+        mRootViewGroup.startRendering();
+        getEventReceiver().addListener(mRootViewGroup);
+
+        // To fix invalidate issue at S6/Note5
+        gvrActivity.getFullScreenView().invalidate();
     }
 
     public RootViewGroup getRootView() { return mRootViewGroup; }
@@ -148,27 +243,40 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
     GestureDetector getGestureDetector() { return mGestureDetector; }
 
-    private void inflateView(final int viewId) {
-        final  GVRActivity activity = getGVRContext().getActivity();
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mView = View.inflate(activity, viewId, null);
-
-                startRenderingView();
-            }
-        });
-    }
-
     @Override
     protected void onNewParentObject(GVRSceneObject parent) {
         super.onNewParentObject(parent);
+        final GVRActivity activity = getGVRContext().getActivity();
+
+        synchronized (mLock) {
+            if (getRenderData() != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Do call View#onDraw().
+                        mRootViewGroup.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        }
     }
 
     @Override
     protected void onRemoveParentObject(GVRSceneObject parent) {
         super.onRemoveParentObject(parent);
+        final GVRActivity activity = getGVRContext().getActivity();
+
+        synchronized (mLock) {
+            if (getRenderData() != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Don't call View#onDraw() anymore.
+                        mRootViewGroup.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        }
     }
 
     public View getView() {
@@ -216,38 +324,47 @@ public class GVRViewSceneObject extends GVRSceneObject {
         return null;
     }
 
-    // TODO: Add stopRenderingView() after romoved from scene
-    private void startRenderingView() {
-        mRootViewGroup = new RootViewGroup(getGVRContext().getActivity(), this);
-
-        if (mView.getParent() != null) {
-            // To keep compatibility with GVRView
-            ((ViewGroup)mView.getParent()).removeView(mView);
+    /**
+     * Will lock current thread until the {@link GVRRenderData} of this instance has been created.
+     * {@link GVRViewSceneObject} instance will be ready after the corresponding
+     * {@link View} has been inflated/configured at UI thread.
+     * Don't call this at UI thread.
+     */
+    public void waitFor() {
+        // Skip for UI thread because the Android View already will be handled by that.
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            // Going to deadlock!
+            throw new UnsupportedOperationException("GVRSVewSceneObject#waitFor() cannot lock UI thread.");
         }
 
-        mRootViewGroup.addView(mView);
-        mRootViewGroup.startRendering();
-        getEventReceiver().addListener(mRootViewGroup);
-
-        // To fix invalidate issue at S6/Note5
-        getGVRContext().getActivity().getFullScreenView().invalidate();
+        synchronized (mLock) {
+            if (getRenderData() == null) {
+                try {
+                    mLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     /**
-     * To set initial properties before attach the view to the View three;
-     *
-     * @param sceneObject This scene object
-     * @param view The view to be initialized;
+     * To set initial properties before attach the view to the View three.
+     * Called at UI thread.
      */
-    private void onInitView(GVRViewSceneObject sceneObject, View view) {
+    protected void onInitView() {
         if (mEventsListener != null) {
-            mEventsListener.onInitView(sceneObject, mView);
+            mEventsListener.onInitView(this, mView);
         }
     }
 
-    private void onStartDraw(GVRViewSceneObject sceneObject, View view) {
+    /**
+     * To set initial properties before start rendering {@link GVRViewSceneObject};
+     * Called at Framework thread.
+     */
+    protected void onStartRendering() {
         if (mEventsListener != null) {
-            mEventsListener.onStartDraw(sceneObject, mView);
+            mEventsListener.onStartRendering(this, mView);
         }
     }
 
@@ -380,9 +497,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         final GVRViewSceneObject mSceneObject;
         Surface mSurface;
         SurfaceTexture mSurfaceTexture;
-        float mViewSize;
-        float mQuadWidth;
-        float mQuadHeight;
+
         float mHitX;
         float mHitY;
         float mActionDownX;
@@ -398,10 +513,6 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
             mGVRContext = gvrActivity.getGVRContext();
             mSceneObject = sceneObject;
-            // Default values to quad size. See onLayoutReady()
-            mViewSize = 0.0f;
-            mQuadWidth = 1.0f;
-            mQuadHeight = 1.0f;
 
             // To optimization
             setWillNotDraw(true);
@@ -476,7 +587,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         public void startRendering() {
             setChildrenInputController(this);
 
-            mSceneObject.onInitView(mSceneObject, this);
+            mSceneObject.onInitView();
 
             // To just set the layout's dimensions but don't call draw(...) after it
             setVisibility(INVISIBLE);
@@ -495,42 +606,33 @@ public class GVRViewSceneObject extends GVRSceneObject {
                         }
                     });
 
-            mGVRContext.getActivity().registerView(RootViewGroup.this);
+            mGVRContext.getActivity().registerView(this);
         }
 
         private void onLayoutReady() {
-            /**
-             * Creates render data and material to its scene object on GL Thread.
-             */
-            mGVRContext.runOnGlThread(new Runnable() {
-                @Override
-                public void run() {
-                    createRenderData();
+            synchronized (mSceneObject.mLock) {
+                createRenderData();
 
-                    onRenderDataReady();
-                }
-            });
+                onRenderDataReady();
+
+                mSceneObject.mLock.notify();
+            }
         }
 
         private void onRenderDataReady() {
-            mViewSize = Math.max(getWidth(), getHeight());
-            mQuadWidth = getWidth() / mViewSize;
-            mQuadHeight = getHeight() / mViewSize;
-
-            /**
-             * Makes the view visible to call draw(...) and start rendering it.
-             */
-            mGVRContext.getActivity().runOnUiThread(new Runnable() {
+            mGVRContext.runOnTheFrameworkThread(new Runnable() {
                 @Override
                 public void run() {
-                    // To call draw(...) after renderData has been created
-                    setVisibility(VISIBLE);
-
-                    onViewVisible();
+                    mSceneObject.onStartRendering();
                 }
             });
 
-            mSceneObject.onStartDraw(mSceneObject, this);
+            // To call draw(...) after renderData has been created
+            if (mSceneObject.getParent() != null) {
+                setVisibility(VISIBLE);
+            }
+
+            onViewVisible();
         }
 
         private void onViewVisible() {
@@ -557,10 +659,18 @@ public class GVRViewSceneObject extends GVRSceneObject {
             final GVRCollider collider;
 
             if (mSceneObject.getRenderData() == null) {
+                float viewSize = Math.max(getWidth(), getHeight());
+                float quadWidth = getWidth() / viewSize;
+                float quadHeight = getHeight() / viewSize;
+
                 final GVRRenderData renderData = new GVRRenderData(mGVRContext);
-                renderData.setMesh(mGVRContext.createQuad(mQuadWidth, mQuadHeight));
+                renderData.setMesh(
+                        GVRMesh.createQuad(mGVRContext,
+                                "float3 a_position float2 a_texcoord",
+                                quadWidth, quadHeight));
                 mSceneObject.attachComponent(renderData);
             }
+
             collider = new GVRMeshCollider(mGVRContext, mSceneObject.getRenderData().getMesh(),true);
             material.setMainTexture(texture);
             mSceneObject.getRenderData().setMaterial(material);

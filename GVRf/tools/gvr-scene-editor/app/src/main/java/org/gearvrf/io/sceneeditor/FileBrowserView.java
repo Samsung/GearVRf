@@ -15,19 +15,17 @@
 
 package org.gearvrf.io.sceneeditor;
 
-import android.view.GestureDetector;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.gearvrf.GVRContext;
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRScene;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.utility.Log;
 
 import java.io.File;
@@ -39,7 +37,7 @@ import java.util.List;
 class FileBrowserView extends BaseView implements OnClickListener {
     private static final String TAG = FileBrowserView.class.getSimpleName();
     private static final String DEFAULT_DIRECTORY = "/sdcard/SceneEditor";
-    private final TextView tvTitle;
+    private TextView tvTitle;
     private String path;
     private String baseDir;
     private ListView listView;
@@ -59,7 +57,6 @@ class FileBrowserView extends BaseView implements OnClickListener {
         }
     };
 
-
     public interface FileViewListener extends WindowChangeListener {
         void onFileSelected(String modelFileName);
     }
@@ -67,22 +64,34 @@ class FileBrowserView extends BaseView implements OnClickListener {
     //Called on main thread
     FileBrowserView(final GVRScene scene, FileViewListener listener,
                     String[] extensions, String title) {
-        super(scene, R.layout.file_browser_layout, true);
-        listView = (ListView) findViewById(R.id.lvFiles);
-        dirView = (TextView) findViewById(R.id.tvDirName);
-        loadingText = (TextView) findViewById(R.id.tvLoading);
+        super(scene, R.layout.file_browser_layout);
+    }
+
+    @Override
+    public void onInitView(GVRViewSceneObject gvrViewSceneObject, View view) {
+        listView = (ListView) view.findViewById(R.id.lvFiles);
+        dirView = (TextView) view.findViewById(R.id.tvDirName);
+        loadingText = (TextView) view.findViewById(R.id.tvLoading);
         loadingText.setVisibility(View.GONE);
         listView.setVisibility(View.VISIBLE);
-        tvTitle = (TextView) findViewById(R.id.tvTitle);
-        bDone = (Button) findViewById(R.id.bDone);
+        tvTitle = (TextView) view.findViewById(R.id.tvTitle);
+        bDone = (Button) view.findViewById(R.id.bDone);
         listView.setOnItemClickListener(itemClickListener);
         fileAdapter = new ArrayAdapter(scene.getGVRContext().getActivity(), android.R.layout.simple_list_item_2,
                 android.R.id.text1, new ArrayList<String>());
         listView.setAdapter(fileAdapter);
-        reset(listener, extensions, title, "models");
     }
 
-    void reset(FileViewListener listener, String[] extensions, String title, String defaultDir) {
+    void reset(GVRActivity activity, final FileViewListener listener, final String[] extensions, final String title, final String defaultDir) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                onReset(listener, extensions, title, defaultDir);
+            }
+        });
+    }
+
+    private void onReset(FileViewListener listener, String[] extensions, String title, String defaultDir) {
         this.fileViewListener = listener;
         bDone.setOnClickListener(new OnClickListener() {
             @Override
@@ -108,11 +117,9 @@ class FileBrowserView extends BaseView implements OnClickListener {
     }
 
     public void render() {
-        if (viewSceneObject == null) {
-            initializeViewSceneObject();
-            viewSceneObject.getTransform().setPosition(0, -4, -10);
-            viewSceneObject.getTransform().rotateByAxis(-35, 1, 0, 0);
-        }
+        mViewSceneObject.getTransform().setScale(10.0f, 10.0f, 1.0f);
+        mViewSceneObject.getTransform().setPosition(0, -4, -10);
+        mViewSceneObject.getTransform().setRotation(0.950f, -0.313f, 0.0f, 0.0f);
         show();
     }
 
