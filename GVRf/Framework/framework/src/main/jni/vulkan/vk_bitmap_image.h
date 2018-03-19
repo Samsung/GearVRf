@@ -40,7 +40,7 @@ namespace gvr {
         void loadCompressedMipMaps(jbyte *data, int format);
 
     private:
-        int updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject bitmap);
+        void updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject bitmap);
 
     };
 

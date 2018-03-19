@@ -50,7 +50,7 @@ std::map<int, VkFormat> compressed_formats = {
             BitmapImage(format)
     { }
 
-    int VkBitmapImage::updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject buffer)
+    void VkBitmapImage::updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject buffer)
     {
         void* pixels = env->GetDirectBufferAddress(buffer);
         // TODO: update bitmap image from pixels

@@ -47,6 +47,7 @@ namespace gvr {
             case 8:
                 return VK_SAMPLE_COUNT_8_BIT;
         }
+        throw std::runtime_error("getVKSampleBit: unknown sampleCount value");
     }
     void VulkanDescriptor::createDescriptor(VulkanCore *vk, int index,
                                             VkShaderStageFlagBits shaderStageFlagBits) {
@@ -862,6 +863,7 @@ VkCullModeFlagBits VulkanCore::getVulkanCullFace(int cull_type){
         case 2:
                 return VK_CULL_MODE_NONE;
     }
+    throw std::runtime_error("VulkanCore::getVulkanCullFace: unknown cull_type value");
 }
 
 

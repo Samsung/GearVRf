@@ -28,8 +28,9 @@ int getComponentsNumber(VkFormat format){
         case VK_FORMAT_D24_UNORM_S8_UINT:
             return 4;
         default:
-            LOGE("format not found");
+            FAIL("format not found");
     }
+    return 0;
 }
 
     vkImageBase::~vkImageBase(){
@@ -139,7 +140,7 @@ void vkImageBase::createImageView(bool host_accessible) {
     }
 }
 
-int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
+void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
                               std::vector<ImageInfo> &bitmapInfos,
                               std::vector<VkBufferImageCopy> &bufferCopyRegions,
                               VkImageViewType target, VkFormat internalFormat,
