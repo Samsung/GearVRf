@@ -115,7 +115,7 @@ def get_animator(var_obj):
 
 
 def animator_start():
-    return '%s.start()' % _var_animator
+    return '%s.start();' % _var_animator
 
 
 def animator_set_repeat_mode():

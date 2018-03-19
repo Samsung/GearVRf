@@ -52,11 +52,12 @@ class BaseExporter(ABC):
 
 
 class MeshExporter(BaseExporter):
-    def __init__(self, client, server_url, obj, globalscale=0.01):
+    def __init__(self, client, server_url, obj, globalscale=0.01, is_animated=False):
         self._client = client
         self._server_url = server_url
         self._obj = obj
         self._globalscale = globalscale
+        self._is_animated = is_animated
         self.export()
 
     def export(self):
@@ -64,7 +65,7 @@ class MeshExporter(BaseExporter):
         url = self._server_url + name
 
         self.export_to_file(name)
-        self._client.load_mesh(url, name, True)
+        self._client.load_mesh(url, name, self._is_animated)
 
     def export_to_file(self, name):
         # Export fbx file
@@ -222,39 +223,49 @@ def export(client, selected_objects, globalscale):
 
     selection = bpy.context.selected_objects
 
+    for obj in scene.objects:
+        obj.select = False
+
     root_objects = []
     for obj in scene.objects:
-        if not obj.parent:
-            root_objects.append(obj)
+        if selected_objects:
+            if obj.parent not in selection:
+                root_objects.append(obj)
+        else:
+            if not obj.parent:
+                root_objects.append(obj)
 
     for obj in root_objects:
-        if selected_objects and not obj.select:
+        if selected_objects and obj not in selection:
             continue
 
-        was_selected = obj.select
         obj.select = True
 
-        child_selection = []
         for child in obj.children:
-            if selected_objects and not child.select:
+            if selected_objects and child not in selection:
                 continue
 
-            child_selection.append(child.select)
             child.select = True
 
         # some exporters only use the active object
         scene.objects.active = obj
 
-        if obj.type == 'MESH' or 'ARMATURE':
+        if obj.type == 'ARMATURE':
+            MeshExporter(client, server_url, obj, globalscale, is_animated=True)
+        elif obj.type == 'MESH':
             MeshExporter(client, server_url, obj, globalscale)
-
         elif obj.type == 'LAMP':
             LightExporter(client, obj)
-
         elif obj.type == 'CAMERA':
             CameraExporter(client, obj)
 
-        obj.select = was_selected
+        for child in obj.children:
+            if selected_objects and child not in selection:
+                continue
+
+            child.select = False
+
+        obj.select = False
 
     client.disconnect()
 
