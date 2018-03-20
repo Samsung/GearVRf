@@ -34,6 +34,8 @@
 #include "batch_manager.h"
 #include "renderer.h"
 #include "vulkan/vulkan_headers.h"
+#include "vulkan/vulkan_flags.h"
+
 
 namespace gvr {
 
@@ -69,8 +71,10 @@ public:
     Texture* createSharedTexture( int id) { return nullptr; };
 
     VulkanRenderer() : vulkanCore_(nullptr) {
+        vkflags::initVkRenderFlags();
         vulkanCore_ = VulkanCore::getInstance();
     }
+
     VulkanCore* getCore() { return vulkanCore_; }
     VkDevice& getDevice(){
         return vulkanCore_->getDevice();

@@ -103,16 +103,26 @@ namespace gvr {
     }*/
 
 
-    PipelineDepthStencilStateCreateInfo::PipelineDepthStencilStateCreateInfo(VkBool32 depthTestEnable ,VkBool32 depthWriteEnable,VkCompareOp depthCompareOp,VkBool32 depthBoundsTestEnable ,VkStencilOp failOp,VkStencilOp  passOp,VkCompareOp
-    compareOp,VkBool32 stencilTestEnable ):mInfo(){
+    PipelineDepthStencilStateCreateInfo::PipelineDepthStencilStateCreateInfo
+            (VkBool32 depthTestEnable , VkBool32 depthWriteEnable,VkCompareOp depthCompareOp,
+             VkBool32 depthBoundsTestEnable ,VkStencilOp failOp,VkStencilOp passOp, VkStencilOp depthFailOp,
+             VkCompareOp compareOp, uint32_t compareMask, uint32_t writeMask,
+             uint32_t reference, VkBool32 stencilTestEnable ):mInfo(){
+
         mInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         mInfo.depthTestEnable = depthTestEnable;
         mInfo.depthWriteEnable = depthWriteEnable;
         mInfo.depthCompareOp = depthCompareOp;
         mInfo.depthBoundsTestEnable = depthBoundsTestEnable;
+
         mInfo.back.failOp = failOp;
         mInfo.back.passOp = passOp;
+        mInfo.back.depthFailOp = depthFailOp;
         mInfo.back.compareOp = compareOp;
+        mInfo.back.compareMask = compareMask;
+        mInfo.back.writeMask = writeMask;
+        mInfo.back.reference = reference;
+
         mInfo.stencilTestEnable = stencilTestEnable;
         mInfo.front = mInfo.back;
     };

@@ -169,8 +169,10 @@ struct GVR_VK_Indices {
     {
         VkPipelineDepthStencilStateCreateInfo mInfo;
     public:
-        explicit PipelineDepthStencilStateCreateInfo(VkBool32 depthTestEnable ,VkBool32 depthWriteEnable,VkCompareOp depthCompareOp,VkBool32 depthBoundsTestEnable ,VkStencilOp failOp,VkStencilOp  passOp,VkCompareOp
-        compareOp,VkBool32 stencilTestEnable );
+        explicit PipelineDepthStencilStateCreateInfo(VkBool32 depthTestEnable , VkBool32 depthWriteEnable,VkCompareOp depthCompareOp,
+                                                     VkBool32 depthBoundsTestEnable ,VkStencilOp failOp,VkStencilOp passOp, VkStencilOp depthFailOp,
+                                                     VkCompareOp compareOp, uint32_t compareMask, uint32_t writeMask,
+                                                     uint32_t reference, VkBool32 stencilTestEnable );
         operator const VkPipelineDepthStencilStateCreateInfo*() const{
             return &mInfo;
         }
