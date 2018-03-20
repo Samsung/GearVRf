@@ -91,10 +91,10 @@ class vkImageBase
 
     private:
         VkImageViewType imageType;
-        VkImage image;
+        VkImage image = 0;
         VkDeviceMemory dev_memory = 0, host_memory = 0;
         VkImageLayout imageLayout;
-        VkImageView imageView;
+        VkImageView imageView = 0;
         VkFormat format_;
         int mSampleCount;
         int width_, height_, depth_,  mLayers;

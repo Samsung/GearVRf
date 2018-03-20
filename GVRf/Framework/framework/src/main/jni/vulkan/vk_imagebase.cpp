@@ -36,8 +36,12 @@ int getComponentsNumber(VkFormat format){
     vkImageBase::~vkImageBase(){
         VulkanCore * instance = VulkanCore::getInstance();
         VkDevice device = instance->getDevice();
-        vkDestroyImageView(device, imageView, nullptr);
-        vkDestroyImage(device, image, nullptr);
+
+        if(imageView != 0)
+            vkDestroyImageView(device, imageView, nullptr);
+
+        if(image != 0 )
+            vkDestroyImage(device, image, nullptr);
 
         if(host_memory != 0)
             vkFreeMemory(device, host_memory, nullptr);
