@@ -93,9 +93,11 @@ class GvrfClient(BaseClient):
             self.exec_command(gvrf_commands.animator_set_repeat_count(-1))
 
     def load_light(
-            self, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone=None, inner_cone=None):
+            self, name, position, rotation, light_type, color, use_diffuse, use_specular, outer_cone=None,
+            inner_cone=None):
 
-        self.create_light_node(position, rotation)
+        self.exec_command(gvrf_commands.remove_scene_obj(name))
+        self.create_light_node(name, position, rotation)
 
         if (light_type == 'POINT'):
             self.create_point_light(color, use_diffuse, use_specular)
@@ -117,10 +119,11 @@ class GvrfClient(BaseClient):
         self.exec_command(gvrf_commands.set_near_clipping(near_clipping))
         self.exec_command(gvrf_commands.set_far_clipping(far_clipping))
 
-    def create_light_node(self, position, rotation):
+    def create_light_node(self, name, position, rotation):
         var_obj = 'lightNode'
 
         self.exec_command(gvrf_commands.create_scene_obj(var_obj))
+        self.exec_command(gvrf_commands.set_obj_name(var_obj, name))
 
         self.exec_command(gvrf_commands.set_position(var_obj, position[0], position[2], position[1] * -1))
         self.exec_command(gvrf_commands.set_rotation(var_obj, rotation[0], rotation[1], rotation[2], rotation[3]))

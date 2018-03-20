@@ -54,6 +54,10 @@ def remove_scene_obj(obj_name):
     return '%s.removeSceneObjectByName("%s");' % (_var_scene, obj_name)
 
 
+def set_obj_name(var_obj, obj_name):
+    return '%s.setName("%s");' % (var_obj, obj_name)
+
+
 def set_position(var_obj, x, y, z):
     return '%s.getTransform().setPosition(%s, %s, %s);' % (var_obj, x, y, z)
 

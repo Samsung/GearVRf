@@ -118,13 +118,13 @@ class LightExporter(BaseExporter):
 
             self.export_to_file(outer_angle, inner_angle)
             self._client.load_light(
-                self._obj.location, self._new_rotation, self._light.type, self._light.color, self._light.use_diffuse,
-                self._light.use_specular, outer_cone=outer_angle, inner_cone=inner_angle)
+                self._obj.name, self._obj.location, self._new_rotation, self._light.type, self._light.color,
+                self._light.use_diffuse, self._light.use_specular, outer_cone=outer_angle, inner_cone=inner_angle)
         else:
             self.export_to_file()
             self._client.load_light(
-                self._obj.location, self._new_rotation, self._light.type, self._light.color, self._light.use_diffuse,
-                self._light.use_specular)
+                self._obj.name, self._obj.location, self._new_rotation, self._light.type, self._light.color,
+                self._light.use_diffuse, self._light.use_specular)
 
     def calc_inner_cone(self, distance, size, blend):
         outer_r = math.tan(math.radians(size / 2.0)) * distance
