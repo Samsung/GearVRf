@@ -1253,18 +1253,13 @@ public class AnimationInteractivityManager {
             // if the objects required for this function were constructed, then
             //   check if this <SCRIPT> has an initialize() method that is run just once.
             if (gvrJavascriptV8FileFinal.getScriptText().contains(INITIALIZE_FUNCTION)) {
+                // <SCRIPT> node initialize() functions set inputOnly values
+                // so we don't continue to run the main script method.
+                // http://www.web3d.org/documents/specifications/19775-1/V3.2/Part01/components/scripting.html#Script
                 complete = gvrJavascriptV8FileFinal.invokeFunction(INITIALIZE_FUNCTION, parametersFinal, "");
-
-                if (complete) {
-                    // The JavaScript initialize() function ran ok.
-                    // Now set any values (such as X3D data types such as SFColor)
-                    //  stored in 'localBindings'.
-                    //  Then call SetResultsFromScript() to set the GearVR values
-                    Bindings bindings = gvrJavascriptV8FileFinal.getLocalBindings();
-                    SetResultsFromScript(interactiveObjectFinal, bindings);
-                } else {
-                    Log.e(TAG, "Error in SCRIPT node '"+  interactiveObjectFinal.getScriptObject().getName() +
-                            "' JavaScript initialize() function.");
+                if ( !complete ) {
+                    Log.e(TAG, "Error with initialize() function in SCRIPT '" +
+                            interactiveObjectFinal.getScriptObject().getName() + "'");
                 }
             }
         } else {
@@ -1851,8 +1846,10 @@ public class AnimationInteractivityManager {
                 }  //  end OUTPUT-ONLY or INPUT_OUTPUT
             }  // end for-loop list of fields for a single script
         } catch (Exception e) {
-            Log.e(TAG, "Error setting values returned from JavaScript in SCRIPT node." +
-                    "  Check JavaScript or ROUTE's.  Exception: " + e);
+
+            Log.e(TAG, "Error setting values returned from JavaScript in SCRIPT node " +
+                    interactiveObjectFinal.getScriptObject().getName() +
+                    ".  Check JavaScript or ROUTE's.  Exception: " + e);
         }
     }  //  end  SetResultsFromScript
 

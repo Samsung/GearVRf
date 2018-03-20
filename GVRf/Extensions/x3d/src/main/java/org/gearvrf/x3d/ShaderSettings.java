@@ -41,7 +41,7 @@ public class ShaderSettings
   private String nameAppearance = ""; // set if there is a DEF in Appearance
                                       // node
   private String nameMaterial = ""; // set if there is a DEF in Material node
-  private String nameTextureTransform = null; // set if there is a DEF in
+  private String nameTextureTransform = ""; // set if there is a DEF in
   // TextureTransform node
 
   private SFVec2f textureCenter = new SFVec2f( 0, 0 );
@@ -80,7 +80,7 @@ public class ShaderSettings
 	material = m;
     nameAppearance = ""; // set if there is a DEF in Appearance node
     nameMaterial = ""; // set if there is a DEF in Material node
-    nameTextureTransform = null; // set if there is a DEF in TextureTransform
+    nameTextureTransform = ""; // set if there is a DEF in TextureTransform
     // node
 
     // initialize texture values

@@ -18,6 +18,10 @@ package org.gearvrf.x3d;
 import android.content.Context;
 import android.graphics.Color;
 
+import org.gearvrf.GVRExternalScene;
+import org.gearvrf.GVRResourceVolume;
+import org.gearvrf.GVRScene;
+import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.GVRShaderId;
 import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRMeshCollider;
@@ -2730,11 +2734,14 @@ public class X3Dobject {
                 /********** Text **********/
                 else if (qName.equalsIgnoreCase("Text")) {
                     Init_Text_FontParams();
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) {
+                        Log.e(TAG, "Text node USE name not currently implemented.");
+                    }
 
                    attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         Text_FontParams.nameTextAttribute = attributeValue;
-                        Log.e(TAG, "Text DEF name currently not implemented.");
                     }
                     attributeValue = attributes.getValue("length");
                     if (attributeValue != null) {
@@ -3673,31 +3680,37 @@ public class X3Dobject {
 
                             // Texture Transform
                             // If DEFined iteam, add to the DeFinedItem list. Maay be interactive
-                             if ( shaderSettings.getTextureTransformName() != null); {
-                                DefinedItem definedItem = new DefinedItem(
-                                        shaderSettings.getTextureTransformName());
-                                definedItem.setGVRMaterial(gvrMaterial);
-                                definedItem.setTextureTranslation( shaderSettings.getTextureTranslation());
-                                definedItem.setTextureCenter( shaderSettings.getTextureCenter() );
-                                definedItem.setTextureScale( shaderSettings.getTextureScale() );
-                                definedItem.setTextureRotation( shaderSettings.getTextureRotation().getValue());
-                                mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
-                            }
-                            // Texture Transform Matrix equation:
-                            // TC' = -C * S * R * C * T * TC
-                            //where TC' is the transformed texture coordinate
-                            //   TC is the original Texture Coordinate
-                            //   C = center, S = scale, R = rotation, T = translation
-                            Matrix3f textureTransform = animationInteractivityManager.SetTextureTransformMatrix(
-                                    shaderSettings.getTextureTranslation(),
-                                    shaderSettings.getTextureCenter(),
-                                    shaderSettings.getTextureScale(),
-                                    shaderSettings.getTextureRotation() );
+                            // GearVR may not be doing texture transforms on primitives or text
+                            // crash otherwise.
 
-                            shaderSettings.textureMatrix = textureTransform;
-                            float[] texMtx = new float[9];
-                            shaderSettings.textureMatrix.get(texMtx);
-                            gvrMaterial.setFloatArray("texture_matrix", texMtx);
+                            if (meshAttachedSceneObject == null) {
+                                if (!shaderSettings.getTextureTransformName().isEmpty()) {
+                                    DefinedItem definedItem = new DefinedItem(
+                                            shaderSettings.getTextureTransformName());
+                                    definedItem.setGVRMaterial(gvrMaterial);
+                                    definedItem.setTextureTranslation(shaderSettings.getTextureTranslation());
+                                    definedItem.setTextureCenter(shaderSettings.getTextureCenter());
+                                    definedItem.setTextureScale(shaderSettings.getTextureScale());
+                                    definedItem.setTextureRotation(shaderSettings.getTextureRotation().getValue());
+                                    definedItem.setName(shaderSettings.getTextureTransformName());
+                                    mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
+                                }
+                                // Texture Transform Matrix equation:
+                                // TC' = -C * S * R * C * T * TC
+                                //where TC' is the transformed texture coordinate
+                                //   TC is the original Texture Coordinate
+                                //   C = center, S = scale, R = rotation, T = translation
+                                Matrix3f textureTransform = animationInteractivityManager.SetTextureTransformMatrix(
+                                        shaderSettings.getTextureTranslation(),
+                                        shaderSettings.getTextureCenter(),
+                                        shaderSettings.getTextureScale(),
+                                        shaderSettings.getTextureRotation());
+
+                                shaderSettings.textureMatrix = textureTransform;
+                                float[] texMtx = new float[9];
+                                shaderSettings.textureMatrix.get(texMtx);
+                                gvrMaterial.setFloatArray("texture_matrix", texMtx);
+                            }
 
                             // Appearance node thus far contains properties of GVRMaterial
                             // node
@@ -4014,17 +4027,40 @@ public class X3Dobject {
                     String[] urls = inlineObject.getURL();
                     for (int j = 0; j < urls.length; j++) {
                         GVRAndroidResource gvrAndroidResource = null;
+                        GVRResourceVolume gvrResourceVolume = null;
                         try {
+                            String filename = urls[j];
                             inlineSubdirectory = "";
                             int lastIndex = urls[j].lastIndexOf('/');
                             if (lastIndex != -1) {
                                 inlineSubdirectory = urls[j].substring(0, urls[j].lastIndexOf('/')+1);
+                                filename = urls[j].substring(urls[j].lastIndexOf('/')+1, urls[j].length());
                             }
+
+                            gvrResourceVolume = new GVRResourceVolume(gvrContext, urls[j]);
+                            gvrAndroidResource = gvrResourceVolume.openResource( filename );
+
+                            if ( filename.toLowerCase().endsWith(".x3d")) {
+                                inputStream = gvrAndroidResource.getStream();
+                                currentSceneObject = inlineObject.getInlineGVRSceneObject();
+                                saxParser.parse(inputStream, userhandler);
+                            }
+                            else {
+                                GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, urls[j], false);
+                                currentSceneObject = inlineObject.getInlineGVRSceneObject();
+                                if (currentSceneObject == null) root.attachComponent(gvrExternalScene);
+                                else currentSceneObject.attachComponent(gvrExternalScene);
+                                GVRScene gvrScene = gvrContext.getMainScene();
+                                gvrExternalScene.load(gvrScene);
+                                GVRAnimator gvrAnimator = gvrExternalScene.getAnimator();
+                            }
+/*
                             gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
                             inputStream = gvrAndroidResource.getStream();
 
                             currentSceneObject = inlineObject.getInlineGVRSceneObject();
                             saxParser.parse(inputStream, userhandler);
+                            */
                         } catch (FileNotFoundException e) {
                             Log.e(TAG,
                                     "Inline file reading: File Not Found: url " + urls[j] + ", Exception "
