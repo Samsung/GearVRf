@@ -1276,7 +1276,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         // TODO: add shadowmap descriptor
 
-        vkShader->bindTextures(vkmtl, writes,  descriptorSet);
+         if(vkShader->bindTextures(vkmtl, writes,  descriptorSet) == -1)
+             return false;
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         vkData->setDescriptorSetNull(false,pass);
         LOGI("Vulkan after update descriptor");

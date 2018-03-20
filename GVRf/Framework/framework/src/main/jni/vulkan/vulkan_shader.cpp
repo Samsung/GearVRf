@@ -113,8 +113,11 @@ int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDesc
         const DataDescriptor::DataEntry* e = mTextureDesc.find(texname);
         if ((e == NULL) || e->NotUsed)
         {
-            return;
+            return -1;
         }
+        if(!t->isReady())
+            return -1;
+
         VkWriteDescriptorSet write;
         memset(&write, 0, sizeof(write));
 
