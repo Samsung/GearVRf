@@ -14,7 +14,6 @@
 
 from abc import ABC, abstractmethod
 import bpy
-import socket
 import math
 import os.path
 import filecmp
@@ -104,7 +103,7 @@ class LightExporter(BaseExporter):
         prev_rotation_mode = self._obj.rotation_mode
         # Set rotation mode to quaternion to get the correct rotation values
         self._obj.rotation_mode = 'QUATERNION'
-        # Rotate -90 degrees on X axis to ajust coordinate system to Y up and -Z foward
+        # Rotate -90 degrees on X axis ajusting to GVRf default rotation towards -Z axis
         self._new_rotation = self.rotate_90_degree_x(self._obj.rotation_quaternion)
         self._obj.rotation_mode = prev_rotation_mode
 
@@ -180,7 +179,7 @@ class CameraExporter(BaseExporter):
         prev_rotation_mode = self._obj.rotation_mode
         # Set rotation mode to quaternion to get the correct rotation values
         self._obj.rotation_mode = 'QUATERNION'
-        # Rotate -90 degrees on X axis to ajust coordinate system to Y up and -Z foward
+        # Rotate -90 degrees on X axis ajusting to GVRf default rotation towards -Z axis
         self._new_rotation = self.rotate_90_degree_x(self._obj.rotation_quaternion)
         self._obj.rotation_mode = prev_rotation_mode
 
@@ -214,10 +213,7 @@ class CameraExporter(BaseExporter):
         }, indent=4)
 
 
-def export(client, selected_objects, globalscale):
-    ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[2][0]
-    server_url = 'http://' + ipv4 + ':8000/'
-
+def export(client, server_url, selected_objects, globalscale):
     scene = bpy.context.scene
     obj_active = scene.objects.active
 
@@ -226,6 +222,7 @@ def export(client, selected_objects, globalscale):
     for obj in scene.objects:
         obj.select = False
 
+    # Group parents to export on same .fbx file
     root_objects = []
     for obj in scene.objects:
         if selected_objects:
@@ -247,7 +244,7 @@ def export(client, selected_objects, globalscale):
 
             child.select = True
 
-        # some exporters only use the active object
+        # Some exporters only use the active object
         scene.objects.active = obj
 
         if obj.type == 'ARMATURE':

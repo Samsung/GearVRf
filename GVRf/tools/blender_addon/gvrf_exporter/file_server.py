@@ -59,6 +59,9 @@ class FileServer:
     def update_url(self):
         self._url = 'http://' + self._ipv4 + ':8000/'
 
+    def get_url(self):
+        return self._url
+
     def start_server(self):
         if self.check_running_server():
             return

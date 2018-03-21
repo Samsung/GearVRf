@@ -89,7 +89,7 @@ class GvrfClient(BaseClient):
             self.exec_command(gvrf_commands.get_animator(var_obj))
             self.exec_command(gvrf_commands.animator_start())
             self.exec_command(gvrf_commands.animator_set_repeat_mode())
-            # set repeat count -1 to repeat infinitely
+            # Set repeat count -1 to repeat infinitely
             self.exec_command(gvrf_commands.animator_set_repeat_count(-1))
 
     def load_light(

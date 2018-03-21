@@ -76,7 +76,8 @@ class SceneExporter(bpy.types.Operator):
 
         try:
             scene_exporter.export(
-                GvrfClient(_addr, _port, do_debug=True), selected_objects=_selected_objects, globalscale=_global_scale)
+                GvrfClient(_addr, _port, do_debug=True), fs.get_url(), selected_objects=_selected_objects,
+                globalscale=_global_scale)
         except TimeoutError:
             self.report(
                 {'ERROR'}, 'Connection attempt failed. Check the clinet\'s IP address and if the gvr-remote-scripting'
