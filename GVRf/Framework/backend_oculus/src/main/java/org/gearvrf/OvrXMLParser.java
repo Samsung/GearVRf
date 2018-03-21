@@ -87,20 +87,7 @@ class OvrXMLParser {
                             continue;
                         }
                         String attributeName = xpp.getAttributeName(i);
-                        if (tagName.equals("mono-mode-parms")
-                                || "mono-mode-parms".equals(tagName)) {
-                            if (attributeName.equals("monoFullScreen")) {
-                                settings.getMonoscopicModeParams()
-                                        .setMonoFullScreenMode(Boolean
-                                                .parseBoolean(xpp
-                                                        .getAttributeValue(i)));
-                            } else if (attributeName.equals("monoMode")) {
-                                settings.getMonoscopicModeParams()
-                                        .setMonoscopicMode(Boolean
-                                                .parseBoolean(xpp
-                                                        .getAttributeValue(i)));
-                            }
-                        } else if (tagName.equals("vr-app-settings")) {
+                        if (tagName.equals("vr-app-settings")) {
                             if (attributeName.equals("showLoadingIcon")) {
                                 settings.setShowLoadingIcon(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));

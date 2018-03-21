@@ -15,13 +15,7 @@
 
 package org.gearvrf;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import android.content.res.AssetManager;
 
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.utility.VrAppSettings;
@@ -31,7 +25,13 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import android.content.res.AssetManager;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class simply parses XML file for distortion stored in assets folder, and
@@ -87,20 +87,7 @@ class MonoscopicXMLParser {
                             continue;
                         }
                         String attributeName = xpp.getAttributeName(i);
-                        if (tagName.equals("mono-mode-parms")
-                                || "mono-mode-parms".equals(tagName)) {
-                            if (attributeName.equals("monoFullScreen")) {
-                                settings.getMonoscopicModeParams()
-                                        .setMonoFullScreenMode(Boolean
-                                                .parseBoolean(xpp
-                                                        .getAttributeValue(i)));
-                            } else if (attributeName.equals("monoMode")) {
-                                settings.getMonoscopicModeParams()
-                                        .setMonoscopicMode(Boolean
-                                                .parseBoolean(xpp
-                                                        .getAttributeValue(i)));
-                            }
-                        } else if (tagName.equals("vr-app-settings")) {
+                        if (tagName.equals("vr-app-settings")) {
                             if (attributeName.equals("showLoadingIcon")) {
                                 settings.setShowLoadingIcon(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));

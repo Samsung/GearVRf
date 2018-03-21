@@ -32,10 +32,6 @@
         useProtectedFramebuffer="false"
         useSrgbFramebuffer="false" >
 
-        <mono-mode-parms
-            monoFullScreen="false"
-            monoMode="false" />
-
         <mode-parms
             allowPowerSave="true"
             resetWindowFullScreen="true" />

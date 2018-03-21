@@ -15,22 +15,6 @@
 
 package org.gearvrf;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRView;
-import org.gearvrf.script.IScriptable;
-import org.gearvrf.utility.DockEventReceiver;
-import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.Threads;
-import org.gearvrf.utility.VrAppSettings;
-
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
@@ -44,6 +28,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+
+import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRView;
+import org.gearvrf.script.IScriptable;
+import org.gearvrf.utility.DockEventReceiver;
+import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
+import org.gearvrf.utility.Log;
+import org.gearvrf.utility.Threads;
+import org.gearvrf.utility.VrAppSettings;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -346,35 +346,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      */
     public final void setMain(GVRMain gvrMain) {
         setMain(gvrMain, "_gvr.xml");
-    }
-
-    /**
-     * Sets whether to force rendering to be single-eye, monoscopic view.
-     *
-     * @param force
-     *            If true, will create a OvrMonoscopicViewManager when
-     *            {@linkplain GVRActivity#setMain(GVRMain, String)} is called. If false, will
-     *            proceed to auto-detect whether the device supports VR
-     *            rendering and choose the appropriate ViewManager. This call
-     *            will only have an effect if it is called before
-     *            {@linkplain #setMain(GVRMain, String) setMain()}.
-     * @deprecated
-     */
-    @Deprecated
-    public void setForceMonoscopic(boolean force) {
-        mAppSettings.getMonoscopicModeParams().setMonoscopicMode(force);
-    }
-
-    /**
-     * Returns whether a monoscopic view was asked to be forced during
-     * {@linkplain #setMain(GVRMain, String) setMain()}.
-     *
-     * @see GVRActivity#setForceMonoscopic(boolean)
-     * @deprecated
-     */
-    @Deprecated
-    public final boolean getForceMonoscopic() {
-        return mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
     }
 
     final long getNative() {

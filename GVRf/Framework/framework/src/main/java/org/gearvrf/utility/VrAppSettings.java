@@ -15,14 +15,9 @@
 
 package org.gearvrf.utility;
 
-import org.gearvrf.GVRScene;
-import org.gearvrf.GVRSceneObject;
 import org.gearvrf.io.GVRControllerType;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * A class that represents overall parameters that we can set with Oculus
@@ -443,71 +438,6 @@ public class VrAppSettings {
         }
     }
 
-    // -----------------------------------------------------------------
-    // This class is to judge if the app will run under a special mono scopic
-    // mode.
-    // If it is the case, many parameters like headmodelparms and modeparms
-    // won't
-    // take effect
-    // -----------------------------------------------------------------
-
-    public static class MonoscopicModeParams {
-        private boolean isMonoscopicMode;// Is the app mono scopic rendering
-                                         // mode?
-        private boolean isMonoFullScreen;// If it is mono scopic, will it be
-                                         // fullscreen or simple quad?
-
-        /**
-         * Set if current app is mono scopic.
-         *
-         * @param isMono
-         *            if current app is mono scopic
-         */
-        public void setMonoscopicMode(boolean isMono) {
-            this.isMonoscopicMode = isMono;
-        }
-
-        /**
-         * Check if current app is mono scopic.
-         * 
-         * @return if current app is mono scopic.
-         */
-        public boolean isMonoscopicMode() {
-            return isMonoscopicMode;
-        }
-
-        /**
-         * Set if current app is full screen under mono scopic mode.
-         * 
-         * @param isFullScreen
-         *            if current app is full screen under mono scopic mode.
-         */
-        public void setMonoFullScreenMode(boolean isFullScreen) {
-            this.isMonoFullScreen = isFullScreen;
-        }
-
-        /**
-         * Check if current app is full screen under mono scopic mode.
-         * 
-         * @return if current app is full screen under mono scopic mode.
-         */
-        public boolean isMonoFullScreenMode() {
-            return isMonoFullScreen;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder result = new StringBuilder();
-            result.append(" isMonoscopicMode = " + isMonoscopicMode);
-            result.append(" isMonoFullScreenMode = " + isMonoFullScreen);
-            return result.toString();
-        }
-
-        public MonoscopicModeParams() {
-            isMonoscopicMode = isMonoFullScreen = false;
-        }
-    }
-
     public static class PerformanceParams {
 
         // Set fixed cpu clock level and gpu clock level.
@@ -591,7 +521,6 @@ public class VrAppSettings {
     public final ModeParams modeParams;
     public final EyeBufferParams eyeBufferParams;
     public final HeadModelParams headModelParams;
-    public final MonoscopicModeParams monoscopicModeParams;
     public final PerformanceParams performanceParams;
 
     /**
@@ -819,15 +748,6 @@ public class VrAppSettings {
     }
 
     /**
-     * Get current overall mono scopic mode parameters.
-     * 
-     * @return Current overall mono scopic mode parameters.
-     */
-    public MonoscopicModeParams getMonoscopicModeParams() {
-        return monoscopicModeParams;
-    }
-
-    /**
      * Get overall performance parameters.
      * 
      * @return Current overall performance parameters.
@@ -846,7 +766,6 @@ public class VrAppSettings {
         modeParams = new ModeParams();
         eyeBufferParams = new EyeBufferParams();
         headModelParams = new HeadModelParams();
-        monoscopicModeParams = new MonoscopicModeParams();
         performanceParams = new PerformanceParams();
     }
 
@@ -861,7 +780,6 @@ public class VrAppSettings {
         res.append(modeParams.toString());
         res.append(eyeBufferParams.toString());
         res.append(headModelParams.toString());
-        res.append(monoscopicModeParams.toString());
         res.append(performanceParams.toString());
         return res.toString();
     }
