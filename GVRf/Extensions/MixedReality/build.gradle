@@ -14,10 +14,10 @@ repositories {
 }
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 26
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -31,6 +31,7 @@ android {
     }
 }
 
+project.ext.jomlVersion = "1.9.3-SNAPSHOT"
 project.ext.arcoreVersion = "1.0.0"
 
 dependencies {
@@ -41,7 +42,9 @@ dependencies {
         implementation(name: 'framework-debug', ext: 'aar')
     }
 
+    implementation "org.joml:joml-android:${jomlVersion}"
     implementation "com.google.ar:core:${arcoreVersion}"
+    implementation 'com.android.support:support-v4:27.0.2'
 }
 
 clean {}.doLast {
