@@ -40,7 +40,8 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
 {
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
-RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
+RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo)
+{
     return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
 
@@ -57,10 +58,14 @@ RenderData* VulkanRenderer::createRenderData()
 RenderTarget* VulkanRenderer::createRenderTarget(Scene* scene) {
     return new VkRenderTarget(scene);
 }
-RenderTarget* VulkanRenderer::createRenderTarget(RenderTexture* renderTexture, bool isMultiview){
+
+RenderTarget* VulkanRenderer::createRenderTarget(RenderTexture* renderTexture, bool isMultiview)
+{
     return new VkRenderTarget(renderTexture, isMultiview);
 }
-RenderTarget* VulkanRenderer::createRenderTarget(RenderTexture* renderTexture, const RenderTarget* renderTarget){
+
+RenderTarget* VulkanRenderer::createRenderTarget(RenderTexture* renderTexture, const RenderTarget* renderTarget)
+{
     return new VkRenderTarget(renderTexture, renderTarget);
 }
 
