@@ -149,7 +149,7 @@ namespace gvr {
                      switch (elemsize)
                      {
                          case 9:
-                         glUniformMatrix3x4fv(loc, e.Count, false, (const float*) data);
+                         glUniformMatrix3fv(loc, e.Count, false, (const float*) data);
                          break;
 
                          case 16:
