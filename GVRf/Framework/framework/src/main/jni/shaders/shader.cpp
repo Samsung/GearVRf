@@ -68,7 +68,7 @@ void Shader::setJava(jclass shaderClass, JavaVM *javaVM)
     }
 }
 
-bool Shader::calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const
+void Shader::calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const
 {
     if (mJavaVM && mJavaShaderClass && mCalcMatrixMethod)
     {

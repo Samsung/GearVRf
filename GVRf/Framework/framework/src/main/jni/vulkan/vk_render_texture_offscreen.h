@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#include "vk_render_to_texture.h"
+
 
 #ifndef FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H
 #define FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H
+
+#include "vk_render_to_texture.h"
 
 namespace gvr {
     class VkRenderTextureOffScreen : public VkRenderTexture
@@ -25,7 +27,9 @@ namespace gvr {
         explicit VkRenderTextureOffScreen(int width, int height, int sample_count = 1);
         void bind();
         bool isReady();
-        bool readRenderResult(uint8_t **readback_buffer);
+        bool readRenderResult(uint8_t *readback_buffer);
+        bool accessRenderResult(uint8_t **readback_buffer);
+        void unmapDeviceMemory();
     };
 
 }

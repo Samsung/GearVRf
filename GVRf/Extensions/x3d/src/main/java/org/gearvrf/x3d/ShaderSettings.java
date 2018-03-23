@@ -21,6 +21,9 @@ import org.gearvrf.GVRMaterial;
 
 
 import org.gearvrf.GVRTexture;
+import org.gearvrf.x3d.data_types.SFFloat;
+import org.gearvrf.x3d.data_types.SFVec2f;
+import org.joml.Matrix3f;
 
 /**
  * 
@@ -32,32 +35,21 @@ import org.gearvrf.GVRTexture;
  * the shader values while still using GearVR's internal Shader.
  */
 
-/*
- * TODO: May eventually include the Texture parameters of wrapping settings
 
- */
 public class ShaderSettings
 {
   private String nameAppearance = ""; // set if there is a DEF in Appearance
                                       // node
   private String nameMaterial = ""; // set if there is a DEF in Material node
-  // private String nameTextureTransform = ""; // set if there is a DEF in
+  private String nameTextureTransform = null; // set if there is a DEF in
   // TextureTransform node
 
-  public float[] textureCenter =
-  {
-      0, 0
-  };
-  public float[] textureScale =
-  {
-      1, 1
-  };
-  public float textureRotation = 0;
-  public float[] textureTranslation =
-  {
-      0, 0
-  };
+  private SFVec2f textureCenter = new SFVec2f( 0, 0 );
+  private SFVec2f textureScale =  new SFVec2f( 1, 1 );
+  private SFVec2f textureTranslation = new SFVec2f( 0, 0 );
+  private SFFloat textureRotation = new SFFloat(0);
 
+  public Matrix3f textureMatrix = null;
   public float ambientIntensity = 0.2f;
   public float[] diffuseColor =
   {
@@ -88,17 +80,14 @@ public class ShaderSettings
 	material = m;
     nameAppearance = ""; // set if there is a DEF in Appearance node
     nameMaterial = ""; // set if there is a DEF in Material node
-    // nameTextureTransform = ""; // set if there is a DEF in TextureTransform
+    nameTextureTransform = null; // set if there is a DEF in TextureTransform
     // node
 
     // initialize texture values
-    for (int i = 0; i < 2; i++)
-    {
-      textureCenter[i] = 0;
-      textureScale[i] = 1;
-      textureTranslation[i] = 0;
-    }
-    textureRotation = 0;
+    textureCenter.setValue( 0, 0 );
+    textureScale.setValue( 1, 1 );
+    textureTranslation.setValue( 0, 0 );
+    textureRotation.setValue(0);
 
     // initialize X3D Material values
     for (int i = 0; i < 3; i++)
@@ -123,6 +112,7 @@ public class ShaderSettings
     }
 
     texture = null;
+    textureMatrix = null;
   }
 
 
@@ -155,6 +145,16 @@ public class ShaderSettings
   public String getMaterialName()
   {
     return this.nameMaterial;
+  }
+
+  public void setTextureTransformName(String name)
+  {
+    this.nameTextureTransform = name;
+  }
+
+  public String getTextureTransformName()
+  {
+    return this.nameTextureTransform;
   }
 
   public void setDiffuseColor(float[] diffuseColor)
@@ -207,35 +207,38 @@ public class ShaderSettings
     this.material.setTexture("diffuseTexture", texture);
   }
 
-  public void setTextureCenter(float[] textureCenter)
-  {
-    for (int i = 0; i < 2; i++)
+    protected void setTextureCenter(float[] textureCenter)
+      {
+        this.textureCenter.setValue(textureCenter[0], textureCenter[1]);
+      }
+    protected SFVec2f getTextureCenter()
     {
-      this.textureCenter[i] = textureCenter[i];
+        return this.textureCenter;
     }
-  }
 
-  public void setTextureScale(float[] textureScale)
-  {
-    for (int i = 0; i < 2; i++)
+    protected void setTextureScale(float[] textureScale)
+      {
+        this.textureScale.setValue(textureScale[0], textureScale[1]);
+      }
+    protected SFVec2f getTextureScale()
     {
-      this.textureScale[i] = textureScale[i];
+        return this.textureScale;
     }
-  }
 
-  public void setTextureRotation(float textureRotation)
-  {
-    for (int i = 0; i < 2; i++)
-    {
-      this.textureRotation = textureRotation;
+    protected void setTextureRotation(float textureRotation) {
+      this.textureRotation.setValue( textureRotation );
     }
-  }
+    protected SFFloat getTextureRotation()
+    {
+        return this.textureRotation;
+    }
 
-  public void setTextureTranslation(float[] textureTranslation)
-  {
-    for (int i = 0; i < 2; i++)
+    protected void setTextureTranslation(float[] textureTranslation)
     {
-      this.textureTranslation[i] = textureTranslation[i];
+      this.textureTranslation.setValue(textureTranslation[0], textureTranslation[1]);
     }
+    protected SFVec2f getTextureTranslation()
+  {
+      return this.textureTranslation;
   }
 }

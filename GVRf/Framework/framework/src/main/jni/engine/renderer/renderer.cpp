@@ -171,7 +171,7 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
     rstate.shader_manager = shader_manager;
     rstate.scene = scene;
     rstate.render_mask = camera->render_mask();
-    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
+    rstate.uniforms.u_right = (rstate.render_mask & RenderData::RenderMaskBit::Right) ? 1 : 0;
     rstate.javaSceneObject = javaSceneObject;
     rstate.lightsChanged = lights.isDirty();
     glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj * rstate.uniforms.u_view);
@@ -338,7 +338,7 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
     rstate.uniforms.u_model = model ? model->getModelMatrix() : glm::mat4();
 //    rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
     transform_ubo->setMat4("u_model", rstate.uniforms.u_model);
-    transform_ubo->setFloat("u_right", rstate.uniforms.u_right);
+    transform_ubo->setFloat("u_right", (rstate.render_mask & RenderData::RenderMaskBit::Right) ? 1 : 0);
 
     if (rstate.is_multiview)
     {

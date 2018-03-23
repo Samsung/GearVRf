@@ -108,7 +108,7 @@ namespace gvr {
                              glUniform3uiv(loc, e.Count, (GLuint*) data);
                              break;
 
-                            case 4:
+                             case 4:
                              glUniform4uiv(loc, e.Count, (GLuint*) data);
                              break;
 
@@ -140,16 +140,15 @@ namespace gvr {
                              default:
                              LOGE("UniformBlock: ERROR invalid integer vector size %d", elemsize);
                              break;
+                         }
                      }
-                     }
-
                  }
                  else if (e.IsMatrix)
                  {
                      elemsize /= sizeof(float);
                      switch (elemsize)
                      {
-                         case 12:
+                         case 9:
                          glUniformMatrix3x4fv(loc, e.Count, false, (const float*) data);
                          break;
 

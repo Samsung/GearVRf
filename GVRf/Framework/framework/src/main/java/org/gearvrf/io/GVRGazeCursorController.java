@@ -110,6 +110,9 @@ final public class GVRGazeCursorController extends GVRCursorController
                 setCursorDepth(eventZ);
             }
             break;
+            default:
+                event.recycle();
+                return;
         }
         setMotionEvent(event);
         invalidate();

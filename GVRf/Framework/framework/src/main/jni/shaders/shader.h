@@ -142,7 +142,7 @@ public:
     virtual void bindLights(LightList& lights, Renderer* r) = 0;
     static int calcSize(const char* type);
     void setJava(jclass shaderClass, JavaVM *javaVM);
-    bool calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;
+    void calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;
 
 private:
     Shader(const Shader& shader) = delete;

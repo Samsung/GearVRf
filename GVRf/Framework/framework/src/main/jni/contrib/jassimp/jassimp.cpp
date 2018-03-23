@@ -14,7 +14,7 @@
 #define lprintf(...) printf (__VA_ARGS__)
 #endif /* ANDROID */
 #else
-#define lprintf
+#define lprintf(...)
 #endif
 
 // Automatically deletes a local ref when it goes out of scope

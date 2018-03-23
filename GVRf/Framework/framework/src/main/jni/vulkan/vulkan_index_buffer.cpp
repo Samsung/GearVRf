@@ -131,6 +131,7 @@ namespace gvr {
         if(type.compare("float4")==0 || type.compare("vec4")==0)
             return VK_FORMAT_R32G32B32A32_SFLOAT;
 
+        throw std::runtime_error("VulkanIndexBuffer::getDataType: unknown type");
     }
 } // end gvrf
 

@@ -41,6 +41,7 @@ namespace gvr {
         activityClass_ = GetGlobalClassReference(env, activityClassName);
 
         onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(IIZ)V");
+        onBeforeDrawEyesMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "beforeDrawEyes", "()V");
         updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
 
         mainThreadId_ = gettid();
@@ -270,6 +271,7 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     if (!sensoredSceneUpdated_ && docked_) {
         sensoredSceneUpdated_ = updateSensoredScene();
     }
+    oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onBeforeDrawEyesMethodId);
 
     // Render the eye images.
     for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {

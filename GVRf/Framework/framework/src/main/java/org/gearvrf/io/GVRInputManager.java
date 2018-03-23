@@ -185,7 +185,10 @@ public class GVRInputManager implements IEventReceiver
     {
         for (GVRCursorController controller : getCursorControllers())
         {
-            controllers.add(controller);
+            if (!controllers.contains(controller))
+            {
+                controllers.add(controller);
+            }
             if (controller.isConnected())
             {
                 addCursorController(controller);
@@ -798,7 +801,7 @@ public class GVRInputManager implements IEventReceiver
                 GVRContext ctx = gvrCursorController.getGVRContext();
                 deselectController();
                 GVRCursorController gaze = ctx.getInputManager().findCursorController(GVRControllerType.GAZE);
-                if (gaze != gvrCursorController)
+                if (null != gaze && gaze != gvrCursorController)
                 {
                     ctx.getInputManager().addCursorController(gaze);
                 }

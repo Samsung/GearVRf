@@ -16,7 +16,6 @@
 #ifndef FRAMEWORK_VULKAN_IMAGE
 #define FRAMEWORK_VULKAN_IMAGE
 
-#include "vulkan_headers.h"
 #include "objects/textures/image.h"
 #include "vk_imagebase.h"
 

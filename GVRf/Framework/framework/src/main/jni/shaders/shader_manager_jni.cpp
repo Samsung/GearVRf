@@ -41,7 +41,7 @@ extern "C" {
     JNIEXPORT jint JNICALL
     Java_org_gearvrf_NativeShaderManager_getShader(JNIEnv* env, jobject obj, jlong jshader_manager, jstring signature);
 
-    JNIEXPORT jint JNICALL
+    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeShaderManager_bindCalcMatrix(JNIEnv* env, jobject obj, jlong jshader_manager,
                                                         jint nativeShader, jclass javeShaderClass);
 
@@ -100,7 +100,7 @@ Java_org_gearvrf_NativeShaderManager_getShader(JNIEnv * env, jobject obj, jlong 
     return 0;
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeShaderManager_bindCalcMatrix(JNIEnv* env, jobject obj, jlong jshader_manager,
                                                     jint nativeShader, jclass javeShaderClass)
 {

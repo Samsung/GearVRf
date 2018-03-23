@@ -45,7 +45,7 @@ static long long getNanoTime() {
     return time;
 }
 
-static long long sleepNanos(long long nanoSeconds) {
+static void sleepNanos(long long nanoSeconds) {
 
     //long long startNS     = getNanoTime();
     // int nanosleep(const struct timespec *req, struct timespec

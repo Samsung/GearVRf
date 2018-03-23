@@ -121,7 +121,7 @@ public:
     virtual bool readRenderResult(uint8_t* readback_buffer){
         glBindFramebuffer(GL_READ_FRAMEBUFFER, getReadBufferId());
         glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, getId(), 0, layer_index_ );
-        GLRenderTexture::readRenderResult(readback_buffer);
+        return GLRenderTexture::readRenderResult(readback_buffer);
     }
     virtual void beginRendering(Renderer* renderer){
         if (!isReady())

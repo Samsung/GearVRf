@@ -25,9 +25,12 @@ int getComponentsNumber(VkFormat format){
             return 2;
         case VK_FORMAT_D32_SFLOAT:
             return 4;
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+            return 4;
         default:
-            LOGE("format not found");
+            FAIL("format not found");
     }
+    return 0;
 }
 
     vkImageBase::~vkImageBase(){
@@ -36,14 +39,19 @@ int getComponentsNumber(VkFormat format){
         vkDestroyImageView(device, imageView, nullptr);
         vkDestroyImage(device, image, nullptr);
 
-        vkDestroyBuffer(device, hostBuffer, nullptr);
-        vkFreeMemory(device, host_memory, nullptr);
+        if(host_memory != 0)
+            vkFreeMemory(device, host_memory, nullptr);
+
+        if(hostBuffer != 0)
+            vkDestroyBuffer(device, hostBuffer, nullptr);
+
 
         if(host_accessible_) {
             vkDestroyBuffer(device, *outBuffer, nullptr);
             vkFreeMemory(device, dev_memory, nullptr);
         }
-    }
+
+      }
 
 void vkImageBase::createImageView(bool host_accessible) {
     host_accessible_ = host_accessible;
@@ -93,11 +101,14 @@ void vkImageBase::createImageView(bool host_accessible) {
     ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
     GVR_VK_CHECK(!ret);
 
+    VkImageAspectFlagBits aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
+    if (usage_flags_ == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        aspectFlag = static_cast<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
     ret = vkCreateImageView(
             device,
             gvr::ImageViewCreateInfo(image, imageType,
                                      format_, 1, mLayers,
-                                     VK_IMAGE_ASPECT_COLOR_BIT),
+                                     aspectFlag),
             nullptr, &imageView
     );
     GVR_VK_CHECK(!ret);
@@ -129,7 +140,7 @@ void vkImageBase::createImageView(bool host_accessible) {
     }
 }
 
-int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
+void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
                               std::vector<ImageInfo> &bitmapInfos,
                               std::vector<VkBufferImageCopy> &bufferCopyRegions,
                               VkImageViewType target, VkFormat internalFormat,
@@ -218,11 +229,11 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
     assert(pass);
 
     /* allocate memory */
-    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &dev_memory);
+    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &host_memory);
     assert(!err);
 
     /* bind memory */
-    err = vkBindImageMemory(device, image, dev_memory, 0);
+    err = vkBindImageMemory(device, image, host_memory, 0);
     assert(!err);
 
     // Reset the setup command buffer

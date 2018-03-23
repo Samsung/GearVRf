@@ -18,7 +18,7 @@
 
 #include "vulkan_headers.h"
 #include "objects/textures/bitmap_image.h"
-
+#include "vulkan/vulkan_image.h"
 namespace gvr {
     class VkBitmapImage : public vkImageBase, public BitmapImage
     {
@@ -40,7 +40,7 @@ namespace gvr {
         void loadCompressedMipMaps(jbyte *data, int format);
 
     private:
-        int updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject bitmap);
+        void updateFromBuffer(JNIEnv *env, VkImageViewType target, jobject bitmap);
 
     };
 

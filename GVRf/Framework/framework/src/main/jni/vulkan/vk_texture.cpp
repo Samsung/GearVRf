@@ -124,5 +124,7 @@ const VkImageView& VkTexture::getVkImageView()
             bitmapImage = static_cast<VkBitmapImage*>(image);
             return bitmapImage->getVkImageView();
     }
+
+    throw std::runtime_error("vrktexture: image is null");
 }
 }

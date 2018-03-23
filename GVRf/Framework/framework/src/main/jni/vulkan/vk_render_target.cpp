@@ -18,6 +18,7 @@
 #include "../vulkan/vk_render_to_texture.h"
 
 
+
 namespace gvr{
 VkCommandBuffer& VkRenderTarget::getCommandBuffer(){
     return static_cast<VkRenderTexture*>(mRenderTexture)->getCommandBuffer();
@@ -27,6 +28,7 @@ VkCommandBuffer& VkRenderTarget::getCommandBuffer(){
      RenderTarget::beginRendering(renderer);
      mRenderTexture->beginRendering(renderer);
  }
+
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview): RenderTarget(renderTexture, is_multiview){
     static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
@@ -37,4 +39,52 @@ VkRenderTarget::VkRenderTarget(Scene* scene): RenderTarget(scene){
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source): RenderTarget(renderTexture, source){
     static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
+
+
+VkRenderTexture* VkRenderTarget :: getTexture() {
+    VkFence fence =  static_cast<VkRenderTexture*>(mRenderTexture)->getFenceObject();
+    VkResult err;
+
+    VulkanCore * core = VulkanCore::getInstance();
+    if(!core)
+    {
+        return NULL;
+    }
+
+    VkDevice device = core->getDevice();
+    err = vkGetFenceStatus(device, fence);
+    /* Commenting out the code of sending an older image to oculus, if the current one is not yet complete.
+     * Reason for commenting : 1. Even though the FPS is 60 the visuals lag.
+     *                         2. FPS is not affected with or without this logic
+     * /
+/*
+    bool found = false;
+    VkResult status;
+
+    if (err != VK_SUCCESS) {
+        renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
+        while (renderTarget1!= nullptr && renderTarget1 != renderTarget) {
+            VkFence fence1 = static_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
+            status = vkGetFenceStatus(m_device, fence1);
+            if (VK_SUCCESS == status) {
+                found = true;
+                break;
+            }
+            renderTarget1 = static_cast<VkRenderTarget*>(renderTarget1->getNextRenderTarget());
+        }
+         if (!found) {
+             renderTarget1 = static_cast<VkRenderTarget*>(renderTarget->getNextRenderTarget());
+             VkFence fence1 = static_cast<VkRenderTexture*>(renderTarget1->getTexture())->getFenceObject();
+            err = vkWaitForFences(m_device, 1, &fence1 , VK_TRUE,
+                              4294967295U);
+         }
+    }
+*/
+    while (err != VK_SUCCESS) {
+        err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
+    }
+
+    return static_cast<VkRenderTexture*>(mRenderTexture);
+}
+
 }

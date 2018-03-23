@@ -63,7 +63,7 @@ extern "C" {
     Java_org_gearvrf_NativeSceneObject_isEnabled(
             JNIEnv * env, jobject obj, jlong jscene_object);
 
-    JNIEXPORT bool JNICALL
+    JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeSceneObject_setEnable(
             JNIEnv * env, jobject obj, jlong jscene_object, bool flag);
 
@@ -171,7 +171,7 @@ Java_org_gearvrf_NativeSceneObject_isEnabled(
     return scene_object->enabled();
 }
 
-JNIEXPORT bool JNICALL
+JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeSceneObject_setEnable(
         JNIEnv * env, jobject obj, jlong jscene_object, bool flag) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);

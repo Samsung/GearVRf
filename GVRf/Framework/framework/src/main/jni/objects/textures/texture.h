@@ -82,6 +82,7 @@ public:
         setWrapU(params[3]);
         setWrapV(params[4]);
         setPadding();
+        return *this;
     }
 
     bool operator==(const TextureParameters& src)

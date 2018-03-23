@@ -14,7 +14,6 @@
  */
 
 #include <jni.h>
-
 #include "engine/renderer/renderer.h"
 #include "objects/textures/render_texture.h"
 #include "objects/components/render_target.h"
@@ -95,8 +94,7 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
                                                                               jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview){
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
     RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
-    RenderTexture* renderTexture =    renderTarget->getTexture();
-
+    RenderTexture* renderTexture = renderTarget->getTexture();
     if(useMultiview){
             renderTexture->setLayerIndex(eye);
     }

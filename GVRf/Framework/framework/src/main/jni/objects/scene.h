@@ -92,11 +92,13 @@ public:
         if(nullptr!= gRenderer){
             return gRenderer->getNumberDrawCalls();
         }
+        return 0;
     }
     int getNumberTriangles() {
         if(nullptr!= gRenderer) {
             return gRenderer->getNumberTriangles();
         }
+        return 0;
     }
 
     void exportToFile(std::string filepath);

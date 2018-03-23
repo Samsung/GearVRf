@@ -1,3 +1,4 @@
+
 /* Copyright 2015 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +20,7 @@
  ***************************************************************************/
 
 #ifndef GL_RENDER_IMAGE_H_
-#define GL_RENDER_IMAGE_H
+#define GL_RENDER_IMAGE_H_
 #include "objects/textures/render_texture.h"
 #include "gl/gl_render_buffer.h"
 #include "gl/gl_frame_buffer.h"

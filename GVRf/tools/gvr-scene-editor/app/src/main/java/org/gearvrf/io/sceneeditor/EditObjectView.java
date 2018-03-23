@@ -28,6 +28,7 @@ import org.gearvrf.GVRRenderData.GVRRenderingOrder;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.joml.Matrix4f;
 
 class EditObjectView extends BaseView implements OnClickListener, OnSeekBarChangeListener {
@@ -53,23 +54,28 @@ class EditObjectView extends BaseView implements OnClickListener, OnSeekBarChang
     //Called on main thread
     EditObjectView(final GVRScene scene, EditViewChangeListener
             editViewChangeListener) {
-        super(scene, R.layout.edit_object_layout, 5, 7, false);
-        ((Button) findViewById(R.id.bDone)).setOnClickListener(this);
-        ((Button) findViewById(R.id.bScaleUp)).setOnClickListener(this);
-        ((Button) findViewById(R.id.bScaleDown)).setOnClickListener(this);
-        ((Button) findViewById(R.id.bRemoveFromScene)).setOnClickListener(this);
-        tvSceneObjectName = (TextView) findViewById(R.id.tvSceneObjectName);
-
-        sbYaw = (SeekBar) findViewById(R.id.sbYaw);
-        sbYaw.setOnSeekBarChangeListener(this);
-
-        sbPitch = (SeekBar) findViewById(R.id.sbPitch);
-        sbPitch.setOnSeekBarChangeListener(this);
-
-        sbRoll = (SeekBar) findViewById(R.id.sbRoll);
-        sbRoll.setOnSeekBarChangeListener(this);
+        super(scene, R.layout.edit_object_layout);
 
         this.editViewChangeListener = editViewChangeListener;
+    }
+
+    @Override
+    // UI Thread
+    public void onInitView(GVRViewSceneObject gvrViewSceneObject, View view) {
+        ((Button) view.findViewById(R.id.bDone)).setOnClickListener(this);
+        ((Button) view.findViewById(R.id.bScaleUp)).setOnClickListener(this);
+        ((Button) view.findViewById(R.id.bScaleDown)).setOnClickListener(this);
+        ((Button) view.findViewById(R.id.bRemoveFromScene)).setOnClickListener(this);
+        tvSceneObjectName = (TextView) view.findViewById(R.id.tvSceneObjectName);
+
+        sbYaw = (SeekBar) view.findViewById(R.id.sbYaw);
+        sbYaw.setOnSeekBarChangeListener(this);
+
+        sbPitch = (SeekBar) view.findViewById(R.id.sbPitch);
+        sbPitch.setOnSeekBarChangeListener(this);
+
+        sbRoll = (SeekBar) view.findViewById(R.id.sbRoll);
+        sbRoll.setOnSeekBarChangeListener(this);
     }
 
     public void setSceneObject(GVRSceneObject attachedSceneObject) {
@@ -77,35 +83,51 @@ class EditObjectView extends BaseView implements OnClickListener, OnSeekBarChang
     }
 
     public void render() {
-        tvSceneObjectName.setText(SCENE_OBJECT_NAME + sceneObject.getName());
-        if(viewSceneObject == null) {
-            initializeViewSceneObject();
-        }
-        viewSceneObject.getTransform().reset();
-        viewSceneObject.getTransform().setPosition(0, 0, -10);
-        viewSceneObject.getTransform().rotateByAxisWithPivot(-35, 1, 0, 0, 0, 0, 0);
+        mViewSceneObject.getGVRContext().getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tvSceneObjectName.setText(SCENE_OBJECT_NAME + sceneObject.getName());
+            }
+        });
+
+        mViewSceneObject.getTransform().setScale( 7.0f, 7.0f, 1.0f);
+        mViewSceneObject.getTransform().setPosition(0, -4, -10);
+        mViewSceneObject.getTransform().setRotation(0.950f, -0.313f, 0.0f, 0.0f);
+
+        /* FIXME:
         Matrix4f cameraMatrix = this.scene.getMainCameraRig()
                 .getHeadTransform().getModelMatrix4f();
-        Matrix4f objectMatrix = viewSceneObject.getTransform().getModelMatrix4f();
+        Matrix4f objectMatrix = mViewSceneObject.getTransform().getModelMatrix4f();
         Matrix4f finalMatrix = cameraMatrix.mul(objectMatrix);
-        viewSceneObject.getTransform().setModelMatrix(finalMatrix);
+        mViewSceneObject.getTransform().setModelMatrix(finalMatrix); */
         show();
     }
 
     void show() {
-        sbYaw.setProgress(0);
-        sbPitch.setProgress(0);
-        sbRoll.setProgress(0);
-        sbYaw.setOnSeekBarChangeListener(this);
-        sbPitch.setOnSeekBarChangeListener(this);
-        sbRoll.setOnSeekBarChangeListener(this);
+        mViewSceneObject.getGVRContext().getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                sbYaw.setProgress(0);
+                sbPitch.setProgress(0);
+                sbRoll.setProgress(0);
+                sbYaw.setOnSeekBarChangeListener(EditObjectView.this);
+                sbPitch.setOnSeekBarChangeListener(EditObjectView.this);
+                sbRoll.setOnSeekBarChangeListener(EditObjectView.this);
+            }
+        });
+
         super.show();
     }
 
     void hide() {
-        sbYaw.setOnSeekBarChangeListener(null);
-        sbPitch.setOnSeekBarChangeListener(null);
-        sbRoll.setOnSeekBarChangeListener(null);
+        mViewSceneObject.getGVRContext().getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                sbYaw.setOnSeekBarChangeListener(null);
+                sbPitch.setOnSeekBarChangeListener(null);
+                sbRoll.setOnSeekBarChangeListener(null);
+            }
+        });
         super.hide();
     }
 
