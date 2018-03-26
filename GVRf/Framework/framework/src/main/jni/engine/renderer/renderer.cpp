@@ -22,6 +22,8 @@
 #include "glm/gtc/matrix_inverse.hpp"
 #include "renderer.h"
 #include "objects/scene.h"
+#include "objects/textures/texture.h"
+#include "objects/textures/render_texture.h"
 
 #define MAX_INDICES 500
 #define BATCH_SIZE 60

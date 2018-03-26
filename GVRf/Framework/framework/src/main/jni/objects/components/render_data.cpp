@@ -19,6 +19,7 @@
 #include "util/jni_utils.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
+#include <glslang/Include/Common.h> //@todo remove; for to_string
 
 namespace gvr {
 

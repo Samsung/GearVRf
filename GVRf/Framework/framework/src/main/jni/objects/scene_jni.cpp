@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "scene.h"
-
+#include "objects/light.h"
 #include "util/gvr_jni.h"
 
 namespace gvr {

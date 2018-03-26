@@ -20,6 +20,7 @@
 
 #include "engine/renderer/renderer.h"
 #include "objects/lightlist.h"
+#include "objects/light.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
 

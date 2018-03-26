@@ -35,6 +35,8 @@
 #include "vulkan/vk_texture.h"
 #include "vulkan/vk_bitmap_image.h"
 
+#include <glslang/Include/Common.h>
+
 namespace gvr {
 ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char* texture_desc)
 {

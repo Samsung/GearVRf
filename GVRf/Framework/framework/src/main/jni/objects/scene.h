@@ -29,11 +29,14 @@
 #include "objects/shader_data.h"
 #include "components/camera_rig.h"
 #include "engine/renderer/renderer.h"
-#include "objects/light.h"
 #include "objects/lightlist.h"
+#include "objects/scene_object.h"
 
 
 namespace gvr {
+
+class Light;
+class Collider;
 
 class Scene: public HybridObject {
 public:

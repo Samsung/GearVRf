@@ -23,10 +23,10 @@
 
 #include <functional>
 #include "engine/renderer/renderer.h"
-#include "objects/light.h"
-
 
 namespace gvr {
+
+class Light;
 
 class LightList
 {
