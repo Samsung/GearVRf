@@ -77,7 +77,7 @@ class FileServer:
                 print('Can\'t close the server')
 
     def check_running_server(self):
-        a = socket.getaddrinfo("", 8000, socket.AF_INET, socket.SOCK_STREAM)
+        a = socket.getaddrinfo("localhost", 8000, socket.AF_INET, socket.SOCK_STREAM)
         family, socktype, proto, canonname, sockaddr = a[0]
         s = socket.socket(family, socktype, proto)
         try:
