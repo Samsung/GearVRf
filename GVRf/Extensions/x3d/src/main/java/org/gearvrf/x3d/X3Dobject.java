@@ -1673,7 +1673,7 @@ public class X3Dobject {
                 if (rotationAttribute != null) {
                     float[] rotation = parseFixedLengthFloatString(rotationAttribute, 1,
                             false, false);
-                    shaderSettings.setTextureRotation( -rotation[0] );
+                    shaderSettings.setTextureRotation( rotation[0] );
                 }
                 String scaleAttribute = attributes.getValue("scale");
                 if (scaleAttribute != null) {
@@ -1685,7 +1685,7 @@ public class X3Dobject {
                 if (translationAttribute != null) {
                     float[] translation = parseFixedLengthFloatString(translationAttribute,
                             2, false, false);
-                    translation[0] = -translation[0];
+                    translation[1] = -translation[1];
                     shaderSettings.setTextureTranslation(translation);
                 }
             }  // end TextureTransform
