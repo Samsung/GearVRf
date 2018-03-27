@@ -135,12 +135,21 @@ namespace gvr {
         int getByteSize(const char* name) const;
 
         /*
+         * Get the shader type for this descriptor type.
+         * @param dtype type from a vertex or uniform descriptor
+         */
+        std::string getShaderType(const char* dtype) const;
+
+        /*
          * Determine if data has changed since last render.
          * @returns true if data has been updated, else false.
          */
         bool isDirty() const { return mIsDirty; }
         virtual void markDirty() { mIsDirty = true; }
+
         virtual std::string makeShaderType(const char* type, int byteSize);
+
+        std::string layoutString() const;
 
         /**
          * Calculate the byte size of the given type.

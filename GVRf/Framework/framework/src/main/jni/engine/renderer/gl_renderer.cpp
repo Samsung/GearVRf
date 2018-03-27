@@ -26,6 +26,7 @@
 #include "gl/gl_external_image.h"
 #include "gl/gl_float_image.h"
 #include "gl/gl_imagetex.h"
+#include "gl/gl_light.h"
 #include "gl_renderer.h"
 #include "objects/scene.h"
 
@@ -59,12 +60,12 @@ namespace gvr
     RenderTarget* GLRenderer::createRenderTarget(RenderTexture* renderTexture, const RenderTarget* renderTarget){
         return new GLRenderTarget(renderTexture, renderTarget);
     }
-    RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo* renderTextureInfo){
+    RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo){
 
-        if(renderTextureInfo->useMultiview)
-            return  new GLMultiviewRenderTexture(renderTextureInfo->fdboWidth,renderTextureInfo->fboHeight,renderTextureInfo->multisamples,2, renderTextureInfo->fboId, renderTextureInfo->texId);
+        if(renderTextureInfo.useMultiview)
+            return  new GLMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,2, renderTextureInfo.fboId, renderTextureInfo.texId);
 
-        return new GLNonMultiviewRenderTexture(renderTextureInfo->fdboWidth,renderTextureInfo->fboHeight,renderTextureInfo->multisamples,renderTextureInfo->fboId, renderTextureInfo->texId);
+        return new GLNonMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,renderTextureInfo.fboId, renderTextureInfo.texId);
     }
     void GLRenderer::clearBuffers(const Camera &camera) const
     {
@@ -148,9 +149,9 @@ namespace gvr
         return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texparams, number_views);
     }
 
-    RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int depthformat)
+    RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format)
     {
-        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, depthformat);
+        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, jdepth_format);
         return tex;
     }
 
@@ -184,6 +185,12 @@ namespace gvr
         return ibuf;
     }
 
+    Light* GLRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
+    {
+        return new GLLight(uniformDescriptor, textureDescriptor);
+    }
+
+
     GLRenderer::GLRenderer() : transform_ubo_{nullptr, nullptr}
     {
         const char* desc;
@@ -215,47 +222,59 @@ namespace gvr
         GL(glCullFace(GL_BACK));
         GL(glDisable(GL_POLYGON_OFFSET_FILL));
         Camera* camera = renderTarget->getCamera();
-        RenderState rstate = renderTarget->getRenderState();
+        RenderData* post_effects = camera->post_effect_data();
+        RenderState& rstate = renderTarget->getRenderState();
         //@todo makes it clear this is a hack
         rstate.javaSceneObject = javaSceneObject;
-        RenderData* post_effects = camera->post_effect_data();
         rstate.scene = scene;
         rstate.shader_manager = shader_manager;
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
-
+        rstate.shadow_map = nullptr;
+        rstate.lightsChanged = false;
         std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
+        LightList& lights = scene->getLights();
 
-        if (!rstate.shadow_map)
+        if (!rstate.is_shadow)
         {
             rstate.render_mask = camera->render_mask();
-            if(rstate.is_multiview)
-                rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
-
+            if (rstate.is_multiview)
+            {
+                rstate.render_mask = RenderData::RenderMaskBit::Right |
+                                     RenderData::RenderMaskBit::Left;
+            }
             rstate.uniforms.u_right = ((camera->render_mask() & RenderData::RenderMaskBit::Right) != 0) ? 1 : 0;
             rstate.material_override = NULL;
             GL(glEnable (GL_BLEND));
             GL(glBlendEquation (GL_FUNC_ADD));
             GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
             GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+            rstate.lightsChanged = lights.isDirty();
+
+            if (lights.usingUniformBlock())
+            {
+                rstate.shadow_map = lights.updateLightBlock(this);
+            }
+            else
+            {
+                rstate.shadow_map = lights.scanLights();
+            }
         }
         if ((post_effects == NULL) ||
             (post_effect_render_texture_a == nullptr) ||
             (post_effects->pass_count() == 0))
         {
-
             clearBuffers(*camera);
             for (auto it = render_data_vector->begin();
                  it != render_data_vector->end();
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.is_shadow || rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
             }
-
         }
         else
         {
@@ -274,7 +293,7 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.is_shadow || rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
@@ -303,7 +322,6 @@ namespace gvr
             renderPostEffectData(rstate, input_texture, post_effects, npost);
         }
         GL(glDisable(GL_BLEND));
-
     }
 
 /**
@@ -420,16 +438,11 @@ namespace gvr
     void GLRenderer::makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager)
     {
         checkGLError("makeShadowMaps");
-        const std::vector<Light*> lights = scene->getLightList();
         GLint drawFB, readFB;
-        int texIndex = 0;
 
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFB);
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFB);
-        for (auto it = lights.begin(); it != lights.end(); ++it) {
-            (*it)->makeShadowMap(scene, javaSceneObject, shader_manager, texIndex);
-            ++texIndex;
-        }
+        scene->getLights().makeShadowMaps(scene, javaSceneObject, shader_manager);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readFB);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFB);
     }
@@ -553,15 +566,20 @@ namespace gvr
          * If updateGPU returns -1, some textures are not ready
          * yet and we do not render this mesh.
          */
-        if (rstate.shadow_map && curr_material)
+        if (rstate.is_shadow && curr_material)
         {
             const char* depthShaderName = mesh->hasBones() ? "GVRDepthShader$a_bone_weights$a_bone_indices" : "GVRDepthShader";
             shader = rstate.shader_manager->findShader(depthShaderName);
 
             if (shader == nullptr)
             {
-                LOGE("Renderer::renderMesh cannot find depth shader %s", depthShaderName);
-                return;
+                rstate.scene->makeDepthShaders(rstate.javaSceneObject);
+                shader = rstate.shader_manager->findShader(depthShaderName);
+                if (shader == nullptr)
+                {
+                    LOGE("Renderer::renderMesh cannot find depth shader %s", depthShaderName);
+                    return;
+                }
             }
             if (curr_material->updateGPU(this,render_data) >= 0)
             {
@@ -622,6 +640,7 @@ namespace gvr
                 glLineWidth(1.0f);
             }
         }
+        GLShader* glshader = static_cast<GLShader*>(shader);
         int texIndex = material->bindToShader(shader, this);
         if (texIndex >= 0)
         {
@@ -631,13 +650,26 @@ namespace gvr
                 updateTransforms(rstate, transformBlock, rdata);
                 if (!transformBlock->usesGPUBuffer())
                 {
-                    static_cast<GLShader*>(shader)->findUniforms(*transformBlock, TRANSFORM_UBO_INDEX);
+                    glshader->findUniforms(*transformBlock, TRANSFORM_UBO_INDEX);
                 }
                 transformBlock->bindBuffer(shader, this);
             }
             if (shader->useLights())
             {
-                updateLights(rstate, shader, texIndex);
+                LightList& lightlist = rstate.scene->getLights();
+
+                lightlist.useLights(this, shader);
+                if (rstate.shadow_map)
+                {
+                    int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
+                    if (loc >= 0)
+                    {
+#ifdef DEBUG_LIGHT
+                        LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
+#endif
+                        rstate.shadow_map->bindTexture(loc, texIndex);
+                    }
+                }
             }
             checkGLError("renderMesh:before render");
             rdata->render(shader, this);
@@ -661,51 +693,21 @@ namespace gvr
         return  false;
     }
 
-    void GLRenderer::updateLights(RenderState& rstate, Shader* shader, int texIndex)
+
+    void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
     {
-        const std::vector<Light*>& lightlist = rstate.scene->getLightList();
-        ShadowMap* shadowMap = nullptr;
+        float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
+        float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
+        unsigned short faces[] = { 0, 2, 1, 1, 2, 3 };
 
-        for (auto it = lightlist.begin();
-             it != lightlist.end();
-             ++it)
-        {
-            Light* light = (*it);
-            if (light != NULL)
-            {
-                light->render(shader);
-                ShadowMap* sm = light->getShadowMap();
-                if (sm != nullptr)
-                {
-                    shadowMap = sm;
-                }
-            }
-        }
-        if (shadowMap)
-        {
-            GLShader* glshader = static_cast<GLShader*>(shader);
-            int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
-            if (loc >= 0)
-            {
-                shadowMap->bindTexture(loc, texIndex);
-            }
-        }
-        checkGLError("GLRenderer::updateLights");
+        const int position_size = sizeof(positions)/ sizeof(positions[0]);
+        const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
+        const int faces_size = sizeof(faces)/ sizeof(faces[0]);
+
+        copy_mesh->setVertices(positions, position_size);
+        copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
+        copy_mesh->setTriangles(faces, faces_size);
     }
-void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
-{
-    float positions[] = { -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f };
-    float uvs[] = { 0.0f, 0.0, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f };
-    unsigned short faces[] = { 0, 2, 1, 1, 2, 3 };
-
-    const int position_size = sizeof(positions)/ sizeof(positions[0]);
-    const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
-    const int faces_size = sizeof(faces)/ sizeof(faces[0]);
-
-    copy_mesh->setVertices(positions, position_size);
-    copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
-    copy_mesh->setTriangles(faces, faces_size);
-}
 
 }
 

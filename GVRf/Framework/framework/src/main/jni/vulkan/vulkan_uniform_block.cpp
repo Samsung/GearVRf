@@ -48,7 +48,7 @@ namespace gvr {
           return writeDescriptorSet;
     }
 
-    bool VulkanUniformBlock::updateGPU(Renderer* renderer)
+    bool VulkanUniformBlock::updateGPU(Renderer* renderer, int start, int len)
     {
         VulkanRenderer* vkrender = static_cast<VulkanRenderer *>(renderer);
         VulkanCore* vk = vkrender->getCore();
@@ -60,7 +60,7 @@ namespace gvr {
         {
             createBuffer(vk);
         }
-        updateBuffer(vk);
+        updateBuffer(vk, start, len);
         mIsDirty = false;
         return true;
     }
@@ -92,7 +92,7 @@ namespace gvr {
         return stream.str();
     }
 
-    void VulkanUniformBlock::updateBuffer(VulkanCore* vk)
+    void VulkanUniformBlock::updateBuffer(VulkanCore* vk, int start, int len)
     {
         VkDevice& device = vk->getDevice();
         VkResult ret = VK_SUCCESS;
@@ -100,7 +100,11 @@ namespace gvr {
         ret = vkMapMemory(device, m_bufferInfo.mem, 0, m_bufferInfo.allocSize, 0, (void **) &pData);
         assert(!ret);
 
-        memcpy(pData, mUniformData, mTotalSize);
+        if (len == 0)
+        {
+            len = mTotalSize;
+        }
+        memcpy(pData + start, mUniformData + start, len);
         vkUnmapMemory(device, m_bufferInfo.mem);
     }
 

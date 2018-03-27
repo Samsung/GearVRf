@@ -12,10 +12,14 @@ uniform mat4 shadow_matrix;
 
 @MATRIX_UNIFORMS
 
-layout (std140) uniform Bones_ubo
-{
-    mat4 u_bone_matrix[60];
-};
+#ifdef HAS_VertexSkinShader
+#ifdef HAS_a_bone_weights
+@BONES_UNIFORMS
+
+layout(location = 6) in vec4 a_bone_weights;
+layout(location = 7) in ivec4 a_bone_indices;
+#endif
+#endif
 
 layout(location = 0) in vec3 a_position;
 layout(location = 0) out vec4 proj_position;
@@ -29,6 +33,9 @@ void main()
 	Vertex vertex;
 
 	vertex.local_position = vec4(a_position.xyz, 1.0);
+#ifdef HAS_VertexSkinShader
+    @VertexSkinShader
+#endif
 #ifdef HAS_MULTIVIEW
 	proj_position = u_mvp_[gl_ViewID_OVR] * vertex.local_position;
 #else

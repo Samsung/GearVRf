@@ -29,7 +29,6 @@ class GLFrameBuffer;
     {
     public:
         explicit ShadowMap(ShaderData* mtl);
-        virtual ~ShadowMap();
         virtual void  beginRendering(Renderer* renderer);
         void setLayerIndex(int layerIndex);
         void bindTexture(int loc, int texture_index);

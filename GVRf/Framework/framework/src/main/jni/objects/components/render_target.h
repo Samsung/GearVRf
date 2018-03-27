@@ -73,7 +73,7 @@ private:
     RenderTarget& operator=(RenderTarget&& render_texture) = delete;
 
 protected:
-    RenderTarget* mNextRenderTarget;
+    RenderTarget*   mNextRenderTarget;
     RenderState     mRenderState;
     RenderTexture*  mRenderTexture;
     std::shared_ptr<std::vector<RenderData*>> mRenderDataVector;

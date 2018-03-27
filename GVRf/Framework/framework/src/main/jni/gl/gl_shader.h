@@ -22,6 +22,7 @@
 namespace gvr {
     class Mesh;
     class GLMaterial;
+    class LightList;
 
 /**
  * Contains information about the vertex attributes, textures and
@@ -71,10 +72,11 @@ public:
             return -1;
         }
     }
-
+    virtual void bindLights(LightList&, Renderer*);
     void convertToGLShaders();
     void findTextures();
     void findUniforms(const DataDescriptor& desc, int bindingPoint);
+    void findUniforms(const Light& light, int locationOffset);
     int getUniformLoc(int index, int bindingPoint) const;
     int getTextureLoc(int index) const;
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
@@ -90,7 +92,7 @@ private:
 
     GLProgram* mProgram;
     bool mIsReady;
-    std::vector<int> mShaderLocs[BONES_UBO_INDEX + 1];
+    std::vector<int> mShaderLocs[LAST_UBO_INDEX + 1];
     std::vector<int> mTextureLocs;
 };
 

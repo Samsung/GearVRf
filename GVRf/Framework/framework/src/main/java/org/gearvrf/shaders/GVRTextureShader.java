@@ -69,7 +69,9 @@ public class GVRTextureShader extends GVRShaderTemplate
         boolean lightMapEnabled  = (renderable instanceof GVRRenderData) ? ((GVRRenderData) renderable).isLightMapEnabled() : false;
         HashMap<String, Integer> defines = super.getRenderDefines(renderable, scene);
         if (!lightMapEnabled)
+        {
             defines.put("lightMapTexture", 0);
+        }
         if (!defines.containsKey("LIGHTSOURCES") || (defines.get("LIGHTSOURCES") != 1))
         {
             defines.put("a_normal", 0);

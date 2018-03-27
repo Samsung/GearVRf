@@ -79,7 +79,7 @@ extern "C" {
     long Java_org_gearvrf_GVRRenderBundle_getRenderTextureNative(JNIEnv *jni, jclass clazz, jlong jrenderTextureInfo)
     {
         RenderTextureInfo* renderTextureInfo = reinterpret_cast<RenderTextureInfo*>(jrenderTextureInfo);
-        RenderTexture* renderTexture = (Renderer::getInstance()->createRenderTexture(renderTextureInfo));
+        RenderTexture* renderTexture = (Renderer::getInstance()->createRenderTexture(*renderTextureInfo));
         delete renderTextureInfo; // free up the resource as it is no longer needed
         return reinterpret_cast<long>(renderTexture);
     }

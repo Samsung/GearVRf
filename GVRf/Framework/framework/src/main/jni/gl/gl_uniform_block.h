@@ -41,12 +41,12 @@ namespace gvr
         /**
          * Copy the data from CPU into the OpenGL uniform buffer.
          */
-        virtual bool updateGPU(Renderer *);
+        virtual bool updateGPU(Renderer *, int start = 0, int len = 0);
 
         /*
          * Bind the uniform buffer to the OpenGL shader
          */
-        virtual bool bindBuffer(Shader *, Renderer *);
+        virtual bool bindBuffer(Shader *, Renderer *, int locationOffset = 0);
 
         virtual std::string makeShaderLayout();
         virtual bool setFloatVec(const char *name, const float *val, int n);
@@ -61,7 +61,6 @@ namespace gvr
 
     protected:
         GLuint GLBuffer;
-        GLuint GLOffset;
     };
 
 }

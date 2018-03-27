@@ -17,6 +17,7 @@ package org.gearvrf;
 
 import static org.gearvrf.utility.Assert.*;
 
+import org.gearvrf.utility.Exceptions;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -25,12 +26,12 @@ import org.joml.Vector3f;
  * Base class for defining light sources.
  *
  * Lights are implemented by the fragment shader. Each different light
- * implementation corresponds to a subclass of GVRLightBase which is
+ * implementation corresponds to a subclass of GVRLight which is
  * responsible for supplying the shader source code for the light. GearVRF
  * aggregates all of the light source implementations into a single fragment
  * shader.
  *
- * Each subclass of GVRLightBase is a different light implementation and has
+ * Each subclass of GVRLight is a different light implementation and has
  * different shader source. The uniform descriptor is a string which gives the
  * name and type of all uniforms expected in the shader source. It is supplied
  * when a light is created to describe the expected shader input.
@@ -38,13 +39,13 @@ import org.joml.Vector3f;
  * GearVRF will automatically compute shadow maps for a light if shadow casting
  * is enabled. The light vertex and fragment shader must be implemented to take
  * advantage of these shadow maps.
- * 
+ *
  * @see GVRShaderTemplate
- * @see GVRRenderData#bindShader(GVRScene)
  * @see GVRLight#setCastShadow(boolean)
  */
 public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
 {
+    protected final static String UNIFORM_DESC = "float enabled float shadow_map_index float pad1 float pad2 float4 world_position float4 world_direction ";
     protected Matrix4f mLightRot;
     protected Vector3f mOldDir;
     protected Vector3f mOldPos;
@@ -57,35 +58,19 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
     protected String mVertexDescriptor = null;
     protected boolean mCastShadow = false;
 
-    public GVRLight(GVRContext gvrContext, GVRSceneObject parent)
+    protected GVRLight(GVRContext gvrContext, String uniformDesc, String vertexDesc)
     {
-        super(gvrContext, NativeLight.ctor());
-        setOwnerObject(parent);
-        mUniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
-        mVertexDescriptor = null;
-        setFloat("enabled", 1.0f);
-        mLightRot = new Matrix4f();
-        mNewDir = new Vector3f(0.0f, 0.0f, -1.0f);
-        mOldDir = new Vector3f();
-        mOldPos = new Vector3f();
-        mNewPos = new Vector3f();
-        setVec3("world_position", 0.0f, 0.0f, 0.0f);
-        setVec3("world_direction", 0.0f, 0.0f, 1.0f);
-    }
-
-    public GVRLight(GVRContext gvrContext)
-    {
-        super(gvrContext, NativeLight.ctor());
-        mUniformDescriptor = "float enabled vec3 world_position vec3 world_direction";
-        mVertexDescriptor = null;
+        super(gvrContext, NativeLight.ctor(uniformDesc));
+        mUniformDescriptor = uniformDesc;
+        mVertexDescriptor = vertexDesc;
         mLightRot = new Matrix4f();
         mOldDir = new Vector3f();
         mOldPos = new Vector3f();
         mNewPos = new Vector3f();
         mNewDir = new Vector3f(0.0f, 0.0f, -1.0f);
         setFloat("enabled", 1.0f);
-        setVec3("world_position", 0.0f, 0.0f, 0.0f);
-        setVec3("world_direction", 0.0f, 0.0f, 1.0f);
+        setVec4("world_position", 0.0f, 0.0f, 0.0f, 10.0f);
+        setVec4("world_direction", 0.0f, 0.0f, 1.0f, 0.0f);
     }
 
     static public long getComponentType() {
@@ -100,12 +85,12 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * intensive because it requires rendering the entire scene from the viewpoint
      * of the light. It is memory intensive because it requires keeping a framebuffer
      * (shadow map) for each shadow-casting light.
-     * 
+     *
      * In order for a light to actually produce shadows, it must employ a
      * shader that performs the shadow map calculation. The built-in {@link GVRDirectLight}
      * and {@link GVRSpotLight} can produce shadows. {@link GVRPointLight} does not currently implement
      * shadow casting.
-     * 
+     *
      * This function will create the material and shader used for making shadow maps
      * if necessary. It will also cause the HAS_SHADOWS symbol to be defined in the
      * shader if shadow casting is enabled.
@@ -133,7 +118,7 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
     {
         return mCastShadow;
     }
-    
+
     public void setOwnerObject(GVRSceneObject newOwner)
     {
         if (owner == newOwner)
@@ -160,6 +145,7 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
             super.setOwnerObject(newOwner);
         }
     }
+
 
     /**
      * Gets the shadow material used in constructing shadow maps.
@@ -191,25 +177,25 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
     {
         setFloat("enabled", 0.0f);
     }
-    
+
     /**
      * Get the position of the light in world coordinates.
-     * 
+     *
      * The position is computed from the scene object the light is attached to.
      * It corresponds to the "world_position" uniform for the light.
-     * 
+     *
      * @return the world position of the light as a 3 element array
      */
     public float[] getPosition() {
-        return getVec3("world_position");
+        return getVec4("world_position");
     }
 
     /**
      * Set the world position of the light.
-     * 
+     *
      * The position is computed from the scene object the light is attached to.
      * It corresponds to the "world_position" uniform for the light.
-     * 
+     *
      * @param x
      *            x-coordinate in world coordinate system
      * @param y
@@ -218,18 +204,29 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      *            z-coordinate in world coordinate system
      */
     public void setPosition(float x, float y, float z) {
-        setVec3("world_position", x, y, z);
+        setVec4("world_position", x, y, z, 1.0f);
     }
 
     /**
-     * Get the light ID.
-     * 
+     * Get the light Class.
+     *
+     * This is a string that identifies the type of light and is generated by
+     * GearVRF when it is added to the scene. It is used to generate shader code.
+     */
+    public String getLightClass()
+    {
+        return NativeLight.getLightClass(getNative());
+    }
+
+    /**
+     * Get the light Name.
+     *
      * This is a string that uniquely identifies the light and is generated by
      * GearVRF when it is added to the scene. It is used to generate shader code.
      */
-    public String getLightID()
+    public String getLightName()
     {
-        return NativeLight.getLightID(getNative());
+        return NativeLight.getLightName(getNative());
     }
 
     /**
@@ -244,7 +241,7 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * format of the Radiance and Surface structures.
      * @see GVRShaderTemplate
      * @see GVRLight#getUniformDescriptor()
-     * 
+     *
      * @return string with source for light fragment shader
      */
     public String getFragmentShaderSource()
@@ -260,17 +257,17 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * is a varying structure which is used by the fragment shader.
      * The format of the vertex output for the light is defined
      * by the vertex shader descriptor.
-     * 
+     *
      * @see GVRShaderTemplate
      * @see GVRLight#getVertexDescriptor()
-     * 
+     *
      * @return string with source for light vertex shader
      */
     public String getVertexShaderSource()
     {
         return mVertexShaderSource;
     }
-    
+
     /**
      * Access the descriptor defining the shader uniforms used by this light.
      *
@@ -278,10 +275,10 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * This string produces the structure defined in the shader source code.
      * Each light object maintains a copy of these values and sends them to the
      * shader when they are updated.
-     * 
+     *
      * @see GVRShaderTemplate
      * @see GVRLight#getFragmentShaderSource()
-     * 
+     *
      * @return String describing light shader uniforms
      */
     public String getUniformDescriptor()
@@ -296,20 +293,20 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
      * These produce the structure defined in the shader source code.
      * Each light object maintains a copy of these values and sends them to the
      * shader when they are updated.
-     * 
+     *
      * @return String describing light vertex shader output
      */
     public String getVertexDescriptor()
     {
         return mVertexDescriptor;
     }
-    
+
+
     /**
-     * Gets the value of a floating uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
-     * @return floating point value of uniform
+     * Get the {@code float} bound to the shader uniform {@code key}.
+     *
+     * @param key Name of the shader uniform
+     * @return The bound {@code float} value, returns 0.0 if key does not exist.
      */
     public float getFloat(String key)
     {
@@ -317,104 +314,201 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
     }
 
     /**
-     * Sets the value of a floating uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
-     * @param value
-     *            floating point value of uniform
+     * Bind a {@code float} to the shader uniform {@code key}.
+     * Throws an exception of the key is not found.
+     *
+     * @param key       Name of the shader uniform
+     * @param value     New data
      */
     public void setFloat(String key, float value)
     {
-        checkStringNotNullOrEmpty("key", key);
+        checkKeyIsUniform(key);
         checkFloatNotNaNOrInfinity("value", value);
         NativeLight.setFloat(getNative(), key, value);
     }
 
     /**
-     * Gets the value of a vec3 floating uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
-     * @return vec3 value of uniform
+     * Get the {@code int} bound to the shader uniform {@code key}.
+     *
+     * @param key   Name of the shader uniform
+     * @return The bound {@code int} value, 0 if key does not exist.
      */
-    public float[] getVec3(String key)
+    public int getInt(String key)
     {
-        return NativeLight.getVec3(getNative(), key);
+        return NativeLight.getInt(getNative(), key);
     }
 
     /**
-     * Sets the value of a vec3 uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
-     * @param x     X coordinate of vector
-     * @param y     Y coordinate of vector
-     * @param z     Z coordinate of vector
+     * Bind an {@code int} to the shader uniform {@code key}.
+     * Throws an exception of the key does not exist.
+     * @param key       Name of the shader uniform
+     * @param value     New data
+     */
+    public void setInt(String key, int value)
+    {
+        checkKeyIsUniform(key);
+        NativeLight.setInt(getNative(), key, value);
+    }
+
+    /**
+     * Get the value for a floating point uniform vector.
+     * @param key name of uniform to get.
+     * @return float array with value of named uniform.
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
+    public float[] getFloatVec(String key)
+    {
+        float[] vec = NativeLight.getFloatVec(getNative(), key);
+        if (vec == null)
+            throw new IllegalArgumentException("key " + key + " not found in light");
+        return vec;
+    }
+
+    /**
+     * Get the value for an integer uniform vector.
+     * @param key name of uniform to get.
+     * @return int array with value of named uniform.
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
+    public int[] getIntVec(String key)
+    {
+        int[] vec = NativeLight.getIntVec(getNative(), key);
+        if (vec == null)
+            throw new IllegalArgumentException("key " + key + " not found in light");
+        return vec;
+    }
+
+    /**
+     * Get the value for a floating point vector of length 2 (type float2).
+     * @param key name of uniform to get.
+     * @return float array with two values
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
+    public float[] getVec2(String key)
+    {
+        return getFloatVec(key);
+    }
+
+    /**
+     * Set the value for a floating point vector of length 2.
+     * @param key name of uniform to set.
+     * @param x new X value
+     * @param y new Y value
+     * @see #getVec2
+     * @see #getFloatVec(String)
+     */
+    public void setVec2(String key, float x, float y)
+    {
+        checkKeyIsUniform(key);
+        NativeLight.setVec2(getNative(), key, x, y);
+    }
+
+    /**
+     * Get the value for a floating point vector of length 3 (type float3).
+     * @param key name of uniform to get.
+     * @return float array with three values
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
+     */
+    public float[] getVec3(String key)
+    {
+        return getFloatVec(key);
+    }
+
+    /**
+     * Set the value for a floating point vector of length 3.
+     * @param key name of uniform to set.
+     * @param x new X value
+     * @param y new Y value
+     * @param z new Z value
+     * @see #getVec3
+     * @see #getFloatVec(String)
      */
     public void setVec3(String key, float x, float y, float z)
     {
-        checkStringNotNullOrEmpty("key", key);
+        checkKeyIsUniform(key);
         NativeLight.setVec3(getNative(), key, x, y, z);
     }
 
     /**
-     * Gets the value of a vec4 floating uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
-     * @return vec4 value of uniform
+     * Get the value for a floating point vector of length 4 (type float4).
+     * @param key name of uniform to get.
+     * @return float array with four values
+     * @throws IllegalArgumentException if key is not in uniform descriptor.
      */
     public float[] getVec4(String key)
     {
-        return NativeLight.getVec4(getNative(), key);
+        return getFloatVec(key);
     }
 
     /**
-     * Sets the value of a vec4 uniform based on its name.
-     * 
-     * @param key   name of uniform to get
-     * @param x     X coordinate of vector
-     * @param y     Y coordinate of vector
-     * @param z     Z coordinate of vector
-     * @param w     W coordinate of vector
+     * Set the value for a floating point vector of length 4.
+     * @param key name of uniform to set.
+     * @param x new X value
+     * @param y new Y value
+     * @param z new Z value
+     * @param w new W value
+     * @see #getVec4
+     * @see #getFloatVec(String)
      */
     public void setVec4(String key, float x, float y, float z, float w)
     {
-        checkStringNotNullOrEmpty("key", key);
+        checkKeyIsUniform(key);
         NativeLight.setVec4(getNative(), key, x, y, z, w);
     }
 
+
+
     /**
-     * Sets the value of a 4x4 matrix uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
-     * @param matrix
-     *            4x4 matrix value of uniform
+     * Set the value for a floating point 4x4 matrix.
+     * @param key name of uniform to set.
+     * @see #getFloatVec(String)
      */
-    public void setMat4(String key, Matrix4f matrix)
+    public void setMat4(String key, float x1, float y1, float z1, float w1,
+                        float x2, float y2, float z2, float w2, float x3, float y3,
+                        float z3, float w3, float x4, float y4, float z4, float w4)
     {
-        float[] data = new float[16];
-        matrix.get(data);
-        checkStringNotNullOrEmpty("key", key);
-        NativeLight.setMat4(getNative(), key, data);
+        checkKeyIsUniform(key);
+        NativeLight.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2,
+                            z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 
     /**
-     * Gets the value of a 4x4 matrix uniform based on its name.
-     * 
-     * @param key
-     *            name of uniform to get
+     * Set the value for a floating point vector uniform.
+     * <p>
+     * @param key name of uniform to set.
+     * @param val floating point array with new data. The size of the array must be
+     *            at least as large as the uniform being updated.
+     * @throws IllegalArgumentException if key is not in uniform descriptor or array is wrong length.
+     * @see #getFloatVec(String)
      */
-    public Matrix4f getMat4(String key)
+    public void setFloatArray(String key, float val[])
     {
-        float[] data = new float[16];
+        checkKeyIsUniform(key);
+        NativeLight.setFloatVec(getNative(), key, val, val.length);
+    }
+
+    /**
+     * Set the value for an integer vector uniform.
+     * <p>
+     * @param key name of uniform to set.
+     * @param val integer array with new data. The size of the array must be
+     *            at least as large as the uniform being updated.
+     * @throws IllegalArgumentException if key is not in uniform descriptor or array is wrong length.
+     * @see #getIntVec(String)
+     */
+    public void setIntArray(String key, int val[])
+    {
+        checkKeyIsUniform(key);
+        NativeLight.setIntVec(getNative(), key, val, val.length);
+    }
+
+    private void checkKeyIsUniform(String key)
+    {
         checkStringNotNullOrEmpty("key", key);
-        NativeLight.getMat4(getNative(), key, data);
-        Matrix4f matrix = new Matrix4f();
-        matrix.set(data);
-        return matrix;
+        if (!mUniformDescriptor.contains(key))
+        {
+            throw Exceptions.IllegalArgument("key " + key + " not in material");
+        }
     }
 
     /**
@@ -429,14 +523,14 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
     /**
      * Set the default orientation of the light when there is no transformation
      * applied.
-     * 
+     *
      * GearVRF lights default to looking down the positive Z axis with a light
      * direction of (0, 0, 1). This function lets you change the initial forward
      * vector for lights. This orientation is multiplied by the world
      * transformation matrix of the scene object the light is attached to in
      * order to derive the light direction in world space that is passed to the
      * fragment shader.
-     * 
+     *
      * @param orientation
      *            quaternion with the initial light orientation
      */
@@ -447,13 +541,41 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
     }
 
 
-/**
- * Updates the position and direction of this light from the transform of
- * scene object that owns it.
- */
+    public int getLightIndex()
+    {
+        return NativeLight.getLightIndex(getNative());
+    }
+
+    protected void setLightClass(String className)
+    {
+        NativeLight.setLightClass(getNative(), className);
+    }
+
+    String getShaderType(String name)
+    {
+        return NativeLight.getShaderType(getNative(), name);
+    }
+
+    String makeShaderLayout()
+    {
+        return NativeLight.makeShaderLayout(getNative());
+    }
+
+    static String makeShaderBlock(GVRScene scene)
+    {
+        return NativeLight.makeShaderBlock(scene.getNative());
+    }
+
+    /**
+     * Updates the position and direction of this light from the transform of
+     * scene object that owns it.
+     */
     public void onDrawFrame(float frameTime)
-    {     
-        if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
+    {
+        if (!isEnabled() || (owner == null) || (getFloat("enabled") <= 0.0f))
+        {
+            return;
+        }
         float[] odir = getVec3("world_direction");
         float[] opos = getVec3("world_position");
         GVRSceneObject parent = owner;
@@ -473,11 +595,11 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
         worldmtx.transformDirection(mNewDir);
         if ((mOldDir.x != mNewDir.x) || (mOldDir.y != mNewDir.y) || (mOldDir.z != mNewDir.z))
         {
-            setVec3("world_direction", mNewDir.x, mNewDir.y, mNewDir.z);
+            setVec4("world_direction", mNewDir.x, mNewDir.y, mNewDir.z, 0);
         }
         if ((mOldPos.x != mNewPos.x) || (mOldPos.y != mNewPos.y) || (mOldPos.z != mNewPos.z))
         {
-            setVec3("world_position", mNewPos.x, mNewPos.y, mNewPos.z);
+            setPosition(mNewPos.x, mNewPos.y, mNewPos.z);
         }
     }
 
@@ -485,25 +607,58 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
 
 class NativeLight
 {
-    static native long ctor();
+    static native long ctor(String uniformDesc);
 
     static native long getComponentType();
+
+    static native String getLightName(long light);
+
+    static native String getLightClass(long light);
+
+    static native void setLightClass(long light, String id);
+
+    static native int getLightIndex(long light);
+
+    static native boolean hasUniform(long light, String key);
+
+    static native boolean hasTexture(long light, String key);
+
+    static native void setTexture(long light, String key, long texture);
 
     static native float getFloat(long light, String key);
 
     static native void setFloat(long light, String key, float value);
 
-    static native float[] getVec3(long light, String key);
+    static native int getInt(long light, String key);
 
-    static native void setVec3(long light, String key, float x, float y, float z);
+    static native void setInt(long light, String key, int value);
 
-    static native float[] getVec4(long light, String key);
+    static native float[] getFloatVec(long light, String key);
 
-    static native void setVec4(long light, String key, float x, float y, float z, float w);
+    static native void setFloatVec(long light, String key, float[] val, int n);
 
-    static native String getLightID(long light);
+    static native void setIntVec(long light, String key, int[] val, int n);
 
-    static native void getMat4(long light, String key, float[] matrix);
-    
-    static native void setMat4(long light, String key, float[] matrix);
+    static native int[] getIntVec(long light, String key);
+
+    static native void setVec2(long light, String key, float x, float y);
+
+    static native void setVec3(long light, String key, float x,
+                               float y, float z);
+
+    static native void setVec4(long light, String key, float x,
+                               float y, float z, float w);
+
+    static native float[] getMat4(long light, String key);
+
+    static native void setMat4(long light, String key, float x1,
+                               float y1, float z1, float w1, float x2, float y2, float z2,
+                               float w2, float x3, float y3, float z3, float w3, float x4,
+                               float y4, float z4, float w4);
+
+    static native String getShaderType(long light, String name);
+
+    static native String makeShaderBlock(long scene);
+
+    static native String makeShaderLayout(long light);
 }

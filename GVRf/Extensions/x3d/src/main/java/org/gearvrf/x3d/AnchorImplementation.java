@@ -404,7 +404,6 @@ public class AnchorImplementation {
         webPagePlusUISceneObject.getTransform().setPosition(webPagePlusUIPosition[0], webPagePlusUIPosition[1], webPagePlusUIPosition[2]);
 
         GVRScene mainScene = gvrContext.getMainScene();
-        mainScene.bindShaders(webPagePlusUISceneObject);
 
         Sensor webPageSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrWebViewSceneObject);
         final GVRSceneObject gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
@@ -472,13 +471,6 @@ public class AnchorImplementation {
         gvrUICubeSceneObject.addChildObject(gvrTextScaleObject);
 
         // Currently req to show an object dynamically added
-        GVRScene mainScene = gvrContext.getMainScene();
-        mainScene.bindShaders(gvrUICubeSceneObject);
-        mainScene.bindShaders(gvrTextExitObject);
-        mainScene.bindShaders(gvrTextTranslationObject);
-        mainScene.bindShaders(gvrTextRotateObject);
-        mainScene.bindShaders(gvrTextScaleObject);
-
         webPagePlusUISceneObject = new GVRSceneObject(gvrContext);
         webPagePlusUISceneObject.getTransform().setPosition(webPagePlusUIPosition[0], webPagePlusUIPosition[1], webPagePlusUIPosition[2]);
 

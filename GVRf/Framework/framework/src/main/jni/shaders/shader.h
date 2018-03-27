@@ -27,10 +27,13 @@
 #include <mutex>
 #include <vector>
 #include <objects/mesh.h>
+#include <objects/lightlist.h>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "objects/uniform_block.h"
+
+//#define DEBUG_SHADER 1
 
 namespace gvr {
 class Mesh;
@@ -45,7 +48,6 @@ class Mesh;
 class Shader
 {
 public:
-    static const bool LOG_SHADER;
 
 /*
  * Creates a native shader description.
@@ -120,10 +122,14 @@ public:
     {
         return mUseHasBones;
     }
-    bool isShaderDirty(){
+
+    bool isShaderDirty()
+    {
         return  shaderDirty;
     }
-    void setShaderDirty(bool flag){
+
+    void setShaderDirty(bool flag)
+    {
         shaderDirty = flag;
     }
 
@@ -133,6 +139,7 @@ public:
     }
 
     virtual bool useShader(bool) = 0;
+    virtual void bindLights(LightList& lights, Renderer* r) = 0;
     static int calcSize(const char* type);
     void setJava(jclass shaderClass, JavaVM *javaVM);
     void calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;

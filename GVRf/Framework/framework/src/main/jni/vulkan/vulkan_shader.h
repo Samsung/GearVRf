@@ -88,6 +88,7 @@ public:
         return m_descriptorLayout;
     }
     void  convertToVkShaders();
+    virtual void bindLights(LightList&, Renderer* r) { }
     int makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata);
     int bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet);
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);

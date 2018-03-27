@@ -45,6 +45,29 @@ namespace gvr
         }
     }
 
+    UniformBlock::UniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxElems)
+            :   DataDescriptor(descriptor),
+                mBlockName(blockName),
+                mOwnData(false),
+                mUseBuffer(true),
+                mBindingPoint(bindingPoint),
+                mUniformData(NULL)
+    {
+        mElemSize = mTotalSize;
+        mMaxElems = maxElems;
+        if (blockName)
+        {
+            mBlockName = blockName;
+        }
+        if ((mElemSize > 0) && (maxElems > 0))
+        {
+            mMaxElems = mNumElems = maxElems;
+            mTotalSize = mElemSize * maxElems;
+            mUniformData = new char[mTotalSize];
+            mOwnData = true;
+        }
+    }
+
     bool UniformBlock::setInt(const char* name, int val)
     {
         int size = sizeof(int);
@@ -251,46 +274,73 @@ namespace gvr
     std::string UniformBlock::makeShaderLayout()
     {
         std::ostringstream stream;
-        if (mUseBuffer) {
+        if (mUseBuffer)
+        {
             stream << "layout (std140) uniform " << getBlockName() << " {" << std::endl;
         }
-            DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
+        DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
+        {
+            int nelems = entry.Count;
+            if (entry.IsSet)
             {
-                int nelems = entry.Count;
-                if (entry.IsSet)
+                stream << "uniform " << entry.Type << " " << entry.Name;
+                if (nelems > 1)
                 {
-                    if(nelems > 1)
-                    stream << "uniform " << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
-                    else
-                    stream << "uniform " << entry.Type << " " << entry.Name << ";" << std::endl;
+                    stream << "[" << nelems << "]";
                 }
-            });
+                stream << ";" << std::endl;
+            }
+        });
 
-        if (mUseBuffer) {
+        if (mUseBuffer)
+        {
             stream << "};" << std::endl;
         }
         return stream.str();
     }
 
-    std::string UniformBlock::toString()
+    std::string UniformBlock::dumpFloats() const
+    {
+        std::ostringstream os;
+        const float* ptr = (const float*) mUniformData;
+        int n = 16;
+        int offset = 0;
+        int totalsize = getTotalSize() / sizeof(float);
+        while (offset < totalsize)
+        {
+            os << *ptr++ << " ";
+            offset++;
+            if (--n <= 0)
+            {
+                os << std::endl;
+                n = 16;
+            }
+        }
+        os << std::endl;
+        return os.str();
+    }
+
+    std::string UniformBlock::toString() const
     {
         std::ostringstream os;
         for (int i = 0; i < mNumElems; ++i)
         {
             forEachEntry([this, &os, i](const DataEntry& e) mutable
             {
-                os << e.Name << ": " << i * e.Offset;
+                os << e.Name << ": ";
                 for (int j = 0; j < e.Size / sizeof(float); j++)
                 {
-                    char* d = ((char*) mUniformData) + e.Offset;
+                    char* d = ((char*) mUniformData) + e.Offset + (i * mElemSize);
                     os << " ";
-                    if (e.Name[0] == 'i')
+                    if (e.IsInt)
                     {
-                        os << *(((int*) d) + i);
+                        int* ip = ((int*) d) + j;
+                        os << *ip;
                     }
                     else
                     {
-                        os << *(((float*) d) + i);
+                        float* fp = ((float*) d) + j;
+                        os << *fp;
                     }
                 }
                 os << ';' << std::endl;
@@ -299,28 +349,6 @@ namespace gvr
         return os.str();
     }
 
-    UniformBlock::UniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxElems)
-    :   DataDescriptor(descriptor),
-        mBlockName(blockName),
-        mOwnData(false),
-        mUseBuffer(true),
-        mBindingPoint(bindingPoint),
-        mUniformData(NULL)
-    {
-        mElemSize = mTotalSize;
-        mMaxElems = maxElems;
-        if (blockName)
-        {
-            mBlockName = blockName;
-        }
-        if ((mElemSize > 0) && (maxElems > 0))
-        {
-            mMaxElems = mNumElems = maxElems;
-            mTotalSize = mElemSize * maxElems;
-            mUniformData = new char[mTotalSize];
-            mOwnData = true;
-        }
-    }
 
     bool UniformBlock::setNumElems(int numElems)
     {
@@ -355,21 +383,48 @@ namespace gvr
         return false;
     }
 
-    bool UniformBlock::setAt(int elemIndex, UniformBlock& srcBlock)
+    bool UniformBlock::setAt(int elemIndex, const UniformBlock& srcBlock)
     {
+        int nelems = srcBlock.getTotalSize() / mElemSize;
         if ((elemIndex >= 0) &&
-            (elemIndex < mMaxElems) &&
-            (srcBlock.getTotalSize() == mElemSize))
+            (elemIndex + nelems <= mMaxElems))
         {
             const char* src = (const char*) srcBlock.getData();
-            memcpy(mUniformData + mElemSize * elemIndex, src, mElemSize);
+            int start = mElemSize * elemIndex;
+            int len = nelems * mElemSize;
+            memcpy(mUniformData + start, src, len);
+            markDirty();
+            elemIndex += nelems;
             if (elemIndex >= mNumElems)
             {
-                setNumElems(elemIndex + 1);
+                setNumElems(elemIndex);
             }
             return true;
         }
         LOGE("UniformBlock::setAt ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);
+        return false;
+    }
+
+    bool UniformBlock::updateGPU(Renderer* r, int elemIndex, const UniformBlock& srcBlock)
+    {
+        int len = srcBlock.getTotalSize();
+        int nelems = srcBlock.getTotalSize() / mElemSize;
+        if ((elemIndex >= 0) &&
+            (elemIndex + nelems <= mMaxElems))
+        {
+            const char* src = (const char*) srcBlock.getData();
+            int start = mElemSize * elemIndex;
+            mIsDirty = true;
+            memcpy(mUniformData + start, src, len);
+            updateGPU(r, start, len);
+            elemIndex += nelems;
+            if (elemIndex >= mNumElems)
+            {
+                setNumElems(elemIndex);
+            }
+            return true;
+        }
+        LOGE("UniformBlock::updateGPU ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);
         return false;
     }
 

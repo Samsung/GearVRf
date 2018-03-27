@@ -412,74 +412,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     }
 
     /**
-     * Visits all the GVRRenderData components in a hierarchy and regenerates
-     * their shaders if necessary.
-     */
-    protected class ShaderBinder implements GVRSceneObject.ComponentVisitor
-    {
-        private GVRScene mScene;
-
-        public ShaderBinder(GVRScene scene)
-        {
-            mScene = scene;
-        }
-
-        public boolean visit(GVRComponent obj)
-        {
-            GVRRenderData rdata = (GVRRenderData) obj;
-            if (rdata.getMesh() != null)
-                rdata.bindShader(mScene);
-            return true;
-        }
-    };
-
-    protected ShaderBinder mBindShaderVisitor;
-
-    /**
-     * Bind the correct vertex and fragment shaders on the given hierarchy.
-     * This function sets the shader template for all the GVRRenderData components
-     * in the input hierarchy (but does not construct vertex and fragment shaders.)
-     *
-     * If new assets are loaded that add lights to the scene after initialization,
-     * bindShaders may need to be called again to regenerate the correct shaders
-     * for the new lighting conditions. This function is called whenever a scene
-     * object is added at the root of the scene.
-     * @see GVRRenderData#bindShader(GVRScene)
-     * @see GVRShaderTemplate
-     * @see GVRScene#addSceneObject(GVRSceneObject)
-     */
-    public void bindShaders(GVRSceneObject root) {
-        if (root != null)
-        {
-            if (mBindShaderVisitor == null)
-            {
-                mBindShaderVisitor = new ShaderBinder(this);
-            }
-            root.forAllComponents(mBindShaderVisitor, GVRRenderData.getComponentType());
-        }
-    }
-
-    private static Runnable sBindShadersFromNative = null;
-
-    /**
-     * Called from the GL thread during rendering if lights
-     * have been added or removed. Will possibly regenerate
-     * all shaders which use light sources.
-     */
-    @SuppressWarnings("unused") //called from native
-    void bindShadersNative()
-    {
-        bindShaders(getRoot());
-    }
-
-    /**
-     * Clears all lights of the scene's light list.
-     */
-    private void clearLights() {
-        NativeScene.clearLights(getNative());
-    }
-    
-    /**
      * Get the list of lights used by this scene.
      * 
      * This list is maintained by GearVRF by gathering the
@@ -628,6 +560,15 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
             }
         }
     };
+
+    void makeDepthShaders()
+    {
+        GVRContext ctx = getGVRContext();
+        GVRMaterial shadowMtl = GVRShadowMap.getShadowMaterial(ctx);
+        GVRShader depthShader = shadowMtl.getShaderType().getTemplate(ctx);
+        depthShader.bindShader(ctx, shadowMtl, "float3 a_position");
+        depthShader.bindShader(ctx, shadowMtl, "float3 a_position float4 a_bone_weights int4 a_bone_indices");
+    }
 
     private static int getCameraRigType(final GVRContext gvrContext) {
         int cameraRigType = -1;

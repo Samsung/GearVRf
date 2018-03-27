@@ -19,7 +19,9 @@
 
 #include "gl/gl_shader.h"
 #include "gl/gl_material.h"
+#include "objects/light.h"
 #include "engine/renderer/renderer.h"
+#include "gl_light.h"
 
 namespace gvr {
 
@@ -147,7 +149,9 @@ bool GLShader::useShader(bool is_multiview)
         LOGE("SHADER: shader could not be generated %s", mSignature.c_str());
         return false;
     }
-    if (LOG_SHADER) LOGV("SHADER: rendering with program %d", programID);
+#ifdef DEBUG_SHADER
+    LOGV("SHADER: rendering with program %d", programID);
+#endif
     glUseProgram(programID);
 
     if(!mTextureLocs.size())
@@ -159,6 +163,34 @@ bool GLShader::useShader(bool is_multiview)
     return true;
 }
 
+void GLShader::bindLights(LightList& lights, Renderer* renderer)
+{
+    int locOffset = 0;
+
+    if ((mShaderLocs[LIGHT_UBO_INDEX].size() == 0) || lights.isDirty())
+    {
+        mShaderLocs[LIGHT_UBO_INDEX].resize(lights.getNumUniforms());
+        lights.forEachLight([this, renderer, locOffset](Light& light) mutable
+        {
+            UniformBlock& lightData = light.uniforms().uniforms();
+
+            findUniforms(light, locOffset);
+            lightData.bindBuffer(this, renderer, locOffset);
+            locOffset += lightData.getNumEntries();
+        });
+    }
+    else
+    {
+        lights.forEachLight([this, renderer, locOffset](Light& light) mutable
+        {
+            UniformBlock& lightData = light.uniforms().uniforms();
+
+            lightData.bindBuffer(this, renderer, locOffset);
+            locOffset += lightData.getNumEntries();
+        });
+    }
+}
+
 /**
  * Gets the GL shader location of a uniform based on its index
  * in the Material uniformdescriptor.
@@ -168,13 +200,10 @@ bool GLShader::useShader(bool is_multiview)
  */
 int GLShader::getUniformLoc(int index, int bindingPoint) const
 {
-    if (bindingPoint <= BONES_UBO_INDEX)
+    const std::vector<int>& locs = mShaderLocs[bindingPoint];
+    if (index < locs.size())
     {
-        const std::vector<int>& locs = mShaderLocs[bindingPoint];
-        if (index < locs.size())
-        {
-            return locs[index];
-        }
+        return locs[index];
     }
     return -1;
 }
@@ -231,11 +260,64 @@ void GLShader::findUniforms(const DataDescriptor& desc, int bindingPoint)
         if (loc >= 0)
         {
             uniformLocs[entry.Index] = loc;
+#ifdef DEBUG_SHADER
             LOGV("SHADER: program %d uniform %s loc %d", getProgramId(), entry.Name, loc);
+#endif
         }
         else
         {
+#ifdef DEBUG_SHADER
             LOGV("SHADER: uniform %s has no location in shader %d", entry.Name, getProgramId());
+#endif
+        }
+    });
+    checkGLError("GLShader::findUniforms");
+}
+
+/**
+ * Finds the shader locations of all uniforms and textures from a given material.
+ * The input material descriptor has all the possible textures and uniforms
+ * that can be used by this shader. (Any material used with this shader
+ * will have the same descriptor.)
+ *
+ * This function uses the descriptor of the input material to find and save
+ * the GL shader locations of each texture and uniform. The locations are
+ * saved into vectors - mTextureLocs and mUniformLocs. Each vector has an
+ * entry for all of the uniforms/textures in the input material
+ * (not just the ones used by this shader). If the shader does not
+ * reference a particular uniform or texture, that location will be -1.
+ * This function must be called after the GL shader program has
+ * been selected as the current program.
+ * @param material  can be any Material which uses this shader
+ * @see #getUniformLoc
+ */
+void GLShader::findUniforms(const Light& light, int locationOffset)
+{
+    const UniformBlock& lightBlock = light.uniforms().uniforms();
+    const GLLight* glLight = static_cast<const GLLight*>(&light);
+
+    lightBlock.forEachEntry([this, glLight, locationOffset](const DataDescriptor::DataEntry& entry) mutable
+    {
+        if (entry.NotUsed)
+        {
+            return;
+        }
+        std::string name = glLight->getLightName();
+        name += '.';
+        name += entry.Name;
+        int loc = glGetUniformLocation(getProgramId(), name.c_str());
+        if (loc >= 0)
+        {
+            mShaderLocs[LIGHT_UBO_INDEX][entry.Index + locationOffset] = loc;
+#ifdef DEBUG_SHADER
+            LOGV("SHADER: program %d uniform %s loc %d", getProgramId(), entry.Name, loc);
+#endif
+        }
+        else
+        {
+#ifdef DEBUG_SHADER
+            LOGV("SHADER: uniform %s has no location in shader %d", entry.Name, getProgramId());
+#endif
         }
     });
     checkGLError("GLShader::findUniforms");
@@ -269,11 +351,15 @@ void GLShader::findTextures()
         if (loc >= 0)
         {
             mTextureLocs[entry.Index] = loc;
+#ifdef DEBUG_SHADER
             LOGV("SHADER: program %d texture %s loc %d", getProgramId(), entry.Name, loc);
+#endif
         }
         else
         {
+#ifdef DEBUG_SHADER
             LOGV("SHADER: texture %s has no location in shader %d", entry.Name, getProgramId());
+#endif
         }
     });
     checkGLError("GLShader::findTextures");

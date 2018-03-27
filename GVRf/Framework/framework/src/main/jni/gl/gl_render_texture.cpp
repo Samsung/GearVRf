@@ -21,6 +21,7 @@
 #include "gl/gl_render_texture.h"
 #include "gl_imagetex.h"
 #include "gl_render_image.h"
+#include "objects/light.h" // for DEBUG_LIGHT
 
 namespace gvr {
 extern void texImage3D(int color_format, int width, int height, int depth , GLenum target);
@@ -48,6 +49,7 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int la
     setImage(new GLRenderImage(width, height, layers, texId, false));
     renderTexture_gl_frame_buffer_ = new GLFrameBuffer(fboId);
 }
+
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format) :
         RenderTexture(sample_count),
         layer_index_(0),
@@ -82,6 +84,7 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
         int jcolor_format, int jdepth_format, bool resolve_depth,
         const TextureParameters* texparams)
         : RenderTexture(sample_count),
+          depth_format_(jdepth_format),
           layer_index_(0),
           renderTexture_gl_render_buffer_(nullptr),
           renderTexture_gl_frame_buffer_(new GLFrameBuffer()),
@@ -125,8 +128,10 @@ void GLRenderTexture::initialize()
 }
 
 void GLRenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
-        GLenum depth_format, int width, int height) {
-    if (jdepth_format != DepthFormat::DEPTH_0) {
+        GLenum depth_format, int width, int height)
+{
+    if (jdepth_format != DepthFormat::DEPTH_0)
+    {
         delete renderTexture_gl_render_buffer_;
         renderTexture_gl_render_buffer_ = new GLRenderBuffer();
         glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
@@ -137,17 +142,21 @@ void GLRenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
     glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, image->getTarget(), image->getId(), 0);
 }
- bool GLNonMultiviewRenderTexture::isReady(){
+
+ bool GLNonMultiviewRenderTexture::isReady()
+ {
     bool status = GLRenderTexture::isReady();
     if (renderTexture_gl_frame_buffer_ == NULL)
     {
         renderTexture_gl_frame_buffer_ = new GLFrameBuffer();
-        generateRenderTextureLayer(depth_format_, width(), height());
+        generateRenderTextureLayer(width(), height());
         checkGLError("RenderTexture::isReady generateRenderTextureLayer");
     }
     return status;
 }
- void GLNonMultiviewRenderTexture::beginRendering(Renderer* renderer){
+
+void GLNonMultiviewRenderTexture::beginRendering(Renderer* renderer)
+{
     if (!isReady())
     {
         return;
@@ -161,20 +170,21 @@ void GLRenderTexture::generateRenderTextureNoMultiSampling(int jdepth_format,
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, image->getId(), 0, layer_index_);
     }
     GLRenderTexture::beginRendering(renderer);
-
 }
-void GLNonMultiviewRenderTexture::generateRenderTextureLayer(GLenum depth_format, int width, int height)
+
+void GLNonMultiviewRenderTexture::generateRenderTextureLayer(int width, int height)
 {
     if (depth_format_ && (renderTexture_gl_render_buffer_ == nullptr))
     {
         renderTexture_gl_render_buffer_ = new GLRenderBuffer();
         glBindRenderbuffer(GL_RENDERBUFFER, renderTexture_gl_render_buffer_->id());
-        glRenderbufferStorage(GL_RENDERBUFFER, depth_format, width, height);
+        glRenderbufferStorage(GL_RENDERBUFFER, depth_format_, width, height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
     }
     GLRenderImage* image = static_cast<GLRenderImage*>(getImage());
     glBindFramebuffer(GL_FRAMEBUFFER, renderTexture_gl_frame_buffer_->id());
     glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, image->getId(), 0, layer_index_);
+    LOGD("LIGHT: generated render texture layer = %d texid = %d", layer_index_, image->getId());
     checkGLError("RenderTexture::generateRenderTextureLayer");
     int fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fboStatus == GL_FRAMEBUFFER_COMPLETE)

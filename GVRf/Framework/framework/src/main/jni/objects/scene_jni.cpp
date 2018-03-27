@@ -92,7 +92,7 @@ extern "C" {
     Java_org_gearvrf_NativeScene_deleteLightsAndDepthTextureOnRenderThread(JNIEnv * env,
                                                        jobject obj, jlong jscene) {
         Scene* scene = reinterpret_cast<Scene*>(jscene);
-        scene->deleteLightsAndDepthTextureOnRenderThread();
+        scene->clearLights();
     }
 };
 
@@ -215,11 +215,11 @@ Java_org_gearvrf_NativeScene_clearLights(JNIEnv * env,
 }
 
 JNIEXPORT jobjectArray JNICALL
-        Java_org_gearvrf_NativeScene_getLightList(JNIEnv* env, jobject obj, jlong jscene)
+Java_org_gearvrf_NativeScene_getLightList(JNIEnv* env, jobject obj, jlong jscene)
 {
     Scene* scene = reinterpret_cast<Scene*>(jscene);
-    const std::vector<Light*> lights = scene->getLightList();
-    int nlights = lights.size();
+    std::vector<Light*> lights;
+    int nlights = scene->getLights().getLights(lights);
     jclass elemClass = env->FindClass("org/gearvrf/GVRLight");
 
     jobjectArray jlights = env->NewObjectArray(nlights, elemClass, NULL);
@@ -227,7 +227,8 @@ JNIEXPORT jobjectArray JNICALL
     for (auto it = lights.begin(); it != lights.end(); ++it)
     {
         jobject obj = (*it)->get_java(env);
-        if (nullptr != obj) {
+        if (nullptr != obj)
+        {
             env->SetObjectArrayElement(jlights, i++, obj);
         }
     }

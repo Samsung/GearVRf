@@ -31,7 +31,7 @@ Scene* Scene::main_scene_ = NULL;
 Scene::Scene() :
         HybridObject(),
         javaVM_(NULL),
-        bindShadersMethod_(0),
+        makeDepthShadersMethod_(0),
         main_camera_rig_(),
         frustum_flag_(false),
         dirtyFlag_(0),
@@ -50,10 +50,10 @@ void Scene::set_java(JavaVM* javaVM, jobject javaScene)
     if (env)
     {
         jclass sceneClass = env->GetObjectClass(javaScene);
-        bindShadersMethod_ = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
-        if (bindShadersMethod_ == 0)
+        makeDepthShadersMethod_ = env->GetMethodID(sceneClass, "makeDepthShaders", "()V");
+        if (makeDepthShadersMethod_ == 0)
         {
-            LOGE("Scene::set_java ERROR cannot find 'GVRScene.bindShadersNative()' Java method");
+            LOGE("Scene::set_java ERROR cannot find 'GVRScene.makeDepthShaders()' Java method");
         }
     }
 }
@@ -78,21 +78,22 @@ int Scene::get_java_env(JNIEnv** envptr)
     return 0;
 }
 
+
 /**
- * Called when the shaders need to be generated on the Java side
- * (usually because a light is added or removed).
+ * Called when the depth shaders for shadow mapping are required.
+ * Typically it will only be called once per scene.
  */
-void Scene::bindShaders(jobject javaSceneObject)
+void Scene::makeDepthShaders(jobject jscene)
 {
-    if ((bindShadersMethod_ == NULL))
+    if (makeDepthShadersMethod_ == NULL)
     {
-        LOGE("SHADER: Could not call GVRScene::bindShadersNative");
+        LOGE("SHADER: Could not call GVRScene::makeDepthShadersMethod_");
     }
     JNIEnv* env = NULL;
     int rc = get_java_env(&env);
     if (env && (rc >= 0))
     {
-        env->CallVoidMethod(javaSceneObject, bindShadersMethod_);
+        env->CallVoidMethod(jscene, makeDepthShadersMethod_);
         if (rc > 0)
         {
             getJavaVM()->DetachCurrentThread();
@@ -113,9 +114,6 @@ void Scene::removeAllSceneObjects() {
     clearAllColliders();
 }
 
-void Scene::deleteLightsAndDepthTextureOnRenderThread() {
-    lightList.clear();
-}
 
 void Scene::clearAllColliders() {
     lockColliders();
@@ -170,35 +168,19 @@ void Scene::exportToFile(std::string filepath) {
     Exporter::writeToFile(this, filepath);
 }
 
-bool Scene::addLight(Light* light) {
-    auto it = std::find(lightList.begin(), lightList.end(), light);
-    if (it != lightList.end())
-        return false;
-    int index = std::distance(lightList.begin(), it);
-    std::ostringstream os;
-    os << "light" << index;
-    if (lightList.size() >= MAX_LIGHTS)
-    {
-        LOGD("SHADER: light %s not added, more than %d lights not allowed", os.str().c_str(), MAX_LIGHTS);
-        return false;
-    }
-    lightList.push_back(light);
-    light->setLightID(os.str());
-    LOGD("SHADER: light %s added to scene", light->getLightID().c_str());
-    return true;
+bool Scene::addLight(Light* light)
+{
+    return lights_.addLight(light);
 }
 
-bool Scene::removeLight(Light* light) {
-    auto it = std::find(lightList.begin(), lightList.end(), light);
-    if (it == lightList.end())
-        return false;
-    lightList.erase(it);
-    LOGD("SHADER: light %s removed from scene", light->getLightID().c_str());
-    return true;
+bool Scene::removeLight(Light* light)
+{
+    return lights_.removeLight(light);
 }
 
-void Scene::clearLights() {
-    lightList.clear();
+void Scene::clearLights()
+{
+    lights_.clear();
 }
 
 }

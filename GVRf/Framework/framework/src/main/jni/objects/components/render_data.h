@@ -42,19 +42,6 @@ class TextureCapturer;
 class RenderPass;
 struct RenderState;
 
-template<typename T>
-std::string to_string(T value) {
-
-    //create an output string stream
-    std::ostringstream os;
-
-    //throw the value into the string stream
-    os << value;
-
-    //convert the string stream into a string and return
-    return os.str();
-}
-
 class RenderData: public Component {
 public:
     enum Queue {
@@ -79,7 +66,7 @@ public:
             texture_capturer(0),
             bones_ubo_(nullptr)
     {
-        render_data_flags.use_light_ = false;
+        render_data_flags.use_light_ = true;
         render_data_flags.use_lightmap_ = false;
         render_data_flags.batching_ = true;
         render_data_flags.offset_ = false;
@@ -178,13 +165,21 @@ public:
     }
 
     void enable_light() {
-        render_data_flags.use_light_ = true;
-        hash_code_dirty_ = true;
+        if (!render_data_flags.use_light_)
+        {
+            render_data_flags.use_light_ = true;
+            hash_code_dirty_ = true;
+            markDirty();
+        }
     }
 
     void disable_light() {
-        render_data_flags.use_light_ = false;
-        hash_code_dirty_ = true;
+        if (render_data_flags.use_light_)
+        {
+            render_data_flags.use_light_ = false;
+            hash_code_dirty_ = true;
+            markDirty();
+        }
     }
 
     bool light_enabled() {

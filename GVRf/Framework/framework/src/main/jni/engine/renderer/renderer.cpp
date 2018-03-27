@@ -17,7 +17,9 @@
  * Renders a scene, a screen.
  ***************************************************************************/
 
-#include <contrib/glm/gtc/type_ptr.hpp>
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
 #include "renderer.h"
 #include "objects/scene.h"
 
@@ -156,18 +158,11 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
         ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector, bool is_multiview)
 {
     std::vector<SceneObject*> scene_objects;
+    LightList& lights = scene->getLights();
+    RenderState rstate;
 
     render_data_vector->clear();
     scene_objects.clear();
-    RenderState rstate;
-
-    int lightCount = scene->getLightList().size();
-    if (lightCount != numLights)
-    {
-        scene->bindShaders(javaSceneObject);
-        numLights = lightCount;
-    }
-
     rstate.is_multiview = is_multiview;
     rstate.material_override = NULL;
     rstate.shader_manager = shader_manager;
@@ -178,7 +173,7 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
     rstate.render_mask = camera->render_mask();
     rstate.uniforms.u_right = (rstate.render_mask & RenderData::RenderMaskBit::Right) ? 1 : 0;
     rstate.javaSceneObject = javaSceneObject;
-
+    rstate.lightsChanged = lights.isDirty();
     glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj * rstate.uniforms.u_view);
     glm::vec3 campos(rstate.uniforms.u_view[3]);
 
@@ -347,7 +342,7 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
 
     if (rstate.is_multiview)
     {
-        if (!rstate.shadow_map)
+        if (!rstate.is_shadow)
         {
             rstate.uniforms.u_view_[0] = rstate.scene->main_camera_rig()->left_camera()->getViewMatrix();
             rstate.uniforms.u_view_[1] = rstate.scene->main_camera_rig()->right_camera()->getViewMatrix();
@@ -408,6 +403,7 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
         //@todo duped in render_data.cpp
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
+
         post_effect->bindShader(env, rstate.javaSceneObject, rstate.is_multiview);
         if (rc > 0)
         {

@@ -57,25 +57,40 @@ public:
     void    setTexture(const char* key, Texture* texture);
     void    forEachTexture(std::function< void(const char* texname, Texture* tex) > func) const;
     int     getByteSize(const char* name) const;
+    int     getTotalSize() const;
+    int     getNumUniforms() const { return uniforms().getNumEntries(); }
+    std::string getShaderType(const char* descriptorType);
     bool    getFloat(const char* name, float& v) const;
     bool    getInt(const char* name, int& v) const;
     bool    setInt(const char* name, int val);
     bool    setFloat(const char* name, float val);
     bool    setIntVec(const char* name, const int* val, int n);
     bool    setFloatVec(const char* name, const float* val, int n);
-    bool    getFloatVec(const char* name, float* val, int n);
-    bool    getIntVec(const char* name, int* val, int n);
+    bool    getFloatVec(const char* name, float* val, int n) const;
+    bool    getIntVec(const char* name, int* val, int n) const;
     bool    setVec2(const char* name, const glm::vec2& v);
     bool    setVec3(const char* name, const glm::vec3& v);
     bool    setVec4(const char* name, const glm::vec4& v);
+    bool    getMat4(const char* name, glm::mat4& m) const;
     bool    setMat4(const char* name, const glm::mat4& m);
     void    makeDirty(DIRTY_BITS bits);
     void    clearDirty();
-    bool    isDirty(DIRTY_BITS bits);
+    bool    isDirty(DIRTY_BITS bits) const;
     bool    hasTexture(const char* key) const;
     bool    hasUniform(const char* key) const;
     bool    copyUniforms(const ShaderData* src);
-    virtual int updateGPU(Renderer* rendere, RenderData* rdata);
+
+    void forEachEntry(std::function< void(const DataDescriptor::DataEntry&) > func) const
+    {
+        return uniforms().forEachEntry(func);
+    }
+
+    void forEachEntry(std::function< void(DataDescriptor::DataEntry&) > func)
+    {
+        return uniforms().forEachEntry(func);
+    }
+
+    virtual int updateGPU(Renderer* renderer, RenderData* rdata);
     std::string makeShaderLayout();
     u_int32_t getNumTextures() const { return mTextures.size(); }
     virtual UniformBlock&   uniforms() = 0;

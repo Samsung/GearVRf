@@ -27,7 +27,8 @@
 #define TRANSFORM_UBO_INDEX 0
 #define MATERIAL_UBO_INDEX  1
 #define BONES_UBO_INDEX     2
-#define SAMPLER_UBO_INDEX   3
+#define LIGHT_UBO_INDEX     3
+#define LAST_UBO_INDEX      3
 
 namespace gvr
 {
@@ -295,17 +296,17 @@ namespace gvr
         virtual bool getIntVec(const char *name, int *val, int n) const;
 
         /**
-         * Copy the data from the CPU into the GPU.
+         * Copy a range of data from the CPU into the GPU.
          * If useGPUBuffer is enabled, the data is copied into a uniform
          * buffer in the GPU. Otherwise immediate mode is used to
          * copy the data to the graphics driver.
          */
-        virtual bool updateGPU(Renderer *) = 0;
+        virtual bool updateGPU(Renderer *, int start = 0, int len = 0) = 0;
 
         /**
          * Bind the uniform block to a shader
          */
-        virtual bool bindBuffer(Shader *, Renderer *) = 0;
+        virtual bool bindBuffer(Shader *, Renderer *, int locationOffset = 0) = 0;
 
         virtual ~UniformBlock()
         {
@@ -321,13 +322,18 @@ namespace gvr
          * of all the uniforms in the block.
          * @return string describing the uniform block.
          */
-        std::string toString();
+        std::string toString() const;
+
+        /*
+         * Dumps the entire uniform block as raw floats
+         */
+        std::string dumpFloats() const;
 
         /**
          * Get a pointer to the entire uniform data area.
          * @returns -> uniform block data if it exists, else NULL
          */
-        const void *getData()
+        const void *getData() const
         {
             return mUniformData;
         }
@@ -339,8 +345,9 @@ namespace gvr
 
         virtual std::string makeShaderLayout();
         const char* getDataAt(int elemIndex);
-        bool setAt(int elemIndex, UniformBlock& srcBlock);
+        bool setAt(int elemIndex, const UniformBlock& srcBlock);
         bool setRange(int elemIndex, const void* srcData, int numElems);
+        bool updateGPU(Renderer*, int elemIndex, const UniformBlock& srcBlock);
 
     protected:
         UniformBlock(const char *descriptor);

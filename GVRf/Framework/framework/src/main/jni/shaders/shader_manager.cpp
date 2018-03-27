@@ -7,7 +7,9 @@
 namespace gvr {
     ShaderManager::~ShaderManager()
     {
-        if (Shader::LOG_SHADER) LOGE("SHADER: deleting ShaderManager");
+#ifdef DEBUG_SHADER
+        LOGE("SHADER: deleting ShaderManager");
+#endif
         for (auto it = shadersByID.begin(); it != shadersByID.end(); ++it) {
             Shader *shader = it->second;
             delete shader;
@@ -30,12 +32,12 @@ namespace gvr {
         }
         std::lock_guard<std::mutex> lock(lock_);
         int id = ++latest_shader_id_;
-        LOGD("SHADER: before add shader %d %s", id, signature);
         shader = Renderer::getInstance()->createShader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertex_shader, fragment_shader);
-        LOGD("SHADER: after obj creation shader %d %s", id, signature);
         shadersBySignature[signature] = shader;
         shadersByID[id] = shader;
-        if (Shader::LOG_SHADER) LOGD("SHADER: added shader %d %s", id, signature);
+#ifdef DEBUG_SHADER
+        LOGD("SHADER: added shader %d %s", id, signature);
+#endif
         return id;
     }
 
@@ -47,7 +49,9 @@ namespace gvr {
         {
             Shader* shader = it->second;
             const std::string& sig = shader->signature();
-            if (Shader::LOG_SHADER) LOGV("SHADER: findShader %s -> %d", sig.c_str(), shader->getShaderID());
+#ifdef DEBUG_SHADER
+            LOGV("SHADER: findShader %s -> %d", sig.c_str(), shader->getShaderID());
+#endif
             return shader;
         }
         else
@@ -64,12 +68,16 @@ namespace gvr {
         {
             Shader* shader = it->second;
             const std::string& sig = shader->signature();
-            if (Shader::LOG_SHADER) LOGV("SHADER: getShader %d -> %s", id, sig.c_str());
+#ifdef DEBUG_SHADER
+            LOGV("SHADER: getShader %d -> %s", id, sig.c_str());
+#endif
             return shader;
         }
         else
         {
+#ifdef DEBUG_SHADER
             LOGE("SHADER: getShader %d NOT FOUND", id);
+#endif
             return NULL;
         }
     }

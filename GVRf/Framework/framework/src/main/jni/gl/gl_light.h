@@ -14,13 +14,14 @@
  */
 
 
-#ifndef FRAMEWORK_GL_MATERIAL_H
-#define FRAMEWORK_GL_MATERIAL_H
+#ifndef FRAMEWORK_GL_LIGHT_H
+#define FRAMEWORK_GL_LIGHT_H
 
 #include <string>
 
-#include "objects/shader_data.h"
-#include "gl/gl_uniform_block.h"
+#include "objects/light.h"
+#include "gl/gl_material.h"
+#include "gl/gl_shader.h"
 
 namespace gvr
 {
@@ -29,26 +30,17 @@ namespace gvr
  * OpenGL implementation of Material which keeps uniform data
  * in a GLUniformBlock.
  */
-    class GLMaterial : public ShaderData
+    class GLLight : public Light
     {
     public:
-        explicit GLMaterial(const char* uniform_desc, const char* texture_desc)
-        : ShaderData(texture_desc),
-          uniforms_(uniform_desc, MATERIAL_UBO_INDEX, "Material_ubo")
-        {
-            uniforms_.useGPUBuffer(false);
-        }
+        explicit GLLight(const char* uniform_desc, const char* texture_desc)
+        :   Light(),
+            uniforms_(uniform_desc, texture_desc, LIGHT_UBO_INDEX, "Lights_ubo")
+            {
+                uniforms_.useGPUBuffer(true);
+            }
 
-        explicit GLMaterial(const char* uniform_desc, const char* texture_desc, int bindingPoint, const char* blockName)
-                : ShaderData(texture_desc),
-                  uniforms_(uniform_desc, bindingPoint, blockName)
-        {
-            uniforms_.useGPUBuffer(true);
-        }
-
-        virtual ~GLMaterial() {}
-
-        virtual UniformBlock& uniforms()
+        virtual ShaderData& uniforms()
         {
             return uniforms_;
         }
@@ -58,16 +50,13 @@ namespace gvr
             uniforms_.useGPUBuffer(flag);
         }
 
-        virtual const UniformBlock& uniforms() const
+        virtual const ShaderData& uniforms() const
         {
             return uniforms_;
         }
 
-        virtual int bindToShader(Shader* shader, Renderer* renderer);
-
     protected:
-
-        GLUniformBlock uniforms_;
+        GLMaterial uniforms_;
     };
 }
 

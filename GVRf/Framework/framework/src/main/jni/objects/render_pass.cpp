@@ -14,6 +14,7 @@
  */
 
 #include <memory>
+#include <glslang/Include/Common.h>
 #include "engine/renderer/renderer.h"
 #include "render_pass.h"
 
@@ -77,8 +78,8 @@ int RenderPass::isValid(Renderer* renderer, const RenderState& rstate, RenderDat
 const std::string& RenderPass::getHashCode(bool is_multiview){
     if (hash_code_dirty_) {
         std::string render_data_string;
-        render_data_string.append(to_string(cull_face_));
-        render_data_string.append(to_string(shaderID_[is_multiview]));
+        render_data_string.append(std::to_string(cull_face_));
+        render_data_string.append(std::to_string(shaderID_[is_multiview]));
         hash_code = render_data_string;
         hash_code_dirty_ = false;
     }

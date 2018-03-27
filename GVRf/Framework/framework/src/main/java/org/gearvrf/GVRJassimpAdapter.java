@@ -839,13 +839,24 @@ class GVRJassimpAdapter {
                 continue;
             }
             lightlist.put(name, l);
-            setPhongLightProp(l,light);
-            setLightProp(l, light);
+            org.gearvrf.jassimp.AiColor ambientCol = light.getColorAmbient(sWrapperProvider);
+            org.gearvrf.jassimp.AiColor diffuseCol = light.getColorDiffuse(sWrapperProvider);
+            org.gearvrf.jassimp.AiColor specular = light.getColorSpecular(sWrapperProvider);
+            float[] c = new float[3];
+            getColor(ambientCol, c);
+            l.setVec4("ambient_intensity", c[0], c[1], c[2], 1.0f);
+            getColor(diffuseCol, c);
+            l.setVec4("diffuse_intensity", c[0], c[1], c[2], 1.0f);
+            getColor(specular, c);
+            l.setVec4("specular_intensity", c[0], c[1], c[2], 1.0f);
+            if ((l instanceof GVRPointLight) || (l instanceof GVRSpotLight))
+            {
+                setAttenuatipn(l, light);
+            }
         }
-
     }
 
-    private void setLightProp(GVRLight gvrLight, AiLight assimpLight)
+    private void setAttenuatipn(GVRLight gvrLight, AiLight assimpLight)
     {
         float aconstant = assimpLight.getAttenuationConstant();
         float alinear = assimpLight.getAttenuationLinear();
@@ -866,20 +877,6 @@ class GVRJassimpAdapter {
         gvrLight.setFloat("attenuation_constant", aconstant);
         gvrLight.setFloat("attenuation_linear", alinear);
         gvrLight.setFloat("attenuation_quadratic", aquad);
-    }
-
-    private void setPhongLightProp(GVRLight gvrLight, AiLight assimpLight)
-    {
-        org.gearvrf.jassimp.AiColor ambientCol = assimpLight.getColorAmbient(sWrapperProvider);
-        org.gearvrf.jassimp.AiColor diffuseCol = assimpLight.getColorDiffuse(sWrapperProvider);
-        org.gearvrf.jassimp.AiColor specular = assimpLight.getColorSpecular(sWrapperProvider);
-        float[] c = new float[3];
-        getColor(ambientCol, c);
-        gvrLight.setVec4("ambient_intensity", c[0], c[1], c[2], 1.0f);
-        getColor(diffuseCol, c);
-        gvrLight.setVec4("diffuse_intensity", c[0], c[1], c[2], 1.0f);
-        getColor(specular, c);
-        gvrLight.setVec4("specular_intensity", c[0], c[1], c[2], 1.0f);
     }
 
     private void getColor(AiColor c, float[] color)

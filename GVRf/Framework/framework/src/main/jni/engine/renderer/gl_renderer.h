@@ -90,8 +90,8 @@ public:
     virtual RenderTarget* createRenderTarget(Scene*) ;
     virtual RenderTarget* createRenderTarget(RenderTexture*, bool);
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*);
-    virtual RenderTexture* createRenderTexture(const RenderTextureInfo*);
-    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int depthformat);
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views);
@@ -102,12 +102,12 @@ public:
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader);
+    virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor);
     GLUniformBlock* getTransformUbo(int index) { return transform_ubo_[index]; }
     virtual void updatePostEffectMesh(Mesh*);
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
 
 private:
-    void updateLights(RenderState &rstate, Shader* shader, int texIndex);
     virtual void renderMesh(RenderState& rstate, RenderData* render_data);
     virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader);
     virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector);

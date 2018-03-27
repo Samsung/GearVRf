@@ -1,11 +1,11 @@
-Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType vertex)
+Radiance @LightType(Surface s, in U@LightType data, int index)
 {
 #ifdef HAS_MULTIVIEW
-	vec4 lightpos = u_view_[gl_ViewID_OVR] * vec4(data.world_position.xyz, 1.0);
-	vec4 spotDir =  normalize(u_view_[gl_ViewID_OVR] * vec4(data.world_direction.xyz, 0.0));
+	vec4 lightpos = u_view_[gl_ViewID_OVR] * data.world_position;
+	vec4 spotDir =  normalize(u_view_[gl_ViewID_OVR] * data.world_direction);
 #else
-    vec4 lightpos = u_view * vec4(data.world_position.xyz, 1.0);
-	vec4 spotDir =  normalize(u_view * vec4(data.world_direction.xyz, 0.0));
+    vec4 lightpos = u_view * data.world_position;
+	vec4 spotDir =  normalize(u_view * data.world_direction);
 #endif
      vec3 lightdir = normalize(lightpos.xyz - viewspace_position.xyz);
           
@@ -18,9 +18,9 @@ Radiance @LightType(Surface s, in Uniform@LightType data, Vertex@LightType verte
      float inner = data.inner_cone_angle;
      float inner_minus_outer = inner - outer;  
      float spot = clamp((cosSpotAngle - outer) / inner_minus_outer, 0.0, 1.0);
-     vec4 ShadowCoord = vertex.shadow_position;
 
 #ifdef HAS_SHADOWS
+     vec4 ShadowCoord = @LightType_shadow_position[index];
     if ((data.shadow_map_index >= 0.0) && (ShadowCoord.w > 0.0))
 	{
         float nDotL = max(dot(s.viewspaceNormal, lightdir), 0.0);

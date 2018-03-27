@@ -55,26 +55,21 @@ public class GVRDirectLight extends GVRLight
     private static String fragmentShader = null;
     private static String vertexShader = null;
     private boolean useShadowShader = true;
+    protected final static String DIRECT_UNIFORM_DESC = UNIFORM_DESC +
+        " float4 diffuse_intensity"
+        + " float4 ambient_intensity"
+        + " float4 specular_intensity"
+        + " float4 sm0 float4 sm1 float4 sm2 float4 sm3";
 
-    public GVRDirectLight(GVRContext gvrContext) {
-        this(gvrContext, null);
-     }
-
-    public GVRDirectLight(GVRContext gvrContext, GVRSceneObject parent)
+    public GVRDirectLight(GVRContext gvrContext)
     {
-        super(gvrContext, parent);
-        mUniformDescriptor += " vec4 diffuse_intensity"
-                + " vec4 ambient_intensity"
-                + " vec4 specular_intensity"
-                + " float shadow_map_index"
-                + " vec4 sm0 vec4 sm1 vec4 sm2 vec4 sm3";
+        this(gvrContext, DIRECT_UNIFORM_DESC,  "float4 shadow_position");
         if (useShadowShader)
         {
             if (fragmentShader == null)
                 fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directshadowlight);
             if (vertexShader == null)
                 vertexShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.vertex_shadow);
-            mVertexDescriptor = "vec4 shadow_position";
             mVertexShaderSource = vertexShader;
         }
         else if (fragmentShader == null)
@@ -82,11 +77,18 @@ public class GVRDirectLight extends GVRLight
             fragmentShader = TextFile.readTextFile(gvrContext.getContext(), R.raw.directlight);
         }
         mFragmentShaderSource = fragmentShader;
+    }
+
+    public GVRDirectLight(GVRContext ctx, String uniformDesc, String vertexDesc)
+    {
+        super(ctx, uniformDesc, vertexDesc);
+        setLightClass(getClass().getSimpleName());
+        setFloat("shadow_map_index", -1.0f);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);
     }
-    
+
     /**
      * Get the ambient light intensity.
      * 
@@ -291,7 +293,7 @@ public class GVRDirectLight extends GVRLight
         if ((mOldDir.x != mNewDir.x) || (mOldDir.y != mNewDir.y) || (mOldDir.z != mNewDir.z))
         {
             changed = true;
-            setVec3("world_direction", mNewDir.x, mNewDir.y, mNewDir.z);
+            setVec4("world_direction", mNewDir.x, mNewDir.y, mNewDir.z, 0);
         }
         GVRShadowMap shadowMap = (GVRShadowMap) getComponent(GVRShadowMap.getComponentType());
         if ((shadowMap != null) && changed && shadowMap.isEnabled())
@@ -311,6 +313,6 @@ public class GVRDirectLight extends GVRLight
         mNewPos.x = bv.center.x - far * mNewDir.x;
         mNewPos.y = bv.center.y - far * mNewDir.y;
         mNewPos.z = bv.center.z - far * mNewDir.z;
-        setVec3("world_position", mNewPos.x, mNewPos.y, mNewPos.z);
+        setPosition(mNewPos.x, mNewPos.y, mNewPos.z);
     }
 }
