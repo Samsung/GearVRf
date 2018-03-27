@@ -16,27 +16,42 @@
 package org.gearvrf.mixedreality.arcore;
 
 import android.app.Activity;
+import android.view.Surface;
 
 import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
+import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRPerspectiveCamera;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 
 public class ARCoreSession extends MRCommon {
     private Session mSession;
     private boolean mInstallRequested;
+    private int mPassThroughTexureId = -1;
+    private GVRSceneObject mPhysicCameraObject = null;
 
-    public ARCoreSession(GVRContext gvrContext) {
+    public ARCoreSession(GVRContext gvrContext, GVRSceneObject owner) {
         super(gvrContext);
         mSession = null;
+        mPhysicCameraObject = owner;
     }
 
     @Override
@@ -100,6 +115,7 @@ public class ARCoreSession extends MRCommon {
         mSession.resume();
 
         //mDisplayRotationHelper.onResume();
+        initARScene();
     }
 
     @Override
@@ -113,6 +129,80 @@ public class ARCoreSession extends MRCommon {
             //mDisplayRotationHelper.onPause();
             mSession.pause();
         }
+    }
+
+    private void initARScene() {
+
+        if (mSession == null) {
+            return;
+        }
+
+        GVRActivity activity = mGvrContext.getActivity();
+        mSession.setDisplayGeometry(Surface.ROTATION_90 , activity.getFullScreenView().getWidth(),
+                activity.getFullScreenView().getHeight());
+
+        GVRScene scene = mGvrContext.getMainScene();
+        GVRPerspectiveCamera cam = scene.getMainCameraRig().getCenterCamera();
+        configCamera(cam.getNearClippingDistance(), cam.getFarClippingDistance());
+    }
+
+    private void configCamera(float near, float far) {
+
+        GVRExternalTexture texture = new GVRExternalTexture(mGvrContext);
+        float aspectRatio = 1.0f;
+
+        mPassThroughTexureId = texture.getId();
+
+        mSession.setCameraTextureName(mPassThroughTexureId);
+
+        Frame frame = mSession.update();
+        Camera camera = frame.getCamera();
+
+        // Get projection matrix.
+        float[] m = new float[16];
+        camera.getProjectionMatrix(m, 0, near, far);
+        Matrix4f projmtx = new Matrix4f();
+        projmtx.set(m);
+
+        aspectRatio = projmtx.m11()/projmtx.m00();
+
+        float camFOV = projmtx.perspectiveFov();
+
+        float fov_y = camFOV;
+        float widthY = 2 * (float) Math.tan(fov_y / 2);
+        float widthX = widthY * aspectRatio;
+
+        float quadDistance = 100;
+        float quadHeight = new Float(2 * quadDistance * Math.tan(fov_y / 2));
+        float quadWidth = quadHeight * aspectRatio;
+
+        GVRSceneObject passThroughObject = null;
+
+        passThroughObject = createPassThroughObject(mGvrContext, texture, -quadDistance,
+                quadWidth, quadHeight);
+        mPhysicCameraObject.addChildObject(passThroughObject);
+
+        android.util.Log.d(TAG, "RATION: " + aspectRatio
+                + ", FOV: " + Math.toDegrees(camFOV) + ", wxh: " + quadWidth + "x" + quadHeight
+                + ", FarXNear: " + near + "x" + far);
+    }
+
+    private static GVRSceneObject createPassThroughObject(GVRContext gvrContext, GVRExternalTexture texture,
+                                                          float z, float width, float height) {
+
+        GVRMaterial material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.OES.ID);
+        GVRSceneObject object = new GVRSceneObject(gvrContext,
+                GVRMesh.createQuad(gvrContext, "float3 a_position float2 a_texcoord",
+                        width, height));
+
+        material.setMainTexture(texture);
+        object.getRenderData().setMaterial(material);
+
+        object.getRenderData().setRenderingOrder(GVRRenderData.GVRRenderingOrder.BACKGROUND);
+        object.getRenderData().setDepthTest(false);
+        object.getTransform().setPosition(0.0f, 0.0f, z);
+
+        return object;
     }
 
     private boolean performRuntimeChecks() {

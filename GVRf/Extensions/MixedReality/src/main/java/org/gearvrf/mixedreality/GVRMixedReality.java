@@ -23,6 +23,7 @@ import android.view.MotionEvent;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMain;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
 import org.joml.Quaternionf;
@@ -33,12 +34,16 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
 
     private MRCommon mSession;
 
-    protected GVRMixedReality(final GVRContext gvrContext) {
+    public GVRMixedReality(final GVRContext gvrContext) {
         super(gvrContext, 0);
 
         mActivityEventsHandler = new ActivityEventsHandler();
 
-        mSession = new ARCoreSession(gvrContext);
+        GVRSceneObject owner = new GVRSceneObject(gvrContext);
+        owner.attachComponent(this);
+
+        mSession = new ARCoreSession(gvrContext, owner);
+
     }
 
     @Override
