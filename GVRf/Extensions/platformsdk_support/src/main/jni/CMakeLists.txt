@@ -14,4 +14,4 @@ add_library(ovrplatformloader SHARED IMPORTED)
 set_property(TARGET ovrplatformloader PROPERTY IMPORTED_LOCATION
              ${OVR_PLATFORM_SDK}/Android/libs/armeabi-v7a/libovrplatformloader.so)
 
-target_link_libraries(gvrf-platformsdk ovrplatformloader log GLESv3)
+target_link_libraries(gvrf-platformsdk ovrplatformloader log EGL GLESv3)
