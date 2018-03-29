@@ -19,4 +19,4 @@ add_library(gvr SHARED IMPORTED)
 set_property(TARGET gvr PROPERTY IMPORTED_LOCATION
             ${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libgvr.so)
 
-target_link_libraries(gvrf-daydream gvr gvrf log GLESv2)
+target_link_libraries(gvrf-daydream gvr gvrf log GLESv2 EGL)

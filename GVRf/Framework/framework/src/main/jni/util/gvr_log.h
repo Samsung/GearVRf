@@ -64,6 +64,9 @@
 //#define GL( func )      func; checkGLError(#func);
 #define GL( func )      func;
 
+//#define EGL(func)      func; checkEGLError(#func);
+#define EGL( func )      func;
+
 //#define clearGLError(msg)
 #define clearGLError(msg) checkGLError(msg);
 
@@ -94,6 +97,28 @@ static void checkGLError(const char* name)
             break;
         }
         LOGE("%s error: %s", name, GlErrorString(glError));
+#ifdef STOP_ON_ERROR
+        error = true;
+#endif
+    }
+
+#ifdef STOP_ON_ERROR
+    if (error) {
+        std::terminate();
+    }
+#endif
+}
+
+static void checkEGLError(const char *name) {
+#ifdef STOP_ON_ERROR
+    bool error = false;
+#endif
+    for (int i = 0; i < 10; ++i) {
+        const EGLint eglError = eglGetError();
+        if (EGL_SUCCESS == eglError) {
+            break;
+        }
+        LOGE("%s error: 0x%X", name, eglError);
 #ifdef STOP_ON_ERROR
         error = true;
 #endif
