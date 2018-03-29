@@ -16,6 +16,7 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from threading import Thread
 import socket
+import platform
 
 
 class ThreadingServer(ThreadingMixIn, HTTPServer):
@@ -52,9 +53,19 @@ class FileServer:
         self.update_url()
 
     def update_ipv4(self):
-        ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[-1]
-        self._ipv4 = ipv4[0]
-        return ipv4
+        # FIXME: find a better way to get ip address cross-platfrom
+        if platform.system() == 'Linux':
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                s.connect(('10.255.255.255', 1))
+                self._ipv4 = s.getsockname()[0]
+            except:
+                self._ipv4 = '127.0.0.1'
+            finally:
+                s.close()
+        else:
+            ipv4 = socket.gethostbyname_ex(socket.getfqdn(''))[-1]
+            self._ipv4 = ipv4[0]
 
     def update_url(self):
         self._url = 'http://' + self._ipv4 + ':8000/'
