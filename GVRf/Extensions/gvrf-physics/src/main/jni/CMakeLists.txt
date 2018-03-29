@@ -36,4 +36,4 @@ add_library(Bullet SHARED IMPORTED)
 set_property(TARGET Bullet PROPERTY IMPORTED_LOCATION
              ${CMAKE_CURRENT_SOURCE_DIR}/prebuilt/${ANDROID_ABI}/libBullet.so)
 
-target_link_libraries(gvrf-physics gvrf log Bullet GLESv3)
+target_link_libraries(gvrf-physics gvrf log Bullet EGL GLESv3)
