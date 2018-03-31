@@ -98,8 +98,10 @@ public:
     }
 
     void releaseInstance(){
-        delete theInstance;
-        theInstance = nullptr;
+        if(theInstance) {
+            delete theInstance;
+            theInstance = nullptr;
+        }
     }
 
     ~VulkanCore();

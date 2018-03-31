@@ -34,27 +34,12 @@ int getComponentsNumber(VkFormat format){
 }
 
     vkImageBase::~vkImageBase(){
-        LOGE("sushant: imagebase destructor");
-
-        cleanup();
-
-      }
-
-    void vkImageBase::cleanup() {
 
         VulkanCore * instance = VulkanCore::getInstance();
         VkDevice device = instance->getDevice();
+        LOGE("sushant: imagebase destructor");
 
-        if(imageView != 0) {
-            vkDestroyImageView(device, imageView, nullptr);
-            imageView = 0;
-        }
-
-        if(image != 0 ) {
-            vkDestroyImage(device, image, nullptr);
-            LOGE("sushant: destroying image in cleanup");
-            image = 0;
-        }
+        cleanup();
 
         if(host_memory != 0) {
             vkFreeMemory(device, host_memory, nullptr);
@@ -78,6 +63,47 @@ int getComponentsNumber(VkFormat format){
                 dev_memory = 0;
             }
         }
+
+      }
+
+    void vkImageBase::cleanup() {
+
+        VulkanCore * instance = VulkanCore::getInstance();
+        VkDevice device = instance->getDevice();
+
+        if(imageView != 0) {
+            vkDestroyImageView(device, imageView, nullptr);
+            imageView = 0;
+        }
+
+        if(image != 0 ) {
+            vkDestroyImage(device, image, nullptr);
+            LOGE("sushant: destroying image in cleanup");
+            image = 0;
+        }
+
+//        if(host_memory != 0) {
+//            vkFreeMemory(device, host_memory, nullptr);
+//            host_memory = 0;
+//        }
+//
+//        if(hostBuffer != 0) {
+//            vkDestroyBuffer(device, hostBuffer, nullptr);
+//            hostBuffer = 0;
+//        }
+//
+//        if(host_accessible_) {
+//
+//            if(outBuffer) {
+//                vkDestroyBuffer(device, *outBuffer, nullptr);
+//                outBuffer = nullptr;
+//            }
+//
+//            if(dev_memory != 0) {
+//                vkFreeMemory(device, dev_memory, nullptr);
+//                dev_memory = 0;
+//            }
+//        }
     }
 
 

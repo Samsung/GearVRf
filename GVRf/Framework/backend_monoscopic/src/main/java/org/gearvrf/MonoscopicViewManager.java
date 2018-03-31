@@ -230,7 +230,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                         initialized = true;
                     }
                     else{
-                        NativeVulkanCore.resetTheInstance();
+                        //NativeVulkanCore.resetTheInstance();
                         NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
                     }
                 }
@@ -246,8 +246,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
                 @Override
                 public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-
-                    // end
+                    //
                     activeFlag = false;
                     try {
                         vulkanDrawThread.join();

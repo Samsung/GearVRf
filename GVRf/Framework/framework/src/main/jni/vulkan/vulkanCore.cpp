@@ -1349,7 +1349,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 //        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
 //        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
         vkDestroyDevice(m_device, nullptr);
-        //vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
 
     }
