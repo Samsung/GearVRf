@@ -24,7 +24,7 @@
 
 namespace gvr {
     VulkanVertexBuffer::VulkanVertexBuffer(const char* layout_desc, int vertexCount)
-    : VertexBuffer(layout_desc, vertexCount)
+            : VertexBuffer(layout_desc, vertexCount)
     {
         mVerticesMap.clear();
     }
@@ -168,31 +168,31 @@ namespace gvr {
         int i = 0;
 
         shader->getVertexDescriptor().forEachEntry([this, &i, &vertices](const DataDescriptor::DataEntry &e)
-        {
-            LOGV("VertexBuffer::bindToShader find %s", e.Name);
-            const DataDescriptor::DataEntry* entry = find(e.Name);
+                                                   {
+                                                       LOGV("VertexBuffer::bindToShader find %s", e.Name);
+                                                       const DataDescriptor::DataEntry* entry = find(e.Name);
 
-            if (!e.NotUsed)                             // shader uses this vertex attribute?
-            {
-                if ((entry != nullptr) && entry->IsSet) // mesh uses this vertex attribute?
-                {
-                    VkVertexInputAttributeDescription binding;
-                    binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
-                    binding.location = e.Index;
-                    LOGV("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
-                    binding.format = getDataType(entry->Type); //float3
-                    binding.offset = entry->Offset;
-                    vertices->vi_attrs.push_back(binding);
-                    i++;
-                }
-                else                                // mesh uses attribute but shader does not
-                {
-                    LOGW("entry is not present %s", e.Name);
+                                                       if (!e.NotUsed)                             // shader uses this vertex attribute?
+                                                       {
+                                                           if ((entry != nullptr) && entry->IsSet) // mesh uses this vertex attribute?
+                                                           {
+                                                               VkVertexInputAttributeDescription binding;
+                                                               binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
+                                                               binding.location = e.Index;
+                                                               LOGV("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                                                               binding.format = getDataType(entry->Type); //float3
+                                                               binding.offset = entry->Offset;
+                                                               vertices->vi_attrs.push_back(binding);
+                                                               i++;
+                                                           }
+                                                           else                                // mesh uses attribute but shader does not
+                                                           {
+                                                               LOGW("entry is not present %s", e.Name);
 
-                }
+                                                           }
 
-            }
-        });
+                                                       }
+                                                   });
         vertices->vi_bindings.stride = mTotalSize;
         vertices->vi.vertexAttributeDescriptionCount = i;
         vertices->vi.pVertexAttributeDescriptions = vertices->vi_attrs.data();
@@ -222,8 +222,5 @@ namespace gvr {
         if(type.compare("int4")==0 || type.compare("ivec4")==0)
             return VK_FORMAT_R32G32B32A32_SINT;
 
-        FAIL("VulkanVertexBuffer::getDataType: unknown type %s", type.c_str());
-        return VK_FORMAT_UNDEFINED;
     }
 } // end gvrf
-

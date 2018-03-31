@@ -24,11 +24,10 @@
 #include "vulkan/vk_render_to_texture.h"
 #include "vk_imagebase.h"
 #include "vk_render_target.h"
-#include "vk_render_texture_offscreen.h"
+#include "vk_render_to_texture.h"
 #include "vulkanCore.h"
 #include <array>
 #include "vk_device_component.h"
-#include "vk_render_texture_onscreen.h"
 
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999
@@ -90,8 +89,6 @@ namespace gvr {
             case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
                 imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 break;
-            default:
-                FAIL("setImageLayout: unsupported oldImageLayout");
         }
 
         switch (newImageLayout) {
@@ -104,8 +101,6 @@ namespace gvr {
             case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
                 imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
                 break;
-            default:
-                FAIL("setImageLayout: unsupported newImageLayout");
         }
 
         vkCmdPipelineBarrier(
@@ -273,7 +268,7 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
 
         if (formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED) {
-            mSurfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mSurfaceFormat.format = VK_FORMAT_R8G8B8A8_UNORM;
             mSurfaceFormat.colorSpace = surfFormats[0].colorSpace;
         }
         else {
@@ -287,20 +282,20 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
 
         VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
-            swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-            swapchainCreateInfo.surface = m_surface;
-            swapchainCreateInfo.minImageCount = surfaceCapabilities.maxImageCount;
-            swapchainCreateInfo.imageFormat = mSurfaceFormat.format;
-            swapchainCreateInfo.imageColorSpace = mSurfaceFormat.colorSpace;
-            swapchainCreateInfo.imageExtent.width = surfaceCapabilities.currentExtent.width;
-            swapchainCreateInfo.imageExtent.height = surfaceCapabilities.currentExtent.height;
-            swapchainCreateInfo.imageUsage = surfaceCapabilities.supportedUsageFlags;
-            swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-            swapchainCreateInfo.imageArrayLayers = 1;
-            swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
-            swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-            swapchainCreateInfo.clipped = VK_TRUE;
+        swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapchainCreateInfo.surface = m_surface;
+        swapchainCreateInfo.minImageCount = surfaceCapabilities.maxImageCount;
+        swapchainCreateInfo.imageFormat = mSurfaceFormat.format;
+        swapchainCreateInfo.imageColorSpace = mSurfaceFormat.colorSpace;
+        swapchainCreateInfo.imageExtent.width = surfaceCapabilities.currentExtent.width;
+        swapchainCreateInfo.imageExtent.height = surfaceCapabilities.currentExtent.height;
+        swapchainCreateInfo.imageUsage = surfaceCapabilities.supportedUsageFlags;
+        swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        swapchainCreateInfo.imageArrayLayers = 1;
+        swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+        swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        swapchainCreateInfo.clipped = VK_TRUE;
 
         ret = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &mSwapchain);
         GVR_VK_CHECK(!ret);
@@ -318,20 +313,20 @@ namespace gvr {
         GVR_VK_CHECK(mSwapchainBuffers);
 
         VkImageViewCreateInfo imageViewCreateInfo = {};
-            imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            imageViewCreateInfo.pNext = nullptr;
-            imageViewCreateInfo.format = mSurfaceFormat.format;
-            imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-            imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-            imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-            imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-            imageViewCreateInfo.subresourceRange.levelCount = 1;
-            imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-            imageViewCreateInfo.subresourceRange.layerCount = 1;
-            imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            imageViewCreateInfo.flags = 0;
+        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewCreateInfo.pNext = nullptr;
+        imageViewCreateInfo.format = mSurfaceFormat.format;
+        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+        imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+        imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewCreateInfo.subresourceRange.layerCount = 1;
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewCreateInfo.flags = 0;
 
 
         for (uint32_t i = 0; i < mSwapchainImageCount; i++){
@@ -528,25 +523,25 @@ namespace gvr {
         return false;
     }
 
-void VulkanCore::InitCommandPools(){
-    VkResult ret = VK_SUCCESS;
+    void VulkanCore::InitCommandPools(){
+        VkResult ret = VK_SUCCESS;
 
-    ret = vkCreateCommandPool(
-            m_device,
-            gvr::CmdPoolCreateInfo(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT, m_queueFamilyIndex),
-            nullptr, &m_commandPoolTrans
-    );
+        ret = vkCreateCommandPool(
+                m_device,
+                gvr::CmdPoolCreateInfo(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT, m_queueFamilyIndex),
+                nullptr, &m_commandPoolTrans
+        );
 
-    GVR_VK_CHECK(!ret);
+        GVR_VK_CHECK(!ret);
 
-    ret = vkCreateCommandPool(
-            m_device,
-            gvr::CmdPoolCreateInfo(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-                                   m_queueFamilyIndex),
-            nullptr, &m_commandPool
-    );
-    GVR_VK_CHECK(!ret);
-}
+        ret = vkCreateCommandPool(
+                m_device,
+                gvr::CmdPoolCreateInfo(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+                                       m_queueFamilyIndex),
+                nullptr, &m_commandPool
+        );
+        GVR_VK_CHECK(!ret);
+    }
     void VulkanCore::createTransientCmdBuffer(VkCommandBuffer &cmdBuff) {
         VkResult ret = VK_SUCCESS;
         ret = vkAllocateCommandBuffers(
@@ -743,9 +738,9 @@ void VulkanCore::InitCommandPools(){
 
 
         VkResult ret = vkCreateRenderPass(m_device,
-                           gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
-                                                     1, &subpassDescription, (uint32_t) 0,
-                                                     nullptr), nullptr, &renderPass);
+                                          gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
+                                                                    1, &subpassDescription, (uint32_t) 0,
+                                                                    nullptr), nullptr, &renderPass);
         GVR_VK_CHECK(!ret);
         mRenderPassMap.insert(std::make_pair(NORMAL_RENDERPASS + sample_count, renderPass));
         return renderPass;
@@ -796,7 +791,7 @@ void VulkanCore::InitCommandPools(){
         VkResult err;
 
         err = vkCreateShaderModule(m_device, gvr::ShaderModuleCreateInfo(result_vert.data(), result_vert.size() *
-                                                                                      sizeof(unsigned int)),
+                                                                                             sizeof(unsigned int)),
                                    nullptr, &module);
         GVR_VK_CHECK(!err);
         gvr::PipelineShaderStageCreateInfo shaderStageInfo = gvr::PipelineShaderStageCreateInfo(
@@ -837,143 +832,143 @@ void VulkanCore::InitCommandPools(){
 
     }
 
-VkFence VulkanCore::createFenceObject(){
-    VkResult ret = VK_SUCCESS;
-    VkFence fence;
-    ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
-    GVR_VK_CHECK(!ret);
-    return fence;
-}
-VkCommandBuffer VulkanCore::createCommandBuffer(VkCommandBufferLevel level){
-    VkResult ret = VK_SUCCESS;
-    VkCommandBuffer cmdBuffer;
-    ret = vkAllocateCommandBuffers(m_device, gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPool),
-                                   &cmdBuffer
-    );
-    GVR_VK_CHECK(!ret);
-    return cmdBuffer;
-}
+    VkFence VulkanCore::createFenceObject(){
+        VkResult ret = VK_SUCCESS;
+        VkFence fence;
+        ret = vkCreateFence(m_device, gvr::FenceCreateInfo(), nullptr, &fence);
+        GVR_VK_CHECK(!ret);
+        return fence;
+    }
+    VkCommandBuffer VulkanCore::createCommandBuffer(VkCommandBufferLevel level){
+        VkResult ret = VK_SUCCESS;
+        VkCommandBuffer cmdBuffer;
+        ret = vkAllocateCommandBuffers(m_device, gvr::CmdBufferCreateInfo(VK_COMMAND_BUFFER_LEVEL_PRIMARY, m_commandPool),
+                                       &cmdBuffer
+        );
+        GVR_VK_CHECK(!ret);
+        return cmdBuffer;
+    }
 
-VkCullModeFlagBits VulkanCore::getVulkanCullFace(int cull_type){
-    switch(cull_type){
-        case 0:
+    VkCullModeFlagBits VulkanCore::getVulkanCullFace(int cull_type){
+        switch(cull_type){
+            case 0:
                 return VK_CULL_MODE_BACK_BIT;
-        case 1:
+            case 1:
                 return VK_CULL_MODE_FRONT_BIT;
-        case 2:
+            case 2:
                 return VK_CULL_MODE_NONE;
+        }
+        throw std::runtime_error("VulkanCore::getVulkanCullFace: unknown cull_type value");
     }
-    throw std::runtime_error("VulkanCore::getVulkanCullFace: unknown cull_type value");
-}
 
 
-void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int pass, VkRenderPass renderPass, int sampleCount) {
-    VkResult err;
+    void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int pass, VkRenderPass renderPass, int sampleCount) {
+        VkResult err;
 
-    // The pipeline contains all major state for rendering.
+        // The pipeline contains all major state for rendering.
 
-    // Our vertex input is a single vertex buffer, and its layout is defined
-    // in our m_vertices object already. Use this when creating the pipeline.
-    VkPipelineVertexInputStateCreateInfo vi = {};
-    vi = m_vertices->vi;
+        // Our vertex input is a single vertex buffer, and its layout is defined
+        // in our m_vertices object already. Use this when creating the pipeline.
+        VkPipelineVertexInputStateCreateInfo vi = {};
+        vi = m_vertices->vi;
 
-    // For this example we do not do blending, so it is disabled.
-    VkPipelineColorBlendAttachmentState att_state[1] = {};
-    bool disable_color_depth_write = rdata->stencil_test() && (RenderData::Queue::Stencil == rdata->rendering_order());
-    att_state[0].colorWriteMask = disable_color_depth_write ? 0x0 : (VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    att_state[0].blendEnable = VK_FALSE;
+        // For this example we do not do blending, so it is disabled.
+        VkPipelineColorBlendAttachmentState att_state[1] = {};
+        bool disable_color_depth_write = rdata->stencil_test() && (RenderData::Queue::Stencil == rdata->rendering_order());
+        att_state[0].colorWriteMask = disable_color_depth_write ? 0x0 : (VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+        att_state[0].blendEnable = VK_FALSE;
 
-    if(rdata->alpha_blend()) {
-        att_state[0].blendEnable = VK_TRUE;
-        att_state[0].srcColorBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->source_alpha_blend_func()]);
-        att_state[0].dstColorBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->dest_alpha_blend_func()]);
-        att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
-        att_state[0].srcAlphaBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->source_alpha_blend_func()]);
-        att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->dest_alpha_blend_func()]);
-        att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        if(rdata->alpha_blend()) {
+            att_state[0].blendEnable = VK_TRUE;
+            att_state[0].srcColorBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->source_alpha_blend_func()]);
+            att_state[0].dstColorBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->dest_alpha_blend_func()]);
+            att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
+            att_state[0].srcAlphaBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->source_alpha_blend_func()]);
+            att_state[0].dstAlphaBlendFactor = static_cast<VkBlendFactor>(vkflags::glToVulkan[rdata->dest_alpha_blend_func()]);
+            att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        }
+        std::vector<uint32_t> result_vert = shader->getVkVertexShader();
+        std::vector<uint32_t> result_frag = shader->getVkFragmentShader();
+        // We define two shader stages: our vertex and fragment shader.
+        // they are embedded as SPIR-V into a header file for ease of deployment.
+        VkPipelineShaderStageCreateInfo shaderStages[2] = {};
+
+
+
+        InitShaders(shaderStages,result_vert,result_frag);
+        // Out graphics pipeline records all state information, including our renderpass
+        // and pipeline layout. We do not have any dynamic state in this example.
+        VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
+        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+        pipelineCreateInfo.layout = shader->getPipelineLayout();
+        pipelineCreateInfo.pVertexInputState = &vi;
+        pipelineCreateInfo.pInputAssemblyState = gvr::PipelineInputAssemblyStateCreateInfo(
+                getTopology(rdata->draw_mode()));
+        VkCullModeFlagBits cull_face = getVulkanCullFace(rdata->cull_face(pass));
+        pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
+                                                                                           VK_FALSE,
+                                                                                           VK_POLYGON_MODE_FILL,
+                                                                                           cull_face,
+                                                                                           (swapChainFlag ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE),
+                                                                                           VK_FALSE,
+                                                                                           0, 0, 0,
+                                                                                           1.0);
+        pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,
+                                                                                     &att_state[0]);
+        pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
+                getVKSampleBit(sampleCount), VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
+                VK_NULL_HANDLE, VK_NULL_HANDLE);
+
+
+        bool depthWrite = (rdata->rendering_order() == RenderData::Queue::Stencil) ? false : true;
+
+        pipelineCreateInfo.pDepthStencilState =
+                gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
+                                                         (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
+                                                         VK_COMPARE_OP_LESS_OR_EQUAL,
+                                                         VK_FALSE,
+                                                         static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_sfail()]),  //stencil pass
+                                                         static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dppass()]), //depth pass, stencil pass
+                                                         static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dpfail()]), //depth fail, stencil pass
+                                                         static_cast<VkCompareOp>(vkflags::glToVulkan[rdata->stencil_func_func()]), //compare function
+                                                         rdata->stencil_func_mask(), //compare mask
+                                                         rdata->getStencilMask(), //stencil mask
+                                                         rdata->stencil_func_ref(),  //reference value
+                                                         rdata->stencil_test());
+
+
+        pipelineCreateInfo.pStages = &shaderStages[0];
+
+        pipelineCreateInfo.renderPass = renderPass;
+
+
+        pipelineCreateInfo.pDynamicState = nullptr;
+        pipelineCreateInfo.stageCount = 2; //vertex and fragment
+        std::vector<VkDynamicState> dynamic_states = {
+                VK_DYNAMIC_STATE_VIEWPORT,
+                VK_DYNAMIC_STATE_SCISSOR,
+                VK_DYNAMIC_STATE_LINE_WIDTH
+        };
+
+        VkPipelineDynamicStateCreateInfo dynamic_state_create_info = {
+                VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,         // VkStructureType                                sType
+                nullptr,                                                      // const void                                    *pNext
+                0,                                                            // VkPipelineDynamicStateCreateFlags              flags
+                static_cast<uint32_t>(dynamic_states.size()),                 // uint32_t                                       dynamicStateCount
+                &dynamic_states[0]                                            // const VkDynamicState                          *pDynamicStates
+        };
+
+        pipelineCreateInfo.pDynamicState = &dynamic_state_create_info;
+        VkPipeline pipeline = 0;
+        LOGI("Vulkan graphics call before");
+        err = vkCreateGraphicsPipelines(m_device, 0, 1, &pipelineCreateInfo, nullptr,
+                                        &pipeline);
+        GVR_VK_CHECK(!err);
+        rdata->setPipeline(pipeline,pass);
+        LOGI("Vulkan graphics call after");
+
     }
-    std::vector<uint32_t> result_vert = shader->getVkVertexShader();
-    std::vector<uint32_t> result_frag = shader->getVkFragmentShader();
-    // We define two shader stages: our vertex and fragment shader.
-    // they are embedded as SPIR-V into a header file for ease of deployment.
-    VkPipelineShaderStageCreateInfo shaderStages[2] = {};
-
-
-
-    InitShaders(shaderStages,result_vert,result_frag);
-    // Out graphics pipeline records all state information, including our renderpass
-    // and pipeline layout. We do not have any dynamic state in this example.
-    VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
-    pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-
-    pipelineCreateInfo.layout = shader->getPipelineLayout();
-    pipelineCreateInfo.pVertexInputState = &vi;
-    pipelineCreateInfo.pInputAssemblyState = gvr::PipelineInputAssemblyStateCreateInfo(
-            getTopology(rdata->draw_mode()));
-    VkCullModeFlagBits cull_face = getVulkanCullFace(rdata->cull_face(pass));
-    pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
-                                                                                       VK_FALSE,
-                                                                                       VK_POLYGON_MODE_FILL,
-                                                                                       cull_face,
-                                                                                       (swapChainFlag ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE),
-                                                                                       VK_FALSE,
-                                                                                       0, 0, 0,
-                                                                                       1.0);
-    pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,
-                                                                                 &att_state[0]);
-    pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
-            getVKSampleBit(sampleCount), VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
-            VK_NULL_HANDLE, VK_NULL_HANDLE);
-
-
-    bool depthWrite = (rdata->rendering_order() == RenderData::Queue::Stencil) ? false : true;
-
-    pipelineCreateInfo.pDepthStencilState =
-            gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                     (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
-                                     VK_COMPARE_OP_LESS_OR_EQUAL,
-                                     VK_FALSE,
-                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_sfail()]),  //stencil pass
-                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dppass()]), //depth pass, stencil pass
-                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dpfail()]), //depth fail, stencil pass
-                                     static_cast<VkCompareOp>(vkflags::glToVulkan[rdata->stencil_func_func()]), //compare function
-                                     rdata->stencil_func_mask(), //compare mask
-                                     rdata->getStencilMask(), //stencil mask
-                                     rdata->stencil_func_ref(),  //reference value
-                                     rdata->stencil_test());
-
-
-    pipelineCreateInfo.pStages = &shaderStages[0];
-
-    pipelineCreateInfo.renderPass = renderPass;
-
-
-    pipelineCreateInfo.pDynamicState = nullptr;
-    pipelineCreateInfo.stageCount = 2; //vertex and fragment
-    std::vector<VkDynamicState> dynamic_states = {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR,
-            VK_DYNAMIC_STATE_LINE_WIDTH
-    };
-
-    VkPipelineDynamicStateCreateInfo dynamic_state_create_info = {
-            VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,         // VkStructureType                                sType
-            nullptr,                                                      // const void                                    *pNext
-            0,                                                            // VkPipelineDynamicStateCreateFlags              flags
-            static_cast<uint32_t>(dynamic_states.size()),                 // uint32_t                                       dynamicStateCount
-            &dynamic_states[0]                                            // const VkDynamicState                          *pDynamicStates
-    };
-
-    pipelineCreateInfo.pDynamicState = &dynamic_state_create_info;
-    VkPipeline pipeline = 0;
-    LOGI("Vulkan graphics call before");
-    err = vkCreateGraphicsPipelines(m_device, 0, 1, &pipelineCreateInfo, nullptr,
-                                    &pipeline);
-    GVR_VK_CHECK(!err);
-    rdata->setPipeline(pipeline,pass);
-    LOGI("Vulkan graphics call after");
-
-}
     void VKFramebuffer::createFramebuffer(VkDevice& device){
 
         std::vector<VkImageView> attachments;
@@ -1007,16 +1002,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         return  0;
     }
 
-    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count, bool monoscopic){
+    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count){
         VkResult ret;
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
         if(sample_count > 1){
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                                                      VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
-            multisampledImage->createImageView(false);
+                                                             mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                                             VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
+            multisampledImage->createImageView(false, false);
             mAttachments[MULTISAMPLED_IMAGE] = multisampledImage;
             attachments.push_back(multisampledImage->getVkImageView());
         }
@@ -1024,16 +1019,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if(image_type & COLOR_IMAGE && mAttachments[COLOR_IMAGE]== nullptr) {
             vkImageBase *colorImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|
-                                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                                           VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
 
             mAttachments[COLOR_IMAGE] = colorImage;
-            if(monoscopic) {
+            if(vk_renderer->getCore()->isUsingSystemSwapchain()) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
+                colorImage->createImageView(true, true);
             }
             else{
-                colorImage->createImageView(true);
+                colorImage->createImageView(true, false);
             }
 
             attachments.push_back(colorImage->getVkImageView());
@@ -1045,7 +1041,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, depthFormat, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
-            depthImage->createImageView(false);
+            depthImage->createImageView(false, false);
             mAttachments[DEPTH_IMAGE] = depthImage;
             attachments.push_back(depthImage->getVkImageView());
         }
@@ -1128,7 +1124,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 }
                 vkCmdSetLineWidth(cmdBuffer, line_width);
                 rdata->render(shader,cmdBuffer,curr_pass);
-           }
+            }
         }
 
         if(renderTarget!= NULL)
@@ -1192,16 +1188,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
     }
 
-     int VulkanCore::waitForFence(VkFence fence) {
+    int VulkanCore::waitForFence(VkFence fence) {
         if(VK_SUCCESS == vkWaitForFences(m_device, 1, &fence, VK_TRUE,
-                        4294967295U))
+                                         4294967295U))
             return 1;
 
         return 0;
 
     }
     void VulkanCore::renderToOculus(RenderTarget* renderTarget){
-        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
+        VkRenderTexture* renderTexture = static_cast<VkRenderTarget*>(renderTarget)->getTexture();
 
         if(!renderTexture) {
             LOGE("VulkanCore renderToOculus: rendertexture null");
@@ -1243,7 +1239,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(vkData->material(pass));
 
         if ((textureDescriptor.getNumEntries() == 0) && uniformDescriptor.getNumEntries() == 0 && !transformUboPresent) {
-        //    vkData->setDescriptorSetNull(true,pass);
+            //    vkData->setDescriptorSetNull(true,pass);
             return true;
         }
         VulkanShader* vkShader = static_cast<VulkanShader*>(shader);
@@ -1299,7 +1295,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         VkResult ret = vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
-                                           &m_pipelineCache);
+                                             &m_pipelineCache);
         GVR_VK_CHECK(!ret);
     }
 
@@ -1331,6 +1327,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(m_androidWindow != NULL) {
+            m_useSystemSwapchain = true;
             InitSwapChain();
             InitSync();
             SetNextBackBuffer();
@@ -1386,7 +1383,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
             m_surface = VK_NULL_HANDLE;
         }
-        
+
         for (size_t i = 0; i < mSwapchainImageCount; i++) {
             vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
             mSwapchainBuffers[i].view = VK_NULL_HANDLE;
@@ -1403,10 +1400,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         //clear the handles to the swapChain images and imageviews. This is necessary because the driver
         //tries to reuse these handles when a new surface is created. When the garbage collector eventually runs
         //it might accidentally clear up the very same handles we are reusing.
-        std::vector<VkRenderTextureOnScreen* > onScreenTextures;
+        std::vector<VkRenderTexture* > onScreenTextures;
         for(int i = 0; i < 3; i ++ )
-            onScreenTextures.push_back(static_cast<VkRenderTextureOnScreen *> (
-                    static_cast<VkRenderTarget*>(vk_renderer->getRenderTarget(i, LEFT))->getTexture()));
+            onScreenTextures.push_back(static_cast<VkRenderTarget*>(vk_renderer->getRenderTarget(i, LEFT))->getTexture());
 
         for(auto tex: onScreenTextures)
         {
