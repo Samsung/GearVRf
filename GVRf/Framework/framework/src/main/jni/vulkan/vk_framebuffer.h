@@ -19,7 +19,7 @@
 
 namespace gvr {
 
-class VKFramebuffer final{
+class VKFramebuffer final : public VKDeviceComponent{
     vkImageBase *mAttachments[3];
 
     VkRenderPass mRenderpass;
@@ -29,6 +29,8 @@ class VKFramebuffer final{
 public:
 
     ~VKFramebuffer();
+
+    void cleanup();
 
     void setImage(ImageType type, vkImageBase* image){
         mAttachments[type] = image;

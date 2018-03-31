@@ -24,6 +24,7 @@
 #include "vulkanCore.h"
 #include "vulkan.h"
 #include "vulkan_uniform_block.h"
+#include "vk_device_component.h"
 
 
 #endif //FRAMEWORK_VULKAN_HEADERS_H

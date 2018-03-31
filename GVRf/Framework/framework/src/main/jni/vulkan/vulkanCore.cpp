@@ -27,7 +27,7 @@
 #include "vk_render_texture_offscreen.h"
 #include "vulkanCore.h"
 #include <array>
-
+#include "vk_device_component.h"
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999
 #define VERTEX_BUFFER_BIND_ID 0
@@ -1334,12 +1334,41 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     VulkanCore::~VulkanCore() {
-        vkDestroyDevice(getDevice(), nullptr);
+
+        for (VKDeviceComponent* component: mDeviceComponents)
+            component->cleanup();
+
+        mDeviceComponents.clear();
+        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+//        for (auto entry : pipelineHashMap ) {
+//            vkDestroyPipeline(getDevice(), entry.second, nullptr);
+//        }
+//        pipelineHashMap.clear();
+        //vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
+
+//        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
+//        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
+        vkDestroyDevice(m_device, nullptr);
+        //vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
+
     }
 
     void VulkanCore::initVulkanCore() {
         InitCommandPools();
         LOGI("Vulkan after intialization");
     }
+
+    void VulkanCore::addDeviceComponent(VKDeviceComponent * component) {
+        mDeviceComponents.push_back(component);
+    }
+
+    void VulkanCore::removeDeviceComponent(VKDeviceComponent * component){
+
+        std::vector<VKDeviceComponent *>::iterator position =
+                std::find(mDeviceComponents.begin(), mDeviceComponents.end(), component);
+        if (position != mDeviceComponents.end())
+            mDeviceComponents.erase(position);
+    }
+
 }

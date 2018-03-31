@@ -217,7 +217,7 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
             Shader *shader = rstate.shader_manager->getShader((*rdata)->get_shader(rstate.is_multiview,curr_pass));
             if (shader == NULL)
             {
-                LOGE("SHADER: shader not found");
+                //LOGE("SHADER: shader not found");
                 continue;
             }
             if (!renderWithShader(rstate, shader, (*rdata), curr_material, curr_pass))
