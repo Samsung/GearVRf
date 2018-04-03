@@ -40,9 +40,15 @@ public abstract class MRCommon implements IMRCommon {
         onPause();
     }
 
+    @Override
+    public void setDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
+        onSetDisplayGeometry(displayRotation, widthPx, heightPx);
+    }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
 
+    protected abstract void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx);
 
 }

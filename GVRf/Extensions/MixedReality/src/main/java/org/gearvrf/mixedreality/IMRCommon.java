@@ -18,4 +18,5 @@ package org.gearvrf.mixedreality;
 public interface IMRCommon {
     void resume();
     void pause();
+    void setDisplayGeometry(int displayRotation, int widthPx, int heightPx);
 }

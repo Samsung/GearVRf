@@ -15,10 +15,12 @@
 
 package org.gearvrf.mixedreality;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PointF;
 import android.view.MotionEvent;
+import android.view.View;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
@@ -26,6 +28,7 @@ import org.gearvrf.GVRMain;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
+import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -33,17 +36,21 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private final IActivityEvents mActivityEventsHandler;
 
     private MRCommon mSession;
+    private DisplayRotationHelper mDisplayRotationHelper;
 
     public GVRMixedReality(final GVRContext gvrContext) {
         super(gvrContext, 0);
 
         mActivityEventsHandler = new ActivityEventsHandler();
+        mSession = new ARCoreSession(gvrContext);
+    }
 
-        GVRSceneObject owner = new GVRSceneObject(gvrContext);
-        owner.attachComponent(this);
+    @Override
+    public void onAttach(GVRSceneObject newOwner) {
+        super.onAttach(newOwner);
 
-        mSession = new ARCoreSession(gvrContext, owner);
-
+        Log.d("AR_GVRF ","onAttach");
+        this.resume();
     }
 
     @Override
@@ -54,6 +61,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     @Override
     public void pause() {
         mSession.pause();
+    }
+
+    @Override
+    public void setDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
+        mSession.setDisplayGeometry(displayRotation, widthPx, heightPx);
     }
 
     private class ActivityEventsHandler implements IActivityEvents {
