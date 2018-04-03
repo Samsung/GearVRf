@@ -104,6 +104,8 @@ public:
         }
     }
 
+    void recreateSwapChain(ANativeWindow *);
+
     ~VulkanCore();
 
     void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*, LightList& lights);

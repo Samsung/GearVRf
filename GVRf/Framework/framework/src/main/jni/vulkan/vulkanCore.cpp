@@ -1340,14 +1340,14 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         mDeviceComponents.clear();
         vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-//        for (auto entry : pipelineHashMap ) {
-//            vkDestroyPipeline(getDevice(), entry.second, nullptr);
-//        }
-//        pipelineHashMap.clear();
-        //vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
+        for (auto entry : pipelineHashMap ) {
+            vkDestroyPipeline(getDevice(), entry.second, nullptr);
+        }
+        pipelineHashMap.clear();
+        vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
 
-//        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
-//        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
+        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
+        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
@@ -1369,6 +1369,44 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 std::find(mDeviceComponents.begin(), mDeviceComponents.end(), component);
         if (position != mDeviceComponents.end())
             mDeviceComponents.erase(position);
+    }
+
+
+    void VulkanCore::recreateSwapChain(ANativeWindow *newNativeWindow){
+
+        vkDeviceWaitIdle(getDevice());
+
+        if(m_surface)
+            vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+
+
+        for (size_t i = 0; i < mSwapchainImageCount; i++) {
+            vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
+            vkDestroyImage(m_device, mSwapchainBuffers[i].image, nullptr);
+        }
+
+        delete mSwapchainBuffers;
+        mSwapchainBuffers = nullptr;
+
+        vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
+        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
+        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
+
+        mSwapchainCurrentIdx = 0;
+        swapChainImageIndex = 0;
+
+        //should the surface be deleted (or does android deletes it after surfaceDestroyed() )?
+        //delete m_androidWindow;
+
+        m_androidWindow = newNativeWindow;
+
+        if(m_androidWindow != NULL) {
+            InitSurface();
+            InitSwapChain();
+            InitSync();
+            SetNextBackBuffer();
+        }
+
     }
 
 }

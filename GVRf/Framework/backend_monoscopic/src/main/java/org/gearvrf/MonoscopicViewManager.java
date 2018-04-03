@@ -231,6 +231,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                     }
                     else{
                         //NativeVulkanCore.resetTheInstance();
+                        NativeVulkanCore.recreateSwapchain(vulkanSurfaceView.getHolder().getSurface());
                         NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
                     }
                 }
@@ -304,9 +305,10 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             } catch (InterruptedException e) {
                 Log.e("vulkan", "draw thread not terminated");
             }
-
-            NativeVulkanCore.resetTheInstance();
         }
+
+////            NativeVulkanCore.recreateSwapchain();
+//        }
         Log.e("sushant", "onPause");
     }
 
@@ -463,5 +465,6 @@ class NativeVulkanCore {
     static native long getInstance(Object surface);
     static native int getSwapChainIndexToRender();
     static native void resetTheInstance();
+    static native void recreateSwapchain(Object surface);
     static native boolean useVulkanInstance();
 }
