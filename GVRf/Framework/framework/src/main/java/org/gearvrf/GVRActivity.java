@@ -22,6 +22,7 @@ import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,6 +30,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
+import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.script.IScriptable;
@@ -403,6 +405,13 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     }
             }
         }
+
+        mViewManager.getEventManager().sendEventWithMask(
+                SEND_EVENT_MASK,
+                this,
+                IActivityEvents.class,
+                "dispatchKeyEvent", event);
+
         if (mViewManager.dispatchKeyEvent(event)) {
             return true;
         }
@@ -646,6 +655,42 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
             Log.w(TAG, "dock listener not started");
         }
     }
+
+    /**
+     * Enables the Android GestureDetector which in turn fires the appropriate {@link GVRMain} callbacks.
+     * By default it is not.
+     * @see GVRMain#onSwipe(GVRTouchPadGestureListener.Action, float)
+     * @see GVRMain#onSingleTapUp(MotionEvent)
+     * @see GVRTouchPadGestureListener
+     */
+    public synchronized void enableGestureDetector() {
+        final GVRTouchPadGestureListener gestureListener = new GVRTouchPadGestureListener() {
+            @Override
+            public boolean onSwipe(MotionEvent e, Action action, float vx, float vy) {
+                if (null != mGVRMain) {
+                    mGVRMain.onSwipe(action, vx);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                if (null != mGVRMain) {
+                    mGVRMain.onSingleTapUp(e);
+                }
+                return true;
+            }
+        };
+        mGestureDetector = new GestureDetector(getApplicationContext(), gestureListener);
+        getEventReceiver().addListener(new GVREventListeners.ActivityEvents() {
+            @Override
+            public void dispatchTouchEvent(MotionEvent event) {
+                mGestureDetector.onTouchEvent(event);
+            }
+        });
+    }
+
+    private GestureDetector mGestureDetector;
 
     private GVRActivityDelegate mDelegate;
 

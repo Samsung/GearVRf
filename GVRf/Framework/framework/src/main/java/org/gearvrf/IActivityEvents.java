@@ -18,6 +18,7 @@ package org.gearvrf;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PointF;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.joml.Quaternionf;
@@ -56,4 +57,5 @@ public interface IActivityEvents extends IEvents {
     void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched);
 
     void dispatchTouchEvent(MotionEvent event);
+    void dispatchKeyEvent(KeyEvent event);
 }

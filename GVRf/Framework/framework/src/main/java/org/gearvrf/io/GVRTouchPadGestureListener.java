@@ -25,11 +25,7 @@
  *************************************************************************************/
 package org.gearvrf.io;
 
-import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;

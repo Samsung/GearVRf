@@ -7,6 +7,7 @@ import org.joml.Vector3f;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PointF;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 /**
@@ -97,6 +98,10 @@ public class GVREventListeners {
 
         @Override
         public void dispatchTouchEvent(MotionEvent event) {
+        }
+
+        @Override
+        public void dispatchKeyEvent(KeyEvent event) {
         }
     }
 

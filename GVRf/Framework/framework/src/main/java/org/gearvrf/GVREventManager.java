@@ -62,10 +62,10 @@ public class GVREventManager {
     // Cache for Java handler methods; keys *must* be weakly referenced
     private final WeakHashMap<Object, Map<String, Method>> mHandlerMethodCache;
 
-    protected static final int SEND_MASK_OBJECT = 0x1;
+    public static final int SEND_MASK_OBJECT = 0x1;
     protected static final int SEND_MASK_LISTENERS = 0x2;
     protected static final int SEND_MASK_SCRIPTS = 0x4;
-    protected static final int SEND_MASK_ALL = SEND_MASK_OBJECT | SEND_MASK_LISTENERS | SEND_MASK_SCRIPTS;
+    public static final int SEND_MASK_ALL = SEND_MASK_OBJECT | SEND_MASK_LISTENERS | SEND_MASK_SCRIPTS;
 
     GVREventManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
@@ -108,7 +108,7 @@ public class GVREventManager {
         return sendEventWithMask(SEND_MASK_ALL, target, eventsClass, eventName, params);
     }
 
-    protected boolean sendEventWithMask(int sendMask, Object target, Class<? extends IEvents> eventsClass,
+    public boolean sendEventWithMask(int sendMask, Object target, Class<? extends IEvents> eventsClass,
             String eventName, Object... params) {
         return sendEventWithMaskParamArray(sendMask, target, eventsClass, eventName, params);
     }

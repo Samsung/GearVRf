@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-class OvrControllerReader implements GVRGearCursorController.ControllerReader {
+class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs {
 
     private FloatBuffer readbackBuffer;
     private final long mPtr;

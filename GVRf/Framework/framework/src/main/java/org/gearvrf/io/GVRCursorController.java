@@ -18,12 +18,11 @@ package org.gearvrf.io;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVREventReceiver;
-import org.gearvrf.IEventReceiver;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPicker;
@@ -31,6 +30,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.IEventReceiver;
 import org.gearvrf.IEvents;
 import org.gearvrf.IPickEvents;
 import org.gearvrf.ISensorEvents;
@@ -181,7 +181,6 @@ public abstract class GVRCursorController implements IEventReceiver
     protected Object eventLock = new Object();
     protected GVRSceneObject mCursor = null;
     protected boolean enable = false;
-    protected boolean mSendEventsToActivity = true;
     protected Object mCursorLock = new Object();
     protected Dragger mDragger = new Dragger(mCursorLock);
 
@@ -283,28 +282,26 @@ public abstract class GVRCursorController implements IEventReceiver
      * Dispatch a key event for this controller.
      * @param event event to dispatch
      * @return true if event handled, false if event should be routed to the application
-     * @see #sendEventsToActivity(boolean)
      */
     synchronized public boolean dispatchKeyEvent(KeyEvent event)
     {
         synchronized (eventLock) {
             this.keyEvent.add(event);
         }
-        return !mSendEventsToActivity;
+        return true;
     }
 
     /**
      * Dispatch a motion event for this controller.
      * @param event event to dispatch
      * @return true if event handled, false if event should be routed to the application
-     * @see #sendEventsToActivity(boolean)
      */
     synchronized public boolean dispatchMotionEvent(MotionEvent event)
     {
         synchronized (eventLock) {
             this.motionEvent.add(event);
         }
-        return !mSendEventsToActivity;
+        return true;
     }
 
     /**
@@ -330,43 +327,6 @@ public abstract class GVRCursorController implements IEventReceiver
      * @see GVREventReceiver#addListener(IEvents)
      */
     public GVREventReceiver getEventReceiver() { return listeners; }
-
-    /**
-     * Enable or disable routing controller MotionEvents to GVRActivity.
-     * <p>
-     * When a controller is active, Android MotionEvents are routed
-     * to your application via {@link GVRActivity#dispatchTouchEvent}
-     * and also consumed by the controller.
-     * <p>
-     * You can listen for {@link IPickEvents} or {@link ITouchEvents}
-     * emitted by the{@link GVRPicker} associated with the controller.
-     * The {@link GVRPicker.GVRPickedObject} associated with the
-     * event may have an Android MotionEvent attached.
-     * You can also use a {@link IControllerEvent}
-     * to listen for controller events. You can get the motion event
-     * with {@link GVRCursorController#getMotionEvent()}.
-     * <p>
-     * If you disable this option, Android MotionEvent and KeyEvents
-     * are not routed to your application when a controller is active.
-     * If you are using {@link org.gearvrf.scene_objects.GVRViewSceneObject}
-     * disable this option because events are routed to the Android View in this case.
-     *
-     * @param flag true to send events to GVRActivity, false to not send them
-     * @see #sendingEventsToActivity
-     * @see IControllerEvent
-     * @see #addPickEventListener(IEvents)
-     * @see ITouchEvents
-     */
-    public void sendEventsToActivity(boolean flag)
-    {
-        mSendEventsToActivity = flag;
-    }
-
-    /**
-     * Determine whether controller events are being routed to GVRActivity.
-     * @return true if events are sent to the activity, else false
-     */
-    public boolean sendingEventsToActivity() { return mSendEventsToActivity; }
 
     /**
      * Set a {@link GVRSceneObject} to be controlled by the

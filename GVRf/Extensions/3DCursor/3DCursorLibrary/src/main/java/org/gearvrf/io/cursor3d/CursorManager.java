@@ -18,31 +18,25 @@ package org.gearvrf.io.cursor3d;
 
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRSensor;
+import org.gearvrf.GVRBoundsPicker;
 import org.gearvrf.GVRContext;
-import org.gearvrf.io.GVRCursorController;
-import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRPerspectiveCamera;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRBoundsPicker;
+import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRSwitch;
 import org.gearvrf.IEventReceiver;
 import org.gearvrf.IEvents;
 import org.gearvrf.ITouchEvents;
-import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.io.GVRGearCursorController;
+import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.io.cursor3d.settings.SettingsView;
 import org.gearvrf.io.cursor3d.settings.SettingsView.SettingsChangeListener;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.utility.Log;
-import org.joml.FrustumIntersection;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -78,7 +72,6 @@ public final class CursorManager implements IEventReceiver
     private final List<Cursor> mCursors = new ArrayList<>();;
     private final List<IoDevice> mIODevices = new ArrayList<IoDevice>();
     private float mCursorDepth;
-    private FrustumChecker frustumChecker;
     private Map<String, CursorTheme> themes;
     private final GlobalSettings globalSettings;
     //Create a laser cursor to use on the settings menu
@@ -88,7 +81,6 @@ public final class CursorManager implements IEventReceiver
     private List<SelectableBehavior> selectableBehaviors;
     private GVRBoundsPicker objectCursorPicker;
     private GVREventReceiver listeners;
-    private boolean mSendEventsToActivity = true;
 
     /**
      * Create a {@link CursorManager}.
@@ -228,11 +220,6 @@ public final class CursorManager implements IEventReceiver
         }
     }
 
-    public void sendEventsToActivity(boolean flag)
-    {
-        mSendEventsToActivity = flag;
-    }
-
     Map<String, CursorTheme> getThemeMap() {
         return themes;
     }
@@ -327,122 +314,11 @@ public final class CursorManager implements IEventReceiver
         }
     }
 
-    private class FrustumChecker implements GVRDrawFrameListener {
-        private final FrustumIntersection culler;
-        private final Matrix4f viewMatrix;
-        private final Matrix4f projectionMatrix;
-        private final Matrix4f vpMatrix;
-        private final Vector3f position;
-        private GVRPerspectiveCamera centerCamera;
-        private GVRScene scene;
-        private Vector3f savedPosition;
-        private float savedDepth;
-        private GVRSceneObject temp;
-        private Quaternionf rotation;
-        private final Vector3f result;
-
-        FrustumChecker(GVRContext context, GVRScene scene) {
-            culler = new FrustumIntersection();
-            viewMatrix = new Matrix4f();
-            projectionMatrix = new Matrix4f();
-            vpMatrix = new Matrix4f();
-            position = new Vector3f();
-            result = new Vector3f();
-            this.scene = scene;
-            temp = new GVRSceneObject(context);
-            context.registerDrawFrameListener(this);
-        }
-
-        @Override
-        public void onDrawFrame(float v) {
-            if (scene == null) {
-                return;
-            }
-
-            centerCamera = scene.getMainCameraRig().getCenterCamera();
-            viewMatrix.set(scene.getMainCameraRig().getHeadTransform().getModelMatrix4f());
-            viewMatrix.invert();
-            projectionMatrix.identity();
-            projectionMatrix.perspective(centerCamera.getFovY(), centerCamera.getAspectRatio(),
-                                         centerCamera
-                                                 .getNearClippingDistance(), centerCamera.getFarClippingDistance());
-            projectionMatrix.mul(viewMatrix, vpMatrix);
-            culler.set(vpMatrix);
-
-            synchronized (mCursors) {
-                for (Cursor cursor : mCursors) {
-                    if (cursor.isActive() == false) {
-                        position.set(cursor.getPositionX(), cursor.getPositionY(), cursor
-                                .getPositionZ());
-                        position.mulPosition(cursor.getOwnerObject().getTransform().getModelMatrix4f
-                                ());
-                        boolean inFrustum = culler.testPoint(position);
-
-                        if (inFrustum) {
-                            savedPosition = null;
-                            savedDepth = 0;
-                        } else {
-                            if (savedPosition == null) {
-                                position.set(cursor.getPositionX(), cursor.getPositionY(), cursor
-                                        .getPositionZ());
-                                savedDepth = getDistance(position.x, position.y, position.z);
-                                savedPosition = new Vector3f(0.0f, 0.0f, -savedDepth);
-                                savedPosition.mulPosition(scene.getMainCameraRig().getHeadTransform()
-                                                                  .getModelMatrix4f(), result);
-                                rotation = getRotation(result, position);
-                            } else {
-                                savedPosition.mulPosition(scene.getMainCameraRig().getHeadTransform()
-                                                                  .getModelMatrix4f(), result);
-                                temp.getTransform().setPosition(result.x, result.y, result.z);
-                                temp.getTransform().rotateWithPivot(rotation.w, rotation.x, rotation
-                                        .y, rotation.z, 0.0f, 0.0f, 0.0f);
-                                cursor.setPosition(temp.getTransform().getPositionX(),
-                                                   temp.getTransform().getPositionY(),
-                                                   temp.getTransform().getPositionZ());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-         * formulae for quaternion rotation taken from
-         * http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
-         **/
-        private Quaternionf getRotation(Vector3f start, Vector3f end) {
-            float norm_u_norm_v = (float) Math.sqrt(start.dot(start) * end.dot(end));
-            float real_part = norm_u_norm_v + start.dot(end);
-            Vector3f w = new Vector3f();
-
-            if (real_part < 1.e-6f * norm_u_norm_v) {
-                /** If u and v are exactly opposite, rotate 180 degrees
-                 * around an arbitrary orthogonal axis. Axis normalisation
-                 * can happen later, when we normalise the quaternion.*/
-                real_part = 0.0f;
-                if (Math.abs(start.x) > Math.abs(start.z)) {
-                    w = new Vector3f(-start.y, start.x, 0.f);
-                } else {
-                    w = new Vector3f(0.f, -start.z, start.y);
-                }
-            } else {
-                /** Otherwise, build quaternion the standard way. */
-                start.cross(end, w);
-            }
-            return new Quaternionf(w.x, w.y, w.z, real_part).normalize();
-        }
-
-        void close() {
-            context.unregisterDrawFrameListener(this);
-        }
-    }
-
     void markCursorUnused(Cursor cursor) {
         Log.d(TAG, "Marking cursor:" + cursor.getName() + " unused");
         removeCursorFromScene(cursor);
         context.getEventManager().sendEvent(this, ICursorActivationListener.class, "onDeactivated", cursor);
     }
-
 
     /**
      * Use this method to set a {@link GVRScene}. This call replaces the currently set {@link
@@ -1159,7 +1035,7 @@ public final class CursorManager implements IEventReceiver
                 }
             }
             controller.setScene(CursorManager.this.scene);
-            controller.sendEventsToActivity(mSendEventsToActivity);
+
             synchronized (mCursors)
             {
                 for (Cursor c : mCursors)

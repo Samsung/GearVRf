@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-class DayDreamControllerReader implements GVRGearCursorController.ControllerReader {
+class DayDreamControllerReader extends GVRGearCursorController.ControllerReaderStubs {
 
     private ControllerManager mControllerManager;
     private Controller mController;
@@ -33,9 +33,12 @@ class DayDreamControllerReader implements GVRGearCursorController.ControllerRead
         mControllerManager.start();
         mActivity = gvrActivity;
     }
+
+    @Override
     public boolean isTouched(){
         return mController.isTouching;
     }
+
     @Override
     public boolean isConnected() {
         return mConnectionState == ConnectionStates.CONNECTED;
@@ -101,6 +104,7 @@ class DayDreamControllerReader implements GVRGearCursorController.ControllerRead
             super.finalize();
         }
     }
+
     private class EventListener extends Controller.EventListener
             implements ControllerManager.EventListener {
 

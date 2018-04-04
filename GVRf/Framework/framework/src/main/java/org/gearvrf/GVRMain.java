@@ -16,11 +16,13 @@
 package org.gearvrf;
 
 import org.gearvrf.animation.GVRAnimation;
+import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.script.GVRScriptFile;
 import org.gearvrf.script.IScriptable;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.view.MotionEvent;
 
 /**
  * Extend this class to create a GVRF application.
@@ -153,6 +155,23 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
     public boolean onBackPress() {
         return false;
     }
+
+    /**
+     * Handle swipe events by implementing this method.
+     * @see GVRActivity#enableGestureDetector()
+     * @see GVRTouchPadGestureListener
+     * @param action
+     * @param vx
+     */
+    public void onSwipe(GVRTouchPadGestureListener.Action action, float vx) {}
+
+    /**
+     * Handle single tap events by implementing this method.
+     * @see GVRActivity#enableGestureDetector()
+     * @see GVRTouchPadGestureListener
+     * @param event
+     */
+    public void onSingleTapUp(MotionEvent event) {}
 
     /*
      * Splash screen support: methods to call or overload to change the default
