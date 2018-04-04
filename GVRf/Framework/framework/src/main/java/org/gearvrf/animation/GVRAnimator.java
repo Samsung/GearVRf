@@ -2,6 +2,7 @@ package org.gearvrf.animation;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.Log;
 
 import java.util.ArrayList;
@@ -199,5 +200,11 @@ public class GVRAnimator extends GVRBehavior
         {
             anim.reset();
         }
+    }
+
+    @Override
+    public void onDetach(GVRSceneObject oldOwner) {
+        super.onDetach(oldOwner);
+        this.stop();
     }
 }

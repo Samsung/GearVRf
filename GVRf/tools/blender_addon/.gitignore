@@ -1,0 +1,8 @@
+# Vim stuff
+*~
+*.swo
+*.swp
+
+# Python stuff
+*.pyc
+__pycache__/

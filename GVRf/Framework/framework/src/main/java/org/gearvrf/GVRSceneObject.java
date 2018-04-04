@@ -700,6 +700,63 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         child.onRemoveParentObject(this);
     }
 
+    protected int removeChildObjectsByNameImpl(final String name) {
+        int count = 0;
+        for (GVRSceneObject child : mChildren) {
+            if (child.getName().equals(name)) {
+                removeChildObject(child);
+                count++;
+            } else {
+                count = count + child.removeChildObjectsByNameImpl(name);
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Removes any child object that has the given name by performing
+     * case-sensitive search.
+     *
+     * @param name name of scene object to be removed.
+     *
+     * @return number of removed objects, 0 if none was found.
+     */
+    public int removeChildObjectsByName(final String name) {
+        int removed = 0;
+
+        if (null != name && !name.isEmpty()) {
+            removed = removeChildObjectsByNameImpl(name);
+        }
+
+        return removed;
+    }
+
+    /**
+     * Performs case-sensitive depth-first search for a child object and then
+     * removes it if found.
+     *
+     * @param name name of scene object to be removed.
+     *
+     * @return true if child was found (and removed), else false
+     */
+    public boolean removeChildObjectByName(final String name) {
+        if (null != name && !name.isEmpty()) {
+            GVRSceneObject found = null;
+            for (GVRSceneObject child : mChildren) {
+                GVRSceneObject object = child.getSceneObjectByName(name);
+                if (object != null) {
+                    found = object;
+                    break;
+                }
+            }
+            if (found != null) {
+                removeChildObject(found);
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Called when the scene object gets a new parent.
      *
