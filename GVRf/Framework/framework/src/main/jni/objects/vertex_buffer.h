@@ -145,7 +145,7 @@ namespace gvr {
         mutable std::mutex mLock;
         int             mVertexCount;       // current number of vertices
         char*           mVertexData;        // vertex data buffer
-        int             mBoneFlags;         // indicates which vertex attributes are bones
+        int             mBoneFlags = 0;     // indicates which vertex attributes are bones
     };
 
 } // end gvrf

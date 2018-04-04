@@ -13,11 +13,9 @@ namespace gvr {
     VertexBuffer::VertexBuffer(const char* layout_desc, int vertexCount)
     : DataDescriptor(layout_desc),
       mVertexCount(0),
-      mBoneFlags(0),
       mVertexData(NULL)
     {
         mVertexData = NULL;
-        mBoneFlags == 0;
         setVertexCount(vertexCount);
         removePunctuations(layout_desc);
     }

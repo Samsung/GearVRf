@@ -92,6 +92,7 @@ int RenderData::cull_face(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->cull_face();
     }
+    return 0;
 }
 
 ShaderData* RenderData::material(int pass) const {
