@@ -15,8 +15,18 @@
 
 package org.gearvrf.mixedreality;
 
+import org.joml.Matrix4f;
+
+import java.util.ArrayList;
+
 public interface IMRCommon {
     void resume();
+
     void pause();
+
     void setDisplayGeometry(int displayRotation, int widthPx, int heightPx);
+
+    GVRAnchor createAnchor(Matrix4f poseMatrix);
+
+    ArrayList<GVRPlane> getAllPlanes();
 }

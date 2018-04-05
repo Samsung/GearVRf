@@ -15,12 +15,10 @@
 
 package org.gearvrf.mixedreality;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PointF;
 import android.view.MotionEvent;
-import android.view.View;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
@@ -29,8 +27,11 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
 
 public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private final IActivityEvents mActivityEventsHandler;
@@ -66,6 +67,16 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     @Override
     public void setDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
         mSession.setDisplayGeometry(displayRotation, widthPx, heightPx);
+    }
+
+    @Override
+    public ArrayList<GVRPlane> getAllPlanes() {
+        return mSession.getAllPlanes();
+    }
+
+    @Override
+    public GVRAnchor createAnchor(Matrix4f poseMatrix) {
+        return mSession.createAnchor(poseMatrix);
     }
 
     private class ActivityEventsHandler implements IActivityEvents {

@@ -18,8 +18,11 @@ package org.gearvrf.mixedreality.arcore;
 import android.app.Activity;
 import android.view.Surface;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
+import com.google.ar.core.Plane;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
@@ -27,9 +30,16 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
 import org.gearvrf.utility.Log;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+
+import java.util.ArrayList;
 
 
 public class ARCoreSession extends MRCommon {
@@ -183,5 +193,51 @@ public class ARCoreSession extends MRCommon {
 
     private void showLoadingMessage() {
         showSnackbarMessage("Searching for surfaces...", false);
+    }
+
+
+    @Override
+    public ArrayList<GVRPlane> onGetAllPlanes() {
+        ArrayList<GVRPlane> planes = new ArrayList<>();
+        mSession.update();
+        for (Plane p: mSession.getAllTrackables(Plane.class)) {
+            GVRPlane gvrPlane = new GVRPlane();
+            float poseMatrix[] = new float[16];
+            p.getCenterPose().toMatrix(poseMatrix, 0);
+            gvrPlane.setCenter(poseMatrix);
+//            gvrPlane.setTrackingState(p.getTrackingState());
+            planes.add(gvrPlane);
+        }
+        return planes;
+    }
+
+    @Override
+    public GVRAnchor onCreateAnchor(Matrix4f poseMatrix) {
+        float[] vectorTranslation = new float[3];
+        Vector3f translation = new Vector3f();
+        float[] vectorRotaion = new float[4];
+        Quaternionf rotation = new Quaternionf();
+        float[] modelMatrix = new float[16];
+        GVRAnchor gvrAnchor = new GVRAnchor(mGvrContext);
+
+
+        poseMatrix.getTranslation(translation);
+        vectorTranslation[0] = translation.x;
+        vectorTranslation[1] = translation.y;
+        vectorTranslation[2] = translation.z;
+
+        poseMatrix.getNormalizedRotation(rotation);
+        vectorRotaion[0] = rotation.x;
+        vectorRotaion[1] = rotation.y;
+        vectorRotaion[2] = rotation.z;
+        vectorRotaion[3] = rotation.w;
+
+        Pose p = new Pose(vectorTranslation, vectorRotaion);
+
+        Anchor anchor = mSession.createAnchor(p);
+        anchor.getPose().toMatrix(modelMatrix, 0);
+        gvrAnchor.setModelMatrix(modelMatrix);
+        return  gvrAnchor;
+
     }
 }
