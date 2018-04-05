@@ -24,6 +24,7 @@
 #include <vulkan/vk_render_target.h>
 #include <vulkan/vk_render_texture_onscreen.h>
 #include <vulkan/vk_render_texture_offscreen.h>
+#include <vulkan/vk_light.h>
 #include "renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
@@ -42,10 +43,16 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
 {
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
+
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo)
 {
     return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
+
+    Light* VulkanRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
+    {
+        return new VKLight(uniformDescriptor, textureDescriptor);
+    }
 
 RenderData* VulkanRenderer::createRenderData()
 {
@@ -146,12 +153,13 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     {
         updateTransforms(rstate, &transformUBO, rdata);
     }
-    rdata->updateGPU(this,shader);
 
-    vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader);
+    rdata->updateGPU(this, shader);
+    LightList& lights = rstate.scene->getLights();
+    vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, lights);
 
     if(vkRdata->isDirty(pass)) {
-        vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
+        vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata, lights);
         VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, rstate.sampleCount);
         std::string vkPipelineHashCode = vkRdata->getHashCode() + std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) + std::to_string(rstate.sampleCount);
 
@@ -233,12 +241,21 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
         rstate.uniforms.u_proj = glm::mat4(1,0,0,0,  0,-1,0,0, 0,0,0.5,0, 0,0,0.5,1) * rstate.uniforms.u_proj;
 
     std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
+    LightList& lights = scene->getLights();
+
     int postEffectCount = 0;
 
     if (!rstate.is_shadow) {
         rstate.render_mask = camera->render_mask();
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;
+
+            rstate.lightsChanged = lights.isDirty();
+            if (lights.usingUniformBlock()) {
+                rstate.shadow_map = lights.updateLightBlock(this);
+            } else {
+                LOGE("Vulkan only supports UBO Lighting");
+            }
     }
 
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
@@ -296,6 +313,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
                 static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject(),
                 vk_renderTarget->getCommandBuffer());
     }
+
 }
 
 

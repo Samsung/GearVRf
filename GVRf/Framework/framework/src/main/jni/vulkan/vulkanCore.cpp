@@ -564,7 +564,7 @@ void VulkanCore::InitCommandPools(){
         GVR_VK_CHECK(!ret);
     }
 
-    void VulkanCore::InitLayoutRenderData(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader) {
+    void VulkanCore::InitLayoutRenderData(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader, LightList& lights) {
 
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
@@ -582,7 +582,8 @@ void VulkanCore::InitCommandPools(){
         uint32_t index = 0;
         std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
 
-        vk_shader->makeLayout(vkMtl, uniformAndSamplerBinding,  index, vkdata);
+
+        vk_shader->makeLayout(vkMtl, uniformAndSamplerBinding,  index, vkdata, lights);
 
         VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
 
@@ -593,15 +594,9 @@ void VulkanCore::InitCommandPools(){
                                           &descriptorLayout);
         GVR_VK_CHECK(!ret);
 
-
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.offset                        = 0;
-        pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
-        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
         VkPipelineLayout &pipelineLayout = static_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
-                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 1, &pushConstantRange),
+                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0, 0),
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
         shader->setShaderDirty(false);
@@ -967,7 +962,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pDynamicState = &dynamic_state_create_info;
     VkPipeline pipeline = 0;
     LOGI("Vulkan graphics call before");
-    err = vkCreateGraphicsPipelines(m_device, m_pipelineCache, 1, &pipelineCreateInfo, nullptr,
+    err = vkCreateGraphicsPipelines(m_device, 0, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
     GVR_VK_CHECK(!err);
     rdata->setPipeline(pipeline,pass);
@@ -1126,7 +1121,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                     line_width = 1.0;
                 }
                 vkCmdSetLineWidth(cmdBuffer, line_width);
-
                 rdata->render(shader,cmdBuffer,curr_pass);
            }
         }
@@ -1230,7 +1224,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         GVR_VK_CHECK(!err);
     }
 
-    bool VulkanCore::InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData) {
+    bool VulkanCore::InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData, LightList& lights) {
 
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
@@ -1265,9 +1259,19 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             writes.push_back(vkData->getTransformUbo().getDescriptorSet());
         }
 
+        if (uniformDescriptor.getNumEntries()) {
+            static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).setDescriptorSet(descriptorSet);
+            writes.push_back(static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).getDescriptorSet());
+        }
+
         if(vkData->mesh()->hasBones() && bones_present){
             static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(descriptorSet);
             writes.push_back(static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->getDescriptorSet());
+        }
+
+        if(lights.getUBO() != nullptr){
+            static_cast<VulkanUniformBlock*>(lights.getUBO())->setDescriptorSet(descriptorSet);
+            writes.push_back(static_cast<VulkanUniformBlock*>(lights.getUBO())->getDescriptorSet());
         }
 
         // TODO: add shadowmap descriptor
@@ -1329,6 +1333,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     void VulkanCore::initVulkanCore() {
         InitCommandPools();
-        LOGE("Vulkan after intialization");
+        LOGI("Vulkan after intialization");
     }
 }

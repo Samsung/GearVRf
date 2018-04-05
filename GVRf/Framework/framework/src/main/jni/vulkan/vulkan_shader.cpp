@@ -40,7 +40,7 @@ void VulkanShader::initialize()
 {
 }
 
-int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata)
+int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights)
 {
     VkDescriptorSetLayoutBinding dummy_binding ={} ;
     if (usesMatrixUniforms()) {
@@ -52,9 +52,15 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         samplerBinding.push_back(dummy_binding);
     }
 
-    // Dummy binding for Material UBO, since now a push Constant
-    dummy_binding.binding = MATERIAL_UBO_INDEX;
-    samplerBinding.push_back(dummy_binding);
+    if (getUniformDescriptor().getNumEntries()){
+        VkDescriptorSetLayoutBinding &material_uniformBinding = reinterpret_cast<VulkanUniformBlock&>(vkMtl.uniforms()).getVulkanDescriptor()->getLayoutBinding();
+        samplerBinding.push_back(material_uniformBinding);
+    }
+    else {
+        // Dummy binding for Material UBO, since now a push Constant
+        dummy_binding.binding = MATERIAL_UBO_INDEX;
+        samplerBinding.push_back(dummy_binding);
+    }
 
     if(vkdata->mesh()->hasBones() && hasBones()){
        VkDescriptorSetLayoutBinding &bones_uniformBinding = static_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
@@ -65,8 +71,15 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         samplerBinding.push_back(dummy_binding);
     }
     // Right now, we dont' have support for shadow map, so add dummy binding for it
-    dummy_binding.binding = 3;
-    samplerBinding.push_back(dummy_binding);
+
+    if(lights.getUBO() != nullptr){
+        VkDescriptorSetLayoutBinding &lights_uniformBinding = static_cast<VulkanUniformBlock*>(lights.getUBO())->getVulkanDescriptor()->getLayoutBinding();
+        samplerBinding.push_back(lights_uniformBinding);
+    }
+    else {
+        dummy_binding.binding = 3;
+        samplerBinding.push_back(dummy_binding);
+    }
 
     /*
      * TODO :: if has shadowmap, create binding for it
@@ -159,6 +172,7 @@ VulkanShader::~VulkanShader() { }
 
     std::string VulkanShader::makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer)
     {
+
         std::ostringstream stream;
         int bindingIndex =0;
 
@@ -210,4 +224,5 @@ VulkanShader::~VulkanShader() { }
         }
         return stream.str();
     }
+
 } /* namespace gvr */

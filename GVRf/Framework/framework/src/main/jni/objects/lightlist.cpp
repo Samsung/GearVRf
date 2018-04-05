@@ -314,7 +314,7 @@ bool LightList::createLightBlock(Renderer* renderer)
         }
     }
     if ((mLightBlock == NULL) ||
-        (numFloats > mLightBlock->getTotalSize()))
+        (numFloats > (mLightBlock->getTotalSize()/ sizeof(float))))
     {
         std::string desc("float lightdata");
         if (mLightBlock)
@@ -352,7 +352,15 @@ void LightList::makeShaderBlock(std::string& layout) const
 
     if (mUseUniformBlock)
     {
-         stream << "layout (std140) uniform Lights_ubo\n{" << std::endl;
+        int uboLightBinding = LIGHT_UBO_INDEX;
+        stream <<
+                "\n#ifdef VULKAN\n"
+                "layout (std140, set = 0, binding = " << uboLightBinding << ")"
+                "\n#else\n"
+                "layout (std140)"
+                "\n#endif\n"
+                "uniform Lights_ubo\n{"
+               << std::endl;
     }
     else
     {

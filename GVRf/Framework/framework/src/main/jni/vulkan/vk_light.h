@@ -13,33 +13,50 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORK_VULKAN_MATERIAL_H
-#define FRAMEWORK_VULKAN_MATERIAL_H
+#ifndef FRAMEWORK_VK_LIGHT_H
+#define FRAMEWORK_VK_LIGHT_H
 
-#include "objects/shader_data.h"
-#include "vulkan/vulkan_headers.h"
-#include "util/gvr_log.h"
+
+#include <string>
+
+#include "objects/light.h"
+#include "vulkan/vulkan_material.h"
+#include "shaders/shader.h"
+
+namespace gvr
+{
 
 /**
  * Vulkan implementation of Material which keeps uniform data
  * in a VulkanUniformBlock.
  */
-namespace gvr {
-
-    class VulkanMaterial : public ShaderData
+    class VKLight : public Light
     {
     public:
-        explicit VulkanMaterial(const char* uniform_desc, const char* texture_desc);
-        explicit VulkanMaterial(const char* uniform_desc, const char* texture_desc, int bindingPoint, const char* blockName);
-        virtual ~VulkanMaterial() {}
-        void useGPUBuffer(bool flag){
+        explicit VKLight(const char* uniform_desc, const char* texture_desc)
+                :   Light(), uniforms_(uniform_desc, texture_desc, LIGHT_UBO_INDEX, "Lights_ubo")
+        {
+            uniforms_.useGPUBuffer(true);
+        }
+
+        virtual ShaderData& uniforms()
+        {
+            return uniforms_;
+        }
+
+        void useGPUBuffer(bool flag)
+        {
             uniforms_.useGPUBuffer(flag);
         }
-        virtual VulkanUniformBlock& uniforms() { return uniforms_; }
-        virtual const VulkanUniformBlock& uniforms() const { return uniforms_; }
+
+        virtual const ShaderData& uniforms() const
+        {
+            return uniforms_;
+        }
+
     protected:
-        VulkanUniformBlock uniforms_;
+        VulkanMaterial uniforms_;
     };
 }
 
-#endif //FRAMEWORK_VULKAN_MATERIAL_H
+#endif //FRAMEWORK_VK_LIGHT_H

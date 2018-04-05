@@ -326,8 +326,7 @@ bool RenderData::updateGPU(Renderer* renderer, Shader* shader)
             bones_ubo_->updateGPU(renderer);
         }
     }
-    vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
-    return true;
+    return vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
 }
 
 void RenderData::setBindShaderObject(JNIEnv* env, jobject bindShaderObject) {

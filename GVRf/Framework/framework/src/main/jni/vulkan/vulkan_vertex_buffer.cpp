@@ -40,12 +40,20 @@ namespace gvr {
 
     bool VulkanVertexBuffer::updateGPU(Renderer* renderer, IndexBuffer* ibuf, Shader* shader)
     {
+        std::lock_guard<std::mutex> lock(mLock);
         VulkanRenderer* vkrender = static_cast<VulkanRenderer*>(renderer);
+        const float* vertexData = getVertexData();
+        if ((getVertexCount() == 0) || (vertexData == NULL))
+        {
+            LOGE("VertexBuffer::updateGPU no vertex data yet");
+            return false;
+        }
         generateVKBuffers(vkrender->getCore(),shader);
         if (ibuf)
         {
             ibuf->updateGPU(renderer);
         }
+        return true;
     }
     const GVR_VK_Vertices* VulkanVertexBuffer::getVKVertices(Shader* shader)  {
         std::unordered_map<Shader*,std::shared_ptr<GVR_VK_Vertices>>::iterator it;

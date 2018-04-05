@@ -104,6 +104,7 @@ void modifyShader(std::string& shader)
                 it1 = tokens.find("out");
             int pos = it->second;
 
+            if(it1 != tokens.end())
             mod_shader += ((pos > 0) ? line.substr(0, pos) : "") + line.substr(it1->second) + "\n";
         }
         else

@@ -359,14 +359,10 @@ public class GVRShaderTemplate extends GVRShader
                 combinedSource = combinedSource.replace("@" + key, segmentSource);
             }
         }
+
         combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
         combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
         combinedSource = combinedSource.replace("@MATERIAL_UNIFORMS", material.makeShaderLayout());
-        if(material != null && combinedSource.contains("Material_ubo"))
-            material.useGpuBuffer(true);
-        else
-            material.useGpuBuffer(false);
-
         combinedSource = combinedSource.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         if (type.equals("Vertex"))
         {
@@ -464,7 +460,7 @@ public class GVRShaderTemplate extends GVRShader
                     writeShader(context, "V-" + signature + ".glsl", vertexShaderSource);
                     writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
                 }
-                Log.e(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
+                Log.i(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
             if (nativeShader > 0)
             {
@@ -515,7 +511,7 @@ public class GVRShaderTemplate extends GVRShader
                     writeShader(context, "V-" + signature + ".glsl", vertexShaderSource);
                     writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
                 }
-                Log.e(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
+                Log.i(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
             return nativeShader;
         }
@@ -609,9 +605,9 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (lclass.VertexDescriptor != null)
             {
-                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "in");
-
+                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "#ifdef HAS_SHADOWS \n layout(location = 20) in");
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
+                lightDefs +=  "#endif";
             }
             lightDefs += "\n" + lightShader + "\n";
             lightFunction += "        if (" + ulightData + elemIndex + ".enabled != 0.0)\n        {\n";
@@ -663,8 +659,9 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (vertexOutputs != null)
             {
-                vertexOutputs = vertexOutputs.replace("$PREFIX", "out");
+                vertexOutputs = vertexOutputs.replace("$PREFIX", "#ifdef HAS_SHADOWS \n layout(location = 20) out");
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
+                lightDefs +=  "#endif";
             }
             if (lclass.Count > 1)
             {

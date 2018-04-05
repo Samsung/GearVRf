@@ -105,7 +105,6 @@ final class OvrActivityDelegate extends GVRActivity.ActivityDelegateStubs {
 
     @Override
     public VrAppSettings makeVrAppSettings() {
-
         final VrAppSettings settings = new OvrVrAppSettings();
         final VrAppSettings.EyeBufferParams params = settings.getEyeBufferParams();
         params.setResolutionHeight(VrAppSettings.DEFAULT_FBO_RESOLUTION);

@@ -23,7 +23,6 @@
 
 #include <functional>
 #include "engine/renderer/renderer.h"
-
 namespace gvr {
 
 class Light;
@@ -38,6 +37,10 @@ public:
                   mUseUniformBlock(true) { }
 
     virtual ~LightList();
+
+    UniformBlock* getUBO(){
+        return mLightBlock;
+    }
 
     void useUniformBlock()  { mUseUniformBlock = true; }
 

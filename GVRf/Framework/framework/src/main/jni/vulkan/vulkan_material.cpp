@@ -21,7 +21,13 @@ namespace gvr
      : ShaderData(texture_desc),
        uniforms_(uniform_desc, MATERIAL_UBO_INDEX, "Material_ubo")
     {
-        uniforms_.useGPUBuffer(false);
+        uniforms_.useGPUBuffer(true);
     }
 
+    VulkanMaterial::VulkanMaterial(const char* uniform_desc, const char* texture_desc, int bindingPoint, const char* blockName)
+            : ShaderData(texture_desc),
+              uniforms_(uniform_desc, bindingPoint, blockName)
+    {
+        uniforms_.useGPUBuffer(true);
+    }
 }

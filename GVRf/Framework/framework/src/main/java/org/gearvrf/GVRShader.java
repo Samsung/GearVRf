@@ -51,7 +51,7 @@ import android.os.Environment;
  */
 public class GVRShader
 {
-    protected boolean mWriteShadersToDisk = false;
+    protected boolean mWriteShadersToDisk = true;
     protected GLSLESVersion mGLSLVersion = GLSLESVersion.V100;
     protected boolean mHasVariants = false;
     protected boolean mUsesLights = false;
@@ -272,10 +272,6 @@ public class GVRShader
             String mtlLayout = material.makeShaderLayout();
             vshader = vshader.replace("@MATERIAL_UNIFORMS", mtlLayout);
             fshader = fshader.replace("@MATERIAL_UNIFORMS", mtlLayout);
-            if(fshader.contains("Material_ubo") || vshader.contains("Material_ubo"))
-                material.useGpuBuffer(true);
-            else
-                material.useGpuBuffer(false);
         }
         vshader = vshader.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         vertexShaderSource.append(vshader);

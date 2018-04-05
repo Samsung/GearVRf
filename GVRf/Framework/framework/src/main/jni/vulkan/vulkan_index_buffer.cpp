@@ -34,7 +34,15 @@ namespace gvr {
 
     bool VulkanIndexBuffer::updateGPU(Renderer* renderer)
     {
+        std::lock_guard<std::mutex> lock(mUpdateLock);
         VulkanRenderer* vkrender = static_cast<VulkanRenderer*>(renderer);
+        const void* data = getIndexData();
+        if ((getIndexCount() == 0) || (data == NULL))
+        {
+            LOGE("IndexBuffer::updateGPU no index data yet");
+            return false;
+        }
+
         generateVKBuffers(vkrender->getCore());
         return true;
     }
