@@ -24,7 +24,7 @@
 namespace gvr {
 extern "C" {
     JNIEXPORT jlong JNICALL
-        Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv* env, jobject obj, jobject surface);
+        Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv* env, jobject obj, jobject surface, jboolean surfaceCreation);
 
     JNIEXPORT jint JNICALL
         Java_org_gearvrf_NativeVulkanCore_getSwapChainIndexToRender(JNIEnv* env, jobject obj);
@@ -40,9 +40,9 @@ extern "C" {
 };
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv * env, jobject obj, jobject surface){
+Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv * env, jobject obj, jobject surface, jboolean surfaceInit){
     ANativeWindow * newNativeWindow = ANativeWindow_fromSurface(env, surface);
-    VulkanCore * vulkanCore = VulkanCore::getInstance(newNativeWindow);
+    VulkanCore * vulkanCore = VulkanCore::getInstance(newNativeWindow, surfaceInit);
     //if(vulkanCore == nullptr)
     //    return (reinterpret_cast<jlong>(nullptr));
     //else

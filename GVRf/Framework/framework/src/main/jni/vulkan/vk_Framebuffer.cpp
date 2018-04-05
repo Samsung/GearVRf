@@ -19,6 +19,7 @@
 namespace gvr {
 
     VKFramebuffer::~VKFramebuffer() {
+        LOGE("sushant: fbo destructor begin");
         delete mAttachments[COLOR_IMAGE];
         delete mAttachments[DEPTH_IMAGE];
         LOGE("sushant: framebuffer destructor");
@@ -34,7 +35,7 @@ namespace gvr {
 
         if(mFramebuffer != 0) {
             vkDestroyFramebuffer(device, mFramebuffer, nullptr);
-            LOGE("sushant: destroying fbo in cleanup");
+            LOGE("sushant: destroying fbo in cleanup %llu", mFramebuffer);
             mFramebuffer = 0;
         }
 

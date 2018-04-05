@@ -36,7 +36,10 @@ public:
         mAttachments[type] = image;
     }
     VKFramebuffer(int width, int height) : mRenderpass(0), mWidth(width), mHeight(height), mAttachments{
-            nullptr, nullptr, nullptr} {}
+            nullptr, nullptr, nullptr} {
+
+        LOGE("sushant: fbo constructor");
+    }
     int getWidth() {
         return mWidth;
     }

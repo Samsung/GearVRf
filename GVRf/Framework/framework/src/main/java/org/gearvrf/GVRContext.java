@@ -886,4 +886,8 @@ public abstract class GVRContext implements IEventReceiver {
         return null;
     }
 
+    public void removeReference(long nativePointer){
+        mReferenceSet.remove(findReference(nativePointer));
+    }
+
 }

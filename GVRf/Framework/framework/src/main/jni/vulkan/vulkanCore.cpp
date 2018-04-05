@@ -334,6 +334,9 @@ namespace gvr {
             imageViewCreateInfo.image = pSwapchainImages[i];
 
             VkResult err = vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &mSwapchainBuffers[i].view);
+            LOGE("sushant: swapchainImage %llu ", pSwapchainImages[i]);
+            LOGE("sushant: swapchainImageView %llu ", mSwapchainBuffers[i].view);
+
             GVR_VK_CHECK(!err);
         }
 
@@ -1054,6 +1057,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                              attachments.data(), mWidth, mHeight,
                                                              uint32_t(1)), nullptr,
                                   &mFramebuffer);
+
+        LOGE("sushant: created fbo %llu", mFramebuffer);
+
         GVR_VK_CHECK(!ret);
     }
 
@@ -1374,23 +1380,37 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     void VulkanCore::recreateSwapChain(ANativeWindow *newNativeWindow){
 
+        LOGE("sushant: recreate swapchain");
+
         vkDeviceWaitIdle(getDevice());
 
-        if(m_surface)
+        if(m_surface) {
             vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+            m_surface = VK_NULL_HANDLE;
+        }
 
 
         for (size_t i = 0; i < mSwapchainImageCount; i++) {
+            LOGE("sushant: destroying imageview %llu", mSwapchainBuffers[i].view);
             vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
+            mSwapchainBuffers[i].view = VK_NULL_HANDLE;
+
+            LOGE("sushant: destroying image %llu", mSwapchainBuffers[i].image);
             vkDestroyImage(m_device, mSwapchainBuffers[i].image, nullptr);
+            mSwapchainBuffers[i].image = VK_NULL_HANDLE;
+
+
         }
 
         delete mSwapchainBuffers;
         mSwapchainBuffers = nullptr;
 
         vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
+        mSwapchain = VK_NULL_HANDLE;
         vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
+        mRenderCompleteSemaphore = VK_NULL_HANDLE;
         vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
+        mBackBufferSemaphore = VK_NULL_HANDLE;
 
         mSwapchainCurrentIdx = 0;
         swapChainImageIndex = 0;

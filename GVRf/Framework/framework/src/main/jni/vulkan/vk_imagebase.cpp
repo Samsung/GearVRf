@@ -72,13 +72,14 @@ int getComponentsNumber(VkFormat format){
         VkDevice device = instance->getDevice();
 
         if(imageView != 0) {
+            LOGE("sushant: destroying imageview %llu", imageView);
             vkDestroyImageView(device, imageView, nullptr);
             imageView = 0;
         }
 
         if(image != 0 ) {
             vkDestroyImage(device, image, nullptr);
-            LOGE("sushant: destroying image in cleanup");
+            LOGE("sushant: destroying image %llu", image);
             image = 0;
         }
 
