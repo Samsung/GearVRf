@@ -26,7 +26,7 @@
 #include "vulkan_flags.h"
 
 
-#define GVR_VK_CHECK(X) if (!(X)) { LOGD("VK_CHECK Failure"); assert((X));}
+#define GVR_VK_CHECK(X) if (!(X)) { FAIL("VK_CHECK Failure"); }
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
