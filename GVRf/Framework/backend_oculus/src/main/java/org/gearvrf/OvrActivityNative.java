@@ -15,9 +15,9 @@
 
 package org.gearvrf;
 
-import org.gearvrf.utility.VrAppSettings;
-
 import android.app.Activity;
+
+import org.gearvrf.utility.VrAppSettings;
 
 class OvrActivityNative implements IActivityNative {
     static {
@@ -30,31 +30,30 @@ class OvrActivityNative implements IActivityNative {
         mPtr = onCreate(act, vrAppSettings);
     }
 
+    @Override
     public void onDestroy() {
         onDestroy(mPtr);
     }
 
+    @Override
     public void setCameraRig(GVRCameraRig cameraRig) {
         setCameraRig(mPtr, cameraRig.getNative());
     }
 
+    @Override
     public void onUndock() {
-        onUndock(mPtr);
     }
 
+    @Override
     public void onDock() {
-        onDock(mPtr);
     }
 
+    @Override
     public long getNative() {
         return mPtr;
     }
 
     private static native void setCameraRig(long appPtr, long cameraRig);
-
-    private static native void onDock(long appPtr);
-
-    private static native void onUndock(long appPtr);
 
     private static native void onDestroy(long appPtr);
 

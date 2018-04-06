@@ -42,16 +42,6 @@ namespace gvr {
         activity->setCameraRig(cameraRig);
     }
 
-    JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onDock(JNIEnv * jni, jclass clazz, jlong appPtr) {
-        GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-        activity->onDock();
-    }
-
-    JNIEXPORT void JNICALL Java_org_gearvrf_OvrActivityNative_onUndock(JNIEnv * jni, jclass clazz, jlong appPtr) {
-        GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-        activity->onUndock();
-    }
-
 // -------------------- //
 // VrapiActivityHandler //
 // -------------------- //

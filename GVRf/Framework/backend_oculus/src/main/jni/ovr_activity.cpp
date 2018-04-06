@@ -25,6 +25,7 @@
 #include <VrApi_Types.h>
 #include <engine/renderer/vulkan_renderer.h>
 #include <objects/textures/render_texture.h>
+
 static const char* activityClassName = "org/gearvrf/GVRActivity";
 static const char* viewManagerClassName = "org/gearvrf/OvrViewManager";
 
@@ -257,18 +258,14 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_FIXED_TO_VIEW;
     }
 
-    if (docked_) {
-        const ovrQuatf &orientation = updatedTracking.HeadPose.Pose.Orientation;
-        const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
-        const glm::quat quat = glm::conjugate(glm::inverse(tmp));
+    const ovrQuatf &orientation = updatedTracking.HeadPose.Pose.Orientation;
+    const glm::quat tmp(orientation.w, orientation.x, orientation.y, orientation.z);
+    const glm::quat quat = glm::conjugate(glm::inverse(tmp));
 
-        cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
-        cameraRig_->updateRotation();
-    } else if (nullptr != cameraRig_) {
-        cameraRig_->updateRotation();
-    }
+    cameraRig_->setRotationSensorData(0, quat.w, quat.x, quat.y, quat.z, 0, 0, 0);
+    cameraRig_->updateRotation();
 
-    if (!sensoredSceneUpdated_ && docked_) {
+    if (!sensoredSceneUpdated_) {
         sensoredSceneUpdated_ = updateSensoredScene();
     }
     oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onBeforeDrawEyesMethodId);

@@ -71,7 +71,6 @@ namespace gvr {
         void beginRenderingEye(const int eye);
         void endRenderingEye(const int eye);
 
-        bool docked_ = false;
         bool clampToBorderSupported_ = false;
         GearController *gearController;
         int mainThreadId_ = 0;
@@ -89,9 +88,6 @@ namespace gvr {
 
         bool isHmtConnected() const;
         bool usingMultiview() const;
-
-        void onDock() { docked_ = true; }
-        void onUndock() { docked_ = false; }
 
         void setGearController(GearController *controller){
             gearController = controller;
