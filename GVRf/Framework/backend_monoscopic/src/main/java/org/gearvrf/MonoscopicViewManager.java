@@ -208,7 +208,8 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                     vulkanDrawThread = new Thread(workerObj, "vulkanThread");
                     if(!initialized) {
                         mRenderBundle = makeRenderBundle();
-                        final GVRScene scene = null == mMainScene ? new GVRScene(MonoscopicViewManager.this) : mMainScene;
+                        //final GVRScene scene = null == mMainScene ? new GVRScene(MonoscopicViewManager.this) : mMainScene;
+                        final GVRScene scene = new GVRScene(MonoscopicViewManager.this);
                         mMainScene = scene;
                         NativeScene.setMainScene(scene.getNative());
                         getActivity().setCameraRig(scene.getMainCameraRig());
@@ -283,6 +284,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             for(int i = 0; i < 3; i++) {
 
                 if(NativeVulkanCore.useVulkanInstance()) {
+                    NativeHybridObject.delete(mRenderTarget[i].getTexture().getNative());
                     NativeHybridObject.delete(mRenderTarget[i].getNative());
                     GVRContext context = mActivity.getGVRContext();
                     context.removeReference(mRenderTarget[i].getNative());
@@ -424,10 +426,12 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     }
 
     private void drawEyes() {
-        //Log.e("sushant: cam" , mMainScene.getMainCameraRig().getOwnerObject().toString());
         mMainScene.getMainCameraRig().updateRotation();
 
         GVRRenderTarget renderTarget = getRenderTarget();
+
+        //Log.e("sushant: native pointer = ", "" + renderTarget.getNative());
+
         renderTarget.cullFromCamera(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle.getShaderManager());
         renderTarget.render(mMainScene, mMainScene
                         .getMainCameraRig().getLeftCamera(), mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),

@@ -77,6 +77,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
 
         mSceneRoot = new GVRSceneObject(gvrContext);
+        mSceneRoot.setName("scene root");
         NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
