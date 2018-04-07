@@ -101,15 +101,20 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
          *    CameraRig.getTransform()
          * 2. head transform object: used internally to do sensor-based rotation
          */
-        setOwnerObject(new GVRSceneObject(gvrContext));
+
+        GVRSceneObject temp = new GVRSceneObject(gvrContext);
+        temp.setName("camera rig object");
+        setOwnerObject(temp);
         getOwnerObject().attachCameraRig(this);
 
         headTransformObject = new GVRSceneObject(gvrContext);
+        headTransformObject.setName("hear transform object");
         addHeadTransformObject();
 
         leftCameraObject = new GVRSceneObject(gvrContext);
         rightCameraObject = new GVRSceneObject(gvrContext);
         centerCameraObject = new GVRSceneObject(gvrContext);
+        centerCameraObject.setName("center camera object");
 
         headTransformObject.addChildObject(leftCameraObject);
         headTransformObject.addChildObject(rightCameraObject);
