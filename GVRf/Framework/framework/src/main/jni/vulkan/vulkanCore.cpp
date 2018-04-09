@@ -1407,14 +1407,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         delete mSwapchainBuffers;
         mSwapchainBuffers = nullptr;
 
-
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
         //clear the handles to the swapChain images and imageviews. This is necessary because the driver
         //tries to reuse these handles when a new surface is created. When the garbage collector eventually runs
         //it might accidentally clear up the very same handles we are reusing.
-        std::vector<VkRenderTextureOnScreen* > onScreenTextures =
-                (static_cast<VulkanRenderer*>(Renderer::getInstance()))->mOnScreenTextures;
 
-        for(auto tex: onScreenTextures)
+        for(auto tex: vk_renderer->mOnScreenTextures)
         {
             vkImageBase ** attachments = tex->getFBO()->getAttachments();
             delete attachments[COLOR_IMAGE];
@@ -1424,10 +1422,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             attachments[DEPTH_IMAGE] = 0;
         }
 
-        //sufficient to clear up the vectors so that there are no dangling pointers. The actual memory has
+        //sufficient to clear up the vector so that there are no dangling pointers. The actual memory has
         //has references to it from java and will be cleared up by the gc.
-        (static_cast<VulkanRenderer*>(Renderer::getInstance()))->mOnScreenTextures.clear();
-        onScreenTextures.clear();
+        vk_renderer->mOnScreenTextures.clear();
 
 
         vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);

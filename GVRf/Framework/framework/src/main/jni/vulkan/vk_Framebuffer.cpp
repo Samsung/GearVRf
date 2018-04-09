@@ -19,6 +19,8 @@
 namespace gvr {
 
     VKFramebuffer::~VKFramebuffer() {
+
+
         LOGE("sushant: fbo destructor begin");
         if(mAttachments[COLOR_IMAGE]!= 0)
             delete mAttachments[COLOR_IMAGE];

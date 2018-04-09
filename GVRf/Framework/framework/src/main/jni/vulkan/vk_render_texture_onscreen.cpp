@@ -17,6 +17,7 @@
 #include "vk_render_to_texture.h"
 #include "../engine/renderer/vulkan_renderer.h"
 #include "vk_imagebase.h"
+#include <algorithm>
 
 namespace gvr{
     VkRenderTextureOnScreen::VkRenderTextureOnScreen(int width, int height, int sample_count):VkRenderTexture(width, height, sample_count){
@@ -30,6 +31,16 @@ namespace gvr{
 
             fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSamples, true);
         }
+    }
+
+    VkRenderTextureOnScreen::~VkRenderTextureOnScreen()
+    {
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+        std::vector<VkRenderTextureOnScreen *>::iterator it =
+                std::find( (vk_renderer->mOnScreenTextures).begin(),  (vk_renderer->mOnScreenTextures).end(), this);
+
+        if(it !=  vk_renderer->mOnScreenTextures.end())
+            vk_renderer->mOnScreenTextures.erase(it);
     }
 
 }
