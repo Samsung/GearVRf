@@ -58,10 +58,10 @@ namespace gvr {
         activity->onSurfaceCreated(*jni);
     }
 
-    JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeOnSurfaceChanged(JNIEnv * jni, jclass clazz,
-                                                                                           jlong appPtr) {
+    JNIEXPORT void JNICALL Java_org_gearvrf_OvrVrapiActivityHandler_nativeOnSurfaceChanged(JNIEnv * jni, jclass,
+                                                                                           jlong appPtr, jobject jsurface) {
         GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
-        activity->onSurfaceChanged(*jni);
+        activity->onSurfaceChanged(*jni, jsurface);
     }
 
     JNIEXPORT void JNICALL Java_org_gearvrf_OvrViewManager_drawEyes(JNIEnv * jni, jobject jViewManager,

@@ -23,9 +23,11 @@
 #include "objects/components/camera_rig.h"
 #include "util/ovr_configuration_helper.h"
 #include "VrApi_Types.h"
+
 namespace gvr {
     class CameraRig;
     struct RenderTextureInfo;
+
     class GVRActivity
     {
     public:
@@ -78,7 +80,7 @@ namespace gvr {
     public:
         void onSurfaceCreated(JNIEnv& env);
         void copyVulkanTexture(int texSwapChainIndex, int eye);
-        void onSurfaceChanged(JNIEnv& env);
+        void onSurfaceChanged(JNIEnv& env, jobject jsurface);
         void onDrawFrame(jobject jViewManager);
         int initializeVrApi();
         static void uninitializeVrApi();

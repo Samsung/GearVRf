@@ -27,6 +27,7 @@ import android.os.HandlerThread;
 import android.util.DisplayMetrics;
 import android.view.Choreographer;
 import android.view.Choreographer.FrameCallback;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import org.gearvrf.utility.Log;
@@ -52,7 +53,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
     private long mPtr;
     private GLSurfaceView mSurfaceView;
     private EGLSurface mPixelBuffer;
-    private EGLSurface mMainSurface;
+
     // warning: writable static state; used to determine when vrapi can be safely uninitialized
     private static WeakReference<OvrVrapiActivityHandler> sVrapiOwner = new WeakReference<>(null);
     private OvrViewManager mViewManager;
@@ -201,8 +202,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
                     EGL10.EGL_NONE
             };
 
-            final EGLContext context = egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT,
-                    contextAttribs);
+            final EGLContext context = egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, contextAttribs);
             if (context == EGL10.EGL_NO_CONTEXT) {
                 throw new IllegalStateException("eglCreateContext failed; egl error 0x"
                         + Integer.toHexString(egl.eglGetError()));
@@ -251,16 +251,44 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
                 throw new IllegalStateException("Unable to retrieve egl configs available.");
             }
 
-            final int[] configAttribs = {
-                    EGL10.EGL_ALPHA_SIZE, 8, // need alpha for the multi-pass
-                    // timewarp compositor
-                    EGL10.EGL_BLUE_SIZE, 8,
-                    EGL10.EGL_GREEN_SIZE, 8,
-                    EGL10.EGL_RED_SIZE, 8,
-                    EGL10.EGL_DEPTH_SIZE, 0,
-                    EGL10.EGL_SAMPLES, 0,
-                    EGL10.EGL_NONE
-            };
+            final int[] configAttribs = new int[16];
+            Arrays.fill(configAttribs, EGL10.EGL_NONE);
+            int counter = 0;
+
+            configAttribs[counter++] = EGL10.EGL_ALPHA_SIZE;
+            configAttribs[counter++] = 8;
+            configAttribs[counter++] = EGL10.EGL_BLUE_SIZE;
+            configAttribs[counter++] = 8;
+            configAttribs[counter++] = EGL10.EGL_GREEN_SIZE;
+            configAttribs[counter++] = 8;
+            configAttribs[counter++] = EGL10.EGL_RED_SIZE;
+            configAttribs[counter++] = 8;
+            configAttribs[counter++] = EGL10.EGL_DEPTH_SIZE;
+            configAttribs[counter++] = 0;
+            configAttribs[counter++] = EGL10.EGL_SAMPLES;
+            configAttribs[counter++] = 0;
+
+            Log.v(TAG, "--- window surface configuration ---");
+            final VrAppSettings appSettings = mActivity.getAppSettings();
+            if (appSettings.useSrgbFramebuffer) {
+                final int EGL_GL_COLORSPACE_KHR = 0x309D;
+                final int EGL_GL_COLORSPACE_SRGB_KHR = 0x3089;
+
+                configAttribs[counter++] = EGL_GL_COLORSPACE_KHR;
+                configAttribs[counter++] = EGL_GL_COLORSPACE_SRGB_KHR;
+            }
+            Log.v(TAG, "--- srgb framebuffer: %b", appSettings.useSrgbFramebuffer);
+
+            if (appSettings.useProtectedFramebuffer) {
+                final int EGL_PROTECTED_CONTENT_EXT = 0x32c0;
+
+                configAttribs[counter++] = EGL_PROTECTED_CONTENT_EXT;
+                configAttribs[counter++] = EGL14.EGL_TRUE;
+            }
+            Log.v(TAG, "--- protected framebuffer: %b", appSettings.useProtectedFramebuffer);
+
+            configAttribs[counter++] = EGL10.EGL_NONE;
+            Log.v(TAG, "------------------------------------");
 
             EGLConfig config = null;
             for (int i = 0; i < numberConfigs[0]; ++i) {
@@ -353,23 +381,12 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         if (!egl.eglMakeCurrent(display, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, context)) {
             Log.v(TAG, "destroySurfaceForTimeWarp makeCurrent NO_SURFACE failed, egl error 0x%x", egl.eglGetError());
         }
-
-        if (null != mMainSurface) {
-            boolean result = egl.eglDestroySurface(display, mMainSurface);
-            Log.v(TAG, "destroySurfaceForTimeWarp destroyed mMainSurface: 0x%x, successful %b, egl error 0x%x",
-                    mMainSurface.hashCode(), result, egl.eglGetError());
-            mMainSurface = null;
-        }
     }
 
     private final Renderer mRenderer = new Renderer() {
-        private EGLConfig mConfig;
-
         @Override
         public void onSurfaceCreated(final GL10 gl, final EGLConfig config) {
             Log.i(TAG, "onSurfaceCreated");
-
-            mConfig = config;
             nativeOnSurfaceCreated(mPtr);
             mViewManager.onSurfaceCreated();
         }
@@ -394,52 +411,14 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
             final EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
             final EGLContext context = egl.eglGetCurrentContext();
 
-            int numAttribs = 0;
-            final int[] configAttribs = new int[16];
-            Arrays.fill(configAttribs, EGL10.EGL_NONE);
-
-            Log.v(TAG, "--- window surface configuration ---");
-            final VrAppSettings appSettings = mActivity.getAppSettings();
-            if (appSettings.useSrgbFramebuffer) {
-                final int EGL_GL_COLORSPACE_KHR = 0x309D;
-                final int EGL_GL_COLORSPACE_SRGB_KHR = 0x3089;
-
-                configAttribs[numAttribs++] = EGL_GL_COLORSPACE_KHR;
-                configAttribs[numAttribs++] = EGL_GL_COLORSPACE_SRGB_KHR;
-            }
-            Log.v(TAG, "--- srgb framebuffer: %b", appSettings.useSrgbFramebuffer);
-
-            if (appSettings.useProtectedFramebuffer) {
-                final int EGL_PROTECTED_CONTENT_EXT = 0x32c0;
-
-                configAttribs[numAttribs++] = EGL_PROTECTED_CONTENT_EXT;
-                configAttribs[numAttribs++] = EGL14.EGL_TRUE;
-            }
-            Log.v(TAG, "--- protected framebuffer: %b", appSettings.useProtectedFramebuffer);
-
-            configAttribs[numAttribs++] = EGL10.EGL_NONE;
-            Log.v(TAG, "------------------------------------");
-
-            // this is the display surface timewarp will hijack
-            mMainSurface = egl.eglCreateWindowSurface(display, mConfig, mSurfaceView.getHolder(), configAttribs);
-            if (mMainSurface == EGL10.EGL_NO_SURFACE) {
-                throw new IllegalStateException(
-                        "eglCreateWindowSurface() failed: 0x" + Integer.toHexString(egl.eglGetError()));
-            }
-
-            Log.v(TAG, "mMainSurface: 0x%x", mMainSurface.hashCode());
-            if (!egl.eglMakeCurrent(display, mMainSurface, mMainSurface, context)) {
-                throw new IllegalStateException(
-                        "eglMakeCurrent() failed: 0x " + Integer.toHexString(egl.eglGetError()));
-            }
-            nativeOnSurfaceChanged(mPtr);
-
             // necessary to explicitly make the pbuffer current for the rendering thread;
             // TimeWarp took over the window surface
             if (!egl.eglMakeCurrent(display, mPixelBuffer, mPixelBuffer, context)) {
                 throw new IllegalStateException("Failed to make context current ; egl error 0x"
                         + Integer.toHexString(egl.eglGetError()));
             }
+
+            nativeOnSurfaceChanged(mPtr, mSurfaceView.getHolder().getSurface());
 
             startChoreographerThreadIfNotStarted();
             mViewManager.onSurfaceChanged(width, height);
@@ -459,7 +438,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     private static native void nativeOnSurfaceCreated(long ptr);
 
-    private static native void nativeOnSurfaceChanged(long ptr);
+    private static native void nativeOnSurfaceChanged(long ptr, Surface surface);
 
     private static native void nativeLeaveVrMode(long ptr);
 
