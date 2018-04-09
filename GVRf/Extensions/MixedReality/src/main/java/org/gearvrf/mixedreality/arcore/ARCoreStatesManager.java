@@ -21,9 +21,12 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.mixedreality.GVRAnchor;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
 
 
 public class ARCoreStatesManager {
@@ -32,10 +35,12 @@ public class ARCoreStatesManager {
     private final ARCoreStatesManager.ARCoreState mResumeState;
     private final ARCoreStatesManager.ARCoreState mTrackingState;
 
-    public ARCoreStatesManager(GVRContext gvrContext, Session arSession) {
+    public ARCoreStatesManager(GVRContext gvrContext, Session arSession,  ArrayList<ARCoreSession
+            .AnchorPair> anchorsPair) {
         mStartState = new ARCoreStatesManager.OnStartState(gvrContext, arSession, gvrContext.getMainScene());
         mResumeState = new ARCoreStatesManager.OnResumeState(gvrContext, arSession, gvrContext.getMainScene());
-        mTrackingState = new ARCoreStatesManager.OnTrackingState(gvrContext, arSession, gvrContext.getMainScene());
+        mTrackingState = new ARCoreStatesManager.OnTrackingState(gvrContext, arSession,
+                gvrContext.getMainScene(), anchorsPair);
 
             /* [start] -> [resume] -> ([tracking] | [finish]) -> [resume] */
 
@@ -263,11 +268,12 @@ public class ARCoreStatesManager {
     }
 
     private static class OnTrackingState extends ARCoreState {
-        private GVRSceneObject mAnchorObject = null;
-        private Anchor mARAnchor = null;
+        private ArrayList<ARCoreSession.AnchorPair> mAnchorsPair = new ArrayList<>();
 
-        OnTrackingState(GVRContext gvrContext, Session arSession, GVRScene scene) {
+        OnTrackingState(GVRContext gvrContext, Session arSession, GVRScene scene,
+                        ArrayList<ARCoreSession.AnchorPair> anchorsPair) {
             super(gvrContext, arSession, scene);
+            mAnchorsPair = anchorsPair;
         }
 
         @Override
@@ -296,10 +302,6 @@ public class ARCoreStatesManager {
 
             // If not tracking, don't draw 3d objects.
             if (arCamera.getTrackingState() != TrackingState.TRACKING) {
-                if (mAnchorObject != null) {
-                    removeGVRAnchorObject();
-                }
-
                 onExit();
                 return;
             }
@@ -309,58 +311,27 @@ public class ARCoreStatesManager {
             float[] viewmtx = new float[16];
             arCamera.getViewMatrix(viewmtx, 0);
 
-            /*if (mAnchorObject == null) {
-                createGVRAnchorObject(arFrame.getTimestamp(), viewmtx);
-            } else if (mARAnchor.getTrackingState() == TrackingState.TRACKING) {
-                updateGVRAnchorObject(arFrame.getTimestamp(), viewmtx);
-            } else {
-                removeGVRAnchorObject();
-            }*/
-        }
-
-        /*private void createGVRAnchorObject(long nanotime, float[] viewmtx) {
-            for (Plane plane : mARSession.getAllTrackables(Plane.class)) {
-                if (plane.getType() == com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING
-                        && plane.getTrackingState() == TrackingState.TRACKING) {
-
-                    mARAnchor = mARSession.createAnchor(plane.getCenterPose());
-
-                    /* GVR Anchor */
-                  /*  GVRTexture texture = mGvrContext.getAssetLoader().loadTexture(
-                            new GVRAndroidResource(mGvrContext, R.drawable.gearvr_logo));
-
-                    mAnchorObject = new GVRCubeSceneObject(mGvrContext, true, new Vector3f(0.2f, 0.01f, 0.2f));
-                    mAnchorObject.getRenderData().getMaterial().setMainTexture(texture);
-
-                    updateGVRAnchorObject(nanotime, viewmtx);
-
-                    mScene.addSceneObject(mAnchorObject);
-
-                    android.util.Log.d(TAG, "New anchor at " + mARAnchor.getPose().toString());
-                    break;
+            for (ARCoreSession.AnchorPair anchorPair : mAnchorsPair) {
+                if (anchorPair.getAnchorAR().getTrackingState() == TrackingState.TRACKING) {
+                    updateGVRAnchorObject(arFrame.getTimestamp(), viewmtx, anchorPair);
                 }
             }
-        }*/
 
-        int count  = 0;
+        }
 
-        private void updateGVRAnchorObject(long nanotime, float[] viewmtx) {
+        private void updateGVRAnchorObject(long nanotime, float[] viewmtx, ARCoreSession
+                .AnchorPair anchorPair){
             float[] modelmtx = new float[16];
             float[] modelview = new float[16];
 
 
-            mARAnchor.getPose().toMatrix(modelmtx, 0);
+            anchorPair.getAnchorAR().getPose().toMatrix(modelmtx, 0);
 
             Matrix.multiplyMM(modelview, 0, viewmtx, 0, modelmtx, 0);
 
-            mFrameManager.updateVRObject(nanotime, mAnchorObject.getTransform(), modelview);
+            mFrameManager.updateVRObject(nanotime, modelview, anchorPair.getAnchorGVRF());
         }
 
-        private void removeGVRAnchorObject() {
-            mScene.removeSceneObject(mAnchorObject);
-            mAnchorObject = null;
-            mARAnchor = null;
-        }
     }
 
     private static class GVRFrameManager implements GVRDrawFrameListener {
@@ -379,13 +350,13 @@ public class ARCoreStatesManager {
             }
         }
 
-        public void updateVRObject(long nanotime, GVRTransform trans, float[] modelview) {
+        public void updateVRObject(long nanotime, float[] modelview, GVRAnchor gvrAnchor) {
             GVRFramePose framePose = mVRFramePosePool.get(nanotime);
 
             if (framePose != null) {
                 float[] transm = new float[16];
                 Matrix.multiplyMM(transm, 0, framePose.matrix, 0, modelview, 0);
-                trans.setModelMatrix(transm);
+                gvrAnchor.setModelMatrix(transm);
             }
         }
 

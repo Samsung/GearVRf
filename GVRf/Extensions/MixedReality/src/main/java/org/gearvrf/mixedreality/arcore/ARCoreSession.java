@@ -51,6 +51,7 @@ public class ARCoreSession extends MRCommon {
     private int mWidthPx;
     private int mHeightPx;
 
+    private ArrayList<AnchorPair> mAnchorsPair = new ArrayList<>();
 
     public ARCoreSession(GVRContext gvrContext) {
         super(gvrContext);
@@ -122,7 +123,7 @@ public class ARCoreSession extends MRCommon {
 
         mSession.setDisplayGeometry(mDisplayRotation , mWidthPx, mHeightPx);
 
-        mArManager = new ARCoreStatesManager(mGvrContext, mSession);
+        mArManager = new ARCoreStatesManager(mGvrContext, mSession, mAnchorsPair);
 
         mArManager.start();
 
@@ -237,7 +238,28 @@ public class ARCoreSession extends MRCommon {
         Anchor anchor = mSession.createAnchor(p);
         anchor.getPose().toMatrix(modelMatrix, 0);
         gvrAnchor.setModelMatrix(modelMatrix);
+
+        mAnchorsPair.add(new AnchorPair(anchor, gvrAnchor));
+
         return  gvrAnchor;
 
+    }
+
+    public class AnchorPair {
+        private Anchor anchorAR;
+        private GVRAnchor anchorGVRF;
+
+        public AnchorPair (Anchor anchorAR, GVRAnchor anchorGVRF) {
+            this.anchorAR = anchorAR;
+            this.anchorGVRF = anchorGVRF;
+        }
+
+        public Anchor getAnchorAR() {
+            return this.anchorAR;
+        }
+
+        public GVRAnchor getAnchorGVRF() {
+            return this.anchorGVRF;
+        }
     }
 }
