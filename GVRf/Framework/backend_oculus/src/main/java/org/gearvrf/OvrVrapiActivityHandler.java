@@ -23,10 +23,7 @@ import android.opengl.GLSurfaceView.EGLConfigChooser;
 import android.opengl.GLSurfaceView.EGLContextFactory;
 import android.opengl.GLSurfaceView.EGLWindowSurfaceFactory;
 import android.opengl.GLSurfaceView.Renderer;
-import android.os.HandlerThread;
 import android.util.DisplayMetrics;
-import android.view.Choreographer;
-import android.view.Choreographer.FrameCallback;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -34,7 +31,6 @@ import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -87,8 +83,6 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onPause() {
-        stopChoreographerThread();
-
         if (null != mSurfaceView) {
             final CountDownLatch cdl = new CountDownLatch(1);
             mSurfaceView.onPause();
@@ -182,7 +176,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         mSurfaceView.setEGLConfigChooser(mConfigChooser);
         mSurfaceView.setEGLWindowSurfaceFactory(mWindowSurfaceFactory);
         mSurfaceView.setRenderer(mRenderer);
-        mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
         mActivity.setContentView(mSurfaceView);
     }
@@ -252,7 +246,6 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
             }
 
             final int[] configAttribs = new int[16];
-            Arrays.fill(configAttribs, EGL10.EGL_NONE);
             int counter = 0;
 
             configAttribs[counter++] = EGL10.EGL_ALPHA_SIZE;
@@ -333,46 +326,6 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         }
     };
 
-    private final FrameCallback mFrameCallback = new FrameCallback() {
-        @Override
-        public void doFrame(final long frameTimeNanos) {
-            mSurfaceView.requestRender();
-            Choreographer.getInstance().postFrameCallback(this);
-        }
-    };
-
-    private HandlerThread mChoreographerThread;
-
-    private final void startChoreographerThreadIfNotStarted() {
-        if (null == mChoreographerThread) {
-            mChoreographerThread = new HandlerThread(
-                    "gvrf-choreographer-" + Integer.toHexString(hashCode())) {
-                @Override
-                protected void onLooperPrepared() {
-                    // Force callbacks from the Choreographer to happen off the
-                    // UI thread.
-                    Choreographer.getInstance().removeFrameCallback(mFrameCallback);
-                    Choreographer.getInstance().postFrameCallback(mFrameCallback);
-                }
-            };
-            mChoreographerThread.start();
-        }
-    }
-
-    private final void stopChoreographerThread() {
-        if (null != mChoreographerThread) {
-            Choreographer.getInstance().removeFrameCallback(mFrameCallback);
-            mChoreographerThread.quitSafely();
-            try {
-                mChoreographerThread.join();
-                Log.i(TAG, "stopChoreographerThread done");
-            } catch (final Exception ignored) {
-            } finally {
-                mChoreographerThread = null;
-            }
-        }
-    }
-
     private void destroySurfaceForTimeWarp() {
         final EGL10 egl = (EGL10) EGLContext.getEGL();
         final EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -420,7 +373,6 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
             nativeOnSurfaceChanged(mPtr, mSurfaceView.getHolder().getSurface());
 
-            startChoreographerThreadIfNotStarted();
             mViewManager.onSurfaceChanged(width, height);
             mViewManager.createSwapChain();
         }
