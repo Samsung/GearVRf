@@ -49,6 +49,7 @@ class Light;
 class BitmapImage;
 class CubemapImage;
 class CompressedImage;
+class VkRenderTextureOnScreen;
 
 class VulkanRenderer: public Renderer {
     friend class Renderer;
@@ -59,6 +60,11 @@ protected:
     }
 
 public:
+
+    //maintaining this to keep a track of all the textures created using monoscopic backend.
+    //the attachments to these FBOs are cleared up when we recreate swapchains in vulkanCore.
+    std::vector<VkRenderTextureOnScreen*> mOnScreenTextures;
+
     VkFence createFenceObject(){
         return vulkanCore_->createFenceObject();
     }

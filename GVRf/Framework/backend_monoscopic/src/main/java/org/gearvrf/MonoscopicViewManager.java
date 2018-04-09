@@ -246,6 +246,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                     mRotationSensor.onResume();
                 }
 
+
+                //either this or onPause is called first when pausing the application. Making sure that
+                //the draw thread terminates in both.
                 @Override
                 public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                     //
@@ -282,14 +285,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
             }
             for(int i = 0; i < 3; i++) {
-
-                if(NativeVulkanCore.useVulkanInstance()) {
-                    NativeHybridObject.delete(mRenderTarget[i].getTexture().getNative());
-                    NativeHybridObject.delete(mRenderTarget[i].getNative());
-                    GVRContext context = mActivity.getGVRContext();
-                    context.removeReference(mRenderTarget[i].getNative());
-                    context.removeReference(mRenderTarget[i].getTexture().getNative());
-                }
                 mRenderTarget[i] = null;
             }
         }
@@ -337,7 +332,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
      * The final call you receive before your activity is destroyed.
      */
     void onDestroy() {
-        Log.v(TAG, "onDestroy");
+        Log.e("sushant", "onDestroy");
         mRotationSensor.onDestroy();
         super.onDestroy();
     }

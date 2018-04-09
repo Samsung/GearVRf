@@ -20,8 +20,11 @@ namespace gvr {
 
     VKFramebuffer::~VKFramebuffer() {
         LOGE("sushant: fbo destructor begin");
-        delete mAttachments[COLOR_IMAGE];
-        delete mAttachments[DEPTH_IMAGE];
+        if(mAttachments[COLOR_IMAGE]!= 0)
+            delete mAttachments[COLOR_IMAGE];
+
+        if(mAttachments[DEPTH_IMAGE]!= 0)
+            delete mAttachments[DEPTH_IMAGE];
         LOGE("sushant: framebuffer destructor");
 
         cleanup();

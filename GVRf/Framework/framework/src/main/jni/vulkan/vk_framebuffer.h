@@ -30,6 +30,10 @@ public:
 
     ~VKFramebuffer();
 
+    vkImageBase ** getAttachments(){
+        return mAttachments;
+    }
+
     void cleanup();
 
     void setImage(ImageType type, vkImageBase* image){
