@@ -107,7 +107,6 @@ Component* SceneObject::detachComponent(long long type)
 
 Component* SceneObject::getComponent(long long type) const {
     for (auto it = components_.begin(); it != components_.end(); ++it) {
-        Component* temp = (*it);
         if ((*it)->getType() == type)
             return *it;
     }
