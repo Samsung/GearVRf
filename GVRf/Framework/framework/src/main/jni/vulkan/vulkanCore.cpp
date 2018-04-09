@@ -1423,7 +1423,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         //sufficient to clear up the vector so that there are no dangling pointers. The actual memory has
-        //has references to it from java and will be cleared up by the gc.
+        //has references to it from java and will be cleared up by close() method in GVRReference.
         vk_renderer->mOnScreenTextures.clear();
 
 
