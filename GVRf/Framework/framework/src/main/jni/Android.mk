@@ -31,11 +31,6 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjav8.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_STATIC_LIBRARIES := shaderc
-
-include $(CLEAR_VARS)
-
-include $(CLEAR_VARS)
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
@@ -106,17 +101,12 @@ LOCAL_ARM_NEON  := true
 endif
 
 ## CPP flags are already defined in cflags.mk.
-#LOCAL_CPPFLAGS += -fexceptions -frtti -std=c++11 -D__GXX_EXPERIMENTAL_CXX0X__ -mhard-float -D_NDK_MATH_NO_SOFTFP=1
-#for NO_RTTI and softFP
 LOCAL_CPPFLAGS += -fexceptions -std=c++11 -D__GXX_EXPERIMENTAL_CXX0X__
 ifdef ARM64
 LOCAL_CPPFLAGS += -DARM64
 endif
 LOCAL_CFLAGS := -Wattributes
 
-# include ld libraries defined in oculus's cflags.mk
-#LOCAL_LDLIBS += -ljnigraphics -lm_hard
-#softFP
 LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 
 include $(BUILD_SHARED_LIBRARY)
