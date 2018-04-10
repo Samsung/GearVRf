@@ -51,7 +51,7 @@ public class ARCoreSession extends MRCommon {
     private int mWidthPx;
     private int mHeightPx;
 
-    private ArrayList<AnchorPair> mAnchorsPair = new ArrayList<>();
+    private ArrayList<ARCoreAnchor> mAnchors = new ArrayList<>();
 
     public ARCoreSession(GVRContext gvrContext) {
         super(gvrContext);
@@ -123,7 +123,7 @@ public class ARCoreSession extends MRCommon {
 
         mSession.setDisplayGeometry(mDisplayRotation , mWidthPx, mHeightPx);
 
-        mArManager = new ARCoreStatesManager(mGvrContext, mSession, mAnchorsPair);
+        mArManager = new ARCoreStatesManager(mGvrContext, mSession, mAnchors);
 
         mArManager.start();
 
@@ -200,14 +200,23 @@ public class ARCoreSession extends MRCommon {
     @Override
     public ArrayList<GVRPlane> onGetAllPlanes() {
         ArrayList<GVRPlane> planes = new ArrayList<>();
-        mSession.update();
-        for (Plane p: mSession.getAllTrackables(Plane.class)) {
-            GVRPlane gvrPlane = new GVRPlane();
-            float poseMatrix[] = new float[16];
-            p.getCenterPose().toMatrix(poseMatrix, 0);
-            gvrPlane.setCenter(poseMatrix);
+
+        try {
+            mSession.update();
+            for (Plane p : mSession.getAllTrackables(Plane.class)) {
+                GVRPlane gvrPlane = new GVRPlane();
+                float poseMatrix[] = new float[16];
+                p.getCenterPose().toMatrix(poseMatrix, 0);
+                gvrPlane.setCenter(poseMatrix);
+                gvrPlane.setWidth(p.getExtentX());
+                gvrPlane.setHeight(p.getExtentZ());
 //            gvrPlane.setTrackingState(p.getTrackingState());
-            planes.add(gvrPlane);
+                planes.add(gvrPlane);
+            }
+        }
+        catch (Throwable t) {
+            // Avoid crashing the application due to unhandled exceptions.
+            Log.e(TAG, "Exception on the OpenGL thread", t);
         }
         return planes;
     }
@@ -219,8 +228,7 @@ public class ARCoreSession extends MRCommon {
         float[] vectorRotaion = new float[4];
         Quaternionf rotation = new Quaternionf();
         float[] modelMatrix = new float[16];
-        GVRAnchor gvrAnchor = new GVRAnchor(mGvrContext);
-
+        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext);
 
         poseMatrix.getTranslation(translation);
         vectorTranslation[0] = translation.x;
@@ -238,28 +246,11 @@ public class ARCoreSession extends MRCommon {
         Anchor anchor = mSession.createAnchor(p);
         anchor.getPose().toMatrix(modelMatrix, 0);
         gvrAnchor.setModelMatrix(modelMatrix);
+        gvrAnchor.setAnchorAR(anchor);
 
-        mAnchorsPair.add(new AnchorPair(anchor, gvrAnchor));
+        mAnchors.add(gvrAnchor);
 
         return  gvrAnchor;
 
-    }
-
-    public class AnchorPair {
-        private Anchor anchorAR;
-        private GVRAnchor anchorGVRF;
-
-        public AnchorPair (Anchor anchorAR, GVRAnchor anchorGVRF) {
-            this.anchorAR = anchorAR;
-            this.anchorGVRF = anchorGVRF;
-        }
-
-        public Anchor getAnchorAR() {
-            return this.anchorAR;
-        }
-
-        public GVRAnchor getAnchorGVRF() {
-            return this.anchorGVRF;
-        }
     }
 }

@@ -1,27 +1,21 @@
 package org.gearvrf.mixedreality;
 
+import android.renderscript.Matrix4f;
+
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
-/**
- * Created by diego.a on 04/04/18.
- */
+public abstract class GVRAnchor extends GVRBehavior {
+    protected GVRSceneObject mOwner;
+    protected float[] modelMatrix = new float[16];
 
-public class GVRAnchor extends GVRBehavior {
-    GVRSceneObject mOwner;
-    float[] modelMatrix = new float[16];
-
-    public GVRAnchor(GVRContext gvrContext) {
+    protected GVRAnchor(GVRContext gvrContext) {
         super(gvrContext);
     }
 
     public void setModelMatrix(float[] modelMatrix) {
         this.modelMatrix = modelMatrix;
-    }
-
-    public float[] getModelMatrix() {
-        return modelMatrix;
     }
 
     @Override

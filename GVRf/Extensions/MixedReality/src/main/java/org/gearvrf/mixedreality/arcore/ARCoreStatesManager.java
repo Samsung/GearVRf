@@ -2,6 +2,7 @@ package org.gearvrf.mixedreality.arcore;
 
 import android.opengl.Matrix;
 import android.os.SystemClock;
+import android.util.Log;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
@@ -35,12 +36,11 @@ public class ARCoreStatesManager {
     private final ARCoreStatesManager.ARCoreState mResumeState;
     private final ARCoreStatesManager.ARCoreState mTrackingState;
 
-    public ARCoreStatesManager(GVRContext gvrContext, Session arSession,  ArrayList<ARCoreSession
-            .AnchorPair> anchorsPair) {
+    public ARCoreStatesManager(GVRContext gvrContext, Session arSession,  ArrayList<ARCoreAnchor> anchors) {
         mStartState = new ARCoreStatesManager.OnStartState(gvrContext, arSession, gvrContext.getMainScene());
         mResumeState = new ARCoreStatesManager.OnResumeState(gvrContext, arSession, gvrContext.getMainScene());
         mTrackingState = new ARCoreStatesManager.OnTrackingState(gvrContext, arSession,
-                gvrContext.getMainScene(), anchorsPair);
+                gvrContext.getMainScene(), anchors);
 
             /* [start] -> [resume] -> ([tracking] | [finish]) -> [resume] */
 
@@ -268,12 +268,12 @@ public class ARCoreStatesManager {
     }
 
     private static class OnTrackingState extends ARCoreState {
-        private ArrayList<ARCoreSession.AnchorPair> mAnchorsPair = new ArrayList<>();
+        private ArrayList<ARCoreAnchor> mAnchors = new ArrayList<>();
 
         OnTrackingState(GVRContext gvrContext, Session arSession, GVRScene scene,
-                        ArrayList<ARCoreSession.AnchorPair> anchorsPair) {
+                        ArrayList<ARCoreAnchor> anchors) {
             super(gvrContext, arSession, scene);
-            mAnchorsPair = anchorsPair;
+            mAnchors = anchors;
         }
 
         @Override
@@ -311,25 +311,27 @@ public class ARCoreStatesManager {
             float[] viewmtx = new float[16];
             arCamera.getViewMatrix(viewmtx, 0);
 
-            for (ARCoreSession.AnchorPair anchorPair : mAnchorsPair) {
-                if (anchorPair.getAnchorAR().getTrackingState() == TrackingState.TRACKING) {
-                    updateGVRAnchorObject(arFrame.getTimestamp(), viewmtx, anchorPair);
+
+
+            for (ARCoreAnchor anchor : mAnchors) {
+                if (anchor.getAnchorAR().getTrackingState() == TrackingState.TRACKING) {
+                    updateGVRAnchorObject(arFrame.getTimestamp(), viewmtx, anchor);
                 }
             }
 
+
         }
 
-        private void updateGVRAnchorObject(long nanotime, float[] viewmtx, ARCoreSession
-                .AnchorPair anchorPair){
+        private void updateGVRAnchorObject(long nanotime, float[] viewmtx, ARCoreAnchor anchor){
             float[] modelmtx = new float[16];
             float[] modelview = new float[16];
 
 
-            anchorPair.getAnchorAR().getPose().toMatrix(modelmtx, 0);
+            anchor.getAnchorAR().getPose().toMatrix(modelmtx, 0);
 
             Matrix.multiplyMM(modelview, 0, viewmtx, 0, modelmtx, 0);
 
-            mFrameManager.updateVRObject(nanotime, modelview, anchorPair.getAnchorGVRF());
+            mFrameManager.updateVRObject(nanotime, modelview, anchor);
         }
 
     }
