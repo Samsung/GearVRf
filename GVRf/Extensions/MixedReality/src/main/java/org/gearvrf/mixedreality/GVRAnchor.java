@@ -9,14 +9,15 @@ import org.gearvrf.GVRSceneObject;
 public abstract class GVRAnchor extends GVRBehavior {
     protected GVRSceneObject mOwner;
     protected float[] modelMatrix = new float[16];
+    private GVRTrackingState mTrackingState;
 
-    protected GVRAnchor(GVRContext gvrContext) {
-        super(gvrContext);
-    }
+    protected GVRAnchor(GVRContext gvrContext) { super(gvrContext); }
 
-    public void setModelMatrix(float[] modelMatrix) {
-        this.modelMatrix = modelMatrix;
-    }
+    public void setModelMatrix(float[] modelMatrix) { this.modelMatrix = modelMatrix; }
+
+    public void setTrackingState(GVRTrackingState state) { this.mTrackingState = state; }
+
+    public GVRTrackingState getTrackingState() { return this.mTrackingState; }
 
     @Override
     public void onAttach(GVRSceneObject newOwner) {

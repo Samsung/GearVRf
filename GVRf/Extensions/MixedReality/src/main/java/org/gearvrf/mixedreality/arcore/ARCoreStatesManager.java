@@ -23,6 +23,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRTrackingState;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -302,6 +303,7 @@ public class ARCoreStatesManager {
 
             // If not tracking, don't draw 3d objects.
             if (arCamera.getTrackingState() != TrackingState.TRACKING) {
+                updateTrackingState();
                 onExit();
                 return;
             }
@@ -311,15 +313,22 @@ public class ARCoreStatesManager {
             float[] viewmtx = new float[16];
             arCamera.getViewMatrix(viewmtx, 0);
 
-
-
             for (ARCoreAnchor anchor : mAnchors) {
                 if (anchor.getAnchorAR().getTrackingState() == TrackingState.TRACKING) {
+                    anchor.setTrackingState(GVRTrackingState.TRACKING);
                     updateGVRAnchorObject(arFrame.getTimestamp(), viewmtx, anchor);
+                } else if (anchor.getAnchorAR().getTrackingState() == TrackingState.PAUSED) {
+                    anchor.setTrackingState(GVRTrackingState.PAUSED);
+                } else {
+                    anchor.setTrackingState(GVRTrackingState.STOPPED);
                 }
             }
+        }
 
-
+        private void updateTrackingState() {
+            for (ARCoreAnchor anchor : mAnchors) {
+                anchor.setTrackingState(GVRTrackingState.PAUSED);
+            }
         }
 
         private void updateGVRAnchorObject(long nanotime, float[] viewmtx, ARCoreAnchor anchor){

@@ -208,8 +208,8 @@ public class ARCoreSession extends MRCommon {
                 float poseMatrix[] = new float[16];
                 p.getCenterPose().toMatrix(poseMatrix, 0);
                 gvrPlane.setCenter(poseMatrix);
-                gvrPlane.setWidth(p.getExtentX());
-                gvrPlane.setHeight(p.getExtentZ());
+                //gvrPlane.setWidth(p.getExtentX());
+                //gvrPlane.setHeight(p.getExtentZ());
 //            gvrPlane.setTrackingState(p.getTrackingState());
                 planes.add(gvrPlane);
             }
