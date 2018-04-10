@@ -70,9 +70,7 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
-    public ArrayList<GVRPlane> getAllPlanes() {
-        return mSession.getAllPlanes();
-    }
+    public ArrayList<GVRPlane> getAllPlanes() { return mSession.getAllPlanes(); }
 
     @Override
     public GVRAnchor createAnchor(Matrix4f poseMatrix) {

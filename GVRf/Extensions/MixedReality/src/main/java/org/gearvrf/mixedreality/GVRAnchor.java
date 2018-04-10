@@ -7,11 +7,14 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
 public abstract class GVRAnchor extends GVRBehavior {
+    static private long TYPE_ANCHOR = newComponentType(GVRAnchor.class);
     protected GVRSceneObject mOwner;
     protected float[] modelMatrix = new float[16];
     private GVRTrackingState mTrackingState;
 
     protected GVRAnchor(GVRContext gvrContext) { super(gvrContext); }
+
+    static public long getComponentType() { return TYPE_ANCHOR; }
 
     public void setModelMatrix(float[] modelMatrix) { this.modelMatrix = modelMatrix; }
 
@@ -26,11 +29,18 @@ public abstract class GVRAnchor extends GVRBehavior {
     }
 
     @Override
+    public void onDetach(GVRSceneObject oldOwner) {
+        mOwner = null;
+        onDetachAnchor();
+    }
+
+    @Override
     public void onDrawFrame(float frameTime) {
         super.onDrawFrame(frameTime);
         if (mOwner != null) {
             mOwner.getTransform().setModelMatrix(modelMatrix);
         }
-
     }
+
+    protected abstract void onDetachAnchor();
 }

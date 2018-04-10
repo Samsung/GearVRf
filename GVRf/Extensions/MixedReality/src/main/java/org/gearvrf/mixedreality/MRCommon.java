@@ -66,6 +66,8 @@ public abstract class MRCommon implements IMRCommon {
 
     public abstract GVRAnchor onCreateAnchor(Matrix4f poseMatrix);
 
+    protected abstract void onDetachAnchor(GVRAnchor anchor);
+
     public abstract ArrayList<GVRPlane> onGetAllPlanes();
 
 }

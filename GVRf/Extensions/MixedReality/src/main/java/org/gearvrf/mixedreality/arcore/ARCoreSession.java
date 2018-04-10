@@ -228,7 +228,7 @@ public class ARCoreSession extends MRCommon {
         float[] vectorRotaion = new float[4];
         Quaternionf rotation = new Quaternionf();
         float[] modelMatrix = new float[16];
-        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext);
+        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext, this);
 
         poseMatrix.getTranslation(translation);
         vectorTranslation[0] = translation.x;
@@ -251,6 +251,16 @@ public class ARCoreSession extends MRCommon {
         mAnchors.add(gvrAnchor);
 
         return  gvrAnchor;
+    }
 
+    @Override
+    protected void onDetachAnchor(GVRAnchor anchor) {
+        for (ARCoreAnchor arCoreAnchor : mAnchors) {
+            android.util.Log.e(TAG, "Anchor removed from session");
+            if (arCoreAnchor.equals(anchor)) {
+                mAnchors.remove(arCoreAnchor);
+                break;
+            }
+        }
     }
 }
