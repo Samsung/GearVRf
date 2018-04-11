@@ -146,6 +146,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
     @Override
     public void onSetScript() {
         mSurfaceView = new GLSurfaceView(mActivity);
+        mSurfaceView.setZOrderOnTop(true);
 
         final DisplayMetrics metrics = new DisplayMetrics();
         mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
