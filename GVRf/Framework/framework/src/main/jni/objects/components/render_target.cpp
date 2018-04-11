@@ -78,6 +78,7 @@ RenderTarget::RenderTarget(RenderTexture* tex, const RenderTarget* source)
     mRenderState.shadow_map = nullptr;
     mRenderState.material_override = NULL;
     mRenderState.is_multiview = false;
+    mRenderState.sampleCount = mRenderTexture->getSampleCount();
 }
 /**
  * Constructs an empty render target without a render texture.
@@ -114,6 +115,7 @@ RenderTarget::~RenderTarget()
 void RenderTarget::setTexture(RenderTexture* texture)
 {
     mRenderTexture = texture;
+    mRenderState.sampleCount = mRenderTexture->getSampleCount();
 }
 
 }
