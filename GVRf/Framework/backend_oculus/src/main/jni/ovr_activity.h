@@ -42,14 +42,14 @@ namespace gvr {
 
     private:
         JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
-
         jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail
 
         jmethodID onDrawEyeMethodId = nullptr;
         jmethodID onBeforeDrawEyesMethodId = nullptr;
         jmethodID updateSensoredSceneMethodId = nullptr;
 
-        jobject activity_;
+        jobject activity_ = nullptr;
+        jobject jsurface_ = nullptr;
 
         ConfigurationHelper configurationHelper_;
 

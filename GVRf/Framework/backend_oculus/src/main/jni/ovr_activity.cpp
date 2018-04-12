@@ -52,6 +52,7 @@ namespace gvr {
         LOGV("GVRActivity::~GVRActivity");
         envMainThread_->DeleteGlobalRef(activityClass_);
         envMainThread_->DeleteGlobalRef(activity_);
+        envMainThread_->DeleteGlobalRef(jsurface_);
     }
 
     int GVRActivity::initializeVrApi() {
@@ -134,6 +135,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv &env, jobject jsurface) {
     int maxSamples = MSAA::getMaxSampleCount();
     LOGV("GVRActivity::onSurfaceChanged");
     initializeOculusJava(env, oculusJavaGlThread_);
+    jsurface_ = env.NewGlobalRef(jsurface);
 
     if (nullptr == oculusMobile_) {
         ovrModeParms parms = vrapi_DefaultModeParms(&oculusJavaGlThread_);
@@ -149,7 +151,7 @@ void GVRActivity::onSurfaceChanged(JNIEnv &env, jobject jsurface) {
             parms.Flags |= VRAPI_MODE_FLAG_NATIVE_WINDOW;
             //@todo consider VRAPI_MODE_FLAG_CREATE_CONTEXT_NO_ERROR as a release-build optimization
 
-            ANativeWindow *nativeWindow = ANativeWindow_fromSurface(&env, jsurface);
+            ANativeWindow *nativeWindow = ANativeWindow_fromSurface(&env, jsurface_);
             if (nullptr == nativeWindow) {
                 FAIL("No native window!");
             }
