@@ -1196,6 +1196,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
     void VulkanCore::renderToOculus(RenderTarget* renderTarget){
         VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
+
+        if(!renderTexture) {
+            LOGE("VulkanCore renderToOculus: rendertexture null");
+            return;
+        }
         renderTexture->accessRenderResult(&oculusTexData);
         renderTexture->unmapDeviceMemory();
     }
