@@ -17,11 +17,23 @@
 #ifndef FRAMEWORK_VK_DEVICE_COMPONENT_H
 #define FRAMEWORK_VK_DEVICE_COMPONENT_H
 
+
+/* All classes which use resources whose creation requires the logical device
+ * should extend from this. This is so that when the device is deleted, all the resources
+ * associated with this device are also destroyed with it.
+ *
+ */
+
 namespace gvr {
     class VKDeviceComponent {
 
     public:
         VKDeviceComponent();
+
+        /*
+         * All classes using vulkan resources must override this method
+         * in order to clear up the resources when the device is deleted.
+         */
         virtual void cleanup() = 0;
         virtual  ~VKDeviceComponent();
 

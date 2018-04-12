@@ -102,7 +102,8 @@ void RenderTarget::cullFromCamera(Scene* scene, jobject javaSceneObject, Camera*
     renderer->state_sort(mRenderDataVector.get());
 }
 
-RenderTarget::~RenderTarget() {
+RenderTarget::~RenderTarget()
+{
 }
 
 /**

@@ -108,7 +108,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
      *            {@link GVRMain} which describes
      */
     MonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
-                          MonoscopicXMLParser xmlParser) {
+                            MonoscopicXMLParser xmlParser) {
         super(gvrActivity, gvrMain);
 
         // Apply view manager preferences
@@ -203,7 +203,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                 @Override
                 public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                    Log.d("vulkan", "surfaceCreated");
+                    Log.d("Vulkan", "surfaceCreated");
                     workerObj = new Worker();
                     vulkanDrawThread = new Thread(workerObj, "vulkanThread");
                     if(!initialized) {
@@ -222,9 +222,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                         currentThread.setPriority(Thread.MAX_PRIORITY);
 
                         if (vulkanCoreObj != 0) {
-                            Log.d("vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
+                            Log.i("Vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
                         } else {
-                            Log.d("vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
+                            Log.i("Vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
                         }
 
                         initialized = true;
@@ -236,7 +236,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
                 @Override
                 public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-                    Log.d("vulkan", "surfaceChanged");
+                    Log.d("Vulkan", "surfaceChanged");
                     if(!vulkanDrawThread.isAlive())
                         vulkanDrawThread.start();
                     activeFlag = true;
@@ -297,14 +297,14 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
      */
     void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
+        Log.v(TAG, "onResume");
     }
 
     /**
      * The final call you receive before your activity is destroyed.
      */
     void onDestroy() {
-        Log.d(TAG, "onDestroy");
+        Log.v(TAG, "onDestroy");
         mRotationSensor.onDestroy();
         super.onDestroy();
     }

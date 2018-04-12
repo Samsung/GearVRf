@@ -1338,6 +1338,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     VulkanCore::~VulkanCore() {
 
+        //destroy all the resources associated with the current device.
         for (VKDeviceComponent* component: mDeviceComponents)
             component->cleanup();
 
@@ -1354,7 +1355,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
-
     }
 
     void VulkanCore::initVulkanCore() {
@@ -1377,8 +1377,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     void VulkanCore::recreateSwapChain(ANativeWindow *newNativeWindow){
 
-        LOGE("sushant: recreate swapchain");
-
         vkDeviceWaitIdle(getDevice());
 
         if(m_surface) {
@@ -1388,15 +1386,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
 
         for (size_t i = 0; i < mSwapchainImageCount; i++) {
-            LOGE("sushant: destroying imageview %llu", mSwapchainBuffers[i].view);
             vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
             mSwapchainBuffers[i].view = VK_NULL_HANDLE;
 
-            LOGE("sushant: destroying image %llu", mSwapchainBuffers[i].image);
             vkDestroyImage(m_device, mSwapchainBuffers[i].image, nullptr);
             mSwapchainBuffers[i].image = VK_NULL_HANDLE;
-
-
         }
 
         delete mSwapchainBuffers;
@@ -1431,9 +1425,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         mSwapchainCurrentIdx = 0;
         swapChainImageIndex = 0;
-
-        //should the surface be deleted (or does android deletes it after surfaceDestroyed() )?
-        //delete m_androidWindow;
 
         m_androidWindow = newNativeWindow;
 
