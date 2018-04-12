@@ -249,10 +249,12 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                 @Override
                 public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                     activeFlag = false;
-                    try {
-                        vulkanDrawThread.join();
-                    } catch (InterruptedException e) {
-                        Log.d("vulkan: surfaceview surfaceDestroyed", "draw thread not terminated");
+                    if (vulkanDrawThread != null) {
+                        try {
+                            vulkanDrawThread.join();
+                        } catch (InterruptedException e) {
+                            Log.d("vulkan: surfaceview surfaceDestroyed", "draw thread not terminated");
+                        }
                     }
                     Log.d("vulkan", "surfaceDestroyed");
                     mRotationSensor.onDestroy();
@@ -281,10 +283,13 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
         if(NativeVulkanCore.useVulkanInstance()) {
             activeFlag = false;
-            try {
-                vulkanDrawThread.join();
-            } catch (InterruptedException e) {
-                Log.e("vulkan: activity onPause:", "draw thread not terminated");
+
+            if (vulkanDrawThread != null){
+                try {
+                    vulkanDrawThread.join();
+                } catch (InterruptedException e) {
+                    Log.e("vulkan: activity onPause:", "draw thread not terminated");
+                }
             }
         }
         Log.d(TAG, "onPause");
