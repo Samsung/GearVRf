@@ -336,9 +336,6 @@ namespace gvr {
             imageViewCreateInfo.image = pSwapchainImages[i];
 
             VkResult err = vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &mSwapchainBuffers[i].view);
-            LOGE("sushant: swapchainImage %llu ", pSwapchainImages[i]);
-            LOGE("sushant: swapchainImageView %llu ", mSwapchainBuffers[i].view);
-
             GVR_VK_CHECK(!err);
         }
 
@@ -1059,8 +1056,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                              attachments.data(), mWidth, mHeight,
                                                              uint32_t(1)), nullptr,
                                   &mFramebuffer);
-
-        LOGE("sushant: created fbo %llu", mFramebuffer);
 
         GVR_VK_CHECK(!ret);
     }

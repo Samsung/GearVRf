@@ -56,7 +56,7 @@ public:
         setImage(image);
     }
 
-    virtual ~RenderTexture() { LOGE("sushant: renderTexture destructor");}
+    virtual ~RenderTexture() {}
     virtual int width() const { return getImage()->getWidth(); }
     virtual int height() const { return getImage()->getHeight(); }
     virtual unsigned int getFrameBufferId() const = 0;

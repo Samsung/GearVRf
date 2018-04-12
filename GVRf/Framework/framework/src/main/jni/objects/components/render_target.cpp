@@ -102,10 +102,7 @@ void RenderTarget::cullFromCamera(Scene* scene, jobject javaSceneObject, Camera*
     renderer->state_sort(mRenderDataVector.get());
 }
 
-RenderTarget::~RenderTarget()
-{
-    LOGE("sushant: renderTarget destructor");
-    //delete mRenderTexture;
+RenderTarget::~RenderTarget() {
 }
 
 /**
