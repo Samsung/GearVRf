@@ -31,6 +31,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
@@ -196,6 +197,7 @@ public class ARCoreSession extends MRCommon {
         showSnackbarMessage("Searching for surfaces...", false);
     }
 
+    protected Session getARSession() { return this.mSession; }
 
     @Override
     public ArrayList<GVRPlane> onGetAllPlanes() {
@@ -219,6 +221,12 @@ public class ARCoreSession extends MRCommon {
             Log.e(TAG, "Exception on the OpenGL thread", t);
         }
         return planes;
+    }
+
+    @Override
+    protected GVRLightEstimate onGetLightEstimate() {
+        ARLightEstimate lightEstimate = new ARLightEstimate(mGvrContext, this);
+        return lightEstimate;
     }
 
     @Override
@@ -263,4 +271,5 @@ public class ARCoreSession extends MRCommon {
             }
         }
     }
+
 }

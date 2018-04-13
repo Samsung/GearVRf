@@ -29,4 +29,6 @@ public interface IMRCommon {
     GVRAnchor createAnchor(Matrix4f poseMatrix);
 
     ArrayList<GVRPlane> getAllPlanes();
+
+    GVRLightEstimate getLightEstimate();
 }

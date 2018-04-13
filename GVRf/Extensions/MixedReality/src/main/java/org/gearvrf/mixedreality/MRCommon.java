@@ -58,6 +58,9 @@ public abstract class MRCommon implements IMRCommon {
         return onGetAllPlanes();
     }
 
+    @Override
+    public GVRLightEstimate getLightEstimate() { return onGetLightEstimate(); }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
@@ -70,4 +73,5 @@ public abstract class MRCommon implements IMRCommon {
 
     public abstract ArrayList<GVRPlane> onGetAllPlanes();
 
+    protected abstract GVRLightEstimate onGetLightEstimate();
 }
