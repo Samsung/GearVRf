@@ -15,6 +15,8 @@
 
 package org.gearvrf.scene_objects;
 
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.view.Surface;
@@ -22,12 +24,16 @@ import android.view.Surface;
 import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.IActivityEvents;
+import org.gearvrf.utility.Log;
 
 import java.lang.ref.WeakReference;
 
@@ -37,12 +43,37 @@ import java.lang.ref.WeakReference;
  */
 public class GVRVideoSceneObject extends GVRSceneObject {
     private volatile GVRVideo mVideo;
+    private GVRVideoSceneObjectPlayer gvrVideoSceneObjectPlayer = null;
 
     /** Video type constants, for use with {@link GVRVideoSceneObject} */
     public abstract class GVRVideoType {
         public static final int MONO = 0;
         public static final int HORIZONTAL_STEREO = 1;
         public static final int VERTICAL_STEREO = 2;
+    };
+
+    private IActivityEvents mActivityEventsListener = new GVREventListeners.ActivityEvents() {
+        @Override
+        public void onPause() {
+            gvrVideoSceneObjectPlayer.pause();
+        }
+
+        @Override
+        public void onResume() {
+            gvrVideoSceneObjectPlayer.start();
+        }
+
+        @Override
+        public void onSetMain(GVRMain main) { }
+
+        @Override
+        public void onWindowFocusChanged(boolean hasFocus) { }
+
+        @Override
+        public void onConfigurationChanged(Configuration config) { }
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {}
     };
 
     /**
@@ -138,6 +169,10 @@ public class GVRVideoSceneObject extends GVRSceneObject {
                                int videoType) {
         super(gvrContext, mesh);
         GVRShaderId materialType;
+
+        gvrVideoSceneObjectPlayer = mediaPlayer;
+        gvrContext.getActivity().getEventReceiver().addListener(mActivityEventsListener);
+
 
         switch (videoType) {
             case GVRVideoType.MONO:

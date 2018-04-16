@@ -15,6 +15,7 @@
 
 package org.gearvrf.x3d;
 
+import java.util.ArrayList;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRMaterial;
@@ -41,7 +42,12 @@ public class ShaderSettings
   private String nameAppearance = ""; // set if there is a DEF in Appearance
                                       // node
   private String nameMaterial = ""; // set if there is a DEF in Material node
+
+    private String nameMovieTexture = ""; // set if there is a DEF in MovieTexture node
+    private boolean movieTextureLoop = false;
+
   private String nameTextureTransform = ""; // set if there is a DEF in
+
   // TextureTransform node
 
   private SFVec2f textureCenter = new SFVec2f( 0, 0 );
@@ -70,6 +76,7 @@ public class ShaderSettings
 
 
   public GVRTexture texture = null;
+    public ArrayList<String> movieTextures = new ArrayList<String>();
 
   public String fragmentShaderLights = "";
   
@@ -80,6 +87,8 @@ public class ShaderSettings
 	material = m;
     nameAppearance = ""; // set if there is a DEF in Appearance node
     nameMaterial = ""; // set if there is a DEF in Material node
+      nameMovieTexture = "";
+        movieTextureLoop = false;
     nameTextureTransform = ""; // set if there is a DEF in TextureTransform
     // node
 
@@ -112,7 +121,11 @@ public class ShaderSettings
     }
 
     texture = null;
+
+      movieTextures.clear();
+
     textureMatrix = null;
+
   }
 
 
@@ -147,6 +160,26 @@ public class ShaderSettings
     return this.nameMaterial;
   }
 
+
+  public void setMovieTextureName(String name)
+  {
+    this.nameMovieTexture = name;
+  }
+
+  public String getMovieTextureName()
+  {
+    return this.nameMovieTexture;
+  }
+
+  public void setMovieTextureLoop(boolean movieTextureLoop)
+  {
+    this.movieTextureLoop = movieTextureLoop;
+  }
+
+  public boolean getMovieTextureLoop() {
+    return this.movieTextureLoop;
+  }
+
   public void setTextureTransformName(String name)
   {
     this.nameTextureTransform = name;
@@ -155,6 +188,7 @@ public class ShaderSettings
   public String getTextureTransformName()
   {
     return this.nameTextureTransform;
+
   }
 
   public void setDiffuseColor(float[] diffuseColor)
