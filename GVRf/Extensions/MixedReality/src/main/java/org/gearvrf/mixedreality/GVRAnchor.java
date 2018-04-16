@@ -1,7 +1,5 @@
 package org.gearvrf.mixedreality;
 
-import android.renderscript.Matrix4f;
-
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;

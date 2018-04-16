@@ -31,4 +31,6 @@ public interface IMRCommon {
     ArrayList<GVRPlane> getAllPlanes();
 
     GVRLightEstimate getLightEstimate();
+
+    ArrayList<GVRHitResult> hitTest(float[] hitLocation);
 }

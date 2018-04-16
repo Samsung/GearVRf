@@ -80,6 +80,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         return mSession.createAnchor(poseMatrix);
     }
 
+    @Override
+    public ArrayList<GVRHitResult> hitTest(float[] hitLocation) {
+        return mSession.hitTest(hitLocation);
+    }
+
     private class ActivityEventsHandler implements IActivityEvents {
         @Override
         public void onPause() {

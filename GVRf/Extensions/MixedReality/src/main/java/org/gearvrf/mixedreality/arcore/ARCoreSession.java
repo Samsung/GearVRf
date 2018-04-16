@@ -21,9 +21,11 @@ import android.view.Surface;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
+import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
+import com.google.ar.core.Trackable;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
@@ -32,6 +34,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import org.gearvrf.GVRContext;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRLightEstimate;
+import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
@@ -57,7 +60,7 @@ public class ARCoreSession extends MRCommon {
     public ARCoreSession(GVRContext gvrContext) {
         super(gvrContext);
         mSession = null;
-        setDisplayGeometry(Surface.ROTATION_90, 1280, 720);
+        setDisplayGeometry(Surface.ROTATION_90, 160, 90);
     }
 
     @Override
@@ -124,9 +127,11 @@ public class ARCoreSession extends MRCommon {
 
         mSession.setDisplayGeometry(mDisplayRotation , mWidthPx, mHeightPx);
 
-        mArManager = new ARCoreStatesManager(mGvrContext, mSession, mAnchors);
+        mArManager = new ARCoreStatesManager();
 
-        mArManager.start();
+        mArManager.setARCoreSession(mSession);
+
+        mArManager.start(mGvrContext.getActivity(), mGvrContext);
 
     }
 
@@ -199,6 +204,17 @@ public class ARCoreSession extends MRCommon {
 
     protected Session getARSession() { return this.mSession; }
 
+
+
+
+
+
+
+
+
+
+
+
     @Override
     public ArrayList<GVRPlane> onGetAllPlanes() {
         ArrayList<GVRPlane> planes = new ArrayList<>();
@@ -206,7 +222,7 @@ public class ARCoreSession extends MRCommon {
         try {
             mSession.update();
             for (Plane p : mSession.getAllTrackables(Plane.class)) {
-                GVRPlane gvrPlane = new GVRPlane();
+                ARCorePlane gvrPlane = new ARCorePlane(mGvrContext);
                 float poseMatrix[] = new float[16];
                 p.getCenterPose().toMatrix(poseMatrix, 0);
                 gvrPlane.setCenter(poseMatrix);
@@ -259,6 +275,29 @@ public class ARCoreSession extends MRCommon {
         mAnchors.add(gvrAnchor);
 
         return  gvrAnchor;
+    }
+
+    @Override
+    protected ArrayList<GVRHitResult> onHitTest(float[] hitLocation) {
+        ArrayList<GVRHitResult> hits = new ArrayList<>();
+        float[] modelMatrix = new float[16];
+        float hitX = (hitLocation[0] + 0.5f) * mWidthPx;
+        float hitY = (1-hitLocation[1] + 0.5f) * mHeightPx;
+
+        for (HitResult hit: mSession.update().hitTest(hitX, hitY)) {
+            Trackable trackable = hit.getTrackable();
+            if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
+                GVRHitResult gvrHitResult = new GVRHitResult();
+                ARCorePlane plane = new ARCorePlane(mGvrContext);
+//                plane.setPlaneAR((Plane)trackable);
+                gvrHitResult.setPlane(plane);
+                hit.getHitPose().toMatrix(modelMatrix, 0);
+                gvrHitResult.setPose(modelMatrix);
+                hits.add(gvrHitResult);
+            }
+        }
+
+        return hits;
     }
 
     @Override

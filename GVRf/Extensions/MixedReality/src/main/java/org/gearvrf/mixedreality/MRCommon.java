@@ -61,17 +61,25 @@ public abstract class MRCommon implements IMRCommon {
     @Override
     public GVRLightEstimate getLightEstimate() { return onGetLightEstimate(); }
 
+    public ArrayList<GVRHitResult> hitTest(float[] hitLocation) {
+        return onHitTest(hitLocation);
+    }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
 
     protected abstract void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx);
 
-    public abstract GVRAnchor onCreateAnchor(Matrix4f poseMatrix);
+    protected abstract GVRAnchor onCreateAnchor(Matrix4f poseMatrix);
 
     protected abstract void onDetachAnchor(GVRAnchor anchor);
 
-    public abstract ArrayList<GVRPlane> onGetAllPlanes();
+    protected abstract ArrayList<GVRPlane> onGetAllPlanes();
+
+    protected abstract  ArrayList<GVRHitResult> onHitTest(float[] hitLocation);
+
+
 
     protected abstract GVRLightEstimate onGetLightEstimate();
 }
