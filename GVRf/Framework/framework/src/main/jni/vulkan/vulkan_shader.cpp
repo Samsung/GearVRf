@@ -103,20 +103,20 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
 
     return index;
 }
-int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet)
+bool VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet)
 {
-    int texIndex = 0;
-    bool fail = false;
-    material->forEachTexture([this, &writes, descriptorSet](const char* texname, Texture* t) mutable
+    bool success = true;
+    material->forEachTexture([this, &writes, descriptorSet, &success](const char* texname, Texture* t) mutable
     {
         VkTexture *tex = static_cast<VkTexture *>(t);
         const DataDescriptor::DataEntry* e = mTextureDesc.find(texname);
-        if ((e == NULL) || e->NotUsed)
-        {
+        if ((e == NULL) || e->NotUsed) {
             return;
         }
-        if(!t->isReady())
+        if(!t->isReady()) {
+            success = false;
             return;
+        }
 
         VkWriteDescriptorSet write;
         memset(&write, 0, sizeof(write));
@@ -132,11 +132,8 @@ int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDesc
             write.pImageInfo = &(tex->getDescriptorImage());
         writes.push_back(write);
     });
-    if (!fail)
-    {
-        return texIndex;
-    }
-    return -1;
+
+    return success;
 }
 
 VulkanShader::~VulkanShader() { }
