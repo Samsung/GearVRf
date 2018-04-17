@@ -85,6 +85,12 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         return mSession.hitTest(hitLocation);
     }
 
+    @Override
+    public void onDrawFrame(float frameTime) {
+        super.onDrawFrame(frameTime);
+        mSession.updateFrame();
+    }
+
     private class ActivityEventsHandler implements IActivityEvents {
         @Override
         public void onPause() {

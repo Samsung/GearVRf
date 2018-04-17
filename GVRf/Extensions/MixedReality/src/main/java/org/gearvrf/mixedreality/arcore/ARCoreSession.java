@@ -204,17 +204,6 @@ public class ARCoreSession extends MRCommon {
 
     protected Session getARSession() { return this.mSession; }
 
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public ArrayList<GVRPlane> onGetAllPlanes() {
         ArrayList<GVRPlane> planes = new ArrayList<>();
@@ -243,6 +232,11 @@ public class ARCoreSession extends MRCommon {
     protected GVRLightEstimate onGetLightEstimate() {
         ARLightEstimate lightEstimate = new ARLightEstimate(mGvrContext, this);
         return lightEstimate;
+    }
+
+    @Override
+    protected void onUpdateFrame() {
+        //TODO: Update Frame, anchors and planes
     }
 
     @Override

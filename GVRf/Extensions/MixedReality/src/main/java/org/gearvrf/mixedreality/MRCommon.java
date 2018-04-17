@@ -65,6 +65,8 @@ public abstract class MRCommon implements IMRCommon {
         return onHitTest(hitLocation);
     }
 
+    protected void updateFrame() { onUpdateFrame(); }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
@@ -79,7 +81,7 @@ public abstract class MRCommon implements IMRCommon {
 
     protected abstract  ArrayList<GVRHitResult> onHitTest(float[] hitLocation);
 
-
-
     protected abstract GVRLightEstimate onGetLightEstimate();
+
+    protected abstract void onUpdateFrame();
 }
