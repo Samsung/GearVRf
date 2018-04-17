@@ -22,10 +22,5 @@ endif
 
 APP_PLATFORM := android-19
 
-ifndef GVRF_USE_CLANG
-APP_STL := gnustl_shared
-NDK_TOOLCHAIN_VERSION := 4.9
-else
 APP_STL := c++_shared
 NDK_TOOLCHAIN_VERSION := clang
-endif

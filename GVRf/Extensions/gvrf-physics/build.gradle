@@ -23,10 +23,7 @@ android {
         }
         externalNativeBuild {
             cmake {
-                if (!rootProject.hasProperty("GVRF_USE_CLANG") || !rootProject.property("GVRF_USE_CLANG")) {
-                    arguments.add('-DANDROID_TOOLCHAIN=gcc')
-                    arguments.add('-DANDROID_STL=gnustl_static')
-                }
+                arguments.add('-DANDROID_STL=c++_shared')
             }
         }
     }
