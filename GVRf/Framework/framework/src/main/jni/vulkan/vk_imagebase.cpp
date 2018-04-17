@@ -36,8 +36,12 @@ int getComponentsNumber(VkFormat format){
     vkImageBase::~vkImageBase(){
         VulkanCore * instance = VulkanCore::getInstance();
         VkDevice device = instance->getDevice();
-        vkDestroyImageView(device, imageView, nullptr);
-        vkDestroyImage(device, image, nullptr);
+
+        if(imageView != 0)
+            vkDestroyImageView(device, imageView, nullptr);
+
+        if(image != 0 )
+            vkDestroyImage(device, image, nullptr);
 
         if(host_memory != 0)
             vkFreeMemory(device, host_memory, nullptr);
@@ -154,8 +158,6 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(vk_renderer->getPhysicalDevice(), internalFormat,
                                         &formatProperties);
-    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT);
-    assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT);
 
     VkBuffer texBuffer;
     VkDeviceMemory texMemory;
@@ -320,104 +322,11 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
     vkFreeMemory(device, texMemory, nullptr);
     vkDestroyBuffer(device, texBuffer, nullptr);
 
-    VkCommandBuffer blitCmd;
-    vk_renderer->initCmdBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, blitCmd);
+    if(mipLevels > 1)
+        createMipLevels(formatProperties, vk_renderer, setupCmdsBeginInfo,
+                        bufferCopyRegions, mipLevels, bitmapInfos, imageMemoryBarrier,
+                        submit_info, buffers, queue);
 
-    vkResetCommandBuffer(blitCmd, 0);
-
-    // Begin recording to the command buffer.
-    vkBeginCommandBuffer(blitCmd, &setupCmdsBeginInfo);
-
-    // Copy down mips from n-1 to n
-    for(int j=0; j< bufferCopyRegions.size(); j++) {
-
-        for (int32_t i = 1; i < mipLevels; i++)
-        {
-
-            VkImageBlit imageBlit{};
-
-            // Source
-            imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageBlit.srcSubresource.layerCount = 1;
-            imageBlit.srcSubresource.mipLevel = i-1;
-            imageBlit.srcSubresource.baseArrayLayer = j;
-            imageBlit.srcOffsets[1].x = int32_t(bitmapInfos[j].width >> (i - 1)) == 0 ? 1 : int32_t(bitmapInfos[j].width >> (i - 1));
-            imageBlit.srcOffsets[1].y = int32_t(bitmapInfos[j].height >> (i - 1)) == 0 ? 1 : int32_t(bitmapInfos[j].height >> (i - 1));
-
-            imageBlit.srcOffsets[1].z = 1;
-
-            // Destination
-            imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageBlit.dstSubresource.layerCount = 1;
-            imageBlit.dstSubresource.baseArrayLayer = j;
-            imageBlit.dstSubresource.mipLevel = i;
-            imageBlit.dstOffsets[1].x = int32_t(bitmapInfos[j].width >> i) == 0 ? 1 : int32_t(bitmapInfos[j].width >> i);
-            imageBlit.dstOffsets[1].y = int32_t(bitmapInfos[j].height >> i) == 0 ? 1 : int32_t(bitmapInfos[j].height >> i);
-            imageBlit.dstOffsets[1].z = 1;
-
-            VkImageMemoryBarrier imageMemoryBarrier = {};
-            imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            imageMemoryBarrier.pNext = NULL;
-            imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageMemoryBarrier.subresourceRange.baseMipLevel = i;
-            imageMemoryBarrier.subresourceRange.levelCount = 1;
-            imageMemoryBarrier.subresourceRange.baseArrayLayer = j;
-            imageMemoryBarrier.subresourceRange.layerCount = 1;
-
-            // change layout of current mip level to transfer dest
-            setImageLayout(imageMemoryBarrier,
-                           blitCmd,
-                           image,
-                           VK_IMAGE_ASPECT_COLOR_BIT,
-                           VK_IMAGE_LAYOUT_UNDEFINED,
-                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, imageMemoryBarrier.subresourceRange,
-                           VK_PIPELINE_STAGE_TRANSFER_BIT,
-                           VK_PIPELINE_STAGE_HOST_BIT);
-
-            // Do blit operation from previous mip level
-            vkCmdBlitImage(
-                    blitCmd,
-                    image,
-                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                    image,
-                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                    1,
-                    &imageBlit,
-                    VK_FILTER_LINEAR);
-
-            // change layout of current mip level to source for next iteration
-            setImageLayout(imageMemoryBarrier,
-                           blitCmd,
-                           image,
-                           VK_IMAGE_ASPECT_COLOR_BIT,
-                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, imageMemoryBarrier.subresourceRange,
-                           VK_PIPELINE_STAGE_HOST_BIT,
-                           VK_PIPELINE_STAGE_TRANSFER_BIT);
-        }
-    }
-    // Change layout of all mip levels to shader read
-    imageMemoryBarrier.subresourceRange.levelCount = mipLevels;
-    setImageLayout(imageMemoryBarrier,
-                   blitCmd,
-                   image,
-                   VK_IMAGE_ASPECT_COLOR_BIT,
-                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                   imageLayout,
-                   imageMemoryBarrier.subresourceRange);
-    // We are finished recording operations.
-    vkEndCommandBuffer(blitCmd);
-    buffers[0] = blitCmd;
-
-    submit_info.pCommandBuffers = &buffers[0];
-
-    // Submit to our shared graphics queue.
-    err = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-    assert(!err);
-
-    // Wait for the queue to become idle.
-    err = vkQueueWaitIdle(queue);
-    assert(!err);
     err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
                                                              target,
                                                              internalFormat, mipLevels,
@@ -425,7 +334,116 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
                                                              VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                             &imageView);
     assert(!err);
-    
 }
+
+
+    void vkImageBase::createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,
+                                     VkCommandBufferBeginInfo setupCmdsBeginInfo, std::vector<VkBufferImageCopy> &bufferCopyRegions,
+                                     int mipLevels, std::vector<ImageInfo> &bitmapInfos, VkImageMemoryBarrier imageMemoryBarrier,
+                                     VkSubmitInfo submit_info, VkCommandBuffer *buffers, VkQueue queue)
+    {
+        assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT);
+        assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT);
+
+        VkCommandBuffer blitCmd;
+        vk_renderer->initCmdBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, blitCmd);
+
+        vkResetCommandBuffer(blitCmd, 0);
+
+
+        // Begin recording to the command buffer.
+        vkBeginCommandBuffer(blitCmd, &setupCmdsBeginInfo);
+
+        // Copy down mips from n-1 to n
+        for(int j=0; j< bufferCopyRegions.size(); j++) {
+
+            for (int32_t i = 1; i < mipLevels; i++)
+            {
+
+                VkImageBlit imageBlit{};
+
+                // Source
+                imageBlit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageBlit.srcSubresource.layerCount = 1;
+                imageBlit.srcSubresource.mipLevel = i-1;
+                imageBlit.srcSubresource.baseArrayLayer = j;
+                imageBlit.srcOffsets[1].x = int32_t(bitmapInfos[j].width >> (i - 1)) == 0 ? 1 : int32_t(bitmapInfos[j].width >> (i - 1));
+                imageBlit.srcOffsets[1].y = int32_t(bitmapInfos[j].height >> (i - 1)) == 0 ? 1 : int32_t(bitmapInfos[j].height >> (i - 1));
+
+                imageBlit.srcOffsets[1].z = 1;
+
+                // Destination
+                imageBlit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageBlit.dstSubresource.layerCount = 1;
+                imageBlit.dstSubresource.baseArrayLayer = j;
+                imageBlit.dstSubresource.mipLevel = i;
+                imageBlit.dstOffsets[1].x = int32_t(bitmapInfos[j].width >> i) == 0 ? 1 : int32_t(bitmapInfos[j].width >> i);
+                imageBlit.dstOffsets[1].y = int32_t(bitmapInfos[j].height >> i) == 0 ? 1 : int32_t(bitmapInfos[j].height >> i);
+                imageBlit.dstOffsets[1].z = 1;
+
+                VkImageMemoryBarrier imageMemoryBarrier = {};
+                imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                imageMemoryBarrier.pNext = NULL;
+                imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                imageMemoryBarrier.subresourceRange.baseMipLevel = i;
+                imageMemoryBarrier.subresourceRange.levelCount = 1;
+                imageMemoryBarrier.subresourceRange.baseArrayLayer = j;
+                imageMemoryBarrier.subresourceRange.layerCount = 1;
+
+                // change layout of current mip level to transfer dest
+                setImageLayout(imageMemoryBarrier,
+                               blitCmd,
+                               image,
+                               VK_IMAGE_ASPECT_COLOR_BIT,
+                               VK_IMAGE_LAYOUT_UNDEFINED,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, imageMemoryBarrier.subresourceRange,
+                               VK_PIPELINE_STAGE_TRANSFER_BIT,
+                               VK_PIPELINE_STAGE_HOST_BIT);
+
+                // Do blit operation from previous mip level
+                vkCmdBlitImage(
+                        blitCmd,
+                        image,
+                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                        image,
+                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        1,
+                        &imageBlit,
+                        VK_FILTER_LINEAR);
+
+                // change layout of current mip level to source for next iteration
+                setImageLayout(imageMemoryBarrier,
+                               blitCmd,
+                               image,
+                               VK_IMAGE_ASPECT_COLOR_BIT,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, imageMemoryBarrier.subresourceRange,
+                               VK_PIPELINE_STAGE_HOST_BIT,
+                               VK_PIPELINE_STAGE_TRANSFER_BIT);
+            }
+        }
+        // Change layout of all mip levels to shader read
+        imageMemoryBarrier.subresourceRange.levelCount = mipLevels;
+        setImageLayout(imageMemoryBarrier,
+                       blitCmd,
+                       image,
+                       VK_IMAGE_ASPECT_COLOR_BIT,
+                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                       imageLayout,
+                       imageMemoryBarrier.subresourceRange);
+        // We are finished recording operations.
+        vkEndCommandBuffer(blitCmd);
+        buffers[0] = blitCmd;
+
+        submit_info.pCommandBuffers = &buffers[0];
+
+        // Submit to our shared graphics queue.
+        VkResult err = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+        assert(!err);
+
+        // Wait for the queue to become idle.
+        err = vkQueueWaitIdle(queue);
+        assert(!err);
+    }
 
 }

@@ -50,6 +50,12 @@ namespace gvr{
 
     bool VkRenderTextureOffScreen::readRenderResult(uint8_t* readback_buffer){
 
+        //wait for rendering to be complete
+        if(!isReady()) {
+            LOGE("VkRenderTextureOffScreen::readRenderResult: error in rendering");
+            return false;
+        }
+
         uint8_t *data;
         bool result = accessRenderResult(&data);
         memcpy(readback_buffer, data, mWidth*mHeight*4);

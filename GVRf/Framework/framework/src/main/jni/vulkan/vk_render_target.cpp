@@ -80,8 +80,11 @@ VkRenderTexture* VkRenderTarget :: getTexture() {
          }
     }
 */
-    while (err != VK_SUCCESS) {
-        err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
+
+    err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
+
+    if (err != VK_SUCCESS) {
+        return NULL;
     }
 
     return static_cast<VkRenderTexture*>(mRenderTexture);

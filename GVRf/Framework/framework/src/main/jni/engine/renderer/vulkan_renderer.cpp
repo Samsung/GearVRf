@@ -161,7 +161,10 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     if(vkRdata->isDirty(pass)) {
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata, lights);
         VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, rstate.sampleCount);
-        std::string vkPipelineHashCode = vkRdata->getHashCode() + std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) + std::to_string(rstate.sampleCount);
+
+        std::string vkPipelineHashCode = std::to_string(shader) + vkRdata->getHashCode() +
+                std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) +
+                std::to_string(rstate.sampleCount);
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
