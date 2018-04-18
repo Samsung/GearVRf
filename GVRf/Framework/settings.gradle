@@ -12,3 +12,11 @@ if (hasProperty('only_daydream') && (only_daydream == "true")) {
 if(file("../../../extra_settings.gradle").exists()) {
     apply from: '../../../extra_settings.gradle'
 }
+
+new File("../../../").eachDir {
+    def fn = it.toString() + "/extra_settings.gradle"
+    if (file(fn).exists()) {
+        apply from: fn
+        println "including modules from " + it.toString()
+    }
+}
