@@ -26,6 +26,9 @@ namespace gvr {
         if(mAttachments[DEPTH_IMAGE]!= 0)
             delete mAttachments[DEPTH_IMAGE];
 
+        if(mAttachments[MULTISAMPLED_IMAGE]!= 0)
+            delete mAttachments[MULTISAMPLED_IMAGE];
+
         cleanup();
 
     }

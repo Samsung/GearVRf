@@ -1406,9 +1406,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkImageBase ** attachments = tex->getFBO()->getAttachments();
             delete attachments[COLOR_IMAGE];
             delete attachments[DEPTH_IMAGE];
+            delete attachments[MULTISAMPLED_IMAGE];
 
             attachments[COLOR_IMAGE] = 0;
             attachments[DEPTH_IMAGE] = 0;
+            attachments[MULTISAMPLED_IMAGE] = 0;
         }
 
         //sufficient to clear up the vector so that there are no dangling pointers. The actual memory has
