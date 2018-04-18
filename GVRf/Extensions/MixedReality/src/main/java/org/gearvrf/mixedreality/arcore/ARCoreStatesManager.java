@@ -40,7 +40,6 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
@@ -53,12 +52,10 @@ import org.gearvrf.GVRTexture;
 import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.mixedreality.R;
-import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -78,7 +75,7 @@ public class ARCoreStatesManager {
     private GVRSceneObject mARPassThroughObject;
     private Frame mLastARFrame;
     private ARCoreHandler mARCoreHandler;
-    private PlaneObject mSelectedPlaneObject;
+    private ARCorePlane mSelectedPlaneObject;
     private GVRSceneObject mCursor;
     private GVRCursorController mCursorController;
 
@@ -88,17 +85,15 @@ public class ARCoreStatesManager {
     private float[] mGVRCamMatrix = new float[16];
     private float[] mModelViewMatrix = new float[16];
 
-    /* Model shaded mesh */
-    private GVRMesh mSharedMesh;
-    private GVRTexture mSharedTexture;
 
     // Pool of virtual objects
     private List<VirtualObject>  mVirtualObjects;
     private int mVirtObjCount;
 
-    public void start(GVRActivity activity, final GVRContext gvrContext) {
+    public ARCoreStatesManager(GVRActivity activity, final GVRContext gvrContext, Session session) {
         mActivity = activity;
-        mVRScene = mActivity.getGVRContext().getMainScene();
+        mVRScene = gvrContext.getMainScene();
+        mARCoreSession = session;
         mARPassThroughObject = null;
         mLastARFrame = null;
 
@@ -110,8 +105,7 @@ public class ARCoreStatesManager {
         initVirtualModels();
 
         /* To highlight planes */
-        mSelectedPlaneObject = new PlaneObject(gvrContext,
-                createPlaneMesh(gvrContext, 1.0f, 1.0f));
+        mSelectedPlaneObject = new ARCorePlane(gvrContext);
         mVRScene.addSceneObject(mSelectedPlaneObject);
 
         mActivity.getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
@@ -250,7 +244,7 @@ public class ARCoreStatesManager {
                 mSingleTapEvent = null;
             } else if (mCursorOverEvent != null) {
                 hitResult = arFrame.hitTest(mCursorOverEvent);
-                mSelectedPlaneObject.updateFromLookingAt(hitResult);
+                mSelectedPlaneObject.updateFromLookingAt(hitResult, mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
             } else {
                 mSelectedPlaneObject.setEnable(false);
             }
@@ -397,38 +391,6 @@ public class ARCoreStatesManager {
         return null;
     }
 
-    private static GVRSceneObject createPlaneMesh(GVRContext gvrContext,
-                                                  float width, float height) {
-        final float[] vertices = {
-                width * -0.5f, -0.01f, height * 0.5f,
-                width * -0.5f, -0.01f, height * -0.5f,
-                width * 0.5f, -0.01f, height * 0.5f,
-                width * 0.5f, -0.01f, height * -0.5f};
-
-        final float[] texCoords = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
-
-        char[] triangles = {0, 1, 2, 1, 3, 2};
-
-        GVRMesh mesh = new GVRMesh(gvrContext,
-                "float3 a_position float2 a_texcoord");
-
-        mesh.setVertices(vertices);
-        mesh.setTexCoords(texCoords);
-        mesh.setIndices(triangles);
-
-        GVRSceneObject quad = new GVRSceneObject(gvrContext, mesh);
-
-        GVRMaterial mat = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
-        mat.setDiffuseColor(0, 0.5f, 0, 0.2f);
-
-        quad.getRenderData().setMaterial(mat);
-        quad.getRenderData().setAlphaBlend(true);
-        quad.getRenderData().setDrawMode(GLES30.GL_TRIANGLES);
-        quad.getRenderData().setCullFace(GVRRenderPass.GVRCullFaceEnum.Front);
-
-        return quad;
-    }
-
     private class PoseObject extends GVRSceneObject {
         protected float[] mPoseMatrix = new float[16];
         protected GVRSceneObject mSceneObject = null;
@@ -502,50 +464,6 @@ public class ARCoreStatesManager {
 
         public Anchor getARAnchor() {
             return mARAnchor;
-        }
-    }
-
-    private class PlaneObject extends PoseObject {
-        private Plane mARPlane;
-
-        public PlaneObject(GVRContext gvrContext, GVRSceneObject sceneObject) {
-            super(gvrContext, sceneObject);
-
-            mARPlane = null;
-            setEnable(false);
-        }
-
-        public void updateFromLookingAt(List<HitResult> hitResult) {
-            for (HitResult hit : hitResult) {
-                // Check if any plane was hit, and if it was hit inside the plane polygon
-                Trackable trackable = hit.getTrackable();
-                // Creates an anchor if a plane or an oriented point was hit.
-                if ((trackable instanceof Plane
-                        && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
-                        && ((Plane) trackable).getSubsumedBy() == null) {
-                    mARPlane = (Plane)trackable;
-                    break;
-                }
-            }
-
-            if (mARPlane != null && mARPlane.getTrackingState() == TrackingState.TRACKING) {
-                setEnable(true);
-                update(mARPlane);
-            } else {
-                setEnable(false);
-            }
-        }
-
-        public void update(Plane plane) {
-            mSceneObject.getTransform().setScale(plane.getExtentX(), 1.0f,
-                    plane.getExtentZ());
-            mARPlane = plane;
-
-            super.update(plane.getCenterPose());
-        }
-
-        public Plane getARPlane() {
-            return mARPlane;
         }
     }
 }

@@ -1,60 +1,64 @@
 package org.gearvrf.mixedreality.arcore;
 
 
-import android.opengl.Matrix;
+import android.opengl.GLES30;
 
 import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
-import com.google.ar.core.Pose;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRRenderPass;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRPlane;
 
 import java.util.List;
-import java.util.ServiceConfigurationError;
 
-public class ARCorePlane extends GVRPlane {
+class ARCorePlane extends GVRPlane {
     private Plane mARPlane;
-    private float[] mPoseMatrix = new float[16];
-    private float[] mModelViewMatrix = new float[16];
-    private float[] mGVRModelMatrix = new float[16];
-
-    private float[] mGVRCamMatrix = new float[16];
-    private float[] mARViewMatrix = new float[16];
-    float AR2VR_SCALE;
-
+    private ARCorePose mPose;
     private GVRSceneObject mSceneObject = null;
 
     public ARCorePlane(GVRContext gvrContext) {
         super(gvrContext);
+        mPose = new ARCorePose();
+        // TODO: Create method to user set plane object
+        mSceneObject = createPlaneMesh(gvrContext, 1.0f, 1.0f);
+        setEnable(false);
+        addChildObject(mSceneObject);
     }
 
-    public void updateAR(Pose pose) {
-        pose.toMatrix(mPoseMatrix, 0);
-
-        ar2gvr();
+    @Override
+    protected void setCenter(float[] pose) {
+        mCenterPose = pose;
     }
 
-    public float[] getMatrix() {
-        return mPoseMatrix;
+    @Override
+    protected void setType() {
+        // FIXME: Create a enum type
+        //mType = mARPlane.getType();
     }
 
-    private void ar2gvr() {
-        Matrix.multiplyMM(mModelViewMatrix, 0, mARViewMatrix, 0, mPoseMatrix, 0);
-        Matrix.multiplyMM(mGVRModelMatrix, 0, mGVRCamMatrix, 0, mModelViewMatrix, 0);
-
-        Matrix.scaleM(mGVRModelMatrix, 0, AR2VR_SCALE, AR2VR_SCALE, AR2VR_SCALE);
-        mGVRModelMatrix[12] = mGVRModelMatrix[12] * AR2VR_SCALE;
-        mGVRModelMatrix[13] = mGVRModelMatrix[13] * AR2VR_SCALE;
-        mGVRModelMatrix[14] = mGVRModelMatrix[14] * AR2VR_SCALE;
-
-        getTransform().setModelMatrix(mGVRModelMatrix);
+    @Override
+    protected void setTrackingState() {
+        // FIXME: Create a enum tracking state
+        //mTrackingState = mARPlane.getTrackingState();
     }
 
-    public void updateFromLookingAt(List<HitResult> hitResult) {
+    @Override
+    protected void setWidth(float width) {
+        mWidth = width;
+    }
+
+    @Override
+    protected void setHeight(float height) {
+        mHeight = height;
+    }
+
+
+    public void updateFromLookingAt(List<HitResult> hitResult, float[] ARViewMatrix, float[] GVRCamMatrix, float scale) {
         for (HitResult hit : hitResult) {
             // Check if any plane was hit, and if it was hit inside the plane polygon
             Trackable trackable = hit.getTrackable();
@@ -69,27 +73,39 @@ public class ARCorePlane extends GVRPlane {
 
         if (mARPlane != null && mARPlane.getTrackingState() == TrackingState.TRACKING) {
             setEnable(true);
-            update(mARPlane);
+            update(mARPlane, ARViewMatrix, GVRCamMatrix, scale);
         } else {
             setEnable(false);
         }
     }
 
-    public void update(Plane plane) {
-        mSceneObject.getTransform().setScale(plane.getExtentX(), 1.0f,
-                plane.getExtentZ());
+    public void update(Plane plane, float[] ARViewMatrix, float[] GVRCamMatrix, float scale) {
         mARPlane = plane;
+        mPose.update(plane.getCenterPose(), ARViewMatrix, GVRCamMatrix, scale);
+        getTransform().setModelMatrix(mPose.getGVRModelMatrixMatrix());
 
-        updateAR(plane.getCenterPose());
+        setCenter(mPose.getPoseMatrix());
+        setType();
+        setTrackingState();
+        setWidth(mARPlane.getExtentX());
+        setHeight(mARPlane.getExtentZ());
+
+        mSceneObject.getTransform().setScale(mWidth, 1.0f, mHeight);
     }
 
-    public void setARMatrixes(float[] GVRCamMatrix, float[] ARViewMatrix, float SCALE) {
-        this.mARViewMatrix = ARViewMatrix;
-        this.mGVRCamMatrix = GVRCamMatrix;
-        this.AR2VR_SCALE = SCALE;
-    }
+    private GVRSceneObject createPlaneMesh(GVRContext gvrContext,
+                                                  float width, float height) {
 
-    public Plane getPlaneAR() {
-        return this.mARPlane;
+        GVRSceneObject quad = new GVRSceneObject(gvrContext, width, height);
+
+        GVRMaterial mat = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
+        mat.setDiffuseColor(0, 0.5f, 0, 0.2f);
+
+        quad.getRenderData().setMaterial(mat);
+        quad.getRenderData().setAlphaBlend(true);
+        quad.getRenderData().setDrawMode(GLES30.GL_TRIANGLES);
+        quad.getRenderData().setCullFace(GVRRenderPass.GVRCullFaceEnum.Front);
+
+        return quad;
     }
 }

@@ -127,12 +127,7 @@ public class ARCoreSession extends MRCommon {
 
         mSession.setDisplayGeometry(mDisplayRotation , mWidthPx, mHeightPx);
 
-        mArManager = new ARCoreStatesManager();
-
-        mArManager.setARCoreSession(mSession);
-
-        mArManager.start(mGvrContext.getActivity(), mGvrContext);
-
+        mArManager = new ARCoreStatesManager(mGvrContext.getActivity(), mGvrContext, mSession);
     }
 
     @Override
@@ -214,7 +209,7 @@ public class ARCoreSession extends MRCommon {
                 ARCorePlane gvrPlane = new ARCorePlane(mGvrContext);
                 float poseMatrix[] = new float[16];
                 p.getCenterPose().toMatrix(poseMatrix, 0);
-                gvrPlane.setCenter(poseMatrix);
+//                gvrPlane.setCenter(poseMatrix);
                 //gvrPlane.setWidth(p.getExtentX());
                 //gvrPlane.setHeight(p.getExtentZ());
 //            gvrPlane.setTrackingState(p.getTrackingState());

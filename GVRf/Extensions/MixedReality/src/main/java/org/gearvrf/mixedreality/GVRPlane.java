@@ -2,58 +2,47 @@ package org.gearvrf.mixedreality;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
-import org.joml.Matrix4f;
 
 
 public abstract class GVRPlane extends GVRSceneObject{
-    private int type;
-    private Matrix4f center;
-    private int trackingState;
-    private float width;
-    private float height;
+    protected int mType;
+    protected int mTrackingState;
+    protected float mWidth;
+    protected float mHeight;
+    protected float[] mCenterPose = new float[16];
+
 
     public GVRPlane(GVRContext gvrContext) {
         super(gvrContext);
-        center = new Matrix4f();
     }
 
-    public void setPlaneType() {
+    protected abstract void setCenter(float[] pose);
 
-    }
+    protected abstract void setType();
 
-    public void setCenter(float[] poseMatrix) {
-        this.center = this.center.set(poseMatrix);
-    }
+    protected abstract void setTrackingState();
 
-    public void setTrackingState() {
+    protected abstract void setWidth(float width);
 
-    }
+    protected abstract void setHeight(float height);
 
-    public void setWidth(float width) {
-        this.width = width;
-    }
-
-    public void setHeight(float height) {
-        this.height = height;
+    public float[] getCenterPose() {
+        return this.mCenterPose;
     }
 
     public int getPlaneType() {
-        return this.type;
-    }
-
-    public Matrix4f getCenter() {
-        return this.center;
+        return this.mType;
     }
 
     public int getTrackingState() {
-        return this.trackingState;
+        return this.mTrackingState;
     }
 
     public float getWidth() {
-        return this.width;
+        return this.mWidth;
     }
 
     public float getHeight() {
-        return this.height;
+        return this.mHeight;
     }
 }
