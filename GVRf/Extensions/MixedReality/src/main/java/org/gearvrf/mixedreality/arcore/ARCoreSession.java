@@ -206,7 +206,7 @@ public class ARCoreSession extends MRCommon {
         try {
             mSession.update();
             for (Plane p : mSession.getAllTrackables(Plane.class)) {
-                ARCorePlane gvrPlane = new ARCorePlane(mGvrContext);
+                ARCorePlane gvrPlane = new ARCorePlane(mGvrContext, 0);
                 float poseMatrix[] = new float[16];
                 p.getCenterPose().toMatrix(poseMatrix, 0);
 //                gvrPlane.setCenter(poseMatrix);
@@ -277,7 +277,7 @@ public class ARCoreSession extends MRCommon {
             Trackable trackable = hit.getTrackable();
             if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
                 GVRHitResult gvrHitResult = new GVRHitResult();
-                ARCorePlane plane = new ARCorePlane(mGvrContext);
+                ARCorePlane plane = new ARCorePlane(mGvrContext, 0);
 //                plane.setPlaneAR((Plane)trackable);
                 gvrHitResult.setPlane(plane);
                 hit.getHitPose().toMatrix(modelMatrix, 0);

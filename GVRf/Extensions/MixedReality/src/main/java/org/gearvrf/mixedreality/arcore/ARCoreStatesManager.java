@@ -15,7 +15,6 @@
 
 package org.gearvrf.mixedreality.arcore;
 
-import android.opengl.GLES30;
 import android.opengl.Matrix;
 import android.os.SystemClock;
 import android.util.Log;
@@ -41,11 +40,9 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRRenderPass;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
@@ -58,7 +55,9 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ARCoreStatesManager {
     private static String TAG = "GVR_ARCORE";
@@ -75,7 +74,6 @@ public class ARCoreStatesManager {
     private GVRSceneObject mARPassThroughObject;
     private Frame mLastARFrame;
     private ARCoreHandler mARCoreHandler;
-    private ARCorePlane mSelectedPlaneObject;
     private GVRSceneObject mCursor;
     private GVRCursorController mCursorController;
 
@@ -90,6 +88,9 @@ public class ARCoreStatesManager {
     private List<VirtualObject>  mVirtualObjects;
     private int mVirtObjCount;
 
+    // Map to track planes
+    private Map<Plane, ARCorePlane> planesMap = new HashMap<>();
+
     public ARCoreStatesManager(GVRActivity activity, final GVRContext gvrContext, Session session) {
         mActivity = activity;
         mVRScene = gvrContext.getMainScene();
@@ -103,10 +104,6 @@ public class ARCoreStatesManager {
         }
 
         initVirtualModels();
-
-        /* To highlight planes */
-        mSelectedPlaneObject = new ARCorePlane(gvrContext);
-        mVRScene.addSceneObject(mSelectedPlaneObject);
 
         mActivity.getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
             @Override
@@ -225,7 +222,6 @@ public class ARCoreStatesManager {
                 if (mVirtObjCount != 0) {
                     disableVirtualObjects();
                 }
-                mSelectedPlaneObject.setEnable(false);
                 return;
             }
 
@@ -243,12 +239,12 @@ public class ARCoreStatesManager {
                 mSingleTapEvent.recycle();
                 mSingleTapEvent = null;
             } else if (mCursorOverEvent != null) {
-                hitResult = arFrame.hitTest(mCursorOverEvent);
-                mSelectedPlaneObject.updateFromLookingAt(hitResult, mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
+                // update planes only if cursor is inside arcore quad
             } else {
-                mSelectedPlaneObject.setEnable(false);
+                // disable planes otherwise
             }
 
+            updatePlanes();
             updateVirtualObjects();
 
             mLastARFrame = arFrame;
@@ -303,6 +299,28 @@ public class ARCoreStatesManager {
 
             return MotionEvent.obtain(SystemClock.uptimeMillis(),
                     SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, hitX, hitY, 0);
+        }
+    }
+
+    private void updatePlanes() {
+        for (Plane plane: mARCoreSession.getAllTrackables(Plane.class)) {
+            if (plane.getTrackingState() != TrackingState.TRACKING || plane.getSubsumedBy() != null) {
+                ARCorePlane arCorePlane = planesMap.get(plane);
+                if (arCorePlane != null) {
+                    arCorePlane.setEnable(false);
+                }
+                continue;
+            }
+
+            ARCorePlane arCorePlane = planesMap.get(plane);
+            if (arCorePlane == null) {
+                arCorePlane = new ARCorePlane(mActivity.getGVRContext(), planesMap.size());
+                mVRScene.addSceneObject(arCorePlane);
+                planesMap.put(plane, arCorePlane);
+            }
+            arCorePlane.setEnable(true);
+            arCorePlane.update(plane, mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
+
         }
     }
 
