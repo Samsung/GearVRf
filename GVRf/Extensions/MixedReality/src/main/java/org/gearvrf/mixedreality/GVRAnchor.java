@@ -1,44 +1,24 @@
 package org.gearvrf.mixedreality;
 
-import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
-public abstract class GVRAnchor extends GVRBehavior {
-    static private long TYPE_ANCHOR = newComponentType(GVRAnchor.class);
-    protected GVRSceneObject mOwner;
-    protected float[] modelMatrix = new float[16];
+public abstract class GVRAnchor extends GVRSceneObject{
     private GVRTrackingState mTrackingState;
+    protected GVRSceneObject mSceneObject = null;
 
-    protected GVRAnchor(GVRContext gvrContext) { super(gvrContext); }
-
-    static public long getComponentType() { return TYPE_ANCHOR; }
-
-    public void setModelMatrix(float[] modelMatrix) { this.modelMatrix = modelMatrix; }
+    protected GVRAnchor(GVRContext gvrContext, GVRSceneObject sceneObject) {
+        super(gvrContext);
+        mSceneObject = sceneObject;
+        addChildObject(sceneObject);
+    }
 
     public void setTrackingState(GVRTrackingState state) { this.mTrackingState = state; }
 
     public GVRTrackingState getTrackingState() { return this.mTrackingState; }
 
-    @Override
-    public void onAttach(GVRSceneObject newOwner) {
-        super.onAttach(newOwner);
-        mOwner = newOwner;
-    }
+    public void update(float[] viewmtx, float[] gvrmatrix, float scale) { onUpdate(viewmtx,
+            gvrmatrix, scale); }
 
-    @Override
-    public void onDetach(GVRSceneObject oldOwner) {
-        mOwner = null;
-        onDetachAnchor();
-    }
-
-    @Override
-    public void onDrawFrame(float frameTime) {
-        super.onDrawFrame(frameTime);
-        if (mOwner != null) {
-            mOwner.getTransform().setModelMatrix(modelMatrix);
-        }
-    }
-
-    protected abstract void onDetachAnchor();
+    protected abstract void onUpdate(float[] viewmtx, float[] gvrmatrix, float scale);
 }

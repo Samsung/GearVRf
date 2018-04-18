@@ -48,6 +48,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.R;
 import org.joml.Math;
 import org.joml.Matrix4f;
@@ -85,7 +86,7 @@ public class ARCoreStatesManager {
 
 
     // Pool of virtual objects
-    private List<VirtualObject>  mVirtualObjects;
+    private ArrayList<ARCoreAnchor> mAnchorsObject;
     private int mVirtObjCount;
 
     // Map to track planes
@@ -102,8 +103,6 @@ public class ARCoreStatesManager {
             Log.e(TAG, "Invalid ARCore session!");
             return;
         }
-
-        initVirtualModels();
 
         mActivity.getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
             @Override
@@ -153,11 +152,6 @@ public class ARCoreStatesManager {
         updateAR2GVRMatrices(mLastARFrame.getCamera(), mVRScene.getMainCameraRig());
     }
 
-    private void initVirtualModels() {
-            mVirtualObjects = new ArrayList<>();
-            mVirtObjCount = 0;
-    }
-
     private void initCursorController(GVRContext gvrContext) {
         mVRScene.getEventReceiver().addListener(mARCoreHandler);
         GVRInputManager inputManager = gvrContext.getInputManager();
@@ -189,8 +183,8 @@ public class ARCoreStatesManager {
         });
     }
 
-    public void setARCoreSession(Session session) {
-        mARCoreSession = session;
+    public void setAnchorObjectList(ArrayList<ARCoreAnchor> anchorsObject) {
+        this.mAnchorsObject = anchorsObject;
     }
 
     public class ARCoreHandler extends GVREventListeners.TouchEvents implements GVRDrawFrameListener {
@@ -219,9 +213,6 @@ public class ARCoreStatesManager {
                 updateAR2GVRMatrices(arCamera, mVRScene.getMainCameraRig());
                 updatePassThroughObject(mARPassThroughObject);
 
-                if (mVirtObjCount != 0) {
-                    disableVirtualObjects();
-                }
                 return;
             }
 
@@ -373,26 +364,19 @@ public class ARCoreStatesManager {
 
         mVirtObjCount++;
 
-        VirtualObject obj = mVirtualObjects.get(mVirtObjCount % mVirtualObjects.size());
-        obj.setARAnchor(anchor);
+        ARCoreAnchor obj = mAnchorsObject.get(mVirtObjCount % mAnchorsObject.size());
+        obj.setAnchorAR(anchor);
         obj.setName("id: " + mVirtObjCount);
 
         Log.d(TAG, "New virtual object " + obj.getName());
     }
 
     private void updateVirtualObjects() {
-        for (VirtualObject obj: mVirtualObjects) {
-            obj.update();
+        for (ARCoreAnchor obj: mAnchorsObject) {
+            obj.update(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
         }
     }
 
-    private void disableVirtualObjects() {
-        for (VirtualObject obj: mVirtualObjects) {
-            obj.setARAnchor(null);
-        }
-
-        mVirtObjCount = 0;
-    }
 
     private Anchor createAnchor(List<HitResult> hitResult) {
         for (HitResult hit : hitResult) {
@@ -409,79 +393,4 @@ public class ARCoreStatesManager {
         return null;
     }
 
-    private class PoseObject extends GVRSceneObject {
-        protected float[] mPoseMatrix = new float[16];
-        protected GVRSceneObject mSceneObject = null;
-
-        public PoseObject(GVRContext gvrContext, GVRSceneObject sceneObject) {
-            super(gvrContext);
-
-            mSceneObject = sceneObject;
-            addChildObject(sceneObject);
-        }
-
-        public void update(Pose pose) {
-            pose.toMatrix(mPoseMatrix, 0);
-
-            ar2gvr();
-        }
-
-        public float[] getMatrix() {
-            return mPoseMatrix;
-        }
-
-        private void ar2gvr() {
-            Matrix.multiplyMM(mModelViewMatrix, 0, mARViewMatrix, 0, mPoseMatrix, 0);
-            Matrix.multiplyMM(mGVRModelMatrix, 0, mGVRCamMatrix, 0, mModelViewMatrix, 0);
-
-            Matrix.scaleM(mGVRModelMatrix, 0, AR2VR_SCALE, AR2VR_SCALE, AR2VR_SCALE);
-            mGVRModelMatrix[12] = mGVRModelMatrix[12] * AR2VR_SCALE;
-            mGVRModelMatrix[13] = mGVRModelMatrix[13] * AR2VR_SCALE;
-            mGVRModelMatrix[14] = mGVRModelMatrix[14] * AR2VR_SCALE;
-
-            getTransform().setModelMatrix(mGVRModelMatrix);
-        }
-    }
-
-    private class VirtualObject extends PoseObject {
-        private Anchor mARAnchor;
-
-        public VirtualObject(GVRContext gvrContext, GVRSceneObject sceneObject) {
-            super(gvrContext, sceneObject);
-
-            setARAnchor(null);
-        }
-
-        public void update(Anchor anchor) {
-            mARAnchor = anchor;
-
-            update();
-        }
-
-        public void update() {
-            if (mARAnchor == null)
-                return;
-
-            if (mARAnchor.getTrackingState() != TrackingState.TRACKING) {
-                mARAnchor.detach();
-                mARAnchor = null;
-                setEnable(false);
-            } else {
-                super.update(mARAnchor.getPose());
-                setEnable(true);
-            }
-        }
-
-        public void setARAnchor(Anchor anchor) {
-            if (mARAnchor != null) {
-                mARAnchor.detach();
-            }
-            mARAnchor = anchor;
-            setEnable(false);
-        }
-
-        public Anchor getARAnchor() {
-            return mARAnchor;
-        }
-    }
 }

@@ -76,8 +76,13 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     public GVRLightEstimate getLightEstimate() { return mSession.getLightEstimate(); }
 
     @Override
-    public GVRAnchor createAnchor(Matrix4f poseMatrix) {
-        return mSession.createAnchor(poseMatrix);
+    public GVRAnchor createAnchor(Matrix4f poseMatrix,  GVRSceneObject sceneObject) {
+        return mSession.createAnchor(poseMatrix, sceneObject);
+    }
+
+    @Override
+    public GVRAnchor createAnchor(GVRHitResult hit, GVRSceneObject sceneObject) {
+        return mSession.createAnchor(hit, sceneObject);
     }
 
     @Override

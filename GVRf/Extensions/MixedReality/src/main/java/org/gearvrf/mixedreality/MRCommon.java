@@ -18,6 +18,7 @@ package org.gearvrf.mixedreality;
 import android.app.Activity;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -49,8 +50,13 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
-    public GVRAnchor createAnchor(Matrix4f poseMatrix) {
-        return onCreateAnchor(poseMatrix);
+    public GVRAnchor createAnchor(Matrix4f poseMatrix, GVRSceneObject sceneObject) {
+        return onCreateAnchor(poseMatrix, sceneObject);
+    }
+
+    @Override
+    public GVRAnchor createAnchor(GVRHitResult hit, GVRSceneObject sceneObject) {
+        return onCreateAnchor(hit, sceneObject);
     }
 
     @Override
@@ -73,9 +79,9 @@ public abstract class MRCommon implements IMRCommon {
 
     protected abstract void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx);
 
-    protected abstract GVRAnchor onCreateAnchor(Matrix4f poseMatrix);
+    protected abstract GVRAnchor onCreateAnchor(Matrix4f poseMatrix, GVRSceneObject sceneObject);
 
-    protected abstract void onDetachAnchor(GVRAnchor anchor);
+    protected abstract GVRAnchor onCreateAnchor(GVRHitResult hit, GVRSceneObject sceneObject);
 
     protected abstract ArrayList<GVRPlane> onGetAllPlanes();
 

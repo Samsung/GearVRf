@@ -32,6 +32,7 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRHitResult;
@@ -55,7 +56,7 @@ public class ARCoreSession extends MRCommon {
     private int mWidthPx;
     private int mHeightPx;
 
-    private ArrayList<ARCoreAnchor> mAnchors = new ArrayList<>();
+    private ArrayList<ARCoreAnchor> mAnchorsObject = new ArrayList<>();
 
     public ARCoreSession(GVRContext gvrContext) {
         super(gvrContext);
@@ -128,6 +129,8 @@ public class ARCoreSession extends MRCommon {
         mSession.setDisplayGeometry(mDisplayRotation , mWidthPx, mHeightPx);
 
         mArManager = new ARCoreStatesManager(mGvrContext.getActivity(), mGvrContext, mSession);
+        mArManager.setAnchorObjectList(mAnchorsObject);
+
     }
 
     @Override
@@ -232,16 +235,17 @@ public class ARCoreSession extends MRCommon {
     @Override
     protected void onUpdateFrame() {
         //TODO: Update Frame, anchors and planes
+
     }
 
     @Override
-    public GVRAnchor onCreateAnchor(Matrix4f poseMatrix) {
+    public GVRAnchor onCreateAnchor(Matrix4f poseMatrix, GVRSceneObject sceneObject) {
         float[] vectorTranslation = new float[3];
         Vector3f translation = new Vector3f();
         float[] vectorRotaion = new float[4];
         Quaternionf rotation = new Quaternionf();
         float[] modelMatrix = new float[16];
-        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext, this);
+
 
         poseMatrix.getTranslation(translation);
         vectorTranslation[0] = translation.x;
@@ -258,12 +262,20 @@ public class ARCoreSession extends MRCommon {
 
         Anchor anchor = mSession.createAnchor(p);
         anchor.getPose().toMatrix(modelMatrix, 0);
-        gvrAnchor.setModelMatrix(modelMatrix);
+        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext, this, sceneObject);
         gvrAnchor.setAnchorAR(anchor);
 
-        mAnchors.add(gvrAnchor);
+        mAnchorsObject.add(gvrAnchor);
 
         return  gvrAnchor;
+    }
+
+    @Override
+    protected GVRAnchor onCreateAnchor(GVRHitResult hit, GVRSceneObject sceneObject) {
+
+        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext, this, sceneObject);
+        mAnchorsObject.add(gvrAnchor);
+        return gvrAnchor;
     }
 
     @Override
@@ -287,17 +299,6 @@ public class ARCoreSession extends MRCommon {
         }
 
         return hits;
-    }
-
-    @Override
-    protected void onDetachAnchor(GVRAnchor anchor) {
-        for (ARCoreAnchor arCoreAnchor : mAnchors) {
-            android.util.Log.e(TAG, "Anchor removed from session");
-            if (arCoreAnchor.equals(anchor)) {
-                mAnchors.remove(arCoreAnchor);
-                break;
-            }
-        }
     }
 
 }
