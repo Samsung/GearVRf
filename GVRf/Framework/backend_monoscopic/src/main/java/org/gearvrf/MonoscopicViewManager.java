@@ -106,7 +106,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
      *            {@link GVRMain} which describes
      */
     MonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
-                            MonoscopicXMLParser xmlParser) {
+                          MonoscopicXMLParser xmlParser) {
         super(gvrActivity, gvrMain);
 
         // Apply view manager preferences
