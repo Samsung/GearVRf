@@ -39,8 +39,6 @@ import javax.microedition.khronos.egl.EGLDisplay;
  */
 class MonoscopicSurfaceView extends GLSurfaceView implements
         android.view.Choreographer.FrameCallback {
-    private MonoscopicViewManager mViewManager = null;
-
     /**
      * Constructs a GVRSurfaceView given by current GVR context without
      * MonoscopicViewManager
@@ -63,10 +61,9 @@ class MonoscopicSurfaceView extends GLSurfaceView implements
      *            {@link MonoscopicSurfaceView}
      */
     public MonoscopicSurfaceView(Context context,
-                          MonoscopicViewManager viewManager,
-                          MonoscopicSurfaceViewRenderer renderer) {
+                                 MonoscopicViewManager viewManager,
+                                 int width, int height) {
         super(context);
-        mViewManager = viewManager;
         /*
          * To access inputs by onKeyDown().
          */
@@ -79,16 +76,13 @@ class MonoscopicSurfaceView extends GLSurfaceView implements
         setPreserveEGLContextOnPause(true);
         setEGLContextFactory(new MonoscopicContextFactory());
         setEGLConfigChooser(new MonoscopicConfigChooser(8, 8, 8, 8, 24, 8));
-        if (renderer != null) {
-            renderer.setViewManager(viewManager);
-            setRenderer(renderer);
-        } else {
-            setRenderer(new MonoscopicSurfaceViewRenderer(viewManager));
-        }
+        setRenderer(new MonoscopicSurfaceViewRenderer(viewManager));
+
         /*
          * requestRender() will be called efficiently with VSync.
          */
         setRenderMode(RENDERMODE_WHEN_DIRTY);
+        getHolder().setFixedSize(width, height);
     }
 
     @Override

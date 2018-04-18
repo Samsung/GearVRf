@@ -25,6 +25,7 @@ import org.gearvrf.debug.GVRMethodCallTracer;
 import org.gearvrf.debug.GVRStatsLine;
 import org.gearvrf.io.GVRGearCursorController;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.VrAppSettings;
 
 /*
  * This is the most important part of gvrf.
@@ -71,9 +72,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
     private static final String TAG = Log.tag(MonoscopicViewManager.class);
     protected MonoscopicRotationSensor mRotationSensor;
-    protected MonoscopicLensInfo mLensInfo;
-
-    protected int mCurrentEye;
 
     // Statistic debug info
     private GVRStatsLine mStatsLine;
@@ -133,43 +131,29 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
          */
 
         mRenderTarget[0] = null;
-        mView = new MonoscopicSurfaceView(gvrActivity, this, null);
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        gvrActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        final VrAppSettings.EyeBufferParams eyeBufferParams = gvrActivity.getAppSettings().getEyeBufferParams();
+        GVRPerspectiveCamera.setDefaultFovY(eyeBufferParams.getFovY());
 
-        final float INCH_TO_METERS = 0.0254f;
-        int screenWidthPixels = metrics.widthPixels;
-        int screenHeightPixels = metrics.heightPixels;
-        float screenWidthMeters = (float) screenWidthPixels / metrics.xdpi
-                * INCH_TO_METERS;
-        float screenHeightMeters = (float) screenHeightPixels / metrics.ydpi
-                * INCH_TO_METERS;
+        final DisplayMetrics metrics = new DisplayMetrics();
+        gvrActivity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+        int width = eyeBufferParams.getResolutionWidth();
+        if (-1 == width) {
+            width = metrics.widthPixels;
+        }
+        int height = eyeBufferParams.getResolutionHeight();
+        if (-1 == height) {
+            height = metrics.heightPixels;
+        }
 
-        mLensInfo = new MonoscopicLensInfo(screenWidthPixels, screenHeightPixels,
-                screenWidthMeters, screenHeightMeters,
-                gvrActivity.getAppSettings());
+        mView = new MonoscopicSurfaceView(gvrActivity, this, width, height);
 
-        GVRPerspectiveCamera.setDefaultFovY(gvrActivity.getAppSettings()
-                .getEyeBufferParams().getFovY());
-        int fboWidth = gvrActivity.getAppSettings().getEyeBufferParams()
-                .getResolutionWidth();
-        int fboHeight = gvrActivity.getAppSettings().getEyeBufferParams()
-                .getResolutionHeight();
-
-        // let's default to fullscreen
-        fboWidth = screenWidthPixels;
-        fboHeight = screenHeightPixels;
-
-        float aspect = (float) fboWidth / (float) fboHeight;
+        float aspect = (float) width / (float) height;
         GVRPerspectiveCamera.setDefaultAspectRatio(aspect);
-        mViewportWidth = fboWidth;
-        mViewportHeight = fboHeight;
+        mViewportWidth = width;
+        mViewportHeight = height;
 
-        mLensInfo.setFBOWidth(mViewportWidth);
-        mLensInfo.setFBOHeight(mViewportHeight);
-
-        sampleCount = gvrActivity.getAppSettings().getEyeBufferParams().getMultiSamples();
+        sampleCount = eyeBufferParams.getMultiSamples();
 
         // Debug statistics
         mStatsLine = new GVRStatsLine("gvrf-stats");
@@ -195,9 +179,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
         if(NativeVulkanCore.useVulkanInstance()){
             isVulkanInstance = true;
             mRenderTarget[0] = null;
-            gvrActivity.getAppSettings().getEyeBufferParams().setResolutionWidth(mViewportWidth);
-            gvrActivity.getAppSettings().getEyeBufferParams().setResolutionHeight(mViewportHeight);
-            gvrActivity.getAppSettings().getEyeBufferParams().setMultiSamples(sampleCount);
+            eyeBufferParams.setResolutionWidth(mViewportWidth);
+            eyeBufferParams.setResolutionHeight(mViewportHeight);
+            eyeBufferParams.setMultiSamples(sampleCount);
             vulkanSurfaceView = new SurfaceView(mActivity);
 
             vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
