@@ -103,6 +103,25 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
 
+
+bool VkRenderTexture::isReady(){
+    VkResult err;
+    VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+    VkDevice device = renderer->getDevice();
+    if(mWaitFence != 0) {
+        err = vkGetFenceStatus(device,mWaitFence);
+        if (err == VK_SUCCESS)
+            return true;
+
+        if(VK_SUCCESS != vkWaitForFences(device, 1, &mWaitFence, VK_TRUE,
+                                         4294967295U))
+            return false;
+
+    }
+    return true;
+}
+
+
 bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
     //wait for rendering to be complete
     if(!isReady()) {

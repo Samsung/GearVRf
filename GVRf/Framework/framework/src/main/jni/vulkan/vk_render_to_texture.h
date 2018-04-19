@@ -78,11 +78,13 @@ public:
     bool readRenderResult(uint8_t *readback_buffer);
     bool accessRenderResult(uint8_t **readback_buffer) ;
     void unmapDeviceMemory();
+    bool isReady();
 
 
 
 
-    virtual void setLayerIndex(int layer_index) {}
+
+        virtual void setLayerIndex(int layer_index) {}
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
     virtual bool readRenderResult(uint8_t *readback_buffer, long capacity) {
