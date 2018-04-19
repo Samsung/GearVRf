@@ -65,6 +65,8 @@ abstract class GVRViewManager extends GVRContext {
         mEventManager = new GVREventManager(this);
         mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes());
         mInputManager.scanDevices();
+
+        mBackend = SystemPropertyUtil.getSystemProperty("debug.gearvrf.backend");
     }
 
     void onPause() {}
@@ -597,6 +599,9 @@ abstract class GVRViewManager extends GVRContext {
         final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
         Threads.spawn(new Runnable() {
             public void run() {
+
+
+
                 final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
                 callback.onScreenCaptured(capturedBitmap);
             }
@@ -688,7 +693,9 @@ abstract class GVRViewManager extends GVRContext {
         // TODO: when we will use multithreading, create new camera using centercamera as we are adding posteffects into it
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         final GVRMaterial postEffect = new GVRMaterial(this, GVRMaterial.GVRShaderType.VerticalFlip.ID);
-        centerCamera.addPostEffect(postEffect);
+
+        if(!(isVulkanInstance() && mBackend == 6))
+            centerCamera.addPostEffect(postEffect);
 
         GVRRenderTexture posteffectRenderTextureB = null;
         GVRRenderTexture posteffectRenderTextureA = null;
@@ -715,7 +722,6 @@ abstract class GVRViewManager extends GVRContext {
         final Bitmap bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
         mReadbackBuffer.rewind();
         bitmap.copyPixelsFromBuffer(mReadbackBuffer);
-
         final GVRScreenshotCallback callback = mScreenshotCenterCallback;
         Threads.spawn(new Runnable() {
             public void run() {
@@ -830,4 +836,7 @@ abstract class GVRViewManager extends GVRContext {
     private native static void readRenderResultNative(Object readbackBuffer, long renderTarget, int eye, boolean useMultiview);
 
     private static final String TAG = "GVRViewManager";
+    private static int mBackend;
+    public static native boolean isVulkanInstance();
 }
+
