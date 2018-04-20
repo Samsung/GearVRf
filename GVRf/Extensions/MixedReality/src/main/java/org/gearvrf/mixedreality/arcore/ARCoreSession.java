@@ -16,6 +16,7 @@
 package org.gearvrf.mixedreality.arcore;
 
 import android.app.Activity;
+import android.opengl.GLES30;
 import android.opengl.Matrix;
 import android.os.SystemClock;
 import android.view.MotionEvent;
@@ -45,9 +46,11 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRRenderPass;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
@@ -276,7 +279,7 @@ public class ARCoreSession extends MRCommon {
         try {
             mSession.update();
             for (Plane p : mSession.getAllTrackables(Plane.class)) {
-                ARCorePlane gvrPlane = new ARCorePlane(mGvrContext, 0);
+                ARCorePlane gvrPlane = new ARCorePlane(mGvrContext);
                 float poseMatrix[] = new float[16];
                 p.getCenterPose().toMatrix(poseMatrix, 0);
 //                gvrPlane.setCenter(poseMatrix);
@@ -355,7 +358,7 @@ public class ARCoreSession extends MRCommon {
             Trackable trackable = hit.getTrackable();
             if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
                 GVRHitResult gvrHitResult = new GVRHitResult();
-                ARCorePlane plane = new ARCorePlane(mGvrContext, 0);
+                ARCorePlane plane = new ARCorePlane(mGvrContext);
 //                plane.setPlaneAR((Plane)trackable);
                 gvrHitResult.setPlane(plane);
                 hit.getHitPose().toMatrix(modelMatrix, 0);
@@ -603,12 +606,75 @@ public class ARCoreSession extends MRCommon {
 
             ARCorePlane arCorePlane = planesMap.get(plane);
             if (arCorePlane == null) {
-                arCorePlane = new ARCorePlane(mGvrContext, planesMap.size());
+                GVRSceneObject sceneObject = createPlaneMesh(mGvrContext, 1.0f, 1.0f,  planesMap
+                        .size());
+                arCorePlane = new ARCorePlane(mGvrContext);
+                arCorePlane.addChildObject(sceneObject);
                 mVRScene.addSceneObject(arCorePlane);
                 planesMap.put(plane, arCorePlane);
             }
             arCorePlane.setEnable(true);
-            arCorePlane.update(plane, mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
+            arCorePlane.update(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
+        }
+    }
+
+        private GVRSceneObject createPlaneMesh(GVRContext gvrContext, float width, float height, int
+            indexColor) {
+
+        final float[] vertices = {
+                width * -0.5f, -0.01f, height * 0.5f,
+                width * -0.5f, -0.01f, height * -0.5f,
+                width * 0.5f, -0.01f, height * 0.5f,
+                width * 0.5f, -0.01f, height * -0.5f};
+
+        final float[] texCoords = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
+
+        char[] triangles = {0, 1, 2, 1, 3, 2};
+
+        GVRMesh mesh = new GVRMesh(gvrContext,
+                "float3 a_position float2 a_texcoord");
+
+        mesh.setVertices(vertices);
+        mesh.setTexCoords(texCoords);
+        mesh.setIndices(triangles);
+
+        GVRSceneObject quad = new GVRSceneObject(gvrContext, mesh);
+
+        GVRMaterial mat = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
+        int color = indexColor % PLANE_COLORS_RGBA.length;
+        mat.setDiffuseColor(PLANE_COLORS_RGBA[color].red,
+                PLANE_COLORS_RGBA[color].green,
+                PLANE_COLORS_RGBA[color].blue,
+                PLANE_COLORS_RGBA[color].alpha);
+
+        quad.getRenderData().setMaterial(mat);
+        quad.getRenderData().setAlphaBlend(true);
+        quad.getRenderData().setDrawMode(GLES30.GL_TRIANGLES);
+        quad.getRenderData().setCullFace(GVRRenderPass.GVRCullFaceEnum.Front);
+
+        return quad;
+    }
+
+    private static final RGB[] PLANE_COLORS_RGBA = {
+            new RGB(0.5f, 0f, 0f, 0.2f),
+            new RGB(0.0f, 0.5f, 0f, 0.2f),
+            new RGB(0.0f, 0f, 0.5f, 0.2f),
+            new RGB(0.5f, 0.5f, 0f, 0.2f),
+            new RGB(0.5f, 0f, 0.5f, 0.2f),
+            new RGB(0.0f, 0.5f, 0.5f, 0.2f),
+    };
+
+    private static class RGB {
+        float red;
+        float green;
+        float blue;
+        float alpha;
+
+        RGB(float r, float g, float b, float a) {
+            red = r;
+            green = g;
+            blue = b;
+            alpha = a;
         }
     }
 

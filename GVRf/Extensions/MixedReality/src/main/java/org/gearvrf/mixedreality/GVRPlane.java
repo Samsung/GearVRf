@@ -5,22 +5,23 @@ import org.gearvrf.GVRSceneObject;
 
 
 public abstract class GVRPlane extends GVRSceneObject{
+
     protected int mType;
-    protected int mTrackingState;
+    private GVRTrackingState mTrackingState;
     protected float mWidth;
     protected float mHeight;
     protected float[] mCenterPose = new float[16];
 
 
-    public GVRPlane(GVRContext gvrContext) {
-        super(gvrContext);
-    }
+    public GVRPlane(GVRContext gvrContext) { super(gvrContext); }
+
+    public void setTrackingState(GVRTrackingState state) { this.mTrackingState = state; }
+
+    public GVRTrackingState getTrackingState() { return this.mTrackingState; }
 
     protected abstract void setCenter(float[] pose);
 
     protected abstract void setType();
-
-    protected abstract void setTrackingState();
 
     protected abstract void setWidth(float width);
 
@@ -34,10 +35,6 @@ public abstract class GVRPlane extends GVRSceneObject{
         return this.mType;
     }
 
-    public int getTrackingState() {
-        return this.mTrackingState;
-    }
-
     public float getWidth() {
         return this.mWidth;
     }
@@ -45,4 +42,10 @@ public abstract class GVRPlane extends GVRSceneObject{
     public float getHeight() {
         return this.mHeight;
     }
+
+    public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
+        onUpdate(viewmtx, gvrmatrix, scale);
+    }
+
+    protected abstract void onUpdate(float[] viewmtx, float[] gvrmatrix, float scale);
 }

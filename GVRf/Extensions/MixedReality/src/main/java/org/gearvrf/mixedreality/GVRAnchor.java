@@ -17,8 +17,9 @@ public abstract class GVRAnchor extends GVRSceneObject{
 
     public GVRTrackingState getTrackingState() { return this.mTrackingState; }
 
-    public void update(float[] viewmtx, float[] gvrmatrix, float scale) { onUpdate(viewmtx,
-            gvrmatrix, scale); }
+    public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
+        onUpdate(viewmtx, gvrmatrix, scale);
+    }
 
     protected abstract void onUpdate(float[] viewmtx, float[] gvrmatrix, float scale);
 }
