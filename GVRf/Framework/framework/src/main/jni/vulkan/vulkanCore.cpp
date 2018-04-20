@@ -89,6 +89,8 @@ namespace gvr {
             case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
                 imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 break;
+            default:
+                FAIL("setImageLayout: unsupported oldImageLayout");
         }
 
         switch (newImageLayout) {
@@ -101,6 +103,8 @@ namespace gvr {
             case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
                 imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
                 break;
+            default:
+                FAIL("setImageLayout: unsupported newImageLayout");
         }
 
         vkCmdPipelineBarrier(

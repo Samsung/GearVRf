@@ -43,7 +43,7 @@ namespace gvr
         const char* curr = descriptor;
         while(*curr != 0){
 
-            while(*curr != 0 && std::isalnum(*curr) || *curr == '_')
+            while((*curr != 0 && std::isalnum(*curr)) || *curr == '_')
                 modified_descriptor.push_back(*curr++);
 
             while(*curr != 0 && !std::isalnum(*curr))
