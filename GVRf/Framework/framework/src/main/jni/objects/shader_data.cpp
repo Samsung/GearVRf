@@ -68,7 +68,7 @@ void ShaderData::setTexture(const char* key, Texture* texture)
         if (temp.compare(key) == 0)
         {
             Texture* oldtex = mTextures[i];
-            makeDirty(oldtex ? MOD_TEXTURE : NEW_TEXTURE);
+            makeDirty(((oldtex != nullptr) && (texture != nullptr)) ? MOD_TEXTURE : NEW_TEXTURE);
             mTextures[i] = texture;
             return;
         }
