@@ -33,14 +33,4 @@ namespace gvr{
         }
     }
 
-    VkRenderTextureOnScreen::~VkRenderTextureOnScreen()
-    {
-        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
-        std::vector<VkRenderTextureOnScreen *>::iterator it =
-                std::find( (vk_renderer->mOnScreenTextures).begin(),  (vk_renderer->mOnScreenTextures).end(), this);
-
-        if(it !=  vk_renderer->mOnScreenTextures.end())
-            vk_renderer->mOnScreenTextures.erase(it);
-    }
-
 }
