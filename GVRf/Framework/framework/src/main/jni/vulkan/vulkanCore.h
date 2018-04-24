@@ -86,28 +86,26 @@ class VulkanCore final {
 
 public:
     // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
-    static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr, bool surfaceInit = false) {
+    static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
         if (!theInstance) {
 
             theInstance = new VulkanCore(newNativeWindow);
             theInstance->initVulkanCore();
-            if(theInstance->m_Vulkan_Initialised)
-                return theInstance;
         }
-
-        if (theInstance->m_Vulkan_Initialised) {
-
-            //if called from surfaceCreated and there already was a vulkan instance,
-            //denotes that a new surface was created and the old one was not destroyed.
-            if(surfaceInit)
-                theInstance->recreateSwapChain(newNativeWindow);
-
+        if (theInstance->m_Vulkan_Initialised)
             return theInstance;
-        }
-
-
         return NULL;
     }
+
+
+    //check if Vulkan has been initialised.
+    static bool isInstancePresent(){
+        if(theInstance == NULL || !theInstance->m_Vulkan_Initialised)
+            return false;
+        else
+            return true;
+    }
+
 
     void releaseInstance(){
         if(theInstance) {

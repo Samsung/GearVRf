@@ -55,7 +55,6 @@ namespace gvr {
                                             VkShaderStageFlagBits shaderStageFlagBits) {
         //createBuffer(device, vk, ubo, index);
         createLayoutBinding(index, shaderStageFlagBits);
-
     }
 
     void VulkanDescriptor::createLayoutBinding(int binding_index, int stageFlags, bool sampler) {
@@ -1383,8 +1382,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
             m_surface = VK_NULL_HANDLE;
         }
-
-
+        
         for (size_t i = 0; i < mSwapchainImageCount; i++) {
             vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
             mSwapchainBuffers[i].view = VK_NULL_HANDLE;
@@ -1397,11 +1395,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         mSwapchainBuffers = nullptr;
 
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+
         //clear the handles to the swapChain images and imageviews. This is necessary because the driver
         //tries to reuse these handles when a new surface is created. When the garbage collector eventually runs
         //it might accidentally clear up the very same handles we are reusing.
+        std::vector<VkRenderTextureOnScreen* > onScreenTextures;
+        for(int i = 0; i < 3; i ++ )
+            onScreenTextures.push_back(static_cast<VkRenderTextureOnScreen *> (
+                    static_cast<VkRenderTarget*>(vk_renderer->getRenderTarget(i, LEFT))->getTexture()));
 
-        for(auto tex: vk_renderer->mOnScreenTextures)
+        for(auto tex: onScreenTextures)
         {
             vkImageBase ** attachments = tex->getFBO()->getAttachments();
             delete attachments[COLOR_IMAGE];
@@ -1413,10 +1416,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             attachments[MULTISAMPLED_IMAGE] = 0;
         }
 
-        //sufficient to clear up the vector so that there are no dangling pointers. The actual memory has
-        //has references to it from java and will be cleared up by close() method in GVRReference.
-        vk_renderer->mOnScreenTextures.clear();
+        //sufficient to clear up the vector so that there are no dangling pointers. The actual rendertextures
+        //haev references to it from java and will be cleared up by close() method in GVRReference.
+        onScreenTextures.clear();
 
+        for(int i = 0; i < 3; i ++ )
+            vk_renderer->addRenderTarget(nullptr, LEFT, i );
 
         vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
         mSwapchain = VK_NULL_HANDLE;

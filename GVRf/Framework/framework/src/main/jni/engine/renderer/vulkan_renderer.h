@@ -136,11 +136,6 @@ public:
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual void updatePostEffectMesh(Mesh*);
 
-
-    //maintaining this to keep a track of all the textures created using monoscopic backend.
-    //the attachments to these FBOs are cleared up when we recreate swapchains in vulkanCore.
-    std::vector<VkRenderTextureOnScreen* > mOnScreenTextures;
-
 private:
     VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}

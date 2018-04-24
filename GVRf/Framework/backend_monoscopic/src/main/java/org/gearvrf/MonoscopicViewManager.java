@@ -215,7 +215,13 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                         mInputManager.setScene(scene);
                         mRotationSensor.onResume();
                         long vulkanCoreObj;
-                        vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface(), true);
+
+
+                        if(NativeVulkanCore.isInstancePresent()) {
+                            NativeVulkanCore.recreateSwapchain(vulkanSurfaceView.getHolder().getSurface());
+                        }
+
+                        vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
                         Thread currentThread = Thread.currentThread();
 
                         // Reduce contention with other Android processes
@@ -348,6 +354,10 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             if(isVulkanInstance) {
                 mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
                 mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+
+                mRenderBundle.addRenderTarget(mRenderTarget[0], GVRViewManager.EYE.LEFT, 0);
+                mRenderBundle.addRenderTarget(mRenderTarget[1], GVRViewManager.EYE.LEFT, 1);
+                mRenderBundle.addRenderTarget(mRenderTarget[2], GVRViewManager.EYE.LEFT, 2);
             }
         }
 
@@ -452,15 +462,14 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             updateSensoredScene();
         }
     }
-
-
 }
 
 
 class NativeVulkanCore {
-    static native long getInstance(Object surface, boolean surfaceInit);
+    static native long getInstance(Object surface);
     static native int getSwapChainIndexToRender();
     static native void resetTheInstance();
     static native void recreateSwapchain(Object surface);
     static native boolean useVulkanInstance();
+    static native boolean isInstancePresent();
 }
