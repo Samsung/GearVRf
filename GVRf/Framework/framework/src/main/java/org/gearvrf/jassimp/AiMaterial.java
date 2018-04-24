@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static android.opengl.GLES20.GL_LINEAR;
+
 
 /**
  * Data structure for a material.<p>
@@ -215,7 +217,17 @@ public final class AiMaterial {
         /**
          * Texture map mode for w axis.
          */
-        TEX_MAP_MODE_W("$tex.mapmodew", AiTextureMapMode.class);
+        TEX_MAP_MODE_W("$tex.mapmodew", AiTextureMapMode.class),
+
+        /**
+         * Texture minification filter
+         */
+        TEX_MIN_FILTER("$tex.mappingfiltermin", Integer.class),
+
+        /**
+         * Texture magnification filter
+         */
+        TEX_MAG_FILTER("$tex.mappingfiltermag", Integer.class);
         
         /**
          * Constructor.
@@ -775,7 +787,7 @@ public final class AiMaterial {
         
         return (C) p.getData();
     }
-    
+
     
     /**
      * Returns the transparent color.<p>
@@ -1166,7 +1178,9 @@ public final class AiMaterial {
         setDefault(PropertyKey.TEX_MAP_MODE_U,          AiTextureMapMode.CLAMP);
         setDefault(PropertyKey.TEX_MAP_MODE_V,          AiTextureMapMode.CLAMP);
         setDefault(PropertyKey.TEX_MAP_MODE_W,          AiTextureMapMode.CLAMP);
-        
+
+        setDefault(PropertyKey.TEX_MIN_FILTER,          GL_LINEAR);
+        setDefault(PropertyKey.TEX_MAG_FILTER,          GL_LINEAR);
         /* ensure we have defaults for everything */
         for (PropertyKey key : PropertyKey.values()) {
             if (!m_defaults.containsKey(key)) {
