@@ -83,6 +83,16 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     return rp_begin;
 }
 
+void VkRenderTexture::bind() {
+    if(fbo == nullptr){
+        fbo = new VKFramebuffer(mWidth,mHeight);
+        createRenderPass();
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+
+        fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSamples);
+    }
+}
+
 void VkRenderTexture::beginRendering(Renderer* renderer){
     bind();
     VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
