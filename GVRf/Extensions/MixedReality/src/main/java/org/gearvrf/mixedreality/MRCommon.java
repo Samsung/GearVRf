@@ -15,11 +15,7 @@
 
 package org.gearvrf.mixedreality;
 
-import android.app.Activity;
-
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRSceneObject;
-import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 
@@ -29,8 +25,6 @@ public abstract class MRCommon implements IMRCommon {
     protected final GVRContext mGvrContext;
 
     public MRCommon(GVRContext gvrContext) {
-        final Activity activity = gvrContext.getActivity();
-
         mGvrContext = gvrContext;
     }
 
@@ -50,13 +44,8 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
-    public GVRAnchor createAnchor(Matrix4f poseMatrix, GVRSceneObject sceneObject) {
-        return onCreateAnchor(poseMatrix, sceneObject);
-    }
-
-    @Override
-    public GVRAnchor createAnchor(GVRHitResult hit, GVRSceneObject sceneObject) {
-        return onCreateAnchor(hit, sceneObject);
+    public void registerPlaneListener(IPlaneEventsListener listener) {
+        onRegisterPlaneListener(listener);
     }
 
     @Override
@@ -64,14 +53,8 @@ public abstract class MRCommon implements IMRCommon {
         return onGetAllPlanes();
     }
 
-    @Override
-    public GVRLightEstimate getLightEstimate() { return onGetLightEstimate(); }
+    public void updateFrame() { onUpdateFrame(); }
 
-    public ArrayList<GVRHitResult> hitTest(float[] hitLocation) {
-        return onHitTest(hitLocation);
-    }
-
-    protected void updateFrame() { onUpdateFrame(); }
 
     protected abstract void onResume();
 
@@ -79,15 +62,10 @@ public abstract class MRCommon implements IMRCommon {
 
     protected abstract void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx);
 
-    protected abstract GVRAnchor onCreateAnchor(Matrix4f poseMatrix, GVRSceneObject sceneObject);
-
-    protected abstract GVRAnchor onCreateAnchor(GVRHitResult hit, GVRSceneObject sceneObject);
+    protected abstract void onRegisterPlaneListener(IPlaneEventsListener listener);
 
     protected abstract ArrayList<GVRPlane> onGetAllPlanes();
 
-    protected abstract  ArrayList<GVRHitResult> onHitTest(float[] hitLocation);
-
-    protected abstract GVRLightEstimate onGetLightEstimate();
-
     protected abstract void onUpdateFrame();
+
 }

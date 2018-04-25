@@ -18,6 +18,7 @@ package org.gearvrf.mixedreality;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PointF;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.gearvrf.GVRBehavior;
@@ -27,7 +28,6 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
 import org.gearvrf.utility.Log;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -35,9 +35,7 @@ import java.util.ArrayList;
 
 public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private final IActivityEvents mActivityEventsHandler;
-
     private MRCommon mSession;
-    private DisplayRotationHelper mDisplayRotationHelper;
 
     public GVRMixedReality(final GVRContext gvrContext) {
         super(gvrContext, 0);
@@ -70,25 +68,12 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
+    public void registerPlaneListener(IPlaneEventsListener listener) {
+        mSession.registerPlaneListener(listener);
+    }
+
+    @Override
     public ArrayList<GVRPlane> getAllPlanes() { return mSession.getAllPlanes(); }
-
-    @Override
-    public GVRLightEstimate getLightEstimate() { return mSession.getLightEstimate(); }
-
-    @Override
-    public GVRAnchor createAnchor(Matrix4f poseMatrix,  GVRSceneObject sceneObject) {
-        return mSession.createAnchor(poseMatrix, sceneObject);
-    }
-
-    @Override
-    public GVRAnchor createAnchor(GVRHitResult hit, GVRSceneObject sceneObject) {
-        return mSession.createAnchor(hit, sceneObject);
-    }
-
-    @Override
-    public ArrayList<GVRHitResult> hitTest(float[] hitLocation) {
-        return mSession.hitTest(hitLocation);
-    }
 
     @Override
     public void onDrawFrame(float frameTime) {
@@ -130,5 +115,8 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
 
         @Override
         public void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched) {}
+
+        @Override
+        public void dispatchKeyEvent(KeyEvent keyEvent) {}
     }
 }

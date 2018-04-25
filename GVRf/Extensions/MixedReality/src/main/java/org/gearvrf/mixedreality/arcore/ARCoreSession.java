@@ -60,6 +60,8 @@ import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRPlane;
+import org.gearvrf.mixedreality.GVRTrackingState;
+import org.gearvrf.mixedreality.IPlaneEventsListener;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
 import org.gearvrf.mixedreality.R;
@@ -88,8 +90,6 @@ public class ARCoreSession extends MRCommon {
     private GVRSceneObject mARPassThroughObject;
     private Frame mLastARFrame;
     private ARCoreHandler mARCoreHandler;
-    private GVRSceneObject mCursor;
-    private GVRCursorController mCursorController;
 
     /* From AR to GVR space matrices */
     private float[] mGVRModelMatrix = new float[16];
@@ -98,21 +98,15 @@ public class ARCoreSession extends MRCommon {
     private float[] mModelViewMatrix = new float[16];
 
     private Vector3f mDisplayGeometry;
-    private int mDisplayRotation;
-    private int mWidthPx;
-    private int mHeightPx;
 
-    private ArrayList<ARCoreAnchor> mAnchorsObject = new ArrayList<>();
-    private int mVirtObjCount;
-
-    // Map to track planes
-    private Map<Plane, ARCorePlane> planesMap = new HashMap<>();
+    private ARCoreHelper mArCoreHelper;
 
     public ARCoreSession(GVRContext gvrContext) {
         super(gvrContext);
         mSession = null;
         mLastARFrame = null;
         mVRScene = gvrContext.getMainScene();
+        mArCoreHelper = new ARCoreHelper(gvrContext, mVRScene);
         setDisplayGeometry(Surface.ROTATION_90, 160, 90);
     }
 
@@ -168,37 +162,28 @@ public class ARCoreSession extends MRCommon {
             config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
             if (!mSession.isSupported(config)) {
                 showSnackbarMessage("This device does not support AR", true);
-                // FIXME: Finish app
             }
             mSession.configure(config);
         }
 
         showLoadingMessage();
-        // Note that order matters - see the note in onPause(), the reverse applies here.
+
         try {
             mSession.resume();
         } catch (CameraNotAvailableException e) {
             e.printStackTrace();
         }
 
-        //mDisplayRotationHelper.onResume();
-
-        //mSession.setDisplayGeometry(mDisplayRotation , mWidthPx, mHeightPx);
-
-        mGvrContext.registerDrawFrameListener(new GVRDrawFrameListener() {
+        mGvrContext.runOnGlThread(new Runnable() {
             @Override
-            public void onDrawFrame(float v) {
-                mGvrContext.unregisterDrawFrameListener(this);
+            public void run() {
                 try {
                     onInitARCoreSession(mGvrContext);
-                     /* Cursor controller */
-                    initCursorController(mGvrContext);
                 } catch (CameraNotAvailableException e) {
                     e.printStackTrace();
                 }
             }
         });
-
     }
 
     @Override
@@ -206,56 +191,10 @@ public class ARCoreSession extends MRCommon {
         Log.d(TAG, "onPause");
 
         if (mSession != null) {
-            // Note that the order matters - GLSurfaceView is paused first so that it does not try
-            // to query the session. If Session is paused before GLSurfaceView, GLSurfaceView may
-            // still call session.update() and get a SessionPausedException.
-            //mDisplayRotationHelper.onPause();
             mSession.pause();
         }
     }
 
-    @Override
-    protected void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
-        mDisplayRotation = displayRotation;
-        mWidthPx = widthPx;
-        mHeightPx = heightPx;
-    }
-
-    private boolean performRuntimeChecks() {
-        return true;
-    }
-
-    private boolean checkWhetherIsInstalled(Activity activity) {
-        switch (ArCoreApk.getInstance().requestInstall(activity, !mInstallRequested)) {
-            case INSTALL_REQUESTED:
-                mInstallRequested = true;
-                return false;
-            case INSTALLED:
-                break;
-        }
-
-        return true;
-    }
-
-    private boolean checkWhetherHasCameraPermission(Activity activity) {
-        if (!CameraPermissionHelper.hasCameraPermission(activity)) {
-            CameraPermissionHelper.requestCameraPermission(activity);
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean checkWhetherIsSupported(Session session) {
-        // Create default config and check if supported.
-        Config config = new Config(session);
-        if (!session.isSupported(config)) {
-            showSnackbarMessage("This device does not support AR", true);
-            return false;
-        }
-        session.configure(config);
-        return true;
-    }
 
     private void showSnackbarMessage(String message, boolean finishOnDismiss) {
         Log.d(TAG, message);
@@ -268,151 +207,23 @@ public class ARCoreSession extends MRCommon {
         showSnackbarMessage("Searching for surfaces...", false);
     }
 
-    protected Session getARSession() {
-        return this.mSession;
-    }
-
-    @Override
-    public ArrayList<GVRPlane> onGetAllPlanes() {
-        ArrayList<GVRPlane> planes = new ArrayList<>();
-
-        try {
-            mSession.update();
-            for (Plane p : mSession.getAllTrackables(Plane.class)) {
-                ARCorePlane gvrPlane = new ARCorePlane(mGvrContext);
-                float poseMatrix[] = new float[16];
-                p.getCenterPose().toMatrix(poseMatrix, 0);
-//                gvrPlane.setCenter(poseMatrix);
-                //gvrPlane.setWidth(p.getExtentX());
-                //gvrPlane.setHeight(p.getExtentZ());
-//            gvrPlane.setTrackingState(p.getTrackingState());
-                planes.add(gvrPlane);
-            }
-        } catch (Throwable t) {
-            // Avoid crashing the application due to unhandled exceptions.
-            Log.e(TAG, "Exception on the OpenGL thread", t);
-        }
-        return planes;
-    }
-
-    @Override
-    protected GVRLightEstimate onGetLightEstimate() {
-        ARLightEstimate lightEstimate = new ARLightEstimate(mGvrContext, this);
-        return lightEstimate;
-    }
-
-    @Override
-    protected void onUpdateFrame() {
-        //TODO: Update Frame, anchors and planes
-
-    }
-
-    @Override
-    public GVRAnchor onCreateAnchor(Matrix4f poseMatrix, GVRSceneObject sceneObject) {
-        float[] vectorTranslation = new float[3];
-        Vector3f translation = new Vector3f();
-        float[] vectorRotaion = new float[4];
-        Quaternionf rotation = new Quaternionf();
-        float[] modelMatrix = new float[16];
-
-
-        poseMatrix.getTranslation(translation);
-        vectorTranslation[0] = translation.x;
-        vectorTranslation[1] = translation.y;
-        vectorTranslation[2] = translation.z;
-
-        poseMatrix.getNormalizedRotation(rotation);
-        vectorRotaion[0] = rotation.x;
-        vectorRotaion[1] = rotation.y;
-        vectorRotaion[2] = rotation.z;
-        vectorRotaion[3] = rotation.w;
-
-        Pose p = new Pose(vectorTranslation, vectorRotaion);
-
-        Anchor anchor = mSession.createAnchor(p);
-        anchor.getPose().toMatrix(modelMatrix, 0);
-        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext, this, sceneObject);
-        gvrAnchor.setAnchorAR(anchor);
-
-        mAnchorsObject.add(gvrAnchor);
-
-        return gvrAnchor;
-    }
-
-    @Override
-    protected GVRAnchor onCreateAnchor(GVRHitResult hit, GVRSceneObject sceneObject) {
-
-        ARCoreAnchor gvrAnchor = new ARCoreAnchor(mGvrContext, this, sceneObject);
-        mAnchorsObject.add(gvrAnchor);
-        return gvrAnchor;
-    }
-
-    @Override
-    protected ArrayList<GVRHitResult> onHitTest(float[] hitLocation) {
-        ArrayList<GVRHitResult> hits = new ArrayList<>();
-        float[] modelMatrix = new float[16];
-        float hitX = (hitLocation[0] + 0.5f) * mWidthPx;
-        float hitY = (1 - hitLocation[1] + 0.5f) * mHeightPx;
-
-        for (HitResult hit : mSession.update().hitTest(hitX, hitY)) {
-            Trackable trackable = hit.getTrackable();
-            if (trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
-                GVRHitResult gvrHitResult = new GVRHitResult();
-                ARCorePlane plane = new ARCorePlane(mGvrContext);
-//                plane.setPlaneAR((Plane)trackable);
-                gvrHitResult.setPlane(plane);
-                hit.getHitPose().toMatrix(modelMatrix, 0);
-                gvrHitResult.setPose(modelMatrix);
-                hits.add(gvrHitResult);
-            }
-        }
-
-        return hits;
-    }
-
-    private void initCursorController(GVRContext gvrContext) {
-        mVRScene.getEventReceiver().addListener(mARCoreHandler);
-        GVRInputManager inputManager = gvrContext.getInputManager();
-        mCursor = new GVRSceneObject(gvrContext,
-                gvrContext.createQuad(0.2f * PASSTHROUGH_DISTANCE,
-                        0.2f * PASSTHROUGH_DISTANCE),
-                gvrContext.getAssetLoader().loadTexture(new GVRAndroidResource(gvrContext,
-                        R.raw.cursor)));
-        mCursor.getRenderData().setDepthTest(false);
-        mCursor.getRenderData().setRenderingOrder(GVRRenderData.GVRRenderingOrder.OVERLAY);
-        final EnumSet<GVRPicker.EventOptions> eventOptions = EnumSet.of(
-                GVRPicker.EventOptions.SEND_TOUCH_EVENTS,
-                GVRPicker.EventOptions.SEND_TO_LISTENERS);
-        inputManager.selectController(new GVRInputManager.ICursorControllerSelectListener()
-        {
-            public void onCursorControllerSelected(GVRCursorController newController, GVRCursorController oldController)
-            {
-                if (oldController != null)
-                {
-                    oldController.removePickEventListener(mARCoreHandler);
-                }
-                mCursorController = newController;
-                newController.addPickEventListener(mARCoreHandler);
-                newController.setCursor(mCursor);
-                newController.setCursorDepth(-PASSTHROUGH_DISTANCE);
-                newController.setCursorControl(GVRCursorController.CursorControl.CURSOR_CONSTANT_DEPTH);
-                newController.getPicker().setEventOptions(eventOptions);
-            }
-        });
-    }
 
     private void onInitARCoreSession(GVRContext gvrContext) throws CameraNotAvailableException {
         GVRTexture passThroughTexture = new GVRExternalTexture(gvrContext);
 
         mSession.setCameraTextureName(passThroughTexture.getId());
 
-        // FIXME: detect VR screen aspect ratio.
-        mSession.setDisplayGeometry(Surface.ROTATION_90, 160, 90);
+        // FIXME: detect VR screen aspect ratio. Using empirical 16:9 aspect ratio
+        /* Try other aspect ration whether virtual objects looks jumping ou sliding
+        during camera's rotation.
+         */
+        mSession.setDisplayGeometry(Surface.ROTATION_90 , 160, 90);
+
         mLastARFrame = mSession.update();
         mDisplayGeometry = configDisplayGeometry(mLastARFrame.getCamera());
 
-        mSession.setDisplayGeometry(Surface.ROTATION_90,
-                (int) mDisplayGeometry.x, (int) mDisplayGeometry.y);
+        mSession.setDisplayGeometry(Surface.ROTATION_90 ,
+                (int)mDisplayGeometry.x, (int)mDisplayGeometry.y);
 
         /* To render texture from phone's camera */
         mARPassThroughObject = new GVRSceneObject(gvrContext, mDisplayGeometry.x, mDisplayGeometry.y,
@@ -432,50 +243,13 @@ public class ARCoreSession extends MRCommon {
         mGVRCamMatrix = mVRScene.getMainCameraRig().getHeadTransform().getModelMatrix();
 
         updateAR2GVRMatrices(mLastARFrame.getCamera(), mVRScene.getMainCameraRig());
-
     }
 
-    private static Vector3f configDisplayGeometry(Camera arCamera) {
-        float near = 0.1f;
-        float far = 100.0f;
 
-        // Get phones' cam projection matrix.
-        float[] m = new float[16];
-        arCamera.getProjectionMatrix(m, 0, near, far);
-        Matrix4f projmtx = new Matrix4f();
-        projmtx.set(m);
-
-        float aspectRatio = projmtx.m11()/projmtx.m00();
-        float arCamFOV = projmtx.perspectiveFov();
-
-        /*
-        float widthY = 2 * (float) Math.tan(arCamFOV * 0.5f);
-        float widthX = widthY * aspectRatio;
-        */
-
-        float quadDistance = PASSTHROUGH_DISTANCE;
-        float quadHeight = new Float(2 * quadDistance * Math.tan(arCamFOV * 0.5f));
-        float quadWidth = quadHeight * aspectRatio;
-
-        android.util.Log.d(TAG, "ARCore configured to: passthrough[w: "
-                + quadWidth + ", h: " + quadHeight +", z: " + quadDistance
-                + "], cam fov: " +Math.toDegrees(arCamFOV) + ", aspect ratio: " + aspectRatio);
-
-        return new Vector3f(quadWidth, quadHeight, -PASSTHROUGH_DISTANCE);
-    }
-
-    private void updateAR2GVRMatrices(Camera arCamera, GVRCameraRig cameraRig) {
-        arCamera.getViewMatrix(mARViewMatrix, 0);
-        mGVRCamMatrix = cameraRig.getHeadTransform().getModelMatrix();
-    }
-
-    public class ARCoreHandler extends GVREventListeners.TouchEvents implements GVRDrawFrameListener {
-        private MotionEvent mCursorOverEvent = null;
-        private MotionEvent mSingleTapEvent = null;
-
+    public class ARCoreHandler implements GVRDrawFrameListener {
         @Override
         public void onDrawFrame(float v) {
-            Frame arFrame = null;
+            Frame arFrame;
             try {
                 arFrame = mSession.update();
             } catch (CameraNotAvailableException e) {
@@ -487,6 +261,7 @@ public class ARCoreSession extends MRCommon {
             Camera arCamera = arFrame.getCamera();
 
             if (arFrame.getTimestamp() == mLastARFrame.getTimestamp()) {
+                // FIXME: ARCore works at 30fps.
                 return;
             }
 
@@ -504,21 +279,8 @@ public class ARCoreSession extends MRCommon {
             // Update passthrough object with last VR cam matrix
             updatePassThroughObject(mARPassThroughObject);
 
-            List<HitResult> hitResult = null;
-
-            if (mSingleTapEvent != null) {
-                hitResult = arFrame.hitTest(mSingleTapEvent);
-                addVirtualObject(createAnchor(hitResult));
-                mSingleTapEvent.recycle();
-                mSingleTapEvent = null;
-            } else if (mCursorOverEvent != null) {
-                // update planes only if cursor is inside arcore quad
-            } else {
-                // disable planes otherwise
-            }
-
-            updatePlanes();
-            updateVirtualObjects();
+            mArCoreHelper.updatePlanes(mSession.getAllTrackables(Plane.class),
+                    mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
 
             mLastARFrame = arFrame;
 
@@ -526,170 +288,11 @@ public class ARCoreSession extends MRCommon {
             // AR/30fps vs VR/60fps
             mGVRCamMatrix = mVRScene.getMainCameraRig().getHeadTransform().getModelMatrix();
         }
-
-        @Override
-        public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
-            super.onInside(sceneObj, collision);
-
-            if (sceneObj != mARPassThroughObject)
-                return;
-
-            if (mCursorOverEvent != null)
-                mCursorOverEvent.recycle();
-
-            mCursorOverEvent = convertToTouchEvent(collision.getHitLocation());
-        }
-
-        @Override
-        public void onExit(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
-            super.onExit(sceneObj, collision);
-
-            if (sceneObj != mARPassThroughObject)
-                return;
-
-            if (mCursorOverEvent != null) {
-                mCursorOverEvent.recycle();
-                mCursorOverEvent = null;
-            }
-        }
-
-        @Override
-        public void onTouchEnd(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
-            super.onTouchEnd(sceneObj, collision);
-
-            if (sceneObj != mARPassThroughObject)
-                return;
-
-            if (mSingleTapEvent != null)
-                mSingleTapEvent.recycle();
-
-            mSingleTapEvent = convertToTouchEvent(collision.getHitLocation());
-        }
-
-        public MotionEvent convertToTouchEvent(float[] hitPoint) {
-            final float hitX = hitPoint[0] + 0.5f * mDisplayGeometry.x;
-            final float hitY = mDisplayGeometry.y - hitPoint[1] - 0.5f * mDisplayGeometry.y;
-
-            return MotionEvent.obtain(SystemClock.uptimeMillis(),
-                    SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, hitX, hitY, 0);
-        }
     }
 
-    private void addVirtualObject(Anchor anchor) {
-        if (anchor == null)
-            return;
-
-        mVirtObjCount++;
-
-        ARCoreAnchor obj = mAnchorsObject.get(mVirtObjCount % mAnchorsObject.size());
-        obj.setAnchorAR(anchor);
-        obj.setName("id: " + mVirtObjCount);
-
-        android.util.Log.d(TAG, "New virtual object " + obj.getName());
-    }
-
-    private void updateVirtualObjects() {
-        for (ARCoreAnchor obj: mAnchorsObject) {
-            obj.update(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
-        }
-    }
-
-    private void updatePlanes() {
-        for (Plane plane: mSession.getAllTrackables(Plane.class)) {
-            if (plane.getTrackingState() != TrackingState.TRACKING || plane.getSubsumedBy() != null) {
-                ARCorePlane arCorePlane = planesMap.get(plane);
-                if (arCorePlane != null) {
-                    arCorePlane.setEnable(false);
-                }
-                continue;
-            }
-
-            ARCorePlane arCorePlane = planesMap.get(plane);
-            if (arCorePlane == null) {
-                GVRSceneObject sceneObject = createPlaneMesh(mGvrContext, 1.0f, 1.0f,  planesMap
-                        .size());
-                arCorePlane = new ARCorePlane(mGvrContext);
-                arCorePlane.addChildObject(sceneObject);
-                mVRScene.addSceneObject(arCorePlane);
-                planesMap.put(plane, arCorePlane);
-            }
-            arCorePlane.setEnable(true);
-            arCorePlane.update(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
-        }
-    }
-
-        private GVRSceneObject createPlaneMesh(GVRContext gvrContext, float width, float height, int
-            indexColor) {
-
-        final float[] vertices = {
-                width * -0.5f, -0.01f, height * 0.5f,
-                width * -0.5f, -0.01f, height * -0.5f,
-                width * 0.5f, -0.01f, height * 0.5f,
-                width * 0.5f, -0.01f, height * -0.5f};
-
-        final float[] texCoords = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
-
-        char[] triangles = {0, 1, 2, 1, 3, 2};
-
-        GVRMesh mesh = new GVRMesh(gvrContext,
-                "float3 a_position float2 a_texcoord");
-
-        mesh.setVertices(vertices);
-        mesh.setTexCoords(texCoords);
-        mesh.setIndices(triangles);
-
-        GVRSceneObject quad = new GVRSceneObject(gvrContext, mesh);
-
-        GVRMaterial mat = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
-        int color = indexColor % PLANE_COLORS_RGBA.length;
-        mat.setDiffuseColor(PLANE_COLORS_RGBA[color].red,
-                PLANE_COLORS_RGBA[color].green,
-                PLANE_COLORS_RGBA[color].blue,
-                PLANE_COLORS_RGBA[color].alpha);
-
-        quad.getRenderData().setMaterial(mat);
-        quad.getRenderData().setAlphaBlend(true);
-        quad.getRenderData().setDrawMode(GLES30.GL_TRIANGLES);
-        quad.getRenderData().setCullFace(GVRRenderPass.GVRCullFaceEnum.Front);
-
-        return quad;
-    }
-
-    private static final RGB[] PLANE_COLORS_RGBA = {
-            new RGB(0.5f, 0f, 0f, 0.2f),
-            new RGB(0.0f, 0.5f, 0f, 0.2f),
-            new RGB(0.0f, 0f, 0.5f, 0.2f),
-            new RGB(0.5f, 0.5f, 0f, 0.2f),
-            new RGB(0.5f, 0f, 0.5f, 0.2f),
-            new RGB(0.0f, 0.5f, 0.5f, 0.2f),
-    };
-
-    private static class RGB {
-        float red;
-        float green;
-        float blue;
-        float alpha;
-
-        RGB(float r, float g, float b, float a) {
-            red = r;
-            green = g;
-            blue = b;
-            alpha = a;
-        }
-    }
-
-    private Anchor createAnchor(List<HitResult> hitResult) {
-        for (HitResult hit : hitResult) {
-            // Check if any plane was hit, and if it was hit inside the plane polygon
-            Trackable trackable = hit.getTrackable();
-            // Creates an anchor if a plane or an oriented point was hit.
-            if ((trackable instanceof Plane
-                    && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
-                    && ((Plane) trackable).getSubsumedBy() == null) {
-                return hit.createAnchor();
-            }
-        }
-        return null;
+    private void updateAR2GVRMatrices(Camera arCamera, GVRCameraRig cameraRig) {
+        arCamera.getViewMatrix(mARViewMatrix, 0);
+        mGVRCamMatrix = cameraRig.getHeadTransform().getModelMatrix();
     }
 
     private void updatePassThroughObject(GVRSceneObject object) {
@@ -699,6 +302,61 @@ public class ARCoreSession extends MRCommon {
         Matrix.multiplyMM(mGVRModelMatrix, 0, mGVRCamMatrix, 0, mModelViewMatrix, 0);
 
         object.getTransform().setModelMatrix(mGVRModelMatrix);
+    }
+
+    private static Vector3f configDisplayGeometry(Camera arCamera) {
+        float near = 0.1f;
+        float far = 100.0f;
+
+        // Get phones' cam projection matrix.
+        float[] m = new float[16];
+        arCamera.getProjectionMatrix(m, 0, near, far);
+        Matrix4f projmtx = new Matrix4f();
+        projmtx.set(m);
+
+        float aspectRatio = projmtx.m11()/projmtx.m00();
+        float arCamFOV = projmtx.perspectiveFov();
+
+        float quadDistance = PASSTHROUGH_DISTANCE;
+        float quadHeight = new Float(2 * quadDistance * Math.tan(arCamFOV * 0.5f));
+        float quadWidth = quadHeight * aspectRatio;
+
+        android.util.Log.d(TAG, "ARCore configured to: passthrough[w: "
+                + quadWidth + ", h: " + quadHeight +", z: " + quadDistance
+                + "], cam fov: " +Math.toDegrees(arCamFOV) + ", aspect ratio: " + aspectRatio);
+
+        return new Vector3f(quadWidth, quadHeight, -PASSTHROUGH_DISTANCE);
+    }
+
+
+
+
+    public void setARCoreSession(Session session) {
+        mSession = session;
+    }
+
+    public Session getARSession() {
+        return mSession;
+    }
+
+
+    @Override
+    protected void onUpdateFrame() {
+        //TODO: Update Frame, anchors and planes
+    }
+
+    @Override
+    protected void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
+    }
+
+    @Override
+    protected void onRegisterPlaneListener(IPlaneEventsListener listener) {
+        mArCoreHelper.registerPlaneListener(listener);
+    }
+
+    @Override
+    public ArrayList<GVRPlane> onGetAllPlanes() {
+        return mArCoreHelper.getAllPlanes();
     }
 
 }
