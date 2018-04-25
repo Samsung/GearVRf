@@ -227,8 +227,18 @@ public final class AiMaterial {
         /**
          * Texture magnification filter
          */
-        TEX_MAG_FILTER("$tex.mappingfiltermag", Integer.class);
-        
+        TEX_MAG_FILTER("$tex.mappingfiltermag", Integer.class),
+
+        /**
+         * Roughness factor for PBR materials
+         */
+        ROUGHNESS("$mat.gltf.pbrMetallicRoughness.roughnessFactor", Float.class),
+
+        /**
+         * Metallic factor for PBR materials
+         */
+        METALLIC("$mat.gltf.pbrMetallicRoughness.metallicFactor", Float.class);
+
         /**
          * Constructor.
          * 
@@ -992,8 +1002,111 @@ public final class AiMaterial {
         
         return AiTextureMapMode.fromRawValue(p.getData());
     }
-    
-    
+
+    /**
+     * Returns the texture minification filter
+     *
+     * If missing, defaults to {@link GL_LINEAR }
+     *
+     * @param type the texture type
+     * @param index the index in the texture stack
+     * @return the texture minification filter
+     */
+    public Integer getTextureMinFilter(AiTextureType type, int index) {
+        checkTexRange(type, index);
+
+        Property p = getProperty(PropertyKey.TEX_MIN_FILTER.m_key);
+
+        if (null == p || null == p.getData()) {
+            return (Integer) m_defaults.get(PropertyKey.TEX_MIN_FILTER);
+        }
+        Object rawValue = p.getData();
+        if (rawValue instanceof java.nio.ByteBuffer)
+        {
+            java.nio.IntBuffer ibuf = ((java.nio.ByteBuffer) rawValue).asIntBuffer();
+            return ibuf.get();
+        }
+        else
+        {
+            return (Integer) rawValue;
+        }
+    }
+
+    /**
+     * Returns the texture magnification filter
+     *
+     * If missing, defaults to {@link GL_LINEAR }
+     *
+     * @param type the texture type
+     * @param index the index in the texture stack
+     * @return the texture magnification filter
+     */
+    public Integer getTextureMagFilter(AiTextureType type, int index) {
+        checkTexRange(type, index);
+
+        Property p = getProperty(PropertyKey.TEX_MAG_FILTER.m_key);
+
+        if (null == p || null == p.getData()) {
+            return (Integer) m_defaults.get(PropertyKey.TEX_MAG_FILTER);
+        }
+        Object rawValue = p.getData();
+        if (rawValue instanceof java.nio.ByteBuffer)
+        {
+            java.nio.IntBuffer ibuf = ((java.nio.ByteBuffer) rawValue).asIntBuffer();
+            return ibuf.get();
+        }
+        else
+        {
+            return (Integer) rawValue;
+        }
+    }
+
+    /**
+     * Returns the metallic factor for PBR shading
+     */
+    public float getMetallic()
+    {
+        Property p = getProperty(PropertyKey.METALLIC.m_key);
+
+        if (null == p || null == p.getData())
+        {
+            throw new IllegalArgumentException("Metallic property not found");
+        }
+        Object rawValue = p.getData();
+        if (rawValue instanceof java.nio.ByteBuffer)
+        {
+            java.nio.FloatBuffer fbuf = ((java.nio.ByteBuffer) rawValue).asFloatBuffer();
+            return fbuf.get();
+        }
+        else
+        {
+            return (Float) rawValue;
+        }
+    }
+
+    /**
+     * Returns the roughness factor for PBR shading
+     */
+    public float getRoughness()
+    {
+        Property p = getProperty(PropertyKey.ROUGHNESS.m_key);
+
+        if (null == p || null == p.getData())
+        {
+            throw new IllegalArgumentException("Roughness property not found");
+        }
+        Object rawValue = p.getData();
+        if (rawValue instanceof java.nio.ByteBuffer)
+        {
+            java.nio.FloatBuffer fbuf = ((java.nio.ByteBuffer) rawValue).asFloatBuffer();
+            return fbuf.get();
+        }
+        else
+        {
+            return (Float) rawValue;
+        }
+    }
+
     /**
      * Returns the texture mapping mode for the w axis.<p>
      * 
@@ -1181,6 +1294,8 @@ public final class AiMaterial {
 
         setDefault(PropertyKey.TEX_MIN_FILTER,          GL_LINEAR);
         setDefault(PropertyKey.TEX_MAG_FILTER,          GL_LINEAR);
+        setDefault(PropertyKey.METALLIC,                0.5f);
+        setDefault(PropertyKey.ROUGHNESS,               0.5f);
         /* ensure we have defaults for everything */
         for (PropertyKey key : PropertyKey.values()) {
             if (!m_defaults.containsKey(key)) {
