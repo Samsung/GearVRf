@@ -599,9 +599,6 @@ abstract class GVRViewManager extends GVRContext {
         final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
         Threads.spawn(new Runnable() {
             public void run() {
-
-
-
                 final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
                 callback.onScreenCaptured(capturedBitmap);
             }

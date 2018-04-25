@@ -17,21 +17,21 @@
 #include "engine/renderer/vulkan_renderer.h"
 
 namespace gvr {
-    int getComponentsNumber(VkFormat format){
-        switch (format){
-            case VK_FORMAT_R8G8B8A8_UNORM:
-                return 4;
-            case VK_FORMAT_D16_UNORM:
-                return 2;
-            case VK_FORMAT_D32_SFLOAT:
-                return 4;
-            case VK_FORMAT_D24_UNORM_S8_UINT:
-                return 4;
-            default:
-                FAIL("format not found");
-        }
-        return 0;
+int getComponentsNumber(VkFormat format){
+    switch (format){
+        case VK_FORMAT_R8G8B8A8_UNORM:
+            return 4;
+        case VK_FORMAT_D16_UNORM:
+            return 2;
+        case VK_FORMAT_D32_SFLOAT:
+            return 4;
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+            return 4;
+        default:
+            FAIL("format not found");
     }
+    return 0;
+}
 
     vkImageBase::~vkImageBase(){
 
@@ -81,296 +81,296 @@ namespace gvr {
     }
 
 
-    void vkImageBase::createImageView(bool host_accessible, bool useDeviceSwapchain) {
+void vkImageBase::createImageView(bool host_accessible, bool useDeviceSwapchain) {
 
-        host_accessible_ = host_accessible;
-        VkResult ret = VK_SUCCESS;
-        VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
-        VkDevice device = vk_renderer->getDevice();
+    host_accessible_ = host_accessible;
+    VkResult ret = VK_SUCCESS;
+    VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
+    VkDevice device = vk_renderer->getDevice();
 
 
-        if(!useDeviceSwapchain) {
+    if(!useDeviceSwapchain) {
 
-            bool pass;
-            VkMemoryRequirements mem_reqs;
-            uint32_t memoryTypeIndex;
-
-            ret = vkCreateImage(
-                    device,
-                    gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, format_, width_,
-                                         height_, depth_, 1, mLayers,
-                                         tiling_,
-                                         usage_flags_, 0, getVKSampleBit(mSampleCount),
-                                         imageLayout),
-                    nullptr, &image
-            );
-            GVR_VK_CHECK(!ret);
-
-            ret = vkCreateBuffer(device,
-                                 gvr::BufferCreateInfo(
-                                         width_ * height_ * getComponentsNumber(format_) * mLayers *
-                                         sizeof(uint8_t),
-                                         usage_flags_), nullptr,
-                                 &hostBuffer);
-            GVR_VK_CHECK(!ret);
-
-            // discover what memory requirements are for this image.
-            vkGetImageMemoryRequirements(device, image, &mem_reqs);
-
-            pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                                                            &memoryTypeIndex);
-            GVR_VK_CHECK(pass);
-            size = mem_reqs.size;
-
-            ret = vkAllocateMemory(device,
-                                   gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
-                                   &host_memory);
-            GVR_VK_CHECK(!ret);
-
-            // Bind memory to the image
-            ret = vkBindImageMemory(device, image, host_memory, 0);
-            GVR_VK_CHECK(!ret);
-
-            ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
-            GVR_VK_CHECK(!ret);
-
-            VkImageAspectFlagBits aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
-            if (usage_flags_ == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-                aspectFlag = static_cast<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT |
-                                                                VK_IMAGE_ASPECT_STENCIL_BIT);
-            ret = vkCreateImageView(
-                    device,
-                    gvr::ImageViewCreateInfo(image, imageType,
-                                             format_, 1, mLayers,
-                                             aspectFlag),
-                    nullptr, &imageView
-            );
-            GVR_VK_CHECK(!ret);
-        }
-
-        if(host_accessible) {
-
-            bool pass;
-            VkMemoryRequirements mem_reqs;
-            uint32_t memoryTypeIndex;
-
-            ret = vkCreateBuffer(device,
-                                 gvr::BufferCreateInfo(width_ * height_ *  getComponentsNumber(format_) * mLayers  * sizeof(uint8_t),
-                                                       VK_BUFFER_USAGE_TRANSFER_DST_BIT), nullptr,
-                                 outBuffer.get());
-            GVR_VK_CHECK(!ret);
-
-            // Obtain the memory requirements for this buffer.
-            vkGetBufferMemoryRequirements(device, *outBuffer, &mem_reqs);
-            GVR_VK_CHECK(!ret);
-
-            pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                                            &memoryTypeIndex);
-            GVR_VK_CHECK(pass);
-
-            ret = vkAllocateMemory(device,
-                                   gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
-                                   &dev_memory);
-            GVR_VK_CHECK(!ret);
-
-            ret = vkBindBufferMemory(device, *outBuffer, dev_memory, 0);
-            GVR_VK_CHECK(!ret);
-        }
-    }
-
-    void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
-                                       std::vector<ImageInfo> &bitmapInfos,
-                                       std::vector<VkBufferImageCopy> &bufferCopyRegions,
-                                       VkImageViewType target, VkFormat internalFormat,
-                                       int mipLevels,
-                                       VkImageCreateFlags flags) {
-
-        VkResult err;
         bool pass;
-        VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
-        VkDevice device = vk_renderer->getDevice();
-        VkFormatProperties formatProperties;
-        vkGetPhysicalDeviceFormatProperties(vk_renderer->getPhysicalDevice(), internalFormat,
-                                            &formatProperties);
-
-        VkBuffer texBuffer;
-        VkDeviceMemory texMemory;
-
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.pNext = NULL;
-        memoryAllocateInfo.allocationSize = 0;
-        memoryAllocateInfo.memoryTypeIndex = 0;
-
-        err = vkCreateBuffer(device,
-                             gvr::BufferCreateInfo(texSize,
-                                                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT),
-                             nullptr, &texBuffer);
-
-
-        GVR_VK_CHECK(!err);
-
-        // Obtain the requirements on memory for this buffer
         VkMemoryRequirements mem_reqs;
-        vkGetBufferMemoryRequirements(device, texBuffer, &mem_reqs);
-        assert(!err);
+        uint32_t memoryTypeIndex;
 
-        memoryAllocateInfo.allocationSize = mem_reqs.size;
+        ret = vkCreateImage(
+                device,
+                gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, format_, width_,
+                                     height_, depth_, 1, mLayers,
+                                     tiling_,
+                                     usage_flags_, 0, getVKSampleBit(mSampleCount),
+                                     imageLayout),
+                nullptr, &image
+        );
+        GVR_VK_CHECK(!ret);
 
-        pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                                        &memoryAllocateInfo.memoryTypeIndex);
-        assert(pass);
-        size = mem_reqs.size;
-        err = vkAllocateMemory(device, gvr::MemoryAllocateInfo(mem_reqs.size,
-                                                               memoryAllocateInfo.memoryTypeIndex),
-                               NULL, &texMemory);
-        unsigned char *texData;
-        err = vkMapMemory(device, texMemory, 0,
-                          memoryAllocateInfo.allocationSize, 0, (void **) &texData);
-        assert(!err);
-        int i = 0;
-        for (auto &buffer_copy_region: bufferCopyRegions) {
-            memcpy(texData + buffer_copy_region.bufferOffset, pixels[i],
-                   bitmapInfos[i].size);
-            i++;
-        }
-        vkUnmapMemory(device, texMemory);
+        ret = vkCreateBuffer(device,
+                             gvr::BufferCreateInfo(
+                                     width_ * height_ * getComponentsNumber(format_) * mLayers *
+                                     sizeof(uint8_t),
+                                     usage_flags_), nullptr,
+                             &hostBuffer);
+        GVR_VK_CHECK(!ret);
 
-        // Bind our buffer to the memory
-        err = vkBindBufferMemory(device, texBuffer, texMemory, 0);
-        assert(!err);
-
-        err = vkCreateImage(device, gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D,
-                                                         internalFormat,
-                                                         bitmapInfos[0].width,
-                                                         bitmapInfos[0].height, 1, mipLevels, pixels.size(),
-                                                         VK_IMAGE_TILING_OPTIMAL,
-                                                         VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-                                                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-                                                         VK_IMAGE_USAGE_SAMPLED_BIT,
-                                                         flags,
-                                                         getVKSampleBit(mSampleCount),
-                                                         VK_IMAGE_LAYOUT_UNDEFINED), NULL,
-                            &image);
-        assert(!err);
-
+        // discover what memory requirements are for this image.
         vkGetImageMemoryRequirements(device, image, &mem_reqs);
-
-        memoryAllocateInfo.allocationSize = mem_reqs.size;
 
         pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
                                                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                                                        &memoryAllocateInfo.memoryTypeIndex);
-        assert(pass);
+                                                        &memoryTypeIndex);
+        GVR_VK_CHECK(pass);
+        size = mem_reqs.size;
 
-        /* allocate memory */
-        err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &host_memory);
-        assert(!err);
+        ret = vkAllocateMemory(device,
+                               gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
+                               &host_memory);
+        GVR_VK_CHECK(!ret);
 
-        /* bind memory */
-        err = vkBindImageMemory(device, image, host_memory, 0);
-        assert(!err);
+        // Bind memory to the image
+        ret = vkBindImageMemory(device, image, host_memory, 0);
+        GVR_VK_CHECK(!ret);
 
-        // Reset the setup command buffer
-        VkCommandBuffer textureCmdBuffer;
-        vk_renderer->initCmdBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, textureCmdBuffer);
+        ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
+        GVR_VK_CHECK(!ret);
 
-        vkResetCommandBuffer(textureCmdBuffer, 0);
-        VkCommandBufferInheritanceInfo commandBufferInheritanceInfo = {};
-        commandBufferInheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-        commandBufferInheritanceInfo.pNext = NULL;
-        commandBufferInheritanceInfo.renderPass = VK_NULL_HANDLE;
-        commandBufferInheritanceInfo.subpass = 0;
-        commandBufferInheritanceInfo.framebuffer = VK_NULL_HANDLE;
-        commandBufferInheritanceInfo.occlusionQueryEnable = VK_FALSE;
-        commandBufferInheritanceInfo.queryFlags = 0;
-        commandBufferInheritanceInfo.pipelineStatistics = 0;
-
-        VkCommandBufferBeginInfo setupCmdsBeginInfo;
-        setupCmdsBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        setupCmdsBeginInfo.pNext = NULL;
-        setupCmdsBeginInfo.flags = 0;
-        setupCmdsBeginInfo.pInheritanceInfo = &commandBufferInheritanceInfo;
-
-        // Begin recording to the command buffer.
-        vkBeginCommandBuffer(textureCmdBuffer, &setupCmdsBeginInfo);
-
-        VkImageMemoryBarrier imageMemoryBarrier = {};
-        imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imageMemoryBarrier.pNext = NULL;
-        imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageMemoryBarrier.subresourceRange.baseMipLevel = 0;
-        imageMemoryBarrier.subresourceRange.levelCount = 1;
-        imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-        imageMemoryBarrier.subresourceRange.layerCount = pixels.size();
-        imageMemoryBarrier.srcAccessMask = 0;
-        imageMemoryBarrier.dstAccessMask =
-                VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-
-        // Optimal image will be used as destination for the copy, so we must transfer from our initial undefined image layout to the transfer destination layout
-        setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
-                       VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                       imageMemoryBarrier.subresourceRange);
-
-        vkCmdCopyBufferToImage(
-                textureCmdBuffer,
-                texBuffer,
-                image,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                static_cast<uint32_t>(bufferCopyRegions.size()),
-                bufferCopyRegions.data());
-
-        imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
-                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                       imageMemoryBarrier.subresourceRange);
-
-        // We are finished recording operations.
-        vkEndCommandBuffer(textureCmdBuffer);
-
-        VkCommandBuffer buffers[1];
-        buffers[0] = textureCmdBuffer;
-
-        VkSubmitInfo submit_info;
-        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submit_info.pNext = NULL;
-        submit_info.waitSemaphoreCount = 0;
-        submit_info.pWaitSemaphores = NULL;
-        submit_info.pWaitDstStageMask = NULL;
-        submit_info.commandBufferCount = 1;
-        submit_info.pCommandBuffers = &buffers[0];
-        submit_info.signalSemaphoreCount = 0;
-        submit_info.pSignalSemaphores = NULL;
-        VkQueue queue = vk_renderer->getQueue();
-
-        // Submit to our shared graphics queue.
-        err = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-        assert(!err);
-
-        // Wait for the queue to become idle.
-        err = vkQueueWaitIdle(queue);
-        assert(!err);
-
-        vkFreeMemory(device, texMemory, nullptr);
-        vkDestroyBuffer(device, texBuffer, nullptr);
-
-        if(mipLevels > 1)
-            createMipLevels(formatProperties, vk_renderer, setupCmdsBeginInfo,
-                            bufferCopyRegions, mipLevels, bitmapInfos, imageMemoryBarrier,
-                            submit_info, buffers, queue);
-
-        err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
-                                                                 target,
-                                                                 internalFormat, mipLevels,
-                                                                 pixels.size(),
-                                                                 VK_IMAGE_ASPECT_COLOR_BIT), NULL,
-                                &imageView);
-        assert(!err);
+        VkImageAspectFlagBits aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
+        if (usage_flags_ == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+            aspectFlag = static_cast<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT |
+                                                            VK_IMAGE_ASPECT_STENCIL_BIT);
+        ret = vkCreateImageView(
+                device,
+                gvr::ImageViewCreateInfo(image, imageType,
+                                         format_, 1, mLayers,
+                                         aspectFlag),
+                nullptr, &imageView
+        );
+        GVR_VK_CHECK(!ret);
     }
+
+    if(host_accessible) {
+
+        bool pass;
+        VkMemoryRequirements mem_reqs;
+        uint32_t memoryTypeIndex;
+
+        ret = vkCreateBuffer(device,
+                             gvr::BufferCreateInfo(width_ * height_ *  getComponentsNumber(format_) * mLayers  * sizeof(uint8_t),
+                                                   VK_BUFFER_USAGE_TRANSFER_DST_BIT), nullptr,
+                             outBuffer.get());
+        GVR_VK_CHECK(!ret);
+
+        // Obtain the memory requirements for this buffer.
+        vkGetBufferMemoryRequirements(device, *outBuffer, &mem_reqs);
+        GVR_VK_CHECK(!ret);
+
+        pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
+                                                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                                                        &memoryTypeIndex);
+        GVR_VK_CHECK(pass);
+
+        ret = vkAllocateMemory(device,
+                               gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
+                               &dev_memory);
+        GVR_VK_CHECK(!ret);
+
+        ret = vkBindBufferMemory(device, *outBuffer, dev_memory, 0);
+        GVR_VK_CHECK(!ret);
+    }
+}
+
+void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
+                                   std::vector<ImageInfo> &bitmapInfos,
+                                   std::vector<VkBufferImageCopy> &bufferCopyRegions,
+                                   VkImageViewType target, VkFormat internalFormat,
+                                   int mipLevels,
+                                   VkImageCreateFlags flags) {
+
+    VkResult err;
+    bool pass;
+    VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
+    VkDevice device = vk_renderer->getDevice();
+    VkFormatProperties formatProperties;
+    vkGetPhysicalDeviceFormatProperties(vk_renderer->getPhysicalDevice(), internalFormat,
+                                        &formatProperties);
+
+    VkBuffer texBuffer;
+    VkDeviceMemory texMemory;
+
+    VkMemoryAllocateInfo memoryAllocateInfo = {};
+    memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    memoryAllocateInfo.pNext = NULL;
+    memoryAllocateInfo.allocationSize = 0;
+    memoryAllocateInfo.memoryTypeIndex = 0;
+
+    err = vkCreateBuffer(device,
+                         gvr::BufferCreateInfo(texSize,
+                                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT),
+                         nullptr, &texBuffer);
+
+
+    GVR_VK_CHECK(!err);
+
+    // Obtain the requirements on memory for this buffer
+    VkMemoryRequirements mem_reqs;
+    vkGetBufferMemoryRequirements(device, texBuffer, &mem_reqs);
+    assert(!err);
+
+    memoryAllocateInfo.allocationSize = mem_reqs.size;
+
+    pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
+                                                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                                                    &memoryAllocateInfo.memoryTypeIndex);
+    assert(pass);
+    size = mem_reqs.size;
+    err = vkAllocateMemory(device, gvr::MemoryAllocateInfo(mem_reqs.size,
+                                                           memoryAllocateInfo.memoryTypeIndex),
+                           NULL, &texMemory);
+    unsigned char *texData;
+    err = vkMapMemory(device, texMemory, 0,
+                      memoryAllocateInfo.allocationSize, 0, (void **) &texData);
+    assert(!err);
+    int i = 0;
+    for (auto &buffer_copy_region: bufferCopyRegions) {
+        memcpy(texData + buffer_copy_region.bufferOffset, pixels[i],
+               bitmapInfos[i].size);
+        i++;
+    }
+    vkUnmapMemory(device, texMemory);
+
+    // Bind our buffer to the memory
+    err = vkBindBufferMemory(device, texBuffer, texMemory, 0);
+    assert(!err);
+
+    err = vkCreateImage(device, gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D,
+                                                     internalFormat,
+                                                     bitmapInfos[0].width,
+                                                     bitmapInfos[0].height, 1, mipLevels, pixels.size(),
+                                                     VK_IMAGE_TILING_OPTIMAL,
+                                                     VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                                                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                                                     VK_IMAGE_USAGE_SAMPLED_BIT,
+                                                     flags,
+                                                     getVKSampleBit(mSampleCount),
+                                                     VK_IMAGE_LAYOUT_UNDEFINED), NULL,
+                        &image);
+    assert(!err);
+
+    vkGetImageMemoryRequirements(device, image, &mem_reqs);
+
+    memoryAllocateInfo.allocationSize = mem_reqs.size;
+
+    pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
+                                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                                    &memoryAllocateInfo.memoryTypeIndex);
+    assert(pass);
+
+    /* allocate memory */
+    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &host_memory);
+    assert(!err);
+
+    /* bind memory */
+    err = vkBindImageMemory(device, image, host_memory, 0);
+    assert(!err);
+
+    // Reset the setup command buffer
+    VkCommandBuffer textureCmdBuffer;
+    vk_renderer->initCmdBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, textureCmdBuffer);
+
+    vkResetCommandBuffer(textureCmdBuffer, 0);
+    VkCommandBufferInheritanceInfo commandBufferInheritanceInfo = {};
+    commandBufferInheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    commandBufferInheritanceInfo.pNext = NULL;
+    commandBufferInheritanceInfo.renderPass = VK_NULL_HANDLE;
+    commandBufferInheritanceInfo.subpass = 0;
+    commandBufferInheritanceInfo.framebuffer = VK_NULL_HANDLE;
+    commandBufferInheritanceInfo.occlusionQueryEnable = VK_FALSE;
+    commandBufferInheritanceInfo.queryFlags = 0;
+    commandBufferInheritanceInfo.pipelineStatistics = 0;
+
+    VkCommandBufferBeginInfo setupCmdsBeginInfo;
+    setupCmdsBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    setupCmdsBeginInfo.pNext = NULL;
+    setupCmdsBeginInfo.flags = 0;
+    setupCmdsBeginInfo.pInheritanceInfo = &commandBufferInheritanceInfo;
+
+    // Begin recording to the command buffer.
+    vkBeginCommandBuffer(textureCmdBuffer, &setupCmdsBeginInfo);
+
+    VkImageMemoryBarrier imageMemoryBarrier = {};
+    imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageMemoryBarrier.pNext = NULL;
+    imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+    imageMemoryBarrier.subresourceRange.levelCount = 1;
+    imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+    imageMemoryBarrier.subresourceRange.layerCount = pixels.size();
+    imageMemoryBarrier.srcAccessMask = 0;
+    imageMemoryBarrier.dstAccessMask =
+            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+
+    // Optimal image will be used as destination for the copy, so we must transfer from our initial undefined image layout to the transfer destination layout
+    setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
+                   VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   imageMemoryBarrier.subresourceRange);
+
+    vkCmdCopyBufferToImage(
+            textureCmdBuffer,
+            texBuffer,
+            image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            static_cast<uint32_t>(bufferCopyRegions.size()),
+            bufferCopyRegions.data());
+
+    imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                   imageMemoryBarrier.subresourceRange);
+
+    // We are finished recording operations.
+    vkEndCommandBuffer(textureCmdBuffer);
+
+    VkCommandBuffer buffers[1];
+    buffers[0] = textureCmdBuffer;
+
+    VkSubmitInfo submit_info;
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.pNext = NULL;
+    submit_info.waitSemaphoreCount = 0;
+    submit_info.pWaitSemaphores = NULL;
+    submit_info.pWaitDstStageMask = NULL;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &buffers[0];
+    submit_info.signalSemaphoreCount = 0;
+    submit_info.pSignalSemaphores = NULL;
+    VkQueue queue = vk_renderer->getQueue();
+
+    // Submit to our shared graphics queue.
+    err = vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+    assert(!err);
+
+    // Wait for the queue to become idle.
+    err = vkQueueWaitIdle(queue);
+    assert(!err);
+
+    vkFreeMemory(device, texMemory, nullptr);
+    vkDestroyBuffer(device, texBuffer, nullptr);
+
+    if(mipLevels > 1)
+        createMipLevels(formatProperties, vk_renderer, setupCmdsBeginInfo,
+                        bufferCopyRegions, mipLevels, bitmapInfos, imageMemoryBarrier,
+                        submit_info, buffers, queue);
+
+    err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
+                                                             target,
+                                                             internalFormat, mipLevels,
+                                                             pixels.size(),
+                                                             VK_IMAGE_ASPECT_COLOR_BIT), NULL,
+                            &imageView);
+    assert(!err);
+}
 
 
     void vkImageBase::createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,

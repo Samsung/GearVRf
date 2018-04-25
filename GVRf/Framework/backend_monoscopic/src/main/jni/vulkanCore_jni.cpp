@@ -22,24 +22,24 @@
 #include "vulkan/vulkan_headers.h"
 
 namespace gvr {
-    extern "C" {
+extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv* env, jobject obj, jobject surface);
+        Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv* env, jobject obj, jobject surface);
 
     JNIEXPORT jint JNICALL
-    Java_org_gearvrf_NativeVulkanCore_getSwapChainIndexToRender(JNIEnv* env, jobject obj);
+        Java_org_gearvrf_NativeVulkanCore_getSwapChainIndexToRender(JNIEnv* env, jobject obj);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeVulkanCore_resetTheInstance(JNIEnv* env, jobject obj);
+        Java_org_gearvrf_NativeVulkanCore_resetTheInstance(JNIEnv* env, jobject obj);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeVulkanCore_recreateSwapchain(JNIEnv* env, jobject obj, jobject surface);
+        Java_org_gearvrf_NativeVulkanCore_recreateSwapchain(JNIEnv* env, jobject obj, jobject surface);
 
     JNIEXPORT bool JNICALL
-    Java_org_gearvrf_NativeVulkanCore_useVulkanInstance(JNIEnv* env, jobject obj);
+        Java_org_gearvrf_NativeVulkanCore_useVulkanInstance(JNIEnv* env, jobject obj);
 
     JNIEXPORT bool JNICALL
-    Java_org_gearvrf_NativeVulkanCore_isInstancePresent(JNIEnv* env, jobject obj);
+        Java_org_gearvrf_NativeVulkanCore_isInstancePresent(JNIEnv* env, jobject obj);
     };
 
     JNIEXPORT jlong JNICALL
