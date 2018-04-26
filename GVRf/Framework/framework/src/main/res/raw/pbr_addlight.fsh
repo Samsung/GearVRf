@@ -83,7 +83,7 @@ vec4 AddLight(Surface s, Radiance r)
     vec3 kS = F * G * D / (4.0 * NdotL * NdotV);
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-    vec3 color = (r.diffuse_intensity * kD) + (r.specular_intensity * (kS * s.brdf.x + s.brdf.y)) + s.emission.xyz;
+    vec3 color = NdotL * ((r.diffuse_intensity * kD) + (r.specular_intensity * kS)) + s.emission.xyz;
 
 #ifdef HAS_lightmapTexture
     float ao = texture(lightmapTexture, lightmap_coord).r;

@@ -5,8 +5,6 @@
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
 
-#define JNI_LOG 1
-
 #ifdef JNI_LOG
 #ifdef ANDROID
 #include <android/log.h>
