@@ -25,7 +25,6 @@
 #include "vk_texture.h"
 #include "vulkan_flags.h"
 
-
 #define GVR_VK_CHECK(X) if (!(X)) { FAIL("VK_CHECK Failure"); }
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
@@ -81,7 +80,8 @@ class VulkanShader;
 class VkRenderTarget;
 class RenderTarget;
 class LightList;
-
+class VKDeviceComponent;
+    
 class VulkanCore final {
 
 public:
@@ -97,10 +97,24 @@ public:
         return NULL;
     }
 
-    void releaseInstance(){
-        delete theInstance;
-        theInstance = nullptr;
+
+    //check if Vulkan has been initialised.
+    static bool isInstancePresent(){
+        if(theInstance == NULL || !theInstance->m_Vulkan_Initialised)
+            return false;
+        else
+            return true;
     }
+
+
+    void releaseInstance(){
+        if(theInstance) {
+            delete theInstance;
+            theInstance = nullptr;
+        }
+    }
+
+    void recreateSwapChain(ANativeWindow *);
 
     ~VulkanCore();
 
@@ -180,6 +194,10 @@ public:
     }
     void SetNextBackBuffer();
     void PresentBackBuffer();
+
+    void addDeviceComponent(VKDeviceComponent*);
+    void removeDeviceComponent(VKDeviceComponent *);
+
 private:
 
     static VulkanCore *theInstance;
@@ -251,6 +269,8 @@ private:
 
     VkPipelineCache m_pipelineCache;
     std::unordered_map<int, VkRenderPass> mRenderPassMap;
+
+    std::vector<VKDeviceComponent * > mDeviceComponents;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H

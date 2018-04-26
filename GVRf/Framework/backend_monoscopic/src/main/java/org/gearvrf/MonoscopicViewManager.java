@@ -106,7 +106,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
      *            {@link GVRMain} which describes
      */
     MonoscopicViewManager(GVRActivity gvrActivity, GVRMain gvrMain,
-                             MonoscopicXMLParser xmlParser) {
+                            MonoscopicXMLParser xmlParser) {
         super(gvrActivity, gvrMain);
 
         // Apply view manager preferences
@@ -199,6 +199,12 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                         mInputManager.setScene(scene);
                         mRotationSensor.onResume();
                         long vulkanCoreObj;
+
+
+                        if(NativeVulkanCore.isInstancePresent()) {
+                            NativeVulkanCore.recreateSwapchain(vulkanSurfaceView.getHolder().getSurface());
+                        }
+
                         vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
                         Thread currentThread = Thread.currentThread();
 
@@ -214,8 +220,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                         initialized = true;
                     }
                     else{
-                        NativeVulkanCore.resetTheInstance();
-                        NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
+                        NativeVulkanCore.recreateSwapchain(vulkanSurfaceView.getHolder().getSurface());
                     }
                 }
 
@@ -228,10 +233,20 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                     mRotationSensor.onResume();
                 }
 
+
+                //either this or onPause is called first when pausing the application. Making sure that
+                //the draw thread terminates in both.
                 @Override
                 public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-                    Log.d("Vulkan", "surfaceDestroyed");
                     activeFlag = false;
+                    if (vulkanDrawThread != null) {
+                        try {
+                            vulkanDrawThread.join();
+                        } catch (InterruptedException e) {
+                            Log.d("vulkan: surfaceview surfaceDestroyed", "draw thread not terminated");
+                        }
+                    }
+                    Log.d("vulkan", "surfaceDestroyed");
                     mRotationSensor.onDestroy();
                 }
 
@@ -254,8 +269,20 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     @Override
     void onPause() {
         super.onPause();
-        Log.v(TAG, "onPause");
         mRotationSensor.onPause();
+
+        if(NativeVulkanCore.useVulkanInstance()) {
+            activeFlag = false;
+
+            if (vulkanDrawThread != null){
+                try {
+                    vulkanDrawThread.join();
+                } catch (InterruptedException e) {
+                    Log.e("vulkan: activity onPause:", "draw thread not terminated");
+                }
+            }
+        }
+        Log.d(TAG, "onPause");
     }
 
     /**
@@ -311,6 +338,10 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             if(isVulkanInstance) {
                 mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
                 mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+
+                mRenderBundle.addRenderTarget(mRenderTarget[0], GVRViewManager.EYE.LEFT, 0);
+                mRenderBundle.addRenderTarget(mRenderTarget[1], GVRViewManager.EYE.LEFT, 1);
+                mRenderBundle.addRenderTarget(mRenderTarget[2], GVRViewManager.EYE.LEFT, 2);
             }
         }
 
@@ -324,6 +355,19 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
         beforeDrawEyes();
         drawEyes();
         afterDrawEyes();
+    }
+
+    public class Worker implements Runnable {
+        public void run() {
+            while(activeFlag){
+                beforeDrawEyes();
+                drawEyes();
+                afterDrawEyes();
+            }
+            for(int i = 0; i < 3; i++) {
+                mRenderTarget[i] = null;
+            }
+        }
     }
 
     @Override
@@ -356,18 +400,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
         if (mGearController != null)
         {
             mGearController.attachReader(new MonoscopicControllerReader());
-        }
-    }
-
-    public class Worker implements Runnable {
-        public void run() {
-            while(activeFlag){
-                beforeDrawEyes();
-                drawEyes();
-                afterDrawEyes();
-            }
-            for(int i = 0; i < 3; i++)
-                mRenderTarget[i] = null;
         }
     }
 
@@ -414,8 +446,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             updateSensoredScene();
         }
     }
-
-
 }
 
 
@@ -423,5 +453,7 @@ class NativeVulkanCore {
     static native long getInstance(Object surface);
     static native int getSwapChainIndexToRender();
     static native void resetTheInstance();
+    static native void recreateSwapchain(Object surface);
     static native boolean useVulkanInstance();
+    static native boolean isInstancePresent();
 }

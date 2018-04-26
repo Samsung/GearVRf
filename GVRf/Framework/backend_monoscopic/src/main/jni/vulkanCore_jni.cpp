@@ -32,18 +32,21 @@ extern "C" {
     JNIEXPORT void JNICALL
         Java_org_gearvrf_NativeVulkanCore_resetTheInstance(JNIEnv* env, jobject obj);
 
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeVulkanCore_recreateSwapchain(JNIEnv* env, jobject obj, jobject surface);
+
     JNIEXPORT bool JNICALL
         Java_org_gearvrf_NativeVulkanCore_useVulkanInstance(JNIEnv* env, jobject obj);
+
+    JNIEXPORT bool JNICALL
+        Java_org_gearvrf_NativeVulkanCore_isInstancePresent(JNIEnv* env, jobject obj);
 };
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv * env, jobject obj, jobject surface){
     ANativeWindow * newNativeWindow = ANativeWindow_fromSurface(env, surface);
     VulkanCore * vulkanCore = VulkanCore::getInstance(newNativeWindow);
-    //if(vulkanCore == nullptr)
-    //    return (reinterpret_cast<jlong>(nullptr));
-    //else
-	    return (reinterpret_cast<jlong>(vulkanCore));
+    return (reinterpret_cast<jlong>(vulkanCore));
 }
 
     JNIEXPORT jint JNICALL
@@ -58,8 +61,20 @@ Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv * env, jobject obj, jobject
         return vulkanCore->releaseInstance();
     }
 
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeVulkanCore_recreateSwapchain(JNIEnv * env, jobject obj, jobject surface){
+        ANativeWindow * newNativeWindow = ANativeWindow_fromSurface(env, surface);
+        VulkanCore * vulkanCore = VulkanCore::getInstance();
+        return vulkanCore->recreateSwapChain(newNativeWindow);
+    }
+
     JNIEXPORT bool JNICALL
     Java_org_gearvrf_NativeVulkanCore_useVulkanInstance(JNIEnv * env, jobject obj){
         return Renderer::useVulkanInstance();
+    }
+
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeVulkanCore_isInstancePresent(JNIEnv* env, jobject obj){
+        return VulkanCore::isInstancePresent();
     }
 }

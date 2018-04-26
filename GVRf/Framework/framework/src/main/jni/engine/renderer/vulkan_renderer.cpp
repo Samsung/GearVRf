@@ -122,6 +122,7 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
 {
     if(monoscopic)
         return new VkRenderTextureOnScreen(width, height, sample_count);
+
     return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters, number_views);
 }
 

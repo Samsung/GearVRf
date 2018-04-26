@@ -34,7 +34,7 @@ namespace gvr {
         MULTISAMPLED_IMAGE = 0, COLOR_IMAGE = 1, DEPTH_IMAGE = 2
     };
 
-class vkImageBase
+class vkImageBase : public VKDeviceComponent
 {
     public:
     explicit vkImageBase(VkImageViewType type) : outBuffer(new VkBuffer),imageType(type), size(0), format_(VK_FORMAT_R8G8B8A8_UNORM), tiling_(VK_IMAGE_TILING_LINEAR), usage_flags_(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT),mSampleCount(1)
@@ -50,6 +50,8 @@ class vkImageBase
     :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
     { }
     virtual ~vkImageBase();
+
+    void cleanup();
         void createImageView(bool host_accessible);
         void updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
         void createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,

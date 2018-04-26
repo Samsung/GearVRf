@@ -49,6 +49,7 @@ class Light;
 class BitmapImage;
 class CubemapImage;
 class CompressedImage;
+class VkRenderTextureOnScreen;
 
 class VulkanRenderer: public Renderer {
     friend class Renderer;
@@ -59,6 +60,7 @@ protected:
     }
 
 public:
+
     VkFence createFenceObject(){
         return vulkanCore_->createFenceObject();
     }
@@ -133,6 +135,7 @@ public:
 
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual void updatePostEffectMesh(Mesh*);
+
 private:
     VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}

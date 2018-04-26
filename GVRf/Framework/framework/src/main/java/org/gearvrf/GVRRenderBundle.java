@@ -149,6 +149,12 @@ class GVRRenderBundle {
 
         return mPostEffectRenderTextureB;
     }
+
+    public void addRenderTarget(GVRRenderTarget target, GVRViewManager.EYE eye, int index)
+    {
+        addRenderTarget(target.getNative(), eye.ordinal(), index);
+    }
+
     protected static native long getRenderTextureNative(long ptr);
     protected static native void addRenderTarget(long renderTarget, int eye, int index);
 }

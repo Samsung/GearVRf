@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORK_VULKAN_HEADERS_H
-#define FRAMEWORK_VULKAN_HEADERS_H
-#define VK_USE_PLATFORM_ANDROID_KHR
 
-#include "vulkan_wrapper.h"
-#include "vulkanInfoWrapper.h"
-#include <vector>
-#include "glm/glm.hpp"
-#include "vulkanCore.h"
-#include "vulkan.h"
-#include "vulkan_uniform_block.h"
 #include "vk_device_component.h"
+#include "vulkanCore.h"
+namespace  gvr {
+    VKDeviceComponent::VKDeviceComponent() {
+        VulkanCore *instance = VulkanCore::getInstance();
+        instance->addDeviceComponent(this);
+    }
 
-
-#endif //FRAMEWORK_VULKAN_HEADERS_H
+    VKDeviceComponent::~VKDeviceComponent(){
+        VulkanCore *instance = VulkanCore::getInstance();
+        instance->removeDeviceComponent(this);
+    }
+}

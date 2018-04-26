@@ -179,7 +179,7 @@ namespace gvr {
                     VkVertexInputAttributeDescription binding;
                     binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
                     binding.location = e.Index;
-                    LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                    LOGV("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
                     binding.format = getDataType(entry->Type); //float3
                     binding.offset = entry->Offset;
                     vertices->vi_attrs.push_back(binding);
@@ -187,7 +187,7 @@ namespace gvr {
                 }
                 else                                // mesh uses attribute but shader does not
                 {
-                    LOGE("entry is not present %s", e.Name);
+                    LOGW("entry is not present %s", e.Name);
 
                 }
 

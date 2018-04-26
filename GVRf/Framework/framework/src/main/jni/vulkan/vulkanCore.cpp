@@ -27,6 +27,8 @@
 #include "vk_render_texture_offscreen.h"
 #include "vulkanCore.h"
 #include <array>
+#include "vk_device_component.h"
+#include "vk_render_texture_onscreen.h"
 
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999
@@ -53,7 +55,6 @@ namespace gvr {
                                             VkShaderStageFlagBits shaderStageFlagBits) {
         //createBuffer(device, vk, ubo, index);
         createLayoutBinding(index, shaderStageFlagBits);
-
     }
 
     void VulkanDescriptor::createLayoutBinding(int binding_index, int stageFlags, bool sampler) {
@@ -1058,6 +1059,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                              attachments.data(), mWidth, mHeight,
                                                              uint32_t(1)), nullptr,
                                   &mFramebuffer);
+
         GVR_VK_CHECK(!ret);
     }
 
@@ -1338,7 +1340,23 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     VulkanCore::~VulkanCore() {
-        vkDestroyDevice(getDevice(), nullptr);
+
+        //destroy all the resources associated with the current device.
+        for (VKDeviceComponent* component: mDeviceComponents)
+            component->cleanup();
+
+        mDeviceComponents.clear();
+        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+        for (auto entry : pipelineHashMap ) {
+            vkDestroyPipeline(getDevice(), entry.second, nullptr);
+        }
+        pipelineHashMap.clear();
+        vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
+
+        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
+        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
+        vkDestroyDevice(m_device, nullptr);
+        vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
     }
 
@@ -1346,4 +1364,88 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         InitCommandPools();
         LOGI("Vulkan after intialization");
     }
+
+    void VulkanCore::addDeviceComponent(VKDeviceComponent * component) {
+        mDeviceComponents.push_back(component);
+    }
+
+    void VulkanCore::removeDeviceComponent(VKDeviceComponent * component){
+
+        std::vector<VKDeviceComponent *>::iterator position =
+                std::find(mDeviceComponents.begin(), mDeviceComponents.end(), component);
+        if (position != mDeviceComponents.end())
+            mDeviceComponents.erase(position);
+    }
+
+
+    void VulkanCore::recreateSwapChain(ANativeWindow *newNativeWindow){
+
+        vkDeviceWaitIdle(getDevice());
+
+        if(m_surface) {
+            vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+            m_surface = VK_NULL_HANDLE;
+        }
+        
+        for (size_t i = 0; i < mSwapchainImageCount; i++) {
+            vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
+            mSwapchainBuffers[i].view = VK_NULL_HANDLE;
+
+            vkDestroyImage(m_device, mSwapchainBuffers[i].image, nullptr);
+            mSwapchainBuffers[i].image = VK_NULL_HANDLE;
+        }
+
+        delete mSwapchainBuffers;
+        mSwapchainBuffers = nullptr;
+
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+
+        //clear the handles to the swapChain images and imageviews. This is necessary because the driver
+        //tries to reuse these handles when a new surface is created. When the garbage collector eventually runs
+        //it might accidentally clear up the very same handles we are reusing.
+        std::vector<VkRenderTextureOnScreen* > onScreenTextures;
+        for(int i = 0; i < 3; i ++ )
+            onScreenTextures.push_back(static_cast<VkRenderTextureOnScreen *> (
+                    static_cast<VkRenderTarget*>(vk_renderer->getRenderTarget(i, LEFT))->getTexture()));
+
+        for(auto tex: onScreenTextures)
+        {
+            vkImageBase ** attachments = tex->getFBO()->getAttachments();
+            delete attachments[COLOR_IMAGE];
+            delete attachments[DEPTH_IMAGE];
+            delete attachments[MULTISAMPLED_IMAGE];
+
+            attachments[COLOR_IMAGE] = 0;
+            attachments[DEPTH_IMAGE] = 0;
+            attachments[MULTISAMPLED_IMAGE] = 0;
+        }
+
+        //sufficient to clear up the vector so that there are no dangling pointers. The actual rendertextures
+        //haev references to it from java and will be cleared up by close() method in GVRReference.
+        onScreenTextures.clear();
+
+        for(int i = 0; i < 3; i ++ )
+            vk_renderer->addRenderTarget(nullptr, LEFT, i );
+
+        vkDestroySwapchainKHR(getDevice(), mSwapchain, nullptr);
+        mSwapchain = VK_NULL_HANDLE;
+        vkDestroySemaphore(getDevice(), mRenderCompleteSemaphore, nullptr);
+        mRenderCompleteSemaphore = VK_NULL_HANDLE;
+        vkDestroySemaphore(getDevice(), mBackBufferSemaphore, nullptr);
+        mBackBufferSemaphore = VK_NULL_HANDLE;
+
+        mSwapchainCurrentIdx = 0;
+        swapChainImageIndex = 0;
+
+        m_androidWindow = newNativeWindow;
+
+        if(m_androidWindow != NULL) {
+            InitSurface();
+            InitSwapChain();
+            InitSync();
+            SetNextBackBuffer();
+        }
+
+    }
+
 }
