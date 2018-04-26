@@ -777,12 +777,14 @@ class GVRJassimpAdapter {
         }
         if (texIndex > 0)
         {
+            if (usingPBR)
+            {
+                assetRequest.onTextureError(mContext, textureKey + " duplicate ignored for PBR renderer" + mFileName, mFileName);
+                return;
+            }
             textureKey += texIndex;
             shaderKey += texIndex;
-            if (!usingPBR)
-            {
-                gvrmtl.setInt(textureKey + "_blendop", blendop);
-            }
+            gvrmtl.setInt(textureKey + "_blendop", blendop);
         }
         GVRTextureParameters texParams = new GVRTextureParameters(mContext);
         texParams.setWrapSType(wrapModeMap.get(aimtl.getTextureMapModeU(texType, texIndex)));

@@ -1294,8 +1294,8 @@ public final class AiMaterial {
 
         setDefault(PropertyKey.TEX_MIN_FILTER,          GL_LINEAR);
         setDefault(PropertyKey.TEX_MAG_FILTER,          GL_LINEAR);
-        setDefault(PropertyKey.METALLIC,                0.5f);
-        setDefault(PropertyKey.ROUGHNESS,               0.5f);
+        setDefault(PropertyKey.METALLIC,                1.0f);
+        setDefault(PropertyKey.ROUGHNESS,               1.0f);
         /* ensure we have defaults for everything */
         for (PropertyKey key : PropertyKey.values()) {
             if (!m_defaults.containsKey(key)) {
