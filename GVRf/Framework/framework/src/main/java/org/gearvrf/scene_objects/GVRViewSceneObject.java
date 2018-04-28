@@ -525,11 +525,20 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         @Override
         public ViewParent invalidateChildInParent(int[] location, Rect dirty) {
-            // To fix the issue of not redrawing the children after its invalidation.
-            // FIXME: Improve this fix.
+            /* FIXME: This method was deprecated in API level 26
+              Use onDescendantInvalidated(View, View) instead.
+             */
             postInvalidate();
 
             return super.invalidateChildInParent(location, dirty);
+        }
+
+        @Override
+        public void onDescendantInvalidated(View child, View target) {
+            super.onDescendantInvalidated(child, target);
+            // To fix the issue of not redrawing the children after its invalidation.
+
+            postInvalidate();
         }
 
         public void dispatchPickerInputEvent(final MotionEvent e, final float x, final float y) {
