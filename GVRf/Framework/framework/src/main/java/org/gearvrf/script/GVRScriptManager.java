@@ -15,8 +15,6 @@
 
 package org.gearvrf.script;
 
-import com.naef.jnlua.script.LuaScriptEngineFactory;
-
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRContextProxy;
@@ -46,7 +44,6 @@ import javax.script.ScriptEngine;
  */
 public class GVRScriptManager {
     private static final String TAG = GVRScriptManager.class.getSimpleName();
-    public static final String LANG_LUA = "lua";
     public static final String LANG_JAVASCRIPT = "js";
     public static final String VAR_NAME_GVRF = "gvrf";
 
@@ -117,7 +114,6 @@ public class GVRScriptManager {
         mEngines = new TreeMap<String, ScriptEngine>();
 
         // Add languages
-        mEngines.put(LANG_LUA, new LuaScriptEngineFactory().getScriptEngine());
         mEngines.put(LANG_JAVASCRIPT, new RhinoScriptEngineFactory().getScriptEngine());
 
         // Add variables to engines
@@ -158,7 +154,7 @@ public class GVRScriptManager {
      * Returns an engine based on language.
      *
      * @param language The name of the language. Please use constants
-     * defined in {@code ScriptManager}, such as LANG_LUA and LANG_JAVASCRIPT.
+     * defined in {@code ScriptManager}, such as LANG_JAVASCRIPT.
      *
      * @return The engine object. {@code null} if the specified engine is
      * not found.
@@ -227,9 +223,7 @@ public class GVRScriptManager {
         }
 
         GVRScriptFile script = null;
-        if (language.equals(LANG_LUA)) {
-            script = new GVRLuaScriptFile(mGvrContext, resource.getStream());
-        } else if (language.equals(LANG_JAVASCRIPT)) {
+        if (language.equals(LANG_JAVASCRIPT)) {
             script = new GVRJavascriptScriptFile(mGvrContext, resource.getStream());
         }
 
