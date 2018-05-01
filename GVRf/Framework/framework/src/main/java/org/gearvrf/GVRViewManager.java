@@ -65,8 +65,6 @@ abstract class GVRViewManager extends GVRContext {
         mEventManager = new GVREventManager(this);
         mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes());
         mInputManager.scanDevices();
-
-        mBackend = SystemPropertyUtil.getSystemProperty("debug.gearvrf.backend");
     }
 
     void onPause() {}
@@ -691,8 +689,7 @@ abstract class GVRViewManager extends GVRContext {
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         final GVRMaterial postEffect = new GVRMaterial(this, GVRMaterial.GVRShaderType.VerticalFlip.ID);
 
-        if(!(isVulkanInstance() && mBackend == 6))
-            centerCamera.addPostEffect(postEffect);
+        centerCamera.addPostEffect(postEffect);
 
         GVRRenderTexture posteffectRenderTextureB = null;
         GVRRenderTexture posteffectRenderTextureA = null;
@@ -833,7 +830,6 @@ abstract class GVRViewManager extends GVRContext {
     private native static void readRenderResultNative(Object readbackBuffer, long renderTarget, int eye, boolean useMultiview);
 
     private static final String TAG = "GVRViewManager";
-    private static int mBackend;
-    public static native boolean isVulkanInstance();
+
 }
 

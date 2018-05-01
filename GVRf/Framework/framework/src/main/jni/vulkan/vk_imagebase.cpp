@@ -88,7 +88,8 @@ void vkImageBase::createImageView(bool host_accessible, bool useDeviceSwapchain)
     VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
     VkDevice device = vk_renderer->getDevice();
 
-
+    //create images backed with memory and imageviews only when not using system swapchain images.
+    //But we do need the host visible outBuffer in case we need to use any form of staging.
     if(!useDeviceSwapchain) {
 
         bool pass;

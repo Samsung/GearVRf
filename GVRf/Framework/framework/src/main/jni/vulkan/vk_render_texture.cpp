@@ -141,8 +141,33 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
 
     uint8_t *data;
     bool result = accessRenderResult(&data);
-    memcpy(readback_buffer, data, mWidth*mHeight*4);
+    VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+
+    /* vulkan has a left handed NDC, with y axis facing downwards. The pointer returned after mapping
+     * device memory points to the memory laid out assuming that the top left of the image is the starting
+     * point. The image rendered is already "upside down". When we pass it to oculus it assumes the top left
+     * to be the bottom left, as is the GL convention, and everything sorts itself out accordingly.
+     * But in case of monoscopic, we need to modify the proj mat to make this possible. (see renderRenderTarget in
+     * vulkan_renderer.cpp). This makes sure that the rendered result is upright. The pointer returned
+     * to the device mem still points to the top left though. Therefore, during taking a screenshot,
+     * we need to make sure we copy the bottom most row first into the byte buffer (which is being used to create
+     * the bitmap).
+     * */
+    if(vk_renderer->getCore()->isSwapChainPresent())
+    {
+        int offset = 0;
+        size_t rowSize = sizeof(u_char) * 4 * mWidth;
+        u_char  * bytedata = data; u_char * readbackdata = readback_buffer;
+        for(int i = mHeight - 1; i >=0 ; i -- )
+        {
+            memcpy(readbackdata + offset, bytedata + (i * rowSize), rowSize);
+            offset += rowSize;
+        }
+    }else{
+        memcpy(readback_buffer, data, mWidth*mHeight*4);
+    }
     unmapDeviceMemory();
+
     return result;
 }
 
@@ -157,10 +182,6 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
 
         err = vkResetFences(device, 1, &mWaitFence);
         vk_renderer->getCore()->beginCmdBuffer(mCmdBuffer);
-        VkBufferCopy copyRegion = {};
-        copyRegion.srcOffset = 0; // Optional
-        copyRegion.dstOffset = 0; // Optional
-        copyRegion.size = fbo->getImageSize(COLOR_IMAGE);
         VkExtent3D extent3D = {};
         extent3D.width = mWidth;
         extent3D.height = mHeight;

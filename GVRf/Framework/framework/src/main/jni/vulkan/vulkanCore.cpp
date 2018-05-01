@@ -1029,7 +1029,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
 
             mAttachments[COLOR_IMAGE] = colorImage;
-            if(vk_renderer->getCore()->isUsingSystemSwapchain()) {
+            VulkanCore * core = vk_renderer->getCore();
+
+            //use system swapchain images and imageviews if we are rendering monoscopic and as long as
+            // swapchain images can be created. After that create fbos which render offscreen.
+            if(core->isSwapChainPresent() && !core->isSwapChainCreationFinished()) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
                 colorImage->createImageView(true, true);
@@ -1333,7 +1337,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(m_androidWindow != NULL) {
-            m_useSystemSwapchain = true;
             InitSwapChain();
             InitSync();
             SetNextBackBuffer();

@@ -186,6 +186,11 @@ public:
         return mSwapchainBuffers[swapChainImageIndex++].view;
     }
 
+    bool isSwapChainCreationFinished()
+    {
+        return swapChainImageIndex == mSwapchainImageCount;
+    }
+
     bool isSwapChainPresent(){
         return swapChainFlag;
     }
@@ -198,9 +203,6 @@ public:
     void addDeviceComponent(VKDeviceComponent*);
     void removeDeviceComponent(VKDeviceComponent *);
 
-    bool isUsingSystemSwapchain(){
-        return m_useSystemSwapchain;
-    }
 
 private:
 
@@ -238,8 +240,6 @@ private:
     VkCullModeFlagBits getVulkanCullFace(int);
 
     ANativeWindow *m_androidWindow;
-    bool m_useSystemSwapchain = false;
-
     VkInstance m_instance;
     VkPhysicalDevice *m_pPhysicalDevices;
     VkPhysicalDevice m_physicalDevice;
