@@ -88,8 +88,6 @@ extern "C" {
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
                                                            jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview);
 
-    JNIEXPORT bool JNICALL Java_org_gearvrf_GVRViewManager_isVulkanInstance(JNIEnv *env, jobject obj);
-
 } // extern "C"
 
 
@@ -103,10 +101,4 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
     }
     renderTexture->readRenderResult(readback_buffer);
 }
-
-JNIEXPORT bool JNICALL Java_org_gearvrf_GVRViewManager_isVulkanInstance(JNIEnv *env, jobject obj){
-    Renderer* renderer = Renderer::getInstance();
-    return renderer->isVulkanInstance();
-}
-
 }
