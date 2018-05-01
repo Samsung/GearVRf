@@ -35,6 +35,8 @@ namespace gvr {
     public:
         explicit BulletSliderConstraint(PhysicsRigidBody *rigidBodyB);
 
+        BulletSliderConstraint(btSliderConstraint *constraint);
+
         virtual ~BulletSliderConstraint();
 
         void setAngularLowerLimit(float limit);
@@ -61,6 +63,7 @@ namespace gvr {
 
         void updateConstructionInfo();
 
+    private:
         btSliderConstraint *mSliderConstraint;
         BulletRigidBody *mRigidBodyB;
 

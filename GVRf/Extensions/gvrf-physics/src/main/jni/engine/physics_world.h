@@ -37,7 +37,7 @@ struct ContactPoint {
 };
 
 class PhysicsWorld : public Component {
- public:
+public:
 	PhysicsWorld() : Component(PhysicsWorld::getComponentType()){}
 
 	virtual ~PhysicsWorld() {}

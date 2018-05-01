@@ -34,6 +34,8 @@ namespace gvr {
         explicit BulletPoint2PointConstraint(PhysicsRigidBody* rigidBodyB, float pivotInA[],
                                              float pivotInB[]);
 
+        BulletPoint2PointConstraint(btPoint2PointConstraint *constraint);
+
         virtual ~BulletPoint2PointConstraint();
 
         virtual void* getUnderlying() {
@@ -62,6 +64,5 @@ namespace gvr {
         PhysicsVec3 mPivotInA;
         PhysicsVec3 mPivotInB;
     };
-
 }
 #endif //BULLET_POINT2POINTCONSTRAINT_H

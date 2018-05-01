@@ -36,6 +36,8 @@ namespace gvr {
                                            PhysicsMat3x3 const &bodyRotation,
                                            PhysicsMat3x3 const &coneRotation);
 
+        BulletConeTwistConstraint(btConeTwistConstraint *constraint);
+
         virtual ~BulletConeTwistConstraint();
 
         void setSwingLimit(float limit);

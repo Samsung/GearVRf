@@ -35,6 +35,8 @@ namespace gvr {
         explicit BulletGeneric6dofConstraint(PhysicsRigidBody *rigidBodyB, float const joint[],
                                              float const rotationA[], float const rotationB[]);
 
+        BulletGeneric6dofConstraint(btGeneric6DofConstraint *constraint);
+
         virtual ~BulletGeneric6dofConstraint();
 
         void setLinearLowerLimits(float limitX, float limitY, float limitZ);

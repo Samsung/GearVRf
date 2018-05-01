@@ -13,32 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef PHYSICS_POINT2POINT_CONSTRAINT_H_
-#define PHYSICS_POINT2POINT_CONSTRAINT_H_
+#ifndef EXTENSIONS_PHYSICS_LOADER_H
+#define EXTENSIONS_PHYSICS_LOADER_H
 
-#include "physics_common.h"
-#include "physics_constraint.h"
+#include <cstddef>
 
 namespace gvr {
 
+class PhysicsWorld;
 class PhysicsRigidBody;
+class PhysicsConstraint;
 
-class PhysicsPoint2pointConstraint : public PhysicsConstraint {
+class PhysicsLoader
+{
 public:
+    PhysicsLoader(char *buffer, size_t length, bool ignoreUpAxis) { }
+    virtual ~PhysicsLoader() { }
 
-    virtual ~PhysicsPoint2pointConstraint() {}
+    virtual PhysicsRigidBody* getNextRigidBody() = 0;
 
-    virtual void setPivotInA(PhysicsVec3 pivot) = 0;
+    virtual const char* getRigidBodyName(PhysicsRigidBody *body) const = 0;
 
-    virtual PhysicsVec3 getPivotInA() const = 0;
+    virtual PhysicsConstraint* getNextConstraint() = 0;
 
-    virtual void setPivotInB(PhysicsVec3 pivot) = 0;
+    virtual PhysicsRigidBody* getConstraintBodyA(PhysicsConstraint *constraint) = 0;
 
-    virtual PhysicsVec3 getPivotInB() const = 0;
-
-    int getConstraintType() const { return PhysicsConstraint::point2pointConstraint; }
+    virtual PhysicsRigidBody* getConstraintBodyB(PhysicsConstraint *constraint) = 0;
 };
 
 }
 
-#endif /* PHYSICS_POINT2POINT_CONSTRAINT_H_ */
+#endif //EXTENSIONS_PHYSICS_LOADER_H

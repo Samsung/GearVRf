@@ -38,6 +38,8 @@ namespace gvr {
             return COMPONENT_TYPE_PHYSICS_CONSTRAINT;
         }
 
+        virtual int getConstraintType() const = 0;
+
     //virtual float getAppliedImpulse() const = 0;
         //virtual float getBreakingImpulseThreshold() const = 0;
         //virtual void setBreakingImpulseThreshold(float n) = 0;
@@ -48,6 +50,15 @@ namespace gvr {
         virtual void setBreakingImpulse(float impulse) = 0;
         virtual float getBreakingImpulse() const = 0;
         virtual void updateConstructionInfo() = 0;
+
+        enum ConstraintType {
+            fixedConstraint = 1,
+            point2pointConstraint = 2,
+            sliderConstraint = 3,
+            hingeConstraint = 4,
+            coneTwistConstraint = 5,
+            genericConstraint = 6,
+        };
     };
 
 }

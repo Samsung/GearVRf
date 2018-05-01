@@ -7,6 +7,8 @@
 #include "bullet_rigidbody.h"
 #include "bullet_world.h"
 
+static const char tag[] = "BulletP2pConstrN";
+
 namespace gvr {
 
     BulletPoint2PointConstraint::BulletPoint2PointConstraint(PhysicsRigidBody* rigidBodyB,
@@ -17,6 +19,13 @@ namespace gvr {
         mPivotInA.set(pivotInA);
         mPivotInB.set(pivotInB);
     };
+
+    // This constructor is only used when loading physics from bullet file
+    BulletPoint2PointConstraint::BulletPoint2PointConstraint(btPoint2PointConstraint *constraint) {
+        mPoint2PointConstraint = constraint;
+        mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
+        constraint->setUserConstraintPtr(this);
+    }
 
     BulletPoint2PointConstraint::~BulletPoint2PointConstraint() {
         if (0 != mPoint2PointConstraint) {
@@ -60,18 +69,20 @@ namespace gvr {
 
 
 void BulletPoint2PointConstraint::updateConstructionInfo() {
-    if (mPoint2PointConstraint != 0) {
-        delete (mPoint2PointConstraint);
+//    if (mPoint2PointConstraint != 0) {
+//        delete (mPoint2PointConstraint);
+//    }
+
+    if (mPoint2PointConstraint == nullptr) {
+        btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
+        btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
+        btRigidBody *rbA = ((BulletRigidBody *) owner_object()->
+                getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
+
+        mPoint2PointConstraint = new btPoint2PointConstraint(*rbA, *mRigidBodyB->getRigidBody(),
+                                                             pivotInA, pivotInB);
+        mPoint2PointConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
     }
-
-    btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
-    btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
-    btRigidBody* rbA = ((BulletRigidBody*)owner_object()->
-            getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
-
-    mPoint2PointConstraint = new btPoint2PointConstraint(*rbA, *mRigidBodyB->getRigidBody(),
-                                                         pivotInA, pivotInB);
-    mPoint2PointConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
 }
 
 }

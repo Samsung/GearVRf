@@ -25,7 +25,8 @@ class PhysicsRigidBody;
 class PhysicsFixedConstraint : public PhysicsConstraint {
  public:
     virtual ~PhysicsFixedConstraint() {}
-    explicit PhysicsFixedConstraint(PhysicsRigidBody *rigidBodyB) : PhysicsConstraint() {}
+
+    virtual int getConstraintType() const { return PhysicsConstraint::fixedConstraint; }
 };
 
 }

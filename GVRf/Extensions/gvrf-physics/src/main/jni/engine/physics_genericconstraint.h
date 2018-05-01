@@ -30,6 +30,7 @@ namespace gvr {
 
         virtual PhysicsVec3 getAngularUpperLimits() const = 0;
 
+        int getConstraintType() const { return PhysicsConstraint::genericConstraint; }
     };
 
 }

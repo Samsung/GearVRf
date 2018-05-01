@@ -41,6 +41,11 @@ public class GVRPoint2PointConstraint extends GVRConstraint {
                 Native3DPoint2PointConstraint.ctor(rigidBodyB.getNative(), pivotInA, pivotInB));
     }
 
+    /** Used only by {@link GVRPhysicsLoader} */
+    GVRPoint2PointConstraint(GVRContext gvrContext, long nativeConstraint) {
+        super(gvrContext, nativeConstraint);
+    }
+
     /**
      * Get the pivot for body A
      *

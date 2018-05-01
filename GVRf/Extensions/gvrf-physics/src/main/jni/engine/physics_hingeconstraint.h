@@ -34,6 +34,8 @@ namespace gvr {
         virtual float getLowerLimit() const = 0;
 
         virtual float getUpperLimit() const = 0;
+
+        int getConstraintType() const { return PhysicsConstraint::hingeConstraint; }
     };
 
 }
