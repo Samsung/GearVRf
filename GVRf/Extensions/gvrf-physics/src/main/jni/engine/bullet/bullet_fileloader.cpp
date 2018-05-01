@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <Android/asset_manager.h>
+#include <android/asset_manager.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
