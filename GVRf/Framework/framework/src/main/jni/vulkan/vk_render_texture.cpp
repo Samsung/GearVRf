@@ -83,6 +83,16 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     return rp_begin;
 }
 
+void VkRenderTexture::bind() {
+    if(fbo == nullptr){
+        fbo = new VKFramebuffer(mWidth,mHeight);
+        createRenderPass();
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+
+        fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSamples);
+    }
+}
+
 void VkRenderTexture::beginRendering(Renderer* renderer){
     bind();
     VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
@@ -102,5 +112,121 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdSetViewport(mCmdBuffer,0,1,&viewport);
     vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
+
+
+bool VkRenderTexture::isReady(){
+    VkResult err;
+    VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+    VkDevice device = renderer->getDevice();
+    if(mWaitFence != 0) {
+        err = vkGetFenceStatus(device,mWaitFence);
+        if (err == VK_SUCCESS)
+            return true;
+
+        if(VK_SUCCESS != vkWaitForFences(device, 1, &mWaitFence, VK_TRUE,
+                                         4294967295U))
+            return false;
+
+    }
+    return true;
+}
+
+
+bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
+    //wait for rendering to be complete
+    if(!isReady()) {
+        LOGE("VkRenderTexture::readRenderResult: error in rendering");
+        return false;
+    }
+
+    uint8_t *data;
+    bool result = accessRenderResult(&data);
+    VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+
+    /* vulkan has a left handed NDC, with y axis facing downwards. The pointer returned after mapping
+     * device memory points to the memory laid out assuming that the top left of the image is the starting
+     * point. The image rendered is already "upside down". When we pass it to oculus it assumes the top left
+     * to be the bottom left, as is the GL convention, and everything sorts itself out accordingly.
+     * But in case of monoscopic, we need to modify the proj mat to make this possible. (see renderRenderTarget in
+     * vulkan_renderer.cpp). This makes sure that the rendered result is upright. The pointer returned
+     * to the device mem still points to the top left though. Therefore, during taking a screenshot,
+     * we need to make sure we copy the bottom most row first into the byte buffer (which is being used to create
+     * the bitmap).
+     * */
+    if(vk_renderer->getCore()->isSwapChainPresent())
+    {
+        int offset = 0;
+        size_t rowSize = sizeof(u_char) * 4 * mWidth;
+        u_char  * bytedata = data; u_char * readbackdata = readback_buffer;
+        for(int i = mHeight - 1; i >=0 ; i -- )
+        {
+            memcpy(readbackdata + offset, bytedata + (i * rowSize), rowSize);
+            offset += rowSize;
+        }
+    }else{
+        memcpy(readback_buffer, data, mWidth*mHeight*4);
+    }
+    unmapDeviceMemory();
+
+    return result;
+}
+
+    bool VkRenderTexture::accessRenderResult(uint8_t **readback_buffer) {
+
+        if(!fbo)
+            return false;
+
+        VkResult err;
+        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+        VkDevice device = vk_renderer->getDevice();
+
+        err = vkResetFences(device, 1, &mWaitFence);
+        vk_renderer->getCore()->beginCmdBuffer(mCmdBuffer);
+        VkExtent3D extent3D = {};
+        extent3D.width = mWidth;
+        extent3D.height = mHeight;
+        extent3D.depth = 1;
+        VkBufferImageCopy region = {0};
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = extent3D;
+        vkCmdCopyImageToBuffer(mCmdBuffer,  fbo->getImage(COLOR_IMAGE),
+                               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                               *(fbo->getImageBuffer(COLOR_IMAGE)), 1, &region);
+        vkEndCommandBuffer(mCmdBuffer);
+
+        VkSubmitInfo ssubmitInfo = {};
+        ssubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        ssubmitInfo.commandBufferCount = 1;
+        ssubmitInfo.pCommandBuffers = &mCmdBuffer;
+
+        vkQueueSubmit(vk_renderer->getQueue(), 1, &ssubmitInfo, mWaitFence);
+
+        uint8_t *data;
+        err = vkWaitForFences(device, 1, &mWaitFence, VK_TRUE, 4294967295U);
+
+        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
+        err = vkMapMemory(device, mem, 0,
+                          fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
+
+        *readback_buffer = data;
+        //GVR_VK_CHECK(!err);
+
+        return true;
+
+    }
+
+
+    void VkRenderTexture::unmapDeviceMemory()
+    {
+        if(!fbo)
+            return;
+
+        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+        VkDevice device = vk_renderer->getDevice();
+        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
+        vkUnmapMemory(device, mem);
+    }
+
 
 }

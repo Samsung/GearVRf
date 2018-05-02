@@ -95,9 +95,6 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views);
-    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
-                                               int jcolor_format, int jdepth_format, bool resolve_depth,
-                                               const TextureParameters* texture_parameters, int number_views, bool monoscopic);
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,

@@ -81,7 +81,7 @@ class VkRenderTarget;
 class RenderTarget;
 class LightList;
 class VKDeviceComponent;
-    
+
 class VulkanCore final {
 
 public:
@@ -186,6 +186,11 @@ public:
         return mSwapchainBuffers[swapChainImageIndex++].view;
     }
 
+    bool isSwapChainCreationFinished()
+    {
+        return swapChainImageIndex == mSwapchainImageCount;
+    }
+
     bool isSwapChainPresent(){
         return swapChainFlag;
     }
@@ -197,6 +202,7 @@ public:
 
     void addDeviceComponent(VKDeviceComponent*);
     void removeDeviceComponent(VKDeviceComponent *);
+
 
 private:
 
@@ -234,7 +240,6 @@ private:
     VkCullModeFlagBits getVulkanCullFace(int);
 
     ANativeWindow *m_androidWindow;
-
     VkInstance m_instance;
     VkPhysicalDevice *m_pPhysicalDevices;
     VkPhysicalDevice m_physicalDevice;

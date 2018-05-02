@@ -24,7 +24,7 @@
 
 namespace gvr {
     VulkanVertexBuffer::VulkanVertexBuffer(const char* layout_desc, int vertexCount)
-    : VertexBuffer(layout_desc, vertexCount)
+            : VertexBuffer(layout_desc, vertexCount)
     {
         mVerticesMap.clear();
     }
@@ -224,6 +224,6 @@ namespace gvr {
 
         FAIL("VulkanVertexBuffer::getDataType: unknown type %s", type.c_str());
         return VK_FORMAT_UNDEFINED;
+
     }
 } // end gvrf
-

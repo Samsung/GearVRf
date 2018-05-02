@@ -688,6 +688,7 @@ abstract class GVRViewManager extends GVRContext {
         // TODO: when we will use multithreading, create new camera using centercamera as we are adding posteffects into it
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         final GVRMaterial postEffect = new GVRMaterial(this, GVRMaterial.GVRShaderType.VerticalFlip.ID);
+
         centerCamera.addPostEffect(postEffect);
 
         GVRRenderTexture posteffectRenderTextureB = null;
@@ -715,7 +716,6 @@ abstract class GVRViewManager extends GVRContext {
         final Bitmap bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
         mReadbackBuffer.rewind();
         bitmap.copyPixelsFromBuffer(mReadbackBuffer);
-
         final GVRScreenshotCallback callback = mScreenshotCenterCallback;
         Threads.spawn(new Runnable() {
             public void run() {
@@ -830,4 +830,6 @@ abstract class GVRViewManager extends GVRContext {
     private native static void readRenderResultNative(Object readbackBuffer, long renderTarget, int eye, boolean useMultiview);
 
     private static final String TAG = "GVRViewManager";
+
 }
+

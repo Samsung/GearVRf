@@ -49,7 +49,6 @@ class Light;
 class BitmapImage;
 class CubemapImage;
 class CompressedImage;
-class VkRenderTextureOnScreen;
 
 class VulkanRenderer: public Renderer {
     friend class Renderer;
@@ -116,10 +115,6 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views);
-    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
-                                               int jcolor_format, int jdepth_format, bool resolve_depth,
-                                               const TextureParameters* texture_parameters, int number_views, bool monoscopic);
-
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int depthformat) { return nullptr; }
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);

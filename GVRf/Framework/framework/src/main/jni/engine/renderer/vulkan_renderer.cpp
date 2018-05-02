@@ -22,8 +22,6 @@
 #include <vulkan/vk_cubemap_image.h>
 #include <vulkan/vk_render_to_texture.h>
 #include <vulkan/vk_render_target.h>
-#include <vulkan/vk_render_texture_onscreen.h>
-#include <vulkan/vk_render_texture_offscreen.h>
 #include <vulkan/vk_light.h>
 #include "renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
@@ -46,23 +44,23 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
 
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo)
 {
-    return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
+    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
 
-    Light* VulkanRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
-    {
-        return new VKLight(uniformDescriptor, textureDescriptor);
-    }
+Light* VulkanRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
+{
+    return new VKLight(uniformDescriptor, textureDescriptor);
+}
 
 RenderData* VulkanRenderer::createRenderData()
 {
     return new VulkanRenderData();
 }
 
-    RenderData* VulkanRenderer::createRenderData(RenderData* data)
-    {
-        return new VulkanRenderData(*data);
-    }
+RenderData* VulkanRenderer::createRenderData(RenderData* data)
+{
+    return new VulkanRenderData(*data);
+}
 
 RenderTarget* VulkanRenderer::createRenderTarget(Scene* scene) {
     return new VkRenderTarget(scene);
@@ -84,10 +82,10 @@ RenderPass* VulkanRenderer::createRenderPass(){
 
 UniformBlock* VulkanRenderer::createUniformBlock(const char* desc, int binding, const char* name, int maxelems)
 {
-   if (maxelems <= 1)
-   {
-       return new VulkanUniformBlock(desc, binding, name);
-   }
+    if (maxelems <= 1)
+    {
+        return new VulkanUniformBlock(desc, binding, name);
+    }
 
     return new VulkanUniformBlock(desc, binding, name, maxelems);
 }
@@ -113,17 +111,7 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const TextureParameters* texture_parameters, int number_views)
 {
-    return new VkRenderTextureOffScreen(width, height, sample_count);
-}
-
-RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
-                                                   int jcolor_format, int jdepth_format, bool resolve_depth,
-                                                   const TextureParameters* texture_parameters, int number_views, bool monoscopic)
-{
-    if(monoscopic)
-        return new VkRenderTextureOnScreen(width, height, sample_count);
-
-    return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters, number_views);
+    return new VkRenderTexture(width, height, sample_count);
 }
 
 Shader* VulkanRenderer::createShader(int id, const char* signature,
@@ -164,8 +152,8 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
         VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, rstate.sampleCount);
 
         std::string vkPipelineHashCode = std::to_string(shader) + vkRdata->getHashCode() +
-                std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) +
-                std::to_string(rstate.sampleCount);
+                                         std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) +
+                                         std::to_string(rstate.sampleCount);
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
@@ -182,14 +170,14 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
 
 void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
-      float positions[] = { -1.0f, +1.0f, 1.0f,
-                            +1.0f, -1.0f, 1.0f,
-                            -1.0f, -1.0f, 1.0f,
+    float positions[] = { -1.0f, +1.0f, 1.0f,
+                          +1.0f, -1.0f, 1.0f,
+                          -1.0f, -1.0f, 1.0f,
 
-                            +1.0f, +1.0f, 1.0f,
-                            +1.0f, -1.0f, 1.0f,
-                            -1.0f, +1.0f, 1.0f,
-      };
+                          +1.0f, +1.0f, 1.0f,
+                          +1.0f, -1.0f, 1.0f,
+                          -1.0f, +1.0f, 1.0f,
+    };
 
     float uvs[] = { 0.0f, 1.0f,
                     1.0f, 0.0f,
@@ -230,7 +218,7 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
     }
 }
 void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
-                                RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
+                                        RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
     std::vector<RenderData*> render_data_list;
     Camera* camera = renderTarget->getCamera();
     RenderState rstate = renderTarget->getRenderState();
@@ -254,12 +242,12 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;
 
-            rstate.lightsChanged = lights.isDirty();
-            if (lights.usingUniformBlock()) {
-                rstate.shadow_map = lights.updateLightBlock(this);
-            } else {
-                LOGE("Vulkan only supports UBO Lighting");
-            }
+        rstate.lightsChanged = lights.isDirty();
+        if (lights.usingUniformBlock()) {
+            rstate.shadow_map = lights.updateLightBlock(this);
+        } else {
+            LOGE("Vulkan only supports UBO Lighting");
+        }
     }
 
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
@@ -319,6 +307,5 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
     }
 
 }
-
 
 }

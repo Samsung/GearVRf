@@ -24,11 +24,10 @@
 #include "vulkan/vk_render_to_texture.h"
 #include "vk_imagebase.h"
 #include "vk_render_target.h"
-#include "vk_render_texture_offscreen.h"
+#include "vk_render_to_texture.h"
 #include "vulkanCore.h"
 #include <array>
 #include "vk_device_component.h"
-#include "vk_render_texture_onscreen.h"
 
 #define TEXTURE_BIND_START 4
 #define QUEUE_INDEX_MAX 99999
@@ -91,7 +90,8 @@ namespace gvr {
                 imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 break;
             default:
-                FAIL("setImageLayout: unsupported oldImageLayout");
+                //other source layouts not yet handled
+                break;
         }
 
         switch (newImageLayout) {
@@ -105,7 +105,8 @@ namespace gvr {
                 imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
                 break;
             default:
-                FAIL("setImageLayout: unsupported newImageLayout");
+                //other source layouts not yet handled
+                break;
         }
 
         vkCmdPipelineBarrier(
@@ -214,7 +215,7 @@ namespace gvr {
         }
 
         return true;
-    }
+}
 
     bool VulkanCore::GetPhysicalDevices() {
         VkResult ret = VK_SUCCESS;
@@ -273,7 +274,7 @@ namespace gvr {
         GVR_VK_CHECK(!ret);
 
         if (formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED) {
-            mSurfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mSurfaceFormat.format = VK_FORMAT_R8G8B8A8_UNORM;
             mSurfaceFormat.colorSpace = surfFormats[0].colorSpace;
         }
         else {
@@ -743,18 +744,18 @@ void VulkanCore::InitCommandPools(){
 
 
         VkResult ret = vkCreateRenderPass(m_device,
-                           gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
-                                                     1, &subpassDescription, (uint32_t) 0,
-                                                     nullptr), nullptr, &renderPass);
+                                          gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
+                                                                    1, &subpassDescription, (uint32_t) 0,
+                                                                    nullptr), nullptr, &renderPass);
         GVR_VK_CHECK(!ret);
         mRenderPassMap.insert(std::make_pair(NORMAL_RENDERPASS + sample_count, renderPass));
         return renderPass;
     }
 /*
- * Compile Vulkan Shader
- * shaderTypeID 1 : Vertex Shader
- * shaderTypeID 2 : Fragment Shader
- */
+* Compile Vulkan Shader
+* shaderTypeID 1 : Vertex Shader
+* shaderTypeID 2 : Fragment Shader
+*/
 
     std::vector<uint32_t> VulkanCore::CompileShader(const std::string &shaderName,
                                                     ShaderType shaderTypeID,
@@ -796,7 +797,7 @@ void VulkanCore::InitCommandPools(){
         VkResult err;
 
         err = vkCreateShaderModule(m_device, gvr::ShaderModuleCreateInfo(result_vert.data(), result_vert.size() *
-                                                                                      sizeof(unsigned int)),
+                                                                                             sizeof(unsigned int)),
                                    nullptr, &module);
         GVR_VK_CHECK(!err);
         gvr::PipelineShaderStageCreateInfo shaderStageInfo = gvr::PipelineShaderStageCreateInfo(
@@ -930,17 +931,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     pipelineCreateInfo.pDepthStencilState =
             gvr::PipelineDepthStencilStateCreateInfo(rdata->depth_test() ? VK_TRUE : VK_FALSE,
-                                     (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
-                                     VK_COMPARE_OP_LESS_OR_EQUAL,
-                                     VK_FALSE,
-                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_sfail()]),  //stencil pass
-                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dppass()]), //depth pass, stencil pass
-                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dpfail()]), //depth fail, stencil pass
-                                     static_cast<VkCompareOp>(vkflags::glToVulkan[rdata->stencil_func_func()]), //compare function
-                                     rdata->stencil_func_mask(), //compare mask
-                                     rdata->getStencilMask(), //stencil mask
-                                     rdata->stencil_func_ref(),  //reference value
-                                     rdata->stencil_test());
+                                                     (rdata->depth_mask()  && depthWrite)? VK_TRUE : VK_FALSE,
+                                                     VK_COMPARE_OP_LESS_OR_EQUAL,
+                                                     VK_FALSE,
+                                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_sfail()]),  //stencil pass
+                                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dppass()]), //depth pass, stencil pass
+                                                     static_cast<VkStencilOp>(vkflags::glToVulkan[rdata->stencil_op_dpfail()]), //depth fail, stencil pass
+                                                     static_cast<VkCompareOp>(vkflags::glToVulkan[rdata->stencil_func_func()]), //compare function
+                                                     rdata->stencil_func_mask(), //compare mask
+                                                     rdata->getStencilMask(), //stencil mask
+                                                     rdata->stencil_func_ref(),  //reference value
+                                                     rdata->stencil_test());
 
 
     pipelineCreateInfo.pStages = &shaderStages[0];
@@ -1007,16 +1008,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         return  0;
     }
 
-    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count, bool monoscopic){
+    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count){
         VkResult ret;
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
         if(sample_count > 1){
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                                                      VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
-            multisampledImage->createImageView(false);
+                                                             mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                                             VK_IMAGE_LAYOUT_UNDEFINED, sample_count);
+            multisampledImage->createImageView(false, false);
             mAttachments[MULTISAMPLED_IMAGE] = multisampledImage;
             attachments.push_back(multisampledImage->getVkImageView());
         }
@@ -1024,16 +1025,21 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if(image_type & COLOR_IMAGE && mAttachments[COLOR_IMAGE]== nullptr) {
             vkImageBase *colorImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|
-                                                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                                           VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
 
             mAttachments[COLOR_IMAGE] = colorImage;
-            if(monoscopic) {
+            VulkanCore * core = vk_renderer->getCore();
+
+            //use system swapchain images and imageviews if we are rendering monoscopic and as long as
+            // swapchain images can be created. After that create fbos which render offscreen.
+            if(core->isSwapChainPresent() && !core->isSwapChainCreationFinished()) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
+                colorImage->createImageView(true, true);
             }
             else{
-                colorImage->createImageView(true);
+                colorImage->createImageView(true, false);
             }
 
             attachments.push_back(colorImage->getVkImageView());
@@ -1045,7 +1051,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, depthFormat, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
-            depthImage->createImageView(false);
+            depthImage->createImageView(false, false);
             mAttachments[DEPTH_IMAGE] = depthImage;
             attachments.push_back(depthImage->getVkImageView());
         }
@@ -1128,7 +1134,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 }
                 vkCmdSetLineWidth(cmdBuffer, line_width);
                 rdata->render(shader,cmdBuffer,curr_pass);
-           }
+            }
         }
 
         if(renderTarget!= NULL)
@@ -1192,16 +1198,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
     }
 
-     int VulkanCore::waitForFence(VkFence fence) {
+    int VulkanCore::waitForFence(VkFence fence) {
         if(VK_SUCCESS == vkWaitForFences(m_device, 1, &fence, VK_TRUE,
-                        4294967295U))
+                                         4294967295U))
             return 1;
 
         return 0;
 
     }
     void VulkanCore::renderToOculus(RenderTarget* renderTarget){
-        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
+        VkRenderTexture* renderTexture = static_cast<VkRenderTarget*>(renderTarget)->getTexture();
 
         if(!renderTexture) {
             LOGE("VulkanCore renderToOculus: rendertexture null");
@@ -1299,7 +1305,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         VkResult ret = vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
-                                           &m_pipelineCache);
+                                             &m_pipelineCache);
         GVR_VK_CHECK(!ret);
     }
 
@@ -1386,7 +1392,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
             m_surface = VK_NULL_HANDLE;
         }
-        
+
         for (size_t i = 0; i < mSwapchainImageCount; i++) {
             vkDestroyImageView(m_device, mSwapchainBuffers[i].view, nullptr);
             mSwapchainBuffers[i].view = VK_NULL_HANDLE;
@@ -1403,10 +1409,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         //clear the handles to the swapChain images and imageviews. This is necessary because the driver
         //tries to reuse these handles when a new surface is created. When the garbage collector eventually runs
         //it might accidentally clear up the very same handles we are reusing.
-        std::vector<VkRenderTextureOnScreen* > onScreenTextures;
+        std::vector<VkRenderTexture* > onScreenTextures;
         for(int i = 0; i < 3; i ++ )
-            onScreenTextures.push_back(static_cast<VkRenderTextureOnScreen *> (
-                    static_cast<VkRenderTarget*>(vk_renderer->getRenderTarget(i, LEFT))->getTexture()));
+            onScreenTextures.push_back(static_cast<VkRenderTarget*>(vk_renderer->getRenderTarget(i, LEFT))->getTexture());
 
         for(auto tex: onScreenTextures)
         {

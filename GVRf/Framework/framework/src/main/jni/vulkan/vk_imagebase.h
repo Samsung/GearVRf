@@ -52,7 +52,7 @@ class vkImageBase : public VKDeviceComponent
     virtual ~vkImageBase();
 
     void cleanup();
-        void createImageView(bool host_accessible);
+        void createImageView(bool host_accessible, bool useDeviceSwapchain);
         void updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
         void createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,
                                      VkCommandBufferBeginInfo setupCmdsBeginInfo, std::vector<VkBufferImageCopy> &bufferCopyRegions,
