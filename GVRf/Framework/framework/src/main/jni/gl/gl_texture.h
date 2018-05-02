@@ -104,7 +104,7 @@ public:
             glBindTexture(target_, id_);
 
             const char* extension_string = (const char*)glGetString(GL_EXTENSIONS);
-            if(strstr(extension_string, "GL_EXT_texture_filter_anisotropic")) {
+            if(nullptr != extension_string && strstr(extension_string, "GL_EXT_texture_filter_anisotropic")) {
                 GLfloat anisotropic_level;
 
                 glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropic_level);
