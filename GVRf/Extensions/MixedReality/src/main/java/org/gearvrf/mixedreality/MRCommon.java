@@ -39,11 +39,6 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
-    public void setDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
-        onSetDisplayGeometry(displayRotation, widthPx, heightPx);
-    }
-
-    @Override
     public void registerPlaneListener(IPlaneEventsListener listener) {
         onRegisterPlaneListener(listener);
     }
@@ -53,19 +48,12 @@ public abstract class MRCommon implements IMRCommon {
         return onGetAllPlanes();
     }
 
-    public void updateFrame() { onUpdateFrame(); }
-
 
     protected abstract void onResume();
 
     protected abstract void onPause();
 
-    protected abstract void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx);
-
     protected abstract void onRegisterPlaneListener(IPlaneEventsListener listener);
 
     protected abstract ArrayList<GVRPlane> onGetAllPlanes();
-
-    protected abstract void onUpdateFrame();
-
 }

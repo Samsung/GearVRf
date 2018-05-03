@@ -16,22 +16,15 @@
 package org.gearvrf.mixedreality.arcore;
 
 import android.app.Activity;
-import android.opengl.GLES30;
 import android.opengl.Matrix;
-import android.os.SystemClock;
-import android.view.MotionEvent;
 import android.view.Surface;
 
-import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
-import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
-import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
-import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
@@ -39,43 +32,26 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
-import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRRenderPass;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.io.GVRCursorController;
-import org.gearvrf.io.GVRInputManager;
-import org.gearvrf.mixedreality.GVRAnchor;
-import org.gearvrf.mixedreality.GVRLightEstimate;
-import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRPlane;
-import org.gearvrf.mixedreality.GVRTrackingState;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
-import org.gearvrf.mixedreality.R;
 import org.gearvrf.utility.Log;
 import org.joml.Math;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 public class ARCoreSession extends MRCommon {
@@ -107,7 +83,6 @@ public class ARCoreSession extends MRCommon {
         mLastARFrame = null;
         mVRScene = gvrContext.getMainScene();
         mArCoreHelper = new ARCoreHelper(gvrContext, mVRScene);
-        setDisplayGeometry(Surface.ROTATION_90, 160, 90);
     }
 
     @Override
@@ -329,8 +304,6 @@ public class ARCoreSession extends MRCommon {
     }
 
 
-
-
     public void setARCoreSession(Session session) {
         mSession = session;
     }
@@ -341,21 +314,12 @@ public class ARCoreSession extends MRCommon {
 
 
     @Override
-    protected void onUpdateFrame() {
-        //TODO: Update Frame, anchors and planes
-    }
-
-    @Override
-    protected void onSetDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
-    }
-
-    @Override
     protected void onRegisterPlaneListener(IPlaneEventsListener listener) {
         mArCoreHelper.registerPlaneListener(listener);
     }
 
     @Override
-    public ArrayList<GVRPlane> onGetAllPlanes() {
+    protected ArrayList<GVRPlane> onGetAllPlanes() {
         return mArCoreHelper.getAllPlanes();
     }
 

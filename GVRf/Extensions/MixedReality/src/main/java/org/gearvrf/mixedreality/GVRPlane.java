@@ -21,8 +21,8 @@ import org.gearvrf.GVRSceneObject;
 
 public abstract class GVRPlane extends GVRSceneObject{
 
-    protected int mType;
-    private GVRTrackingState mTrackingState;
+    protected Type mType;
+    protected GVRTrackingState mTrackingState;
     protected float[] mCenterPose = new float[16];
     protected float mWidth;
     protected float mHeight;
@@ -33,41 +33,72 @@ public abstract class GVRPlane extends GVRSceneObject{
         super(gvrContext);
     }
 
-    public void setTrackingState(GVRTrackingState state) {
-        this.mTrackingState = state;
-    }
+    protected abstract void setTrackingState(GVRTrackingState state);
 
     protected abstract void setCenter(float[] pose);
 
-    protected abstract void setType();
+    protected abstract void setType(Type type);
 
     protected abstract void setWidth(float width);
 
     protected abstract void setHeight(float height);
 
+    /**
+     * Set the scene object to represent the plane
+     *
+     * @param obj
+     */
     public void setSceneObject(GVRSceneObject obj) {
         mSceneObject = obj;
         addChildObject(mSceneObject);
     }
 
+    /**
+     *
+     * @return The plane tracking state
+     */
     public GVRTrackingState getTrackingState() {
         return this.mTrackingState;
     }
 
+    /**
+     *
+     * @return The plane center pose
+     */
     public float[] getCenterPose() {
         return this.mCenterPose;
     }
 
-    public int getPlaneType() {
+    /**
+     *
+     * @return The plane type
+     */
+    public Type getPlaneType() {
         return this.mType;
     }
 
+    /**
+     *
+     * @return The plane width
+     */
     public float getWidth() {
         return this.mWidth;
     }
 
+    /**
+     *
+     * @return The plane height
+     */
     public float getHeight() {
         return this.mHeight;
+    }
+
+    /**
+     *
+     * @return The scene object that represents the plane
+     */
+    public GVRSceneObject getSceneObject() {
+        return this.mSceneObject;
     }
 
     public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
@@ -79,4 +110,9 @@ public abstract class GVRPlane extends GVRSceneObject{
     }
 
     protected abstract void onUpdate(float[] viewmtx, float[] gvrmatrix, float scale);
+
+    public enum Type {
+        HORIZONTAL_DOWNWARD_FACING,
+        HORIZONTAL_UPWARD_FACING
+    }
 }

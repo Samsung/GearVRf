@@ -54,14 +54,18 @@ class ARCorePlane extends GVRPlane {
 
 
     @Override
+    protected void setTrackingState(GVRTrackingState state) {
+        mTrackingState = state;
+    }
+
+    @Override
     protected void setCenter(float[] pose) {
         mCenterPose = pose;
     }
 
     @Override
-    protected void setType() {
-        // FIXME: Create a enum type
-        //mType = mARPlane.getType();
+    protected void setType(GVRPlane.Type type) {
+        mType = type;
     }
 
     @Override
@@ -87,15 +91,18 @@ class ARCorePlane extends GVRPlane {
             setEnable(false);
         }
 
-        if (mARPlane.getTrackingState() != TrackingState.TRACKING
-                || mARPlane.getSubsumedBy() != null) {
-            setTrackingState(GVRTrackingState.STOPPED);
-            mARPlane = null;
+        if (mARPlane.getTrackingState() != TrackingState.TRACKING) {
             setEnable(false);
-        } else {
-            setTrackingState(GVRTrackingState.TRACKING);
+        }
+        else {
             mPose.update(mARPlane.getCenterPose(), arViewMatrix, vrCamMatrix, scale);
 
+            if (mARPlane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
+                setType(Type.HORIZONTAL_DOWNWARD_FACING);
+            }
+            else {
+                setType(Type.HORIZONTAL_UPWARD_FACING);
+            }
             getTransform().setModelMatrix(mPose.getPoseMatrix());
             setWidth(mARPlane.getExtentX());
             setHeight(mARPlane.getExtentZ());

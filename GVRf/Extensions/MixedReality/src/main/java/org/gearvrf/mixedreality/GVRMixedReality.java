@@ -24,6 +24,7 @@ import android.view.MotionEvent;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMain;
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
@@ -33,15 +34,35 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 
+/**
+ * Component to enable AR functionalities on GVRf.
+ */
 public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private final IActivityEvents mActivityEventsHandler;
     private MRCommon mSession;
 
+    /**
+     * Default GVRMidexReality constructor. Create a instace of GVRMixedReality component.
+     *
+     * @param gvrContext
+     */
     public GVRMixedReality(final GVRContext gvrContext) {
         super(gvrContext, 0);
 
         mActivityEventsHandler = new ActivityEventsHandler();
         mSession = new ARCoreSession(gvrContext);
+    }
+
+    /**
+     * Create a instace of GVRMixedReality component and add it to the specified scene.
+     *
+     * @param gvrContext
+     * @param scene
+     */
+    public GVRMixedReality(final GVRContext gvrContext, final GVRScene scene) {
+        this(gvrContext);
+
+        scene.getMainCameraRig().getOwnerObject().attachComponent(this);
     }
 
     @Override
@@ -62,24 +83,24 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         mSession.pause();
     }
 
-    @Override
-    public void setDisplayGeometry(int displayRotation, int widthPx, int heightPx) {
-        mSession.setDisplayGeometry(displayRotation, widthPx, heightPx);
-    }
-
+    /**
+     * Register a listener to GVRPlane events.
+     *
+     * @param listener
+     */
     @Override
     public void registerPlaneListener(IPlaneEventsListener listener) {
         mSession.registerPlaneListener(listener);
     }
 
+    /**
+     * Gets all detected planes.
+     *
+     * @return A ArrayList of GVRPlanes
+     */
     @Override
     public ArrayList<GVRPlane> getAllPlanes() { return mSession.getAllPlanes(); }
 
-    @Override
-    public void onDrawFrame(float frameTime) {
-        super.onDrawFrame(frameTime);
-        mSession.updateFrame();
-    }
 
     private class ActivityEventsHandler implements IActivityEvents {
         @Override

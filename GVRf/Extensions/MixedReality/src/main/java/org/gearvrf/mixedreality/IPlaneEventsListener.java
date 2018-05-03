@@ -17,6 +17,6 @@ package org.gearvrf.mixedreality;
 
 
 public interface IPlaneEventsListener {
-    void onDetection(GVRPlane plane);
-    void onTrackingStateChange(GVRPlane plane, GVRTrackingState state);
+    void onPlaneDetection(GVRPlane plane);
+    void onPlaneStateChange(GVRPlane plane, GVRTrackingState state);
 }

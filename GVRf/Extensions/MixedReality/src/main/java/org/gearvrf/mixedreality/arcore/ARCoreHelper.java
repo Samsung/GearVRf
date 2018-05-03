@@ -27,7 +27,6 @@ import org.gearvrf.mixedreality.IPlaneEventsListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class ARCoreHelper {
@@ -46,19 +45,37 @@ public class ARCoreHelper {
 
     public void updatePlanes(Collection<Plane> allPlanes, float[] arViewMatrix,
                               float[] vrCamMatrix, float scale) {
+        ARCorePlane arCorePlane;
+
         for (Plane plane: allPlanes) {
-            if (plane.getTrackingState() != TrackingState.TRACKING || plane.getSubsumedBy() != null) {
+            if (plane.getTrackingState() != TrackingState.TRACKING
+                    || mArPlanes.containsKey(plane)) {
                 continue;
             }
 
-            ARCorePlane arCorePlane = mArPlanes.get(plane);
-            if (arCorePlane == null) {
-                arCorePlane = new ARCorePlane(mGvrContext);
-                arCorePlane.setARPlane(plane);
-                mGvrScene.addSceneObject(arCorePlane);
-                mArPlanes.put(plane, arCorePlane);
-                notifyPlaneDetectionListeners(arCorePlane);
+            arCorePlane = createPlane(plane);
+            notifyPlaneDetectionListeners(arCorePlane);
+        }
+
+        for (Plane plane: mArPlanes.keySet()) {
+            arCorePlane = mArPlanes.get(plane);
+
+            if (plane.getTrackingState() == TrackingState.TRACKING &&
+                    arCorePlane.getTrackingState() != GVRTrackingState.TRACKING) {
+                arCorePlane.setTrackingState(GVRTrackingState.TRACKING);
+                notifyPlaneStateChangeListeners(arCorePlane, GVRTrackingState.TRACKING);
             }
+            else if (plane.getTrackingState() == TrackingState.PAUSED &&
+                    arCorePlane.getTrackingState() != GVRTrackingState.PAUSED) {
+                arCorePlane.setTrackingState(GVRTrackingState.PAUSED);
+                notifyPlaneStateChangeListeners(arCorePlane, GVRTrackingState.PAUSED);
+            }
+            else if (plane.getTrackingState() == TrackingState.STOPPED &&
+                    arCorePlane.getTrackingState() != GVRTrackingState.STOPPED) {
+                arCorePlane.setTrackingState(GVRTrackingState.STOPPED);
+                notifyPlaneStateChangeListeners(arCorePlane, GVRTrackingState.STOPPED);
+            }
+
             arCorePlane.update(arViewMatrix, vrCamMatrix, scale);
         }
     }
@@ -66,11 +83,10 @@ public class ARCoreHelper {
     public ArrayList<GVRPlane> getAllPlanes() {
         ArrayList<GVRPlane> allPlanes = new ArrayList<>();
 
-        Iterator it = mArPlanes.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry map = (Map.Entry)it.next();
-            allPlanes.add((GVRPlane)map.getValue());
+        for (Plane plane: mArPlanes.keySet()) {
+            allPlanes.add(mArPlanes.get(plane));
         }
+
         return allPlanes;
     }
 
@@ -78,15 +94,23 @@ public class ARCoreHelper {
         planeEventsListeners.add(listener);
     }
 
-    public void notifyPlaneDetectionListeners(GVRPlane plane) {
+    private ARCorePlane createPlane(Plane plane) {
+        ARCorePlane arCorePlane = new ARCorePlane(mGvrContext);
+        arCorePlane.setARPlane(plane);
+        mGvrScene.addSceneObject(arCorePlane);
+        mArPlanes.put(plane, arCorePlane);
+        return arCorePlane;
+    }
+
+    private void notifyPlaneDetectionListeners(GVRPlane plane) {
         for (IPlaneEventsListener listener: planeEventsListeners) {
-            listener.onDetection(plane);
+            listener.onPlaneDetection(plane);
         }
     }
 
-    public void notifyPlaneStateChangeListeners(GVRPlane plane, GVRTrackingState state) {
+    private void notifyPlaneStateChangeListeners(GVRPlane plane, GVRTrackingState state) {
         for (IPlaneEventsListener listener: planeEventsListeners) {
-            listener.onTrackingStateChange(plane, state);
+            listener.onPlaneStateChange(plane, state);
         }
     }
 }

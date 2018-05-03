@@ -23,8 +23,6 @@ public interface IMRCommon {
 
     void pause();
 
-    void setDisplayGeometry(int displayRotation, int widthPx, int heightPx);
-
     void registerPlaneListener(IPlaneEventsListener listener);
 
     ArrayList<GVRPlane> getAllPlanes();
