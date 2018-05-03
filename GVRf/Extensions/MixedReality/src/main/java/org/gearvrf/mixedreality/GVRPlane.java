@@ -26,6 +26,7 @@ public abstract class GVRPlane extends GVRSceneObject{
     protected float[] mCenterPose = new float[16];
     protected float mWidth;
     protected float mHeight;
+    protected GVRPlane mParentPlane;
     protected GVRSceneObject mSceneObject;
 
 
@@ -42,6 +43,8 @@ public abstract class GVRPlane extends GVRSceneObject{
     protected abstract void setWidth(float width);
 
     protected abstract void setHeight(float height);
+
+    protected abstract void setParentPlane(GVRPlane plane);
 
     /**
      * Set the scene object to represent the plane
@@ -91,6 +94,14 @@ public abstract class GVRPlane extends GVRSceneObject{
      */
     public float getHeight() {
         return this.mHeight;
+    }
+
+    /**
+     *
+     * @return The parent plane
+     */
+    public GVRPlane getParentPlane() {
+        return this.mParentPlane;
     }
 
     /**

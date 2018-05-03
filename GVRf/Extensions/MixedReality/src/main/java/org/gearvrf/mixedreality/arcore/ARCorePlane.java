@@ -78,6 +78,11 @@ class ARCorePlane extends GVRPlane {
         mHeight = height;
     }
 
+    @Override
+    protected void setParentPlane(GVRPlane plane) {
+        mParentPlane = plane;
+    }
+
     /**
      * Converts from ARCore world space to GVRf's world space.
      *
@@ -103,6 +108,7 @@ class ARCorePlane extends GVRPlane {
             else {
                 setType(Type.HORIZONTAL_UPWARD_FACING);
             }
+            setCenter(mPose.getPoseMatrix());
             getTransform().setModelMatrix(mPose.getPoseMatrix());
             setWidth(mARPlane.getExtentX());
             setHeight(mARPlane.getExtentZ());

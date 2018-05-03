@@ -76,6 +76,11 @@ public class ARCoreHelper {
                 notifyPlaneStateChangeListeners(arCorePlane, GVRTrackingState.STOPPED);
             }
 
+            if (plane.getSubsumedBy() != null && arCorePlane.getParentPlane() == null) {
+                arCorePlane.setParentPlane(mArPlanes.get(plane.getSubsumedBy()));
+                notifyMergedPlane(arCorePlane, arCorePlane.getParentPlane());
+            }
+
             arCorePlane.update(arViewMatrix, vrCamMatrix, scale);
         }
     }
@@ -108,9 +113,15 @@ public class ARCoreHelper {
         }
     }
 
-    private void notifyPlaneStateChangeListeners(GVRPlane plane, GVRTrackingState state) {
+    private void notifyPlaneStateChangeListeners(GVRPlane plane, GVRTrackingState trackingState) {
         for (IPlaneEventsListener listener: planeEventsListeners) {
-            listener.onPlaneStateChange(plane, state);
+            listener.onPlaneStateChange(plane, trackingState);
+        }
+    }
+
+    private void notifyMergedPlane(GVRPlane childPlane, GVRPlane parentPlane) {
+        for (IPlaneEventsListener listener: planeEventsListeners) {
+            listener.onPlaneMerging(childPlane, parentPlane);
         }
     }
 }
