@@ -249,7 +249,6 @@ namespace gvr {
                 // index of uniform variable
                 GLuint tUniformIndex = uniformsIndices[uniformMember];
 
-                uniformsIndices[uniformMember];
                 GLint uniformNameLength, uniformOffset, uniformSize;
                 GLint uniformType, arrayStride, matrixStride;
 

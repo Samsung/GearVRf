@@ -17,14 +17,35 @@
 #include "vulkanCore.h"
 
 namespace gvr {
+
     VKFramebuffer::~VKFramebuffer() {
-        delete mAttachments[COLOR_IMAGE];
-        delete mAttachments[DEPTH_IMAGE];
+
+        if(mAttachments[COLOR_IMAGE]!= 0)
+            delete mAttachments[COLOR_IMAGE];
+
+        if(mAttachments[DEPTH_IMAGE]!= 0)
+            delete mAttachments[DEPTH_IMAGE];
+
+        if(mAttachments[MULTISAMPLED_IMAGE]!= 0)
+            delete mAttachments[MULTISAMPLED_IMAGE];
+
+        cleanup();
+
+    }
+
+    void VKFramebuffer::cleanup() {
 
         VulkanCore * instance = VulkanCore::getInstance();
         VkDevice device = instance->getDevice();
-        vkDestroyFramebuffer(device, mFramebuffer, nullptr);
 
-        vkDestroyRenderPass(device, mRenderpass, nullptr);
+        if(mFramebuffer != 0) {
+            vkDestroyFramebuffer(device, mFramebuffer, nullptr);
+            mFramebuffer = 0;
+        }
+
+        if(mRenderpass != 0) {
+            vkDestroyRenderPass(device, mRenderpass, nullptr);
+            mRenderpass = 0;
+        }
     }
 }

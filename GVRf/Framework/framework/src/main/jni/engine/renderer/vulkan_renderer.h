@@ -59,6 +59,7 @@ protected:
     }
 
 public:
+
     VkFence createFenceObject(){
         return vulkanCore_->createFenceObject();
     }
@@ -114,10 +115,6 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views);
-    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
-                                               int jcolor_format, int jdepth_format, bool resolve_depth,
-                                               const TextureParameters* texture_parameters, int number_views, bool monoscopic);
-
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int depthformat) { return nullptr; }
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);
@@ -133,6 +130,7 @@ public:
 
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual void updatePostEffectMesh(Mesh*);
+
 private:
     VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}

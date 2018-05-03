@@ -36,6 +36,7 @@ public:
 
     virtual PhysicsVec3 getPivotInB() const = 0;
 
+    int getConstraintType() const { return PhysicsConstraint::point2pointConstraint; }
 };
 
 }

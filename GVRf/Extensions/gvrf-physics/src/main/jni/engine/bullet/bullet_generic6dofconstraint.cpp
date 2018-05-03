@@ -24,6 +24,8 @@
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
 
+static const char tag[] = "BulletGenericConstrN";
+
 namespace gvr {
 
     BulletGeneric6dofConstraint::BulletGeneric6dofConstraint(
@@ -37,6 +39,13 @@ namespace gvr {
         mPosition.set(joint);
         mRotationA.set(rotationA);
         mRotationB.set(rotationB);
+    }
+
+    BulletGeneric6dofConstraint::BulletGeneric6dofConstraint(btGeneric6DofConstraint *constraint)
+    {
+        mGeneric6DofConstraint = constraint;
+        mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
+        constraint->setUserConstraintPtr(this);
     }
 
     BulletGeneric6dofConstraint::~BulletGeneric6dofConstraint() {
@@ -144,8 +153,8 @@ namespace gvr {
     }
 
 void BulletGeneric6dofConstraint::updateConstructionInfo() {
-    if (mGeneric6DofConstraint != 0) {
-        delete (mGeneric6DofConstraint);
+    if (mGeneric6DofConstraint != nullptr) {
+        return;
     }
 
     btRigidBody *rbA = ((BulletRigidBody*)owner_object()->

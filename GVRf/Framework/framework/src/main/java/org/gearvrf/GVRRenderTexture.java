@@ -53,18 +53,10 @@ public class GVRRenderTexture extends GVRTexture {
         this(gvrContext,width,height,sampleCount,1);
     }
 
-    public GVRRenderTexture(GVRContext gvrContext, int width, int height, int sampleCount, boolean monoscopic)
-    {
-        super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
-                sampleCount, 1, monoscopic));
-        mWidth = width;
-        mHeight = height;
-    }
-
     public GVRRenderTexture(GVRContext gvrContext, int width, int height, int sampleCount, int number_views)
     {
         super(gvrContext, NativeRenderTexture.ctorMSAA(width, height,
-                sampleCount, number_views, false));
+                sampleCount, number_views));
         mWidth = width;
         mHeight = height;
     }
@@ -197,7 +189,7 @@ public class GVRRenderTexture extends GVRTexture {
 class NativeRenderTexture {
     static native long ctor(int width, int height);
 
-    static native long ctorMSAA(int width, int height, int sampleCount, int number_views, boolean monoscopic);
+    static native long ctorMSAA(int width, int height, int sampleCount, int number_views);
 
     static native long ctorWithParameters(int width, int height,
                                           int sampleCount, int colorFormat, int depthFormat,

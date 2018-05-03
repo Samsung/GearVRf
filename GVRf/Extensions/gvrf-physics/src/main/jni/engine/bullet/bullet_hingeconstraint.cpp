@@ -21,6 +21,8 @@
 #include "bullet_rigidbody.h"
 #include <BulletDynamics/ConstraintSolver/btHingeConstraint.h>
 
+const char tag[] = "BulletHingeConstrN";
+
 namespace gvr {
 
     BulletHingeConstraint::BulletHingeConstraint(PhysicsRigidBody *rigidBodyB, const float *pivotInA,
@@ -37,6 +39,13 @@ namespace gvr {
         // By default angular limit is inactive
         mTempLower = 2.0f;
         mTempUpper = 0.0f;
+    }
+
+    BulletHingeConstraint::BulletHingeConstraint(btHingeConstraint *constraint)
+    {
+        mHingeConstraint = constraint;
+        mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
+        constraint->setUserConstraintPtr(this);
     }
 
     BulletHingeConstraint::~BulletHingeConstraint() {
@@ -92,18 +101,23 @@ namespace gvr {
     }
 
     void BulletHingeConstraint::updateConstructionInfo() {
-        if (mHingeConstraint != 0) {
-            delete (mHingeConstraint);
+//        if (mHingeConstraint != 0) {
+//            delete (mHingeConstraint);
+//        }
+
+        if (mHingeConstraint == nullptr)
+        {
+            btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
+            btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
+            btVector3 axisInA(mAxisInA.x, mAxisInA.y, mAxisInA.z);
+            btVector3 axisInB(mAxisInB.x, mAxisInB.y, mAxisInB.z);
+            btRigidBody *rbA = ((BulletRigidBody *) owner_object()->getComponent(
+                    COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
+
+            mHingeConstraint = new btHingeConstraint(*rbA, *mRigidBodyB->getRigidBody(), pivotInA,
+                                                     pivotInB, axisInA, axisInB);
+            mHingeConstraint->setLimit(mTempLower, mTempUpper);
+            mHingeConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
         }
-
-        btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
-        btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
-        btVector3 axisInA(mAxisInA.x, mAxisInA.y, mAxisInA.z);
-        btVector3 axisInB(mAxisInB.x, mAxisInB.y, mAxisInB.z);
-        btRigidBody* rbA = ((BulletRigidBody*)owner_object()->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
-
-        mHingeConstraint = new btHingeConstraint(*rbA, *mRigidBodyB->getRigidBody(), pivotInA, pivotInB, axisInA, axisInB);
-        mHingeConstraint->setLimit(mTempLower, mTempUpper);
-        mHingeConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
     }
 }

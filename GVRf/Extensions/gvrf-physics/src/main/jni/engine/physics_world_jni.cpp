@@ -17,12 +17,17 @@
  * Represents a physics 3D world
  ***************************************************************************/
 
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+
 #include "bullet/bullet_world.h"
 #include "physics_world.h"
 #include "physics_rigidbody.h"
 #include "physics_constraint.h"
 
 #include "util/gvr_jni.h"
+
+static char tag[] = "PhysWorldJNI";
 
 namespace gvr {
 extern "C" {

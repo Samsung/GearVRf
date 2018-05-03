@@ -142,6 +142,6 @@ void GVRImageCapture::saveAllImages()
         fileIndex++;
     }
     mPBOData.clear();
-    delete data;
+    delete[] data;
     mMaxWidth = mMaxHeight = 0;
 }

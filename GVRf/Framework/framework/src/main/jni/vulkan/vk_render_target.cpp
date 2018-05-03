@@ -56,7 +56,7 @@ VkRenderTexture* VkRenderTarget :: getTexture() {
     /* Commenting out the code of sending an older image to oculus, if the current one is not yet complete.
      * Reason for commenting : 1. Even though the FPS is 60 the visuals lag.
      *                         2. FPS is not affected with or without this logic
-     * /
+     */
 /*
     bool found = false;
     VkResult status;

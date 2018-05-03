@@ -15,6 +15,7 @@
 
 package org.gearvrf.physics;
 
+import android.content.res.AssetManager;
 import android.os.SystemClock;
 import android.util.LongSparseArray;
 
@@ -35,6 +36,8 @@ public class GVRWorld extends GVRComponent {
     private final GVRPhysicsContext mPhysicsContext;
     private GVRWorldTask mWorldTask;
     private static final long DEFAULT_INTERVAL = 15;
+
+    private long mNativeLoader;
 
     static {
         System.loadLibrary("gvrf-physics");

@@ -35,6 +35,8 @@ namespace gvr {
         virtual void setTwistLimit(float limit) = 0;
 
         virtual float getTwistLimit() const = 0;
+
+        int getConstraintType() const { return PhysicsConstraint::coneTwistConstraint; }
     };
 
 }

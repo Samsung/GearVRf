@@ -23,6 +23,8 @@
 #include <BulletDynamics/ConstraintSolver/btConeTwistConstraint.h>
 #include <LinearMath/btScalar.h>
 
+const char tag[] = "BulletConeTwistConstrN";
+
 namespace gvr {
     BulletConeTwistConstraint::BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyB,
                                                          PhysicsVec3 pivot,
@@ -37,6 +39,13 @@ namespace gvr {
         mConeRotation = coneRotation;
         mSwingLimit = SIMD_PI * 0.25f;
         mTwistLimit = SIMD_PI;
+    }
+
+    BulletConeTwistConstraint::BulletConeTwistConstraint(btConeTwistConstraint *constraint)
+    {
+        mConeTwistConstraint = constraint;
+        mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
+        constraint->setUserConstraintPtr(this);
     }
 
     BulletConeTwistConstraint::~BulletConeTwistConstraint() {
@@ -101,8 +110,8 @@ namespace gvr {
     }
 
 void BulletConeTwistConstraint::updateConstructionInfo() {
-    if (mConeTwistConstraint != 0) {
-        delete (mConeTwistConstraint);
+    if (mConeTwistConstraint != nullptr) {
+        return;
     }
 
     btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(owner_object()

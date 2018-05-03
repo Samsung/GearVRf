@@ -24,7 +24,7 @@
 
 namespace gvr {
     VulkanVertexBuffer::VulkanVertexBuffer(const char* layout_desc, int vertexCount)
-    : VertexBuffer(layout_desc, vertexCount)
+            : VertexBuffer(layout_desc, vertexCount)
     {
         mVerticesMap.clear();
     }
@@ -179,7 +179,7 @@ namespace gvr {
                     VkVertexInputAttributeDescription binding;
                     binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
                     binding.location = e.Index;
-                    LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                    LOGV("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
                     binding.format = getDataType(entry->Type); //float3
                     binding.offset = entry->Offset;
                     vertices->vi_attrs.push_back(binding);
@@ -187,7 +187,7 @@ namespace gvr {
                 }
                 else                                // mesh uses attribute but shader does not
                 {
-                    LOGE("entry is not present %s", e.Name);
+                    LOGW("entry is not present %s", e.Name);
 
                 }
 
@@ -222,6 +222,8 @@ namespace gvr {
         if(type.compare("int4")==0 || type.compare("ivec4")==0)
             return VK_FORMAT_R32G32B32A32_SINT;
 
+        FAIL("VulkanVertexBuffer::getDataType: unknown type %s", type.c_str());
+        return VK_FORMAT_UNDEFINED;
+
     }
 } // end gvrf
-

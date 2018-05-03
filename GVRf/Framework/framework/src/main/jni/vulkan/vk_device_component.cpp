@@ -14,24 +14,16 @@
  */
 
 
+#include "vk_device_component.h"
+#include "vulkanCore.h"
+namespace  gvr {
+    VKDeviceComponent::VKDeviceComponent() {
+        VulkanCore *instance = VulkanCore::getInstance();
+        instance->addDeviceComponent(this);
+    }
 
-#ifndef FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H
-#define FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H
-
-#include "vk_render_to_texture.h"
-
-namespace gvr {
-    class VkRenderTextureOffScreen : public VkRenderTexture
-    {
-    public:
-        explicit VkRenderTextureOffScreen(int width, int height, int sample_count = 1);
-        void bind();
-        bool isReady();
-        bool readRenderResult(uint8_t *readback_buffer);
-        bool accessRenderResult(uint8_t **readback_buffer);
-        void unmapDeviceMemory();
-    };
-
+    VKDeviceComponent::~VKDeviceComponent(){
+        VulkanCore *instance = VulkanCore::getInstance();
+        instance->removeDeviceComponent(this);
+    }
 }
-
-#endif //FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H

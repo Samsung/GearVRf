@@ -29,6 +29,13 @@ import java.util.List;
  */
 abstract class GVRConstraint extends GVRPhysicsWorldObject {
 
+    static final int fixedConstraintId = 1;
+    static final int point2pointConstraintId = 2;
+    static final int sliderConstraintId = 3;
+    static final int hingeConstraintId = 4;
+    static final int coneTwistConstraintId = 5;
+    static final int genericConstraintId = 6;
+
     protected GVRConstraint(GVRContext gvrContext, long nativePointer) {
         super(gvrContext, nativePointer);
     }
@@ -76,6 +83,8 @@ abstract class GVRConstraint extends GVRPhysicsWorldObject {
 
 class Native3DConstraint {
     static native long getComponentType();
+
+    static native int getConstraintType(long nativeConstraint);
 
     static native void setBreakingImpulse(long nativeConstraint, float impulse);
 

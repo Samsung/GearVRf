@@ -43,6 +43,8 @@ namespace gvr {
         virtual void setLinearUpperLimit(float limit) = 0;
 
         virtual float getLinearUpperLimit() const = 0;
+
+        int getConstraintType() const { return PhysicsConstraint::sliderConstraint; }
     };
 
 }

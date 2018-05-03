@@ -37,6 +37,8 @@ namespace gvr {
                                        float const pivotInB[], float const axisInA[],
                                        float const axisInB[]);
 
+        BulletHingeConstraint(btHingeConstraint *constraint);
+
         virtual ~BulletHingeConstraint();
 
         void setLimits(float lower, float upper);

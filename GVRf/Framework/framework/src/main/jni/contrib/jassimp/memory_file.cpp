@@ -28,7 +28,7 @@
 #define lprintf(...) printf (__VA_ARGS__)
 #endif /* ANDROID */
 #else
-#define lprintf
+#define lprintf(...)
 #endif
 
 // Memory File

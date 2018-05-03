@@ -193,7 +193,7 @@ void decode_block(uint32_t block_mode, decoded_block_t *decoded_block)
     {
         // The 'selector' is bits 7 & 8 which distinguish which row
         // of the table applies to retrieve the values we're looking for.
-        selector == (block_mode >> 7) & 0x3;
+        selector = (block_mode >> 7) & 0x3;
         r1 = (block_mode >> 2) & 0x1;
         r2 = (block_mode >> 3) & 0x1;
         r0 = (block_mode >> 4) & 0x1;

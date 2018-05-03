@@ -25,15 +25,29 @@
 #include <LinearMath/btTransform.h>
 #include <math.h>
 
+static const char tag[] = "BulletRbN";
+
 namespace gvr {
 
 BulletRigidBody::BulletRigidBody()
-        : mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
+        : mRigidBody(nullptr),
+          mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
           m_centerOfMassOffset(btTransform::getIdentity()),
           mScale(1.0f, 1.0f, 1.0f),
           mSimType(SimulationType::DYNAMIC)
 {
     initialize();
+}
+
+BulletRigidBody::BulletRigidBody(btRigidBody *rigidBody)
+        : mRigidBody(rigidBody),
+          mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
+          m_centerOfMassOffset(btTransform::getIdentity()),
+          mScale(1.0f, 1.0f, 1.0f),
+          mSimType(SimulationType::DYNAMIC)
+{
+    initialize();
+    mConstructionInfo.m_mass = rigidBody->isStaticObject() ? 0.f : 1.f / rigidBody->getInvMass();
 }
 
 BulletRigidBody::~BulletRigidBody() {
@@ -102,7 +116,11 @@ void BulletRigidBody::updateConstructionInfo() {
 }
 
 void BulletRigidBody::initialize() {
-    mRigidBody = new btRigidBody(mConstructionInfo);
+    if (nullptr == mRigidBody)
+    {
+        mRigidBody = new btRigidBody(mConstructionInfo);
+    }
+
     mRigidBody->setUserPointer(this);
 }
 

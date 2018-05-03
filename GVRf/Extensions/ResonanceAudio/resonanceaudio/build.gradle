@@ -38,7 +38,7 @@ android {
 }
 
 project.ext.jomlVersion = "1.9.3-SNAPSHOT"
-project.ext.daydreamVersion = "1.120.0"
+project.ext.daydreamVersion = "1.130.0"
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
