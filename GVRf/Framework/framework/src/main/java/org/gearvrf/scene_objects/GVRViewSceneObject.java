@@ -737,7 +737,10 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         @Override
         public void onInside(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
-            if (sceneObject == mSelected) {
+            final MotionEvent event = pickInfo.motionEvent;
+
+            if (sceneObject == mSelected && event != null
+                    && event.getAction() == MotionEvent.ACTION_MOVE) {
                 onDrag(pickInfo);
             }
         }
