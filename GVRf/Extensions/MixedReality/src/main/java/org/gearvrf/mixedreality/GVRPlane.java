@@ -19,8 +19,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
 
-public abstract class GVRPlane extends GVRSceneObject{
-
+public abstract class GVRPlane extends GVRSceneObject {
     protected Type mType;
     protected GVRTrackingState mTrackingState;
     protected float[] mCenterPose = new float[16];
@@ -30,13 +29,11 @@ public abstract class GVRPlane extends GVRSceneObject{
     protected GVRSceneObject mSceneObject;
 
 
-    public GVRPlane(GVRContext gvrContext) {
+    protected GVRPlane(GVRContext gvrContext) {
         super(gvrContext);
     }
 
     protected abstract void setTrackingState(GVRTrackingState state);
-
-    protected abstract void setCenter(float[] pose);
 
     protected abstract void setType(Type type);
 

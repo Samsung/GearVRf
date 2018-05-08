@@ -19,7 +19,6 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.TrackingState;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRTrackingState;
 
@@ -29,12 +28,10 @@ import org.gearvrf.mixedreality.GVRTrackingState;
  */
 public class ARCoreAnchor extends GVRAnchor {
     private Anchor mAnchor;
-    ARCoreSession mSession;
     private ARCorePose mPose;
 
-    public ARCoreAnchor(GVRContext gvrContext, ARCoreSession session, GVRSceneObject sceneObject) {
-        super(gvrContext, sceneObject);
-        this.mSession = session;
+    public ARCoreAnchor(GVRContext gvrContext) {
+        super(gvrContext);
         mPose = new ARCorePose();
     }
 
@@ -63,7 +60,6 @@ public class ARCoreAnchor extends GVRAnchor {
      */
     @Override
     protected void onUpdate(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
-
         if (mAnchor == null)
             return;
 

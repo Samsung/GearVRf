@@ -83,24 +83,24 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         mSession.pause();
     }
 
-    /**
-     * Register a listener to GVRPlane events.
-     *
-     * @param listener
-     */
     @Override
     public void registerPlaneListener(IPlaneEventsListener listener) {
         mSession.registerPlaneListener(listener);
     }
 
-    /**
-     * Gets all detected planes.
-     *
-     * @return A ArrayList of GVRPlanes
-     */
     @Override
     public ArrayList<GVRPlane> getAllPlanes() { return mSession.getAllPlanes(); }
 
+
+    @Override
+    public GVRAnchor createAnchor(float[] pose) {
+        return mSession.createAnchor(pose);
+    }
+
+    @Override
+    public GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject) {
+        return mSession.createAnchor(pose, sceneObject);
+    }
 
     private class ActivityEventsHandler implements IActivityEvents {
         @Override

@@ -59,11 +59,6 @@ class ARCorePlane extends GVRPlane {
     }
 
     @Override
-    protected void setCenter(float[] pose) {
-        mCenterPose = pose;
-    }
-
-    @Override
     protected void setType(GVRPlane.Type type) {
         mType = type;
     }
@@ -108,7 +103,9 @@ class ARCorePlane extends GVRPlane {
             else {
                 setType(Type.HORIZONTAL_UPWARD_FACING);
             }
-            setCenter(mPose.getPoseMatrix());
+
+            // Set the center Pose of plane
+            mARPlane.getCenterPose().toMatrix(mCenterPose, 0);
             getTransform().setModelMatrix(mPose.getPoseMatrix());
             setWidth(mARPlane.getExtentX());
             setHeight(mARPlane.getExtentZ());

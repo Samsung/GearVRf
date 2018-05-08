@@ -19,11 +19,13 @@ import android.app.Activity;
 import android.opengl.Matrix;
 import android.view.Surface;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Plane;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -42,6 +44,7 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 import org.gearvrf.mixedreality.MRCommon;
@@ -49,6 +52,7 @@ import org.gearvrf.mixedreality.CameraPermissionHelper;
 import org.gearvrf.utility.Log;
 import org.joml.Math;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -257,6 +261,8 @@ public class ARCoreSession extends MRCommon {
             mArCoreHelper.updatePlanes(mSession.getAllTrackables(Plane.class),
                     mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
 
+            mArCoreHelper.updateAnchors(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
+
             mLastARFrame = arFrame;
 
             // Update current VR cam's matrix to next update of passtrhough and virtual objects.
@@ -323,4 +329,46 @@ public class ARCoreSession extends MRCommon {
         return mArCoreHelper.getAllPlanes();
     }
 
+
+    @Override
+    protected GVRAnchor onCreateAnchor(float[] pose) {
+        float[] translation = new float[3];
+        float[] rotation = new float[4];
+
+        convertMatrixPoseToVector(pose, translation, rotation);
+
+        Anchor anchor = mSession.createAnchor(new Pose(translation, rotation));
+        return mArCoreHelper.createAnchor(anchor);
+    }
+
+    @Override
+    protected GVRAnchor onCreateAnchor(float[] pose, GVRSceneObject sceneObject) {
+        float[] translation = new float[3];
+        float[] rotation = new float[4];
+
+        convertMatrixPoseToVector(pose, translation, rotation);
+
+        Anchor anchor = mSession.createAnchor(new Pose(translation, rotation));
+        return mArCoreHelper.createAnchor(anchor, sceneObject);
+    }
+
+    private void convertMatrixPoseToVector(float[] pose, float[] translation, float[] rotation) {
+        Vector3f vectorTranslation = new Vector3f();
+        Quaternionf quaternionRotation = new Quaternionf();
+        Matrix4f matrixPose = new Matrix4f();
+
+        matrixPose.set(pose);
+
+
+        matrixPose.getTranslation(vectorTranslation);
+        translation[0] = vectorTranslation.x;
+        translation[1] = vectorTranslation.y;
+        translation[2] = vectorTranslation.z;
+
+        matrixPose.getNormalizedRotation(quaternionRotation);
+        rotation[0] = quaternionRotation.x;
+        rotation[1] = quaternionRotation.y;
+        rotation[2] = quaternionRotation.z;
+        rotation[3] = quaternionRotation.w;
+    }
 }

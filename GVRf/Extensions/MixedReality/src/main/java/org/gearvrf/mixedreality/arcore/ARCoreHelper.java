@@ -15,11 +15,14 @@
 
 package org.gearvrf.mixedreality.arcore;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.Plane;
 import com.google.ar.core.TrackingState;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
@@ -27,6 +30,7 @@ import org.gearvrf.mixedreality.IPlaneEventsListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ARCoreHelper {
@@ -34,6 +38,7 @@ public class ARCoreHelper {
     private GVRScene mGvrScene;
 
     private Map<Plane, ARCorePlane> mArPlanes;
+    private List<ARCoreAnchor> mArAnchors;
 
     private ArrayList<IPlaneEventsListener> planeEventsListeners = new ArrayList<>();
 
@@ -41,10 +46,11 @@ public class ARCoreHelper {
         mGvrContext = gvrContext;
         mGvrScene = gvrScene;
         mArPlanes = new HashMap<>();
+        mArAnchors = new ArrayList<>();
     }
 
     public void updatePlanes(Collection<Plane> allPlanes, float[] arViewMatrix,
-                              float[] vrCamMatrix, float scale) {
+                             float[] vrCamMatrix, float scale) {
         ARCorePlane arCorePlane;
 
         for (Plane plane: allPlanes) {
@@ -54,6 +60,8 @@ public class ARCoreHelper {
             }
 
             arCorePlane = createPlane(plane);
+            // FIXME: New planes are updated two times
+            arCorePlane.update(arViewMatrix, vrCamMatrix, scale);
             notifyPlaneDetectionListeners(arCorePlane);
         }
 
@@ -85,6 +93,12 @@ public class ARCoreHelper {
         }
     }
 
+    public void updateAnchors(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
+        for (ARCoreAnchor anchor: mArAnchors) {
+            anchor.update(arViewMatrix, vrCamMatrix, scale);
+        }
+    }
+
     public ArrayList<GVRPlane> getAllPlanes() {
         ArrayList<GVRPlane> allPlanes = new ArrayList<>();
 
@@ -95,16 +109,33 @@ public class ARCoreHelper {
         return allPlanes;
     }
 
-    public void registerPlaneListener(IPlaneEventsListener listener) {
-        planeEventsListeners.add(listener);
-    }
-
-    private ARCorePlane createPlane(Plane plane) {
+    public ARCorePlane createPlane(Plane plane) {
         ARCorePlane arCorePlane = new ARCorePlane(mGvrContext);
         arCorePlane.setARPlane(plane);
         mGvrScene.addSceneObject(arCorePlane);
         mArPlanes.put(plane, arCorePlane);
         return arCorePlane;
+    }
+
+    public GVRAnchor createAnchor(Anchor arAnchor) {
+        ARCoreAnchor arCoreAnchor = new ARCoreAnchor(mGvrContext);
+        arCoreAnchor.setAnchorAR(arAnchor);
+        mGvrScene.addSceneObject(arCoreAnchor);
+        mArAnchors.add(arCoreAnchor);
+        return arCoreAnchor;
+    }
+
+    public GVRAnchor createAnchor(Anchor arAnchor, GVRSceneObject sceneObject) {
+        ARCoreAnchor arCoreAnchor = new ARCoreAnchor(mGvrContext);
+        arCoreAnchor.setAnchorAR(arAnchor);
+        arCoreAnchor.setSceneObject(sceneObject);
+        mGvrScene.addSceneObject(arCoreAnchor);
+        mArAnchors.add(arCoreAnchor);
+        return arCoreAnchor;
+    }
+
+    public void registerPlaneListener(IPlaneEventsListener listener) {
+        planeEventsListeners.add(listener);
     }
 
     private void notifyPlaneDetectionListeners(GVRPlane plane) {

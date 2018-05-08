@@ -16,6 +16,8 @@
 package org.gearvrf.mixedreality;
 
 
+import org.gearvrf.GVRSceneObject;
+
 import java.util.ArrayList;
 
 public interface IMRCommon {
@@ -23,7 +25,34 @@ public interface IMRCommon {
 
     void pause();
 
+    /**
+     * Register a listener to GVRPlane events.
+     *
+     * @param listener
+     */
     void registerPlaneListener(IPlaneEventsListener listener);
 
+    /**
+     * Gets all detected planes.
+     *
+     * @return A ArrayList of GVRPlanes
+     */
     ArrayList<GVRPlane> getAllPlanes();
+
+    /**
+     * Create an anchor on pose specified.
+     *
+     * @param pose
+     * @return
+     */
+    GVRAnchor createAnchor(float[] pose);
+
+    /**
+     * Create an anchor on pose specified and associate to the sceneObject
+     *
+     * @param pose
+     * @param sceneObject
+     * @return
+     */
+    GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject);
 }

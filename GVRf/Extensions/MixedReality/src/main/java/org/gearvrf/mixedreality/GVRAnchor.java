@@ -18,17 +18,20 @@ package org.gearvrf.mixedreality;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
-public abstract class GVRAnchor extends GVRSceneObject{
+public abstract class GVRAnchor extends GVRSceneObject {
     private GVRTrackingState mTrackingState;
     protected GVRSceneObject mSceneObject = null;
 
-    protected GVRAnchor(GVRContext gvrContext, GVRSceneObject sceneObject) {
+    protected GVRAnchor(GVRContext gvrContext) {
         super(gvrContext);
-        mSceneObject = sceneObject;
-        addChildObject(sceneObject);
     }
 
     public void setTrackingState(GVRTrackingState state) { this.mTrackingState = state; }
+
+    public void setSceneObject(GVRSceneObject obj) {
+        this.mSceneObject = obj;
+        addChildObject(mSceneObject);
+    }
 
     public GVRTrackingState getTrackingState() { return this.mTrackingState; }
 
