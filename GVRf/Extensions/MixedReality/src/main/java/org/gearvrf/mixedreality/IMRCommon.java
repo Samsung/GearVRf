@@ -16,6 +16,7 @@
 package org.gearvrf.mixedreality;
 
 
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 
 import java.util.ArrayList;
@@ -31,6 +32,13 @@ public interface IMRCommon {
      * @param listener
      */
     void registerPlaneListener(IPlaneEventsListener listener);
+
+    /**
+     * Register a listener to GVRAnchor events.
+     *
+     * @param listener
+     */
+    void registerAnchorListener(IAnchorEventsListener listener);
 
     /**
      * Gets all detected planes.
@@ -55,4 +63,6 @@ public interface IMRCommon {
      * @return
      */
     GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject);
+
+    void hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 }

@@ -25,6 +25,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
+import org.gearvrf.mixedreality.IAnchorEventsListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class ARCoreHelper {
     private List<ARCoreAnchor> mArAnchors;
 
     private ArrayList<IPlaneEventsListener> planeEventsListeners = new ArrayList<>();
+    private ArrayList<IAnchorEventsListener> anchorEventsListeners = new ArrayList<>();
 
     public ARCoreHelper(GVRContext gvrContext, GVRScene gvrScene) {
         mGvrContext = gvrContext;
@@ -95,6 +97,24 @@ public class ARCoreHelper {
 
     public void updateAnchors(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
         for (ARCoreAnchor anchor: mArAnchors) {
+            Anchor arAnchor = anchor.getAnchorAR();
+
+            if (arAnchor.getTrackingState() == TrackingState.TRACKING &&
+                    anchor.getTrackingState() != GVRTrackingState.TRACKING) {
+                anchor.setTrackingState(GVRTrackingState.TRACKING);
+                notifyAnchorStateChangeListeners(anchor, GVRTrackingState.TRACKING);
+            }
+            else if (arAnchor.getTrackingState() == TrackingState.PAUSED &&
+                    anchor.getTrackingState() != GVRTrackingState.PAUSED) {
+                anchor.setTrackingState(GVRTrackingState.PAUSED);
+                notifyAnchorStateChangeListeners(anchor, GVRTrackingState.PAUSED);
+            }
+            else if (arAnchor.getTrackingState() == TrackingState.STOPPED &&
+                    anchor.getTrackingState() != GVRTrackingState.STOPPED) {
+                anchor.setTrackingState(GVRTrackingState.STOPPED);
+                notifyAnchorStateChangeListeners(anchor, GVRTrackingState.STOPPED);
+            }
+
             anchor.update(arViewMatrix, vrCamMatrix, scale);
         }
     }
@@ -138,6 +158,10 @@ public class ARCoreHelper {
         planeEventsListeners.add(listener);
     }
 
+    public void registerAnchorListener(IAnchorEventsListener listener) {
+        anchorEventsListeners.add(listener);
+    }
+
     private void notifyPlaneDetectionListeners(GVRPlane plane) {
         for (IPlaneEventsListener listener: planeEventsListeners) {
             listener.onPlaneDetection(plane);
@@ -153,6 +177,12 @@ public class ARCoreHelper {
     private void notifyMergedPlane(GVRPlane childPlane, GVRPlane parentPlane) {
         for (IPlaneEventsListener listener: planeEventsListeners) {
             listener.onPlaneMerging(childPlane, parentPlane);
+        }
+    }
+
+    private void notifyAnchorStateChangeListeners(GVRAnchor anchor, GVRTrackingState trackingState) {
+        for (IAnchorEventsListener listener: anchorEventsListeners) {
+            listener.onAnchorStateChange(anchor, trackingState);
         }
     }
 }

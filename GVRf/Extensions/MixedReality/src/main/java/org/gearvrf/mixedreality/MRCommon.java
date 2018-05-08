@@ -16,6 +16,7 @@
 package org.gearvrf.mixedreality;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 
 import java.util.ArrayList;
@@ -45,6 +46,11 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
+    public void registerAnchorListener(IAnchorEventsListener listener) {
+        onRegisterAnchorListener(listener);
+    }
+
+    @Override
     public ArrayList<GVRPlane> getAllPlanes() {
         return onGetAllPlanes();
     }
@@ -60,15 +66,24 @@ public abstract class MRCommon implements IMRCommon {
         return onCreateAnchor(pose, sceneObject);
     }
 
+    @Override
+    public void hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        onHitTest(sceneObj, collision);
+    }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
 
     protected abstract void onRegisterPlaneListener(IPlaneEventsListener listener);
 
+    protected abstract void onRegisterAnchorListener(IAnchorEventsListener listener);
+
     protected abstract ArrayList<GVRPlane> onGetAllPlanes();
 
     protected abstract GVRAnchor onCreateAnchor(float[] pose);
 
     protected abstract GVRAnchor onCreateAnchor(float[] pose, GVRSceneObject sceneObject);
+
+    protected abstract void onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 }

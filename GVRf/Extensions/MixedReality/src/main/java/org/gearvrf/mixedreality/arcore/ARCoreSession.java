@@ -40,12 +40,14 @@ import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRPlane;
+import org.gearvrf.mixedreality.IAnchorEventsListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
@@ -53,6 +55,7 @@ import org.gearvrf.utility.Log;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -69,6 +72,7 @@ public class ARCoreSession extends MRCommon {
     private GVRScene mVRScene;
     private GVRSceneObject mARPassThroughObject;
     private Frame mLastARFrame;
+    private Frame arFrame;
     private ARCoreHandler mARCoreHandler;
 
     /* From AR to GVR space matrices */
@@ -228,7 +232,6 @@ public class ARCoreSession extends MRCommon {
     public class ARCoreHandler implements GVRDrawFrameListener {
         @Override
         public void onDrawFrame(float v) {
-            Frame arFrame;
             try {
                 arFrame = mSession.update();
             } catch (CameraNotAvailableException e) {
@@ -325,6 +328,11 @@ public class ARCoreSession extends MRCommon {
     }
 
     @Override
+    protected void onRegisterAnchorListener(IAnchorEventsListener listener) {
+        mArCoreHelper.registerAnchorListener(listener);
+    }
+
+    @Override
     protected ArrayList<GVRPlane> onGetAllPlanes() {
         return mArCoreHelper.getAllPlanes();
     }
@@ -350,6 +358,22 @@ public class ARCoreSession extends MRCommon {
 
         Anchor anchor = mSession.createAnchor(new Pose(translation, rotation));
         return mArCoreHelper.createAnchor(anchor, sceneObject);
+    }
+
+    @Override
+    protected void onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        if (sceneObj != mARPassThroughObject)
+            return;
+
+        Vector2f tapPosition = convertToDisplayGeometrySpace(collision.getHitLocation());
+        arFrame.hitTest(tapPosition.x, tapPosition.y);
+    }
+
+    private Vector2f convertToDisplayGeometrySpace(float[] hitPoint) {
+        final float hitX = hitPoint[0] + 0.5f * mDisplayGeometry.x;
+        final float hitY = mDisplayGeometry.y - hitPoint[1] - 0.5f * mDisplayGeometry.y;
+
+        return new Vector2f(hitX, hitY);
     }
 
     private void convertMatrixPoseToVector(float[] pose, float[] translation, float[] rotation) {

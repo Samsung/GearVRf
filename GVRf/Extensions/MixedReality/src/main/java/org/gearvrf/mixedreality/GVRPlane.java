@@ -33,6 +33,11 @@ public abstract class GVRPlane extends GVRSceneObject {
         super(gvrContext);
     }
 
+    /**
+     * Set the anchor tracking state
+     *
+     * @param state
+     */
     protected abstract void setTrackingState(GVRTrackingState state);
 
     protected abstract void setType(Type type);

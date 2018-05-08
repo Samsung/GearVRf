@@ -24,6 +24,7 @@ import android.view.MotionEvent;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMain;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
@@ -89,6 +90,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
+    public void registerAnchorListener(IAnchorEventsListener listener) {
+        mSession.registerAnchorListener(listener);
+    }
+
+    @Override
     public ArrayList<GVRPlane> getAllPlanes() { return mSession.getAllPlanes(); }
 
 
@@ -100,6 +106,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     @Override
     public GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject) {
         return mSession.createAnchor(pose, sceneObject);
+    }
+
+    @Override
+    public void hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        mSession.hitTest(sceneObj, collision);
     }
 
     private class ActivityEventsHandler implements IActivityEvents {
