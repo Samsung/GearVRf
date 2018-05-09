@@ -70,7 +70,6 @@ namespace gvr {
         int x, y, width, height;                // viewport
 
         void initializeOculusJava(JNIEnv& env, ovrJava& oculusJava);
-        void beginRenderingEye(const int eye);
         void endRenderingEye(const int eye);
 
         bool clampToBorderSupported_ = false;

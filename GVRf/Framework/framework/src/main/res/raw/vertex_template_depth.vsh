@@ -8,8 +8,6 @@ layout(num_views = 2) in;
 #endif
 precision highp float;
 
-uniform mat4 shadow_matrix;
-
 @MATRIX_UNIFORMS
 
 #ifdef HAS_VertexSkinShader
@@ -36,6 +34,7 @@ void main()
 #ifdef HAS_VertexSkinShader
     @VertexSkinShader
 #endif
+
 #ifdef HAS_MULTIVIEW
 	proj_position = u_mvp_[gl_ViewID_OVR] * vertex.local_position;
 #else

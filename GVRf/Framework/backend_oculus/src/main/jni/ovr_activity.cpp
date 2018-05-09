@@ -122,11 +122,15 @@ RenderTextureInfo *GVRActivity::getRenderTextureInfo(int eye, int index) {
     RenderTextureInfo *renderTextureInfo = new RenderTextureInfo();
     renderTextureInfo->fboId = fbo.getRenderBufferFBOId(index);
     renderTextureInfo->fboHeight = fbo.getHeight();
-    renderTextureInfo->fdboWidth = fbo.getWidth();
+    renderTextureInfo->fboWidth = fbo.getWidth();
     renderTextureInfo->multisamples = mMultisamplesConfiguration;
     renderTextureInfo->useMultiview = use_multiview;
     renderTextureInfo->views = use_multiview ? 2 : 1;
     renderTextureInfo->texId = fbo.getColorTexId(index);
+    renderTextureInfo->viewport[0] = x;
+    renderTextureInfo->viewport[1] = y;
+    renderTextureInfo->viewport[2] = width;
+    renderTextureInfo->viewport[3] = height;
 
     return renderTextureInfo;
 }
@@ -246,7 +250,7 @@ void GVRActivity::copyVulkanTexture(int texSwapChainIndex, int eye){
                        oculusTexData);
     glFlush();
     frameBuffer_[eye].advance();
-
+    reinterpret_cast<VulkanRenderer*>(gRenderer)->unmapRenderToOculus(renderTarget);
 }
 
 void GVRActivity::onDrawFrame(jobject jViewManager) {
@@ -297,9 +301,6 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     // Render the eye images.
     for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
         int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-        if (!gRenderer->isVulkanInstance()) {
-            beginRenderingEye(eye);
-        }
         oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye,
                                                 textureSwapChainIndex, use_multiview);
 
@@ -320,21 +321,7 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     vrapi_SubmitFrame(oculusMobile_, &parms);
 }
 
-    static const GLenum attachments[] = {GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT};
-
-    void GVRActivity::beginRenderingEye(const int eye) {
-        frameBuffer_[eye].bind();
-
-        GL(glViewport(x, y, width, height));
-        GL(glScissor(0, 0, frameBuffer_[eye].mWidth, frameBuffer_[eye].mHeight));
-
-        GL(glInvalidateFramebuffer(GL_FRAMEBUFFER, sizeof(attachments)/sizeof(GLenum), attachments));
-    }
-
     void GVRActivity::endRenderingEye(const int eye) {
-        GL(glDisable(GL_DEPTH_TEST));
-        GL(glDisable(GL_CULL_FACE));
-
         if (!clampToBorderSupported_) {
             // quote off VrApi_Types.h:
             // <quote>
@@ -360,7 +347,6 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         }
 
         //per vrAppFw
-        GL(glFlush());
         frameBuffer_[eye].resolve();
         frameBuffer_[eye].advance();
     }

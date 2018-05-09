@@ -57,6 +57,7 @@ void RenderTarget::beginRendering(Renderer *renderer) {
                                            mRenderState.camera->background_color_g(),
                                            mRenderState.camera->background_color_b(), mRenderState.camera->background_color_a());
     }
+    mRenderTexture->beginRendering(renderer);
 }
 void RenderTarget::endRendering(Renderer *renderer) {
     mRenderTexture->endRendering(renderer);

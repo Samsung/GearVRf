@@ -24,7 +24,6 @@ int getComponentsNumber(VkFormat format){
         case VK_FORMAT_D16_UNORM:
             return 2;
         case VK_FORMAT_D32_SFLOAT:
-            return 4;
         case VK_FORMAT_D24_UNORM_S8_UINT:
             return 4;
         default:
@@ -32,6 +31,21 @@ int getComponentsNumber(VkFormat format){
     }
     return 0;
 }
+
+    VkImageAspectFlagBits getAspectFlagForFormat(VkFormat format){
+        switch (format){
+            case VK_FORMAT_R8G8B8A8_UNORM:
+                return VK_IMAGE_ASPECT_COLOR_BIT;
+            case VK_FORMAT_D16_UNORM:
+            case VK_FORMAT_D32_SFLOAT:
+            case VK_FORMAT_D24_UNORM_S8_UINT:
+                return VK_IMAGE_ASPECT_DEPTH_BIT;
+            default:
+                LOGE("format not found");
+        }
+
+        return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
 
     vkImageBase::~vkImageBase(){
 
@@ -78,6 +92,13 @@ int getComponentsNumber(VkFormat format){
             vkDestroyImage(device, image, nullptr);
             image = 0;
         }
+
+        if(cascadeImageView.size() != 0) {
+            for(int i = 0; i < cascadeImageView.size(); i++)
+                vkDestroyImageView(device, cascadeImageView[i], nullptr);
+
+            cascadeImageView.clear();
+        }
     }
 
 
@@ -91,7 +112,6 @@ void vkImageBase::createImageView(bool host_accessible, bool useDeviceSwapchain)
     //create images backed with memory and imageviews only when not using system swapchain images.
     //But we do need the host visible outBuffer in case we need to use any form of staging.
     if(!useDeviceSwapchain) {
-
         bool pass;
         VkMemoryRequirements mem_reqs;
         uint32_t memoryTypeIndex;
@@ -136,18 +156,42 @@ void vkImageBase::createImageView(bool host_accessible, bool useDeviceSwapchain)
         ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
         GVR_VK_CHECK(!ret);
 
-        VkImageAspectFlagBits aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
-        if (usage_flags_ == VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-            aspectFlag = static_cast<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT |
-                                                            VK_IMAGE_ASPECT_STENCIL_BIT);
-        ret = vkCreateImageView(
-                device,
-                gvr::ImageViewCreateInfo(image, imageType,
-                                         format_, 1, mLayers,
-                                         aspectFlag),
-                nullptr, &imageView
-        );
-        GVR_VK_CHECK(!ret);
+        // Overall view of the image created
+        if(mLayers == 1) {
+            ret = vkCreateImageView(
+                    device,
+                    gvr::ImageViewCreateInfo(image, imageType,
+                                             format_, 1, 0, mLayers,
+                                             getAspectFlagForFormat(format_)),
+                    nullptr, &imageView
+            );
+            GVR_VK_CHECK(!ret);
+        }
+        else {
+            // View for whole array
+            ret = vkCreateImageView(
+                    device,
+                    gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+                                             format_, 1, 0, mLayers,
+                                             getAspectFlagForFormat(format_)),
+                    nullptr, &imageView
+            );
+            GVR_VK_CHECK(!ret);
+
+            //View per layers are created here
+            VkImageView layerView;
+            for (int i = 0; i < mLayers; i++) {
+                ret = vkCreateImageView(
+                        device,
+                        gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+                                                 format_, 1, i, 1,
+                                                 getAspectFlagForFormat(format_)),
+                        nullptr, &layerView
+                );
+                GVR_VK_CHECK(!ret);
+                cascadeImageView.push_back(layerView);
+            }
+        }
     }
 
     if(host_accessible) {
@@ -366,7 +410,7 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
 
     err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
                                                              target,
-                                                             internalFormat, mipLevels,
+                                                             internalFormat, mipLevels,0,
                                                              pixels.size(),
                                                              VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                             &imageView);

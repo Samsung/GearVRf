@@ -43,6 +43,13 @@ namespace gvr {
             mFramebuffer = 0;
         }
 
+        if(mCascadeFramebuffer.size() != 0) {
+            for(int i = 0; i < mCascadeFramebuffer.size(); i++)
+                vkDestroyFramebuffer(device, mCascadeFramebuffer[i], nullptr);
+
+            mCascadeFramebuffer.clear();
+        }
+
         if(mRenderpass != 0) {
             vkDestroyRenderPass(device, mRenderpass, nullptr);
             mRenderpass = 0;

@@ -12,6 +12,5 @@ namespace gvr{
 
 void GLRenderTarget::beginRendering(Renderer *renderer) {
     RenderTarget::beginRendering(renderer);
-    mRenderTexture->beginRendering(renderer);
 }
 }

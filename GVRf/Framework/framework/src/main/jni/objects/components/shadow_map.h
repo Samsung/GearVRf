@@ -25,13 +25,16 @@ namespace gvr {
 class Renderer;
 class GLFrameBuffer;
 
-    class ShadowMap : public GLRenderTarget
+    class ShadowMap : public RenderTarget
     {
     public:
         explicit ShadowMap(ShaderData* mtl);
         virtual void  beginRendering(Renderer* renderer);
         void setLayerIndex(int layerIndex);
-        void bindTexture(int loc, int texture_index);
+
+        ShaderData* getShadowMaterial(){
+            return mShadowMaterial;
+        }
 
     protected:
         int         mLayerIndex;

@@ -75,7 +75,7 @@ private:
 protected:
     RenderTarget*   mNextRenderTarget;
     RenderState     mRenderState;
-    RenderTexture*  mRenderTexture;
+    RenderTexture*  mRenderTexture = nullptr;
     std::shared_ptr<std::vector<RenderData*>> mRenderDataVector;
 };
 

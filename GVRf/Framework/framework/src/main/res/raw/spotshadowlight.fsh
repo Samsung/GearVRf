@@ -20,7 +20,7 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
      float spot = clamp((cosSpotAngle - outer) / inner_minus_outer, 0.0, 1.0);
 
 #ifdef HAS_SHADOWS
-     vec4 ShadowCoord = @LightType_shadow_position[index];
+    vec4 ShadowCoord = @LightType_shadow_position[index];
     if ((data.shadow_map_index >= 0.0) && (ShadowCoord.w > 0.0))
 	{
         float nDotL = max(dot(s.viewspaceNormal, lightdir), 0.0);
@@ -34,6 +34,7 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
         if (distanceFromLight < shadowMapPosition.z - bias)
             attenuation = 0.5;
 	}
+
 #endif
     return Radiance(data.ambient_intensity.xyz,
                     data.diffuse_intensity.xyz,

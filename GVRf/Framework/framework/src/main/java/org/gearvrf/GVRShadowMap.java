@@ -59,10 +59,12 @@ public class GVRShadowMap extends GVRRenderTarget
     public GVRShadowMap(GVRContext ctx, GVRCamera camera)
     {
         super(ctx, NativeShadowMap.ctor(getShadowMaterial(ctx).getNative()));
+        mHasFrameCallback = false;
         mScene = ctx.getMainScene();
         mShadowMatrix = new Matrix4f();
         mTemp = new Vector4f();
         mTempMtx = new float[16];
+
         if (sShadowMaps == null)
         {
             sShadowMaps = new GVRRenderTextureArray(ctx, 1024, 1024, 2, 4);

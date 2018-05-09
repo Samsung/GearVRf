@@ -65,6 +65,8 @@ import org.gearvrf.utility.Log;
 public class GVRShaderTemplate extends GVRShader
 {
     private final static String TAG = "GVRShaderTemplate";
+    // Keeping the start of shadow attribute from 20 since locations less than it are used up by vertex descriptor and texture coords.
+    private final int shadowmapStartLocation = 20;
 
     protected class LightClass
     {
@@ -574,6 +576,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     private String generateLightFragmentShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
+        int shadowMapLocation = shadowmapStartLocation;
         String lightFunction = "\nvec4 LightPixel(Surface s)\n{\n"
                                + "    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);\n"
                                + "    vec4 c;\n"
@@ -605,9 +608,9 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (lclass.VertexDescriptor != null)
             {
-                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "#ifdef HAS_SHADOWS \n layout(location = 20) in");
+                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "layout(location = " + shadowMapLocation + ") in");
+                shadowMapLocation += lclass.Count;
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
-                lightDefs +=  "#endif";
             }
             lightDefs += "\n" + lightShader + "\n";
             lightFunction += "        if (" + ulightData + elemIndex + ".enabled != 0.0)\n        {\n";
@@ -635,6 +638,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     private String generateLightVertexShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
+        int shadowMapLocation = shadowmapStartLocation;
         String lightSources = "";
         String lightDefs = "";
         String lightFunction = "\nvoid LightVertex(Vertex vertex)\n{\n";
@@ -659,9 +663,9 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (vertexOutputs != null)
             {
-                vertexOutputs = vertexOutputs.replace("$PREFIX", "#ifdef HAS_SHADOWS \n layout(location = 20) out");
+                vertexOutputs = vertexOutputs.replace("$PREFIX", "layout(location = " + shadowMapLocation + ") out");
+                shadowMapLocation += lclass.Count;
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
-                lightDefs +=  "#endif";
             }
             if (lclass.Count > 1)
             {

@@ -115,6 +115,14 @@ struct VulkanRenderPass : public RenderPass
             return static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
         }
 
+        VulkanRenderPass* getShadowRenderPass(){
+            return shadowPass;
+        }
+
+        void setShadowRenderPass(VulkanRenderPass* sp){
+            shadowPass = sp;
+        }
+
         void bindToShader(Shader* shader, Renderer* renderer);
         bool isDirty(int pass){
             return isHashCodeDirty() || RenderData::isDirty() || isDescriptorSetNull(pass);
@@ -130,6 +138,7 @@ struct VulkanRenderPass : public RenderPass
 
     private:
         VulkanUniformBlock ubo;
+        VulkanRenderPass * shadowPass = nullptr;
 
     };
 

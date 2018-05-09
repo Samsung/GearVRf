@@ -38,7 +38,7 @@ typedef void (GL_APIENTRY *PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(G
                                                                                GLsizei samples,
                                                                                GLint baseViewIndex,
                                                                                GLsizei numViews);
-GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId):
+GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId, int const viewport[]):
         RenderTexture(sample_count),
         layer_index_(0),
         renderTexture_gl_render_buffer_(nullptr),
@@ -48,9 +48,13 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int la
 
     setImage(new GLRenderImage(width, height, layers, texId, false));
     renderTexture_gl_frame_buffer_ = new GLFrameBuffer(fboId);
+    viewport_[0] = viewport[0];
+    viewport_[1] = viewport[1];
+    viewport_[2] = viewport[2];
+    viewport_[3] = viewport[3];
 }
 
-GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format) :
+GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format, int const viewport[]) :
         RenderTexture(sample_count),
         layer_index_(0),
         renderTexture_gl_render_buffer_(nullptr),
@@ -77,12 +81,16 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count, int la
         depth_format_ = GL_DEPTH_COMPONENT16;
         break;
     }
+    viewport_[0] = viewport[0];
+    viewport_[1] = viewport[1];
+    viewport_[2] = viewport[2];
+    viewport_[3] = viewport[3];
 }
 
 
 GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
         int jcolor_format, int jdepth_format, bool resolve_depth,
-        const TextureParameters* texparams)
+        const TextureParameters* texparams, int const viewport[])
         : RenderTexture(sample_count),
           depth_format_(jdepth_format),
           layer_index_(0),
@@ -91,6 +99,10 @@ GLRenderTexture::GLRenderTexture(int width, int height, int sample_count,
           renderTexture_gl_resolve_buffer_(nullptr),
           renderTexture_gl_color_buffer_(nullptr)
 {
+    viewport_[0] = viewport[0];
+    viewport_[1] = viewport[1];
+    viewport_[2] = viewport[2];
+    viewport_[3] = viewport[3];
 
 }
 
@@ -267,12 +279,8 @@ void GLRenderTexture::generateRenderTexture(int sample_count, int jdepth_format,
 
 void GLRenderTexture::beginRendering(Renderer* renderer)
 {
-    Image* image = getImage();
-    const int width = image->getWidth();
-    const int height = image->getHeight();
-
-    glViewport(0, 0, width, height);
-    glScissor(0, 0, width, height);
+    glViewport(viewport_[0], viewport_[1], viewport_[2], viewport_[3]);
+    glScissor(viewport_[0], viewport_[1], viewport_[2], viewport_[3]);
     invalidateFrameBuffer(GL_FRAMEBUFFER, true, true, renderTexture_gl_render_buffer_ != NULL);
     glDepthMask(GL_TRUE);
     GL(glEnable(GL_DEPTH_TEST));
@@ -317,6 +325,10 @@ void GLRenderTexture::endRendering(Renderer* renderer)
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
         invalidateFrameBuffer(GL_READ_FRAMEBUFFER, true, true, false);
     }
+
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+    GL(glFlush());
 }
 
 void GLRenderTexture::invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer) {
@@ -403,8 +415,8 @@ void GLNonMultiviewRenderTexture::startReadBack(int layer) {
 }
 GLNonMultiviewRenderTexture::GLNonMultiviewRenderTexture(int width, int height, int sample_count,
                                      int jcolor_format, int jdepth_format, bool resolve_depth,
-                                     const TextureParameters* texture_parameters):GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
-                                                                                                  resolve_depth, texture_parameters) {
+                                     const TextureParameters* texture_parameters, int viewport[]):GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
+                                                                                                  resolve_depth, texture_parameters, viewport) {
     GLRenderImage* colorbuffer = new GLRenderImage(width, height, jcolor_format, texture_parameters);
     GLenum depth_format;
 
@@ -477,8 +489,8 @@ void createArrayTexture(GLuint &texId, int width, int height, GLenum tex_format)
 
 GLMultiviewRenderTexture::GLMultiviewRenderTexture(int width, int height, int sample_count,
                                                          int jcolor_format, int jdepth_format, bool resolve_depth,
-                                                         const TextureParameters* texture_parameters, int layers):GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
-                                                                                                                      resolve_depth, texture_parameters), mLayers_(layers) {
+                                                         const TextureParameters* texture_parameters, int layers, int const viewport[]):GLRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
+                                                                                                                      resolve_depth, texture_parameters, viewport), mLayers_(layers) {
     GLRenderImage* colorbuffer = new GLRenderImage(width, height, layers, jcolor_format, texture_parameters);
     GLenum depth_format;
 
