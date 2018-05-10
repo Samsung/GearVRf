@@ -64,5 +64,5 @@ public interface IMRCommon {
      */
     GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject);
 
-    void hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
+    GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 }

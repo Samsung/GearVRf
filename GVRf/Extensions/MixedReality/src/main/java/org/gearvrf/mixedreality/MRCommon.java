@@ -67,8 +67,8 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
-    public void hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
-        onHitTest(sceneObj, collision);
+    public GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        return onHitTest(sceneObj, collision);
     }
 
     protected abstract void onResume();
@@ -85,5 +85,5 @@ public abstract class MRCommon implements IMRCommon {
 
     protected abstract GVRAnchor onCreateAnchor(float[] pose, GVRSceneObject sceneObject);
 
-    protected abstract void onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
+    protected abstract GVRHitResult onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 }

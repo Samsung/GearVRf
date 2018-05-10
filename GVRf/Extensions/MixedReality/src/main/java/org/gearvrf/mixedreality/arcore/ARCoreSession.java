@@ -24,6 +24,7 @@ import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
+import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
@@ -46,6 +47,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
@@ -59,6 +61,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class ARCoreSession extends MRCommon {
@@ -361,12 +364,14 @@ public class ARCoreSession extends MRCommon {
     }
 
     @Override
-    protected void onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+    protected GVRHitResult onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         if (sceneObj != mARPassThroughObject)
-            return;
+            return null;
 
         Vector2f tapPosition = convertToDisplayGeometrySpace(collision.getHitLocation());
-        arFrame.hitTest(tapPosition.x, tapPosition.y);
+        List<HitResult> hitResult = arFrame.hitTest(tapPosition.x, tapPosition.y);
+
+        return mArCoreHelper.hitTest(hitResult);
     }
 
     private Vector2f convertToDisplayGeometrySpace(float[] hitPoint) {

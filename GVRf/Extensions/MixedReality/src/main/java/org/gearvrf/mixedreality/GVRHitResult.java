@@ -17,32 +17,31 @@ package org.gearvrf.mixedreality;
 
 
 public class GVRHitResult {
-    private float[] pose;
-    private float distance;
-    private GVRPlane plane;
-
-
-    public float[] getPose() {
-        return pose;
-    }
+    private float[] mPose;
+    private float mDistance;
+    private GVRPlane mPlane;
 
     public void setPose(float[] pose) {
-        this.pose = pose;
-    }
-
-    public float getDistance() {
-        return distance;
+        this.mPose = pose;
     }
 
     public void setDistance(float distance) {
-        this.distance = distance;
+        this.mDistance = distance;
     }
 
     public void setPlane(GVRPlane plane) {
-        this.plane = plane;
+        this.mPlane = plane;
+    }
+
+    public float[] getPose() {
+        return mPose;
+    }
+
+    public float getDistance() {
+        return mDistance;
     }
 
     public GVRPlane getPlane() {
-        return plane;
+        return mPlane;
     }
 }

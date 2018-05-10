@@ -109,8 +109,8 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
-    public void hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
-        mSession.hitTest(sceneObj, collision);
+    public GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        return mSession.hitTest(sceneObj, collision);
     }
 
     private class ActivityEventsHandler implements IActivityEvents {

@@ -16,13 +16,16 @@
 package org.gearvrf.mixedreality.arcore;
 
 import com.google.ar.core.Anchor;
+import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
+import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
@@ -152,6 +155,29 @@ public class ARCoreHelper {
         mGvrScene.addSceneObject(arCoreAnchor);
         mArAnchors.add(arCoreAnchor);
         return arCoreAnchor;
+    }
+
+    public GVRHitResult hitTest(List<HitResult> hitResult) {
+        for (HitResult hit : hitResult) {
+            // Check if any plane was hit, and if it was hit inside the plane polygon
+            Trackable trackable = hit.getTrackable();
+            // Creates an anchor if a plane or an oriented point was hit.
+            if ((trackable instanceof Plane
+                    && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
+                    && ((Plane) trackable).getSubsumedBy() == null) {
+                GVRHitResult gvrHitResult = new GVRHitResult();
+                float[] hitPose = new float[16];
+
+                hit.getHitPose().toMatrix(hitPose, 0);
+                gvrHitResult.setPose(hitPose);
+                gvrHitResult.setDistance(hit.getDistance());
+                gvrHitResult.setPlane(mArPlanes.get(trackable));
+
+                return gvrHitResult;
+            }
+        }
+
+        return null;
     }
 
     public void registerPlaneListener(IPlaneEventsListener listener) {
