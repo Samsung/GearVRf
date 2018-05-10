@@ -34,18 +34,38 @@ public abstract class GVRPlane extends GVRSceneObject {
     }
 
     /**
-     * Set the anchor tracking state
+     * Set the plane tracking state
      *
      * @param state
      */
     protected abstract void setTrackingState(GVRTrackingState state);
 
+    /**
+     * Set the type of plane
+     *
+     * @param type
+     */
     protected abstract void setType(Type type);
 
+    /**
+     * Set the width of plane (x-axis)
+     *
+     * @param width
+     */
     protected abstract void setWidth(float width);
 
+    /**
+     * Set the height of plane (z-axis)
+     *
+     * @param height
+     */
     protected abstract void setHeight(float height);
 
+    /**
+     * Set the parent plane (only when plane is merged)
+     *
+     * @param plane
+     */
     protected abstract void setParentPlane(GVRPlane plane);
 
     /**
@@ -114,6 +134,14 @@ public abstract class GVRPlane extends GVRSceneObject {
         return this.mSceneObject;
     }
 
+
+    /**
+     * Update the plane based on arcore best knowledge of the world
+     *
+     * @param viewmtx
+     * @param gvrmatrix
+     * @param scale
+     */
     public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
         onUpdate(viewmtx, gvrmatrix, scale);
 

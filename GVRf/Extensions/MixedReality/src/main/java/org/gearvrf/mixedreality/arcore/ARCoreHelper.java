@@ -17,6 +17,7 @@ package org.gearvrf.mixedreality.arcore;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.HitResult;
+import com.google.ar.core.LightEstimate;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
@@ -26,6 +27,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRHitResult;
+import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
@@ -178,6 +180,19 @@ public class ARCoreHelper {
         }
 
         return null;
+    }
+
+    public GVRLightEstimate getLightEstimate(LightEstimate lightEstimate) {
+        ARCoreLightEstimate arCoreLightEstimate = new ARCoreLightEstimate();
+        GVRLightEstimate.GVRLightEstimateState state;
+
+        arCoreLightEstimate.setPixelIntensity(lightEstimate.getPixelIntensity());
+        state = (lightEstimate.getState() == LightEstimate.State.VALID) ?
+                GVRLightEstimate.GVRLightEstimateState.VALID :
+                GVRLightEstimate.GVRLightEstimateState.NOT_VALID;
+        arCoreLightEstimate.setState(state);
+
+        return arCoreLightEstimate;
     }
 
     public void registerPlaneListener(IPlaneEventsListener listener) {

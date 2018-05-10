@@ -15,31 +15,45 @@
 
 package org.gearvrf.mixedreality;
 
-import org.gearvrf.GVRContext;
-
+/**
+ * Represents the light estimate of a frame in arcore scene
+ */
 public abstract class GVRLightEstimate {
+    protected float mPixelIntensity;
+    protected GVRLightEstimateState mState;
 
-    protected GVRLightEstimate(GVRContext gvrContext) {  }
+    /**
+     * Set the pixel intensity of light
+     *
+     * @param intensity
+     */
+    protected abstract void setPixelIntensity(float intensity);
 
-    public float getPixelIntensity() { return onGetPixelIntensity(); }
+    /**
+     * Set the state of light estimate
+     *
+     * @param state
+     */
+    protected abstract void setState(GVRLightEstimateState state);
 
-    public GVRLightEstimateState getLightEstimateState() { return onGetLightEstimateState(); }
-
-    public enum GVRLightEstimateState {
-        NOT_VALID(0),
-        VALID(1);
-
-        private int mCode;
-
-        GVRLightEstimateState(int code) {
-            this.mCode = code;
-        }
-
-        public int getCode() {
-            return this.mCode;
-        }
+    /**
+     *
+     * @return The pixel intensity of light
+     */
+    public float getPixelIntensity() {
+        return this.mPixelIntensity;
     }
 
-    protected abstract GVRLightEstimateState onGetLightEstimateState();
-    protected abstract float onGetPixelIntensity();
+    /**
+     *
+     * @return The state of light estimate
+     */
+    public GVRLightEstimateState getLightEstimateState() {
+        return this.mState;
+    }
+
+    public enum GVRLightEstimateState {
+        NOT_VALID,
+        VALID
+    }
 }

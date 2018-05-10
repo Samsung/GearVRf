@@ -57,6 +57,13 @@ public abstract class GVRAnchor extends GVRSceneObject {
         return mSceneObject;
     }
 
+    /**
+     * Update the anchor based on arcore best knowledge of the world
+     *
+     * @param viewmtx
+     * @param gvrmatrix
+     * @param scale
+     */
     public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
         onUpdate(viewmtx, gvrmatrix, scale);
     }

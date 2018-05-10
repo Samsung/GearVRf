@@ -71,6 +71,11 @@ public abstract class MRCommon implements IMRCommon {
         return onHitTest(sceneObj, collision);
     }
 
+    @Override
+    public GVRLightEstimate getLightEstimate() {
+        return onGetLightEstimate();
+    }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
@@ -86,4 +91,6 @@ public abstract class MRCommon implements IMRCommon {
     protected abstract GVRAnchor onCreateAnchor(float[] pose, GVRSceneObject sceneObject);
 
     protected abstract GVRHitResult onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
+
+    protected abstract GVRLightEstimate onGetLightEstimate();
 }

@@ -48,6 +48,7 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRHitResult;
+import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
@@ -316,15 +317,6 @@ public class ARCoreSession extends MRCommon {
     }
 
 
-    public void setARCoreSession(Session session) {
-        mSession = session;
-    }
-
-    public Session getARSession() {
-        return mSession;
-    }
-
-
     @Override
     protected void onRegisterPlaneListener(IPlaneEventsListener listener) {
         mArCoreHelper.registerPlaneListener(listener);
@@ -372,6 +364,11 @@ public class ARCoreSession extends MRCommon {
         List<HitResult> hitResult = arFrame.hitTest(tapPosition.x, tapPosition.y);
 
         return mArCoreHelper.hitTest(hitResult);
+    }
+
+    @Override
+    protected GVRLightEstimate onGetLightEstimate() {
+        return mArCoreHelper.getLightEstimate(arFrame.getLightEstimate());
     }
 
     private Vector2f convertToDisplayGeometrySpace(float[] hitPoint) {

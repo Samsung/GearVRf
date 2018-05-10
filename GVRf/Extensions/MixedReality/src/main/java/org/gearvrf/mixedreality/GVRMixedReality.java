@@ -70,7 +70,6 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     public void onAttach(GVRSceneObject newOwner) {
         super.onAttach(newOwner);
 
-        Log.d("AR_GVRF ","onAttach");
         this.resume();
     }
 
@@ -111,6 +110,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     @Override
     public GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         return mSession.hitTest(sceneObj, collision);
+    }
+
+    @Override
+    public GVRLightEstimate getLightEstimate() {
+        return mSession.getLightEstimate();
     }
 
     private class ActivityEventsHandler implements IActivityEvents {

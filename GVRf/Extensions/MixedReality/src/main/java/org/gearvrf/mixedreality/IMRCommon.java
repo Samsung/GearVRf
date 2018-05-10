@@ -51,7 +51,7 @@ public interface IMRCommon {
      * Create an anchor on pose specified.
      *
      * @param pose
-     * @return
+     * @return The anchor created
      */
     GVRAnchor createAnchor(float[] pose);
 
@@ -60,9 +60,21 @@ public interface IMRCommon {
      *
      * @param pose
      * @param sceneObject
-     * @return
+     * @return The anchor created
      */
     GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject);
 
+    /**
+     *
+     * @param sceneObj
+     * @param collision
+     * @return
+     */
     GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
+
+    /**
+     *
+     * @return The light estimate
+     */
+    GVRLightEstimate getLightEstimate();
 }
