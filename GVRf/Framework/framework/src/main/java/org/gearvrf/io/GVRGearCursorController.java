@@ -68,39 +68,43 @@ public final class GVRGearCursorController extends GVRCursorController
 {
     public interface ControllerReader
     {
-        boolean isConnected();
+        boolean isConnected(int index);
 
-        boolean isTouched();
+        boolean isTouched(int index);
 
-        void updateRotation(Quaternionf quat);
+        void updateRotation(Quaternionf quat, int index);
 
-        void updatePosition(Vector3f vec);
+        void updatePosition(Vector3f vec, int index);
 
-        int getKey();
+        int getKey(int index);
 
         float getHandedness();
 
-        void updateTouchpad(PointF pt);
+        void updateTouchpad(PointF pt, int index);
+
+        int getMaxControllers();
+        void onPause();
+        void onResume();
     }
 
     public static class ControllerReaderStubs implements ControllerReader
     {
         @Override
-        public boolean isConnected() {
+        public boolean isConnected(int index) {
             return false;
         }
         @Override
-        public boolean isTouched() {
+        public boolean isTouched(int index) {
             return false;
         }
         @Override
-        public void updateRotation(Quaternionf quat) {
+        public void updateRotation(Quaternionf quat, int index) {
         }
         @Override
-        public void updatePosition(Vector3f vec) {
+        public void updatePosition(Vector3f vec, int index) {
         }
         @Override
-        public int getKey() {
+        public int getKey(int index) {
             return 0;
         }
         @Override
@@ -108,8 +112,14 @@ public final class GVRGearCursorController extends GVRCursorController
             return 0;
         }
         @Override
-        public void updateTouchpad(PointF pt) {
+        public void updateTouchpad(PointF pt, int index) {
         }
+        @Override
+        public int getMaxControllers() { return 1; }
+        @Override
+        public void onPause(){}
+        @Override
+        public void onResume(){}
     }
 
     public enum CONTROLLER_KEYS
@@ -343,12 +353,11 @@ public final class GVRGearCursorController extends GVRCursorController
         }
         showControllerModel(mShowControllerModel);
     }
-
     public void onDrawFrame()
     {
         boolean wasConnected = mConnected;
 
-        mConnected = (mControllerReader != null) && mControllerReader.isConnected();
+        mConnected = (mControllerReader != null) && mControllerReader.isConnected(0);
         if (!wasConnected && mConnected)
         {
             context.getInputManager().addCursorController(this);
@@ -362,12 +371,12 @@ public final class GVRGearCursorController extends GVRCursorController
         {
             ControllerEvent event = ControllerEvent.obtain();
 
-            mControllerReader.updateRotation(event.rotation);
-            mControllerReader.updatePosition(event.position);
-            event.touched = mControllerReader.isTouched();
-            event.key = mControllerReader.getKey();
+            mControllerReader.updateRotation(event.rotation,0);
+            mControllerReader.updatePosition(event.position,0);
+            event.touched = mControllerReader.isTouched(0);
+            event.key = mControllerReader.getKey(0);
             event.handedness = mControllerReader.getHandedness();
-            mControllerReader.updateTouchpad(event.pointF);
+            mControllerReader.updateTouchpad(event.pointF,0);
             handleControllerEvent(event);
         }
     }
