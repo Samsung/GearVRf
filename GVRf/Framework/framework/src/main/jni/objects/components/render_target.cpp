@@ -47,6 +47,9 @@ RenderTarget::RenderTarget(RenderTexture* tex, bool is_multiview)
     }
 }
 void RenderTarget::beginRendering(Renderer *renderer) {
+    if(mRenderTexture == nullptr)
+        return;
+
     mRenderTexture->useStencil(renderer->useStencilBuffer());
     mRenderState.viewportWidth = mRenderTexture->width();
     mRenderState.viewportHeight = mRenderTexture->height();
@@ -60,6 +63,8 @@ void RenderTarget::beginRendering(Renderer *renderer) {
     mRenderTexture->beginRendering(renderer);
 }
 void RenderTarget::endRendering(Renderer *renderer) {
+    if(mRenderTexture == nullptr)
+        return;
     mRenderTexture->endRendering(renderer);
 }
 RenderTarget::RenderTarget(Scene* scene)
