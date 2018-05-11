@@ -82,8 +82,8 @@ public final class GVRGearCursorController extends GVRCursorController
 
         void updateTouchpad(PointF pt, int index);
 
-        int getMaxControllers();
         void onPause();
+
         void onResume();
     }
 
@@ -98,11 +98,9 @@ public final class GVRGearCursorController extends GVRCursorController
             return false;
         }
         @Override
-        public void updateRotation(Quaternionf quat, int index) {
-        }
+        public void updateRotation(Quaternionf quat, int index) { }
         @Override
-        public void updatePosition(Vector3f vec, int index) {
-        }
+        public void updatePosition(Vector3f vec, int index) { }
         @Override
         public int getKey(int index) {
             return 0;
@@ -112,14 +110,11 @@ public final class GVRGearCursorController extends GVRCursorController
             return 0;
         }
         @Override
-        public void updateTouchpad(PointF pt, int index) {
-        }
+        public void updateTouchpad(PointF pt, int index) { }
         @Override
-        public int getMaxControllers() { return 1; }
+        public void onPause() { }
         @Override
-        public void onPause(){}
-        @Override
-        public void onResume(){}
+        public void onResume() { }
     }
 
     public enum CONTROLLER_KEYS
@@ -171,7 +166,9 @@ public final class GVRGearCursorController extends GVRCursorController
     private long prevATime;
     private boolean actionDown = false;
     private float touchDownX = 0.0f;
+    private final int controllerID;
     private static final float DEPTH_SENSITIVITY = 0.01f;
+    private static int maxControllers = 0;
 
     private Vector3f result = new Vector3f();
     private int prevButtonEnter = KeyEvent.ACTION_UP;
@@ -182,9 +179,10 @@ public final class GVRGearCursorController extends GVRCursorController
     private int prevButtonHome = KeyEvent.ACTION_UP;
     private ControllerEvent currentControllerEvent;
 
-    public GVRGearCursorController(GVRContext context)
+    public GVRGearCursorController(GVRContext context, int id)
     {
         super(context, GVRControllerType.CONTROLLER);
+        controllerID = id;
         mPivotRoot = new GVRSceneObject(context);
         mPivotRoot.setName("GearCursorController_Pivot");
         mControllerGroup = new GVRSceneObject(context);
@@ -206,9 +204,14 @@ public final class GVRGearCursorController extends GVRCursorController
         mControllerReader = reader;
     }
 
-    @SuppressWarnings("unused")
-    public GVRSceneObject getControllerModel() { return mControllerModel; }
-
+    /**
+     * Get the ID of this controller.
+     * It is a 0-based integer (either 0 or 1)
+     * that is established when the GVRGearCursorController
+     * instance is created.
+     * @return controller ID
+     */
+    public int getControllerID() { return controllerID; }
 
     /**
      * Show or hide the controller model and picking ray.
@@ -233,9 +236,20 @@ public final class GVRGearCursorController extends GVRCursorController
     }
 
     /**
+     * Get the model currently being used to depict the controller
+     * in the scene.
+     * @return controller model
+     * @see #setControllerModel(GVRSceneObject)
+     * @see #showControllerModel(boolean)
+     */
+    public GVRSceneObject getControllerModel() { return mControllerModel; }
+
+    /**
      * Replaces the model used to depict the controller in the scene.
      *
      * @param controllerModel root of hierarchy to use for controller model
+     * @see #getControllerModel()
+     * @see #showControllerModel(boolean)
      */
     public void setControllerModel(GVRSceneObject controllerModel)
     {
@@ -248,6 +262,12 @@ public final class GVRGearCursorController extends GVRCursorController
         mControllerModel.setEnable(mShowControllerModel);
     }
 
+    /**
+     * Set the depth of the cursor.
+     * This is the length of the ray from the origin
+     * to the cursor.
+     * @param depth default cursor depth
+     */
     @Override
     public void setCursorDepth(float depth)
     {
@@ -285,6 +305,14 @@ public final class GVRGearCursorController extends GVRCursorController
         }
     }
 
+    /**
+     * Set the position of the pick ray.
+     * This function is used internally to update the
+     * pick ray with the new controller position.
+     * @param x the x value of the position.
+     * @param y the y value of the position.
+     * @param z the z value of the position.
+     */
     @Override
     public void setPosition(float x, float y, float z)
     {
@@ -353,11 +381,12 @@ public final class GVRGearCursorController extends GVRCursorController
         }
         showControllerModel(mShowControllerModel);
     }
-    public void onDrawFrame()
+
+    public void pollController()
     {
         boolean wasConnected = mConnected;
 
-        mConnected = (mControllerReader != null) && mControllerReader.isConnected(0);
+        mConnected = (mControllerReader != null) && mControllerReader.isConnected(controllerID);
         if (!wasConnected && mConnected)
         {
             context.getInputManager().addCursorController(this);
@@ -371,12 +400,12 @@ public final class GVRGearCursorController extends GVRCursorController
         {
             ControllerEvent event = ControllerEvent.obtain();
 
-            mControllerReader.updateRotation(event.rotation,0);
-            mControllerReader.updatePosition(event.position,0);
-            event.touched = mControllerReader.isTouched(0);
-            event.key = mControllerReader.getKey(0);
+            mControllerReader.updateRotation(event.rotation,controllerID);
+            mControllerReader.updatePosition(event.position,controllerID);
+            event.touched = mControllerReader.isTouched(controllerID);
+            event.key = mControllerReader.getKey(controllerID);
             event.handedness = mControllerReader.getHandedness();
-            mControllerReader.updateTouchpad(event.pointF,0);
+            mControllerReader.updateTouchpad(event.pointF,controllerID);
             handleControllerEvent(event);
         }
     }
