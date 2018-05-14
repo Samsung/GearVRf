@@ -307,7 +307,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
      * Determine whether the pick list has changed since last frame.
      * @returns true if pick list changed, else false
      */
-    public boolean HasPickListChanged() { return mPickListChanged; }
+    public boolean hasPickListChanged() { return mPickListChanged; }
 
     /**
      * Get the current ray to use for picking.
