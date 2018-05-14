@@ -103,44 +103,8 @@ public class ARCoreSession extends MRCommon {
         Log.d(TAG, "onResumeAR");
 
         if (mSession == null) {
-            Activity activity = mGvrContext.getActivity();
-            Exception exception = null;
-            String message = null;
-            try {
-                switch (ArCoreApk.getInstance().requestInstall(activity, !mInstallRequested)) {
-                    case INSTALL_REQUESTED:
-                        mInstallRequested = true;
-                        return;
-                    case INSTALLED:
-                        break;
-                }
 
-                // ARCore requires camera permissions to operate. If we did not yet obtain runtime
-                // permission on Android M and above, now is a good time to ask the user for it.
-                if (!CameraPermissionHelper.hasCameraPermission(activity)) {
-                    CameraPermissionHelper.requestCameraPermission(activity);
-                    return;
-                }
-
-                mSession = new Session(/* context= */ activity);
-            } catch (UnavailableArcoreNotInstalledException
-                    | UnavailableUserDeclinedInstallationException e) {
-                message = "Please install ARCore";
-                exception = e;
-            } catch (UnavailableApkTooOldException e) {
-                message = "Please update ARCore";
-                exception = e;
-            } catch (UnavailableSdkTooOldException e) {
-                message = "Please update this app";
-                exception = e;
-            } catch (Exception e) {
-                message = "This device does not support AR";
-                exception = e;
-            }
-
-            if (message != null) {
-                showSnackbarMessage(message, true);
-                android.util.Log.e(TAG, "Exception creating session", exception);
+            if (!checkARCoreAndCamera()) {
                 return;
             }
 
@@ -182,6 +146,50 @@ public class ARCoreSession extends MRCommon {
         }
     }
 
+    private boolean checkARCoreAndCamera() {
+        Activity activity = mGvrContext.getActivity();
+        Exception exception = null;
+        String message = null;
+        try {
+            switch (ArCoreApk.getInstance().requestInstall(activity, !mInstallRequested)) {
+                case INSTALL_REQUESTED:
+                    mInstallRequested = true;
+                    return false;
+                case INSTALLED:
+                    break;
+            }
+
+            // ARCore requires camera permissions to operate. If we did not yet obtain runtime
+            // permission on Android M and above, now is a good time to ask the user for it.
+            if (!CameraPermissionHelper.hasCameraPermission(activity)) {
+                CameraPermissionHelper.requestCameraPermission(activity);
+                return false;
+            }
+
+            mSession = new Session(/* context= */ activity);
+        } catch (UnavailableArcoreNotInstalledException
+                | UnavailableUserDeclinedInstallationException e) {
+            message = "Please install ARCore";
+            exception = e;
+        } catch (UnavailableApkTooOldException e) {
+            message = "Please update ARCore";
+            exception = e;
+        } catch (UnavailableSdkTooOldException e) {
+            message = "Please update this app";
+            exception = e;
+        } catch (Exception e) {
+            message = "This device does not support AR";
+            exception = e;
+        }
+
+        if (message != null) {
+            showSnackbarMessage(message, true);
+            android.util.Log.e(TAG, "Exception creating session", exception);
+            return false;
+        }
+
+        return true;
+    }
 
     private void showSnackbarMessage(String message, boolean finishOnDismiss) {
         Log.d(TAG, message);

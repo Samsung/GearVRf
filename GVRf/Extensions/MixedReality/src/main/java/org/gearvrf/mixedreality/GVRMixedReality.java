@@ -40,7 +40,7 @@ import java.util.ArrayList;
  */
 public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private final IActivityEvents mActivityEventsHandler;
-    private MRCommon mSession;
+    private final MRCommon mSession;
 
     /**
      * Default GVRMidexReality constructor. Create a instace of GVRMixedReality component.
@@ -48,20 +48,25 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
      * @param gvrContext
      */
     public GVRMixedReality(final GVRContext gvrContext) {
-        super(gvrContext, 0);
-
-        mActivityEventsHandler = new ActivityEventsHandler();
-        mSession = new ARCoreSession(gvrContext);
+        this(gvrContext, null);
     }
 
     /**
-     * Create a instace of GVRMixedReality component and add it to the specified scene.
+     * Create a instance of GVRMixedReality component and add it to the specified scene.
      *
      * @param gvrContext
      * @param scene
      */
-    public GVRMixedReality(final GVRContext gvrContext, final GVRScene scene) {
-        this(gvrContext);
+    public GVRMixedReality(GVRContext gvrContext, GVRScene scene) {
+        super(gvrContext, 0);
+
+
+        if (scene == null) {
+            scene = gvrContext.getMainScene();
+        }
+
+        mActivityEventsHandler = new ActivityEventsHandler();
+        mSession = new ARCoreSession(gvrContext);
 
         scene.getMainCameraRig().getOwnerObject().attachComponent(this);
     }
