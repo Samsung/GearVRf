@@ -251,11 +251,7 @@ class OvrViewManager extends GVRViewManager {
     /** Called once per frame */
     protected void onDrawFrame() {
 
-        // update the gear controller
-        if (mGearController != null)
-        {
-            mGearController.onDrawFrame();
-        }
+        getInputManager().updateGearControllers();
         drawEyes(mActivity.getActivityNative().getNative());
         afterDrawEyes();
     }
@@ -288,8 +284,8 @@ class OvrViewManager extends GVRViewManager {
         mGearController = mInputManager.getGearController();
         if (mGearController != null)
         {
-            mGearController.attachReader(
-                    new OvrControllerReader(mActivity.getActivityNative().getNative()));
+            GVRGearCursorController.ControllerReader reader = new OvrControllerReader(mActivity.getActivityNative().getNative());
+            mGearController.attachReader(reader);
         }
     }
     void createSwapChain(){
