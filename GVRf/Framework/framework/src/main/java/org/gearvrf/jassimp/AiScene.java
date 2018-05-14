@@ -188,7 +188,6 @@ public final class AiScene {
         return m_cameras;
     }
 
-
     /**
      * Returns the number of embedded textures in the scene.<p>
      *
@@ -277,5 +276,4 @@ public final class AiScene {
      * Scene graph root.
      */
     private Object m_sceneRoot;
-
 }

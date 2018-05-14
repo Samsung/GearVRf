@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.gearvrf.jassimp;
 
 
-/** 
+/**
  * Defines how UV coordinates outside the [0...1] range are handled.<p>
  *
  * Commonly referred to as 'wrapping mode'.
@@ -66,14 +66,17 @@ public enum AiTextureMapMode {
      */
     MIRROR(0x2),
     
-    
     /** 
      * If the texture coordinates for a pixel are outside [0...1] the texture 
      * is not applied to that pixel.
      */
-    DECAL(0x3);
+    DECAL(0x3),
 
-    
+    GL_REPEAT(10497),
+    GL_CLAMP(33071),
+    GL_MIRRORED_REPEAT(33648);
+
+
     /**
      * Utility method for converting from c/c++ based integer enums to java 
      * enums.<p>
@@ -84,18 +87,25 @@ public enum AiTextureMapMode {
      * @param rawValue an integer based enum value (as defined by assimp) 
      * @return the enum value corresponding to rawValue
      */
-    static AiTextureMapMode fromRawValue(int rawValue) {
+    static AiTextureMapMode fromRawValue(Object rawValue) {
+        Integer newValue;
+        if (rawValue instanceof java.nio.ByteBuffer)
+        {
+            java.nio.IntBuffer ibuf = ((java.nio.ByteBuffer) rawValue).asIntBuffer();
+            newValue = ibuf.get();
+        }
+        else
+        {
+            newValue = (Integer) rawValue;
+        }
         for (AiTextureMapMode type : AiTextureMapMode.values()) {
-            if (type.m_rawValue == rawValue) {
+            if (type.m_rawValue == newValue) {
                 return type;
             }
         }
-        
-        throw new IllegalArgumentException("unexptected raw value: " + 
-                rawValue);
+        throw new IllegalArgumentException("unexptected raw value: " + newValue);
     }
-    
-    
+
     /**
      * Constructor.
      * 

@@ -24,20 +24,21 @@ import org.gearvrf.GVRAndroidResource.TextureCallback;
 import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.asynchronous.GVRCompressedTextureLoader;
+import org.gearvrf.jassimp.AiIOStream;
+import org.gearvrf.jassimp.AiIOSystem;
 import org.gearvrf.jassimp.AiTexture;
 import org.gearvrf.jassimp.Jassimp;
-import org.gearvrf.jassimp.JassimpFileIO;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.FileNameUtils;
 import org.gearvrf.utility.GVRByteArray;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.ResourceCacheBase;
-import org.gearvrf.utility.ResourceReader;
 import org.gearvrf.utility.Threads;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -45,7 +46,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -93,40 +96,6 @@ public final class GVRAssetLoader {
         protected boolean                 mCacheEnabled = true;
         protected EnumSet<GVRImportSettings> mSettings = null;
 
-        /**
-         * Request to load an asset.
-         * @param context GVRContext to get asset load events.
-         * @param fileVolume GVRResourceVolume containing path to file
-         */
-        public AssetRequest(GVRContext context, GVRResourceVolume fileVolume)
-        {
-            mScene = null;
-            mContext = context;
-            mNumTextures = 0;
-            mFileName = fileVolume.getFileName();
-            mUserHandler = null;
-            mErrors = "";
-            mVolume = fileVolume;
-            Log.d(TAG, "ASSET: loading %s ...", mFileName);
-        }
-
-        /**
-         * Request to load an asset.
-         * @param context GVRContext to get asset load events.
-         * @param resource GVRAndroidResource describing the file to load.
-         */
-        public AssetRequest(GVRContext context, GVRAndroidResource resource, GVRScene scene)
-        {
-            mScene = scene;
-            mContext = context;
-            mNumTextures = 0;
-            mFileName = resource.getResourceFilename();
-            mUserHandler = null;
-            mErrors = "";
-            mVolume = new GVRResourceVolume(mContext, mFileName);
-            mVolume.addResource(resource);
-            Log.d(TAG, "ASSET: loading %s ...", mFileName);
-        }
 
         /**
          * Request to load an asset and add it to the scene.
@@ -553,12 +522,11 @@ public final class GVRAssetLoader {
     }
 
 
+    protected GVRContext mContext;
     protected static ResourceCache<GVRImage> mTextureCache = new ResourceCache<GVRImage>();
+    protected ResourceCacheBase<GVRMesh> mMeshCache = new ResourceCacheBase<>();
     protected static HashMap<String, GVRImage> mEmbeddedCache = new HashMap<String, GVRImage>();
     protected static GVRBitmapImage mDefaultImage = null;
-
-    protected GVRContext mContext;
-    protected ResourceCache<GVRMesh> mMeshCache = new ResourceCache<>();
 
     /**
      * When the application is restarted we recreate the texture cache
@@ -942,98 +910,91 @@ public final class GVRAssetLoader {
     }
 
     // IO Handler for Jassimp
-    static class ResourceVolumeIO implements JassimpFileIO
+    static class ResourceStream implements AiIOStream
     {
-        private GVRResourceVolume volume;
-        private Throwable lastError = null;
+        protected final GVRAndroidResource resource;
+        private final ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-        ResourceVolumeIO(GVRResourceVolume volume)
+        ResourceStream(GVRResourceVolume v, String path) throws IOException
         {
-            this.volume = volume;
+            resource = v.openResource(path);
+            InputStream stream = resource.getStream();
+            if (stream == null)
+            {
+                throw new IOException("Cannot open " + path);
+            }
+            int read;
+            byte[] data = new byte[1024];
+            while((read = stream.read(data, 0, data.length)) != -1)
+            {
+                output.write(data, 0, read);
+            }
+            output.flush();
+            resource.closeStream();
         }
 
-        public Throwable getLastError() { return lastError; }
+        public int getFileSize() { return output.size(); }
 
-        @Override
-        public byte[] read(String path)
+        public boolean read(ByteBuffer buffer)
         {
-            GVRAndroidResource resource = null;
-            try
+            if (output.size() > 0)
             {
-                resource = volume.openResource(path);
-                InputStream stream = resource.getStream();
-                if (stream == null)
-                {
-                    return null;
-                }
-                byte data[] = ResourceReader.readStream(stream);
-                return data;
+                buffer.put(output.toByteArray());
+                return true;
             }
-            catch (Exception e)
-            {
-                lastError = e;
-                return null;
-            }
-            finally
-            {
-                if (resource != null)
-                {
-                    resource.closeStream();
-                }
-            }
-        }
-
-        protected GVRResourceVolume getResourceVolume()
-        {
-            return volume;
+            return false;
         }
     };
 
-    static class CachedVolumeIO implements JassimpFileIO
+    // IO Handler for Jassimp
+    static class ResourceVolumeIO implements AiIOSystem<ResourceStream>
     {
-        protected ResourceVolumeIO uncachedIO;
-        protected ResourceCacheBase<GVRByteArray> cache;
         protected Throwable lastError = null;
+        protected final GVRResourceVolume volume;
+        protected final HashMap<String, ResourceStream> cache = new HashMap<>();
 
-        public CachedVolumeIO(ResourceVolumeIO uncachedIO)
+        ResourceVolumeIO(GVRResourceVolume v)
         {
-            this.uncachedIO = uncachedIO;
-            cache = new ResourceCacheBase<GVRByteArray>();
+            volume = v;
         }
 
-        public Throwable getLastError() { return lastError; }
-
-        @Override
-        public byte[] read(String path)
+        public char getOsSeparator()
         {
+            return '/';
+        }
+
+        public ResourceStream open(String path, String iomode)
+        {
+            ResourceStream rs = cache.get(path);
+            if (rs != null)
+            {
+                return rs;
+            }
             try
             {
-                GVRAndroidResource resource = uncachedIO.getResourceVolume().openResource(path);
-                GVRByteArray byteArray = cache.get(resource);
-                if (byteArray == null)
-                {
-                    if (resource.getResourceType() != GVRAndroidResource.ResourceType.INPUT_STREAM)
-                    {
-                        resource.closeStream(); // needed to avoid hanging
-                    }
-                    byte[] data = uncachedIO.read(path);
-                    if (data == null)
-                    {
-                        lastError = uncachedIO.getLastError();
-                        return null;
-                    }
-                    byteArray = GVRByteArray.wrap(data);
-                    cache.put(resource, byteArray);
-                }
-                return byteArray.getByteArray();
+                rs = new ResourceStream(volume, path);
+                cache.put(path, rs);
+                return rs;
             }
-            catch (IOException e)
+            catch (IOException ex)
             {
-                lastError = uncachedIO.getLastError();
+                lastError = ex;
                 return null;
             }
         }
-    }
+
+        public void close(ResourceStream rs)
+        {
+            cache.remove(rs);
+        }
+
+        public boolean exists(String path)
+        {
+            return open(path, "r") != null;
+        }
+
+        public Throwable getLastError() { return lastError; }
+    };
 
     /**
      * Loads a hierarchy of scene objects {@link GVRSceneObject} from a 3D model.
@@ -1812,16 +1773,16 @@ public final class GVRAssetLoader {
         GVRJassimpAdapter jassimpAdapter = new GVRJassimpAdapter(this, filePath);
 
         model.setName(filePath);
-        CachedVolumeIO volume = new CachedVolumeIO(new ResourceVolumeIO(request.getVolume()));
+        ResourceVolumeIO jassimpIO = new ResourceVolumeIO(request.getVolume());
         try
         {
-            assimpScene = Jassimp.importFileEx(FileNameUtils.getFilename(filePath),
-                    jassimpAdapter.toJassimpSettings(request.getImportSettings()),
-                    volume);
+            assimpScene = Jassimp.importFile(FileNameUtils.getFilename(filePath),
+                                             jassimpAdapter.toJassimpSettings(request.getImportSettings()),
+                                             jassimpIO);
         }
         catch (IOException ex)
         {
-            String errmsg = "Cannot load model: " + ex.getMessage() + " " + volume.getLastError();
+            String errmsg = "Cannot load model: " + ex.getMessage() + " " + jassimpIO.getLastError();
             request.onModelError(mContext, errmsg, filePath);
             throw new IOException(errmsg);
         }
@@ -1832,7 +1793,7 @@ public final class GVRAssetLoader {
             throw new IOException(errmsg);
         }
         boolean startAnimations = request.getImportSettings().contains(GVRImportSettings.START_ANIMATIONS);
-        jassimpAdapter.processScene(request, model, assimpScene, volume.uncachedIO.getResourceVolume(), startAnimations);
+        jassimpAdapter.processScene(request, model, assimpScene, request.getVolume(), startAnimations);
         request.onModelLoaded(mContext, model, filePath);
         return model;
     }

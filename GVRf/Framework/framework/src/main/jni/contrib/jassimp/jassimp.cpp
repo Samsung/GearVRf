@@ -1,21 +1,22 @@
 #include "jassimp.h"
-#include "memory_file.h"
-#include <assimp/cimport.h>
+
+#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/include/assimp/port/AndroidJNI/AndroidJNIIOSystem.h>
-#include <malloc.h>
-#include <cstdlib>
+#include <assimp/IOStream.hpp>
+#include <assimp/IOSystem.hpp>
 
 #ifdef JNI_LOG
 #ifdef ANDROID
 #include <android/log.h>
-#define lprintf(...)  __android_log_print(ANDROID_LOG_VERBOSE, "JASSIMP", __VA_ARGS__)
+#define lprintf(...) __android_log_print(ANDROID_LOG_ERROR, __func__, __VA_ARGS__)
 #else
 #define lprintf(...) printf (__VA_ARGS__)
 #endif /* ANDROID */
 #else
 #define lprintf(...)
 #endif
+
+static std::string gLastErrorString;
 
 // Automatically deletes a local ref when it goes out of scope
 class SmartLocalRef {
@@ -65,7 +66,7 @@ static bool createInstance(JNIEnv *env, const char* className, jobject& newInsta
 		lprintf("error calling no-arg constructor for class %s\n", className);
 		return false;
 	}
-	lprintf("creating %s %p", className, newInstance);
+
 	return true;
 }
 
@@ -96,8 +97,16 @@ static bool createInstance(JNIEnv *env, const char* className, const char* signa
 		lprintf("error calling  constructor for class %s, signature %s\n", className, signature);
 		return false;
 	}
-	lprintf("creating %s %p", className, newInstance);
+
 	return true;
+}
+
+static void throwException(JNIEnv* env, const char* message)
+{
+    jclass clazz = env->FindClass("java/lang/Exception");
+    SmartLocalRef classRef(env, clazz);
+
+    env->ThrowNew(clazz, message);
 }
 
 static bool getField(JNIEnv *env, jobject object, const char* fieldName, const char* signature, jobject& field)
@@ -124,13 +133,6 @@ static bool getField(JNIEnv *env, jobject object, const char* fieldName, const c
 	return true;
 }
 
-static void throwException(JNIEnv* env, const char* message)
-{
-	jclass clazz = env->FindClass("java/lang/Exception");
-	SmartLocalRef classRef(env, clazz);
-
-	env->ThrowNew(clazz, message);
-}
 
 static bool setIntField(JNIEnv *env, jobject object, const char* fieldName, jint value)
 {
@@ -218,7 +220,7 @@ static bool getStaticField(JNIEnv *env, const char* className, const char* field
 		return false;
 	}
 
-	jfieldID fieldId = env->GetFieldID(clazz, fieldName, signature);
+	jfieldID fieldId = env->GetStaticFieldID(clazz, fieldName, signature);
 
 	if (NULL == fieldId)
 	{
@@ -279,8 +281,8 @@ static bool callv(JNIEnv *env, jobject object, const char* typeName,
 	return true;
 }
 
-static jobject callj(JNIEnv *env, jobject object, const char* typeName, const char* methodName,
-					 const char* signature,/* const*/ jvalue* params)
+static jobject callo(JNIEnv *env, jobject object, const char* typeName, const char* methodName, 
+	const char* signature,/* const*/ jvalue* params)
 {
 	jclass clazz = env->FindClass(typeName);
 	SmartLocalRef clazzRef(env, clazz);
@@ -304,8 +306,8 @@ static jobject callj(JNIEnv *env, jobject object, const char* typeName, const ch
 	return jReturnValue;
 }
 
-static jobject callj(JNIEnv *env, jobject object, const char* typeName, const char* methodName,
-					 const char* signature)
+static int calli(JNIEnv *env, jobject object, const char* typeName, const char* methodName, 
+	const char* signature)
 {
 	jclass clazz = env->FindClass(typeName);
 	SmartLocalRef clazzRef(env, clazz);
@@ -313,7 +315,7 @@ static jobject callj(JNIEnv *env, jobject object, const char* typeName, const ch
 	if (NULL == clazz)
 	{
 		lprintf("could not find class %s\n", typeName);
-		return NULL;
+		return false;
 	}
 
 	jmethodID mid = env->GetMethodID(clazz, methodName, signature);
@@ -321,12 +323,39 @@ static jobject callj(JNIEnv *env, jobject object, const char* typeName, const ch
 	if (NULL == mid)
 	{
 		lprintf("could not find method %s with signature %s in type %s\n", methodName, signature, typeName);
-		return NULL;
+		return false;
 	}
 
-	jobject jReturnValue = env->CallObjectMethod(object, mid);
-	return jReturnValue;
+	jint jReturnValue = env->CallIntMethod(object, mid);
+
+	return (int) jReturnValue;
 }
+
+static int callc(JNIEnv *env, jobject object, const char* typeName, const char* methodName, 
+	const char* signature)
+{
+	jclass clazz = env->FindClass(typeName);
+	SmartLocalRef clazzRef(env, clazz);
+
+	if (NULL == clazz)
+	{
+		lprintf("could not find class %s\n", typeName);
+		return false;
+	}
+
+	jmethodID mid = env->GetMethodID(clazz, methodName, signature);
+
+	if (NULL == mid)
+	{
+		lprintf("could not find method %s with signature %s in type %s\n", methodName, signature, typeName);
+		return false;
+	}
+
+	jint jReturnValue = env->CallCharMethod(object, mid);
+
+	return (int) jReturnValue;
+}
+
 
 static bool callStaticObject(JNIEnv *env, const char* typeName, const char* methodName, 
 	const char* signature,/* const*/ jvalue* params, jobject& returnValue)
@@ -353,6 +382,29 @@ static bool callStaticObject(JNIEnv *env, const char* typeName, const char* meth
 	return true;
 }
 
+static jobject callj(JNIEnv *env, jobject object, const char* typeName, const char* methodName,
+                     const char* signature)
+{
+    jclass clazz = env->FindClass(typeName);
+    SmartLocalRef clazzRef(env, clazz);
+
+    if (NULL == clazz)
+    {
+        lprintf("could not find class %s\n", typeName);
+        return NULL;
+    }
+
+    jmethodID mid = env->GetMethodID(clazz, methodName, signature);
+
+    if (NULL == mid)
+    {
+        lprintf("could not find method %s with signature %s in type %s\n", methodName, signature, typeName);
+        return NULL;
+    }
+
+    jobject jReturnValue = env->CallObjectMethod(object, mid);
+    return jReturnValue;
+}
 
 static bool copyBuffer(JNIEnv *env, jobject jMesh, const char* jBufferName, void* cData, size_t size)
 {
@@ -416,64 +468,159 @@ static bool copyBufferArray(JNIEnv *env, jobject jMesh, const char* jBufferName,
 	return true;
 }
 
-static bool loadEmbeddedTextures(JNIEnv *env, const aiScene* cScene, jobject& jScene)
+class JavaIOStream : public Assimp::IOStream
 {
-	for (unsigned int i = 0; i < cScene->mNumTextures; i++)
-	{
-		const aiTexture* cTex = cScene->mTextures[i];
-		jstring          jType = NULL;
-		int              numbytes = cTex->mWidth;
+private:	
+	size_t pos;
+	size_t size;
+	char* buffer;
+	jobject jIOStream;
 
-		if (cTex->mHeight == 0)
-		{
-			jType = env->NewStringUTF(cTex->achFormatHint);
+	
+public:
+	JavaIOStream(size_t size, char* buffer, jobject jIOStream) :
+	pos(0),
+	size(size),
+	buffer(buffer),
+	jIOStream(jIOStream)
+	{};
+	
+	
+    ~JavaIOStream(void) 
+    {
+    	free(buffer);
+    }; 
+
+    size_t Read(void* pvBuffer, size_t pSize, size_t pCount)
+    {
+    	const size_t cnt = std::min(pCount,(size - pos)/pSize);
+		const size_t ofs = pSize*cnt;
+	
+	    memcpy(pvBuffer, buffer + pos, ofs);
+	    pos += ofs;
+	
+	    return cnt;
+    };
+    size_t Write(const void* pvBuffer, size_t pSize, size_t pCount) 
+    {
+        return 0;
+    };
+    
+    aiReturn Seek(size_t pOffset, aiOrigin pOrigin)
+    {
+	    if (aiOrigin_SET == pOrigin) {
+	        if (pOffset >= size) {
+	            return AI_FAILURE;
+	        }
+	        pos = pOffset;
+	    }
+	    else if (aiOrigin_END == pOrigin) {
+	        if (pOffset >= size) {
+	            return AI_FAILURE;
+	        }
+	        pos = size-pOffset;
+	    }
+	    else {
+	        if (pOffset + pos >= size) {
+	            return AI_FAILURE;
+	        }
+	        pos += pOffset;
+	    }
+	    return AI_SUCCESS;
+    };
+    
+    size_t Tell(void) const
+    {
+    	return pos;
+    };
+    
+    size_t FileSize() const
+    {
+    	return size;
+    };
+    
+    void Flush() {};
+    
+    
+    jobject javaObject()
+    {
+    	return jIOStream;
+    };
+    
+    
+};
+ 
+
+class JavaIOSystem : public Assimp::IOSystem {
+	private:
+    JNIEnv* mJniEnv;
+	jobject& mJavaIOSystem;
+	
+	public:
+	JavaIOSystem(JNIEnv* env, jobject& javaIOSystem) :
+		mJniEnv(env),
+		mJavaIOSystem(javaIOSystem)
+	{};
+	
+    bool Exists( const char* pFile) const
+    {
+    	jvalue params[1];
+		params[0].l = mJniEnv->NewStringUTF(pFile);
+	    return call(mJniEnv, mJavaIOSystem, "org/gearvrf/jassimp/AiIOSystem", "exists", "(Ljava/lang/String;)Z", params);
+
+    };
+    char getOsSeparator() const
+    {
+	    return (char) callc(mJniEnv, mJavaIOSystem, "org/gearvrf/jassimp/AiIOSystem", "getOsSeparator", "()C");
+    };
+    
+    Assimp::IOStream* Open(const char* pFile,const char* pMode = "rb")
+    {
+        jvalue params[2];
+		params[0].l = mJniEnv->NewStringUTF(pFile);
+		params[1].l = mJniEnv->NewStringUTF(pMode);
+		
+		
+	    jobject jStream = callo(mJniEnv, mJavaIOSystem, "org/gearvrf/jassimp/AiIOSystem", "open", "(Ljava/lang/String;Ljava/lang/String;)Lorg/gearvrf/jassimp/AiIOStream;", params);
+	    if(NULL == jStream)
+	    {
+	    	lprintf("NULL object from AiIOSystem.open\n");
+	    	return NULL;
+	    }
+	    
+	    size_t size = calli(mJniEnv, jStream, "org/gearvrf/jassimp/AiIOStream", "getFileSize", "()I");
+	    lprintf("Model file size is %d\n", size);
+	    
+	    char* buffer = (char*)malloc(size);
+	    jobject javaBuffer = mJniEnv->NewDirectByteBuffer(buffer, size);
+	    
+	    jvalue readParams[1];
+	    readParams[0].l = javaBuffer;
+	    if(call(mJniEnv, jStream, "org/gearvrf/jassimp/AiIOStream", "read", "(Ljava/nio/ByteBuffer;)Z", readParams))
+	    {
+	    	return new JavaIOStream(size, buffer, jStream);
 		}
 		else
 		{
-			jType = env->NewStringUTF("argb");
-			numbytes *= cTex->mHeight * 4;
-		}
-		/* create texture */
-		jobject jTex = NULL;
-		SmartLocalRef refTex(env, jTex);
-		jvalue texparams[3];
-		texparams[0].i = cTex->mWidth;
-		texparams[1].i = cTex->mHeight;
-		texparams[2].l = jType;
-		if (!createInstance(env, "org/gearvrf/jassimp/AiTexture",
-							"(IILjava/lang/String;)V", texparams, jTex))
-		{
-			throwException(env, "Cannot find constructor org/gearvrf/jassimp/AiTexture(int, int, String");
+			lprintf("Read failure on AiIOStream.read");
+			free(buffer);
+			return NULL;
 		}
 
-		/* copy pixels into memory array */
-		jbyteArray jPixels = (jbyteArray) callj(env, jTex, "org/gearvrf/jassimp/AiTexture", "getByteData", "()[B");
-		if (jPixels == NULL)
-		{
-			throwException(env, "cannot allocate buffer for pixel data");
-		}
-		jbyte* pixels = env->GetByteArrayElements(jPixels, NULL);
-		memcpy(pixels, cTex->pcData, numbytes);
-		env->ReleaseByteArrayElements(jPixels, pixels, 0);
+    };
+    void Close( Assimp::IOStream* pFile)
+    {
+    	
+		jvalue params[1];
+		params[0].l = ((JavaIOStream*) pFile)->javaObject();
+		callv(mJniEnv, mJavaIOSystem, "org/gearvrf/jassimp/AiIOSystem", "close", "(Lorg/gearvrf/jassimp/AiIOStream;)V", params);
+    	delete pFile;
+    };
+    
 
-		/* add texture to m_textures java.util.List */
-		jobject jTextures = NULL;
-		SmartLocalRef refTextures(env, jTextures);
+	
+};
 
-		if (!getField(env, jScene, "m_textures", "Ljava/util/List;", jTextures))
-		{
-			throwException(env, "cannot access m_textures from AiScene");
-		}
-		jvalue addParams[1];
-		addParams[0].l = jTex;
-		if (!call(env, jTextures, "java/util/Collection",
-				  "add", "(Ljava/lang/Object;)Z", addParams))
-		{
-			throwException(env, "cannot add AiTexture to list");
-		}
-	}
-	return true;
-}
 
 static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 {
@@ -487,7 +634,7 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		jobject jMesh = NULL;
 		SmartLocalRef refMesh(env, jMesh);
 
-		if (!createInstance(env, "org/gearvrf/jassimp/AiMesh", jMesh))
+		if (!createInstance(env, "org/gearvrf/jassimp/AiMesh", jMesh)) 
 		{
 			return false;
 		}
@@ -518,7 +665,7 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			return false;
 		}
 
-		lprintf("mesh %p uses material %d", jMesh, cMesh->mMaterialIndex);
+
 		if (!setIntField(env, jMesh, "m_materialIndex", cMesh->mMaterialIndex))
 		{
 			return false;
@@ -797,7 +944,7 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 
 			jobject jBone;
 			SmartLocalRef refBone(env, jBone);
-			if (!createInstance(env, "org/gearvrf/jassimp/AiBone", jBone))
+			if (!createInstance(env, "org/gearvrf/jassimp/AiBone", jBone)) 
 			{
 				return false;
 			}
@@ -888,8 +1035,164 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 	return true;
 }
 
+static bool loadMetadata(JNIEnv *env, const aiNode* cNode, jobject& jNode)
+{
+    aiMetadata *cMetadata = cNode->mMetaData;
 
-static bool loadSceneNode(JNIEnv *env, const aiNode *cNode, jobject parent, jobject* loadedNode = NULL) 
+	for(unsigned i = 0; i<cMetadata->mNumProperties; i++) {
+
+        aiString& metaDataKey = cMetadata->mKeys[i];
+		void* cData = cMetadata->mValues[i].mData;
+		aiMetadataType cMetadataType = cMetadata->mValues[i].mType;
+
+		jobject jAiMetadataEntry = NULL;
+		SmartLocalRef refMetadataEntry(env, jAiMetadataEntry);
+
+		if(!createInstance(env, "org/gearvrf/jassimp/AiMetadataEntry", jAiMetadataEntry)) {
+			return false;
+		}
+
+		jobject jAiMetadataTypeEnumValue = NULL;
+		SmartLocalRef refMetadataTypeEnumValue(env, jAiMetadataTypeEnumValue);
+
+		jobject jMetadataData = NULL;
+		SmartLocalRef refMetadataData(env, jMetadataData);
+
+		bool getMetadataTypeSuccess = false;
+		bool getMetadataDataSuccess = false;
+
+		jvalue boxingMethodArgument[1];
+
+        jboolean exceptionThrown;
+
+		switch (cMetadataType) {
+
+			case AI_BOOL: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_BOOL", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue);
+                boxingMethodArgument[0].z = (jboolean) *static_cast<bool*>(cData);
+                getMetadataDataSuccess = callStaticObject(env, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", boxingMethodArgument, jMetadataData);
+                break;
+            }
+            case AI_INT32: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_INT32", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue);
+                boxingMethodArgument[0].i = (jint) *static_cast<int32_t*>(cData);
+                getMetadataDataSuccess = callStaticObject(env, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", boxingMethodArgument, jMetadataData);
+                break;
+            }
+            case AI_UINT64: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_UINT64", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue);
+                boxingMethodArgument[0].j = (jlong) *static_cast<uint64_t*>(cData);
+                getMetadataDataSuccess = callStaticObject(env, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", boxingMethodArgument, jMetadataData);
+                break;
+            }
+            case AI_FLOAT: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_FLOAT", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue);
+                boxingMethodArgument[0].f = (jfloat) *static_cast<float*>(cData);
+                getMetadataDataSuccess = callStaticObject(env, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", boxingMethodArgument, jMetadataData);
+                break;
+            }
+            case AI_DOUBLE: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_DOUBLE", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue);
+                boxingMethodArgument[0].d = (jdouble) *static_cast<double*>(cData);
+                getMetadataDataSuccess = callStaticObject(env, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", boxingMethodArgument, jMetadataData);
+                break;
+            }
+            case AI_AISTRING: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_AISTRING", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue);
+                jMetadataData = env->NewStringUTF(static_cast<aiString*>(cData)->C_Str());
+                getMetadataDataSuccess = (jMetadataData != NULL);
+                break;
+            }
+            case AI_AIVECTOR3D: {
+                getMetadataTypeSuccess = getStaticField(env, "org/gearvrf/jassimp/AiMetadataEntry$AiMetadataType", "AI_AIVECTOR3D",
+                                                        "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;",
+                                                        jAiMetadataTypeEnumValue);
+                jvalue wrapVec3Args[3];
+                aiVector3D *vector3D = static_cast<aiVector3D *>(cData);
+                wrapVec3Args[0].f = vector3D->x;
+                wrapVec3Args[1].f = vector3D->y;
+                wrapVec3Args[2].f = vector3D->z;
+                getMetadataDataSuccess = callStaticObject(env, "org/gearvrf/jassimp/Jassimp", "wrapVec3", "(FFF)Ljava/lang/Object;",
+                                                          wrapVec3Args, jMetadataData);
+                break;
+            }
+            default: {
+                getMetadataTypeSuccess = false;
+                getMetadataDataSuccess = false;
+                break;
+            }
+        }
+
+        exceptionThrown = env->ExceptionCheck();
+
+        if(!getMetadataTypeSuccess || !getMetadataDataSuccess) {
+            if(exceptionThrown)
+            {
+                env->ExceptionDescribe();
+            }
+
+            return false;
+        }
+
+        if(!setObjectField(env, jAiMetadataEntry, "mType", "Lorg/gearvrf/jassimp/AiMetadataEntry$AiMetadataType;", jAiMetadataTypeEnumValue)) {
+            exceptionThrown = env->ExceptionCheck();
+
+            if(exceptionThrown)
+            {
+                env->ExceptionDescribe();
+            }
+
+            return false;
+        }
+
+        if(!setObjectField(env, jAiMetadataEntry, "mData", "Ljava/lang/Object;", jMetadataData)) {
+            exceptionThrown = env->ExceptionCheck();
+
+            if(exceptionThrown)
+            {
+                env->ExceptionDescribe();
+            }
+
+            return false;
+        }
+
+        jobject jNodeMetadata = NULL;
+        SmartLocalRef refMetadata(env, jNodeMetadata);
+
+        if(!getField(env, jNode, "m_metaData", "Ljava/util/Map;", jNodeMetadata)) {
+            exceptionThrown = env->ExceptionCheck();
+
+            if(exceptionThrown)
+            {
+                env->ExceptionDescribe();
+            }
+
+            return false;
+        }
+
+        jclass hashMapClass = env->FindClass("java/util/HashMap");
+        jmethodID jHashMapPutMethod = env->GetMethodID(hashMapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+        jstring jKey = env->NewStringUTF(metaDataKey.C_Str());
+        SmartLocalRef keyRef(env, jKey);
+
+        // Only check exception instead of result here because maps will return
+        // null on success if they did not overwrite an existing mapping for the given key.
+        env->CallObjectMethod(jNodeMetadata, jHashMapPutMethod, jKey, jAiMetadataEntry);
+
+        exceptionThrown = env->ExceptionCheck();
+
+        if(exceptionThrown) {
+            env->ExceptionDescribe();
+            return false;
+        }
+
+    }
+
+    return true;
+}
+
+static bool loadSceneNode(JNIEnv *env, const aiNode *cNode, jobject parent, jobject* loadedNode = NULL)
 {
 	lprintf("   converting node %s ...\n", cNode->mName.C_Str());
 
@@ -902,7 +1205,7 @@ static bool loadSceneNode(JNIEnv *env, const aiNode *cNode, jobject parent, jobj
 	wrapMatParams[0].l = jMatrixArr;
 	jobject jMatrix;
 	SmartLocalRef refMatrix(env, jMatrix);
-				
+
 	if (!callStaticObject(env, "org/gearvrf/jassimp/Jassimp", "wrapMatrix", "([F)Ljava/lang/Object;", wrapMatParams, jMatrix))
 	{
 		return false;
@@ -951,12 +1254,19 @@ static bool loadSceneNode(JNIEnv *env, const aiNode *cNode, jobject parent, jobj
 		}
 	}
 
-	if (NULL != loadedNode)
-	{
-		*loadedNode = jNode;
-	} else {
-	    env->DeleteLocalRef(jNode);
-	}
+    if (NULL != loadedNode)
+    {
+        if(cNode->mMetaData) {
+            if(!loadMetadata(env, cNode, jNode))
+            {
+                return false;
+            }
+        }
+
+        *loadedNode = jNode;
+    } else {
+        env->DeleteLocalRef(jNode);
+    }
 
 	return true;
 }
@@ -1081,7 +1391,7 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 				}
 
 				constructorParams[4].l = jData;
-				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V",
+				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V", 
 					constructorParams, jProperty))
 				{
 					return false;
@@ -1107,7 +1417,7 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 				}
 
 				constructorParams[4].l = jData;
-				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V",
+				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V", 
 					constructorParams, jProperty))
 				{
 					return false;
@@ -1126,7 +1436,7 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 				}
 
 				constructorParams[4].l = jData;
-				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V",
+				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V", 
 					constructorParams, jProperty))
 				{
 					return false;
@@ -1145,7 +1455,7 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 				}
 
 				constructorParams[4].l = jData;
-				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V",
+				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V", 
 					constructorParams, jProperty))
 				{
 					return false;
@@ -1154,12 +1464,11 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 			else if (cProperty->mType == aiPTI_String) 
 			{
 				/* skip length prefix */
-				const char* s = cProperty->mData + 4;
 				jobject jData = env->NewStringUTF(cProperty->mData + 4);
 				SmartLocalRef refData(env, jData);
 
 				constructorParams[4].l = jData;
-				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V",
+				if (!createInstance(env, "org/gearvrf/jassimp/AiMaterial$Property", "(Ljava/lang/String;IIILjava/lang/Object;)V", 
 					constructorParams, jProperty))
 				{
 					return false;
@@ -1529,6 +1838,64 @@ static bool loadCameras(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 	return true;
 }
 
+static bool loadEmbeddedTextures(JNIEnv *env, const aiScene* cScene, jobject& jScene)
+{
+    for (unsigned int i = 0; i < cScene->mNumTextures; i++)
+    {
+        const aiTexture* cTex = cScene->mTextures[i];
+        jstring          jType = NULL;
+        int              numbytes = cTex->mWidth;
+
+        if (cTex->mHeight == 0)
+        {
+            jType = env->NewStringUTF(cTex->achFormatHint);
+        }
+        else
+        {
+            jType = env->NewStringUTF("argb");
+            numbytes *= cTex->mHeight * 4;
+        }
+        /* create texture */
+        jobject jTex = NULL;
+        SmartLocalRef refTex(env, jTex);
+        jvalue texparams[3];
+        texparams[0].i = cTex->mWidth;
+        texparams[1].i = cTex->mHeight;
+        texparams[2].l = jType;
+        if (!createInstance(env, "org/gearvrf/jassimp/AiTexture",
+                            "(IILjava/lang/String;)V", texparams, jTex))
+        {
+            throwException(env, "Cannot find constructor org/gearvrf/jassimp/AiTexture(int, int, String");
+        }
+
+        /* copy pixels into memory array */
+        jbyteArray jPixels = (jbyteArray) callj(env, jTex, "org/gearvrf/jassimp/AiTexture", "getByteData", "()[B");
+        if (jPixels == NULL)
+        {
+            throwException(env, "cannot allocate buffer for pixel data");
+        }
+        jbyte* pixels = env->GetByteArrayElements(jPixels, NULL);
+        memcpy(pixels, cTex->pcData, numbytes);
+        env->ReleaseByteArrayElements(jPixels, pixels, 0);
+
+        /* add texture to m_textures java.util.List */
+        jobject jTextures = NULL;
+        SmartLocalRef refTextures(env, jTextures);
+
+        if (!getField(env, jScene, "m_textures", "Ljava/util/List;", jTextures))
+        {
+            throwException(env, "cannot access m_textures from AiScene");
+        }
+        jvalue addParams[1];
+        addParams[0].l = jTex;
+        if (!call(env, jTextures, "java/util/Collection",
+                  "add", "(Ljava/lang/Object;)Z", addParams))
+        {
+            throwException(env, "cannot add AiTexture to list");
+        }
+    }
+    return true;
+}
 
 JNIEXPORT jint JNICALL Java_org_gearvrf_jassimp_Jassimp_getVKeysize
   (JNIEnv *env, jclass jClazz)
@@ -1589,7 +1956,7 @@ JNIEXPORT jint JNICALL Java_org_gearvrf_jassimp_Jassimp_getlongsize
 JNIEXPORT jstring JNICALL Java_org_gearvrf_jassimp_Jassimp_getErrorString
   (JNIEnv *env, jclass jClazz)
 {
-	const char *err = aiGetErrorString();
+	const char *err = gLastErrorString.c_str();
 
 	if (NULL == err)
 	{
@@ -1599,219 +1966,94 @@ JNIEXPORT jstring JNICALL Java_org_gearvrf_jassimp_Jassimp_getErrorString
 	return env->NewStringUTF(err);
 }
 
-static char *extractAsset(AAssetManager* mgr, const char *name, int *pBufferSize)
+
+JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp_Jassimp_aiImportFile
+  (JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject ioSystem)
 {
-	// Open file
-	AAsset* asset = AAssetManager_open(mgr, name, AASSET_MODE_UNKNOWN);
-
-	char *pBuffer = NULL;
-
-	if (asset != NULL) {
-		// Find size
-		off_t assetSize = AAsset_getLength(asset);
-
-		// Prepare input buffer
-		if (pBufferSize)
-			*pBufferSize = assetSize;
-		pBuffer = new char[assetSize];
-
-		if (pBuffer) {
-			// Store input buffer
-			AAsset_read(asset, pBuffer, assetSize);
-
-			lprintf("Asset extracted");
-		}
-
-		// Close
-		AAsset_close(asset);
-	} else {
-		lprintf("Asset not found: %s", name);
-		return 0;
-	}
-	return pBuffer;
-}
-
-// Memory File IO
-
-struct FileOpsData {
-	jobject jFileIO;
-	JNIEnv *env;
-};
-
-static aiFile* aiFileOpen(C_STRUCT aiFileIO* fio, const char* name, const char* mode) {
-	FileOpsData &opsData(*reinterpret_cast<FileOpsData*>(fio->UserData));
-	JNIEnv *env = opsData.env;
-
-	jstring jNameString = env->NewStringUTF(name);
-	SmartLocalRef refNameString(env, jNameString);
-
-	jvalue readParams[1];
-	readParams[0].l = jNameString;
-
-	jbyteArray jByteArray = static_cast<jbyteArray>(callj(opsData.env, opsData.jFileIO, "org/gearvrf/jassimp/JassimpFileIO", "read",
-														  "(Ljava/lang/String;)[B", readParams));
-	SmartLocalRef refByteArray(env, jByteArray);
-
-	if (!jByteArray) {
-		lprintf("JassimpFileIO.read returns null");
-		return nullptr;
-	}
-
-	int len = env->GetArrayLength(jByteArray);
-	unsigned char* buf = (unsigned char*)malloc(len);
-	env->GetByteArrayRegion(jByteArray, 0, len, reinterpret_cast<jbyte*>(buf));
-
-	// Wrap data as a memory-backed file
-	aiFile *file = (aiFile *)calloc(1, sizeof(aiFile));
-	MemoryFileData *fileData = (MemoryFileData *)calloc(1, sizeof(MemoryFileData));
-	fileData->buf = buf;
-	fileData->size = len;
-
-	lprintf("ASSIMP before memcpy");
-	memcpy(file, &memoryFilePrototype, sizeof(memoryFilePrototype));
-	file->UserData = reinterpret_cast<char*>(fileData);
-	lprintf("ASSIMP after memcpy");
-
-	return file;
-}
-
-static void aiFileClose(C_STRUCT aiFileIO* fio, C_STRUCT aiFile* file) {
-	MemoryFileData *fileData(reinterpret_cast<MemoryFileData *>(file->UserData));
-	free(fileData->buf);
-	free(file->UserData);
-	free(file);
-}
-
-static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess,
-							jobject assetManager, jobject jFileIO)
-{
-	jobject jScene = NULL;
+	jobject jScene = NULL; 
 
 	/* convert params */
 	const char* cFilename = env->GetStringUTFChars(jFilename, NULL);
+	
+    Assimp::Importer imp;
 
-	lprintf("opening file: %s%s\n", cFilename,
-			assetManager ? " from android assets"
-						 : (jFileIO ? " from custom fileIO" : ""));
+    imp.SetPropertyBool("AI_CONFIG_IMPORT_FBX_EMBEDDED_TEXTURES_LEGACY_NAMING", true);
+	if(ioSystem != NULL)
+	{
+		imp.SetIOHandler(new JavaIOSystem(env, ioSystem));		
+		lprintf("Created aiFileIO\n");
+	}
+	
+	lprintf("opening file: %s\n", cFilename);
 
 	/* do import */
-	const aiScene *cScene;
-	if (assetManager) {
-		AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
+	const aiScene *cScene = imp.ReadFile(cFilename, (unsigned int) postProcess);
 
-		int assetSize;
-		char *pBuffer = extractAsset(mgr, cFilename, &assetSize);
-		if (!pBuffer)
-			return NULL;
-
-		const char* extension = 0;
-		if (cFilename != 0) {
-			extension = strrchr(cFilename, '.');
-			if (extension && extension != cFilename) {
-				extension++;
-			}
-		}
-
-		cScene = aiImportFileFromMemory(pBuffer, assetSize, (unsigned int) postProcess,
-										extension);
-
-		delete pBuffer;
-	} else if (jFileIO) {
-		FileOpsData fileOpsData {
-				.jFileIO = jFileIO,
-				.env = env
-		};
-
-		aiFileIO fileIO = {
-				.OpenProc = aiFileOpen,
-				.CloseProc = aiFileClose,
-				.UserData = reinterpret_cast<char*>(&fileOpsData)
-		};
-
-		cScene = aiImportFileEx(cFilename, (unsigned int) postProcess, &fileIO);
-	} else {
-		cScene = aiImportFile(cFilename, (unsigned int) postProcess);
-	}
-
-	lprintf("jassimp aiImportFile done");
 	if (!cScene)
 	{
 		lprintf("import file returned null\n");
 		goto error;
 	}
 
-	if (!createInstance(env, "org/gearvrf/jassimp/AiScene", jScene))
+	if (!createInstance(env, "org/gearvrf/jassimp/AiScene", jScene)) 
 	{
 		goto error;
 	}
-	lprintf("jassimp createInstance");
 
 	if (!loadMeshes(env, cScene, jScene))
 	{
 		goto error;
 	}
-	lprintf("jassimp loadMeshes");
-	if (!loadEmbeddedTextures(env, cScene, jScene))
-	{
-		goto error;
-	}
-	lprintf("jassimp loadEmbeddedTextures");
+
+    if (!loadEmbeddedTextures(env, cScene, jScene))
+    {
+        goto error;
+    }
+
 	if (!loadMaterials(env, cScene, jScene))
 	{
 		goto error;
 	}
-	lprintf("jassimp loadMaterials");
 
 	if (!loadAnimations(env, cScene, jScene))
 	{
 		goto error;
 	}
-	lprintf("jassimp loadAnimations");
 
 	if (!loadLights(env, cScene, jScene))
 	{
 		goto error;
 	}
-	lprintf("jassimp loadLights");
 
 	if (!loadCameras(env, cScene, jScene))
 	{
 		goto error;
 	}
-	lprintf("jassimp loadCameras");
 
 	if (!loadSceneGraph(env, cScene, jScene))
 	{
 		goto error;
 	}
-	lprintf("jassimp loadSceneGraph");
 
 	/* jump over error handling section */
 	goto end;
 
-	error:
+error:
 	{
-		jclass exception = env->FindClass("java/io/IOException");
-		SmartLocalRef refException(env, exception);
+	jclass exception = env->FindClass("java/io/IOException");
 
-		if (NULL == exception)
-		{
-			/* thats really a problem because we cannot throw in this case */
-			env->FatalError("could not throw java.io.IOException");
-		}
+	if (NULL == exception)
+	{
+		/* that's really a problem because we cannot throw in this case */
+		env->FatalError("could not throw java.io.IOException");
+	}
+	gLastErrorString = imp.GetErrorString();
+	env->ThrowNew(exception, gLastErrorString.c_str());
 
-		env->ThrowNew(exception, aiGetErrorString());
-
-		lprintf("problem detected\n");
+	lprintf("problem detected\n");
 	}
 
-	end:
-	/*
-	 * NOTE: this releases all memory used in the native domain.
-	 * Ensure all data has been passed to java before!
-	 */
-	aiReleaseImport(cScene);
-
+end:
 
 	/* free params */
 	env->ReleaseStringUTFChars(jFilename, cFilename);
@@ -1819,22 +2061,4 @@ static jobject importHelper(JNIEnv *env, jclass jClazz, jstring jFilename, jlong
 	lprintf("return from native\n");
 
 	return jScene;
-}
-
-JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp_Jassimp_aiImportAssetFile
-		(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject assetManager)
-{
-	return importHelper(env, jClazz, jFilename, postProcess, assetManager, NULL);
-}
-
-JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp_Jassimp_aiImportFile
-		(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess)
-{
-	return importHelper(env, jClazz, jFilename, postProcess, NULL, NULL);
-}
-
-JNIEXPORT jobject JNICALL Java_org_gearvrf_jassimp_Jassimp_aiImportFileEx
-		(JNIEnv *env, jclass jClazz, jstring jFilename, jlong postProcess, jobject jFileIO)
-{
-	return importHelper(env, jClazz, jFilename, postProcess, NULL, jFileIO);
 }

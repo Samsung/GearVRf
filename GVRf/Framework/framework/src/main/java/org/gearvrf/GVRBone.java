@@ -142,7 +142,7 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
         sb.append(GVRBone.class.getSimpleName());
         sb.append(" [name=" + getName()
                 + ", offsetMatrix=" + getOffsetMatrix()
-//              + ", finalTransformMatrix=" + getFinalTransformMatrix() // crashes debugger
+                + ", finalTransformMatrix=" + getFinalTransformMatrix() // crashes debugger
                 + "]");
         sb.append(System.lineSeparator());
     }

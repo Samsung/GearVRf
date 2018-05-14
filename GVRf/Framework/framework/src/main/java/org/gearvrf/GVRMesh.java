@@ -197,7 +197,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @param ibuf new index buffer to use
      * @see #setIndices(int[])
      * @see #getIndexBuffer()
-     * @see #getIndices()
+     * @see #getIntIndices()
      */
     public void setIndexBuffer(GVRIndexBuffer ibuf)
     {
@@ -478,9 +478,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      *            char array containing the packed index data or null.
      *            If null is specified, the index buffer is destroyed
      *            and the mesh will have only vertices.
-     * @see #setTriangles(int[])
+     * @see #setIntIndices(int[])
      * @see #setIndexBuffer(GVRIndexBuffer)
-     * @see #getIndices()
+     * @see #getIntIndices()
      * @see #getIndexBuffer()
      * @throws IllegalArgumentException if index buffer is not <i>char</i>
      */
@@ -513,9 +513,9 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      *            CharBuffer containing the packed index data or null.
      *            If null is specified, the index buffer is destroyed
      *            and the mesh will have only vertices.
-     * @see #setTriangles(int[])
+     * @see #setIntIndices(int[])
      * @see #setIndexBuffer(GVRIndexBuffer)
-     * @see #getIndices()
+     * @see #getIntIndices()
      * @see #getIndexBuffer()
      * @throws IllegalArgumentException if index buffer is not <i>char</i>
      */
@@ -753,9 +753,16 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      */
     public void setBones(List<GVRBone> bones)
     {
+        StringBuffer sb = new StringBuffer();
         mBones.clear();
         mBones.addAll(bones);
+        sb.append("BONES\n");
+        for (GVRBone b : bones)
+        {
+            b.prettyPrint(sb, 0);
+        }
         NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(bones));
+        Log.e("BONES", sb.toString());
     }
 
 

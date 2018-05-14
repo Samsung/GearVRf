@@ -59,7 +59,7 @@ import java.util.Set;
  * Pointer comparison will fail.
  */
 public final class Jassimp {
-    
+
     /**
      * The default wrapper provider using built in types.
      */
@@ -79,6 +79,20 @@ public final class Jassimp {
         return importFile(filename, EnumSet.noneOf(AiPostProcessSteps.class));
     }
     
+    /**
+     * Imports a file via assimp without post processing.
+     * 
+     * @param filename the file to import
+     * @param ioSystem ioSystem to load files, or null for default
+     * @return the loaded scene
+     * @throws IOException if an error occurs
+     */
+    public static AiScene importFile(String filename, AiIOSystem<?> ioSystem) 
+          throws IOException {
+       
+       return importFile(filename, EnumSet.noneOf(AiPostProcessSteps.class), ioSystem);
+    }
+    
     
     /**
      * Imports a file via assimp.
@@ -89,53 +103,29 @@ public final class Jassimp {
      * @throws IOException if an error occurs
      */
     public static AiScene importFile(String filename, 
-            Set<AiPostProcessSteps> postProcessing) throws IOException {
-        
-        return aiImportFile(filename, AiPostProcessSteps.toRawValue(
-                postProcessing));
+                                     Set<AiPostProcessSteps> postProcessing) 
+                                           throws IOException {
+        return importFile(filename, postProcessing, null);
     }
-
-    /**
-     * Imports a file via assimp without post processing.
-     *
-     * @param filename the file to import
-     * @param fileIO the fileIO handler
-     * @return the loaded scene
-     * @throws IOException if an error occurs
-     */
-    public static AiScene importFileEx(String filename, JassimpFileIO fileIO) throws IOException {
-        return importFileEx(filename, EnumSet.noneOf(AiPostProcessSteps.class), fileIO);
-    }
-
+    
     /**
      * Imports a file via assimp.
-     *
+     * 
      * @param filename the file to import
      * @param postProcessing post processing flags
-     * @param fileIO the fileIO handler
+     * @param ioSystem ioSystem to load files, or null for default
      * @return the loaded scene, or null if an error occurred
      * @throws IOException if an error occurs
      */
-    public static AiScene importFileEx(String filename,
-                                       Set<AiPostProcessSteps> postProcessing,
-                                       JassimpFileIO fileIO) throws IOException {
-
-        return aiImportFileEx(filename, AiPostProcessSteps.toRawValue(postProcessing), fileIO);
+    public static AiScene importFile(String filename, 
+            Set<AiPostProcessSteps> postProcessing, AiIOSystem<?> ioSystem) 
+                  throws IOException {
+        
+        return aiImportFile(filename, AiPostProcessSteps.toRawValue(
+                postProcessing), ioSystem);
     }
-
-    /**
-     * The native interface.
-     *
-     * @param filename the file to load
-     * @param postProcessing post processing flags
-     * @param fileIO the fileIO handler
-     * @return the loaded scene, or null if an error occurred
-     * @throws IOException if an error occurs
-     */
-    private static native AiScene aiImportFileEx(String filename,
-                                                 long postProcessing,
-                                                 JassimpFileIO fileIO) throws IOException;
-
+    
+    
     /**
      * Returns the size of a struct or ptimitive.<p>
      * 
@@ -215,8 +205,8 @@ public final class Jassimp {
         
         s_wrapperProvider = wrapperProvider;
     }
-    
-    
+
+
     /**
      * Helper method for wrapping a matrix.<p>
      * 
@@ -303,8 +293,7 @@ public final class Jassimp {
         
         return s_wrapperProvider.wrapSceneNode(parent, matrix, meshRefs, name);
     }
-    
-    
+
     /**
      * The native interface.
      * 
@@ -314,7 +303,7 @@ public final class Jassimp {
      * @throws IOException if an error occurs
      */
     private static native AiScene aiImportFile(String filename, 
-            long postProcessing) throws IOException;
+            long postProcessing, AiIOSystem<?> ioSystem) throws IOException;
     
     
     /**
@@ -322,7 +311,7 @@ public final class Jassimp {
      */
     private static AiWrapperProvider<?, ?, ?, ?, ?> s_wrapperProvider = 
             new AiBuiltInWrapperProvider();
-    
+
     
     /**
      * Pure static class, no accessible constructor.
@@ -331,24 +320,13 @@ public final class Jassimp {
         /* nothing to do */
     }
     
-    public static final int NATIVE_AIVEKTORKEY_SIZE; 
-    public static final int NATIVE_AIQUATKEY_SIZE; 
-    public static final int NATIVE_AIVEKTOR3D_SIZE; 
-    public static final int NATIVE_FLOAT_SIZE; 
-    public static final int NATIVE_INT_SIZE; 
-    public static final int NATIVE_UINT_SIZE; 
-    public static final int NATIVE_DOUBLE_SIZE; 
-    public static final int NATIVE_LONG_SIZE; 
+    public static int NATIVE_AIVEKTORKEY_SIZE = getVKeysize();
+    public static int NATIVE_AIQUATKEY_SIZE = getQKeysize();
+    public static int NATIVE_AIVEKTOR3D_SIZE = getV3Dsize();
+    public static int NATIVE_FLOAT_SIZE = getfloatsize();
+    public static int NATIVE_INT_SIZE = getintsize();
+    public static int NATIVE_UINT_SIZE = getuintsize();
+    public static int NATIVE_DOUBLE_SIZE = getdoublesize();
+    public static int NATIVE_LONG_SIZE = getlongsize();
 
-    static {
-        //System.loadLibrary("jassimp");
-    	NATIVE_AIVEKTORKEY_SIZE = getVKeysize();
-    	NATIVE_AIQUATKEY_SIZE = getQKeysize();
-    	NATIVE_AIVEKTOR3D_SIZE = getV3Dsize();
-    	NATIVE_FLOAT_SIZE = getfloatsize();
-    	NATIVE_INT_SIZE = getintsize();
-    	NATIVE_UINT_SIZE = getuintsize();
-    	NATIVE_DOUBLE_SIZE = getdoublesize();
-    	NATIVE_LONG_SIZE = getlongsize();
-    }
 }
