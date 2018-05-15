@@ -50,6 +50,8 @@ android {
     // ignore the x86 files from the google vr libraries
     packagingOptions {
         exclude 'lib/x86/libgvr.so'
+        pickFirst 'lib/*/libc++_shared.so'
+        pickFirst 'lib/*/libgnustl_shared.so'
         if (!project.hasProperty("ARM64")) {
             exclude 'lib/arm64-v8a/*.so'
         } else {

@@ -15,13 +15,21 @@
 
 package org.gearvrf.io.sceneeditor;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.utility.Log;
 
 public class SceneEditorActivity extends GVRActivity {
     private static final String TAG = SceneEditorActivity.class.getSimpleName();
+    private final static int PERMISSION_REQUEST_CODE = 13;
+    private final static String[] PERMISSIONS = {Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
     private SceneEditorMain cursorMain;
 
     @Override
@@ -29,6 +37,23 @@ public class SceneEditorActivity extends GVRActivity {
         super.onCreate(bundle);
         cursorMain = new SceneEditorMain();
         setMain(cursorMain, "gvr.xml");
+
+        if(!hasPermissions(this, PERMISSIONS)){
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
+            Log.d(TAG, "Permissions requested!");
+        } else {
+            Log.d(TAG, "Permissions guaranteed!");
+        }
+    }
+
+    private static boolean hasPermissions(Activity context, String... permissions) {
+        for (String permission : permissions) {
+            if (ActivityCompat.checkSelfPermission(context, permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -41,5 +66,22 @@ public class SceneEditorActivity extends GVRActivity {
     protected void onStop() {
         super.onStop();
         cursorMain.close();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Permission " + PERMISSIONS[i] + " denied!");
+                    finish();
+                    return;
+                }
+            }
+            Log.d(TAG, "Permissions accepted!");
+        }
     }
 }
