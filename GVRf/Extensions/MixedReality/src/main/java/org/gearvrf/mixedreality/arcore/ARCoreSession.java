@@ -324,6 +324,10 @@ public class ARCoreSession extends MRCommon {
         return new Vector3f(quadWidth, quadHeight, -PASSTHROUGH_DISTANCE);
     }
 
+    @Override
+    protected GVRSceneObject onGetPassThroughObject() {
+        return mARPassThroughObject;
+    }
 
     @Override
     protected void onRegisterPlaneListener(IPlaneEventsListener listener) {
@@ -340,18 +344,6 @@ public class ARCoreSession extends MRCommon {
         return mArCoreHelper.getAllPlanes();
     }
 
-
-    @Override
-    protected GVRAnchor onCreateAnchor(float[] pose) {
-        float[] translation = new float[3];
-        float[] rotation = new float[4];
-
-        convertMatrixPoseToVector(pose, translation, rotation);
-
-        Anchor anchor = mSession.createAnchor(new Pose(translation, rotation));
-        return mArCoreHelper.createAnchor(anchor);
-    }
-
     @Override
     protected GVRAnchor onCreateAnchor(float[] pose, GVRSceneObject sceneObject) {
         float[] translation = new float[3];
@@ -361,6 +353,22 @@ public class ARCoreSession extends MRCommon {
 
         Anchor anchor = mSession.createAnchor(new Pose(translation, rotation));
         return mArCoreHelper.createAnchor(anchor, sceneObject);
+    }
+
+    @Override
+    protected void onUpdateAnchorPose(GVRAnchor anchor, float[] pose) {
+        float[] translation = new float[3];
+        float[] rotation = new float[4];
+
+        convertMatrixPoseToVector(pose, translation, rotation);
+
+        Anchor arAnchor = mSession.createAnchor(new Pose(translation, rotation));
+        mArCoreHelper.updateAnchorPose((ARCoreAnchor)anchor, arAnchor);
+    }
+
+    @Override
+    protected void onRemoveAnchor(GVRAnchor anchor) {
+        mArCoreHelper.removeAnchor((ARCoreAnchor)anchor);
     }
 
     @Override

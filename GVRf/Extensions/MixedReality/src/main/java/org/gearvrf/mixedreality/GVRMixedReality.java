@@ -89,6 +89,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
+    public GVRSceneObject getPassThroughObject() {
+        return mSession.getPassThroughObject();
+    }
+
+    @Override
     public void registerPlaneListener(IPlaneEventsListener listener) {
         mSession.registerPlaneListener(listener);
     }
@@ -110,6 +115,16 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     @Override
     public GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject) {
         return mSession.createAnchor(pose, sceneObject);
+    }
+
+    @Override
+    public void updateAnchorPose(GVRAnchor anchor, float[] pose) {
+        mSession.updateAnchorPose(anchor, pose);
+    }
+
+    @Override
+    public void removeAnchor(GVRAnchor anchor) {
+        mSession.removeAnchor(anchor);
     }
 
     @Override

@@ -142,21 +142,30 @@ public class ARCoreHelper {
         return arCorePlane;
     }
 
-    public GVRAnchor createAnchor(Anchor arAnchor) {
-        ARCoreAnchor arCoreAnchor = new ARCoreAnchor(mGvrContext);
-        arCoreAnchor.setAnchorAR(arAnchor);
-        mGvrScene.addSceneObject(arCoreAnchor);
-        mArAnchors.add(arCoreAnchor);
-        return arCoreAnchor;
-    }
-
     public GVRAnchor createAnchor(Anchor arAnchor, GVRSceneObject sceneObject) {
         ARCoreAnchor arCoreAnchor = new ARCoreAnchor(mGvrContext);
         arCoreAnchor.setAnchorAR(arAnchor);
-        arCoreAnchor.setSceneObject(sceneObject);
         mGvrScene.addSceneObject(arCoreAnchor);
         mArAnchors.add(arCoreAnchor);
+
+        if (sceneObject != null) {
+            arCoreAnchor.attachSceneObject(sceneObject);
+        }
+
         return arCoreAnchor;
+    }
+
+    public void updateAnchorPose(ARCoreAnchor anchor, Anchor arAnchor) {
+        if (anchor.getAnchorAR() != null) {
+            anchor.getAnchorAR().detach();
+        }
+        anchor.setAnchorAR(arAnchor);
+    }
+
+    public void removeAnchor(ARCoreAnchor anchor) {
+        anchor.getAnchorAR().detach();
+        mArAnchors.remove(anchor);
+        mGvrScene.removeSceneObject(anchor);
     }
 
     public GVRHitResult hitTest(List<HitResult> hitResult) {

@@ -27,6 +27,12 @@ public interface IMRCommon {
     void pause();
 
     /**
+     *
+     * @return The passthrough object
+     */
+    GVRSceneObject getPassThroughObject();
+
+    /**
      * Register a listener to GVRPlane events.
      *
      * @param listener
@@ -63,6 +69,21 @@ public interface IMRCommon {
      * @return The anchor created
      */
     GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject);
+
+    /**
+     * Update the pose of an anchor
+     *
+     * @param anchor
+     * @param pose
+     */
+    void updateAnchorPose(GVRAnchor anchor, float[] pose);
+
+    /**
+     * Remove the anchor specified
+     *
+     * @param anchor
+     */
+    void removeAnchor(GVRAnchor anchor);
 
     /**
      *

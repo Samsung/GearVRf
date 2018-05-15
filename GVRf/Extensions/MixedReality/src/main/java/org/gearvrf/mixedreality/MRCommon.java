@@ -41,6 +41,11 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
+    public GVRSceneObject getPassThroughObject() {
+        return onGetPassThroughObject();
+    }
+
+    @Override
     public void registerPlaneListener(IPlaneEventsListener listener) {
         onRegisterPlaneListener(listener);
     }
@@ -58,12 +63,22 @@ public abstract class MRCommon implements IMRCommon {
 
     @Override
     public GVRAnchor createAnchor(float[] pose) {
-        return onCreateAnchor(pose);
+        return onCreateAnchor(pose, null);
     }
 
     @Override
     public GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject) {
         return onCreateAnchor(pose, sceneObject);
+    }
+
+    @Override
+    public void updateAnchorPose(GVRAnchor anchor, float[] pose) {
+        onUpdateAnchorPose(anchor, pose);
+    }
+
+    @Override
+    public void removeAnchor(GVRAnchor anchor) {
+        onRemoveAnchor(anchor);
     }
 
     @Override
@@ -80,15 +95,19 @@ public abstract class MRCommon implements IMRCommon {
 
     protected abstract void onPause();
 
+    protected abstract GVRSceneObject onGetPassThroughObject();
+
     protected abstract void onRegisterPlaneListener(IPlaneEventsListener listener);
 
     protected abstract void onRegisterAnchorListener(IAnchorEventsListener listener);
 
     protected abstract ArrayList<GVRPlane> onGetAllPlanes();
 
-    protected abstract GVRAnchor onCreateAnchor(float[] pose);
-
     protected abstract GVRAnchor onCreateAnchor(float[] pose, GVRSceneObject sceneObject);
+
+    protected abstract void onUpdateAnchorPose(GVRAnchor anchor, float[] pose);
+
+    protected abstract void onRemoveAnchor(GVRAnchor anchor);
 
     protected abstract GVRHitResult onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 
