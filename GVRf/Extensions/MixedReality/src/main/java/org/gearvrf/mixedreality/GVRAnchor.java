@@ -55,6 +55,10 @@ public abstract class GVRAnchor extends GVRSceneObject {
      * @param scale
      */
     public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
+        if (getParent() == null) {
+            return;
+        }
+
         onUpdate(viewmtx, gvrmatrix, scale);
     }
 

@@ -137,7 +137,6 @@ public class ARCoreHelper {
     public ARCorePlane createPlane(Plane plane) {
         ARCorePlane arCorePlane = new ARCorePlane(mGvrContext);
         arCorePlane.setARPlane(plane);
-        mGvrScene.addSceneObject(arCorePlane);
         mArPlanes.put(plane, arCorePlane);
         return arCorePlane;
     }
@@ -145,7 +144,6 @@ public class ARCoreHelper {
     public GVRAnchor createAnchor(Anchor arAnchor, GVRSceneObject sceneObject) {
         ARCoreAnchor arCoreAnchor = new ARCoreAnchor(mGvrContext);
         arCoreAnchor.setAnchorAR(arAnchor);
-        mGvrScene.addSceneObject(arCoreAnchor);
         mArAnchors.add(arCoreAnchor);
 
         if (sceneObject != null) {
