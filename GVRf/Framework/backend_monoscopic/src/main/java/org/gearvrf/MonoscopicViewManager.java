@@ -334,10 +334,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
-            mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
-                    mViewportWidth, mViewportHeight, sampleCount), getMainScene());
-
             if(isVulkanInstance) {
+                mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
+                        mViewportWidth, mViewportHeight, sampleCount), getMainScene());
                 mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
                         mViewportWidth, mViewportHeight, sampleCount), getMainScene());
                 mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
@@ -346,6 +345,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                 mRenderBundle.addRenderTarget(mRenderTarget[0], GVRViewManager.EYE.LEFT, 0);
                 mRenderBundle.addRenderTarget(mRenderTarget[1], GVRViewManager.EYE.LEFT, 1);
                 mRenderBundle.addRenderTarget(mRenderTarget[2], GVRViewManager.EYE.LEFT, 2);
+            }
+            else{
+                mRenderTarget[0] = new GVRRenderTarget(getActivity().getGVRContext());
             }
         }
 
