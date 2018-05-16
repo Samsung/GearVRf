@@ -43,7 +43,7 @@ public class GVRPBRShader extends GVRShaderTemplate
 
     public GVRPBRShader(GVRContext gvrcontext)
     {
-         super("float4 diffuse_color; float4 specular_color; float4 emissive_color; float metallic; float roughness; float specular_exponent; float lightmapStrength; float normalScale",
+         super("float4 diffuse_color; float4 specular_color; float4 emissive_color; float metallic; float roughness; float specular_exponent; float lightmapStrength; float normalScale; float glossinessFactor",
                 "sampler2D diffuseTexture; sampler2D metallicRoughnessTexture; sampler2D specularTexture; sampler2D lightmapTexture; sampler2D diffuseTexture1; sampler2D normalTexture; sampler2D emissiveTexture",
                 "float3 a_position float2 a_texcoord float2 a_texcoord1 float2 a_texcoord2 float2 a_texcoord3 float3 a_normal float4 a_bone_weights int4 a_bone_indices float4 a_tangent float4 a_bitangent",
                 GLSLESVersion.VULKAN);
@@ -87,8 +87,6 @@ public class GVRPBRShader extends GVRShaderTemplate
     {
         material.setVec4("diffuse_color", 0.8f, 0.8f, 0.8f, 1.0f);
         material.setVec4("emissive_color", 0.0f, 0.0f, 0.0f, 1.0f);
-        material.setFloat("metallic", 1);
-        material.setFloat("roughness", 1);
         material.setFloat("normalScale", 1);
         material.setFloat("lightmapStrength", 1);
     }

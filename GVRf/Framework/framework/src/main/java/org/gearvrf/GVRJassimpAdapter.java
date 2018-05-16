@@ -732,12 +732,31 @@ class GVRJassimpAdapter {
         {
             try
             {
-                float metallic = material.getMetallic();
-                float roughness = material.getRoughness();
+                boolean glosspresent = material.getSpecularGlossinessUsage();
                 shaderType = new GVRShaderId(GVRPBRShader.class);
                 GVRMaterial m = new GVRMaterial(mContext, shaderType);
-                m.setFloat("roughness", roughness);
-                m.setFloat("metallic", metallic);
+
+                //use specular glossiness workflow, if present
+                if(glosspresent)
+                {
+                    AiColor diffuseFactor = material.getDiffuseColor(sWrapperProvider);
+                    AiColor specularFactor = material.getSpecularColor(sWrapperProvider);
+                    //gltf2importer.cpp in the assimp lib defines shininess as glossiness_factor * 1000.0f
+                    float glossinessFactor = material.getShininess() / 1000.0f;
+
+                    m.setDiffuseColor(diffuseFactor.getRed(), diffuseFactor.getGreen(), diffuseFactor.getBlue(), diffuseFactor.getAlpha());
+                    m.setSpecularColor(specularFactor.getRed(), specularFactor.getGreen(), specularFactor.getBlue(), specularFactor.getAlpha());
+                    m.setFloat("glossinessFactor", glossinessFactor);
+                }
+                else {
+                    float metallic = material.getMetallic();
+                    float roughness = material.getRoughness();
+                    AiColor baseColorFactor = material.getDiffuseColor(sWrapperProvider);
+
+                    m.setFloat("roughness", roughness);
+                    m.setFloat("metallic", metallic);
+                    m.setDiffuseColor(baseColorFactor.getRed(), baseColorFactor.getGreen(), baseColorFactor.getBlue(), baseColorFactor.getAlpha());
+                }
                 return m;
             }
             catch (IllegalArgumentException e) { }

@@ -237,7 +237,14 @@ public final class AiMaterial {
         /**
          * Metallic factor for PBR materials
          */
-        METALLIC("$mat.gltf.pbrMetallicRoughness.metallicFactor", Float.class);
+        METALLIC("$mat.gltf.pbrMetallicRoughness.metallicFactor", Float.class),
+
+        /**
+         * PBR specular glossiness workflow is present in the gltf file
+         */
+
+        SPECULAR_GLOSSINESS("$mat.gltf.pbrSpecularGlossiness", Integer.class);
+
 
         /**
          * Constructor.
@@ -1108,6 +1115,18 @@ public final class AiMaterial {
     }
 
     /**
+     *
+     * @return true if the gltf file contains the specular glossiness extension workflow
+     */
+    public boolean getSpecularGlossinessUsage() {
+
+        Property p = getProperty(PropertyKey.SPECULAR_GLOSSINESS.m_key);
+        return !(null == p || null == p.getData());
+
+    }
+
+
+    /**
      * Returns the texture mapping mode for the w axis.<p>
      * 
      * If missing, defaults to {@link AiTextureMapMode#CLAMP}
@@ -1211,7 +1230,7 @@ public final class AiMaterial {
         if (null == p || null == p.getData()) {
             return clazz.cast(m_defaults.get(key));
         }
-        
+
         return clazz.cast(p.getData());
     }
     
@@ -1296,6 +1315,7 @@ public final class AiMaterial {
         setDefault(PropertyKey.TEX_MAG_FILTER,          GL_LINEAR);
         setDefault(PropertyKey.METALLIC,                1.0f);
         setDefault(PropertyKey.ROUGHNESS,               1.0f);
+        setDefault(PropertyKey.SPECULAR_GLOSSINESS,      0);
         /* ensure we have defaults for everything */
         for (PropertyKey key : PropertyKey.values()) {
             if (!m_defaults.containsKey(key)) {

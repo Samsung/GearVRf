@@ -68,7 +68,9 @@ vec4 AddLight(Surface s, Radiance r)
     // Fresnel Schlick Simplified implementation of fresnel from
     // "An Inexpensive BRDF Model for Physically based Rendering" by Christophe Schlick.
     //
-    vec3 F = s.metallic + (vec3(1.0) - s.metallic) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);
+    vec3 specularEnvironmentR0 = s.specular.rgb;
+    vec3 specularEnvironmentR90 = vec3(1.0, 1.0, 1.0) * s.brdf.y;
+    vec3 F = specularEnvironmentR0 + (specularEnvironmentR90 - specularEnvironmentR0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);
 
     float G = geometricOcclusionSchlick(NdotL, NdotV, s.roughness); // Schlick implementation
 //  float G = geometricOcclusionSmith(NdotL, NdotV, alphaRoughess); // Smith implementation
@@ -91,18 +93,20 @@ vec4 AddLight(Surface s, Radiance r)
 #endif
 
     // This section uses mix to override final color for reference app visualization
-    // of various parameters in the lighting equation.
-#ifdef HAS_scaleFGD
-    color = mix(color, F, scaleFGD.x);
-    color = mix(color, vec3(G), scaleFGD.y);
-    color = mix(color, vec3(D), scaleFGD.z);
-    color = mix(color, kS, scaleFGD.w);
-#endif
-#ifdef HAS_scaleDiffBaseMR
-    color = mix(color, kD, scaleDiffBaseMR.x);
-    color = mix(color, s.diffuse.rgb, scaleDiffBaseMR.y);
-    color = mix(color, vec3(s.metallic), scaleDiffBaseMR.z);
-    color = mix(color, vec3(s.roughness), scaleDiffBaseMR.w);
-#endif
+    // of various parameters in the lighting equation. Might need this if we have an app for demo.
+
+//#ifdef HAS_scaleFGD
+//    color = mix(color, F, scaleFGD.x);
+//    color = mix(color, vec3(G), scaleFGD.y);
+//    color = mix(color, vec3(D), scaleFGD.z);
+//    color = mix(color, kS, scaleFGD.w);
+//#endif
+//#ifdef HAS_scaleDiffBaseMR
+//    color = mix(color, kD, scaleDiffBaseMR.x);
+//    color = mix(color, s.diffuse.rgb, scaleDiffBaseMR.y);
+//    color = mix(color, vec3(s.metallic), scaleDiffBaseMR.z);
+//    color = mix(color, vec3(s.roughness), scaleDiffBaseMR.w);
+//#endif
+
     return vec4(pow(color, vec3(1.0 / 2.2)), s.diffuse.w);
 }
