@@ -75,7 +75,6 @@ class OvrViewManager extends GVRViewManager {
     private GVRMethodCallTracer mTracerDrawEyes2;
     private GVRMethodCallTracer mTracerDrawFrame;
     private GVRMethodCallTracer mTracerDrawFrameGap;
-    private GVRGearCursorController mGearController;
 
     /**
      * Constructs OvrViewManager object with GVRMain which controls GL
@@ -250,8 +249,6 @@ class OvrViewManager extends GVRViewManager {
 
     /** Called once per frame */
     protected void onDrawFrame() {
-
-        getInputManager().updateGearControllers();
         drawEyes(mActivity.getActivityNative().getNative());
         afterDrawEyes();
     }
@@ -281,11 +278,13 @@ class OvrViewManager extends GVRViewManager {
     @Override
     void onSurfaceCreated() {
         super.onSurfaceCreated();
-        mGearController = mInputManager.getGearController();
-        if (mGearController != null)
-        {
-            GVRGearCursorController.ControllerReader reader = new OvrControllerReader(mActivity.getActivityNative().getNative());
-            mGearController.attachReader(reader);
+        mControllerReader = new OvrControllerReader(mActivity.getActivityNative().getNative());
+        for(int i=0; i< mActivity.getAppSettings().getNumControllers(); i++){
+            GVRGearCursorController gearController = mInputManager.getGearController(i);
+            if (gearController != null)
+            {
+                gearController.attachReader(mControllerReader);
+            }
         }
     }
     void createSwapChain(){

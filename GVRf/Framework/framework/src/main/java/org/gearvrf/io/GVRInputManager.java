@@ -390,8 +390,6 @@ public class GVRInputManager implements IEventReceiver
     public GVRGearCursorController getGearController() {
         return gearCursorControllers.get(0);
     }
-
-
     /**
      * Get the Gear cursor controller with the given ID.
      * This function will return an instance even if

@@ -85,6 +85,8 @@ public final class GVRGearCursorController extends GVRCursorController
         void onPause();
 
         void onResume();
+
+        void updatePosData();
     }
 
     public static class ControllerReaderStubs implements ControllerReader
@@ -115,6 +117,8 @@ public final class GVRGearCursorController extends GVRCursorController
         public void onPause() { }
         @Override
         public void onResume() { }
+        @Override
+        public void updatePosData(){}
     }
 
     public enum CONTROLLER_KEYS
@@ -399,7 +403,6 @@ public final class GVRGearCursorController extends GVRCursorController
         if (isEnabled())
         {
             ControllerEvent event = ControllerEvent.obtain();
-
             mControllerReader.updateRotation(event.rotation,controllerID);
             mControllerReader.updatePosition(event.position,controllerID);
             event.touched = mControllerReader.isTouched(controllerID);
