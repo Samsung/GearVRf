@@ -21,6 +21,11 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libassimpd.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE    := jnlua
+LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjnlua.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE    := jav8
 LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjav8.so
 include $(PREBUILT_SHARED_LIBRARY)
