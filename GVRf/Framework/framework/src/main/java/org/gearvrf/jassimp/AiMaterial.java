@@ -955,7 +955,7 @@ public final class AiMaterial {
                     PropertyKey.TEX_MAP_MODE_U);
         }
         
-        return AiTextureMapMode.fromRawValue((Integer) p.getData());
+        return AiTextureMapMode.fromRawValue(p.getData());
     }
     
     
@@ -978,7 +978,7 @@ public final class AiMaterial {
                     PropertyKey.TEX_MAP_MODE_V);
         }
         
-        return AiTextureMapMode.fromRawValue((Integer) p.getData());
+        return AiTextureMapMode.fromRawValue(p.getData());
     }
     
     
@@ -1001,7 +1001,7 @@ public final class AiMaterial {
                     PropertyKey.TEX_MAP_MODE_W);
         }
         
-        return AiTextureMapMode.fromRawValue((Integer) p.getData());
+        return AiTextureMapMode.fromRawValue(p.getData());
     }
     
     

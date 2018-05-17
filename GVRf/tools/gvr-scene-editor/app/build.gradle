@@ -66,6 +66,7 @@ dependencies {
         compile "org.gearvrf:3DCursorLibrary:$gearvrfVersion"
         compile "org.gearvrf:sceneserializer:$gearvrfVersion"
     }
+    implementation 'com.android.support:appcompat-v7:27.0.1'
 }
 
 //TODO export plugin to jar

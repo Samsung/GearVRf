@@ -43,7 +43,6 @@ package org.gearvrf.jassimp;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /** 
  * An animation.<p>
  * 

@@ -564,7 +564,7 @@ class GVRJassimpAdapter {
         GVRLight light =  lightlist.get(name);
         if (light != null) {
             Quaternionf q = new Quaternionf();
-            q.rotationX((float) Math.PI / 2.0f);
+            q.rotationX((float) -Math.PI / 2.0f);
             q.normalize();
             light.setDefaultOrientation(q);
             sceneObject.attachLight(light);
@@ -689,7 +689,9 @@ class GVRJassimpAdapter {
         wrapModeMap.put(AiTextureMapMode.WRAP, GVRTextureParameters.TextureWrapType.GL_REPEAT );
         wrapModeMap.put(AiTextureMapMode.CLAMP, GVRTextureParameters.TextureWrapType.GL_CLAMP_TO_EDGE );
         wrapModeMap.put(AiTextureMapMode.MIRROR, GVRTextureParameters.TextureWrapType.GL_MIRRORED_REPEAT );
-
+        wrapModeMap.put(AiTextureMapMode.GL_REPEAT, GVRTextureParameters.TextureWrapType.GL_REPEAT );
+        wrapModeMap.put(AiTextureMapMode.GL_CLAMP, GVRTextureParameters.TextureWrapType.GL_CLAMP_TO_EDGE );
+        wrapModeMap.put(AiTextureMapMode.GL_MIRRORED_REPEAT, GVRTextureParameters.TextureWrapType.GL_MIRRORED_REPEAT );
     }
 
     private GVRMaterial createMaterial(AiMaterial material, EnumSet<GVRImportSettings> settings)
@@ -753,6 +755,7 @@ class GVRJassimpAdapter {
 
         gvrTex.setTexCoord(texCoordKey, shaderKey);
         gvrmtl.setTexture(textureKey, gvrTex);
+
         if (texFileName.startsWith("*"))
         {
             AiTexture tex = null;
