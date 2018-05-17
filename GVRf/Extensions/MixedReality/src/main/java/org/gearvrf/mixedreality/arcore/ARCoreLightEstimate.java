@@ -19,13 +19,31 @@ import org.gearvrf.mixedreality.GVRLightEstimate;
 
 
 public class ARCoreLightEstimate extends GVRLightEstimate {
-    @Override
+    /**
+     * Set the pixel intensity of light
+     *
+     * @param intensity
+     */
     protected void setPixelIntensity(float intensity) {
-        this.mPixelIntensity = intensity;
+        mPixelIntensity = intensity;
+    }
+
+    /**
+     * Set the state of light estimate
+     *
+     * @param state
+     */
+    protected void setState(GVRLightEstimateState state) {
+        mState = state;
     }
 
     @Override
-    protected void setState(GVRLightEstimateState state) {
-        this.mState = state;
+    public float getPixelIntensity() {
+        return mPixelIntensity;
+    }
+
+    @Override
+    public GVRLightEstimateState getLightEstimateState() {
+        return mState;
     }
 }

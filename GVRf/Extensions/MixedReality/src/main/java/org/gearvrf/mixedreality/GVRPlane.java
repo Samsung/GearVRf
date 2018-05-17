@@ -18,58 +18,21 @@ package org.gearvrf.mixedreality;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
+import java.nio.FloatBuffer;
+
 
 public abstract class GVRPlane extends GVRSceneObject {
     protected Type mType;
     protected GVRTrackingState mTrackingState;
-    protected float[] mCenterPose = new float[16];
-    protected float mWidth;
-    protected float mHeight;
     protected GVRPlane mParentPlane;
     protected GVRSceneObject mSceneObject;
-
 
     protected GVRPlane(GVRContext gvrContext) {
         super(gvrContext);
     }
 
     /**
-     * Set the plane tracking state
-     *
-     * @param state
-     */
-    protected abstract void setTrackingState(GVRTrackingState state);
-
-    /**
-     * Set the type of plane
-     *
-     * @param type
-     */
-    protected abstract void setType(Type type);
-
-    /**
-     * Set the width of plane (x-axis)
-     *
-     * @param width
-     */
-    protected abstract void setWidth(float width);
-
-    /**
-     * Set the height of plane (z-axis)
-     *
-     * @param height
-     */
-    protected abstract void setHeight(float height);
-
-    /**
-     * Set the parent plane (only when plane is merged)
-     *
-     * @param plane
-     */
-    protected abstract void setParentPlane(GVRPlane plane);
-
-    /**
-     * Set the scene object to represent the plane
+     * Set a scene object to represent the plane
      *
      * @param obj
      */
@@ -80,81 +43,54 @@ public abstract class GVRPlane extends GVRSceneObject {
 
     /**
      *
-     * @return The plane tracking state
-     */
-    public GVRTrackingState getTrackingState() {
-        return this.mTrackingState;
-    }
-
-    /**
-     *
-     * @return The plane center pose
-     */
-    public float[] getCenterPose() {
-        return this.mCenterPose;
-    }
-
-    /**
-     *
-     * @return The plane type
-     */
-    public Type getPlaneType() {
-        return this.mType;
-    }
-
-    /**
-     *
-     * @return The plane width
-     */
-    public float getWidth() {
-        return this.mWidth;
-    }
-
-    /**
-     *
-     * @return The plane height
-     */
-    public float getHeight() {
-        return this.mHeight;
-    }
-
-    /**
-     *
-     * @return The parent plane
-     */
-    public GVRPlane getParentPlane() {
-        return this.mParentPlane;
-    }
-
-    /**
-     *
      * @return The scene object that represents the plane
      */
     public GVRSceneObject getSceneObject() {
         return this.mSceneObject;
     }
 
+    /**
+     *
+     * @return The plane tracking state
+     */
+    public abstract GVRTrackingState getTrackingState();
 
     /**
-     * Update the plane based on arcore best knowledge of the world
      *
-     * @param viewmtx
-     * @param gvrmatrix
-     * @param scale
+     * @return The plane center pose
      */
-    public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
-        if (getParent() == null) {
-            return;
-        }
+    public abstract float[] getCenterPose();
 
-        onUpdate(viewmtx, gvrmatrix, scale);
+    /**
+     *
+     * @return The plane type
+     */
+    public abstract Type getPlaneType();
 
-        if (mSceneObject != null) {
-            mSceneObject.getTransform().setScale(mWidth * 0.95f, mHeight * 0.95f, 1.0f);
-        }
-    }
+    /**
+     *
+     * @return The plane width
+     */
+    public abstract float getWidth();
 
-    protected abstract void onUpdate(float[] viewmtx, float[] gvrmatrix, float scale);
+    /**
+     *
+     * @return The plane height
+     */
+    public abstract float getHeight();
+
+    /**
+     *
+     * @return The polygon that best represents the plane
+     */
+    public abstract FloatBuffer getPolygon();
+
+    /**
+     *
+     * @return The parent plane
+     */
+    public abstract GVRPlane getParentPlane();
+
 
     public enum Type {
         HORIZONTAL_DOWNWARD_FACING,

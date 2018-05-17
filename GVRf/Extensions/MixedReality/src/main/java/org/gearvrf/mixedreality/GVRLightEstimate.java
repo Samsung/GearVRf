@@ -23,34 +23,16 @@ public abstract class GVRLightEstimate {
     protected GVRLightEstimateState mState;
 
     /**
-     * Set the pixel intensity of light
-     *
-     * @param intensity
-     */
-    protected abstract void setPixelIntensity(float intensity);
-
-    /**
-     * Set the state of light estimate
-     *
-     * @param state
-     */
-    protected abstract void setState(GVRLightEstimateState state);
-
-    /**
      *
      * @return The pixel intensity of light
      */
-    public float getPixelIntensity() {
-        return this.mPixelIntensity;
-    }
+    public abstract float getPixelIntensity();
 
     /**
      *
      * @return The state of light estimate
      */
-    public GVRLightEstimateState getLightEstimateState() {
-        return this.mState;
-    }
+    public abstract GVRLightEstimateState getLightEstimateState();
 
     public enum GVRLightEstimateState {
         NOT_VALID,

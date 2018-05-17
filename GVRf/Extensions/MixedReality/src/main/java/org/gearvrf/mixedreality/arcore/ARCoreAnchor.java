@@ -30,7 +30,7 @@ public class ARCoreAnchor extends GVRAnchor {
     private Anchor mAnchor;
     private ARCorePose mPose;
 
-    public ARCoreAnchor(GVRContext gvrContext) {
+    protected ARCoreAnchor(GVRContext gvrContext) {
         super(gvrContext);
         mPose = new ARCorePose();
     }
@@ -40,15 +40,43 @@ public class ARCoreAnchor extends GVRAnchor {
      *
      * @param anchor ARCore Anchor instance
      */
-    public void setAnchorAR(Anchor anchor) {
+    protected void setAnchorAR(Anchor anchor) {
         this.mAnchor = anchor;
     }
 
     /**
+     * Set the anchor tracking state
+     *
+     * @param state
+     */
+    protected void setTrackingState(GVRTrackingState state) { mTrackingState = state; }
+
+    /**
      * @return ARCore Anchor instance
      */
-    public Anchor getAnchorAR() {
+    protected Anchor getAnchorAR() {
         return this.mAnchor;
+    }
+
+    @Override
+    public GVRTrackingState getTrackingState() {
+        return mTrackingState;
+    }
+
+    /**
+     * Update the anchor based on arcore best knowledge of the world
+     *
+     * @param viewmtx
+     * @param gvrmatrix
+     * @param scale
+     */
+    protected void update(float[] viewmtx, float[] gvrmatrix, float scale) {
+        // Updates only when the plane is in the scene
+        if (getParent() == null) {
+            return;
+        }
+
+        convertFromARtoVRSpace(viewmtx, gvrmatrix, scale);
     }
 
     /**
@@ -58,20 +86,8 @@ public class ARCoreAnchor extends GVRAnchor {
      * @param vrCamMatrix GVRf Camera matrix.
      * @param scale Scale from AR to GVRf world.
      */
-    @Override
-    protected void onUpdate(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
-        if (mAnchor == null)
-            return;
-
-        if (mAnchor.getTrackingState() == TrackingState.TRACKING) {
-            setTrackingState(GVRTrackingState.TRACKING);
-            mPose.update(mAnchor.getPose(), arViewMatrix, vrCamMatrix, scale);
-            getTransform().setModelMatrix(mPose.getPoseMatrix());
-        } else if(mAnchor.getTrackingState() == TrackingState.PAUSED){
-            setTrackingState(GVRTrackingState.PAUSED);
-        } else {
-            setTrackingState(GVRTrackingState.STOPPED);
-        }
-
+    protected void convertFromARtoVRSpace(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
+        mPose.update(mAnchor.getPose(), arViewMatrix, vrCamMatrix, scale);
+        getTransform().setModelMatrix(mPose.getPoseMatrix());
     }
 }

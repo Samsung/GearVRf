@@ -16,68 +16,107 @@
 package org.gearvrf.mixedreality.arcore;
 
 import com.google.ar.core.Plane;
-import com.google.ar.core.TrackingState;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
+
+import java.nio.FloatBuffer;
 
 
 class ARCorePlane extends GVRPlane {
     private Plane mARPlane;
     private ARCorePose mPose;
 
-    public ARCorePlane(GVRContext gvrContext) {
+    protected ARCorePlane(GVRContext gvrContext, Plane plane) {
         super(gvrContext);
         mPose = new ARCorePose();
-        setEnable(false);
-    }
-
-    /**
-     * Sets ARCore plane
-     *
-     * @param plane ARCore Plane instance
-     */
-    public void setARPlane(Plane plane) {
         mARPlane = plane;
 
-        setEnable(plane != null && plane.getTrackingState() == TrackingState.TRACKING
-                && plane.getSubsumedBy() == null);
+        if (mARPlane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
+            mType = Type.HORIZONTAL_DOWNWARD_FACING;
+        }
+        else {
+            mType = Type.HORIZONTAL_UPWARD_FACING;
+        }
     }
 
     /**
-     * @return ARCore Plane instance
+     * Set the plane tracking state
+     *
+     * @param state
      */
-    public Plane getARPlane() {
-        return mARPlane;
-    }
-
-
-    @Override
     protected void setTrackingState(GVRTrackingState state) {
         mTrackingState = state;
     }
 
-    @Override
-    protected void setType(GVRPlane.Type type) {
-        mType = type;
-    }
-
-    @Override
-    protected void setWidth(float width) {
-        mWidth = width;
-    }
-
-    @Override
-    protected void setHeight(float height) {
-        mHeight = height;
-    }
-
-    @Override
+    /**
+     * Set the parent plane (only when plane is merged)
+     *
+     * @param plane
+     */
     protected void setParentPlane(GVRPlane plane) {
         mParentPlane = plane;
     }
 
+    @Override
+    public GVRTrackingState getTrackingState() {
+        return mTrackingState;
+    }
+
+    @Override
+    public float[] getCenterPose() {
+        float[] centerPose = new float[16];
+        mARPlane.getCenterPose().toMatrix(centerPose, 0);
+        return centerPose;
+    }
+
+    @Override
+    public Type getPlaneType() {
+        return mType;
+    }
+
+    @Override
+    public float getWidth() {
+        return mARPlane.getExtentX();
+    }
+
+    @Override
+    public float getHeight() {
+        return mARPlane.getExtentZ();
+    }
+
+    @Override
+    public FloatBuffer getPolygon() {
+        return mARPlane.getPolygon();
+    }
+
+    @Override
+    public GVRPlane getParentPlane() {
+        return mParentPlane;
+    }
+
+    /**
+     * Update the plane based on arcore best knowledge of the world
+     *
+     * @param viewmtx
+     * @param gvrmatrix
+     * @param scale
+     */
+    protected void update(float[] viewmtx, float[] gvrmatrix, float scale) {
+        // Updates only when the plane is in the scene
+        if (getParent() == null) {
+            return;
+        }
+
+        convertFromARtoVRSpace(viewmtx, gvrmatrix, scale);
+
+        if (mSceneObject != null) {
+            mSceneObject.getTransform().setScale(mARPlane.getExtentX() * 0.95f,
+                    mARPlane.getExtentZ() * 0.95f, 1.0f);
+        }
+    }
+    
     /**
      * Converts from ARCore world space to GVRf's world space.
      *
@@ -85,33 +124,8 @@ class ARCorePlane extends GVRPlane {
      * @param vrCamMatrix GVRf Camera matrix
      * @param scale Scale from AR to GVRf world
      */
-    @Override
-    protected void onUpdate(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
-        if (mARPlane == null) {
-            setEnable(false);
-        }
-
-        if (mARPlane.getTrackingState() != TrackingState.TRACKING) {
-            setEnable(false);
-        }
-        else {
-            mPose.update(mARPlane.getCenterPose(), arViewMatrix, vrCamMatrix, scale);
-
-            if (mARPlane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
-                setType(Type.HORIZONTAL_DOWNWARD_FACING);
-            }
-            else {
-                setType(Type.HORIZONTAL_UPWARD_FACING);
-            }
-
-            // Set the center Pose of plane
-            mARPlane.getCenterPose().toMatrix(mCenterPose, 0);
-            getTransform().setModelMatrix(mPose.getPoseMatrix());
-            setWidth(mARPlane.getExtentX());
-            setHeight(mARPlane.getExtentZ());
-            setEnable(true);
-        }
-
+    private void convertFromARtoVRSpace(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
+        mPose.update(mARPlane.getCenterPose(), arViewMatrix, vrCamMatrix, scale);
+        getTransform().setModelMatrix(mPose.getPoseMatrix());
     }
-
 }

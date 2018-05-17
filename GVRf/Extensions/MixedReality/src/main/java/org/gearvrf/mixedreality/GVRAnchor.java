@@ -19,18 +19,11 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
 public abstract class GVRAnchor extends GVRSceneObject {
-    private GVRTrackingState mTrackingState;
+    protected GVRTrackingState mTrackingState;
 
     protected GVRAnchor(GVRContext gvrContext) {
         super(gvrContext);
     }
-
-    /**
-     * Set the anchor tracking state
-     *
-     * @param state
-     */
-    public void setTrackingState(GVRTrackingState state) { this.mTrackingState = state; }
 
     /**
      * Attach a scene object to be displayed on this anchor position
@@ -45,22 +38,6 @@ public abstract class GVRAnchor extends GVRSceneObject {
      *
      * @return The anchor tracking state
      */
-    public GVRTrackingState getTrackingState() { return this.mTrackingState; }
+    public abstract GVRTrackingState getTrackingState();
 
-    /**
-     * Update the anchor based on arcore best knowledge of the world
-     *
-     * @param viewmtx
-     * @param gvrmatrix
-     * @param scale
-     */
-    public void update(float[] viewmtx, float[] gvrmatrix, float scale) {
-        if (getParent() == null) {
-            return;
-        }
-
-        onUpdate(viewmtx, gvrmatrix, scale);
-    }
-
-    protected abstract void onUpdate(float[] viewmtx, float[] gvrmatrix, float scale);
 }

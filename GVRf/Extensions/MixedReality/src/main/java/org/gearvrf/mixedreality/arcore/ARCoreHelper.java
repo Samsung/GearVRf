@@ -135,8 +135,7 @@ public class ARCoreHelper {
     }
 
     public ARCorePlane createPlane(Plane plane) {
-        ARCorePlane arCorePlane = new ARCorePlane(mGvrContext);
-        arCorePlane.setARPlane(plane);
+        ARCorePlane arCorePlane = new ARCorePlane(mGvrContext, plane);
         mArPlanes.put(plane, arCorePlane);
         return arCorePlane;
     }
