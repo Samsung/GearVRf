@@ -41,9 +41,10 @@ import java.util.ArrayList;
 public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private final IActivityEvents mActivityEventsHandler;
     private final MRCommon mSession;
+    private SessionState mState;
 
     /**
-     * Default GVRMidexReality constructor. Create a instace of GVRMixedReality component.
+     * Default GVRMixedReality constructor. Create a instace of GVRMixedReality component.
      *
      * @param gvrContext
      */
@@ -67,29 +68,34 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
 
         mActivityEventsHandler = new ActivityEventsHandler();
         mSession = new ARCoreSession(gvrContext);
+        mState = SessionState.ON_PAUSE;
 
         scene.getMainCameraRig().getOwnerObject().attachComponent(this);
     }
 
     @Override
-    public void onAttach(GVRSceneObject newOwner) {
-        super.onAttach(newOwner);
-
-        this.resume();
-    }
-
-    @Override
     public void resume() {
+        if (mState == SessionState.ON_RESUME) {
+            return;
+        }
         mSession.resume();
+        mState = SessionState.ON_RESUME;
     }
 
     @Override
     public void pause() {
+        if (mState == SessionState.ON_PAUSE) {
+            return;
+        }
         mSession.pause();
+        mState = SessionState.ON_PAUSE;
     }
 
     @Override
     public GVRSceneObject getPassThroughObject() {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         return mSession.getPassThroughObject();
     }
 
@@ -104,36 +110,59 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
-    public ArrayList<GVRPlane> getAllPlanes() { return mSession.getAllPlanes(); }
+    public ArrayList<GVRPlane> getAllPlanes() {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
+        return mSession.getAllPlanes();
+    }
 
 
     @Override
     public GVRAnchor createAnchor(float[] pose) {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         return mSession.createAnchor(pose);
     }
 
     @Override
     public GVRAnchor createAnchor(float[] pose, GVRSceneObject sceneObject) {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         return mSession.createAnchor(pose, sceneObject);
     }
 
     @Override
     public void updateAnchorPose(GVRAnchor anchor, float[] pose) {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         mSession.updateAnchorPose(anchor, pose);
     }
 
     @Override
     public void removeAnchor(GVRAnchor anchor) {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         mSession.removeAnchor(anchor);
     }
 
     @Override
     public GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         return mSession.hitTest(sceneObj, collision);
     }
 
     @Override
     public GVRLightEstimate getLightEstimate() {
+        if (mState == SessionState.ON_PAUSE) {
+            throw new UnsupportedOperationException("Session is not resumed");
+        }
         return mSession.getLightEstimate();
     }
 
@@ -175,4 +204,10 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         @Override
         public void dispatchKeyEvent(KeyEvent keyEvent) {}
     }
+
+
+    private enum SessionState {
+        ON_RESUME,
+        ON_PAUSE
+    };
 }

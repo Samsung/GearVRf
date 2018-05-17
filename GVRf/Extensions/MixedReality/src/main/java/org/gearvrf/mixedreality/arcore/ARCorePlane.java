@@ -105,7 +105,7 @@ class ARCorePlane extends GVRPlane {
      */
     protected void update(float[] viewmtx, float[] gvrmatrix, float scale) {
         // Updates only when the plane is in the scene
-        if (getParent() == null) {
+        if (getParent() == null || !isEnabled()) {
             return;
         }
 
