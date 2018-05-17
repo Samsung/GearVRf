@@ -60,21 +60,19 @@ namespace gvr
  * The hit point computed is in local coordinates (same coordinate
  * space as the mesh vertices).
  *
- * @param view_matrix   camera view matrix (inverse of camera model matrix)
+ * @param owner       SceneObject which owns this collider.
+ *                    If the collider is part of a group,
+ *                    this will be the SceneObject which
+ *                    owns the collider group
  * @param rayStart      origin of the ray in world coordinates
  * @param rayDir        direction of the ray in world coordinates
  *
  * @returns ColliderData structure with collision information
  */
-    ColliderData MeshCollider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
+    ColliderData MeshCollider::isHit(SceneObject* owner, const glm::vec3& rayStart, const glm::vec3& rayDir)
     {
         Mesh* mesh = mesh_;
         bool pickCoordinates = pickCoordinates_;
-        SceneObject* owner = owner_object();
-        if (nullptr == owner) {
-            return ColliderData();
-        }
-
         RenderData* rd = owner->render_data();
         glm::mat4 model_matrix = owner->transform()->getModelMatrix();
         glm::mat4 model_inverse = glm::affineInverse(model_matrix);
@@ -125,19 +123,17 @@ namespace gvr
  * The hit point computed is in local coordinates (same coordinate
  * space as the mesh vertices).
  *
- * @param view_matrix   camera view matrix (inverse of camera model matrix)
- * @param sphere        array with origin of the sphere and radius in world coordinates
+ * @param owner       SceneObject which owns this collider.
+ *                    If the collider is part of a group,
+ *                    this will be the SceneObject which
+ *                    owns the collider group
+ * @param sphere      array with origin of the sphere and radius in world coordinates
  *
  * @returns ColliderData structure with hit point and distance from camera
  */
-    ColliderData MeshCollider::isHit(const float sphere[])
+    ColliderData MeshCollider::isHit(SceneObject* owner, const float sphere[])
     {
         Mesh* mesh = mesh_;
-        SceneObject* owner = owner_object();
-        if (nullptr == owner) {
-            return ColliderData();
-        }
-
         RenderData* rd = owner->render_data();
         glm::mat4 model_matrix = owner->transform()->getModelMatrix();
         glm::mat4 model_inverse = glm::affineInverse(model_matrix);

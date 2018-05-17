@@ -43,52 +43,48 @@ void ColliderGroup::removeCollider(Collider* collider) {
 }
 
 
-ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
+ColliderData ColliderGroup::isHit(SceneObject* ownerObject, const glm::vec3& rayStart, const glm::vec3& rayDir)
 {
     ColliderData finalHit(reinterpret_cast<Collider *>(this));
-    SceneObject *ownerObject = owner_object();
 
     hit_ = glm::vec3(std::numeric_limits<float>::infinity());
-    if (nullptr != ownerObject)
+    Transform *transform = ownerObject->transform();
+    finalHit.ObjectHit = ownerObject;
+    if (nullptr != transform)
     {
-        Transform *transform = ownerObject->transform();
-        finalHit.ObjectHit = ownerObject;
-        if (nullptr != transform)
-        {
-            glm::mat4 model_inverse = glm::affineInverse(transform->getModelMatrix());
-            glm::vec3 O(rayStart);
-            glm::vec3 D(rayDir);
+        glm::mat4 model_inverse = glm::affineInverse(transform->getModelMatrix());
+        glm::vec3 O(rayStart);
+        glm::vec3 D(rayDir);
 
-            transformRay(model_inverse, O, D);
-            for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+        transformRay(model_inverse, O, D);
+        for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+        {
+            ColliderData currentHit = (*it)->isHit(ownerObject, O, D);
+            if (currentHit.IsHit && (currentHit.Distance < finalHit.Distance))
             {
-                ColliderData currentHit = (*it)->isHit(O, D);
-                if (currentHit.IsHit && (currentHit.Distance < finalHit.Distance))
-                {
-                    hit_ = currentHit.HitPosition;
-                    finalHit.CopyHit(currentHit);
-                }
+                hit_ = currentHit.HitPosition;
+                finalHit.CopyHit(currentHit);
             }
         }
     }
     return finalHit;
 }
 
-    ColliderData ColliderGroup::isHit(const float sphere[])
-    {
-        ColliderData finalHit(reinterpret_cast<Collider*>(this));
+ColliderData ColliderGroup::isHit(SceneObject* owner, const float sphere[])
+{
+    ColliderData finalHit(reinterpret_cast<Collider*>(this));
 
-        hit_ = glm::vec3(std::numeric_limits<float>::infinity());
-        for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+    hit_ = glm::vec3(std::numeric_limits<float>::infinity());
+    for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+    {
+        ColliderData currentHit = (*it)->isHit(owner, sphere);
+        if (currentHit.IsHit)
         {
-            ColliderData currentHit = (*it)->isHit(sphere);
-            if (currentHit.IsHit)
-            {
-                hit_ = currentHit.HitPosition;
-                currentHit.ColliderHit = *it;
-                finalHit.CopyHit(currentHit);
-            }
+            hit_ = currentHit.HitPosition;
+            currentHit.ColliderHit = *it;
+            finalHit.CopyHit(currentHit);
         }
-        return finalHit;
     }
+    return finalHit;
+}
 }
