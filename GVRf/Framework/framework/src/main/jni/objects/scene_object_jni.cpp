@@ -108,9 +108,16 @@ JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeSceneObject_setName(JNIEnv * env,
         jobject obj, jlong jscene_object, jstring name) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    const char* native_name = env->GetStringUTFChars(name, 0);
-    scene_object->set_name(std::string(native_name));
-    env->ReleaseStringUTFChars(name, native_name);
+    if (name != nullptr)
+    {
+        const char* native_name = env->GetStringUTFChars(name, 0);
+        scene_object->set_name(std::string(native_name));
+        env->ReleaseStringUTFChars(name, native_name);
+    }
+    else
+    {
+        scene_object->set_name(std::string());
+    }
 }
 
 

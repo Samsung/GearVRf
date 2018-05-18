@@ -343,7 +343,8 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
      * @see GVRSceneObject#detachComponent(long)
      * @see GVRSceneObject#getComponent(long)
      */
-    public boolean attachComponent(GVRComponent component) {
+    public boolean attachComponent(GVRComponent component) throws UnsupportedOperationException
+    {
         if (component.getNative() != 0) {
             NativeSceneObject.attachComponent(getNative(), component.getNative());
         }
@@ -355,7 +356,7 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
                 return true;
             }
         }
-        return false;
+        throw new UnsupportedOperationException("ERROR: the scene object already has a component of this type, only one is allowed");
     }
 
     /**
