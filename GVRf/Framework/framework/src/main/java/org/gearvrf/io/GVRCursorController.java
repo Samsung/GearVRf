@@ -1092,13 +1092,13 @@ public abstract class GVRCursorController implements IEventReceiver
                     mPicker.setPickRay(0, 0, 0, pickDir.x, pickDir.y, pickDir.z);
                 }
                 mPicker.processPick(mActive, mEvent);
-                picked = mPicker.getPicked();
             }
             if (mEvent != null)
             {
                 mEvent.recycle();
                 mEvent = null;
             }
+            picked = mPicker.getPicked();
             if ((picked != null) && (picked.length > 0))
             {
                 GVRPicker.GVRPickedObject hit = picked[0];
