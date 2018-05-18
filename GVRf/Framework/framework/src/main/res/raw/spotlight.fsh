@@ -27,6 +27,6 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
                      data.diffuse_intensity.xyz,
                      data.specular_intensity.xyz,
                      lightdir,
-                     spot);  
+                     spot * attenuation);
                    
 }
