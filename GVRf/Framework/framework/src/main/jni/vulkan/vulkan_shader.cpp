@@ -16,7 +16,7 @@
 /***************************************************************************
  * A shader which an user can add in run-time.
  ***************************************************************************/
-#define TEXTURE_BIND_START 4
+#define TEXTURE_BIND_START 5
 #include "vulkan/vulkan_shader.h"
 #include "vulkan/vulkan_material.h"
 #include "engine/renderer/vulkan_renderer.h"
@@ -70,20 +70,25 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         dummy_binding.binding = BONES_UBO_INDEX;
         samplerBinding.push_back(dummy_binding);
     }
-    // Right now, we dont' have support for shadow map, so add dummy binding for it
 
     if(lights.getUBO() != nullptr){
         VkDescriptorSetLayoutBinding &lights_uniformBinding = static_cast<VulkanUniformBlock*>(lights.getUBO())->getVulkanDescriptor()->getLayoutBinding();
         samplerBinding.push_back(lights_uniformBinding);
     }
     else {
-        dummy_binding.binding = 3;
+        dummy_binding.binding = LIGHT_UBO_INDEX;
         samplerBinding.push_back(dummy_binding);
     }
 
-    /*
-     * TODO :: if has shadowmap, create binding for it
-     */
+    // Dummy shadowmap binding
+    VkDescriptorSetLayoutBinding layoutBinding;
+    layoutBinding.binding = SHADOW_UBO_INDEX;
+    layoutBinding.descriptorCount = 1;
+    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    layoutBinding.pImmutableSamplers = nullptr;
+    (samplerBinding).push_back(layoutBinding);
+
     index = TEXTURE_BIND_START;
     vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
     {
@@ -127,7 +132,7 @@ bool VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDes
         write.descriptorCount = 1;
         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         if(!t->getImage())
-            write.pImageInfo = &(static_cast<VkRenderTexture*>(t)->getDescriptorImage());
+            write.pImageInfo = &(static_cast<VkRenderTexture*>(t)->getDescriptorImage(COLOR_IMAGE));
         else
             write.pImageInfo = &(tex->getDescriptorImage());
         writes.push_back(write);

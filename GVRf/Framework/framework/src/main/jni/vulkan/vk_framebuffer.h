@@ -26,6 +26,7 @@ class VKFramebuffer final : public VKDeviceComponent{
     int mWidth;
     int mHeight;
     VkFramebuffer mFramebuffer;
+    std::vector<VkFramebuffer> mCascadeFramebuffer;
 public:
 
     ~VKFramebuffer();
@@ -82,10 +83,16 @@ public:
         return mAttachments[type]->getSize();
     }
 
-    void createFrameBuffer(VkDevice &, int, int sample_count = 1);
+    void createFrameBuffer(VkDevice &, int, int layers = 1, int sample_count = 1);
     void createFramebuffer(VkDevice& device);
-    const VkFramebuffer &getFramebuffer() {
-        return mFramebuffer;
+    const VkFramebuffer &getFramebuffer(int layer) {
+        if(layer == -1) {
+            return mFramebuffer;
+        }
+        else{
+            return mCascadeFramebuffer[layer];
+        }
+
     }
 
 };

@@ -9,8 +9,10 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.gearvrf.GVRBone;
+import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -35,6 +37,7 @@ public class GVRSkinningController extends GVRAnimationController {
         Matrix4f localTransform;
         Matrix4f globalTransform;
         int channelId;
+        boolean noname;
 
         SceneAnimNode(GVRSceneObject sceneObject, SceneAnimNode parent) {
             this.sceneObject = sceneObject;
@@ -43,6 +46,7 @@ public class GVRSkinningController extends GVRAnimationController {
             localTransform = new Matrix4f();
             globalTransform = new Matrix4f();
             channelId = -1;
+            noname = sceneObject.getName().equals("");
         }
     }
 
@@ -61,29 +65,41 @@ public class GVRSkinningController extends GVRAnimationController {
 
         animRoot = createAnimationTree(sceneRoot, null);
         pruneTree(animRoot);
+        MeshVisitor visitor = new MeshVisitor();
+        sceneRoot.forAllComponents(visitor, GVRRenderData.getComponentType());
     }
 
-    protected SceneAnimNode createAnimationTree(GVRSceneObject node, SceneAnimNode parent) {
+    protected SceneAnimNode createAnimationTree(GVRSceneObject node, SceneAnimNode parent)
+    {
+        GVRSceneObject root = node;
+        if (node.getName().equals("") && (node.getChildrenCount() == 1))
+        {
+            GVRSceneObject child = node.getChildByIndex(0);
+            if (child != null)
+            {
+                node.setName(child.getName());
+                child.setName(child.getName() + "-2");
+                root = child;
+            }
+        }
         SceneAnimNode internalNode = new SceneAnimNode(node, parent);
-        nodeByName.put(node.getName(), internalNode);
 
+        // Find channel Id
+        if (animation != null)
+        {
+            internalNode.channelId = animation.findChannel(node.getName());
+        }
         // Bind-pose local transform
         internalNode.localTransform.set(node.getTransform().getLocalModelMatrix4f());
         internalNode.globalTransform.set(internalNode.localTransform);
-
         // Global transform
-        if (parent != null) {
+        if (parent != null)
+        {
             parent.globalTransform.mul(internalNode.globalTransform, internalNode.globalTransform);
         }
-
-        // Find channel Id
-        if (animation != null) {
-            internalNode.channelId = animation.findChannel(node.getName());
-        }
-
-        setupBone(node, internalNode);
-
-        for (GVRSceneObject child : node.getChildren()) {
+        nodeByName.put(node.getName(), internalNode);
+        for (GVRSceneObject child : root.getChildren())
+        {
             SceneAnimNode animChild = createAnimationTree(child, internalNode);
             internalNode.children.add(animChild);
         }
@@ -91,11 +107,27 @@ public class GVRSkinningController extends GVRAnimationController {
         return internalNode;
     }
 
-    protected void setupBone(GVRSceneObject node, SceneAnimNode internalNode) {
+    private class MeshVisitor implements GVRSceneObject.ComponentVisitor
+    {
+        public boolean visit(GVRComponent c)
+        {
+            GVRRenderData rd = (GVRRenderData) c;
+            GVRMesh mesh = rd.getMesh();
+
+            if (mesh != null)
+            {
+                setupBone(rd.getOwnerObject());
+            }
+            return true;
+        }
+    }
+
+    protected void setupBone(GVRSceneObject node) {
         GVRMesh mesh;
         if (node.getRenderData() != null && (mesh = node.getRenderData().getMesh()) != null) {
             Log.v(TAG, "setupBone checking mesh with %d vertices", mesh.getVertexBuffer().getVertexCount());
-            for (GVRBone bone : mesh.getBones()) {
+            for (GVRBone bone : mesh.getBones())
+            {
                 bone.setSceneObject(node);
 
                 GVRSceneObject skeletalNode = sceneRoot.getSceneObjectByName(bone.getName());
@@ -123,12 +155,17 @@ public class GVRSkinningController extends GVRAnimationController {
         Matrix4f[] animationTransform = animation.getTransforms(animationTick);
 
         updateTransforms(animRoot, new Matrix4f(), animationTransform);
-
-        for (Entry<GVRSceneObject, List<GVRBone>> ent : boneMap.entrySet()) {
+        for (Entry<GVRSceneObject, List<GVRBone>> ent : boneMap.entrySet())
+        {
             // Transform all bone splits (a bone can be split into multiple instances if they influence
             // different meshes)
             SceneAnimNode node = nodeByName.get(ent.getKey().getName());
-            for (GVRBone bone : ent.getValue()) {
+            if (node == null)
+            {
+                return;
+            }
+            for (GVRBone bone : ent.getValue())
+            {
                 updateBoneMatrices(bone, node);
             }
         }

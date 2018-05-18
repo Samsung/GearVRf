@@ -211,7 +211,7 @@ class ImageViewCreateInfo final
     public:
         ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, VkFormat aFormat, VkImageAspectFlags aAspectFlags);
         ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, VkFormat aFormat, uint32_t aArraySize, VkImageAspectFlags aAspectFlags);
-        ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, VkFormat aFormat, uint32_t aMipLevels, uint32_t aArraySize, VkImageAspectFlags aAspectFlags);
+        ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, VkFormat aFormat, uint32_t aMipLevels, uint32_t aBaseArrayLayer, uint32_t aArraySize, VkImageAspectFlags aAspectFlags);
 
         operator const VkImageViewCreateInfo*() const
         {

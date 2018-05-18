@@ -81,9 +81,9 @@ namespace gvr
         shadowMap->setLayerIndex(layerIndex);
         shadowMap->setMainScene(scene);
         shadowMap->cullFromCamera(scene, javaSceneObject, shadowMap->getCamera(),renderer, shader_manager);
-        shadowMap->beginRendering(renderer);
+
         renderer->renderRenderTarget(scene, javaSceneObject, shadowMap,shader_manager, nullptr, nullptr);
-        shadowMap->endRendering(renderer);
+
         return true;
     }
 

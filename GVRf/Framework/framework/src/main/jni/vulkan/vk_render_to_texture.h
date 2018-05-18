@@ -25,13 +25,14 @@ namespace gvr{
 class VkRenderTexture : public RenderTexture
 {
 protected:
-    VKFramebuffer* fbo;
+    VKFramebuffer* fbo = nullptr;
     void createRenderPass();
-    int mWidth, mHeight, mSamples;
+    int mWidth, mHeight, mSamples, mFboType, mLayers;
     std::vector <VkClearValue> clear_values;
     VkFence mWaitFence = 0;
     VkDescriptorImageInfo mImageInfo;
     VkCommandBuffer mCmdBuffer;
+    int layer_index_ = -1;
 public:
     VkCommandBuffer& getCommandBuffer(){
         return mCmdBuffer;
@@ -40,7 +41,7 @@ public:
         return mWaitFence;
     }
     void initVkData();
-    virtual const VkDescriptorImageInfo& getDescriptorImage();
+    virtual const VkDescriptorImageInfo& getDescriptorImage(ImageType imageTyp);
     // isReady() for renderTexture is blocking call, we will wait till command buffer rendering is complete
     VkRenderPassBeginInfo getRenderPassBeginInfo();
     VKFramebuffer* getFBO(){
@@ -55,7 +56,7 @@ public:
     virtual ~VkRenderTexture(){
         delete fbo;
     }
-    explicit VkRenderTexture(int width, int height, int sample_count = 1);
+    explicit VkRenderTexture(int width, int height, int fboType, int layers = 1, int sample_count = 1);
     virtual unsigned int getFrameBufferId() const {
         return 0;
     }
@@ -63,7 +64,6 @@ public:
     virtual unsigned int getDepthBufferId() const {
         return 0;
     }
-
     virtual void bind();
     virtual void beginRendering(Renderer* renderer);
     virtual void endRendering(Renderer*){
@@ -82,7 +82,7 @@ public:
     void unmapDeviceMemory();
     bool isReady();
 
-    virtual void setLayerIndex(int layer_index) {}
+    virtual void setLayerIndex(int layer_index);
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
     virtual bool readRenderResult(uint8_t *readback_buffer, long capacity) {

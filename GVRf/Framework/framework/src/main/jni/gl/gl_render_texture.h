@@ -34,11 +34,11 @@ class Renderer;
 class GLRenderTexture : public RenderTexture
 {
 public:
-    explicit GLRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId);
-    explicit GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format);
+    explicit GLRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId, int const viewport[]);
+    explicit GLRenderTexture(int width, int height, int sample_count, int layers, int depth_format, int const viewport[]);
     explicit GLRenderTexture(int width, int height, int sample_count,
             int jcolor_format, int jdepth_format, bool resolve_depth,
-            const TextureParameters* texture_parameters);
+            const TextureParameters* texture_parameters, int const viewport[]);
 
     virtual ~GLRenderTexture();
 
@@ -77,6 +77,7 @@ private:
 
 protected:
     int layer_index_;
+    int viewport_[4];
     void initialize();
     void generateRenderTextureNoMultiSampling(int jdepth_format,GLenum depth_format, int width, int height);
     void generateRenderTextureEXT(int sample_count,int jdepth_format,GLenum depth_format, int width, int height);
@@ -106,13 +107,13 @@ public:
         return  renderTexture_gl_read_buffer->id();
     }
     void startReadBack(int layer);
-    explicit GLMultiviewRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId):
-            GLRenderTexture(width, height, sample_count, layers,fboId,texId){}
-    explicit GLMultiviewRenderTexture(int width, int height, int sample_count, int layers, int depth_format): GLRenderTexture(width, height, sample_count, layers, depth_format),
+    explicit GLMultiviewRenderTexture(int width, int height, int sample_count, int layers, GLuint fboId, GLuint texId, int const viewport[]):
+            GLRenderTexture(width, height, sample_count, layers,fboId,texId, viewport){}
+    explicit GLMultiviewRenderTexture(int width, int height, int sample_count, int layers, int depth_format, int const viewport[]): GLRenderTexture(width, height, sample_count, layers, depth_format, viewport),
                                                                                                               mLayers_(layers){}
     explicit GLMultiviewRenderTexture(int width, int height, int sample_count,
                                          int jcolor_format, int jdepth_format, bool resolve_depth,
-                                         const TextureParameters* texture_parameters, int layers);
+                                         const TextureParameters* texture_parameters, int layers, int const viewport[]);
 
     virtual ~GLMultiviewRenderTexture(){}
     virtual bool isReady() {
@@ -139,12 +140,12 @@ class GLNonMultiviewRenderTexture: public GLRenderTexture
 {
 public:
 
-    explicit GLNonMultiviewRenderTexture(int width, int height, int sample_count, GLuint fboId, GLuint texId):
-            GLRenderTexture(width, height, sample_count, 1,fboId,texId){}
-    explicit GLNonMultiviewRenderTexture(int width, int height, int sample_count, int layers, int depth_format): GLRenderTexture(width, height, sample_count, layers , depth_format) {}
+    explicit GLNonMultiviewRenderTexture(int width, int height, int sample_count, GLuint fboId, GLuint texId, int const viewport[]):
+            GLRenderTexture(width, height, sample_count, 1,fboId,texId, viewport){}
+    explicit GLNonMultiviewRenderTexture(int width, int height, int sample_count, int layers, int depth_format, int const viewport[]): GLRenderTexture(width, height, sample_count, layers , depth_format, viewport) {}
     explicit GLNonMultiviewRenderTexture(int width, int height, int sample_count,
                              int jcolor_format, int jdepth_format, bool resolve_depth,
-                             const TextureParameters* texture_parameters);
+                             const TextureParameters* texture_parameters, int viewport[]);
     void generateRenderTextureLayer(int width, int height);
     virtual ~GLNonMultiviewRenderTexture(){
 

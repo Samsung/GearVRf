@@ -6,7 +6,6 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
     vec4 L = u_view * data.world_direction;
 #endif
 	float attenuation = 1.0;
-
 vec3 lightdir = normalize(L.xyz);
 
  #ifdef HAS_SHADOWS

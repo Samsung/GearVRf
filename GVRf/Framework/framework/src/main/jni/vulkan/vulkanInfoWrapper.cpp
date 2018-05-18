@@ -172,12 +172,12 @@ ImageViewCreateInfo::ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, 
 
 ImageViewCreateInfo::ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, VkFormat aFormat,
     uint32_t aArraySize, VkImageAspectFlags aAspectFlags)
-    : ImageViewCreateInfo(aImage, aType, aFormat, 1, aArraySize, aAspectFlags)
+    : ImageViewCreateInfo(aImage, aType, aFormat, 1, 0, aArraySize, aAspectFlags)
 {
 }
 
 ImageViewCreateInfo::ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, VkFormat aFormat, uint32_t aMipLevels,
-    uint32_t aArraySize, VkImageAspectFlags aAspectFlags)
+                                         uint32_t aBaseArrayLayer, uint32_t aArraySize, VkImageAspectFlags aAspectFlags)
     : mInfo{}
 {
     mInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -188,7 +188,7 @@ ImageViewCreateInfo::ImageViewCreateInfo(VkImage aImage, VkImageViewType aType, 
     mInfo.format = aFormat;
     mInfo.image = aImage;
     mInfo.subresourceRange.aspectMask = aAspectFlags;
-    mInfo.subresourceRange.baseArrayLayer = 0;
+    mInfo.subresourceRange.baseArrayLayer = aBaseArrayLayer;
     mInfo.subresourceRange.layerCount = aArraySize;
     mInfo.subresourceRange.baseMipLevel = 0;
     mInfo.subresourceRange.levelCount = aMipLevels;

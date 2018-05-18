@@ -19,25 +19,30 @@
 #include "../engine/renderer/vulkan_renderer.h"
 #include "vk_texture.h"
 namespace gvr{
-VkRenderTexture::VkRenderTexture(int width, int height, int sample_count):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height), mSamples(sample_count){
+VkRenderTexture::VkRenderTexture(int width, int height, int fboType, int layers, int sample_count):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height), mFboType(fboType), mLayers(layers), mSamples(sample_count){
     initVkData();
 }
 
-const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
+const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(ImageType imageType){
     mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    mImageInfo.imageView = fbo->getImageView(COLOR_IMAGE);
+    mImageInfo.imageView = fbo->getImageView(imageType);
     TextureParameters textureParameters = TextureParameters();
     uint64_t index = textureParameters.getHashCode();
     index = (index << 32) | 1;
-    if(getSampler(index) == 0)
-        VkTexture::createSampler(textureParameters,1);
+    if (getSampler(index) == 0)
+        VkTexture::createSampler(textureParameters, 1);
     mImageInfo.sampler = getSampler(index);
     return  mImageInfo;
 }
 
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
-    VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+    VkRenderPass renderPass;
+    if(mFboType == (DEPTH_IMAGE | COLOR_IMAGE))
+        renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+    else
+        renderPass = vk_renderer->getCore()->createVkRenderPass(SHADOW_RENDERPASS, mSampleCount);
+
     clear_values.resize(3);
     fbo->addRenderPass(renderPass);
 }
@@ -72,7 +77,7 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rp_begin.pNext = nullptr;
     rp_begin.renderPass = fbo->getRenderPass();
-    rp_begin.framebuffer = fbo->getFramebuffer();
+    rp_begin.framebuffer = fbo->getFramebuffer(layer_index_);
     rp_begin.renderArea.offset.x = 0;
     rp_begin.renderArea.offset.y = 0;
     rp_begin.renderArea.extent.width = fbo->getWidth();
@@ -89,12 +94,13 @@ void VkRenderTexture::bind() {
         createRenderPass();
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
-        fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSamples);
+        fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mLayers, mSamples);
     }
 }
 
 void VkRenderTexture::beginRendering(Renderer* renderer){
     bind();
+
     VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
     VkViewport viewport = {};
     viewport.height = (float) height();
@@ -112,6 +118,15 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdSetViewport(mCmdBuffer,0,1,&viewport);
     vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
+
+/*
+ * Bind the framebuffer to the specified layer of the texture array.
+ * Create the framebuffer and layered texture if necessary.
+ */
+    void VkRenderTexture::setLayerIndex(int layerIndex)
+    {
+        layer_index_ = layerIndex;
+    }
 
 
 bool VkRenderTexture::isReady(){
@@ -227,6 +242,5 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
         VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         vkUnmapMemory(device, mem);
     }
-
 
 }

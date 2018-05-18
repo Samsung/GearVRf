@@ -25,13 +25,13 @@ layout(location = 10) in vec2 normal_coord;
 layout(location = 8) in vec2 lightmap_coord;
 #endif
 
-layout(set = 0, binding = 5) uniform sampler2D ambientTexture;
-layout(set = 0, binding = 4) uniform sampler2D diffuseTexture;
-layout(set = 0, binding = 6) uniform sampler2D specularTexture;
-layout(set = 0, binding = 7) uniform sampler2D opacityTexture;
-layout(set = 0, binding = 8) uniform sampler2D lightmapTexture;
-layout(set = 0, binding = 10) uniform sampler2D emissiveTexture;
-layout(set = 0, binding = 9) uniform sampler2D normalTexture;
+layout(set = 0, binding = 6) uniform sampler2D ambientTexture;
+layout(set = 0, binding = 5) uniform sampler2D diffuseTexture;
+layout(set = 0, binding = 7) uniform sampler2D specularTexture;
+layout(set = 0, binding = 8) uniform sampler2D opacityTexture;
+layout(set = 0, binding = 9) uniform sampler2D lightmapTexture;
+layout(set = 0, binding = 11) uniform sampler2D emissiveTexture;
+layout(set = 0, binding = 10) uniform sampler2D normalTexture;
 
 struct Surface
 {

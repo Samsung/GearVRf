@@ -24,14 +24,25 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
     if(shader == NULL)
         LOGE("Shader is NULL");
 
+    VulkanRenderPass * rp;
+    if(static_cast<VulkanShader*>(shader)->isDepthShader())
+        rp = getShadowRenderPass();
+    else
+        rp = getRenderPass(curr_pass);
+
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      getVKPipeline(curr_pass) );
+                      rp->m_pipeline );
 
     VulkanShader *Vkshader = reinterpret_cast<VulkanShader *>(shader);
 
     VkDescriptorSet descriptorSet = getDescriptorSet(curr_pass);
     //bind out descriptor set, which handles our uniforms and samplers
-    if (!isDescriptorSetNull(curr_pass)) {
+    if(static_cast<VulkanShader*>(shader)->isDepthShader()){
+        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                Vkshader->getPipelineLayout(), 0, 1,
+                                &rp->m_descriptorSet, 0, NULL);
+    }
+    else if (!isDescriptorSetNull(curr_pass)) {
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 Vkshader->getPipelineLayout(), 0, 1,
                                 &descriptorSet, 0, NULL);
@@ -42,10 +53,13 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
     VulkanVertexBuffer *vbuf = reinterpret_cast< VulkanVertexBuffer *>(mesh_->getVertexBuffer());
     const VulkanIndexBuffer *ibuf = reinterpret_cast<const VulkanIndexBuffer *>(mesh_->getIndexBuffer());
     const GVR_VK_Vertices *vert = (vbuf->getVKVertices(shader));
+    if(vert == NULL)
+        return;
 
     vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &(vert->buf), offsets);
 
     if(ibuf && ibuf->getIndexCount()) {
+
         const GVR_VK_Indices &ind = ibuf->getVKIndices();
         VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
                                                             : VK_INDEX_TYPE_UINT32;

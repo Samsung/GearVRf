@@ -63,9 +63,9 @@ namespace gvr
     RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo){
 
         if(renderTextureInfo.useMultiview)
-            return  new GLMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,2, renderTextureInfo.fboId, renderTextureInfo.texId);
+            return  new GLMultiviewRenderTexture(renderTextureInfo.fboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,2, renderTextureInfo.fboId, renderTextureInfo.texId, renderTextureInfo.viewport);
 
-        return new GLNonMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,renderTextureInfo.fboId, renderTextureInfo.texId);
+        return new GLNonMultiviewRenderTexture(renderTextureInfo.fboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,renderTextureInfo.fboId, renderTextureInfo.texId, renderTextureInfo.viewport);
     }
     void GLRenderer::clearBuffers(const Camera &camera) const
     {
@@ -134,16 +134,20 @@ namespace gvr
                                                    bool resolve_depth,
                                                    const TextureParameters *texparams, int number_views)
     {
+        // Default viewport
+        int viewport[4] = {0, 0, width, height};
         if(number_views == 1)
             return new GLNonMultiviewRenderTexture(width, height, sample_count, jcolor_format, jdepth_format,
-                                                 resolve_depth, texparams);
+                                                 resolve_depth, texparams, viewport);
 
-         return new GLMultiviewRenderTexture(width,height,sample_count,jcolor_format,jdepth_format, resolve_depth,texparams, number_views);
+         return new GLMultiviewRenderTexture(width,height,sample_count,jcolor_format,jdepth_format, resolve_depth,texparams, number_views, viewport);
     }
 
     RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format)
     {
-        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, jdepth_format);
+        // Default viewport
+        int viewport[4] = {0, 0, width, height};
+        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, jdepth_format, viewport);
         return tex;
     }
 
@@ -205,6 +209,7 @@ namespace gvr
     {
 
         resetStats();
+        renderTarget->beginRendering(this);
 
         glDepthMask(GL_TRUE);
         GL(glEnable(GL_DEPTH_TEST));
@@ -314,6 +319,7 @@ namespace gvr
             renderPostEffectData(rstate, input_texture, post_effects, npost);
         }
         GL(glDisable(GL_BLEND));
+        renderTarget->endRendering(this);
     }
 
 /**
@@ -659,7 +665,12 @@ namespace gvr
 #ifdef DEBUG_LIGHT
                         LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
 #endif
-                        rstate.shadow_map->bindTexture(loc, texIndex);
+                        GLRenderTexture* rtex = static_cast<GLRenderTexture*>(rstate.shadow_map->getTexture());
+
+                        if (rtex)
+                        {
+                            rtex->bindTexture(loc, texIndex);
+                        }
                     }
                 }
             }

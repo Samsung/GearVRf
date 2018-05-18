@@ -362,12 +362,6 @@ public:
     // TODO: need to consider texture_capturer in hash_code ?
     TextureCapturer *get_texture_capturer() { return texture_capturer; }
 
-    void set_shader(int pass, int shaderid, bool isMultiview)
-    {
-        LOGD("SHADER: RenderData:setNativeShader %d %p", shaderid, this);
-        render_pass_list_[pass]->set_shader(shaderid, isMultiview);
-    }
-
     int isValid(Renderer* renderer, const RenderState& scene);
 
     int             get_shader(bool useMultiview =false, int pass =0) const { return render_pass_list_[pass]->get_shader(useMultiview); }

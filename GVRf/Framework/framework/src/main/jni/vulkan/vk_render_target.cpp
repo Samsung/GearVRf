@@ -24,20 +24,15 @@ VkCommandBuffer& VkRenderTarget::getCommandBuffer(){
     return static_cast<VkRenderTexture*>(mRenderTexture)->getCommandBuffer();
 }
  void VkRenderTarget::beginRendering(Renderer* renderer){
-     mRenderTexture->bind();
      RenderTarget::beginRendering(renderer);
-     mRenderTexture->beginRendering(renderer);
  }
 
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview): RenderTarget(renderTexture, is_multiview){
-    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 
 VkRenderTarget::VkRenderTarget(Scene* scene): RenderTarget(scene){
-    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source): RenderTarget(renderTexture, source){
-    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 
 

@@ -18,7 +18,7 @@
 namespace gvr {
 class Renderer;
     ShadowMap::ShadowMap(ShaderData* mtl)
-            : GLRenderTarget((RenderTexture*)nullptr, false),
+            : RenderTarget((RenderTexture*)nullptr, false),
               mLayerIndex(-1),
               mShadowMaterial(mtl)
     {
@@ -28,28 +28,18 @@ class Renderer;
     void ShadowMap::setLayerIndex(int layerIndex)
     {
         mLayerIndex = layerIndex;
-        GLRenderTexture* rtex = static_cast<GLRenderTexture*>(mRenderTexture);
 
-        if (rtex)
+        if (mRenderTexture)
         {
             LOGV("ShadowMap::setLayerIndex %d", layerIndex);
-            rtex->setLayerIndex(mLayerIndex);
+            mRenderTexture->setLayerIndex(mLayerIndex);
         }
     }
 
-    void ShadowMap::bindTexture(int loc, int texIndex)
-    {
-        GLRenderTexture* rtex = static_cast<GLRenderTexture*>(mRenderTexture);
-
-        if (rtex)
-        {
-            rtex->bindTexture(loc, texIndex);
-        }
-    }
 
     void  ShadowMap::beginRendering(Renderer* renderer)
     {
-        GLRenderTarget::beginRendering(renderer);
+        RenderTarget::beginRendering(renderer);
         mRenderState.render_mask = 1;
         mRenderState.is_shadow = true;
         mRenderState.shadow_map = nullptr;
