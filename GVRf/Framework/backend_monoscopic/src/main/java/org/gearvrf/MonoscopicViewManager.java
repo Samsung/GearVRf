@@ -183,6 +183,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             eyeBufferParams.setResolutionHeight(mViewportHeight);
             eyeBufferParams.setMultiSamples(sampleCount);
             vulkanSurfaceView = new SurfaceView(mActivity);
+            vulkanSurfaceView.getHolder().setFixedSize(mViewportWidth, mViewportHeight);
 
             vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                 @Override
