@@ -30,12 +30,14 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.upstream.AssetDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import org.gearvrf.GVRAssetLoader;
+import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRImage;
 import org.gearvrf.GVRLight;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRPointLight;
 import org.gearvrf.GVRSpotLight;
 import org.gearvrf.GVRDirectLight;
@@ -135,6 +137,7 @@ public class AnimationInteractivityManager {
 
 
     private PerFrameScripting perFrameScripting = new PerFrameScripting();
+    private SensorImplementation sensorImplementation = new SensorImplementation();
 
     // Append this incremented value to GVRSceneObject names to insure unique
     // GVRSceneObjects when new GVRScene objects are generated to support animation
@@ -272,7 +275,6 @@ public class AnimationInteractivityManager {
                         //TODO: complete adding field to this Script Node when sent to TimeSensor
                         for (ScriptObject.Field field : routeFromScriptObject.getFieldsArrayList()) {
                             if (toField.equalsIgnoreCase(routeFromScriptObject.getFieldName(field))) {
-                                //routeFromScriptObject.setFromEventUtility(field, routeFromEventUtility, fromField);
                                 interactiveObject.getScriptObject().setToTimeSensor(field, routeToTimeSensor, toField);
                                 routeToTimeSensorFound = true;
                             }
@@ -701,14 +703,74 @@ public class AnimationInteractivityManager {
                 }  // end if sensor == TOUCH
             }  // end if at least sensor, eventUtility and defined object
 
-            // Sensor (such as TouchSensor) to a Script
-            //   to a DEFined Object
+            // Sensor (PlaneSensor, TouchSensor, etc) to a Script
+            //   that sets properties of a DEFined Object
             else if (interactiveObject.getScriptObject() != null) {
                 // A Sensor with a Script and defined object found
                 final InteractiveObject interactiveObjectFinal = interactiveObject;
 
                 if (interactiveObject.getSensor() != null) {
-                    if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                    if (interactiveObject.getSensor().getSensorType() == Sensor.Type.PLANE) {
+                        //Log.e("X3DDBG", "initAnimationsAndInteractivity PLANE");
+                        // a Plane Sensor
+                        interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                                new GVRSceneObject.SceneVisitor()
+                                {
+                                    public boolean visit (GVRSceneObject obj)
+                                    {
+                                        obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                        return true;
+                                    }
+                                });
+                        interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+                            boolean initialized = false;
+                            GVRCameraRig gvrCameraRig = gvrContext.getMainScene().getMainCameraRig();
+                            Vector3f initCameraDir = null;
+                            float[] initPlaneTranslation = new float[3];
+                            float[] initHitLocation = null;
+                            float[] planeTranslation = new float[3];
+                            GVRSceneObject gvrSceneObject = null;
+
+                            @Override
+                            public void onSensorEvent(SensorEvent event) {
+                                if (event.isActive()) {
+                                    GVRPicker.GVRPickedObject gvrPickedObject = event.getPickedObject();
+                                    if ( !initialized ) {
+                                        //Log.e("X3DDBG", "onSensorEvent PLANE event.isActive() INITIALIZED");
+                                        initialized = true;
+                                        float[] lookAt = gvrCameraRig.getLookAt();
+                                        initCameraDir = new Vector3f(lookAt[0], lookAt[1], lookAt[2]);
+                                        initHitLocation = gvrPickedObject.getHitLocation();
+                                        GVRSceneObject hitObjectSceneObject = gvrPickedObject.getHitObject();
+                                        // Primitives are a child of the GVRSceneObject with the name.
+                                        if ( hitObjectSceneObject.getName().isEmpty() ) {
+                                            hitObjectSceneObject = hitObjectSceneObject.getParent();
+                                        }
+                                        gvrSceneObject = root
+                                                .getSceneObjectByName((hitObjectSceneObject.getName() + x3dObject.TRANSFORM_TRANSLATION_));
+
+                                        initPlaneTranslation[0] = gvrSceneObject.getTransform().getPositionX();
+                                        initPlaneTranslation[1] = gvrSceneObject.getTransform().getPositionY();
+                                        initPlaneTranslation[2] = gvrSceneObject.getTransform().getPositionZ();
+                                    }
+                                    // initialize the input values for planeSensor and run the javaScript.
+                                    planeTranslation[0] = gvrSceneObject.getTransform().getPositionX();
+                                    planeTranslation[1] = gvrSceneObject.getTransform().getPositionY();
+                                    Object[] parameters = SetJavaScriptArguments(interactiveObjectFinal, planeTranslation[0], planeTranslation[1], true);
+                                    ScriptObject scriptObject = interactiveObjectFinal.getScriptObject();
+                                    ScriptObject.Field firstField = scriptObject.getField(0);
+                                    RunScript(interactiveObjectFinal, scriptObject.getFieldName(firstField), parameters);
+
+                                }
+                                else {
+                                    initialized = false;
+                                }
+                            }
+                        });
+
+                    }
+                    else if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
+                        // A Touch Sensor
                         interactiveObject.getSensor().getOwnerObject().forAllDescendants(
                                 new GVRSceneObject.SceneVisitor()
                                 {
@@ -725,7 +787,7 @@ public class AnimationInteractivityManager {
                             @Override
                             public void onSensorEvent(SensorEvent event) {
 
-                                Object[] parameters = SetJavaScriptArguments(interactiveObjectFinal, event.isOver(), stateChanged);
+                                Object[] parameters = SetJavaScriptArguments(interactiveObjectFinal, event.isOver(), 0, stateChanged);
                                 ScriptObject scriptObject = interactiveObjectFinal.getScriptObject();
                                 ScriptObject.Field firstField = scriptObject.getField(0);
                                 String functionName = scriptObject.getFieldName(firstField);
@@ -846,6 +908,41 @@ public class AnimationInteractivityManager {
                         }
                     });
                 }  // end if sensor == TOUCH
+                else if (interactiveObject.getSensor().getSensorType() == Sensor.Type.PLANE) {
+                    interactiveObject.getSensor().getOwnerObject().forAllDescendants(
+                            new GVRSceneObject.SceneVisitor()
+                            {
+                                public boolean visit (GVRSceneObject obj)
+                                {
+                                    obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                    return true;
+                                }
+                            });
+                    interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
+                        boolean isActive = false;
+
+                        @Override
+                        public void onSensorEvent(SensorEvent event) {
+                            if ( interactiveObjectFinal.getSensor().getEnabled() ) {
+                                if (event.isActive() && !isActive) {
+                                    isActive = true;
+                                    //Log.e("X3DDBG", "PLANE Sensor isActive");
+                                    GVRPicker.GVRPickedObject gvrPickedObject = event.getPickedObject();
+                                    //float[] hitLocation = gvrPickedObject.getHitLocation();
+                                    //float hitDistance = gvrPickedObject.getHitDistance();
+
+                                    sensorImplementation.registerDrawFrameListerner(gvrPickedObject, interactiveObjectFinal);
+                                } else if ( !event.isActive() || !event.isOver() ) {
+                                    sensorImplementation.unregisterDrawFrameListerner();
+                                    GVRPicker.GVRPickedObject gvrPickedObject = null;
+                                    //Log.e("X3DDBG", "PLANE Sensor isActive reset");
+                                    isActive = false;
+                                }
+                            }// if PlaneSensor is enabled
+                        }   // end onSensorEvent
+                    });
+                }  // end if sensor == PLANESensor
+
             }  //  end sensor and definedItem != null
             // Sensor (such as TouchSensor) to an EventUnity (such as BoleanToggle)
             else if ((interactiveObject.getSensor() != null) &&
@@ -904,6 +1001,155 @@ public class AnimationInteractivityManager {
     }   //  end initAnimationsAndInteractivity.
 
 
+    private final class SensorActiveDrawFrame implements GVRDrawFrameListener {
+        @Override
+        public void onDrawFrame(float frameTime) {
+            sensorImplementation.onSensorActiveDrawFrame(frameTime);
+        }
+    }
+
+    // Supports PlaneSensor and eventually CylinderSensor, SphereSensor
+    private class SensorImplementation {
+
+        GVRDrawFrameListener mSensorOnDrawFrame = null;
+        InteractiveObject mInteractiveObjectFinal = null;
+        GVRPicker.GVRPickedObject mGVRPickedObject = null;
+        GVRSceneObject mGVRSceneObject = null;
+        Sensor.Type mSensorType;
+        String fromField = "";
+        String toField = "";
+        float[] initHitLocation = new float[3];
+        float initHitDistance = 0;
+        Vector3f initCameraDir = null;
+        float[] initPlaneTranslation = new float[3];
+        // values and booleans for checking min and max distance of PlaneSensor
+        SFVec2f mMinPosition = new SFVec2f(0, 0);
+        SFVec2f mMaxPosition = new SFVec2f(-1, -1);
+        boolean mCheckXpos = false;
+        boolean mCheckYpos = false;
+
+        boolean run = false;
+        GVRCameraRig gvrCameraRig = null;
+
+
+        final void registerDrawFrameListerner(GVRPicker.GVRPickedObject gvrPickedObject, final InteractiveObject interactiveObjectFinal ) {
+            mSensorOnDrawFrame = new SensorActiveDrawFrame();
+            gvrContext.registerDrawFrameListener(mSensorOnDrawFrame);
+            run = true;
+            mGVRPickedObject = gvrPickedObject;
+            mInteractiveObjectFinal = interactiveObjectFinal;
+            gvrCameraRig = gvrContext.getMainScene().getMainCameraRig();
+
+            if ( mInteractiveObjectFinal != null ) {
+                if (mInteractiveObjectFinal.getSensor() != null) {
+                    // initialize the 'from sensor information
+                    Sensor sensor = mInteractiveObjectFinal.getSensor();
+                    if (sensor.getSensorType() == Sensor.Type.PLANE) {
+                        mSensorType = Sensor.Type.PLANE;
+                        mMinPosition = sensor.getMinValues();
+                        mMaxPosition = sensor.getMaxValues();
+                        if ( mMinPosition.getX() <= mMaxPosition.getX()) mCheckXpos = true;
+                        if ( mMinPosition.getY() <= mMaxPosition.getY()) mCheckYpos = true;
+                        if (StringFieldMatch(mInteractiveObjectFinal.getSensorFromField(), "translation")) {
+                            fromField = "translation";
+                        } else if (StringFieldMatch(mInteractiveObjectFinal.getSensorFromField(), "trackPoint")) {
+                            fromField = "trackPoint";
+                        } else {
+                            Log.e(TAG, "Cylinder, Plane or Sphere Sensor: not supported 'from field': " + mInteractiveObjectFinal.getSensorFromField() );
+                        }
+                    } else if (sensor.getSensorType() == Sensor.Type.CYLINDER) {
+                        mSensorType = Sensor.Type.CYLINDER;
+                        Log.e(TAG, "CYLINDER Sensor not yet supported in GearVR.");
+                    } else if (sensor.getSensorType() == Sensor.Type.SPHERE) {
+                        mSensorType = Sensor.Type.SPHERE;
+                        Log.e(TAG, "SPHERE Sensor not yet supported in GearVR.");
+                    } else {
+                        Log.e(TAG, "Unsupported or Undefined Sensor.");
+                    }
+                } else {
+                    Log.e(TAG, "Cylinder, Plane or Sphere Sensor not set");
+                }
+
+                // initialize the 'to' object information
+                if (mInteractiveObjectFinal.getDefinedItem() != null) {
+                    mGVRSceneObject = mInteractiveObjectFinal.getDefinedItem().getGVRSceneObject();
+
+                    if ( mGVRSceneObject.getName().isEmpty() ) {
+                        mGVRSceneObject = mGVRSceneObject.getParent();
+                    }
+                    mGVRSceneObject = root
+                            .getSceneObjectByName((mGVRSceneObject.getName() + x3dObject.TRANSFORM_TRANSLATION_));
+
+                    if ( mGVRSceneObject != null ) {
+                        if (StringFieldMatch(mInteractiveObjectFinal.getDefinedItemToField(), "translation")) {
+                            toField = "translation";
+                            initPlaneTranslation[0] = mGVRSceneObject.getTransform().getPositionX();
+                            initPlaneTranslation[1] = mGVRSceneObject.getTransform().getPositionY();
+                            initPlaneTranslation[2] = mGVRSceneObject.getTransform().getPositionZ();
+                        } else {
+                            Log.e(TAG, "Cylinder, Plane or Sphere Sensor: not supported 'to field': " + mInteractiveObjectFinal.getDefinedItemToField());
+                        }
+                    }
+                    else {
+                        Log.e(TAG, "Problem with Cylinder, Plane or Sphere Sensor: no receiving object.");
+                    }
+                }
+            }
+            else {
+                Log.e(TAG, "Issue with Cylinder, Plane or Sphere Sensor");
+            }
+            initHitLocation = mGVRPickedObject.getHitLocation();
+            initHitDistance = mGVRPickedObject.getHitDistance();
+            float[] lookAt = gvrCameraRig.getLookAt();
+            initCameraDir = new Vector3f(lookAt[0], lookAt[1], lookAt[2]);
+        } //  end registerDrawFrameListerner
+
+        final void unregisterDrawFrameListerner() {
+            if (mSensorOnDrawFrame != null) gvrContext.unregisterDrawFrameListener(mSensorOnDrawFrame);
+            mSensorOnDrawFrame = null;
+            mInteractiveObjectFinal = null;
+            mGVRPickedObject = null;
+            mGVRSceneObject = null;
+            fromField = "";
+            toField = "";
+            run = false;
+        }
+
+        public boolean getRunState() {
+            return run;
+        }
+
+        final void onSensorActiveDrawFrame(float frameTime) {
+            if ( mSensorType == Sensor.Type.PLANE ) {
+                if ( mGVRSceneObject != null && mGVRPickedObject != null ) {
+                    float[] lookAt = gvrCameraRig.getLookAt();
+                    Vector3f cameraDir = new Vector3f(lookAt[0], lookAt[1], lookAt[2]);
+                    cameraDir.sub( initCameraDir );
+                    float x = initPlaneTranslation[0] + cameraDir.x * initHitDistance;
+                    float y = initPlaneTranslation[1] + cameraDir.y * initHitDistance;
+                    if ( mCheckXpos ) {
+                        if ( (x >= mMinPosition.getX()) && (x <= mMaxPosition.getX()) ) {
+                            mGVRSceneObject.getTransform().setPositionX( x );
+                        }
+                    }
+                    else mGVRSceneObject.getTransform().setPositionX( x );
+                    if ( mCheckYpos ) {
+                        if ( (y >= mMinPosition.getY()) && (y <= mMaxPosition.getY()) ) {
+                            mGVRSceneObject.getTransform().setPositionY( y );
+                        }
+                    }
+                    else mGVRSceneObject.getTransform().setPositionY( y );
+
+                    if (  fromField.equalsIgnoreCase("trackPoint") && toField.equalsIgnoreCase("translation")) {
+                        // trackPoint to translation
+                        mGVRSceneObject.getTransform().setPositionZ( initHitLocation[2] );
+                    }
+                }
+            }
+        }
+    }  //  end class SensorImplementation
+
+    // Supports when TimeSensor per-frame calls invoke Script
     private class PerFrameScripting {
 
         InteractiveObject interactiveObjectFinal = null;
@@ -945,7 +1191,7 @@ public class AnimationInteractivityManager {
 
             BuildInitJavaScript(interactiveObjectFinal);
 
-            parameters = SetJavaScriptArguments(this.interactiveObjectFinal, 0, false); // false is just a place holder
+            parameters = SetJavaScriptArguments(this.interactiveObjectFinal, 0, 0, false); // false is just a place holder
             parameters[0] = 0;
             if (scriptObject.getTimeStampParameter()) parameters[1] = 0;
 
@@ -979,7 +1225,7 @@ public class AnimationInteractivityManager {
                     });
                 }
                 // once we run through the initialization of this script, then we can Run the script
-                parameters = SetJavaScriptArguments(this.interactiveObjectFinal, 0, false); // false is just a place holder
+                parameters = SetJavaScriptArguments(this.interactiveObjectFinal, 0, 0, false); // false is just a place holder
                 accumulatedTime += frameTime;
                 parameters[0] = accumulatedTime % cycleInterval;
                 if (scriptObject.getTimeStampParameter()) parameters[1] = accumulatedTime;
@@ -1017,7 +1263,7 @@ public class AnimationInteractivityManager {
 
     // funtion called each event and sets the arguments (parameters)
     // from INPUT_ONLY and INPUT_OUTPUT to the function that 'compiles' and run JavaScript
-    private Object[] SetJavaScriptArguments(InteractiveObject interactiveObj, Object argument0, boolean stateChanged) {
+    private Object[] SetJavaScriptArguments(InteractiveObject interactiveObj, Object argument0, Object argument1, boolean stateChanged) {
         ArrayList<Object> scriptParameters = new ArrayList<Object>();
 
         ScriptObject scriptObject = interactiveObj.getScriptObject();
@@ -1030,6 +1276,7 @@ public class AnimationInteractivityManager {
                 DefinedItem definedItem = scriptObject.getFromDefinedItem(field);
                 EventUtility eventUtility = scriptObject.getFromEventUtility(field);
                 TimeSensor timeSensor = scriptObject.getFromTimeSensor(field);
+
 
                 if (fieldType.equalsIgnoreCase("SFBool")) {
                     if (definedItem != null) {
@@ -1056,12 +1303,22 @@ public class AnimationInteractivityManager {
                         scriptParameters.add( interactiveObj.getEventUtility().getToggle() );
                     }
                 }  // end if SFBool
+                else if ((fieldType.equalsIgnoreCase("SFVec2f")) && (definedItem == null)) {
+                    // data from a Plane Sensor
+                    if (interactiveObj.getSensorFromField() != null) {
+                        if (interactiveObj.getSensor().getSensorType() == Sensor.Type.PLANE) {
+                            scriptParameters.add( argument0 );
+                            scriptParameters.add( argument1 );
+                        }
+                    }
+                }
                 else if ((fieldType.equalsIgnoreCase("SFFloat")) && (definedItem == null)) {
                     if (timeSensor != null) {
                         scriptParameters.add( timeSensor.getCycleInterval() );
                     }
                     else scriptParameters.add(argument0); // the time passed in from an SFTime node
-                } else if (scriptObject.getFromDefinedItem(field) != null) {
+                }
+                else if (scriptObject.getFromDefinedItem(field) != null) {
                     if (fieldType.equalsIgnoreCase("SFColor")) {
                         float[] color = {0, 0, 0};
                         if (definedItem.getGVRMaterial() != null) {
@@ -1408,7 +1665,7 @@ public class AnimationInteractivityManager {
             if (interactiveObject.getScriptObject() != null) {
 
                 BuildInitJavaScript(interactiveObject);
-                Object[] parameters = SetJavaScriptArguments(interactiveObject, 0, false);
+                Object[] parameters = SetJavaScriptArguments(interactiveObject, 0, 0,false);
                 parameters[0] = 0;
                 if (interactiveObject.getScriptObject().getTimeStampParameter()) parameters[1] = 0;
 
@@ -1484,6 +1741,11 @@ public class AnimationInteractivityManager {
         ScriptObject scriptObject = interactiveObject.getScriptObject();
         int argumentNum = 1;
         if (scriptObject.getTimeStampParameter()) argumentNum = 2;
+        if ( interactiveObject.getSensor() != null ) {
+            if ( interactiveObject.getSensor().getSensorType() == Sensor.Type.PLANE) {
+                argumentNum = 2;
+            }
+        }
 
         // Get the parameters on X3D data types that are included with this JavaScript
         if ( V8JavaScriptEngine ) {
@@ -1677,7 +1939,7 @@ public class AnimationInteractivityManager {
                     // However, not all JavaScript functions set returned-values, and thus left null.  For
                     // example the initialize() method may not set some Script field values, so don't
                     // process those and thus check if returnedJavaScriptValue != null
-                    if ((returnedJavaScriptValue != null) || ( !(returnedJavaScriptValue instanceof V8Object) )) {
+                    if ((returnedJavaScriptValue != null) && ( !(returnedJavaScriptValue instanceof V8Object) )) {
                         if (fieldType.equalsIgnoreCase("SFBool")) {
                             SFBool sfBool = (SFBool) returnedJavaScriptValue;
                             if ( scriptObjectToDefinedItem != null) {
@@ -2168,8 +2430,7 @@ public class AnimationInteractivityManager {
     }
 
 
-
-    }  //  end AnimationInteractivityManager class
+}  //  end AnimationInteractivityManager class
 
 
 
