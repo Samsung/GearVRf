@@ -32,7 +32,7 @@ android {
 }
 
 project.ext.jomlVersion = "1.9.3-SNAPSHOT"
-project.ext.arcoreVersion = "1.0.0"
+project.ext.arcoreVersion = "1.2.0"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
