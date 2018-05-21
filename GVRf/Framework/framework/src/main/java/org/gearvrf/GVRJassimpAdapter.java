@@ -49,7 +49,7 @@ import org.joml.Quaternionf;
 
 import static java.lang.Integer.parseInt;
 
-class GVRJassimpAdapter {
+class   GVRJassimpAdapter {
     private static final String TAG = GVRJassimpAdapter.class.getSimpleName();
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
     private GVRAssetLoader  mLoader;
@@ -716,7 +716,7 @@ class GVRJassimpAdapter {
     private GVRMaterial createMaterial(AiMaterial material, EnumSet<GVRImportSettings> settings)
     {
         boolean layered = false;
-        GVRShaderId shaderType = GVRMaterial.GVRShaderType.Phong.ID;
+        GVRShaderId shaderType;
 
         for (final AiTextureType texType : AiTextureType.values())
         {
@@ -759,7 +759,10 @@ class GVRJassimpAdapter {
                 }
                 return m;
             }
-            catch (IllegalArgumentException e) { }
+            catch (IllegalArgumentException e)
+            {
+                shaderType = GVRMaterial.GVRShaderType.Phong.ID;
+            }
             if (layered)
             {
                 shaderType = GVRMaterial.GVRShaderType.PhongLayered.ID;
