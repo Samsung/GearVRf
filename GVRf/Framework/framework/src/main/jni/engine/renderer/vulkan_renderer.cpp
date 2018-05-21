@@ -298,7 +298,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
 
     if ((post_effects != NULL) &&
         (post_effect_render_texture_a != nullptr) &&
-        (post_effects->pass_count() >= 0)) {
+        (post_effects->pass_count() > 0)) {
 
         VkRenderTexture* renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_a);
         VkRenderTexture* input_texture = renderTexture;

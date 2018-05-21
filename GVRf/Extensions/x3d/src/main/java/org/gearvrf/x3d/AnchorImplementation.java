@@ -405,7 +405,7 @@ public class AnchorImplementation {
 
         GVRScene mainScene = gvrContext.getMainScene();
 
-        Sensor webPageSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrWebViewSceneObject);
+        Sensor webPageSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrWebViewSceneObject, true);
         final GVRSceneObject gvrSceneObjectAnchorFinal = gvrSceneObjectAnchor;
         final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
         final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;
@@ -475,7 +475,7 @@ public class AnchorImplementation {
         webPagePlusUISceneObject.getTransform().setPosition(webPagePlusUIPosition[0], webPagePlusUIPosition[1], webPagePlusUIPosition[2]);
 
         // Set up sensor for the U.I.
-        Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject);
+        Sensor uibObjectSensor = new Sensor(urlFinal, Sensor.Type.TOUCH, gvrUICubeSceneObject, true);
         final GVRSceneObject gvrWebViewSceneObjectFinal = gvrWebViewSceneObject;
         final GVRSceneObject gvrUICubeSceneObjectFinal = gvrUICubeSceneObject;
         final GVRSceneObject webPagePlusUISceneObjectFinal = webPagePlusUISceneObject;

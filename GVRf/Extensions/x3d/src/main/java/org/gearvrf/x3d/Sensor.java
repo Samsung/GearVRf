@@ -19,6 +19,7 @@ import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.x3d.data_types.SFVec2f;
 import org.joml.Vector3f;
 
 
@@ -34,7 +35,7 @@ public class Sensor extends GVRSensor
 
   public enum Type
   {
-    ANCHOR, PROXIMITY, TOUCH, VISIBILITY
+    ANCHOR, CYLINDER, PLANE, PROXIMITY, SPHERE, TOUCH, VISIBILITY
   };
 
   private static final String TAG = Sensor.class.getSimpleName();
@@ -42,22 +43,36 @@ public class Sensor extends GVRSensor
   public static final String IS_ACTIVE = "isActive";
 
   private String name = null;
+  private boolean mEnabled = true;
   private Type sensorType;
   private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
   private String anchorURL = null;
   private Vector3f hitPoint = new Vector3f();
+  private SFVec2f mMinValue = new SFVec2f(0, 0);
+  private SFVec2f mMaxValue = new SFVec2f(-1, -1);
 
 
-  public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject)
+  public Sensor(String name, Type sensorType, GVRSceneObject sensorSceneObject, boolean enabled)
   {
     super(sensorSceneObject.getGVRContext());
     this.name = name;
     this.sensorType = sensorType;
     sensorSceneObject.attachComponent(this);
+    mEnabled = enabled;
   }
 
   void addISensorEvents(ISensorEvents sensorEvents){
     getOwnerObject().getEventReceiver().addListener(sensorEvents);
+  }
+
+  public void setEnabled(boolean enabled)
+  {
+    this.mEnabled = enabled;
+  }
+
+  public boolean getEnabled()
+  {
+    return this.mEnabled;
   }
 
   public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
@@ -98,6 +113,23 @@ public class Sensor extends GVRSensor
   {
     return this.anchorURL;
   }
+
+  public void setMinMaxValues(SFVec2f minValue, SFVec2f maxValue)
+  {
+    this.mMinValue.setValue( minValue );
+    this.mMaxValue.setValue( maxValue );
+  }
+
+  public SFVec2f getMaxValues()
+  {
+    return this.mMaxValue;
+  }
+
+  public SFVec2f getMinValues()
+  {
+    return this.mMinValue;
+  }
+
 
 }
 

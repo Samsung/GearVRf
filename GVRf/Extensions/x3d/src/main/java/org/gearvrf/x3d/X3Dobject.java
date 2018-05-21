@@ -3151,7 +3151,7 @@ public class X3Dobject {
                     currentSceneObject = AddGVRSceneObject();
                     currentSceneObject.setName(name);
                     Sensor sensor = new Sensor(name, Sensor.Type.ANCHOR,
-                            currentSceneObject);
+                            currentSceneObject, true);
                     sensor.setAnchorURL(url);
                     sensors.add(sensor);
                     animationInteractivityManager.BuildInteractiveObjectFromAnchor(sensor, url);
@@ -3176,11 +3176,49 @@ public class X3Dobject {
                         enabled = parseBooleanString(attributeValue);
                     }
 
-                    Sensor sensor = new Sensor(name, Sensor.Type.TOUCH, currentSceneObject);
+                    Sensor sensor = new Sensor(name, Sensor.Type.TOUCH, currentSceneObject, enabled);
                     sensors.add(sensor);
                     // add colliders to all objects under the touch sensor
                     currentSceneObject.attachCollider(new GVRMeshCollider(gvrContext, true));
                 } // end <TouchSensor> node
+
+
+                /********** PlaneSensor **********/
+                else if (qName.equalsIgnoreCase("PlaneSensor")) {
+                    String name = "";
+                    String description = "";
+                    boolean enabled = true;
+                    SFVec2f minPosition = new SFVec2f(0, 0);
+                    SFVec2f maxPosition = new SFVec2f(-1, -1);
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        name = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("description");
+                    if (attributeValue != null) {
+                        description = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("enabled");
+                    if (attributeValue != null) {
+                        enabled = parseBooleanString(attributeValue);
+                    }
+                    attributeValue = attributes.getValue("maxPosition");
+                    if (attributeValue != null) {
+                        float[] maxValues = parseFixedLengthFloatString(attributeValue, 2, false, false);
+                        maxPosition.setValue(maxValues[0], maxValues[1]);
+                    }
+                    attributeValue = attributes.getValue("minPosition");
+                    if (attributeValue != null) {
+                        float[] minValues = parseFixedLengthFloatString(attributeValue, 2, false, false);
+                        minPosition.setValue(minValues[0], minValues[1]);
+                    }
+
+                    Sensor sensor = new Sensor(name, Sensor.Type.PLANE, currentSceneObject, enabled);
+                    sensor.setMinMaxValues(minPosition, maxPosition);
+                    sensors.add(sensor);
+                    // add colliders to all objects under the touch sensor
+                    currentSceneObject.attachCollider(new GVRMeshCollider(gvrContext, true));
+                } // end <PlaneSensor> node
 
 
                 /********** ProximitySensor **********/
@@ -3715,7 +3753,7 @@ public class X3Dobject {
 
                 /***** end of parsing the nodes currently parsed *****/
                 else {
-                    Log.e(TAG, "X3D node " + qName + " not implemented.");
+                    Log.e(TAG, "X3D node '" + qName + "' not implemented.");
                 }
             }  // end 'else { if stmt' at ROUTE, which should be deleted
         }  //  end startElement
@@ -4021,6 +4059,8 @@ public class X3Dobject {
                 ;
             } else if (qName.equalsIgnoreCase("TouchSensor")) {
                 ;
+            } else if (qName.equalsIgnoreCase("PlaneSensor")) {
+                ;
             } else if (qName.equalsIgnoreCase("ProximitySensor")) {
                 ;
             } else if (qName.equalsIgnoreCase("Text")) {
@@ -4185,6 +4225,10 @@ public class X3Dobject {
             else if (qName.equalsIgnoreCase("x3d")) {
                 ;
             } // end </x3d>
+            else {
+                Log.e(TAG, "Not parsing ending '" + qName + "' tag.");
+                ;
+            } // end </x3d>
         }  // end endElement
 
 
@@ -4255,13 +4299,6 @@ public class X3Dobject {
                                 gvrExternalScene.load(gvrScene);
                                 GVRAnimator gvrAnimator = gvrExternalScene.getAnimator();
                             }
-/*
-                            gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
-                            inputStream = gvrAndroidResource.getStream();
-
-                            currentSceneObject = inlineObject.getInlineGVRSceneObject();
-                            saxParser.parse(inputStream, userhandler);
-                            */
                         } catch (FileNotFoundException e) {
                             Log.e(TAG,
                                     "Inline file reading: File Not Found: url " + urls[j] + ", Exception "
