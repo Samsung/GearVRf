@@ -52,6 +52,9 @@ class MonoscopicXMLParser {
     MonoscopicXMLParser(AssetManager assets, String fileName, VrAppSettings baseSettings) {
         final MonoscopicVrAppSettings settings = (MonoscopicVrAppSettings)baseSettings;
 
+        float fov_y = Float.NaN;
+        float monoscopic_fov_y = Float.NaN;
+
         try {
             StringBuilder buf = new StringBuilder();
             InputStream is = assets.open(fileName);
@@ -151,9 +154,9 @@ class MonoscopicXMLParser {
                                 || "eye-buffer-params".equals(tagName)) {
                             String attributeValue = xpp.getAttributeValue(i);
                             if (attributeName.equals("fov-y")) {
-                                settings.getEyeBufferParams().setFovY(
-                                        Float.parseFloat(xpp
-                                                .getAttributeValue(i)));
+                                fov_y = Float.parseFloat(xpp.getAttributeValue(i));
+                            } else if (attributeName.equals("monoscopic-fov-y")) {
+                                monoscopic_fov_y = Float.parseFloat(xpp.getAttributeValue(i));
                             } else if (attributeName.equals("depthFormat")) {
                                 if (attributeValue.equals("DEPTH_0")) {
                                     settings.getEyeBufferParams()
@@ -256,6 +259,12 @@ class MonoscopicXMLParser {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             throw e;
+        }
+
+        if (!Float.isNaN(monoscopic_fov_y)) {
+            settings.getEyeBufferParams().setFovY(monoscopic_fov_y);
+        } else if (!Float.isNaN(fov_y)) {
+            settings.getEyeBufferParams().setFovY(fov_y);
         }
     }
 
