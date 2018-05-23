@@ -11,25 +11,25 @@ class MonoscopicControllerReader extends org.gearvrf.io.GVRGearCursorController.
     }
 
     @Override
-    public boolean isConnected() {
+    public boolean isConnected(int index) {
         return false;
     }
 
     @Override
-    public boolean isTouched() {
+    public boolean isTouched(int index) {
         return false;
     }
 
     @Override
-    public void updateRotation(Quaternionf quat) {
+    public void updateRotation(Quaternionf quat,int index) {
     }
 
     @Override
-    public void updatePosition(Vector3f vec) {
+    public void updatePosition(Vector3f vec,int index) {
     }
 
     @Override
-    public int getKey() {
+    public int getKey(int index) {
         return 0;
     }
 
@@ -39,7 +39,7 @@ class MonoscopicControllerReader extends org.gearvrf.io.GVRGearCursorController.
     }
 
     @Override
-    public void updateTouchpad(PointF pt) {
+    public void updateTouchpad(PointF pt,int index) {
     }
 
     @Override
