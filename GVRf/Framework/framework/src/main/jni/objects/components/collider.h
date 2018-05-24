@@ -24,7 +24,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 
-#include "component.h"
+#include "component_group.h"
 #include "collider_shape_types.h"
 #include "objects/scene_object.h"
 
@@ -57,10 +57,10 @@ public:
  * Component attached to a SceneObject that provides
  * collision geometry and makes an object pickable.
  */
-class Collider: public Component {
+class Collider: public ComponentGroup {
 public:
-    Collider() : Component(Collider::getComponentType()), pick_distance_(0) {}
-    explicit Collider(long long type) : Component(type), pick_distance_(0) {}
+    Collider() : ComponentGroup(Collider::getComponentType()), pick_distance_(0) {}
+    explicit Collider(long long type) : ComponentGroup(type), pick_distance_(0) {}
 
     virtual ~Collider() {}
 
@@ -75,7 +75,7 @@ public:
      *
      * @returns ColliderData structure with hit point and distance from camera
      */
-    virtual ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir) = 0;
+    virtual ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
 
     /*
      * Hit test the input sphere against this collider.
@@ -87,7 +87,7 @@ public:
      *
      * @returns ColliderData structure with hit point and distance from camera
      */
-    virtual ColliderData isHit(const float sphere[]) = 0;
+    virtual ColliderData isHit(const float sphere[]);
 
     virtual long shape_type() {
         return COLLIDER_SHAPE_UNKNOWN;

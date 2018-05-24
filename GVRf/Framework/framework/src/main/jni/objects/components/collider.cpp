@@ -74,6 +74,55 @@ namespace gvr
         sphere[2] = (c1.z + c2.z) / 2;
         sphere[3] = glm::distance(glm::vec3(c1.x, c1.y, c1.z), glm::vec3(c2.x, c2.y, c2.z)) / 2.0f;
     }
+
+    ColliderData Collider::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
+    {
+        ColliderData finalHit(this);
+        SceneObject *ownerObject = owner_object();
+
+        finalHit.HitPosition = glm::vec3(std::numeric_limits<float>::infinity());
+        if (nullptr != ownerObject)
+        {
+            Transform *transform = ownerObject->transform();
+            finalHit.ObjectHit = ownerObject;
+            if (nullptr != transform)
+            {
+                glm::mat4 model_inverse = glm::affineInverse(transform->getModelMatrix());
+                glm::vec3 O(rayStart);
+                glm::vec3 D(rayDir);
+
+                transformRay(model_inverse, O, D);
+                for (auto it = children_.begin(); it != children_.end(); ++it)
+                {
+                    Collider *collider = static_cast<Collider*>(*it);
+                    ColliderData currentHit = collider->isHit(O, D);
+                    if (currentHit.IsHit && (currentHit.Distance < finalHit.Distance))
+                    {
+                        finalHit.CopyHit(currentHit);
+                    }
+                }
+            }
+        }
+        return finalHit;
+    }
+
+    ColliderData Collider::isHit(const float sphere[])
+    {
+        ColliderData finalHit(this);
+
+        finalHit.HitPosition = glm::vec3(std::numeric_limits<float>::infinity());
+        for (auto it = children_.begin(); it != children_.end(); ++it)
+        {
+            Collider *collider = static_cast<Collider*>(*it);
+            ColliderData currentHit = collider->isHit(sphere);
+            if (currentHit.IsHit)
+            {
+                currentHit.ColliderHit = collider;
+                finalHit.CopyHit(currentHit);
+            }
+        }
+        return finalHit;
+    }
 }
 
 

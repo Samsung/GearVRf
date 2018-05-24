@@ -1,11 +1,10 @@
 package org.gearvrf;
 
+import android.util.LongSparseArray;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-
-import android.util.Log;
-import android.util.LongSparseArray;
 
 /**
  * A collider allows a scene object to be picked.
@@ -31,8 +30,7 @@ import android.util.LongSparseArray;
  * @see GVRMeshCollider
  * @see GVRSceneObject#attachComponent(GVRComponent)
  */
-public class GVRCollider extends GVRComponent
-{
+public class GVRCollider extends GVRComponentGroup<GVRCollider> {
     private float mPickDistance = 0;
     private static final LongSparseArray<WeakReference<GVRCollider>> sColliders = new LongSparseArray<WeakReference<GVRCollider>>();
     private final static List<NativeCleanupHandler> sCleanup;
@@ -64,6 +62,18 @@ public class GVRCollider extends GVRComponent
     }
 
     /**
+     * Constructs an empty collider. Use this to construct a collider
+     * that holds a set of colliders attached to a scene object.
+     *
+     * @param context
+     *            current {@link GVRContext}
+     */
+    public GVRCollider(GVRContext context)
+    {
+        this(context, NativeCollider.ctor());
+    }
+
+    /**
      * Internal constructor for subclasses.
      * You cannot instantiate a GVRCollider, only a derivation of it.
      */
@@ -77,7 +87,7 @@ public class GVRCollider extends GVRComponent
     {
         return NativeCollider.getComponentType();
     }
-    
+
     /**
      * Lookup a native pointer to a collider and return its Java object.
      * 
@@ -138,6 +148,29 @@ public class GVRCollider extends GVRComponent
         {
             GVRPicker.sFindObjectsLock.unlock();
         }
+    }
+
+    /**
+     * Add a {@link GVRCollider} to this collider-group
+     *
+     * @param collider
+     *            The {@link GVRCollider} to add
+     */
+    public boolean addChildCollider(GVRCollider collider) {
+        return super.addChildComponent(collider);
+    }
+
+    /**
+     * Remove a {@link GVRCollider} from this collider-group.
+     *
+     * No exception is thrown if the collider is not held by this collider-group.
+     *
+     * @param collider
+     *            The {@link GVRCollider} to remove
+     *
+     */
+    public void removeChildCollider(GVRCollider collider) {
+        super.removeChildComponent(collider);
     }
 }
 
