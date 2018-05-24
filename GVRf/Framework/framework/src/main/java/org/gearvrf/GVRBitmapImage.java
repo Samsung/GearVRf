@@ -25,16 +25,12 @@ import org.gearvrf.utility.Log;
 
 import java.io.IOException;
 import java.nio.Buffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static android.opengl.GLES20.GL_RGB565;
 import static android.opengl.GLES20.GL_RGBA;
 import static android.opengl.GLES20.GL_RGB;
 import static android.opengl.GLES20.GL_LUMINANCE;
-import static android.opengl.GLES20.GL_RGBA4;
-import static android.opengl.GLES30.GL_R8;
 
 
 /**
@@ -135,6 +131,8 @@ public class GVRBitmapImage extends GVRImage
     {
         Bitmap.Config config = bmap.getConfig();
 
+        //if a bitmap of format other than supported format is found,
+        //try to create a new bitmap from it of config ARGB_8888.
         if (!supportedConfigs.contains(config))
             bmap = getBitmapSupported(bmap);
 
@@ -143,14 +141,12 @@ public class GVRBitmapImage extends GVRImage
 
     private Bitmap getBitmapSupported(Bitmap orig)
     {
-        Bitmap maskBitmap = Bitmap.createBitmap( orig.getWidth(), orig.getHeight(), Bitmap.Config.ARGB_8888 );
-        Canvas c = new Canvas();
-        c.setBitmap(maskBitmap);
+        Bitmap supBitmap = Bitmap.createBitmap( orig.getWidth(), orig.getHeight(), Bitmap.Config.ARGB_8888 );
+        Canvas c = new Canvas(supBitmap);
         Paint p = new Paint();
-        p.setFilterBitmap(true); // possibly not nessecary as there is no scaling
         c.drawBitmap(orig,0,0,p);
         orig.recycle();
-        return maskBitmap;
+        return supBitmap;
     }
 
 
@@ -251,7 +247,10 @@ public class GVRBitmapImage extends GVRImage
 
     private final static String TAG = "GVRBitmapTexture";
     private final static List<Bitmap.Config> supportedConfigs = Arrays.asList(
-            Bitmap.Config.ALPHA_8, Bitmap.Config.ARGB_4444, Bitmap.Config.ARGB_8888, Bitmap.Config.RGB_565
+        Bitmap.Config.ALPHA_8,
+        Bitmap.Config.ARGB_4444,
+        Bitmap.Config.ARGB_8888,
+        Bitmap.Config.RGB_565
     ) ;
 }
 

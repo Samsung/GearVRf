@@ -82,10 +82,6 @@ namespace gvr
         BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
         const char* format_name = env->GetStringUTFChars(format, 0);
 
-        /*TODO: Android Bitmap.java has an additional config called "HARDWARE" introduced in API 26.
-         * Need to look into handling that case.
-         * */
-
         int form = GL_RGBA;
 
         if(strcmp(format_name, "ALPHA_8") == 0)
