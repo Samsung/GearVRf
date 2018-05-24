@@ -33,14 +33,11 @@ import java.util.List;
  * One can use this class to specify multiple colliders for a
  * single {@link GVRSceneObject}.
  *
+ * This class is deprecated! Use empty GVRCollider instead.
  */
+
+@Deprecated
 public class GVRColliderGroup extends GVRCollider {
-    private final List<GVRCollider> colliders = new ArrayList<GVRCollider>();
-
-    static GVRCollider lookup(GVRContext gvrContext, long nativePointer) {
-        return GVRCollider.lookup(nativePointer);
-    }
-
     /**
      * Constructor
      * 
@@ -48,19 +45,14 @@ public class GVRColliderGroup extends GVRCollider {
      *            Current {@link GVRContext}
      */
     public GVRColliderGroup(GVRContext gvrContext) {
-        this(gvrContext, NativeColliderGroup.ctor());
+        super(gvrContext);
     }
 
     public GVRColliderGroup(GVRContext gvrContext, GVRSceneObject owner) {
-        this(gvrContext, NativeColliderGroup.ctor());
+        this(gvrContext);
         setOwnerObject(owner);
     }
-    
-    private GVRColliderGroup(GVRContext gvrContext, long nativePointer) {
-        super(gvrContext, nativePointer);
-    }        
-        
-    
+
     /**
      * Is this collider-group enabled?
      * 
@@ -73,7 +65,6 @@ public class GVRColliderGroup extends GVRCollider {
         return super.isEnabled();
     }
 
-
     /**
      * Add a {@link GVRCollider} to this collider-group
      * 
@@ -81,10 +72,8 @@ public class GVRColliderGroup extends GVRCollider {
      *            The {@link GVRCollider} to add
      */
     public void addCollider(GVRCollider collider) {
-        colliders.add(collider);
-        NativeColliderGroup.addCollider(getNative(), collider.getNative());
+        addChildComponent(collider);
     }
-
 
     /**
      * Remove a {@link GVRCollider} from this collider-group.
@@ -96,30 +85,6 @@ public class GVRColliderGroup extends GVRCollider {
      * 
      */
     public void removeCollider(GVRCollider collider) {
-        colliders.remove(collider);
-        NativeColliderGroup.removeCollider(getNative(),
-                collider.getNative());
+        removeChildComponent(collider);
     }
-
-    /**
-     * Get the x, y, z of the point of where the hit occurred in model space
-     * 
-     * @return Three floats representing the x, y, z hit point.
-     * @see #getHit()
-     */
-    public float[] getHit()
-    {
-        return NativeColliderGroup.getHit(getNative());
-    }
-
-}
-
-class NativeColliderGroup {
-    static native long ctor();
-
-    static native float[] getHit(long colliderGroup);
-    
-    static native void addCollider(long colliderGroup, long collider);
-
-    static native void removeCollider(long colliderGroup, long collider);
 }
