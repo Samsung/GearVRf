@@ -17,16 +17,24 @@ package org.gearvrf;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.utility.Log;
 
 import java.io.IOException;
 import java.nio.Buffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static android.opengl.GLES20.GL_RGB565;
 import static android.opengl.GLES20.GL_RGBA;
 import static android.opengl.GLES20.GL_RGB;
 import static android.opengl.GLES20.GL_LUMINANCE;
+import static android.opengl.GLES20.GL_RGBA4;
+import static android.opengl.GLES30.GL_R8;
 
 
 /**
@@ -125,8 +133,26 @@ public class GVRBitmapImage extends GVRImage
      */
     public void setBitmap(Bitmap bmap)
     {
-        NativeBitmapImage.updateFromBitmap(getNative(), bmap, bmap.hasAlpha());
+        Bitmap.Config config = bmap.getConfig();
+
+        if (!supportedConfigs.contains(config))
+            bmap = getBitmapSupported(bmap);
+
+        NativeBitmapImage.updateFromBitmap(getNative(), bmap, bmap.hasAlpha(), bmap.getConfig().name());
     }
+
+    private Bitmap getBitmapSupported(Bitmap orig)
+    {
+        Bitmap maskBitmap = Bitmap.createBitmap( orig.getWidth(), orig.getHeight(), Bitmap.Config.ARGB_8888 );
+        Canvas c = new Canvas();
+        c.setBitmap(maskBitmap);
+        Paint p = new Paint();
+        p.setFilterBitmap(true); // possibly not nessecary as there is no scaling
+        c.drawBitmap(orig,0,0,p);
+        orig.recycle();
+        return maskBitmap;
+    }
+
 
     /**
      * Copy a new texture from a {@link Buffer} to the GPU texture. This one is also safe even
@@ -224,6 +250,9 @@ public class GVRBitmapImage extends GVRImage
     }
 
     private final static String TAG = "GVRBitmapTexture";
+    private final static List<Bitmap.Config> supportedConfigs = Arrays.asList(
+            Bitmap.Config.ALPHA_8, Bitmap.Config.ARGB_4444, Bitmap.Config.ARGB_8888, Bitmap.Config.RGB_565
+    ) ;
 }
 
 class NativeBitmapImage {
@@ -231,7 +260,7 @@ class NativeBitmapImage {
     static native void setFileName(long pointer, String fname);
     static native String getFileName(long pointer);
     static native void updateFromMemory(long pointer, int width, int height, byte[] data);
-    static native void updateFromBitmap(long pointer, Bitmap bitmap, boolean hasAlpha);
+    static native void updateFromBitmap(long pointer, Bitmap bitmap, boolean hasAlpha, String format);
     static native void updateFromBuffer(long pointer, int xoffset, int yoffset, int width, int height, int format, int type, Buffer pixels);
     static native void updateCompressed(long pointer, int width, int height, int imageSize, byte[] data, int levels, int[] offsets);
 
