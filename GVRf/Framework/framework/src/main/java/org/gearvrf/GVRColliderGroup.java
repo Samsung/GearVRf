@@ -32,8 +32,6 @@ import java.util.List;
  *
  * One can use this class to specify multiple colliders for a
  * single {@link GVRSceneObject}.
- *
- * This class is deprecated! Use empty GVRCollider instead.
  */
 public class GVRColliderGroup extends GVRCollider {
     /**

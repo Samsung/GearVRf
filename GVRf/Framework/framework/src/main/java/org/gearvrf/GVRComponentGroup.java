@@ -44,14 +44,6 @@ public class GVRComponentGroup <T extends GVRComponent> extends GVRComponent {
      */
     protected boolean addChildComponent(T child)
     {
-        if (child.mParent == this)
-        {
-            return false;
-        }
-        if (child.mParent != null)
-        {
-            throw new UnsupportedOperationException("GVRComponent cannot have multiple parents");
-        }
         if (child.getType() != mType)
         {
             throw new UnsupportedOperationException(child.getClass().getSimpleName() + " components cannot be added to this group");
