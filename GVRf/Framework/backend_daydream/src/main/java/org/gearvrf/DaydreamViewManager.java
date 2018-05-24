@@ -99,13 +99,9 @@ class DaydreamViewManager extends GVRViewManager {
     void onSurfaceCreated()
     {
         super.onSurfaceCreated();
-        for(int i=0; i< mActivity.getAppSettings().getNumControllers(); i++){
-            GVRGearCursorController gearController = mInputManager.getGearController(i);
-            if (gearController != null)
-            {
-                gearController.attachReader(mControllerReader);
-            }
-        }
+        GVRGearCursorController gearController = mInputManager.getGearController();
+        if (gearController != null)
+            gearController.attachReader(mControllerReader);
     }
 
     @Override

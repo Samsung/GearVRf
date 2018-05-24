@@ -279,13 +279,10 @@ class OvrViewManager extends GVRViewManager {
     void onSurfaceCreated() {
         super.onSurfaceCreated();
         mControllerReader = new OvrControllerReader(mActivity.getActivityNative().getNative());
-        for(int i=0; i< mActivity.getAppSettings().getNumControllers(); i++){
-            GVRGearCursorController gearController = mInputManager.getGearController(i);
-            if (gearController != null)
-            {
-                gearController.attachReader(mControllerReader);
-            }
-        }
+        GVRGearCursorController gearController = mInputManager.getGearController();
+        if (gearController != null)
+            gearController.attachReader(mControllerReader);
+
     }
     void createSwapChain(){
         boolean isMultiview = mActivity.getAppSettings().isMultiviewSet();

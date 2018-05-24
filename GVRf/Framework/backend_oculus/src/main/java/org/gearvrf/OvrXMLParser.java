@@ -99,10 +99,6 @@ class OvrXMLParser {
                                     .equals("useControllerTypes")) {
                                 parseControllerTypes(settings, xpp.getAttributeValue(i));
                             } else if (attributeName
-                                    .equals("numControllers")) {
-                                settings.numControllers = Integer
-                                        .parseInt(xpp.getAttributeValue(i));
-                            } else if (attributeName
                                     .equals("useAndroidWearTouchpad")) {
                                 settings.setUseAndroidWearTouchpad(Boolean
                                         .parseBoolean(xpp.getAttributeValue(i)));
