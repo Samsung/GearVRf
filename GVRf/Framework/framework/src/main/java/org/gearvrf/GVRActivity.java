@@ -56,6 +56,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * data to manage a viewpoint, and thus present an appropriate stereoscopic view
  * of your scene graph. {@code GVRActivity} also gives GVRF a full-screen window
  * in landscape orientation with no title bar.
+ *
+ * Please consider applying the GVRfAppTheme theme to your activity in the manifest.
+ * It takes care of things like disabling the preview (which if enabled may lead to
+ * white screen flashing launch time), choosing appropriate background color and
+ * making sure the activity is using the full screen.
  */
 public class GVRActivity extends Activity implements IEventReceiver, IScriptable {
 
