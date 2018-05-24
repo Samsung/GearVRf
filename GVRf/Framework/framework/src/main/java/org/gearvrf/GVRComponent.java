@@ -17,8 +17,6 @@ package org.gearvrf;
 
 import java.util.List;
 
-import org.gearvrf.utility.Exceptions;
-
 /**
  * Base class for defining components to extend the scene object.
  *
@@ -36,7 +34,8 @@ import org.gearvrf.utility.Exceptions;
 public class GVRComponent extends GVRHybridObject {
     protected boolean mIsEnabled;
     protected long mType = 0;
-    
+    protected GVRComponent mParent = null;
+
     /**
      * Constructor for a component that is not attached to a scene object.
      *
@@ -144,7 +143,15 @@ public class GVRComponent extends GVRHybridObject {
             onDisable();
         }
     }
-    
+
+    /**
+     * @return Returns the {@linkplain GVRComponentGroup parent} this component is added to,
+     * or null if not added to a component's group.
+     */
+    public GVRComponent getParent() {
+        return mParent;
+    }
+
     /**
      * Enable the component so it will be active in the scene.
      */
@@ -178,7 +185,7 @@ public class GVRComponent extends GVRHybridObject {
         }
         return mType;
     }
-    
+
     /**
      * Get the transform of the scene object this component is attached to.
      * 

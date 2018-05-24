@@ -36,6 +36,9 @@ public:
     explicit Component(long long type, SceneObject* owner_object);
     virtual ~Component();
 
+    Component* parent() const;
+    void set_parent(Component* parent);
+
     SceneObject* owner_object() const;
 
     virtual void set_owner_object(SceneObject* owner_object);
@@ -55,6 +58,7 @@ private:
     Component& operator=(Component&& component) = delete;
 
 protected:
+    Component *parent_;
     SceneObject* owner_object_;
     bool         enabled_;
 

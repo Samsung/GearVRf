@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
-
 /***************************************************************************
  * Can hold a set of colliders attached to a scene object.
  ***************************************************************************/
 
-#ifndef COLLIDE_GROUP_H_
-#define COLLIDE_GROUP_H_
+#ifndef COMPONENT_GROUP_H_
+#define COMPONENT_GROUP_H_
 
 #include <algorithm>
 #include <memory>
@@ -27,35 +26,28 @@
 
 #include "glm/glm.hpp"
 
-#include "collider.h"
+#include "component.h"
 
 namespace gvr {
 
-class ColliderGroup: public Collider {
+class ComponentGroup: public Component
+{
 public:
-    ColliderGroup();
-    virtual ~ColliderGroup();
+    ComponentGroup(long long type);
+    virtual ~ComponentGroup();
 
-    void addCollider(Collider* collider);
-    void removeCollider(Collider* collider);
-    ColliderData isHit(SceneObject* owner, const glm::vec3& rayStart, const glm::vec3& rayDir);
-    ColliderData isHit(SceneObject* owner, const float sphere[]);
-
-    const glm::vec3& hit() const {
-        return hit_;
-    }
+    void addChildComponent(Component* child);
+    void removeChildComponent(Component* child);
 
 private:
-    ColliderGroup(const ColliderGroup& colliderGroup) = delete;
-    ColliderGroup(ColliderGroup&& colliderGroup) = delete;
-    ColliderGroup& operator=(const ColliderGroup& colliderGroup) = delete;
-    ColliderGroup& operator=(ColliderGroup&& colliderGroup) = delete;
+    ComponentGroup(const ComponentGroup& group) = delete;
+    ComponentGroup(ComponentGroup&& group) = delete;
+    ComponentGroup& operator=(const ComponentGroup& group) = delete;
+    ComponentGroup& operator=(ComponentGroup&& group) = delete;
 
-private:
-    glm::vec3 hit_;
-    std::vector<Collider*> colliders_;
+protected:
+    std::vector<Component*> children_;
 };
-
 }
 
 #endif

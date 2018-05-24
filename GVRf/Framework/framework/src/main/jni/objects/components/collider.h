@@ -24,7 +24,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 
-#include "component.h"
+#include "component_group.h"
 #include "collider_shape_types.h"
 #include "objects/scene_object.h"
 
@@ -34,7 +34,8 @@ class Collider;
 /*
  * Information from a collision when a collider is picked.
  */
-class ColliderData {
+class ColliderData
+{
 public:
     ColliderData(Collider* collider);
     ColliderData();
@@ -57,10 +58,11 @@ public:
  * Component attached to a SceneObject that provides
  * collision geometry and makes an object pickable.
  */
-class Collider: public Component {
+class Collider: public ComponentGroup
+{
 public:
-    Collider() : Component(Collider::getComponentType()), pick_distance_(0) {}
-    explicit Collider(long long type) : Component(type), pick_distance_(0) {}
+    Collider() : ComponentGroup(Collider::getComponentType()), pick_distance_(0) {}
+    explicit Collider(long long type) : ComponentGroup(type), pick_distance_(0) {}
 
     virtual ~Collider() {}
 

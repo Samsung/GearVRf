@@ -87,6 +87,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
     protected boolean mPickClosest = true;
     protected GVREventReceiver mListeners = null;
     protected Lock mPickEventLock = new ReentrantLock();
+    protected boolean mPickListChanged = false;
     protected EnumSet<EventOptions> mEventOptions = EnumSet.of(
             EventOptions.SEND_PICK_EVENTS,
             EventOptions.SEND_TO_SCENE,
@@ -302,6 +303,13 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
         mScene = scene;
     }
 
+    /**
+     * Determine whether the pick list has changed since last frame.
+     * The value returned by this function is only valid
+     * within pick event listeners.
+     * @returns true if pick list changed, else false
+     */
+    public boolean hasPickListChanged() { return mPickListChanged; }
 
     /**
      * Get the current ray to use for picking.
@@ -573,6 +581,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
                 {
                     collision.touched = mTouched;
                     collision.motionEvent = mMotionEvent;
+                    mPickListChanged = true;
                     propagateOnExit(collider.getOwnerObject(), collision);
                 }
             }
@@ -601,6 +610,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
             collision.motionEvent = mMotionEvent;
             if (prevHit == null)
             {
+                mPickListChanged = true;
                 propagateOnEnter(collision);
                 if (mTouched)
                 {
@@ -611,11 +621,14 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
             {
                 propagateOnInside(collision);
                 if (prevHit.touched && !mTouched)
+
                 {
+                    mPickListChanged = true;
                     propagateOnNoTouch(collision);
                 }
                 else if (!prevHit.touched && mTouched)
                 {
+                    mPickListChanged = true;
                     propagateOnTouch(collision);
                 }
             }
@@ -635,6 +648,7 @@ public class GVRPicker extends GVRBehavior implements IEventReceiver {
                 propagateOnMotionOutside(mMotionEvent);
             }
         }
+        mPickListChanged = false;
     }
 
     //@todo anything that sets nativePointer to 0 needs this otherwise GVRHybridObject's hashCode
