@@ -25,12 +25,8 @@ namespace gvr {
     extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DHingeConstraint_ctor(JNIEnv *env, jobject obj,
-                                                          jlong rigidBodyB, jfloatArray pivotInA,
-                                                          jfloatArray pivotInB, jfloatArray axisInA,
-                                                          jfloatArray axisInB);
-
-    JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DHingeConstraint_getComponentType(JNIEnv *env, jobject obj);
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray pivotInA, jfloatArray pivotInB,
+            jfloatArray axisInA, jfloatArray axisInB);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_Native3DHingeConstraint_setLimits(JNIEnv * env , jobject obj,
@@ -48,20 +44,16 @@ namespace gvr {
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DHingeConstraint_ctor(JNIEnv * env, jobject obj,
-                                                          jlong rigidBodyB, jfloatArray pivotInA,
-                                                          jfloatArray pivotInB, jfloatArray axisInA,
-                                                          jfloatArray axisInB) {
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray pivotInA, jfloatArray pivotInB,
+            jfloatArray axisInA, jfloatArray axisInB)
+    {
         float *pA = env->GetFloatArrayElements(pivotInA, 0);
         float *pB = env->GetFloatArrayElements(pivotInB, 0);
         float *aA = env->GetFloatArrayElements(axisInA, 0);
         float *aB = env->GetFloatArrayElements(axisInB, 0);
         return reinterpret_cast<jlong>(new BulletHingeConstraint(
+                reinterpret_cast<PhysicsRigidBody*>(rigidBodyA),
                 reinterpret_cast<PhysicsRigidBody*>(rigidBodyB), pA, pB, aA, aB));
-    }
-
-    JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DHingeConstraint_getComponentType(JNIEnv * env, jobject obj) {
-        return PhysicsConstraint::getComponentType();
     }
 
     JNIEXPORT void JNICALL

@@ -23,18 +23,19 @@ import org.gearvrf.GVRTransform;
  */
 
 /**
- * Represents a generic constraint for two {@linkplain GVRRigidBody rigid bodies} that are linked by
- * a joint point related to the first one (the owner of the constraint). Though it can be moved the
- * first body can be referred as "fixed" since it will keep same distance and rotation from this
- * joint point while the second is the "moving" because one can explicitly set restriction for each
- * translation and rotation axis.
+ * Represents a generic constraint between two {@linkplain GVRRigidBody rigid bodies} that are
+ * linked by a joint point related to the first one. Though it can be moved the first body can be
+ * referred as "fixed" since it will keep same distance and rotation from this joint point while the
+ * second is the "moving" because one can explicitly set restriction for each translation and
+ * rotation axis.
  */
 public class GVRGenericConstraint extends GVRConstraint {
     /**
      * Construct a new instance of a generic constraint.
      *
      * @param gvrContext the context of the app
-     * @param rigidBodyB the "moving" body (not the owner) in this constraint
+     * @param rigidBodyA the "fixed" body in this constraint
+     * @param rigidBodyB the "moving" body in this constraint
      * @param joint the joint point (x, y and z coordinates) in this constraint relative to "fixed"
      *              body
      * @param rotationA the rotation of the constraint (an array containing the elements of 3x3
@@ -42,15 +43,18 @@ public class GVRGenericConstraint extends GVRConstraint {
      * @param rotationB the rotation of the constraint (an array containing the elements of 3x3
      *                  rotation matrix) related to "moving" body
      */
-    public GVRGenericConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB, final float joint[],
+    public GVRGenericConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA,
+                                GVRRigidBody rigidBodyB, final float joint[],
                                 final float rotationA[], final float rotationB[]) {
-        super(gvrContext, Native3DGenericConstraint.ctor(
-                rigidBodyB.getNative(), joint, rotationA, rotationB));
+        super(gvrContext, rigidBodyA, rigidBodyB,
+                Native3DGenericConstraint.ctor(rigidBodyA.getNative(), rigidBodyB.getNative(),
+                        joint, rotationA, rotationB));
     }
 
     /** Used only by {@link GVRPhysicsLoader} */
-    GVRGenericConstraint(GVRContext gvrContext, long nativeConstraint) {
-        super(gvrContext, nativeConstraint);
+    GVRGenericConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA, GVRRigidBody rigidBodyB,
+                         long nativeConstraint) {
+        super(gvrContext, rigidBodyA, rigidBodyB, nativeConstraint);
     }
 
     /**
@@ -135,8 +139,8 @@ public class GVRGenericConstraint extends GVRConstraint {
 }
 
 class Native3DGenericConstraint {
-    static native long ctor(long rigidBodyB, final float joint[], final float rotationA[],
-                            final float rotationB[]);
+    static native long ctor(long rigidBodyA, long rigidBodyB, final float joint[],
+                            final float rotationA[], final float rotationB[]);
 
     static native void setLinearLowerLimits(long jconstr, float limX, float limY, float limZ);
 

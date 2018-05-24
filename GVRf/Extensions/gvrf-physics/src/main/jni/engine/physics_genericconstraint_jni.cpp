@@ -25,8 +25,8 @@ namespace gvr {
 
     extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DGenericConstraint_ctor(
-            JNIEnv *env, jobject obj, jlong rigidBodyB, jfloatArray const joint,
+    Java_org_gearvrf_physics_Native3DGenericConstraint_ctor(JNIEnv *env, jobject obj,
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray const joint,
             jfloatArray const rotationA, jfloatArray const rotationB);
 
     JNIEXPORT void JNICALL
@@ -63,15 +63,18 @@ namespace gvr {
     }
 
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DGenericConstraint_ctor(
-            JNIEnv *env, jobject obj, jlong rigidBodyB, jfloatArray const joint,
-            jfloatArray const rotationA, jfloatArray const rotationB) {
-        PhysicsRigidBody *body = reinterpret_cast<PhysicsRigidBody*>(rigidBodyB);
+    Java_org_gearvrf_physics_Native3DGenericConstraint_ctor(JNIEnv *env, jobject obj,
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray const joint,
+            jfloatArray const rotationA, jfloatArray const rotationB)
+    {
+        PhysicsRigidBody *rbA = reinterpret_cast<PhysicsRigidBody*>(rigidBodyA);
+        PhysicsRigidBody *rbB = reinterpret_cast<PhysicsRigidBody*>(rigidBodyB);
         float const *_joint = env->GetFloatArrayElements(joint, 0);
         float const *_rotA = env->GetFloatArrayElements(rotationA, 0);
         float const *_rotB = env->GetFloatArrayElements(rotationB, 0);
 
-        return reinterpret_cast<jlong>(new BulletGeneric6dofConstraint(body, _joint, _rotA, _rotB));
+        return reinterpret_cast<jlong>(new
+                BulletGeneric6dofConstraint(rbA, rbB, _joint, _rotA, _rotB));
     }
 
     JNIEXPORT void JNICALL

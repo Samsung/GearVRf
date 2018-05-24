@@ -21,103 +21,59 @@
 #include "bullet_rigidbody.h"
 #include <BulletDynamics/ConstraintSolver/btHingeConstraint.h>
 
-const char tag[] = "BulletHingeConstrN";
+const char tag[] = "BulletHingeConstr";
 
 namespace gvr {
 
-    BulletHingeConstraint::BulletHingeConstraint(PhysicsRigidBody *rigidBodyB, const float *pivotInA,
-                                                 const float *pivotInB, const float *axisInA,
-                                                 const float *axisInB) {
-        mHingeConstraint = 0;
-        mRigidBodyB = reinterpret_cast<BulletRigidBody*>(rigidBodyB);
-        mBreakingImpulse = SIMD_INFINITY;
-        mPivotInA.set(pivotInA);
-        mPivotInB.set(pivotInB);
-        mAxisInA.set(axisInA);
-        mAxisInB.set(axisInB);
+    BulletHingeConstraint::BulletHingeConstraint(PhysicsRigidBody *rigidBodyA,
+            PhysicsRigidBody *rigidBodyB, const float *pivotInA, const float *pivotInB,
+            const float *axisInA, const float *axisInB)
+    {
+        btVector3 pInA(pivotInA[0], pivotInA[1], pivotInA[2]);
+        btVector3 pInB(pivotInB[0], pivotInB[1], pivotInB[2]);
+        btVector3 aInA(axisInA[0], axisInA[1], axisInA[2]);
+        btVector3 aInB(axisInB[0], axisInB[1], axisInB[2]);
+        btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(rigidBodyA)->getRigidBody();
+        btRigidBody *rbB = reinterpret_cast<BulletRigidBody*>(rigidBodyB)->getRigidBody();
 
-        // By default angular limit is inactive
-        mTempLower = 2.0f;
-        mTempUpper = 0.0f;
+        mHingeConstraint = new btHingeConstraint(*rbA, *rbB, pInA, pInB, aInA, aInB);
+
+        // By default angular limits are inactive
     }
 
     BulletHingeConstraint::BulletHingeConstraint(btHingeConstraint *constraint)
     {
         mHingeConstraint = constraint;
-        mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
         constraint->setUserConstraintPtr(this);
     }
 
-    BulletHingeConstraint::~BulletHingeConstraint() {
-        if (0 != mHingeConstraint) {
-            delete mHingeConstraint;
-        }
+    BulletHingeConstraint::~BulletHingeConstraint()
+    {
+        delete mHingeConstraint;
     }
 
-    void BulletHingeConstraint::setLimits(float lower, float upper) {
-        if (0 == mHingeConstraint) {
-            mTempLower = lower;
-            mTempUpper = upper;
-        }
-        else {
-            mHingeConstraint->setLimit(lower, upper);
-        }
+    void BulletHingeConstraint::setLimits(float lower, float upper)
+    {
+        mHingeConstraint->setLimit(lower, upper);
     }
 
-    float BulletHingeConstraint::getLowerLimit() const {
-        if (0 == mHingeConstraint) {
-            return mTempLower;
-        }
-        else {
-            return mHingeConstraint->getLowerLimit();
-        }
+    float BulletHingeConstraint::getLowerLimit() const
+    {
+        return mHingeConstraint->getLowerLimit();
     }
 
-    float BulletHingeConstraint::getUpperLimit() const {
-        if (0 == mHingeConstraint) {
-            return mTempUpper;
-        }
-        else {
-            return mHingeConstraint->getUpperLimit();
-        }
+    float BulletHingeConstraint::getUpperLimit() const
+    {
+        return mHingeConstraint->getUpperLimit();
     }
 
-    void BulletHingeConstraint::setBreakingImpulse(float impulse) {
-        if (0 != mHingeConstraint) {
-            mHingeConstraint->setBreakingImpulseThreshold(impulse);
-        }
-        else {
-            mBreakingImpulse = impulse;
-        }
+    void BulletHingeConstraint::setBreakingImpulse(float impulse)
+    {
+        mHingeConstraint->setBreakingImpulseThreshold(impulse);
     }
 
-    float BulletHingeConstraint::getBreakingImpulse() const {
-        if (0 != mHingeConstraint) {
-            return mHingeConstraint->getBreakingImpulseThreshold();
-        }
-        else {
-            return mBreakingImpulse;
-        }
-    }
-
-    void BulletHingeConstraint::updateConstructionInfo() {
-//        if (mHingeConstraint != 0) {
-//            delete (mHingeConstraint);
-//        }
-
-        if (mHingeConstraint == nullptr)
-        {
-            btVector3 pivotInA(mPivotInA.x, mPivotInA.y, mPivotInA.z);
-            btVector3 pivotInB(mPivotInB.x, mPivotInB.y, mPivotInB.z);
-            btVector3 axisInA(mAxisInA.x, mAxisInA.y, mAxisInA.z);
-            btVector3 axisInB(mAxisInB.x, mAxisInB.y, mAxisInB.z);
-            btRigidBody *rbA = ((BulletRigidBody *) owner_object()->getComponent(
-                    COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
-
-            mHingeConstraint = new btHingeConstraint(*rbA, *mRigidBodyB->getRigidBody(), pivotInA,
-                                                     pivotInB, axisInA, axisInB);
-            mHingeConstraint->setLimit(mTempLower, mTempUpper);
-            mHingeConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
-        }
+    float BulletHingeConstraint::getBreakingImpulse() const
+    {
+        return mHingeConstraint->getBreakingImpulseThreshold();
     }
 }

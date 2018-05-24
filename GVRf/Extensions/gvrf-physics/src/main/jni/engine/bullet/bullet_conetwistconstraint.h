@@ -32,9 +32,9 @@ namespace gvr {
 
     class BulletConeTwistConstraint : public PhysicsConeTwistConstraint, BulletObject {
     public:
-        explicit BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyB, PhysicsVec3 pivot,
-                                           PhysicsMat3x3 const &bodyRotation,
-                                           PhysicsMat3x3 const &coneRotation);
+        explicit BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyA,
+                PhysicsRigidBody *rigidBodyB, PhysicsVec3 pivot, PhysicsMat3x3 const &bodyRotation,
+                PhysicsMat3x3 const &coneRotation);
 
         BulletConeTwistConstraint(btConeTwistConstraint *constraint);
 
@@ -60,15 +60,6 @@ namespace gvr {
     private:
 
         btConeTwistConstraint *mConeTwistConstraint;
-        BulletRigidBody *mRigidBodyB;
-
-        float mBreakingImpulse;
-        PhysicsVec3 mPivot;
-        PhysicsMat3x3 mBodyRotation;
-        PhysicsMat3x3 mConeRotation;
-
-        float mSwingLimit;
-        float mTwistLimit;
     };
 
 }

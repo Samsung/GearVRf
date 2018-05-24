@@ -254,8 +254,8 @@ BulletFileLoader::~BulletFileLoader()
         PhysicsConstraint *phcons = static_cast<PhysicsConstraint*>(constraint->getUserConstraintPtr());
         if (nullptr != phcons && ((PhysicsConstraint*)-1) != phcons)
         {
-            // Constraint is valid, but was it attached?
-            if (nullptr != phcons->owner_object())
+            // Constraint is valid, but was it added?
+            if (phcons->marked)
             {
                 continue;
             }
@@ -270,7 +270,8 @@ BulletFileLoader::~BulletFileLoader()
         }
     }
 
-    for (i = 0; i < mImporter->getNumRigidBodies(); i++) {
+    for (i = 0; i < mImporter->getNumRigidBodies(); i++)
+    {
         btRigidBody *rb = static_cast<btRigidBody*>(mImporter->getRigidBodyByIndex(i));
         BulletRigidBody *brb = static_cast<BulletRigidBody*>(rb->getUserPointer());
         if (nullptr != brb)

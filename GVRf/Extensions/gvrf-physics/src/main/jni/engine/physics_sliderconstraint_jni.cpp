@@ -26,7 +26,8 @@ namespace gvr {
     extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DSliderConstraint_ctor(JNIEnv * env, jobject obj,
-                                                           jlong rigidBodyB);
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray const rotationA,
+            jfloatArray const rotationB);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_Native3DSliderConstraint_setAngularLowerLimit(JNIEnv * env,
@@ -75,9 +76,14 @@ namespace gvr {
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DSliderConstraint_ctor(JNIEnv * env, jobject obj,
-                                                           jlong rigidBodyB) {
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray const rotationA,
+            jfloatArray const rotationB) {
+        float const *_rotA = env->GetFloatArrayElements(rotationA, 0);
+        float const *_rotB = env->GetFloatArrayElements(rotationB, 0);
+
         return reinterpret_cast<jlong>(new
-                BulletSliderConstraint(reinterpret_cast<PhysicsRigidBody*>(rigidBodyB)));
+                BulletSliderConstraint(reinterpret_cast<PhysicsRigidBody*>(rigidBodyA),
+                reinterpret_cast<PhysicsRigidBody*>(rigidBodyB), _rotA, _rotB));
     }
 
     JNIEXPORT void JNICALL

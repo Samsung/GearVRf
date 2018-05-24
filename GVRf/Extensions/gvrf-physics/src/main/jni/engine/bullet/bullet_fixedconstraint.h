@@ -31,7 +31,7 @@ namespace gvr {
                                          BulletObject  {
 
     public:
-        explicit BulletFixedConstraint(PhysicsRigidBody* rigidBodyB);
+        explicit BulletFixedConstraint(PhysicsRigidBody* rigidBodyA, PhysicsRigidBody* rigidBodyB);
 
         BulletFixedConstraint(btFixedConstraint *constraint);
 
@@ -49,9 +49,6 @@ namespace gvr {
 
     private:
         btFixedConstraint *mFixedConstraint;
-        BulletRigidBody *mRigidBodyB; //this is A
-
-        float mBreakingImpulse;
     };
 
 }

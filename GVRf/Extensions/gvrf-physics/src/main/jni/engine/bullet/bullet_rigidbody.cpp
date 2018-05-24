@@ -67,15 +67,15 @@ void BulletRigidBody::setSimulationType(PhysicsRigidBody::SimulationType type)
         break;
 
         case SimulationType::STATIC:
-        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() |
-                                      btCollisionObject::CollisionFlags::CF_STATIC_OBJECT &
+        mRigidBody->setCollisionFlags((mRigidBody->getCollisionFlags() |
+                                      btCollisionObject::CollisionFlags::CF_STATIC_OBJECT) &
                                       ~btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
         mRigidBody->setActivationState(ISLAND_SLEEPING);
         break;
 
         case SimulationType::KINEMATIC:
-        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() |
-                                       btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT &
+        mRigidBody->setCollisionFlags((mRigidBody->getCollisionFlags() |
+                                       btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT) &
                                        ~btCollisionObject::CollisionFlags::CF_STATIC_OBJECT);
         mRigidBody->setActivationState(ISLAND_SLEEPING);
         break;

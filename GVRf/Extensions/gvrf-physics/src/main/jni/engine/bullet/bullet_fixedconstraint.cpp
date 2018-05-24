@@ -4,61 +4,61 @@
 
 #include "bullet_fixedconstraint.h"
 #include "bullet_rigidbody.h"
+#include "bullet_gvr_utils.h"
 #include <BulletDynamics/ConstraintSolver/btFixedConstraint.h>
 
 #include <android/log.h>
 
-static const char tag[] = "BulletFixedConstrN";
+static const char tag[] = "BulletFixedConstr";
 
 namespace gvr {
 
-BulletFixedConstraint::BulletFixedConstraint(PhysicsRigidBody* rigidBodyB) {
-    mFixedConstraint = 0;
-    mRigidBodyB = reinterpret_cast<BulletRigidBody*>(rigidBodyB);
-    mBreakingImpulse = SIMD_INFINITY;
+BulletFixedConstraint::BulletFixedConstraint(PhysicsRigidBody* rigidBodyA,
+                                             PhysicsRigidBody* rigidBodyB)
+{
+    btRigidBody* rbA = reinterpret_cast<BulletRigidBody*>(rigidBodyA)->getRigidBody();
+    btRigidBody* rbB = reinterpret_cast<BulletRigidBody*>(rigidBodyB)->getRigidBody();
+
+    // Frames will be fixed at updateConstructionInfo()
+    mFixedConstraint = new btFixedConstraint(*rbA, *rbB, rbB->getWorldTransform(),
+            rbA->getWorldTransform());
 }
 
 BulletFixedConstraint::BulletFixedConstraint(btFixedConstraint *constraint)
 {
     mFixedConstraint = constraint;
-    mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
     constraint->setUserConstraintPtr(this);
 }
 
-BulletFixedConstraint::~BulletFixedConstraint() {
-    if (0 != mFixedConstraint) {
-        delete mFixedConstraint;
-    }
+BulletFixedConstraint::~BulletFixedConstraint()
+{
+    delete mFixedConstraint;
 }
 
-void BulletFixedConstraint::setBreakingImpulse(float impulse) {
-    if (0 != mFixedConstraint) {
-        mFixedConstraint->setBreakingImpulseThreshold(impulse);
-    }
-    else {
-        mBreakingImpulse = impulse;
-    }
-}
-
-float BulletFixedConstraint::getBreakingImpulse() const {
-    if (0 != mFixedConstraint) {
-        return mFixedConstraint->getBreakingImpulseThreshold();
-    }
-    else {
-        return mBreakingImpulse;
-    }
-}
-
-void BulletFixedConstraint::updateConstructionInfo() {
-    if (mFixedConstraint != nullptr) {
+void BulletFixedConstraint::updateConstructionInfo()
+{
+    void *user = mFixedConstraint->getUserConstraintPtr();
+    if (user != nullptr && user != (void*)-1)
+    {
+        // Do not update loaded constraint
         return;
     }
-    btRigidBody* rbA = ((BulletRigidBody*)this->owner_object()->
-            getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
 
-    mFixedConstraint = new btFixedConstraint(*rbA, *mRigidBodyB->getRigidBody(),
-                                             mRigidBodyB->getRigidBody()->getWorldTransform(),
-                                             rbA->getWorldTransform());
-    mFixedConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
+    // Will fix BFrame because rigid bodies might be updated when added to the world. This
+    // happens because rigid bodies are added tho the world in physics thread while this
+    // constraint was created in another thread
+    mFixedConstraint->setFrames(mFixedConstraint->getRigidBodyB().getWorldTransform(),
+            mFixedConstraint->getRigidBodyA().getWorldTransform());
 }
+
+void BulletFixedConstraint::setBreakingImpulse(float impulse)
+{
+    mFixedConstraint->setBreakingImpulseThreshold(impulse);
+}
+
+float BulletFixedConstraint::getBreakingImpulse() const
+{
+    return mFixedConstraint->getBreakingImpulseThreshold();
+}
+
 }

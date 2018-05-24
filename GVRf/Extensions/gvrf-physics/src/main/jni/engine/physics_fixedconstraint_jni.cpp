@@ -20,13 +20,16 @@ namespace gvr {
 
     extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DFixedConstraint_ctor(JNIEnv * env, jobject obj, jlong rigidBodyB);
+    Java_org_gearvrf_physics_Native3DFixedConstraint_ctor(JNIEnv * env, jobject obj,
+                                                          jlong rigidBodyA, jlong rigidBodyB);
     }
 
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DFixedConstraint_ctor(JNIEnv * env, jobject obj, jlong rigidBodyB) {
+    Java_org_gearvrf_physics_Native3DFixedConstraint_ctor(JNIEnv * env, jobject obj,
+                                                          jlong rigidBodyA, jlong rigidBodyB) {
         return reinterpret_cast<jlong>(
-                new BulletFixedConstraint(reinterpret_cast<PhysicsRigidBody*>(rigidBodyB)));
+                new BulletFixedConstraint(reinterpret_cast<PhysicsRigidBody*>(rigidBodyA),
+                                          reinterpret_cast<PhysicsRigidBody*>(rigidBodyB)));
     }
 
 }

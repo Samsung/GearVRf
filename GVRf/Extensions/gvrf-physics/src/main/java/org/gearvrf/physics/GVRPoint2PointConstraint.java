@@ -31,19 +31,22 @@ public class GVRPoint2PointConstraint extends GVRConstraint {
      * Constructs new instance of point-to-point constraint.
      *
      * @param gvrContext the context of the app
-     * @param rigidBodyB the second rigid body (not the owner) in this constraint
-     * @param pivotInA the pivot point (x, y and z coordinates) related to body A (the owner)
+     * @param rigidBodyA the first rigid body in this constraint
+     * @param rigidBodyB the second rigid body in this constraint
+     * @param pivotInA the pivot point (x, y and z coordinates) related to body A
      * @param pivotInB the pivot point related to body B
      */
-    public GVRPoint2PointConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB,
-                                    float pivotInA[], float pivotInB[]) {
-        super(gvrContext,
-                Native3DPoint2PointConstraint.ctor(rigidBodyB.getNative(), pivotInA, pivotInB));
+    public GVRPoint2PointConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA,
+                                    GVRRigidBody rigidBodyB, float pivotInA[], float pivotInB[]) {
+        super(gvrContext, rigidBodyA, rigidBodyB,
+                Native3DPoint2PointConstraint.ctor(rigidBodyA.getNative(), rigidBodyB.getNative(),
+                        pivotInA, pivotInB));
     }
 
     /** Used only by {@link GVRPhysicsLoader} */
-    GVRPoint2PointConstraint(GVRContext gvrContext, long nativeConstraint) {
-        super(gvrContext, nativeConstraint);
+    GVRPoint2PointConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA,
+                             GVRRigidBody rigidBodyB, long nativeConstraint) {
+        super(gvrContext, rigidBodyA, rigidBodyB, nativeConstraint);
     }
 
     /**
@@ -84,7 +87,7 @@ public class GVRPoint2PointConstraint extends GVRConstraint {
 }
 
 class Native3DPoint2PointConstraint {
-    static native long ctor(long rbB, float pivotInA[], float pivotInB[]);
+    static native long ctor(long rbA, long rbB, float pivotInA[], float pivotInB[]);
 
     static native void setPivotInA(long nativeConstraint, float x, float y, float z);
 

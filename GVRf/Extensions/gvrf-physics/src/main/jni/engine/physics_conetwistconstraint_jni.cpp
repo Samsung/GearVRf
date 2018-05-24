@@ -26,9 +26,8 @@ namespace gvr {
     extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DConeTwistConstraint_ctor(JNIEnv *env, jobject obj,
-                                                              jlong rigidBodyB, jfloatArray pivot,
-                                                              const jfloatArray bodyRotation,
-                                                              const jfloatArray coneRotation);
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray pivot, const jfloatArray bodyRotation,
+            const jfloatArray coneRotation);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_Native3DConeTwistConstraint_setSwingLimit(JNIEnv *env, jobject obj,
@@ -52,17 +51,17 @@ namespace gvr {
 
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DConeTwistConstraint_ctor(JNIEnv *env, jobject obj,
-                                                              jlong rigidBodyB,
-                                                              const jfloatArray pivot,
-                                                              const jfloatArray bodyRotation,
-                                                              const jfloatArray coneRotation) {
+            jlong rigidBodyA, jlong rigidBodyB, const jfloatArray pivot,
+            const jfloatArray bodyRotation, const jfloatArray coneRotation)
+    {
+        PhysicsRigidBody *rbA = reinterpret_cast<PhysicsRigidBody*>(rigidBodyA);
+        PhysicsRigidBody *rbB = reinterpret_cast<PhysicsRigidBody*>(rigidBodyB);
         PhysicsVec3 _pivot(env->GetFloatArrayElements(pivot, 0));
         PhysicsMat3x3 _b_rot(env->GetFloatArrayElements(bodyRotation, 0));
         PhysicsMat3x3 _c_rot(env->GetFloatArrayElements(coneRotation, 0));
 
         return reinterpret_cast<jlong>(new
-                BulletConeTwistConstraint(reinterpret_cast<PhysicsRigidBody*>(rigidBodyB),
-                                          _pivot, _b_rot, _c_rot));
+                BulletConeTwistConstraint(rbA, rbB, _pivot, _b_rot, _c_rot));
     }
 
     JNIEXPORT void JNICALL

@@ -22,16 +22,17 @@ import org.gearvrf.GVRContext;
  */
 
 /**
- * Represents a constraint for two {@linkplain GVRRigidBody bodies} in which the first one (the
- * owner) swings constrained to a right circular conic trajectory around a vortex while the other
- * body is simply fixed to this vortex (meaning that the vortex will move if the second body moves).
+ * Represents a constraint between two {@linkplain GVRRigidBody bodies} in which the first one
+ * swings constrained to a right circular conic trajectory around a vortex while the other body
+ * is simply fixed to this vortex (meaning that the vortex will move if the second body moves).
  */
 public class GVRConeTwistConstraint extends GVRConstraint {
     /**
      * Construct a new instance of a conic twist constraint.
      *
      * @param gvrContext the context of the app
-     * @param rigidBodyB the second rigid body (not the owner) in this constraint
+     * @param rigidBodyA the first rigid body in this constraint
+     * @param rigidBodyB the second rigid body in this constraint
      * @param vortex the vortex position (x, y and z coordinates) of the conic swing relative to
      *               first body (the owner)
      * @param bodyRotation a vector containing the elements of the 3x3 rotation matrix for the
@@ -39,15 +40,18 @@ public class GVRConeTwistConstraint extends GVRConstraint {
      * @param coneRotation a vector containing the elements of the 3x3 rotation matrix for the conic
      *                     trajectory
      */
-    public GVRConeTwistConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB, final float vortex[],
-                           final float bodyRotation[], final float coneRotation[]) {
-        super(gvrContext, Native3DConeTwistConstraint.ctor(rigidBodyB.getNative(), vortex,
-                bodyRotation, coneRotation));
+    public GVRConeTwistConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA,
+                                  GVRRigidBody rigidBodyB, final float vortex[],
+                                  final float bodyRotation[], final float coneRotation[]) {
+        super(gvrContext, rigidBodyA, rigidBodyB,
+                Native3DConeTwistConstraint.ctor(rigidBodyA.getNative(), rigidBodyB.getNative(),
+                        vortex, bodyRotation, coneRotation));
     }
 
     /** Used only by {@link GVRPhysicsLoader} */
-    GVRConeTwistConstraint(GVRContext gvrContext, long nativeConstraint) {
-        super(gvrContext, nativeConstraint);
+    GVRConeTwistConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA, GVRRigidBody rigidBodyB,
+                           long nativeConstraint) {
+        super(gvrContext, rigidBodyA, rigidBodyB, nativeConstraint);
     }
 
     /**
@@ -88,8 +92,8 @@ public class GVRConeTwistConstraint extends GVRConstraint {
 }
 
 class Native3DConeTwistConstraint {
-    static native long ctor(long rigidBody, final float pivot[], final float bodyRotation[],
-                            final float coneRotation[]);
+    static native long ctor(long rigidBodyA, long rigidBodyB, final float pivot[],
+                            final float bodyRotation[], final float coneRotation[]);
 
     static native void setSwingLimit(long jconstraint, float limit);
 

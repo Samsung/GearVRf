@@ -21,7 +21,7 @@ namespace gvr {
     extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_Native3DPoint2PointConstraint_ctor(JNIEnv * env, jobject obj,
-        jlong rigidBodyB, jfloatArray pivotInA, jfloatArray pivotInB);
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray pivotInA, jfloatArray pivotInB);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_Native3DPoint2PointConstraint_setPivotInA(JNIEnv * env, jobject obj,
@@ -57,12 +57,13 @@ namespace gvr {
     }
 
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_physics_Native3DPoint2PointConstraint_ctor(JNIEnv * env, jobject obj, 
-        jlong rigidBodyB, jfloatArray pivotInA, jfloatArray pivotInB) {
+    Java_org_gearvrf_physics_Native3DPoint2PointConstraint_ctor(JNIEnv * env, jobject obj,
+            jlong rigidBodyA, jlong rigidBodyB, jfloatArray pivotInA, jfloatArray pivotInB) {
         jfloat *pA = env->GetFloatArrayElements(pivotInA, 0);
         jfloat *pB = env->GetFloatArrayElements(pivotInB, 0);
         return reinterpret_cast<jlong>(new BulletPoint2PointConstraint(
-                    reinterpret_cast<PhysicsRigidBody*>(rigidBodyB), pA, pB));
+                reinterpret_cast<PhysicsRigidBody*>(rigidBodyA),
+                reinterpret_cast<PhysicsRigidBody*>(rigidBodyB), pA, pB));
     }
 
     JNIEXPORT void JNICALL

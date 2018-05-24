@@ -16,7 +16,7 @@
 #ifndef EXTENSIONS_PHYSICS_CONSTRAINT_H
 #define EXTENSIONS_PHYSICS_CONSTRAINT_H
 
-#include "../objects/scene_object.h"
+#include "../objects/hybrid_object.h"
 
 namespace gvr {
 
@@ -28,15 +28,13 @@ namespace gvr {
 
     };
 
-    class PhysicsConstraint : public Component {
+    class PhysicsRigidBody;
+
+    class PhysicsConstraint : public HybridObject {
     public:
-        PhysicsConstraint() : Component(PhysicsConstraint::getComponentType()){}
+        PhysicsConstraint() : HybridObject(), marked(false){}
 
         virtual ~PhysicsConstraint() {}
-
-        static long long getComponentType() {
-            return COMPONENT_TYPE_PHYSICS_CONSTRAINT;
-        }
 
         virtual int getConstraintType() const = 0;
 
@@ -47,9 +45,10 @@ namespace gvr {
     //virtual void setJointFeedback(JointFeedback const * feedback) = 0;
         virtual void *getUnderlying() = 0;
 
+        virtual void updateConstructionInfo() {}
+
         virtual void setBreakingImpulse(float impulse) = 0;
         virtual float getBreakingImpulse() const = 0;
-        virtual void updateConstructionInfo() = 0;
 
         enum ConstraintType {
             fixedConstraint = 1,
@@ -59,6 +58,8 @@ namespace gvr {
             coneTwistConstraint = 5,
             genericConstraint = 6,
         };
+
+        bool marked;
     };
 
 }

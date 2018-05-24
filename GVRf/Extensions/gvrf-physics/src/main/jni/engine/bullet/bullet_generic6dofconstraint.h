@@ -32,8 +32,9 @@ namespace gvr {
 
     class BulletGeneric6dofConstraint : public PhysicsGenericConstraint, BulletObject {
     public:
-        explicit BulletGeneric6dofConstraint(PhysicsRigidBody *rigidBodyB, float const joint[],
-                                             float const rotationA[], float const rotationB[]);
+        explicit BulletGeneric6dofConstraint(PhysicsRigidBody *rigidBodyA,
+                PhysicsRigidBody *rigidBodyB, float const joint[], float const rotationA[],
+                float const rotationB[]);
 
         BulletGeneric6dofConstraint(btGeneric6DofConstraint *constraint);
 
@@ -66,17 +67,6 @@ namespace gvr {
     private:
 
         btGeneric6DofConstraint *mGeneric6DofConstraint;
-        BulletRigidBody *mRigidBodyB;
-
-        float mBreakingImpulse;
-        PhysicsVec3 mLinearLowerLimits;
-        PhysicsVec3 mLinearUpperLimits;
-        PhysicsVec3 mAngularLowerLimits;
-        PhysicsVec3 mAngularUpperLimits;
-
-        PhysicsVec3 mPosition;
-        PhysicsMat3x3 mRotationA;
-        PhysicsMat3x3 mRotationB;
     };
 
 }

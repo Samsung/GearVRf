@@ -23,119 +23,94 @@
 #include <BulletDynamics/ConstraintSolver/btConeTwistConstraint.h>
 #include <LinearMath/btScalar.h>
 
-const char tag[] = "BulletConeTwistConstrN";
+const char tag[] = "BulletConeTwistConstr";
 
 namespace gvr {
-    BulletConeTwistConstraint::BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyB,
-                                                         PhysicsVec3 pivot,
-                                                         PhysicsMat3x3 const &bodyRotation,
-                                                         PhysicsMat3x3 const &coneRotation) {
-        mConeTwistConstraint = 0;
-        mRigidBodyB = reinterpret_cast<BulletRigidBody*>(rigidBodyB);
 
-        mBreakingImpulse = SIMD_INFINITY;
-        mPivot = pivot;
-        mBodyRotation = bodyRotation;
-        mConeRotation = coneRotation;
-        mSwingLimit = SIMD_PI * 0.25f;
-        mTwistLimit = SIMD_PI;
+    BulletConeTwistConstraint::BulletConeTwistConstraint(PhysicsRigidBody *rigidBodyA,
+            PhysicsRigidBody *rigidBodyB, PhysicsVec3 pivot, PhysicsMat3x3 const &bodyRotation,
+            PhysicsMat3x3 const &coneRotation)
+    {
+        btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(rigidBodyA)->getRigidBody();
+        btRigidBody *rbB = reinterpret_cast<BulletRigidBody*>(rigidBodyB)->getRigidBody();
+
+        // Original pivot is relative to body A (the one that swings)
+        btVector3 p(pivot.x, pivot.y, pivot.z);
+
+        btMatrix3x3 m(bodyRotation.vec[0], bodyRotation.vec[1], bodyRotation.vec[2],
+                bodyRotation.vec[3], bodyRotation.vec[4], bodyRotation.vec[5],
+                bodyRotation.vec[6], bodyRotation.vec[7], bodyRotation.vec[8]);
+        btTransform fA(m, p);
+
+        m.setValue(coneRotation.vec[0], coneRotation.vec[1], coneRotation.vec[2],
+                coneRotation.vec[3], coneRotation.vec[4], coneRotation.vec[5],
+                coneRotation.vec[6], coneRotation.vec[7], coneRotation.vec[8]);
+
+        // Pivot for body B will be fixed in updateConstructionInfo()
+        btTransform fB(m, p);
+
+        mConeTwistConstraint = new btConeTwistConstraint(*rbA, *rbB, fA, fB);
     }
 
     BulletConeTwistConstraint::BulletConeTwistConstraint(btConeTwistConstraint *constraint)
     {
         mConeTwistConstraint = constraint;
-        mRigidBodyB = static_cast<BulletRigidBody*>(constraint->getRigidBodyB().getUserPointer());
         constraint->setUserConstraintPtr(this);
     }
 
-    BulletConeTwistConstraint::~BulletConeTwistConstraint() {
-        if (0 != mConeTwistConstraint) {
-            delete mConeTwistConstraint;
-        }
+    BulletConeTwistConstraint::~BulletConeTwistConstraint()
+    {
+        delete mConeTwistConstraint;
     }
 
-    void BulletConeTwistConstraint::setSwingLimit(float limit) {
-        if (0 != mConeTwistConstraint) {
-            mConeTwistConstraint->setLimit(4, limit);
-            mConeTwistConstraint->setLimit(5, limit);
-        }
-        else {
-            mSwingLimit = limit;
-        }
+    void BulletConeTwistConstraint::setSwingLimit(float limit)
+    {
+        mConeTwistConstraint->setLimit(4, limit);
+        mConeTwistConstraint->setLimit(5, limit);
     }
 
-    float BulletConeTwistConstraint::getSwingLimit() const {
-        if (0 != mConeTwistConstraint) {
-            return mConeTwistConstraint->getLimit(4);
-        }
-        else {
-            return mSwingLimit;
-        }
+    float BulletConeTwistConstraint::getSwingLimit() const
+    {
+        return mConeTwistConstraint->getLimit(4);
     }
 
-    void BulletConeTwistConstraint::setTwistLimit(float limit) {
-        if (0 != mConeTwistConstraint) {
-            mConeTwistConstraint->setLimit(3, limit);
-        }
-        else {
-            mTwistLimit = limit;
-        }
+    void BulletConeTwistConstraint::setTwistLimit(float limit)
+    {
+        mConeTwistConstraint->setLimit(3, limit);
     }
 
-    float BulletConeTwistConstraint::getTwistLimit() const {
-        if (0 != mConeTwistConstraint) {
-            return mConeTwistConstraint->getLimit(3);
-        }
-        else {
-            return mTwistLimit;
-        }
+    float BulletConeTwistConstraint::getTwistLimit() const
+    {
+        return mConeTwistConstraint->getLimit(3);
     }
 
-    void BulletConeTwistConstraint::setBreakingImpulse(float impulse) {
-        if (0 != mConeTwistConstraint) {
-            mConeTwistConstraint->setBreakingImpulseThreshold(impulse);
-        }
-        else {
-            mBreakingImpulse = impulse;
-        }
+    void BulletConeTwistConstraint::setBreakingImpulse(float impulse)
+    {
+        mConeTwistConstraint->setBreakingImpulseThreshold(impulse);
     }
 
-    float BulletConeTwistConstraint::getBreakingImpulse() const {
-        if (0 != mConeTwistConstraint) {
-            return mConeTwistConstraint->getBreakingImpulseThreshold();
-        }
-        else {
-            return mBreakingImpulse;
-        }
+    float BulletConeTwistConstraint::getBreakingImpulse() const
+    {
+        return mConeTwistConstraint->getBreakingImpulseThreshold();
     }
 
-void BulletConeTwistConstraint::updateConstructionInfo() {
-    if (mConeTwistConstraint != nullptr) {
-        return;
+    void BulletConeTwistConstraint::updateConstructionInfo()
+    {
+        void *user = mConeTwistConstraint->getUserConstraintPtr();
+        if (user != nullptr && user != (void*)-1)
+        {
+            // Do not update loaded constraint
+            return;
+        }
+
+        // Will fix BFrame because rigid bodies might be updated when added to the world. This
+        // happens because rigid bodies are added tho the world in physics thread while this
+        // constraint was created in another thread
+        btVector3 p(mConeTwistConstraint->getAFrame().getOrigin());
+        p = mConeTwistConstraint->getRigidBodyA().getWorldTransform().getOrigin() + p;
+        p -= mConeTwistConstraint->getRigidBodyB().getWorldTransform().getOrigin();
+        btTransform fB(mConeTwistConstraint->getBFrame().getBasis(), p);
+        mConeTwistConstraint->setFrames(mConeTwistConstraint->getAFrame(), fB);
     }
 
-    btRigidBody *rbA = reinterpret_cast<BulletRigidBody*>(owner_object()
-            ->getComponent(COMPONENT_TYPE_PHYSICS_RIGID_BODY))->getRigidBody();
-
-    // Original pivot is relative to body A (the one that swings)
-    btVector3 p(mPivot.x, mPivot.y, mPivot.z);
-
-    btMatrix3x3 m(mBodyRotation.vec[0], mBodyRotation.vec[1], mBodyRotation.vec[2],
-                  mBodyRotation.vec[3], mBodyRotation.vec[4], mBodyRotation.vec[5],
-                  mBodyRotation.vec[6], mBodyRotation.vec[7], mBodyRotation.vec[8]);
-    btTransform fA(m, p);
-
-    m.setValue(mConeRotation.vec[0], mConeRotation.vec[1], mConeRotation.vec[2],
-               mConeRotation.vec[3], mConeRotation.vec[4], mConeRotation.vec[5],
-               mConeRotation.vec[6], mConeRotation.vec[7], mConeRotation.vec[8]);
-
-    // Pivot for body B must be calculated
-    p = rbA->getWorldTransform().getOrigin() + p;
-    p -= mRigidBodyB->getRigidBody()->getWorldTransform().getOrigin();
-    btTransform fB(m, p);
-
-    mConeTwistConstraint = new btConeTwistConstraint(*rbA, *mRigidBodyB->getRigidBody(), fA, fB);
-    mConeTwistConstraint->setLimit(mSwingLimit, mSwingLimit, mTwistLimit);
-    mConeTwistConstraint->setBreakingImpulseThreshold(mBreakingImpulse);
-}
 }

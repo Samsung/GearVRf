@@ -33,9 +33,9 @@ namespace gvr {
                                   BulletObject {
 
     public:
-        explicit BulletHingeConstraint(PhysicsRigidBody *rigidBodyB, float const pivotInA[],
-                                       float const pivotInB[], float const axisInA[],
-                                       float const axisInB[]);
+        explicit BulletHingeConstraint(PhysicsRigidBody *rigidBodyA,
+                PhysicsRigidBody *rigidBodyB, float const pivotInA[], float const pivotInB[],
+                float const axisInA[], float const axisInB[]);
 
         BulletHingeConstraint(btHingeConstraint *constraint);
 
@@ -53,20 +53,8 @@ namespace gvr {
 
         float getBreakingImpulse() const;
 
-        void updateConstructionInfo();
-
     private:
         btHingeConstraint *mHingeConstraint;
-        BulletRigidBody *mRigidBodyB;
-
-        float mBreakingImpulse;
-        float mTempLower;
-        float mTempUpper;
-
-        PhysicsVec3 mPivotInA;
-        PhysicsVec3 mPivotInB;
-        PhysicsVec3 mAxisInA;
-        PhysicsVec3 mAxisInB;
     };
 }
 #endif //EXTENSIONS_BULLET_HINGECONSTRAINT_H

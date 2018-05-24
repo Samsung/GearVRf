@@ -79,8 +79,8 @@ void BulletWorld::finalize() {
 }
 
 void BulletWorld::addConstraint(PhysicsConstraint *constraint) {
-    constraint->updateConstructionInfo();
     btTypedConstraint *_constr = reinterpret_cast<btTypedConstraint*>(constraint->getUnderlying());
+    constraint->updateConstructionInfo();
     mPhysicsWorld->addConstraint(_constr);
 }
 

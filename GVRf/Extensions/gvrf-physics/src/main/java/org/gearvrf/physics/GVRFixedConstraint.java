@@ -16,6 +16,7 @@
 package org.gearvrf.physics;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 
 /**
  * Represents a constraint that forces two {@linkplain GVRRigidBody rigid bodies} to keep same
@@ -27,18 +28,22 @@ public class GVRFixedConstraint extends GVRConstraint {
      * Constructs new instance of fixed constraint.
      *
      * @param gvrContext the context of the app
-     * @param rigidBodyB the second rigid body (not the owner) in this constraint
+     * @param rigidBodyA the first rigid body in this constraints
+     * @param rigidBodyB the second rigid body in this constraint
      */
-    public GVRFixedConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB) {
-        super(gvrContext, Native3DFixedConstraint.ctor(rigidBodyB.getNative()));
+    public GVRFixedConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA,
+                              GVRRigidBody rigidBodyB) {
+        super(gvrContext, rigidBodyA, rigidBodyB,
+                Native3DFixedConstraint.ctor(rigidBodyA.getNative(), rigidBodyB.getNative()));
     }
 
     /** Used only by {@link GVRPhysicsLoader} */
-    GVRFixedConstraint(GVRContext gvrContext, long nativeConstraint) {
-        super(gvrContext, nativeConstraint);
+    GVRFixedConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyA, GVRRigidBody rigidBodyB,
+                       long nativeConstraint) {
+        super(gvrContext, rigidBodyA, rigidBodyB, nativeConstraint);
     }
 }
 
 class Native3DFixedConstraint {
-    static native long ctor( long rbB);
+    static native long ctor(long rbA, long rbB);
 }

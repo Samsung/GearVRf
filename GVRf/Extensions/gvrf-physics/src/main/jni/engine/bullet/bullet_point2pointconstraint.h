@@ -31,8 +31,8 @@ namespace gvr {
                                                BulletObject {
 
     public:
-        explicit BulletPoint2PointConstraint(PhysicsRigidBody* rigidBodyB, float pivotInA[],
-                                             float pivotInB[]);
+        explicit BulletPoint2PointConstraint(PhysicsRigidBody *rigidBodyA,
+                PhysicsRigidBody* rigidBodyB, float pivotInA[], float pivotInB[]);
 
         BulletPoint2PointConstraint(btPoint2PointConstraint *constraint);
 
@@ -48,21 +48,14 @@ namespace gvr {
 
         void setPivotInA(PhysicsVec3 pivot);
 
-        PhysicsVec3 getPivotInA() const { return mPivotInA; }
+        PhysicsVec3 getPivotInA() const;
 
         void setPivotInB(PhysicsVec3 pivot);
 
-        PhysicsVec3 getPivotInB() const { return mPivotInB; }
-
-        void updateConstructionInfo();
+        PhysicsVec3 getPivotInB() const;
 
     private:
         btPoint2PointConstraint *mPoint2PointConstraint;
-        BulletRigidBody *mRigidBodyB;
-
-        float mBreakingImpulse;
-        PhysicsVec3 mPivotInA;
-        PhysicsVec3 mPivotInB;
     };
 }
 #endif //BULLET_POINT2POINTCONSTRAINT_H

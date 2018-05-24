@@ -20,6 +20,8 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 
+import java.util.ArrayList;
+
 /**
  * Represents a rigid body that can be static or dynamic. You can set a mass and apply some
  * physics forces.
@@ -44,6 +46,8 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
 
     private final int mCollisionGroup;
     private final GVRPhysicsContext mPhysicsContext;
+
+    ArrayList<GVRConstraint> mConstraints = new ArrayList<>();
 
     /**
      * Constructs new instance to simulate a rigid body in {@link GVRWorld}.
@@ -424,6 +428,66 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
      */
     public int getCollisionGroup() {
         return mCollisionGroup;
+    }
+
+    /** Called by {@link GVRConstraint} when it wants to be added to the world */
+    void addConstraint(GVRConstraint constraint) {
+        mConstraints.add(constraint);
+        if (isEnabled() && getWorld() != null) {
+            getWorld().addConstraint(constraint);
+        }
+    }
+
+    /** Called by {@link GVRConstraint} when it wants to be removed from the world */
+    void removeConstraint(GVRConstraint constraint) {
+        mConstraints.remove(constraint);
+
+        if (getWorld() != null) {
+            getWorld().removeConstraint(constraint);
+        }
+    }
+
+    /**
+     * Removes all constraints from this rigid body. Call this if you are going to discard this
+     * rigid body
+     */
+    public void removeAllConstraints() {
+        // Will also remove these constraints from the other bodies
+        for (GVRConstraint constraint : mConstraints) {
+            if (constraint.getBodyA() == this) {
+                constraint.getBodyB().removeConstraint(constraint);
+            } else {
+                constraint.getBodyA().removeConstraint(constraint);
+            }
+        }
+
+        if (getWorld() != null) {
+            // Removes also from the physics simulation world if it 'knows' it!
+            for (GVRConstraint constraint : mConstraints) {
+                getWorld().removeConstraint(constraint);
+            }
+        }
+
+        mConstraints.clear();
+    }
+
+    /**
+     * Performs a case-sensitive search for a constraint.
+     *
+     * @param name name of the constraint to look for.
+     *
+     * @return first match in the collection; null if none was found.
+     */
+    public GVRConstraint getConstraintByName(String name) {
+        if (name != null) {
+            for (GVRConstraint constraint : mConstraints) {
+                if (name.equals(constraint.getName())) {
+                    return constraint;
+                }
+            }
+        }
+
+        return null;
     }
 
     @Override
