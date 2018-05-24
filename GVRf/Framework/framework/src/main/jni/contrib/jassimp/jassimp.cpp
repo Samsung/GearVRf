@@ -1331,7 +1331,7 @@ static bool loadMaterials(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 		}
 
 		/* set texture numbers */
-		for (int ttInd = aiTextureType_DIFFUSE; ttInd < aiTextureType_UNKNOWN; ttInd++) 
+		for (int ttInd = aiTextureType_DIFFUSE; ttInd <= aiTextureType_UNKNOWN; ttInd++)
 		{
 			aiTextureType tt = static_cast<aiTextureType>(ttInd);
 
