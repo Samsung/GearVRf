@@ -19,28 +19,17 @@
  ***************************************************************************/
 
 #include "collider.h"
-#include "glm/gtc/type_ptr.hpp"
 #include "util/gvr_jni.h"
 
 namespace gvr {
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeCollider_ctor(JNIEnv * env, jobject obj);
-
-    JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeCollider_getComponentType(JNIEnv * env, jobject obj);
-}
-
-JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeCollider_ctor(JNIEnv * env, jobject obj)
-{
-    return reinterpret_cast<jlong>(new Collider());
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCollider_getComponentType(JNIEnv * env, jobject obj) {
     return Collider::getComponentType();
 }
-
 
 }

@@ -84,7 +84,7 @@ void Picker::pickClosest(Scene* scene,
     Collider::transformRay(model_matrix, ray_start, ray_dir);
     for (auto it = colliders.begin(); it != colliders.end(); ++it)
     {
-        Collider* collider = reinterpret_cast<Collider*>(*it);
+        Collider* collider = static_cast<Collider*>(*it);
         SceneObject* owner = collider->owner_object();
         if (collider->enabled() && (owner != NULL) && owner->enabled())
         {

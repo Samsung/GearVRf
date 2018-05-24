@@ -21,6 +21,7 @@ namespace gvr {
     const long COLLIDER_SHAPE_BOX       = 10001;
     const long COLLIDER_SHAPE_SPHERE    = 10002;
     const long COLLIDER_SHAPE_MESH      = 10003;
+    const long COLLIDER_SHAPE_GROUP     = 10004;
 }
 
 #endif

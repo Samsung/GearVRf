@@ -30,7 +30,7 @@ import java.util.List;
  * @see GVRMeshCollider
  * @see GVRSceneObject#attachComponent(GVRComponent)
  */
-public class GVRCollider extends GVRComponentGroup<GVRCollider> {
+public class GVRCollider extends GVRComponent {
     private float mPickDistance = 0;
     private static final LongSparseArray<WeakReference<GVRCollider>> sColliders = new LongSparseArray<WeakReference<GVRCollider>>();
     private final static List<NativeCleanupHandler> sCleanup;
@@ -56,21 +56,10 @@ public class GVRCollider extends GVRComponentGroup<GVRCollider> {
      * @see GVRCollider#lookup(long)
      */
     protected void registerNativePointer(long nativePointer) {
-        synchronized (sColliders) {
-        sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
-    }
-    }
-
-    /**
-     * Constructs an empty collider. Use this to construct a collider
-     * that holds a set of colliders attached to a scene object.
-     *
-     * @param context
-     *            current {@link GVRContext}
-     */
-    public GVRCollider(GVRContext context)
-    {
-        this(context, NativeCollider.ctor());
+        synchronized (sColliders)
+        {
+            sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
+        }
     }
 
     /**
@@ -80,6 +69,7 @@ public class GVRCollider extends GVRComponentGroup<GVRCollider> {
     protected GVRCollider(GVRContext context, long nativePointer)
     {
         super(context, nativePointer, sConcatenations.getUniqueConcatenation(sCleanup));
+        mType = getComponentType();
         registerNativePointer(nativePointer);
     }
    
@@ -96,10 +86,11 @@ public class GVRCollider extends GVRComponentGroup<GVRCollider> {
      */
     static GVRCollider lookup(long nativePointer)
     {
-        synchronized (sColliders) {
-        WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
-        return weakReference == null ? null : weakReference.get();
-    }
+        synchronized (sColliders)
+        {
+            WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
+            return weakReference == null ? null : weakReference.get();
+        }
     }
     
     /**
@@ -150,33 +141,9 @@ public class GVRCollider extends GVRComponentGroup<GVRCollider> {
         }
     }
 
-    /**
-     * Add a {@link GVRCollider} to this collider-group
-     *
-     * @param collider
-     *            The {@link GVRCollider} to add
-     */
-    public boolean addChildCollider(GVRCollider collider) {
-        return super.addChildComponent(collider);
-    }
-
-    /**
-     * Remove a {@link GVRCollider} from this collider-group.
-     *
-     * No exception is thrown if the collider is not held by this collider-group.
-     *
-     * @param collider
-     *            The {@link GVRCollider} to remove
-     *
-     */
-    public void removeChildCollider(GVRCollider collider) {
-        super.removeChildComponent(collider);
-    }
 }
 
 class NativeCollider
 {
-    static native long ctor();
-    
     static native long getComponentType();
 }

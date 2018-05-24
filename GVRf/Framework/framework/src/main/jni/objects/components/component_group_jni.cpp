@@ -25,6 +25,9 @@
 
 namespace gvr {
 extern "C" {
+    JNIEXPORT long JNICALL
+    Java_org_gearvrf_NativeComponentGroup_ctor(JNIEnv * env,
+                                               jobject obj, jlong componentType);
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeComponentGroup_addChildComponent(JNIEnv * env,
             jobject obj, jlong jgroup, jlong jcomponent);
@@ -35,10 +38,17 @@ extern "C" {
             jlong jcomponent);
 }
 
+JNIEXPORT long JNICALL
+Java_org_gearvrf_NativeComponentGroup_ctor(JNIEnv * env,
+                                           jobject obj, jlong componentType)
+{
+    return reinterpret_cast<jlong>(new ComponentGroup(componentType));
+}
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeComponentGroup_addChildComponent(JNIEnv * env,
         jobject obj, jlong jgroup, jlong jcomponent) {
-    ComponentGroup* group = reinterpret_cast<ComponentGroup*>(jgroup);
+    Component* group = reinterpret_cast<Component*>(jgroup);
     Component* component = reinterpret_cast<Component*>(jcomponent);
     group->addChildComponent(component);
 }
@@ -46,7 +56,7 @@ Java_org_gearvrf_NativeComponentGroup_addChildComponent(JNIEnv * env,
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeComponentGroup_removeChildComponent(JNIEnv * env,
         jobject obj, jlong jgroup, jlong jcomponent) {
-    ComponentGroup* group = reinterpret_cast<ComponentGroup*>(jgroup);
+    Component* group = reinterpret_cast<Component*>(jgroup);
     Component* component = reinterpret_cast<Component*>(jcomponent);
     group->removeChildComponent(component);
 }

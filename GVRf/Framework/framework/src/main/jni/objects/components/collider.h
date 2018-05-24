@@ -58,12 +58,9 @@ public:
  * Component attached to a SceneObject that provides
  * collision geometry and makes an object pickable.
  */
-class Collider: public ComponentGroup
+class Collider: public Component
 {
 public:
-    Collider() : ComponentGroup(Collider::getComponentType()), pick_distance_(0) {}
-    explicit Collider(long long type) : ComponentGroup(type), pick_distance_(0) {}
-
     virtual ~Collider() {}
 
     /*
@@ -116,6 +113,9 @@ public:
     static void transformSphere(const glm::mat4& model_matrix, float* sphere);
 
 protected:
+    Collider() : Component(Collider::getComponentType()), pick_distance_(0) {}
+    explicit Collider(long long type) : Component(type), pick_distance_(0) {}
+
     float pick_distance_;
 
     Collider(const Collider& collider) = delete;

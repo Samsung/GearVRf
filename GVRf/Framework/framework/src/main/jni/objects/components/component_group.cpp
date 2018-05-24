@@ -23,21 +23,20 @@
 
 namespace gvr {
 
-ComponentGroup::ComponentGroup(long long type) :
-        Component(type) {
+ComponentGroup::ComponentGroup(long long type)
+   : Component(type)
+{
+
 }
 
 ComponentGroup::~ComponentGroup() {
 }
 
 void ComponentGroup::addChildComponent(Component* child) {
-    child->set_parent(this);
     children_.push_back(child);
 }
 
 void ComponentGroup::removeChildComponent(Component* child) {
-    child->set_parent(nullptr);
-    children_.erase(std::remove(children_.begin(), children_.end(), child),
-        children_.end());
+    children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
 }
 }

@@ -19,7 +19,18 @@ public class GVRComponentGroup <T extends GVRComponent> extends GVRComponent {
      */
     protected GVRComponentGroup(GVRContext gvrContext, long componentType)
     {
-        super(gvrContext, componentType);
+        super(gvrContext, NativeComponentGroup.ctor(componentType));
+        mType = componentType;
+    }
+
+    /**
+     * Constructor for a component's group.
+     *
+     * @see GVRComponent#GVRComponent(GVRContext, long)
+     */
+    protected GVRComponentGroup(GVRContext gvrContext, long nativeGroup, long componentType)
+    {
+        super(gvrContext, nativeGroup);
         mType = componentType;
     }
 
@@ -46,7 +57,6 @@ public class GVRComponentGroup <T extends GVRComponent> extends GVRComponent {
             throw new UnsupportedOperationException(child.getClass().getSimpleName() + " components cannot be added to this group");
         }
         mChildren.add(child);
-        child.mParent = this;
         NativeComponentGroup.addChildComponent(getNative(), child.getNative());
         return true;
     }
@@ -60,7 +70,6 @@ public class GVRComponentGroup <T extends GVRComponent> extends GVRComponent {
      */
     protected void removeChildComponent(T child) {
         mChildren.remove(child);
-        child.mParent = null;
         NativeComponentGroup.removeChildComponent(getNative(), child.getNative());
     }
 }

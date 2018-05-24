@@ -35,8 +35,6 @@ import java.util.List;
  *
  * This class is deprecated! Use empty GVRCollider instead.
  */
-
-@Deprecated
 public class GVRColliderGroup extends GVRCollider {
     /**
      * Constructor
@@ -44,25 +42,9 @@ public class GVRColliderGroup extends GVRCollider {
      * @param gvrContext
      *            Current {@link GVRContext}
      */
-    public GVRColliderGroup(GVRContext gvrContext) {
-        super(gvrContext);
-    }
-
-    public GVRColliderGroup(GVRContext gvrContext, GVRSceneObject owner) {
-        this(gvrContext);
-        setOwnerObject(owner);
-    }
-
-    /**
-     * Is this collider-group enabled?
-     * 
-     * If this collider-group is disabled, then picking will <b>not</b> occur against
-     * its {@link GVRCollider}s.
-     * @return true if enabled, false otherwise.
-     * @deprecated use GVRComponent.isEnabled()
-     */
-    public boolean getEnable() {
-        return super.isEnabled();
+    public GVRColliderGroup(GVRContext gvrContext)
+    {
+        super(gvrContext, NativeColliderGroup.ctor());
     }
 
     /**
@@ -71,8 +53,9 @@ public class GVRColliderGroup extends GVRCollider {
      * @param collider
      *            The {@link GVRCollider} to add
      */
-    public void addCollider(GVRCollider collider) {
-        addChildComponent(collider);
+    public void addCollider(GVRCollider collider)
+    {
+        NativeComponentGroup.addChildComponent(getNative(), collider.getNative());
     }
 
     /**
@@ -84,7 +67,13 @@ public class GVRColliderGroup extends GVRCollider {
      *            The {@link GVRCollider} to remove
      * 
      */
-    public void removeCollider(GVRCollider collider) {
-        removeChildComponent(collider);
+    public void removeCollider(GVRCollider collider)
+    {
+        NativeComponentGroup.removeChildComponent(getNative(), collider.getNative());
     }
+}
+
+class NativeColliderGroup
+{
+    static native long ctor();
 }
