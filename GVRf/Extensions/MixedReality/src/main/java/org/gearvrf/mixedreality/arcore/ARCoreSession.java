@@ -51,6 +51,7 @@ import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
+import org.gearvrf.mixedreality.ICloudAnchorListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 import org.gearvrf.mixedreality.MRCommon;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
@@ -62,6 +63,8 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -78,6 +81,7 @@ public class ARCoreSession extends MRCommon {
     private Frame mLastARFrame;
     private Frame arFrame;
     private ARCoreHandler mARCoreHandler;
+    private boolean mEnableCloudAnchor;
 
     /* From AR to GVR space matrices */
     private float[] mGVRModelMatrix = new float[16];
@@ -89,12 +93,15 @@ public class ARCoreSession extends MRCommon {
 
     private ARCoreHelper mArCoreHelper;
 
-    public ARCoreSession(GVRContext gvrContext) {
+    private final HashMap<Anchor, ICloudAnchorListener> pendingAnchors = new HashMap<>();
+
+    public ARCoreSession(GVRContext gvrContext, boolean enableCloudAnchor) {
         super(gvrContext);
         mSession = null;
         mLastARFrame = null;
         mVRScene = gvrContext.getMainScene();
         mArCoreHelper = new ARCoreHelper(gvrContext, mVRScene);
+        mEnableCloudAnchor = enableCloudAnchor;
     }
 
     @Override
@@ -110,6 +117,9 @@ public class ARCoreSession extends MRCommon {
 
             // Create default config and check if supported.
             Config config = new Config(mSession);
+            if (mEnableCloudAnchor) {
+                config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
+            }
             config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
             if (!mSession.isSupported(config)) {
                 showSnackbarMessage("This device does not support AR", true);
@@ -278,6 +288,8 @@ public class ARCoreSession extends MRCommon {
 
             mArCoreHelper.updateAnchors(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
 
+            updateCloudAnchors(arFrame.getUpdatedAnchors());
+
             mLastARFrame = arFrame;
 
             // Update current VR cam's matrix to next update of passtrhough and virtual objects.
@@ -369,6 +381,59 @@ public class ARCoreSession extends MRCommon {
     @Override
     protected void onRemoveAnchor(GVRAnchor anchor) {
         mArCoreHelper.removeAnchor((ARCoreAnchor)anchor);
+    }
+
+    /**
+     * This method hosts an anchor. The {@code listener} will be invoked when the results are
+     * available.
+     */
+    @Override
+    synchronized protected void onHostAnchor(GVRAnchor anchor, ICloudAnchorListener listener) {
+        Anchor newAnchor = mSession.hostCloudAnchor(((ARCoreAnchor)anchor).getAnchorAR());
+        pendingAnchors.put(newAnchor, listener);
+    }
+
+    /**
+     * This method resolves an anchor. The {@code listener} will be invoked when the results are
+     * available.
+     */
+    synchronized protected void onResolveCloudAnchor(String anchorId, ICloudAnchorListener listener) {
+        Anchor newAnchor = mSession.resolveCloudAnchor(anchorId);
+        pendingAnchors.put(newAnchor, listener);
+    }
+
+    /** Should be called with the updated anchors available after a {@link Session#update()} call. */
+    synchronized void updateCloudAnchors(Collection<Anchor> updatedAnchors) {
+        for (Anchor anchor : updatedAnchors) {
+            if (pendingAnchors.containsKey(anchor)) {
+                Anchor.CloudAnchorState cloudState = anchor.getCloudAnchorState();
+                if (isReturnableState(cloudState)) {
+                    ICloudAnchorListener listener = pendingAnchors.remove(anchor);
+                    GVRAnchor newAnchor = mArCoreHelper.createAnchor(anchor, null);
+                    listener.onTaskComplete(newAnchor);
+                }
+            }
+        }
+    }
+
+    /** Used to clear any currently registered listeners, so they wont be called again. */
+    synchronized void clearListeners() {
+        pendingAnchors.clear();
+    }
+
+    private static boolean isReturnableState(Anchor.CloudAnchorState cloudState) {
+        switch (cloudState) {
+            case NONE:
+            case TASK_IN_PROGRESS:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    @Override
+    protected void onSetEnableCloudAnchor(boolean enableCloudAnchor) {
+        mEnableCloudAnchor = enableCloudAnchor;
     }
 
     @Override

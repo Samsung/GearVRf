@@ -82,6 +82,21 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
+    public void hostAnchor(GVRAnchor anchor, ICloudAnchorListener listener) {
+        onHostAnchor(anchor, listener);
+    }
+
+    @Override
+    public void resolveCloudAnchor(String anchorId, ICloudAnchorListener listener) {
+        onResolveCloudAnchor(anchorId, listener);
+    }
+
+    @Override
+    public void setEnableCloudAnchor(boolean enableCloudAnchor) {
+        onSetEnableCloudAnchor(enableCloudAnchor);
+    }
+
+    @Override
     public GVRHitResult hitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         return onHitTest(sceneObj, collision);
     }
@@ -108,6 +123,12 @@ public abstract class MRCommon implements IMRCommon {
     protected abstract void onUpdateAnchorPose(GVRAnchor anchor, float[] pose);
 
     protected abstract void onRemoveAnchor(GVRAnchor anchor);
+
+    protected  abstract void onHostAnchor(GVRAnchor anchor, ICloudAnchorListener listener);
+
+    protected abstract void onResolveCloudAnchor(String anchorId, ICloudAnchorListener listener);
+
+    protected abstract void onSetEnableCloudAnchor(boolean enableCloudAnchor);
 
     protected abstract GVRHitResult onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 

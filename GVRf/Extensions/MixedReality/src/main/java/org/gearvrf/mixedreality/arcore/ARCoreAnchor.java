@@ -63,6 +63,11 @@ public class ARCoreAnchor extends GVRAnchor {
         return mTrackingState;
     }
 
+    @Override
+    public String getCloudAnchorId() {
+        return mAnchor.getCloudAnchorId();
+    }
+
     /**
      * Update the anchor based on arcore best knowledge of the world
      *

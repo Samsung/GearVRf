@@ -44,12 +44,22 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     private SessionState mState;
 
     /**
-     * Default GVRMixedReality constructor. Create a instace of GVRMixedReality component.
+     * Create a instace of GVRMixedReality component.
      *
      * @param gvrContext
      */
     public GVRMixedReality(final GVRContext gvrContext) {
-        this(gvrContext, null);
+        this(gvrContext, false, null);
+    }
+
+    /**
+     * Create a instace of GVRMixedReality component and specifies the use of cloud anchors.
+     *
+     * @param gvrContext
+     * @param enableCloudAnchor
+     */
+    public GVRMixedReality(final GVRContext gvrContext, boolean enableCloudAnchor) {
+        this(gvrContext, enableCloudAnchor, null);
     }
 
     /**
@@ -58,7 +68,19 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
      * @param gvrContext
      * @param scene
      */
-    public GVRMixedReality(GVRContext gvrContext, GVRScene scene) {
+    public GVRMixedReality(final GVRContext gvrContext, GVRScene scene) {
+        this(gvrContext, false, scene);
+    }
+
+    /**
+     * Default GVRMixedReality constructor. Create a instace of GVRMixedReality component, set
+     * the use of cloud anchors and add it to the specified scened.
+     *
+     * @param gvrContext
+     * @param enableCloudAnchor
+     * @param scene
+     */
+    public GVRMixedReality(GVRContext gvrContext, boolean enableCloudAnchor, GVRScene scene) {
         super(gvrContext, 0);
 
 
@@ -67,7 +89,7 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         }
 
         mActivityEventsHandler = new ActivityEventsHandler();
-        mSession = new ARCoreSession(gvrContext);
+        mSession = new ARCoreSession(gvrContext, enableCloudAnchor);
         mState = SessionState.ON_PAUSE;
 
         scene.getMainCameraRig().getOwnerObject().attachComponent(this);
@@ -148,6 +170,21 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
             throw new UnsupportedOperationException("Session is not resumed");
         }
         mSession.removeAnchor(anchor);
+    }
+
+    @Override
+    public void hostAnchor(GVRAnchor anchor, ICloudAnchorListener listener) {
+        mSession.hostAnchor(anchor, listener);
+    }
+
+    @Override
+    public void resolveCloudAnchor(String anchorId, ICloudAnchorListener listener) {
+        mSession.resolveCloudAnchor(anchorId, listener);
+    }
+
+    @Override
+    public void setEnableCloudAnchor(boolean enableCloudAnchor) {
+        mSession.setEnableCloudAnchor(enableCloudAnchor);
     }
 
     @Override

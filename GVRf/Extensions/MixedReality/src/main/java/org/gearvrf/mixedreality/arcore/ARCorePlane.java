@@ -36,8 +36,11 @@ class ARCorePlane extends GVRPlane {
         if (mARPlane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
             mType = Type.HORIZONTAL_DOWNWARD_FACING;
         }
-        else {
+        else if (mARPlane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
             mType = Type.HORIZONTAL_UPWARD_FACING;
+        }
+        else {
+            mType = Type.VERTICAL;
         }
     }
 

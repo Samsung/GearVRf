@@ -40,4 +40,10 @@ public abstract class GVRAnchor extends GVRSceneObject {
      */
     public abstract GVRTrackingState getTrackingState();
 
+    /**
+     *
+     * @return The cloud anchor ID
+     */
+    public abstract String getCloudAnchorId();
+
 }

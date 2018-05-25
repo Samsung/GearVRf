@@ -86,6 +86,28 @@ public interface IMRCommon {
     void removeAnchor(GVRAnchor anchor);
 
     /**
+     * Host an anchor to be shared
+     *
+     * @param anchor
+     */
+    void hostAnchor(GVRAnchor anchor, ICloudAnchorListener listener);
+
+    /**
+     * Get an anchor previously hosted
+     *
+     * @param anchorId
+     * @param listener
+     */
+    void resolveCloudAnchor(String anchorId, ICloudAnchorListener listener);
+
+    /**
+     * Set if cloud anchors will be available or not
+     *
+     * @param enableCloudAnchor
+     */
+    void setEnableCloudAnchor(boolean enableCloudAnchor);
+
+    /**
      *
      * @param sceneObj
      * @param collision

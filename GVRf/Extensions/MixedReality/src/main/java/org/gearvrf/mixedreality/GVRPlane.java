@@ -94,6 +94,7 @@ public abstract class GVRPlane extends GVRSceneObject {
 
     public enum Type {
         HORIZONTAL_DOWNWARD_FACING,
-        HORIZONTAL_UPWARD_FACING
+        HORIZONTAL_UPWARD_FACING,
+        VERTICAL
     }
 }
