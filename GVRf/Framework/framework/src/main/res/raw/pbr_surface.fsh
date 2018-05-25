@@ -29,6 +29,18 @@ layout(location = 9) in vec2 normal_coord;
 layout(set = 0, binding = 15) uniform sampler2D normalTexture;
 #endif
 
+#ifdef HAS_brdfLUTTexture
+layout(set = 0, binding = 17) uniform sampler2D brdfLUTTexture;
+#endif
+
+#ifdef HAS_diffuseEnvTex
+layout(set = 0, binding = 18) uniform samplerCube diffuseEnvTex;
+#endif
+
+#ifdef HAS_specularEnvTexture
+layout(set = 0, binding = 19) uniform samplerCube specularEnvTexture;
+#endif
+
 #ifdef HAS_diffuseTexture1
 layout(location = 11) in vec2 diffuse_coord1;
 layout(set = 0, binding = 11) uniform sampler2D diffuseTexture1;

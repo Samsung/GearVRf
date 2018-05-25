@@ -1,5 +1,9 @@
 
-
+//vec3 SRGBtoLINEAR(vec3 srgbIn)
+//{
+//    //fast srgb approximation
+//    return pow(srgbIn.xyz, vec3(2.2));
+//}
 //
 // Schlick Implementation of microfacet occlusion from
 // "An Inexpensive BRDF Model for Physically based Rendering" by Christophe Schlick.
@@ -58,43 +62,46 @@ vec3 getIBLContribution(float perceptualRoughness, float NdotV, vec3 n, vec3 ref
                         vec3 diffuseColor)
 {
 
-#ifdef HAS_brdfLUTTexture
-#endif
-    //float mipCount = 9.0; // resolution of 512x512
-    //float lod = (pbrInputs.perceptualRoughness * mipCount);
-    // retrieve a scale and bias to F0. See [1], Figure 3
-    vec3 brdf = SRGBtoLINEAR(texture(brdfLUTTexture, vec2(NdotV, 1.0 - perceptualRoughness)));
-    vec3 diffuseLight = SRGBtoLINEAR(textureCube(diffuseEnvTex, n));
+    vec3 diffuse = vec3(0);
+    vec3 specular = vec3(0);
 
-//#ifdef USE_TEX_LOD
-//    vec3 specularLight = SRGBtoLINEAR(textureCubeLodEXT(u_SpecularEnvSampler, reflection, lod)).rgb;
-//#else
-    vec3 specularLight = SRGBtoLINEAR(textureCube(specularEnvTexture, reflection)).rgb;
-//#endif
+    #ifdef HAS_brdfLUTTexture
+        //float mipCount = 9.0; // resolution of 512x512
+        //float lod = (pbrInputs.perceptualRoughness * mipCount);
+        // retrieve a scale and bias to F0. See [1], Figure 3
 
-    vec3 diffuse = diffuseLight * diffuseColor;
-    vec3 specular = specularLight * (specularColor * brdf.x + brdf.y);
+        vec3 brdf = SRGBtoLINEAR(texture(brdfLUTTexture, vec2(NdotV, 1.0 - perceptualRoughness)).rgb);
+        #ifdef HAS_diffuseEnvTex
+            vec3 diffuseLight = SRGBtoLINEAR(texture(diffuseEnvTex, n).rgb);
+            diffuse = diffuseLight * diffuseColor;
+        #endif
 
-    // For presentation, this allows us to disable IBL terms
-//    diffuse *= u_ScaleIBLAmbient.x;
-//    specular *= u_ScaleIBLAmbient.y;
+        #ifdef HAS_specularEnvTexture
+        //#ifdef USE_TEX_LOD
+        //    vec3 specularLight = SRGBtoLINEAR(textureCubeLodEXT(u_SpecularEnvSampler, reflection, lod).rgb);
+        //#else
+            vec3 specularLight = SRGBtoLINEAR(texture(specularEnvTexture, reflection).rgb);
+            specular = specularLight * (specularColor * brdf.x + brdf.y);
+        //#endif
+        #endif
 
+        // For presentation, this allows us to disable IBL terms
+    //    diffuse *= u_ScaleIBLAmbient.x;
+    //    specular *= u_ScaleIBLAmbient.y;
+
+    #endif
     return diffuse + specular;
+
 }
-
-
-
-
-
 
 
 vec4 AddLight(Surface s, Radiance r)
 {
 	vec3 l = r.direction.xyz;                  // From surface to light, unit length, view-space
     vec3 n = s.viewspaceNormal;                // normal at surface point
-    vec3 v = view_direction;                   // Vector from surface point to camera
+    vec3 v = viewspace_position;               // Vector from surface point to camera
     vec3 h = normalize(l + v);                 // Half vector between both l and v
-    vec3 reflection = -normalize(reflect(v, n));
+    vec3 reflection = reflect(v, normalize(n));
     float NdotL = clamp(dot(n, l), 0.001, 1.0);
     float NdotV = abs(dot(n, v)) + 0.001;
     float NdotH = clamp(dot(n, h), 0.0, 1.0);
@@ -126,7 +133,14 @@ vec4 AddLight(Surface s, Radiance r)
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
     vec3 color = NdotL * ((r.diffuse_intensity * kD) + (r.specular_intensity * kS)) + s.emission.xyz;
 
-    color += getIBLContribution(s.perceptualRoughness, NdotV, n, reflection, s.specular, s.diffuse);
+    mat4 view_i;
+#ifdef HAS_MULTIVIEW
+    view_i = u_view_i_[gl_ViewID_OVR];
+#else
+    view_i = u_view_i;
+#endif
+
+    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz, (view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
 
 #ifdef HAS_lightmapTexture
     float ao = texture(lightmapTexture, lightmap_coord).r;
