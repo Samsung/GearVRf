@@ -90,11 +90,6 @@ public class GVRPhysicsLoader {
                 continue;
             }
 
-            if (sceneObject.getComponent(GVRCollider.getComponentType()) == null) {
-                // Set mesh collider as default.
-                sceneObject.attachComponent(new GVRMeshCollider(gvrContext, true));
-            }
-
             GVRRigidBody rigidBody = new GVRRigidBody(gvrContext, nativeRigidBody);
             sceneObject.attachComponent(rigidBody);
             rbObjects.put(nativeRigidBody, sceneObject);

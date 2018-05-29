@@ -25,29 +25,26 @@
 #include <LinearMath/btTransform.h>
 #include <math.h>
 
-static const char tag[] = "BulletRbN";
-
 namespace gvr {
 
 BulletRigidBody::BulletRigidBody()
-        : mRigidBody(nullptr),
-          mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
+        : mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
+          mRigidBody(new btRigidBody(mConstructionInfo)),
           m_centerOfMassOffset(btTransform::getIdentity()),
           mScale(1.0f, 1.0f, 1.0f),
           mSimType(SimulationType::DYNAMIC)
 {
-    initialize();
+    mRigidBody->setUserPointer(this);
 }
 
 BulletRigidBody::BulletRigidBody(btRigidBody *rigidBody)
-        : mRigidBody(rigidBody),
-          mConstructionInfo(btScalar(0.0f), nullptr, new btEmptyShape()),
+        : mConstructionInfo(btScalar(0.0f), nullptr, nullptr),
+          mRigidBody(rigidBody),
           m_centerOfMassOffset(btTransform::getIdentity()),
           mScale(1.0f, 1.0f, 1.0f),
           mSimType(SimulationType::DYNAMIC)
 {
-    initialize();
-    mConstructionInfo.m_mass = rigidBody->isStaticObject() ? 0.f : 1.f / rigidBody->getInvMass();
+    mRigidBody->setUserPointer(this);
 }
 
 BulletRigidBody::~BulletRigidBody() {
@@ -88,40 +85,35 @@ BulletRigidBody::SimulationType BulletRigidBody::getSimulationType() const
 }
 
 void BulletRigidBody::updateConstructionInfo() {
-    bool isDynamic = (getMass() != 0.f);
-    Collider* collider = (Collider*)owner_object_->getComponent(COMPONENT_TYPE_COLLIDER);
-    RenderData* rdata = owner_object_->render_data();
-    if (mConstructionInfo.m_collisionShape) {
-        delete mConstructionInfo.m_collisionShape;
-    }
-    mRigidBody->setMotionState(this);
-    mRigidBody->setMassProps(mConstructionInfo.m_mass, mConstructionInfo.m_localInertia);
-    if (collider) {
-        mConstructionInfo.m_collisionShape = convertCollider2CollisionShape(collider);
-        if (isDynamic) {
-            mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
-                                                                      mConstructionInfo.m_localInertia);
-        }
-        mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
-        mRigidBody->setMassProps(getMass(), mConstructionInfo.m_localInertia);
-        mRigidBody->updateInertiaTensor();
-        updateColisionShapeLocalScaling();
-    }
-    else {
-        LOGE("PHYSICS: Cannot attach rigid body without collider");
-    }
-
-    getWorldTransform(prevPos);
-
-}
-
-void BulletRigidBody::initialize() {
-    if (nullptr == mRigidBody)
+    if (mConstructionInfo.m_collisionShape != nullptr)
     {
-        mRigidBody = new btRigidBody(mConstructionInfo);
+        // This rigid body was not loaded so its construction must be finished
+        Collider *collider = (Collider *) owner_object_->getComponent(COMPONENT_TYPE_COLLIDER);
+        if (collider)
+        {
+            bool isDynamic = (getMass() != 0.f);
+            delete mConstructionInfo.m_collisionShape;
+            mRigidBody->setMotionState(this);
+            mRigidBody->setMassProps(mConstructionInfo.m_mass, mConstructionInfo.m_localInertia);
+            mConstructionInfo.m_collisionShape = convertCollider2CollisionShape(collider);
+            if (isDynamic)
+            {
+                mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
+                        mConstructionInfo.m_localInertia);
+            }
+            mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
+            mRigidBody->setMassProps(getMass(), mConstructionInfo.m_localInertia);
+            mRigidBody->updateInertiaTensor();
+            updateColisionShapeLocalScaling();
+        }
+        else
+        {
+            LOGE("PHYSICS: Cannot attach rigid body without collider");
+        }
     }
 
-    mRigidBody->setUserPointer(this);
+    mRigidBody->setMotionState(this);
+    getWorldTransform(prevPos);
 }
 
 void BulletRigidBody::finalize() {

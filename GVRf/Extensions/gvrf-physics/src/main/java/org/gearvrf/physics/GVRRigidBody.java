@@ -45,6 +45,8 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
     private final int mCollisionGroup;
     private final GVRPhysicsContext mPhysicsContext;
 
+    private final boolean mLoaded;
+
     /**
      * Constructs new instance to simulate a rigid body in {@link GVRWorld}.
      *
@@ -74,10 +76,10 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
      *                       everyone if {#collisionGroup} is out of the range 0...15.
      */
     public GVRRigidBody(GVRContext gvrContext, float mass, int collisionGroup) {
-        super(gvrContext, Native3DRigidBody.ctor());
-        Native3DRigidBody.setMass(getNative(), mass);
+        super(gvrContext, Native3DRigidBody.ctor(mass));
         mCollisionGroup = collisionGroup;
         mPhysicsContext = GVRPhysicsContext.getInstance();
+        mLoaded = false;
     }
 
     /** Used only by {@link GVRPhysicsLoader} */
@@ -85,6 +87,7 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
         super(gvrContext, nativeRigidBody);
         mCollisionGroup = -1;
         mPhysicsContext = GVRPhysicsContext.getInstance();
+        mLoaded = true;
     }
 
     static public long getComponentType() {
@@ -428,7 +431,7 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
 
     @Override
     public void onAttach(GVRSceneObject newOwner) {
-        if (newOwner.getCollider() == null) {
+        if (!mLoaded && newOwner.getCollider() == null) {
             throw new UnsupportedOperationException("You must have a collider attached to the scene object before attaching the rigid body");
         }
         final GVRRenderData renderData = newOwner.getRenderData();
@@ -454,7 +457,7 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
 }
 
 class Native3DRigidBody {
-    static native long ctor();
+    static native long ctor(float mass);
 
     static native long getComponentType();
 
