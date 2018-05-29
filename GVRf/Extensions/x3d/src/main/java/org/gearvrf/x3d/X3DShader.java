@@ -20,14 +20,11 @@ public class X3DShader extends GVRShaderTemplate
     private static String surfaceShader = null;
     private static String addLight = null;
     private static String vtxShader = null;
-    private static String normalShader = null;
-    private static String skinShader = null;
-    private boolean useMultitex = true;
 
     public X3DShader(GVRContext gvrcontext)
     {
-        super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; mat3 texture_matrix; float specular_exponent",
-              "sampler2D diffuseTexture",
+        super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; mat3 texture_matrix; float specular_exponent; int diffuseTexture1_blendop",
+              "sampler2D diffuseTexture sampler2D diffuseTexture1",
               "float3 a_position float2 a_texcoord float3 a_normal float4 a_bone_weights int4 a_bone_indices float4 a_tangent float4 a_bitangent",
               GLSLESVersion.VULKAN);
 
@@ -35,9 +32,11 @@ public class X3DShader extends GVRShaderTemplate
         {
             Context context = gvrcontext.getContext();
             fragTemplate = TextFile.readTextFile(context, org.gearvrf.R.raw.fragment_template);
-            vtxTemplate = TextFile.readTextFile(context, org.gearvrf.x3d.R.raw.x3d_vertex_template);
+            vtxTemplate = TextFile.readTextFile(context, org.gearvrf.R.raw.vertex_template_multitex).
+                            replaceFirst("@MATRIX_UNIFORMS", "@MATRIX_UNIFORMS\n@MATERIAL_UNIFORMS\n");
             surfaceShader = TextFile.readTextFile(context, org.gearvrf.x3d.R.raw.x3d_surface);
-            vtxShader = TextFile.readTextFile(context, org.gearvrf.x3d.R.raw.x3d_vertex);
+            vtxShader = TextFile.readTextFile(context, org.gearvrf.R.raw.pos_norm_tex) +
+                        TextFile.readTextFile(context, org.gearvrf.x3d.R.raw.x3d_vertex);
             addLight = TextFile.readTextFile(context, org.gearvrf.R.raw.addlight);
         }
         setSegment("FragmentTemplate", fragTemplate);
@@ -45,6 +44,8 @@ public class X3DShader extends GVRShaderTemplate
         setSegment("FragmentSurface", surfaceShader);
         setSegment("FragmentAddLight", addLight);
         setSegment("VertexShader", vtxShader);
+        setSegment("VertexNormalShader", "");
+        setSegment("VertexSkinShader", "");
 
         mHasVariants = true;
         mUsesLights = true;

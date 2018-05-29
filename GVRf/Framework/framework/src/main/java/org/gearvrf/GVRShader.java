@@ -398,8 +398,6 @@ public class GVRShader
     protected void setSegment(String segmentName, String shaderSource)
     {
         mShaderSegments.put(segmentName, shaderSource);
-        if (shaderSource == null)
-            throw new java.lang.IllegalArgumentException("Shader source is null for segment " + segmentName + " of shader");
     }
 
     private boolean isImplemented(String methodName, Class<?> ...paramTypes)
