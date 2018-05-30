@@ -139,7 +139,8 @@ vec4 AddLight(Surface s, Radiance r)
 #else
     view_i = u_view_i;
 #endif
-
+    vec3 reflected = (view_i * vec4(reflection, 1.0)).xyz;
+    reflected.z = -reflected.z;
     color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz, (view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
 
 #ifdef HAS_lightmapTexture

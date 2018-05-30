@@ -25,8 +25,26 @@ layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
 #endif
 
 #ifdef HAS_normalTexture
-layout(location = 9) in vec2 normal_coord;
-layout(set = 0, binding = 15) uniform sampler2D normalTexture;
+    layout(location = 9) in vec2 normal_coord;
+    layout(set = 0, binding = 15) uniform sampler2D normalTexture;
+    mat3 calculateTangentMatrix()
+    {
+        #ifdef HAS_a_tangent
+            return tangent_matrix;
+        #else
+            vec3 pos_dx = dFdx(viewspace_position);
+            vec3 pos_dy = dFdy(viewspace_position);
+            vec3 tex_dx = dFdx(vec3(normal_coord, 0.0));
+            vec3 tex_dy = dFdy(vec3(normal_coord, 0.0));
+
+            vec3 dp2perp = cross(pos_dy, viewspace_normal);
+            vec3 dp1perp = cross(viewspace_normal, pos_dx);
+            vec3 t = dp2perp * tex_dx.x + dp1perp * tex_dy.x;
+            vec3 b = dp2perp * tex_dx.y + dp1perp * tex_dy.y;
+            float invmax = inversesqrt(max(dot(t, t), dot(b, b)));
+            return mat3(t * invmax, b * invmax, viewspace_normal);
+        #endif
+    }
 #endif
 
 #ifdef HAS_brdfLUTTexture
@@ -41,10 +59,6 @@ layout(set = 0, binding = 18) uniform samplerCube diffuseEnvTex;
 layout(set = 0, binding = 19) uniform samplerCube specularEnvTexture;
 #endif
 
-#ifdef HAS_diffuseTexture1
-layout(location = 11) in vec2 diffuse_coord1;
-layout(set = 0, binding = 11) uniform sampler2D diffuseTexture1;
-#endif
 
 struct Surface
 {
@@ -124,9 +138,9 @@ Surface @ShaderName()
     #ifdef HAS_emissiveTexture
         emission = SRGBtoLINEAR(texture(emissiveTexture, emissive_coord.xy).rgb);
     #endif
-    #if defined(HAS_normalTexture) && defined(HAS_a_tangent)
+    #if defined(HAS_normalTexture)
         viewspaceNormal = texture(normalTexture, normal_coord.xy).xyz * 2.0 - 1.0;
-        viewspaceNormal = normalize(tangent_matrix * (viewspaceNormal * vec3(normalScale, normalScale, 1.0)));
+        viewspaceNormal = normalize(calculateTangentMatrix() * viewspaceNormal * vec3(normalScale, normalScale, 1.0));
     #else
         viewspaceNormal = viewspace_normal;
     #endif
