@@ -1154,14 +1154,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         err = vkQueueSubmit(m_queue, 1, &submitInfo, fence);
         GVR_VK_CHECK(!err);
-
-        if(swapChainFlag) {
-            int success = 0;
-            while(success != 1){
-                success = waitForFence(fence);
-            }
-            PresentBackBuffer();
-        }
     }
 
     int VulkanCore::waitForFence(VkFence fence) {
