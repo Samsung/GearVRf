@@ -66,10 +66,6 @@ vec3 getIBLContribution(float perceptualRoughness, float NdotV, vec3 n, vec3 ref
     vec3 specular = vec3(0);
 
     #ifdef HAS_brdfLUTTexture
-        //float mipCount = 9.0; // resolution of 512x512
-        //float lod = (pbrInputs.perceptualRoughness * mipCount);
-        // retrieve a scale and bias to F0. See [1], Figure 3
-
         vec3 brdf = SRGBtoLINEAR(texture(brdfLUTTexture, vec2(NdotV, 1.0 - perceptualRoughness)).rgb);
         #ifdef HAS_diffuseEnvTex
             vec3 diffuseLight = SRGBtoLINEAR(texture(diffuseEnvTex, n).rgb);
@@ -77,17 +73,9 @@ vec3 getIBLContribution(float perceptualRoughness, float NdotV, vec3 n, vec3 ref
         #endif
 
         #ifdef HAS_specularEnvTexture
-        //#ifdef USE_TEX_LOD
-        //    vec3 specularLight = SRGBtoLINEAR(textureCubeLodEXT(u_SpecularEnvSampler, reflection, lod).rgb);
-        //#else
             vec3 specularLight = SRGBtoLINEAR(texture(specularEnvTexture, reflection).rgb);
             specular = specularLight * (specularColor * brdf.x + brdf.y);
-        //#endif
         #endif
-
-        // For presentation, this allows us to disable IBL terms
-    //    diffuse *= u_ScaleIBLAmbient.x;
-    //    specular *= u_ScaleIBLAmbient.y;
 
     #endif
     return diffuse + specular;
@@ -141,7 +129,7 @@ vec4 AddLight(Surface s, Radiance r)
 #endif
     vec3 reflected = (view_i * vec4(reflection, 1.0)).xyz;
     reflected.z = -reflected.z;
-    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz, (view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
+    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz, reflected, s.specular, s.diffuse.xyz);
 
 #ifdef HAS_lightmapTexture
     float ao = texture(lightmapTexture, lightmap_coord).r;
@@ -151,18 +139,18 @@ vec4 AddLight(Surface s, Radiance r)
     // This section uses mix to override final color for reference app visualization
     // of various parameters in the lighting equation. Might need this if we have an app for demo.
 
-//#ifdef HAS_scaleFGD
-//    color = mix(color, F, scaleFGD.x);
-//    color = mix(color, vec3(G), scaleFGD.y);
-//    color = mix(color, vec3(D), scaleFGD.z);
-//    color = mix(color, kS, scaleFGD.w);
-//#endif
-//#ifdef HAS_scaleDiffBaseMR
-//    color = mix(color, kD, scaleDiffBaseMR.x);
-//    color = mix(color, s.diffuse.rgb, scaleDiffBaseMR.y);
-//    color = mix(color, vec3(s.metallic), scaleDiffBaseMR.z);
-//    color = mix(color, vec3(s.roughness), scaleDiffBaseMR.w);
-//#endif
+    //#ifdef HAS_scaleFGD
+    //    color = mix(color, F, scaleFGD.x);
+    //    color = mix(color, vec3(G), scaleFGD.y);
+    //    color = mix(color, vec3(D), scaleFGD.z);
+    //    color = mix(color, kS, scaleFGD.w);
+    //#endif
+    //#ifdef HAS_scaleDiffBaseMR
+    //    color = mix(color, kD, scaleDiffBaseMR.x);
+    //    color = mix(color, s.diffuse.rgb, scaleDiffBaseMR.y);
+    //    color = mix(color, vec3(s.metallic), scaleDiffBaseMR.z);
+    //    color = mix(color, vec3(s.roughness), scaleDiffBaseMR.w);
+    //#endif
 
     return vec4(pow(color, vec3(1.0 / 2.2)), s.diffuse.w);
 }
