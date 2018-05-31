@@ -1,10 +1,4 @@
 
-//vec3 SRGBtoLINEAR(vec3 srgbIn)
-//{
-//    //fast srgb approximation
-//    return pow(srgbIn.xyz, vec3(2.2));
-//}
-//
 // Schlick Implementation of microfacet occlusion from
 // "An Inexpensive BRDF Model for Physically based Rendering" by Christophe Schlick.
 //
@@ -87,9 +81,9 @@ vec4 AddLight(Surface s, Radiance r)
 {
 	vec3 l = r.direction.xyz;                  // From surface to light, unit length, view-space
     vec3 n = s.viewspaceNormal;                // normal at surface point
-    vec3 v = viewspace_position;               // Vector from surface point to camera
+    vec3 v = -viewspace_position;               // Vector from surface point to camera
     vec3 h = normalize(l + v);                 // Half vector between both l and v
-    vec3 reflection = reflect(v, normalize(n));
+    vec3 reflection = reflect(-v, normalize(n));
     float NdotL = clamp(dot(n, l), 0.001, 1.0);
     float NdotV = abs(dot(n, v)) + 0.001;
     float NdotH = clamp(dot(n, h), 0.0, 1.0);
@@ -127,9 +121,8 @@ vec4 AddLight(Surface s, Radiance r)
 #else
     view_i = u_view_i;
 #endif
-    vec3 reflected = (view_i * vec4(reflection, 1.0)).xyz;
-    reflected.z = -reflected.z;
-    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz, reflected, s.specular, s.diffuse.xyz);
+    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz,
+                                (view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
 
 #ifdef HAS_lightmapTexture
     float ao = texture(lightmapTexture, lightmap_coord).r;
