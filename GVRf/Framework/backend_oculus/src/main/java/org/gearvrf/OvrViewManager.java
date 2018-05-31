@@ -134,6 +134,8 @@ class OvrViewManager extends GVRViewManager {
         mStatsLine.addColumn(mTracerDrawEyes1.getStatColumn());
         mStatsLine.addColumn(mTracerDrawEyes2.getStatColumn());
         mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
+
+        mControllerReader = new OvrControllerReader(mActivity.getActivityNative().getNative());
     }
 
     /**
@@ -278,7 +280,6 @@ class OvrViewManager extends GVRViewManager {
     @Override
     void onSurfaceCreated() {
         super.onSurfaceCreated();
-        mControllerReader = new OvrControllerReader(mActivity.getActivityNative().getNative());
         GVRGearCursorController gearController = mInputManager.getGearController();
         if (gearController != null)
             gearController.attachReader(mControllerReader);
