@@ -92,7 +92,7 @@ public class GVRInputManager implements IEventReceiver
     private GVRAndroidWearTouchpad androidWearTouchpad;
     private GVRGamepadDeviceManager gamepadDeviceManager;
     private GVRMouseDeviceManager mouseDeviceManager;
-    private GVRGearCursorController gearCursorController;
+    private final List<GVRGearCursorController> gearCursorControllers = new ArrayList();
     private GVREventReceiver mListeners;
     private ArrayList<GVRControllerType> mEnabledControllerTypes;
 
@@ -138,7 +138,7 @@ public class GVRInputManager implements IEventReceiver
      * @param context       GVRContext input manager is attached to
      * @param enabledTypes  list of controller types allowed for this applications
      */
-    public GVRInputManager(GVRContext context, ArrayList<GVRControllerType> enabledTypes)
+    public GVRInputManager(GVRContext context, ArrayList<GVRControllerType> enabledTypes, int numControllers)
     {
         Context androidContext = context.getContext();
         inputManager = (InputManager) androidContext.getSystemService(Context.INPUT_SERVICE);
@@ -150,7 +150,10 @@ public class GVRInputManager implements IEventReceiver
         cache = new SparseArray<GVRCursorController>();
         mouseDeviceManager = new GVRMouseDeviceManager(context);
         gamepadDeviceManager = new GVRGamepadDeviceManager();
-        gearCursorController = new GVRGearCursorController(context);
+        for (int i = 0; i < numControllers; ++i)
+        {
+            gearCursorControllers.add(new GVRGearCursorController(context, i));
+        }
         if ((enabledTypes != null) &&
             enabledTypes.contains(GVRControllerType.WEARTOUCHPAD) &&
             checkIfWearTouchPadServiceInstalled(context))
@@ -321,7 +324,10 @@ public class GVRInputManager implements IEventReceiver
         for (int deviceId : inputManager.getInputDeviceIds()) {
             addDevice(deviceId);
         }
-        cache.put(CONTROLLER_CACHED_KEY, gearCursorController);
+        for (GVRGearCursorController controller : gearCursorControllers)
+        {
+            cache.put(CONTROLLER_CACHED_KEY + controller.getControllerID(), controller);
+        }
     }
 
     private boolean checkIfWearTouchPadServiceInstalled(GVRContext context) {
@@ -375,8 +381,39 @@ public class GVRInputManager implements IEventReceiver
         return null;
     }
 
+    /**
+     * Get the Gear cursor controller.
+     * This function will return an instance even if
+     * the controller is not connected.
+     * @return GVRGearCursorController object
+     */
     public GVRGearCursorController getGearController() {
-        return gearCursorController;
+        return gearCursorControllers.get(0);
+    }
+    /**
+     * Get the Gear cursor controller with the given ID.
+     * This function will return an instance even if
+     * the controller is not connected.
+     * It will throw an exception if the ID exceeds
+     * the maximum number of controllers for the platform.
+     * @return GVRGearCursorController object
+     * @throws ArrayIndexOutOfBoundsException
+     * @see GVRGearCursorController#getControllerID()
+     */
+    public GVRGearCursorController getGearController(int id) {
+        return gearCursorControllers.get(id);
+    }
+
+    /**
+     * Update the position and orientation of the Gear VR controllers.
+     * This function should only be used internally.
+     */
+    public void updateGearControllers()
+    {
+        for (GVRGearCursorController controller : gearCursorControllers)
+        {
+            controller.pollController();
+        }
     }
 
     /**

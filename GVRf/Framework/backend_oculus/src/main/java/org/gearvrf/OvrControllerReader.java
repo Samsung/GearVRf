@@ -24,17 +24,17 @@ class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs 
     }
 
     @Override
-    public boolean isConnected() {
+    public boolean isConnected(int id) {
         return readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
     }
 
     @Override
-    public boolean isTouched() {
+    public boolean isTouched(int id) {
         return readbackBuffer.get(INDEX_TOUCHED) == 1.0f;
     }
 
     @Override
-    public void updateRotation(Quaternionf quat) {
+    public void updateRotation(Quaternionf quat, int id) {
         quat.set(readbackBuffer.get(INDEX_ROTATION + 1),
                 readbackBuffer.get(INDEX_ROTATION + 2),
                 readbackBuffer.get(INDEX_ROTATION + 3),
@@ -42,14 +42,14 @@ class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs 
     }
 
     @Override
-    public void updatePosition(Vector3f vec) {
+    public void updatePosition(Vector3f vec, int id) {
         vec.set(readbackBuffer.get(INDEX_POSITION),
                 readbackBuffer.get(INDEX_POSITION + 1),
                 readbackBuffer.get(INDEX_POSITION + 2));
     }
 
     @Override
-    public int getKey() {
+    public int getKey(int id) {
         return (int) readbackBuffer.get(INDEX_BUTTON);
     }
 
@@ -59,7 +59,7 @@ class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs 
     }
 
     @Override
-    public void updateTouchpad(PointF pt) {
+    public void updateTouchpad(PointF pt, int id) {
         pt.set(readbackBuffer.get(INDEX_TOUCHPAD), readbackBuffer.get(INDEX_TOUCHPAD + 1));
     }
 

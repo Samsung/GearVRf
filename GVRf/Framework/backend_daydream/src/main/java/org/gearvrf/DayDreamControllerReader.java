@@ -35,12 +35,12 @@ class DayDreamControllerReader extends GVRGearCursorController.ControllerReaderS
     }
 
     @Override
-    public boolean isTouched(){
+    public boolean isTouched(int index){
         return mController.isTouching;
     }
 
     @Override
-    public boolean isConnected() {
+    public boolean isConnected(int index) {
         return mConnectionState == ConnectionStates.CONNECTED;
     }
 
@@ -55,20 +55,20 @@ class DayDreamControllerReader extends GVRGearCursorController.ControllerReaderS
     }
 
     @Override
-    public void updateRotation(Quaternionf quat) {
+    public void updateRotation(Quaternionf quat,int index) {
         Orientation orientation = mController.orientation;
         quat.set(orientation.x, orientation.y, orientation.z,orientation.w);
         quat.rotateLocalY(-(float)Math.toRadians(45.0));  // this makes it to look same as other backends
     }
 
     @Override
-    public void updatePosition(Vector3f vec) {
+    public void updatePosition(Vector3f vec,int index) {
         vec.set(mController.position[0], mController.position[1], mController.position[2]);
         vec.add(0.341f, -0.486f, -0.383f); // this makes it to look same as other backends
     }
 
     @Override
-    public int getKey() {
+    public int getKey(int index) {
         if(mController.appButtonState)
             return GVRGearCursorController.CONTROLLER_KEYS.BUTTON_A.getNumVal();
         if(mController.clickButtonState)
@@ -91,7 +91,7 @@ class DayDreamControllerReader extends GVRGearCursorController.ControllerReaderS
     }
 
     @Override
-    public void updateTouchpad(PointF pt) {
+    public void updateTouchpad(PointF pt,int index) {
         pt.set(mController.touch.x * OCULUS_SCALE, mController.touch.y * OCULUS_SCALE);
     }
 

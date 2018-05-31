@@ -83,8 +83,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     private GVRMethodCallTracer mTracerDrawEyes2;
     private GVRMethodCallTracer mTracerDrawFrame;
     private GVRMethodCallTracer mTracerDrawFrameGap;
-    private GVRGearCursorController mGearController;
-
 
     private MonoscopicSurfaceView mView;
     private int mViewportWidth, mViewportHeight, sampleCount;
@@ -403,11 +401,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     void onSurfaceCreated() {
         super.onSurfaceCreated();
         mRotationSensor.onResume();
-        mGearController = mInputManager.getGearController();
-        if (mGearController != null)
-        {
-            mGearController.attachReader(new MonoscopicControllerReader());
-        }
     }
 
     private void drawEyes() {
