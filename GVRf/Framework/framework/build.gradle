@@ -107,11 +107,6 @@ android {
 
     sourceSets.main {
         java.srcDirs = ['src/main/java']
-        jni.srcDirs = [] // no auto generation of Android.mk
-        // pre-compiled libraries
-        jniLibs {
-            srcDir 'src/main/libs'
-        }
         resources.srcDir 'src/main/libs'
     }
 }
