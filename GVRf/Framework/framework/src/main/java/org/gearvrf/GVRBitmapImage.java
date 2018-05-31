@@ -145,7 +145,6 @@ public class GVRBitmapImage extends GVRImage
         Canvas c = new Canvas(supBitmap);
         Paint p = new Paint();
         c.drawBitmap(orig,0,0,p);
-        orig.recycle();
         return supBitmap;
     }
 
