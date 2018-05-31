@@ -22,7 +22,7 @@
 #include "gl/gl_bitmap_image.h"
 namespace gvr {
 
-int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool mipmap)
+int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool mipmap, int internalFormat)
 {
     AndroidBitmapInfo info;
     void *pixels;
@@ -46,21 +46,25 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap, boo
     {
         int dataFormat = GL_UNSIGNED_BYTE;
         int pixelFormat = GL_RGBA;
-        int internalFormat = GL_RGBA;
-        switch (info.format)
+        switch (internalFormat)
         {
-            case ANDROID_BITMAP_FORMAT_RGB_565:internalFormat = GL_RGB565;
+            case GL_RGB565:
                 dataFormat = GL_UNSIGNED_SHORT_5_6_5;
                 pixelFormat = GL_RGB;
                 break;
 
-            case ANDROID_BITMAP_FORMAT_RGBA_4444:internalFormat = GL_RGBA4;
+            case GL_RGBA4:
                 dataFormat = GL_UNSIGNED_SHORT_4_4_4_4;
                 break;
 
-            case ANDROID_BITMAP_FORMAT_A_8:dataFormat = GL_R8;
+            case GL_R8:
                 pixelFormat = GL_RED;
                 break;
+
+            case GL_RGBA16F:
+                dataFormat = GL_HALF_FLOAT;
+                break;
+
         }
         glTexImage2D(target, 0, internalFormat, info.width, info.height, 0, pixelFormat,
                      dataFormat, pixels);
@@ -148,7 +152,7 @@ void GLBitmapImage::updateFromBitmap(int texid)
         bool mipmap = false;
         if(!mIsCompressed && mTexParams.getMinFilter() >=  TextureParameters::NEAREST_MIPMAP_NEAREST)
             mipmap = true;
-        mFormat = updateFromBitmap(env, mGLTarget, mBitmap, mipmap);
+        updateFromBitmap(env, mGLTarget, mBitmap, mipmap, mFormat);
     }
     checkGLError("GLBitmapImage::updateFromBitmap");
 }

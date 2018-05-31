@@ -34,7 +34,7 @@ namespace gvr {
 
         virtual ~GLBitmapImage() {}
 
-        static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool);
+        static int updateFromBitmap(JNIEnv *env, int target, jobject bitmap, bool, int internalFormat);
 
         virtual int getId() { return mId; }
 

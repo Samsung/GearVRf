@@ -51,7 +51,7 @@ void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
     }
 }
 
-void BitmapImage::update(JNIEnv* env, jobject bitmap, bool hasAlpha)
+void BitmapImage::update(JNIEnv* env, jobject bitmap, bool hasAlpha, int format)
 {
     std::lock_guard<std::mutex> lock(mUpdateLock);
     env->GetJavaVM(&mJava);
@@ -59,6 +59,7 @@ void BitmapImage::update(JNIEnv* env, jobject bitmap, bool hasAlpha)
     if (bitmap != NULL)
     {
         mBitmap = static_cast<jbyteArray>(env->NewGlobalRef(bitmap));
+        mFormat = format;
         mIsBuffer = false;
         LOGV("Texture: BitmapImage::update(bitmap)");
         if( hasAlpha ) {
