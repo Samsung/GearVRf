@@ -23,6 +23,7 @@ import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
+import org.gearvrf.io.GVRGearCursorController;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.ImageUtils;
@@ -63,13 +64,17 @@ abstract class GVRViewManager extends GVRContext {
         VrAppSettings appSettings = activity.getAppSettings();
         mScriptManager = new GVRScriptManager(this);
         mEventManager = new GVREventManager(this);
-        mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes());
+        mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes(),appSettings.getNumControllers());
         mInputManager.scanDevices();
     }
 
-    void onPause() {}
+    void onPause() {
+        mControllerReader.onPause();
+    }
 
-    void onResume() {}
+    void onResume() {
+        mControllerReader.onResume();
+    }
 
     void onDestroy() {
         mInputManager.close();
@@ -499,6 +504,7 @@ abstract class GVRViewManager extends GVRContext {
     protected void beforeDrawEyes() {
         GVRNotifications.notifyBeforeStep();
         mFrameHandler.beforeDrawEyes();
+        getInputManager().updateGearControllers();
         makeShadowMaps(mMainScene.getNative(), getMainScene(), mRenderBundle.getShaderManager().getNative(),
                        mRenderBundle.getPostEffectRenderTextureA().getWidth(), mRenderBundle.getPostEffectRenderTextureA().getHeight());
     }
@@ -797,7 +803,7 @@ abstract class GVRViewManager extends GVRContext {
             mReadbackBuffer = null;
         }
     }
-
+    GVRGearCursorController.ControllerReader mControllerReader;
     private final GVRScriptManager mScriptManager;
     protected final GVRActivity mActivity;
     protected float mFrameTime;

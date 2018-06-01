@@ -50,7 +50,8 @@ namespace gvr
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
-                                                        jlong jtexture, jobject jbitmap, jboolean hasAlpha);
+                                                        jlong jtexture, jobject jbitmap,
+                                                        jboolean hasAlpha, jstring format);
     }
 
     JNIEXPORT jlong JNICALL
@@ -75,10 +76,28 @@ namespace gvr
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeBitmapImage_updateFromBitmap(JNIEnv *env, jobject obj,
-                                                        jlong jtexture, jobject jbitmap, jboolean hasAlpha)
+                                                        jlong jtexture, jobject jbitmap,
+                                                        jboolean hasAlpha, jstring format)
     {
         BitmapImage *texture = reinterpret_cast<BitmapImage *>(jtexture);
-        texture->update(env, jbitmap, static_cast<bool>(hasAlpha) );
+        const char* format_name = env->GetStringUTFChars(format, 0);
+
+        int form = GL_RGBA;
+
+        if(strcmp(format_name, "ALPHA_8") == 0)
+            form = GL_R8;
+        else if (strcmp(format_name, "RGB_565") == 0)
+            form = GL_RGB565;
+        else if (strcmp(format_name, "ARGB_4444") == 0)
+            form = GL_RGBA4;
+        else if (strcmp(format_name, "ARGB_8888") == 0)
+            form = GL_RGBA8;
+        else if (strcmp(format_name, "RGBA_F16") == 0)
+            form = GL_RGBA16F;
+
+        texture->update(env, jbitmap, static_cast<bool>(hasAlpha), form );
+        env->ReleaseStringUTFChars(format, format_name);
+
     }
 
     JNIEXPORT void JNICALL

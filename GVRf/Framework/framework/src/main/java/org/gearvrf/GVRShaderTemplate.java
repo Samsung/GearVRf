@@ -119,7 +119,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     public GVRShaderTemplate(String uniformDescriptor, String textureDescriptor, String vertexDescriptor, GLSLESVersion glslVersion)
     {
-       super(uniformDescriptor, textureDescriptor, vertexDescriptor, glslVersion);
+        super(uniformDescriptor, textureDescriptor, vertexDescriptor, glslVersion);
         mHasVariants = true;
     }
 
@@ -139,6 +139,10 @@ public class GVRShaderTemplate extends GVRShader
     protected void setSegment(String segmentName, String shaderSource)
     {
         super.setSegment(segmentName, shaderSource);
+        if (shaderSource == null)
+        {
+            return;
+        }
         Pattern pattern = Pattern.compile("HAS_([a-zA-Z0-9_]+)");
         Matcher matcher = pattern.matcher(shaderSource);
         if (mShaderDefines == null) mShaderDefines = new HashSet<String>();
@@ -354,8 +358,9 @@ public class GVRShaderTemplate extends GVRShader
                 String segmentSource = entry.getValue();
                 if (segmentSource == null)
                     segmentSource = "";
-                if (!definedNames.containsKey(key) ||
-                    (definedNames.get(key) != 0)) {
+                else if (!definedNames.containsKey(key) ||
+                        (definedNames.get(key) != 0))
+                {
                     shaderSource.append("#define HAS_" + key + " 1;\n");
                 }
                 combinedSource = combinedSource.replace("@" + key, segmentSource);

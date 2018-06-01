@@ -36,7 +36,7 @@ namespace gvr {
         explicit BitmapImage(int format);
         virtual ~BitmapImage();
         void update(JNIEnv* env, int width, int height, jbyteArray data);
-        void update(JNIEnv* env, jobject bitmap, bool hasAlpha);
+        void update(JNIEnv* env, jobject bitmap, bool hasAlpha, int format);
         void update(JNIEnv* env, int xoffset, int yoffset, int width, int height,
                     int format, int type, jobject bitmap);
         void update(JNIEnv *env, int width, int height, int imageSize,

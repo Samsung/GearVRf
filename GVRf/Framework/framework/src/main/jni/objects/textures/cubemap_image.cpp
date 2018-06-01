@@ -25,6 +25,7 @@ namespace gvr {
     CubemapImage::CubemapImage(int format) :
             Image(Image::CUBEMAP, format), mJava(NULL), mBitmaps(NULL), mTextures(NULL)
     {
+        mFormat = format;
     }
 
     void CubemapImage::update(JNIEnv* env, jobjectArray bitmapArray)

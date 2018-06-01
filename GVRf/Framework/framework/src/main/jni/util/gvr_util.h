@@ -16,7 +16,10 @@
 #define GVR_UTIL_H
 
 namespace gvr {
+
 bool isSystemPropertySet(const char *prop);
 int getSystemProperty(const char *prop);
+char* getSystemPropertyString(const char *prop, char* out);
+
 }
 #endif

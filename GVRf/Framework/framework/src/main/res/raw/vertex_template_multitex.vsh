@@ -35,6 +35,7 @@ layout(location = 7) in ivec4 a_bone_indices;
 #ifdef HAS_VertexNormalShader
 layout(location = 8) in vec3 a_tangent;
 layout(location = 9) in vec3 a_bitangent;
+layout(location = 15) out mat3 tangent_matrix;
 #endif
 
 layout(location = 0) out vec3 view_direction;
@@ -127,5 +128,5 @@ void main() {
         gl_Position = mvp  * vertex.local_position;
 #else
 	gl_Position = u_mvp * vertex.local_position;	
-#endif	
+#endif
 }

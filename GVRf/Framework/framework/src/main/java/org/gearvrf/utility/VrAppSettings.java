@@ -493,6 +493,7 @@ public class VrAppSettings {
         }
     }
 
+    public int numControllers;
     public static int DEFAULT_FBO_RESOLUTION = 1024;
 
     // If it will show loading icon in the vr app.
@@ -523,6 +524,13 @@ public class VrAppSettings {
     public final HeadModelParams headModelParams;
     public final PerformanceParams performanceParams;
 
+    /**
+        This will return number of controllers in the app
+
+     */
+    public int getNumControllers(){
+        return numControllers;
+    }
     /**
      * Set if user wants to use multiview or not
      * 
@@ -767,6 +775,7 @@ public class VrAppSettings {
         eyeBufferParams = new EyeBufferParams();
         headModelParams = new HeadModelParams();
         performanceParams = new PerformanceParams();
+        numControllers = 1;
     }
 
     public String toString() {
