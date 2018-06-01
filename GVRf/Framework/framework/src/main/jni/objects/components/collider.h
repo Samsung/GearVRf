@@ -24,7 +24,6 @@
 #include <vector>
 #include "glm/glm.hpp"
 
-#include "component_group.h"
 #include "collider_shape_types.h"
 #include "objects/scene_object.h"
 

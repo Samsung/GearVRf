@@ -33,6 +33,14 @@ extern "C" {
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jlight, jboolean flag);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeComponent_addChildComponent(JNIEnv * env, jobject obj,
+                                                       jlong jgroup, jlong jcomponent);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeComponent_removeChildComponent(JNIEnv * env, jobject obj,
+                                                          jlong jgroup, jlong jcomponent);
 }
 
 JNIEXPORT jlong JNICALL
@@ -67,5 +75,22 @@ Java_org_gearvrf_NativeComponent_setEnable(JNIEnv * env, jobject obj, jlong jcom
     component->set_enable((bool) flag);
 }
 
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeComponent_addChildComponent(JNIEnv * env, jobject obj,
+                                                   jlong jgroup, jlong jcomponent)
+{
+    Component* group = reinterpret_cast<Component*>(jgroup);
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    group->addChildComponent(component);
+}
+
+JNIEXPORT void JNICALL
+Java_org_gearvrf_NativeComponent_removeChildComponent(JNIEnv * env, jobject obj,
+                                                      jlong jgroup, jlong jcomponent)
+{
+    Component* group = reinterpret_cast<Component*>(jgroup);
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    group->removeChildComponent(component);
+}
 }
 

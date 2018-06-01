@@ -252,10 +252,6 @@ class NativeComponent {
     static native void setOwnerObject(long component, long owner);
     static native boolean isEnabled(long component);
     static native void setEnable(long component, boolean flag);
-}
-
-class NativeComponentGroup {
-    static native long ctor(long componentType);
     static native void addChildComponent(long component, long child);
     static native void removeChildComponent(long component, long child);
 }

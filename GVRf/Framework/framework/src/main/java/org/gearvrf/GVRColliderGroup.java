@@ -53,7 +53,7 @@ public class GVRColliderGroup extends GVRCollider {
      */
     public void addCollider(GVRCollider collider)
     {
-        NativeComponentGroup.addChildComponent(getNative(), collider.getNative());
+        NativeComponent.addChildComponent(getNative(), collider.getNative());
     }
 
     /**
@@ -67,7 +67,7 @@ public class GVRColliderGroup extends GVRCollider {
      */
     public void removeCollider(GVRCollider collider)
     {
-        NativeComponentGroup.removeChildComponent(getNative(), collider.getNative());
+        NativeComponent.removeChildComponent(getNative(), collider.getNative());
     }
 }
 
