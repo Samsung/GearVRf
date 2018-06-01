@@ -29,7 +29,7 @@ namespace gvr {
 extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_physics_NativePhysics3DLoader_ctor(JNIEnv* env, jclass clazz,
-            jstring fname, jboolean ignoreUpAxis, jobject jassetmanager);
+            jbyteArray byteArr, jint arrLen, jboolean ignoreUpAxis);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_NativePhysics3DLoader_delete(JNIEnv* env, jclass clazz, jlong jloader);
@@ -57,20 +57,22 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL
 Java_org_gearvrf_physics_NativePhysics3DLoader_ctor(JNIEnv* env, jclass clazz,
-        jstring fname, jboolean ignoreUpAxis, jobject jassetmanager)
+    jbyteArray byteArr, jint len, jboolean ignoreUpAxis)
 {
-    const char* cFilename = env->GetStringUTFChars(fname, NULL);
-    AAssetManager *assetmgr = AAssetManager_fromJava(env, jassetmanager);
-    AAsset *file = AAssetManager_open(assetmgr, cFilename, AASSET_MODE_UNKNOWN);
-    size_t assetsize = (size_t)AAsset_getLength(file);
-    char *buf = new char[assetsize];
-    int ret = AAsset_read(file, buf, assetsize);
-    __android_log_print(ANDROID_LOG_DEBUG, tag, "read %i bytes from asset '%s'", ret, cFilename);
-    AAsset_close(file);
+    jbyte* data = env->GetByteArrayElements(byteArr, NULL);
 
-    PhysicsLoader *loader = new BulletFileLoader(buf, assetsize, ignoreUpAxis);
+    if (data == NULL) {
+        return 0;
+    }
 
-    delete[] buf;
+    char *buffer = new char[len];
+    memcpy(buffer, data, len);
+
+    env->ReleaseByteArrayElements(byteArr, data, JNI_ABORT);
+
+    PhysicsLoader *loader = new BulletFileLoader(buffer, len, ignoreUpAxis);
+
+    delete[] buffer;
 
     return reinterpret_cast<jlong>(loader);
 }

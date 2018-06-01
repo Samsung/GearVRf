@@ -15,13 +15,20 @@
 
 package org.gearvrf.physics;
 
-import android.content.res.AssetManager;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class GVRPhysicsLoader {
     static private final String TAG = GVRPhysicsLoader.class.getSimpleName();
@@ -31,7 +38,7 @@ public class GVRPhysicsLoader {
     }
 
     /**
-     * Loads a physics settings file from 'assets' directory of the application.
+     * Loads a physics settings file.
      *
      * @param gvrContext The context of the app.
      * @param fileName Physics settings file name.
@@ -42,7 +49,7 @@ public class GVRPhysicsLoader {
     }
 
     /**
-     * Loads a physics settings file from 'assets' directory of the application.
+     * Loads a physics settings file.
      *
      * Use this if you want the up-axis information from physics file to be ignored.
      *
@@ -52,7 +59,24 @@ public class GVRPhysicsLoader {
      * @param scene The scene containing the objects to attach physics components.
      */
     public static void loadPhysicsFile(GVRContext gvrContext, String fileName, boolean ignoreUpAxis, GVRScene scene) {
-        long loader = NativePhysics3DLoader.ctor(fileName, ignoreUpAxis, gvrContext.getActivity().getAssets());
+        byte[] inputData = null;
+        try {
+            inputData = toByteArray(toAndroidResource(gvrContext, fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (inputData == null || inputData.length == 0) {
+            Log.e(TAG, "Fail to load bullet file " + fileName);
+            return;
+        }
+
+        long loader = NativePhysics3DLoader.ctor(inputData, inputData.length, ignoreUpAxis);
+
+        if (loader == 0) {
+            Log.e(TAG, "Fail to parse bullet file " + fileName);
+            return;
+        }
 
         GVRSceneObject sceneRoot = scene.getRoot();
         ArrayMap<Long, GVRSceneObject> rbObjects = new ArrayMap<>();
@@ -63,11 +87,17 @@ public class GVRPhysicsLoader {
             GVRSceneObject sceneObject = sceneRoot.getSceneObjectByName(name);
             if (sceneObject == null) {
                 Log.d(TAG, "Did not found scene object for rigid body '" + name + "'");
-            } else {
-                GVRRigidBody rigidBody = new GVRRigidBody(gvrContext, nativeRigidBody);
-                sceneObject.attachComponent(rigidBody);
-                rbObjects.put(nativeRigidBody, sceneObject);
+                continue;
             }
+
+            if (sceneObject.getComponent(GVRCollider.getComponentType()) == null) {
+                // Set mesh collider as default.
+                sceneObject.attachComponent(new GVRMeshCollider(gvrContext, true));
+            }
+
+            GVRRigidBody rigidBody = new GVRRigidBody(gvrContext, nativeRigidBody);
+            sceneObject.attachComponent(rigidBody);
+            rbObjects.put(nativeRigidBody, sceneObject);
         }
 
         long nativeConstraint;
@@ -108,10 +138,33 @@ public class GVRPhysicsLoader {
         NativePhysics3DLoader.delete(loader);
     }
 
+    private static byte[] toByteArray(GVRAndroidResource resource) throws IOException {
+        resource.openStream();
+        InputStream is = resource.getStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        for (int read; (read = is.read(buffer, 0, buffer.length)) != -1; ) {
+            baos.write(buffer, 0, read);
+        }
+        baos.flush();
+        resource.closeStream();
+        return  baos.toByteArray();
+    }
+
+    private static GVRAndroidResource toAndroidResource(GVRContext context, String fileName) throws IOException {
+        GVRResourceVolume resVol = new GVRResourceVolume(context, fileName);
+
+        final int i = fileName.lastIndexOf("/");
+        if (i > 0) {
+            fileName = fileName.substring(i + 1);
+        }
+
+        return resVol.openResource(fileName);
+    }
 }
 
 class NativePhysics3DLoader {
-    static native long ctor(String file_name, boolean ignoreUpAxis, AssetManager assetManager);
+    static native long ctor(byte[] bytes, int len, boolean ignoreUpAxis);
 
     static native long delete(long loader);
 
