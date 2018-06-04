@@ -32,6 +32,12 @@ import java.util.List;
  * @see GVRSceneObject#getComponent(long)
  */
 public class GVRComponent extends GVRHybridObject {
+    public interface IComponentGroup<T extends GVRComponent>
+    {
+        void addChildComponent(T child);
+        void removeChildComponent(T child);
+    };
+
     protected boolean mIsEnabled;
     protected long mType = 0;
     protected GVRComponent mParent = null;

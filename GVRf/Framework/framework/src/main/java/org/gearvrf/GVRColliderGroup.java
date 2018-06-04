@@ -33,7 +33,8 @@ import java.util.List;
  * One can use this class to specify multiple colliders for a
  * single {@link GVRSceneObject}.
  */
-public class GVRColliderGroup extends GVRCollider {
+public class GVRColliderGroup extends GVRCollider implements GVRComponent.IComponentGroup<GVRCollider>
+{
     /**
      * Constructor
      * 
@@ -56,6 +57,11 @@ public class GVRColliderGroup extends GVRCollider {
         NativeComponent.addChildComponent(getNative(), collider.getNative());
     }
 
+    public void addChildComponent(GVRCollider collider)
+    {
+        NativeComponent.addChildComponent(getNative(), collider.getNative());
+    }
+
     /**
      * Remove a {@link GVRCollider} from this collider-group.
      * 
@@ -66,6 +72,11 @@ public class GVRColliderGroup extends GVRCollider {
      * 
      */
     public void removeCollider(GVRCollider collider)
+    {
+        NativeComponent.removeChildComponent(getNative(), collider.getNative());
+    }
+
+    public void removeChildComponent(GVRCollider collider)
     {
         NativeComponent.removeChildComponent(getNative(), collider.getNative());
     }
