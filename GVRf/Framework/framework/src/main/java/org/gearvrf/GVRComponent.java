@@ -150,13 +150,6 @@ public class GVRComponent extends GVRHybridObject {
         }
     }
 
-    /**
-     * @return Returns the {@linkplain GVRComponentGroup parent} this component is added to,
-     * or null if not added to a component's group.
-     */
-    public GVRComponent getParent() {
-        return mParent;
-    }
 
     /**
      * Enable the component so it will be active in the scene.
