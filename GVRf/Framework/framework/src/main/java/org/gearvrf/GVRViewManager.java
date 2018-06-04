@@ -69,11 +69,15 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     void onPause() {
-        mControllerReader.onPause();
+        if (null != mControllerReader) {
+            mControllerReader.onPause();
+        }
     }
 
     void onResume() {
-        mControllerReader.onResume();
+        if (null != mControllerReader) {
+            mControllerReader.onResume();
+        }
     }
 
     void onDestroy() {
