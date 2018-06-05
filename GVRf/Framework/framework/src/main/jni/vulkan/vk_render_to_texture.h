@@ -22,7 +22,7 @@
 #include "vulkan/vk_texture.h"
 
 namespace gvr{
-class VkRenderTexture : public RenderTexture
+class VkRenderTexture : public RenderTexture, VKDeviceComponent
 {
 protected:
     VKFramebuffer* fbo = nullptr;
@@ -54,8 +54,10 @@ public:
         return mHeight;
     }
     virtual ~VkRenderTexture(){
+        cleanup();
         delete fbo;
     }
+    void cleanup();
     explicit VkRenderTexture(int width, int height, int fboType, int layers = 1, int sample_count = 1);
     virtual unsigned int getFrameBufferId() const {
         return 0;
@@ -92,6 +94,11 @@ public:
         bind();
         return fbo->getRenderPass();
     }
+
+private:
+    VkDeviceMemory readbackMemory = VK_NULL_HANDLE;
+    VkBuffer readbackMemoryHandle  = VK_NULL_HANDLE;
+    void createBufferForRenderedResult();
 };
 
 }

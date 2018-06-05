@@ -98,6 +98,38 @@ void VkRenderTexture::bind() {
     }
 }
 
+void VkRenderTexture::createBufferForRenderedResult(){
+    VkResult ret = VK_SUCCESS;
+    VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
+    VkDevice device = vk_renderer->getDevice();
+    VkMemoryRequirements mem_reqs;
+    uint32_t memoryTypeIndex;
+
+    // Components currently hard coded to 4 since our Color buffer is VK_FORMAT_R8G8B8A8_UNORM
+    ret = vkCreateBuffer(device,
+                         gvr::BufferCreateInfo(mWidth * mHeight *  4 * sizeof(uint8_t),
+                                               VK_BUFFER_USAGE_TRANSFER_DST_BIT), nullptr,
+                         &readbackMemoryHandle);
+    GVR_VK_CHECK(!ret);
+
+    // Obtain the memory requirements for this buffer.
+    vkGetBufferMemoryRequirements(device, readbackMemoryHandle, &mem_reqs);
+    GVR_VK_CHECK(!ret);
+
+    bool pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
+                                                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                                                         &memoryTypeIndex);
+    GVR_VK_CHECK(pass);
+
+    ret = vkAllocateMemory(device,
+                           gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
+                           &readbackMemory);
+    GVR_VK_CHECK(!ret);
+
+    ret = vkBindBufferMemory(device, readbackMemoryHandle, readbackMemory, 0);
+    GVR_VK_CHECK(!ret);
+}
+
 void VkRenderTexture::beginRendering(Renderer* renderer){
     bind();
 
@@ -191,6 +223,9 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
         if(!fbo)
             return false;
 
+        if(readbackMemoryHandle == VK_NULL_HANDLE)
+            createBufferForRenderedResult();
+
         VkResult err;
         VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
         VkDevice device = vk_renderer->getDevice();
@@ -207,7 +242,7 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
         region.imageExtent = extent3D;
         vkCmdCopyImageToBuffer(mCmdBuffer,  fbo->getImage(COLOR_IMAGE),
                                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                               *(fbo->getImageBuffer(COLOR_IMAGE)), 1, &region);
+                               readbackMemoryHandle, 1, &region);
         vkEndCommandBuffer(mCmdBuffer);
 
         VkSubmitInfo ssubmitInfo = {};
@@ -219,13 +254,12 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
 
         uint8_t *data;
         err = vkWaitForFences(device, 1, &mWaitFence, VK_TRUE, 4294967295U);
-
-        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
-        err = vkMapMemory(device, mem, 0,
+        GVR_VK_CHECK(!err);
+        err = vkMapMemory(device, readbackMemory, 0,
                           fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
 
         *readback_buffer = data;
-        //GVR_VK_CHECK(!err);
+        GVR_VK_CHECK(!err);
 
         return true;
 
@@ -239,8 +273,22 @@ bool VkRenderTexture::readRenderResult(uint8_t *readback_buffer){
 
         VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
         VkDevice device = vk_renderer->getDevice();
-        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
-        vkUnmapMemory(device, mem);
+        vkUnmapMemory(device, readbackMemory);
+    }
+
+    void VkRenderTexture::cleanup() {
+        VulkanCore * instance = VulkanCore::getInstance();
+        VkDevice device = instance->getDevice();
+
+        if(readbackMemoryHandle != 0 ) {
+            vkDestroyBuffer(device, readbackMemoryHandle, nullptr);
+            readbackMemoryHandle = 0;
+        }
+
+        if(readbackMemory != 0) {
+            vkFreeMemory(device, readbackMemory, nullptr);
+            readbackMemory = 0;
+        }
     }
 
 }

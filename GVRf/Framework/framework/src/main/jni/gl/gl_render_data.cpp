@@ -51,9 +51,7 @@ namespace gvr
             glDrawArrays(mode, 0, vertexCount);
             break;
         }
-       // LOGE("Roshan calling draw for %s", owner_object()->name().c_str());
         checkGLError(" RenderData::render after draw");
-        //LOGE("draweyes");
         glBindVertexArray(0);
     }
 

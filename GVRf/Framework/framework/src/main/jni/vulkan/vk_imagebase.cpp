@@ -17,21 +17,6 @@
 #include "engine/renderer/vulkan_renderer.h"
 
 namespace gvr {
-int getComponentsNumber(VkFormat format){
-    switch (format){
-        case VK_FORMAT_R8G8B8A8_UNORM:
-            return 4;
-        case VK_FORMAT_D16_UNORM:
-            return 2;
-        case VK_FORMAT_D32_SFLOAT:
-        case VK_FORMAT_D24_UNORM_S8_UINT:
-            return 4;
-        default:
-            FAIL("format not found");
-    }
-    return 0;
-}
-
     VkImageAspectFlagBits getAspectFlagForFormat(VkFormat format){
         switch (format){
             case VK_FORMAT_R8G8B8A8_UNORM:
@@ -48,34 +33,7 @@ int getComponentsNumber(VkFormat format){
     }
 
     vkImageBase::~vkImageBase(){
-
-        VulkanCore * instance = VulkanCore::getInstance();
-        VkDevice device = instance->getDevice();
-
         cleanup();
-
-        if(host_memory != 0) {
-            vkFreeMemory(device, host_memory, nullptr);
-            host_memory = 0;
-        }
-
-        if(hostBuffer != 0) {
-            vkDestroyBuffer(device, hostBuffer, nullptr);
-            hostBuffer = 0;
-        }
-
-        if(host_accessible_) {
-            if(outBuffer) {
-                vkDestroyBuffer(device, *outBuffer, nullptr);
-                outBuffer = nullptr;
-            }
-
-            if(dev_memory != 0) {
-                vkFreeMemory(device, dev_memory, nullptr);
-                dev_memory = 0;
-            }
-        }
-
     }
 
     void vkImageBase::cleanup() {
@@ -88,9 +46,14 @@ int getComponentsNumber(VkFormat format){
             imageView = 0;
         }
 
-        if(image != 0 ) {
-            vkDestroyImage(device, image, nullptr);
-            image = 0;
+        if(imageHandle != 0 ) {
+            vkDestroyImage(device, imageHandle, nullptr);
+            imageHandle = 0;
+        }
+
+        if(device_memory != 0) {
+            vkFreeMemory(device, device_memory, nullptr);
+            device_memory = 0;
         }
 
         if(cascadeImageView.size() != 0) {
@@ -102,127 +65,70 @@ int getComponentsNumber(VkFormat format){
     }
 
 
-void vkImageBase::createImageView(bool host_accessible, bool useDeviceSwapchain) {
-
-    host_accessible_ = host_accessible;
+void vkImageBase::createImage() {
     VkResult ret = VK_SUCCESS;
     VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
     VkDevice device = vk_renderer->getDevice();
 
-    //create images backed with memory and imageviews only when not using system swapchain images.
-    //But we do need the host visible outBuffer in case we need to use any form of staging.
-    if(!useDeviceSwapchain) {
-        bool pass;
-        VkMemoryRequirements mem_reqs;
-        uint32_t memoryTypeIndex;
+    bool pass;
+    VkMemoryRequirements mem_reqs;
+    uint32_t memoryTypeIndex;
 
-        ret = vkCreateImage(
-                device,
-                gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, format_, width_,
-                                     height_, depth_, 1, mLayers,
-                                     tiling_,
-                                     usage_flags_, 0, getVKSampleBit(mSampleCount),
-                                     imageLayout),
-                nullptr, &image
-        );
-        GVR_VK_CHECK(!ret);
+    ret = vkCreateImage(
+            device,
+            gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, format_, width_,
+                                 height_, depth_, 1, mLayers,
+                                 tiling_,
+                                 usage_flags_, 0, getVKSampleBit(mSampleCount),
+                                 imageLayout),
+            nullptr, &imageHandle
+    );
+    GVR_VK_CHECK(!ret);
 
-        ret = vkCreateBuffer(device,
-                             gvr::BufferCreateInfo(
-                                     width_ * height_ * getComponentsNumber(format_) * mLayers *
-                                     sizeof(uint8_t),
-                                     usage_flags_), nullptr,
-                             &hostBuffer);
-        GVR_VK_CHECK(!ret);
+    // discover what memory requirements are for this image.
+    vkGetImageMemoryRequirements(device, imageHandle, &mem_reqs);
 
-        // discover what memory requirements are for this image.
-        vkGetImageMemoryRequirements(device, image, &mem_reqs);
+    pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
+                                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                                    &memoryTypeIndex);
+    GVR_VK_CHECK(pass);
+    size = mem_reqs.size;
 
-        pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                                                        &memoryTypeIndex);
-        GVR_VK_CHECK(pass);
-        size = mem_reqs.size;
+    ret = vkAllocateMemory(device,
+                           gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
+                           &device_memory);
+    GVR_VK_CHECK(!ret);
 
-        ret = vkAllocateMemory(device,
-                               gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
-                               &host_memory);
-        GVR_VK_CHECK(!ret);
+    // Bind memory to the image
+    ret = vkBindImageMemory(device, imageHandle, device_memory, 0);
+    GVR_VK_CHECK(!ret);
 
-        // Bind memory to the image
-        ret = vkBindImageMemory(device, image, host_memory, 0);
-        GVR_VK_CHECK(!ret);
+    // View of the image created
+    ret = vkCreateImageView(
+              device,
+              gvr::ImageViewCreateInfo(imageHandle, imageType,
+                                       format_, 1, 0, mLayers,
+                                       getAspectFlagForFormat(format_)),
+              nullptr, &imageView
+    );
+    GVR_VK_CHECK(!ret);
 
-        ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
-        GVR_VK_CHECK(!ret);
-
-        // Overall view of the image created
-        if(mLayers == 1) {
+    if(mLayers > 1){
+        //View per layers are created here
+        VkImageView layerView;
+        for (int i = 0; i < mLayers; i++) {
             ret = vkCreateImageView(
                     device,
-                    gvr::ImageViewCreateInfo(image, imageType,
-                                             format_, 1, 0, mLayers,
+                    gvr::ImageViewCreateInfo(imageHandle, imageType,
+                                             format_, 1, i, 1,
                                              getAspectFlagForFormat(format_)),
-                    nullptr, &imageView
+                    nullptr, &layerView
             );
             GVR_VK_CHECK(!ret);
-        }
-        else {
-            // View for whole array
-            ret = vkCreateImageView(
-                    device,
-                    gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-                                             format_, 1, 0, mLayers,
-                                             getAspectFlagForFormat(format_)),
-                    nullptr, &imageView
-            );
-            GVR_VK_CHECK(!ret);
-
-            //View per layers are created here
-            VkImageView layerView;
-            for (int i = 0; i < mLayers; i++) {
-                ret = vkCreateImageView(
-                        device,
-                        gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-                                                 format_, 1, i, 1,
-                                                 getAspectFlagForFormat(format_)),
-                        nullptr, &layerView
-                );
-                GVR_VK_CHECK(!ret);
-                cascadeImageView.push_back(layerView);
-            }
+            cascadeImageView.push_back(layerView);
         }
     }
 
-    if(host_accessible) {
-
-        bool pass;
-        VkMemoryRequirements mem_reqs;
-        uint32_t memoryTypeIndex;
-
-        ret = vkCreateBuffer(device,
-                             gvr::BufferCreateInfo(width_ * height_ *  getComponentsNumber(format_) * mLayers  * sizeof(uint8_t),
-                                                   VK_BUFFER_USAGE_TRANSFER_DST_BIT), nullptr,
-                             outBuffer.get());
-        GVR_VK_CHECK(!ret);
-
-        // Obtain the memory requirements for this buffer.
-        vkGetBufferMemoryRequirements(device, *outBuffer, &mem_reqs);
-        GVR_VK_CHECK(!ret);
-
-        pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                                                        &memoryTypeIndex);
-        GVR_VK_CHECK(pass);
-
-        ret = vkAllocateMemory(device,
-                               gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
-                               &dev_memory);
-        GVR_VK_CHECK(!ret);
-
-        ret = vkBindBufferMemory(device, *outBuffer, dev_memory, 0);
-        GVR_VK_CHECK(!ret);
-    }
 }
 
 void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
@@ -299,10 +205,10 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
                                                      flags,
                                                      getVKSampleBit(mSampleCount),
                                                      VK_IMAGE_LAYOUT_UNDEFINED), NULL,
-                        &image);
+                        &imageHandle);
     assert(!err);
 
-    vkGetImageMemoryRequirements(device, image, &mem_reqs);
+    vkGetImageMemoryRequirements(device, imageHandle, &mem_reqs);
 
     memoryAllocateInfo.allocationSize = mem_reqs.size;
 
@@ -312,11 +218,11 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
     assert(pass);
 
     /* allocate memory */
-    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &host_memory);
+    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &device_memory);
     assert(!err);
 
     /* bind memory */
-    err = vkBindImageMemory(device, image, host_memory, 0);
+    err = vkBindImageMemory(device, imageHandle, device_memory, 0);
     assert(!err);
 
     // Reset the setup command buffer
@@ -356,21 +262,21 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
             VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
 
     // Optimal image will be used as destination for the copy, so we must transfer from our initial undefined image layout to the transfer destination layout
-    setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
+    setImageLayout(imageMemoryBarrier, textureCmdBuffer, imageHandle, VK_IMAGE_ASPECT_COLOR_BIT,
                    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                    imageMemoryBarrier.subresourceRange);
 
     vkCmdCopyBufferToImage(
             textureCmdBuffer,
             texBuffer,
-            image,
+            imageHandle,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             static_cast<uint32_t>(bufferCopyRegions.size()),
             bufferCopyRegions.data());
 
     imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    setImageLayout(imageMemoryBarrier, textureCmdBuffer, image, VK_IMAGE_ASPECT_COLOR_BIT,
+    setImageLayout(imageMemoryBarrier, textureCmdBuffer, imageHandle, VK_IMAGE_ASPECT_COLOR_BIT,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    imageMemoryBarrier.subresourceRange);
 
@@ -408,7 +314,7 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
                         bufferCopyRegions, mipLevels, bitmapInfos, imageMemoryBarrier,
                         submit_info, buffers, queue);
 
-    err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
+    err = vkCreateImageView(device, gvr::ImageViewCreateInfo(imageHandle,
                                                              target,
                                                              internalFormat, mipLevels,0,
                                                              pixels.size(),
@@ -474,7 +380,7 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
                 // change layout of current mip level to transfer dest
                 setImageLayout(imageMemoryBarrier,
                                blitCmd,
-                               image,
+                               imageHandle,
                                VK_IMAGE_ASPECT_COLOR_BIT,
                                VK_IMAGE_LAYOUT_UNDEFINED,
                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, imageMemoryBarrier.subresourceRange,
@@ -484,9 +390,9 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
                 // Do blit operation from previous mip level
                 vkCmdBlitImage(
                         blitCmd,
-                        image,
+                        imageHandle,
                         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                        image,
+                        imageHandle,
                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                         1,
                         &imageBlit,
@@ -495,7 +401,7 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
                 // change layout of current mip level to source for next iteration
                 setImageLayout(imageMemoryBarrier,
                                blitCmd,
-                               image,
+                               imageHandle,
                                VK_IMAGE_ASPECT_COLOR_BIT,
                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, imageMemoryBarrier.subresourceRange,
@@ -507,7 +413,7 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
         imageMemoryBarrier.subresourceRange.levelCount = mipLevels;
         setImageLayout(imageMemoryBarrier,
                        blitCmd,
-                       image,
+                       imageHandle,
                        VK_IMAGE_ASPECT_COLOR_BIT,
                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                        imageLayout,

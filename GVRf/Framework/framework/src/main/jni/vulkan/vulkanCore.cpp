@@ -947,18 +947,19 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkResult ret;
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+        VkImageViewType imageViewType = (layers > 1) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
 
         if(sample_count > 1){
-            vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
+            vkImageBase *multisampledImage = new vkImageBase(imageViewType, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, sample_count);
-            multisampledImage->createImageView(false, false);
+            multisampledImage->createImage();
             mAttachments[MULTISAMPLED_IMAGE] = multisampledImage;
             attachments.push_back(multisampledImage->getVkImageView());
         }
 
         if(image_type & COLOR_IMAGE && mAttachments[COLOR_IMAGE]== nullptr) {
-            vkImageBase *colorImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
+            vkImageBase *colorImage = new vkImageBase(imageViewType, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|
                                                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, 1);
@@ -971,10 +972,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             if(core->isSwapChainPresent() && !core->isSwapChainCreationFinished()) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
-                colorImage->createImageView(true, true);
             }
             else{
-                colorImage->createImageView(true, false);
+                colorImage->createImage();
             }
 
             attachments.push_back(colorImage->getVkImageView());
@@ -982,10 +982,10 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
             VkFormat depthFormat =  Renderer::getInstance()->useStencilBuffer() ? VK_FORMAT_D24_UNORM_S8_UINT: VK_FORMAT_D16_UNORM;
-            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, depthFormat, mWidth,
+            vkImageBase *depthImage = new vkImageBase(imageViewType, depthFormat, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, sample_count);
-            depthImage->createImageView(false, false);
+            depthImage->createImage();
             mAttachments[DEPTH_IMAGE] = depthImage;
             attachments.push_back(depthImage->getVkImageView());
         }
