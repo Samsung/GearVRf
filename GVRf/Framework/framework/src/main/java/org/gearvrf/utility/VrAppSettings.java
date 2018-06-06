@@ -15,6 +15,7 @@
 
 package org.gearvrf.utility;
 
+import org.gearvrf.SystemPropertyUtil;
 import org.gearvrf.io.GVRControllerType;
 
 import java.util.ArrayList;
@@ -538,7 +539,9 @@ public class VrAppSettings {
      *            
      */
     public void setUseMultiview(boolean useMultiview){
-        this.useMultiview = useMultiview;
+        if (1 != SystemPropertyUtil.getSystemProperty(DEBUG_GEARVRF_MULTIVIEW)) {
+            this.useMultiview = useMultiview;
+        }
     }
     /**
      * Check if user has set usemultiview flag
@@ -766,7 +769,6 @@ public class VrAppSettings {
 
     public VrAppSettings() {
         showLoadingIcon = true;
-        useMultiview = false;
         useSrgbFramebuffer = false;
         useProtectedFramebuffer = false;
         framebufferPixelsWide = -1;
@@ -776,8 +778,11 @@ public class VrAppSettings {
         headModelParams = new HeadModelParams();
         performanceParams = new PerformanceParams();
         numControllers = 1;
+
+        useMultiview = 1 == SystemPropertyUtil.getSystemProperty(DEBUG_GEARVRF_MULTIVIEW);
     }
 
+    @Override
     public String toString() {
         StringBuilder res = new StringBuilder();
         res.append("showLoadingIcon = " + showLoadingIcon);
@@ -793,11 +798,5 @@ public class VrAppSettings {
         return res.toString();
     }
 
-    /**
-     * Doesn't do a thing
-     * @deprecated
-     */
-    static public void setShowDebugLog(boolean b) {
-
-    }
+    private final static String DEBUG_GEARVRF_MULTIVIEW = "debug.gearvrf.multiview";
 }
