@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "collider.h"
-#include "glm/gtc/type_ptr.hpp"
 #include "util/gvr_jni.h"
 
 namespace gvr {
@@ -32,6 +31,5 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeCollider_getComponentType(JNIEnv * env, jobject obj) {
     return Collider::getComponentType();
 }
-
 
 }

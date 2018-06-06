@@ -33,7 +33,7 @@ inline Component::Component(SceneObject* owner_object) :
 
 inline Component::Component(long long type, SceneObject* owner_object) :
         type_(type),
-        enabled_(true),
+         enabled_(true),
         owner_object_(owner_object) {
 }
 
@@ -46,11 +46,13 @@ inline SceneObject *Component::owner_object() const {
 }
 
 inline void Component::set_owner_object(SceneObject *owner_object) {
-    if (owner_object_) {
+    if (owner_object_)
+    {
         onDetach(owner_object_);
     }
     owner_object_ = owner_object;
-    if (owner_object) {
+    if (owner_object)
+    {
         onAttach(owner_object);
     }
 }

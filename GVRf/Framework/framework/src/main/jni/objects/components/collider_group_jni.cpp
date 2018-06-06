@@ -18,66 +18,19 @@
  * JNI
  ***************************************************************************/
 
+#include "collider.h"
 #include "collider_group.h"
-
 #include "util/gvr_jni.h"
-#include "glm/gtc/type_ptr.hpp"
 
 namespace gvr {
 extern "C" {
     JNIEXPORT jlong JNICALL
-    Java_org_gearvrf_NativeColliderGroup_ctor(JNIEnv * env,
-            jobject obj);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeColliderGroup_addCollider(JNIEnv * env,
-            jobject obj, jlong jgroup, jlong jcollider);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeColliderGroup_removeCollider(
-            JNIEnv * env, jobject obj, jlong jgroup,
-            jlong jcollider);
-
-    JNIEXPORT jfloatArray JNICALL
-    Java_org_gearvrf_NativeColliderGroup_getHit(JNIEnv * env, jobject obj, jlong jgroup);
+    Java_org_gearvrf_NativeColliderGroup_ctor(JNIEnv * env, jobject obj);
 }
-
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeColliderGroup_ctor(JNIEnv * env,
-        jobject obj) {
+Java_org_gearvrf_NativeColliderGroup_ctor(JNIEnv * env, jobject obj)
+{
     return reinterpret_cast<jlong>(new ColliderGroup());
 }
-
-JNIEXPORT jfloatArray JNICALL
-Java_org_gearvrf_NativeColliderGroup_getHit(JNIEnv * env, jobject obj, jlong jgroup) {
-    ColliderGroup* group = reinterpret_cast<ColliderGroup*>(jgroup);
-    const glm::vec3& hitpos = group->hit();
-    jsize size = sizeof(hitpos) / sizeof(jfloat);
-    if (size != 3) {
-        LOGE("sizeof(hit) / sizeof(jfloat) != 3");
-        throw "sizeof(hit) / sizeof(jfloat) != 3";
-    }
-    jfloatArray jhit = env->NewFloatArray(size);
-    env->SetFloatArrayRegion(jhit, 0, size, glm::value_ptr(hitpos));
-    return jhit;
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeColliderGroup_addCollider(JNIEnv * env,
-        jobject obj, jlong jgroup, jlong jcollider) {
-    ColliderGroup* group = reinterpret_cast<ColliderGroup*>(jgroup);
-    Collider* collider = reinterpret_cast<Collider*>(jcollider);
-    group->addCollider(collider);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeColliderGroup_removeCollider(
-        JNIEnv * env, jobject obj, jlong jgroup,
-        jlong jcollider) {
-    ColliderGroup* group = reinterpret_cast<ColliderGroup*>(jgroup);
-    Collider* collider = reinterpret_cast<Collider*>(jcollider);
-    group->removeCollider(collider);
-}
-
 }

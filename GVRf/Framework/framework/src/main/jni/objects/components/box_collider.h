@@ -45,8 +45,8 @@ public:
         return half_extents_;
     }
 
-    ColliderData isHit(const float sphere[]);
-    ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
+    ColliderData isHit(SceneObject* owner, const float sphere[]);
+    ColliderData isHit(SceneObject* owner, const glm::vec3& rayStart, const glm::vec3& rayDir);
     ColliderData isHit(const glm::mat4& model_matrix, const glm::vec3& half_extents, const glm::vec3& rayStart, const glm::vec3& rayDir);
     static ColliderData isHit(const glm::vec3& center, const glm::vec3& half_extents, const float sphere[]);
 

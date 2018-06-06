@@ -1,11 +1,10 @@
 package org.gearvrf;
 
+import android.util.LongSparseArray;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-
-import android.util.Log;
-import android.util.LongSparseArray;
 
 /**
  * A collider allows a scene object to be picked.
@@ -31,8 +30,7 @@ import android.util.LongSparseArray;
  * @see GVRMeshCollider
  * @see GVRSceneObject#attachComponent(GVRComponent)
  */
-public class GVRCollider extends GVRComponent
-{
+public class GVRCollider extends GVRComponent {
     private float mPickDistance = 0;
     private static final LongSparseArray<WeakReference<GVRCollider>> sColliders = new LongSparseArray<WeakReference<GVRCollider>>();
     private final static List<NativeCleanupHandler> sCleanup;
@@ -58,9 +56,10 @@ public class GVRCollider extends GVRComponent
      * @see GVRCollider#lookup(long)
      */
     protected void registerNativePointer(long nativePointer) {
-        synchronized (sColliders) {
-        sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
-    }
+        synchronized (sColliders)
+        {
+            sColliders.put(nativePointer, new WeakReference<GVRCollider>(this));
+        }
     }
 
     /**
@@ -70,6 +69,7 @@ public class GVRCollider extends GVRComponent
     protected GVRCollider(GVRContext context, long nativePointer)
     {
         super(context, nativePointer, sConcatenations.getUniqueConcatenation(sCleanup));
+        mType = getComponentType();
         registerNativePointer(nativePointer);
     }
    
@@ -77,7 +77,7 @@ public class GVRCollider extends GVRComponent
     {
         return NativeCollider.getComponentType();
     }
-    
+
     /**
      * Lookup a native pointer to a collider and return its Java object.
      * 
@@ -86,10 +86,11 @@ public class GVRCollider extends GVRComponent
      */
     static GVRCollider lookup(long nativePointer)
     {
-        synchronized (sColliders) {
-        WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
-        return weakReference == null ? null : weakReference.get();
-    }
+        synchronized (sColliders)
+        {
+            WeakReference<GVRCollider> weakReference = sColliders.get(nativePointer);
+            return weakReference == null ? null : weakReference.get();
+        }
     }
     
     /**
@@ -139,11 +140,10 @@ public class GVRCollider extends GVRComponent
             GVRPicker.sFindObjectsLock.unlock();
         }
     }
+
 }
 
 class NativeCollider
 {
-    static native long ctor();
-    
     static native long getComponentType();
 }

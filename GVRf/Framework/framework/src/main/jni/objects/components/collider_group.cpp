@@ -26,31 +26,30 @@
 
 namespace gvr {
 
-ColliderGroup::ColliderGroup() :
-        Collider(ColliderGroup::getComponentType()) {
-}
+    ColliderGroup::ColliderGroup() :
+            Collider(ColliderGroup::getComponentType())
+    { }
 
-ColliderGroup::~ColliderGroup() {
-}
+    ColliderGroup::~ColliderGroup() {
+    }
 
-void ColliderGroup::addCollider(Collider* collider) {
-    colliders_.push_back(collider);
-}
-
-void ColliderGroup::removeCollider(Collider* collider) {
-    colliders_.erase(std::remove(colliders_.begin(), colliders_.end(), collider),
-            colliders_.end());
-}
-
-
-ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& rayDir)
-{
-    ColliderData finalHit(reinterpret_cast<Collider *>(this));
-    SceneObject *ownerObject = owner_object();
-
-    hit_ = glm::vec3(std::numeric_limits<float>::infinity());
-    if (nullptr != ownerObject)
+    void ColliderGroup::addChildComponent(Component* collider)
     {
+        colliders_.push_back(static_cast<Collider*>(collider));
+    }
+
+    void ColliderGroup::removeChildComponent(Component* collider)
+    {
+        colliders_.erase(std::remove(colliders_.begin(), colliders_.end(),
+                                     static_cast<Collider*>(collider)), colliders_.end());
+    }
+
+
+    ColliderData ColliderGroup::isHit(SceneObject* ownerObject, const glm::vec3& rayStart, const glm::vec3& rayDir)
+    {
+        ColliderData finalHit(reinterpret_cast<Collider *>(this));
+
+        hit_ = glm::vec3(std::numeric_limits<float>::infinity());
         Transform *transform = ownerObject->transform();
         finalHit.ObjectHit = ownerObject;
         if (nullptr != transform)
@@ -62,7 +61,7 @@ ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& ra
             transformRay(model_inverse, O, D);
             for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
             {
-                ColliderData currentHit = (*it)->isHit(O, D);
+                ColliderData currentHit = (*it)->isHit(ownerObject, O, D);
                 if (currentHit.IsHit && (currentHit.Distance < finalHit.Distance))
                 {
                     hit_ = currentHit.HitPosition;
@@ -70,18 +69,17 @@ ColliderData ColliderGroup::isHit(const glm::vec3& rayStart, const glm::vec3& ra
                 }
             }
         }
+        return finalHit;
     }
-    return finalHit;
-}
 
-    ColliderData ColliderGroup::isHit(const float sphere[])
+    ColliderData ColliderGroup::isHit(SceneObject* owner, const float sphere[])
     {
         ColliderData finalHit(reinterpret_cast<Collider*>(this));
 
         hit_ = glm::vec3(std::numeric_limits<float>::infinity());
         for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
         {
-            ColliderData currentHit = (*it)->isHit(sphere);
+            ColliderData currentHit = (*it)->isHit(owner, sphere);
             if (currentHit.IsHit)
             {
                 hit_ = currentHit.HitPosition;

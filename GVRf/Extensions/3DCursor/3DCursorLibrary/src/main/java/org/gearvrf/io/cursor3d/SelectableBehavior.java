@@ -204,8 +204,6 @@ public class SelectableBehavior extends GVRBehavior {
         }
         cursorManager.addSelectableObject(sceneObject);
         sceneObject.getEventReceiver().addListener(clickListener);
-        SelectableGroup component = new SelectableGroup(getGVRContext(), sceneObject);
-        sceneObject.attachComponent(component);
         if (sceneObject.getCollider() == null) {
             sceneObject.attachCollider(new GVRSphereCollider(getGVRContext()));
         }
@@ -217,7 +215,6 @@ public class SelectableBehavior extends GVRBehavior {
         sceneObject.getEventReceiver().removeListener(clickListener);
         sceneObject.detachComponent(GVRSwitch.getComponentType());
         cursorManager.removeSelectableObject(sceneObject);
-        sceneObject.detachComponent(SelectableGroup.getComponentType());
     }
 
     /**

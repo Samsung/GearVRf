@@ -21,7 +21,6 @@
 
 #include "objects/components/camera.h"
 #include "objects/components/camera_rig.h"
-#include "objects/components/collider_group.h"
 #include "objects/components/render_data.h"
 #include "util/gvr_log.h"
 #include "mesh.h"

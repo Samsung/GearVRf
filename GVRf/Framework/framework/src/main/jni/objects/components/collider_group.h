@@ -31,30 +31,30 @@
 
 namespace gvr {
 
-class ColliderGroup: public Collider {
-public:
-    ColliderGroup();
-    virtual ~ColliderGroup();
+    class ColliderGroup: public Collider {
+    public:
+        ColliderGroup();
+        virtual ~ColliderGroup();
 
-    void addCollider(Collider* collider);
-    void removeCollider(Collider* collider);
-    ColliderData isHit(const glm::vec3& rayStart, const glm::vec3& rayDir);
-    ColliderData isHit(const float sphere[]);
+        virtual void addChildComponent(Component* collider);
+        virtual void removeChildComponent(Component* collider);
+        ColliderData isHit(SceneObject* owner, const glm::vec3& rayStart, const glm::vec3& rayDir);
+        ColliderData isHit(SceneObject* owner, const float sphere[]);
 
-    const glm::vec3& hit() const {
-        return hit_;
-    }
+        const glm::vec3& hit() const {
+            return hit_;
+        }
 
-private:
-    ColliderGroup(const ColliderGroup& colliderGroup) = delete;
-    ColliderGroup(ColliderGroup&& colliderGroup) = delete;
-    ColliderGroup& operator=(const ColliderGroup& colliderGroup) = delete;
-    ColliderGroup& operator=(ColliderGroup&& colliderGroup) = delete;
+    private:
+        ColliderGroup(const ColliderGroup& colliderGroup) = delete;
+        ColliderGroup(ColliderGroup&& colliderGroup) = delete;
+        ColliderGroup& operator=(const ColliderGroup& colliderGroup) = delete;
+        ColliderGroup& operator=(ColliderGroup&& colliderGroup) = delete;
 
-private:
-    glm::vec3 hit_;
-    std::vector<Collider*> colliders_;
-};
+    private:
+        glm::vec3 hit_;
+        std::vector<Collider*> colliders_;
+    };
 
 }
 

@@ -37,13 +37,13 @@ public:
     virtual ~Component();
 
     SceneObject* owner_object() const;
-
     virtual void set_owner_object(SceneObject* owner_object);
     virtual void onAddedToScene(Scene* scene) { }
     virtual void onRemovedFromScene(Scene* scene) { }
     virtual void onAttach(SceneObject* owner) { }
     virtual void onDetach(SceneObject* owner) { }
-
+    virtual void addChildComponent(Component*) { }
+    virtual void removeChildComponent(Component*) { }
     long long getType() const;
     bool enabled() const;
     virtual void set_enable(bool enable);

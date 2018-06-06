@@ -32,47 +32,19 @@ import java.util.List;
  *
  * One can use this class to specify multiple colliders for a
  * single {@link GVRSceneObject}.
- *
  */
-public class GVRColliderGroup extends GVRCollider {
-    private final List<GVRCollider> colliders = new ArrayList<GVRCollider>();
-
-    static GVRCollider lookup(GVRContext gvrContext, long nativePointer) {
-        return GVRCollider.lookup(nativePointer);
-    }
-
+public class GVRColliderGroup extends GVRCollider implements GVRComponent.IComponentGroup<GVRCollider>
+{
     /**
      * Constructor
      * 
      * @param gvrContext
      *            Current {@link GVRContext}
      */
-    public GVRColliderGroup(GVRContext gvrContext) {
-        this(gvrContext, NativeColliderGroup.ctor());
+    public GVRColliderGroup(GVRContext gvrContext)
+    {
+        super(gvrContext, NativeColliderGroup.ctor());
     }
-
-    public GVRColliderGroup(GVRContext gvrContext, GVRSceneObject owner) {
-        this(gvrContext, NativeColliderGroup.ctor());
-        setOwnerObject(owner);
-    }
-    
-    private GVRColliderGroup(GVRContext gvrContext, long nativePointer) {
-        super(gvrContext, nativePointer);
-    }        
-        
-    
-    /**
-     * Is this collider-group enabled?
-     * 
-     * If this collider-group is disabled, then picking will <b>not</b> occur against
-     * its {@link GVRCollider}s.
-     * @return true if enabled, false otherwise.
-     * @deprecated use GVRComponent.isEnabled()
-     */
-    public boolean getEnable() {
-        return super.isEnabled();
-    }
-
 
     /**
      * Add a {@link GVRCollider} to this collider-group
@@ -80,11 +52,15 @@ public class GVRColliderGroup extends GVRCollider {
      * @param collider
      *            The {@link GVRCollider} to add
      */
-    public void addCollider(GVRCollider collider) {
-        colliders.add(collider);
-        NativeColliderGroup.addCollider(getNative(), collider.getNative());
+    public void addCollider(GVRCollider collider)
+    {
+        NativeComponent.addChildComponent(getNative(), collider.getNative());
     }
 
+    public void addChildComponent(GVRCollider collider)
+    {
+        NativeComponent.addChildComponent(getNative(), collider.getNative());
+    }
 
     /**
      * Remove a {@link GVRCollider} from this collider-group.
@@ -95,31 +71,18 @@ public class GVRColliderGroup extends GVRCollider {
      *            The {@link GVRCollider} to remove
      * 
      */
-    public void removeCollider(GVRCollider collider) {
-        colliders.remove(collider);
-        NativeColliderGroup.removeCollider(getNative(),
-                collider.getNative());
-    }
-
-    /**
-     * Get the x, y, z of the point of where the hit occurred in model space
-     * 
-     * @return Three floats representing the x, y, z hit point.
-     * @see #getHit()
-     */
-    public float[] getHit()
+    public void removeCollider(GVRCollider collider)
     {
-        return NativeColliderGroup.getHit(getNative());
+        NativeComponent.removeChildComponent(getNative(), collider.getNative());
     }
 
+    public void removeChildComponent(GVRCollider collider)
+    {
+        NativeComponent.removeChildComponent(getNative(), collider.getNative());
+    }
 }
 
-class NativeColliderGroup {
+class NativeColliderGroup
+{
     static native long ctor();
-
-    static native float[] getHit(long colliderGroup);
-    
-    static native void addCollider(long colliderGroup, long collider);
-
-    static native void removeCollider(long colliderGroup, long collider);
 }
