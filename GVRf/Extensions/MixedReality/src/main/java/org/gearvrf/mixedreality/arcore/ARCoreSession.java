@@ -16,11 +16,14 @@
 package org.gearvrf.mixedreality.arcore;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.opengl.Matrix;
 import android.view.Surface;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.AugmentedImage;
+import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
@@ -47,6 +50,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRAugmentedImage;
 import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
@@ -75,6 +79,7 @@ public class ARCoreSession extends MRCommon {
 
     private Session mSession;
     private boolean mInstallRequested;
+    private Config mConfig;
 
     private GVRScene mVRScene;
     private GVRSceneObject mARPassThroughObject;
@@ -116,15 +121,15 @@ public class ARCoreSession extends MRCommon {
             }
 
             // Create default config and check if supported.
-            Config config = new Config(mSession);
+            mConfig = new Config(mSession);
             if (mEnableCloudAnchor) {
-                config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
+                mConfig.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
             }
-            config.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
-            if (!mSession.isSupported(config)) {
+            mConfig.setUpdateMode(Config.UpdateMode.LATEST_CAMERA_IMAGE);
+            if (!mSession.isSupported(mConfig)) {
                 showSnackbarMessage("This device does not support AR", true);
             }
-            mSession.configure(config);
+            mSession.configure(mConfig);
         }
 
         showLoadingMessage();
@@ -285,6 +290,8 @@ public class ARCoreSession extends MRCommon {
 
             mArCoreHelper.updatePlanes(mSession.getAllTrackables(Plane.class),
                     mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
+
+            mArCoreHelper.updateAugmentedImages(arFrame.getUpdatedTrackables(AugmentedImage.class));
 
             mArCoreHelper.updateAnchors(mARViewMatrix, mGVRCamMatrix, AR2VR_SCALE);
 
@@ -450,6 +457,20 @@ public class ARCoreSession extends MRCommon {
     @Override
     protected GVRLightEstimate onGetLightEstimate() {
         return mArCoreHelper.getLightEstimate(arFrame.getLightEstimate());
+    }
+
+    @Override
+    protected void onSetAugmentedImageBitmap(Bitmap imageBitmap) {
+        AugmentedImageDatabase augmentedImageDatabase = new AugmentedImageDatabase(mSession);
+        augmentedImageDatabase.addImage("image_name", imageBitmap);
+        mConfig.setAugmentedImageDatabase(augmentedImageDatabase);
+
+        mSession.configure(mConfig);
+    }
+
+    @Override
+    protected ArrayList<GVRAugmentedImage> onGetAllAugmentedImages() {
+        return mArCoreHelper.getAllAugmentedImages();
     }
 
     private Vector2f convertToDisplayGeometrySpace(float[] hitPoint) {

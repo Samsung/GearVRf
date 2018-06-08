@@ -15,6 +15,8 @@
 
 package org.gearvrf.mixedreality;
 
+import android.graphics.Bitmap;
+
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
@@ -106,6 +108,16 @@ public abstract class MRCommon implements IMRCommon {
         return onGetLightEstimate();
     }
 
+    @Override
+    public void setAugmentedImageBitmap(Bitmap imageBitmap) {
+        onSetAugmentedImageBitmap(imageBitmap);
+    }
+
+    @Override
+    public ArrayList<GVRAugmentedImage> getAllAugmentedImages() {
+        return onGetAllAugmentedImages();
+    }
+
     protected abstract void onResume();
 
     protected abstract void onPause();
@@ -133,4 +145,8 @@ public abstract class MRCommon implements IMRCommon {
     protected abstract GVRHitResult onHitTest(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision);
 
     protected abstract GVRLightEstimate onGetLightEstimate();
+
+    protected abstract void onSetAugmentedImageBitmap(Bitmap imageBitmap);
+
+    protected abstract ArrayList<GVRAugmentedImage> onGetAllAugmentedImages();
 }

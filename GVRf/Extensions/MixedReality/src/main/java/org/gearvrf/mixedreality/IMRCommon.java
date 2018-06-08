@@ -16,6 +16,8 @@
 package org.gearvrf.mixedreality;
 
 
+import android.graphics.Bitmap;
+
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 
@@ -120,4 +122,18 @@ public interface IMRCommon {
      * @return The light estimate
      */
     GVRLightEstimate getLightEstimate();
+
+    /**
+     * Set an image to be detected
+     *
+     * @param imageBitmap
+     */
+    void setAugmentedImageBitmap(Bitmap imageBitmap);
+
+    /**
+     * Get all detected augmented images
+     *
+     * @return An ArrayList of GVRAugmentedImage
+     */
+    ArrayList<GVRAugmentedImage> getAllAugmentedImages();
 }

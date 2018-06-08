@@ -17,6 +17,7 @@ package org.gearvrf.mixedreality;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -29,7 +30,6 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
-import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -201,6 +201,16 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
             throw new UnsupportedOperationException("Session is not resumed");
         }
         return mSession.getLightEstimate();
+    }
+
+    @Override
+    public void setAugmentedImageBitmap(Bitmap imageBitmap) {
+        mSession.setAugmentedImageBitmap(imageBitmap);
+    }
+
+    @Override
+    public ArrayList<GVRAugmentedImage> getAllAugmentedImages() {
+        return mSession.getAllAugmentedImages();
     }
 
     private class ActivityEventsHandler implements IActivityEvents {

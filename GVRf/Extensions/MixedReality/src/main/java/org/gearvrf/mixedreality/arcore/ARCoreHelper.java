@@ -16,6 +16,7 @@
 package org.gearvrf.mixedreality.arcore;
 
 import com.google.ar.core.Anchor;
+import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.HitResult;
 import com.google.ar.core.LightEstimate;
 import com.google.ar.core.Plane;
@@ -26,6 +27,7 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
+import org.gearvrf.mixedreality.GVRAugmentedImage;
 import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
@@ -44,6 +46,7 @@ public class ARCoreHelper {
     private GVRScene mGvrScene;
 
     private Map<Plane, ARCorePlane> mArPlanes;
+    private Map<AugmentedImage, ARCoreAugmentedImage> mArAugmentedImages;
     private List<ARCoreAnchor> mArAnchors;
 
     private ArrayList<IPlaneEventsListener> planeEventsListeners = new ArrayList<>();
@@ -53,6 +56,7 @@ public class ARCoreHelper {
         mGvrContext = gvrContext;
         mGvrScene = gvrScene;
         mArPlanes = new HashMap<>();
+        mArAugmentedImages = new HashMap<>();
         mArAnchors = new ArrayList<>();
     }
 
@@ -100,6 +104,42 @@ public class ARCoreHelper {
         }
     }
 
+    public void updateAugmentedImages(Collection<AugmentedImage> allAugmentedImages){
+        ARCoreAugmentedImage arCoreAugmentedImage;
+
+        for (AugmentedImage augmentedImage: allAugmentedImages) {
+            if (augmentedImage.getTrackingState() != TrackingState.TRACKING
+                || mArAugmentedImages.containsKey(augmentedImage)) {
+                continue;
+            }
+
+            arCoreAugmentedImage = createAugmentedImage(augmentedImage);
+            //TODO: notify augmented image detection listener
+
+            mArAugmentedImages.put(augmentedImage, arCoreAugmentedImage);
+        }
+
+        for (AugmentedImage augmentedImage: mArAugmentedImages.keySet()) {
+            arCoreAugmentedImage = mArAugmentedImages.get(augmentedImage);
+
+            if (augmentedImage.getTrackingState() == TrackingState.TRACKING &&
+                    arCoreAugmentedImage.getTrackingState() != GVRTrackingState.TRACKING) {
+                arCoreAugmentedImage.setTrackingState(GVRTrackingState.TRACKING);
+                //TODO: notify augmented image state changed
+            }
+            else if (augmentedImage.getTrackingState() == TrackingState.PAUSED &&
+                    arCoreAugmentedImage.getTrackingState() != GVRTrackingState.PAUSED) {
+                arCoreAugmentedImage.setTrackingState(GVRTrackingState.PAUSED);
+                //TODO: notify augmented image state changed
+            }
+            else if (augmentedImage.getTrackingState() == TrackingState.STOPPED &&
+                    arCoreAugmentedImage.getTrackingState() != GVRTrackingState.STOPPED) {
+                arCoreAugmentedImage.setTrackingState(GVRTrackingState.STOPPED);
+                //TODO: notify augmented image state changed
+            }
+        }
+    }
+
     public void updateAnchors(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
         for (ARCoreAnchor anchor: mArAnchors) {
             Anchor arAnchor = anchor.getAnchorAR();
@@ -134,10 +174,25 @@ public class ARCoreHelper {
         return allPlanes;
     }
 
+    public ArrayList<GVRAugmentedImage> getAllAugmentedImages() {
+        ArrayList<GVRAugmentedImage> allAugmentedImages = new ArrayList<>();
+
+        for (AugmentedImage augmentedImage: mArAugmentedImages.keySet()) {
+            allAugmentedImages.add(mArAugmentedImages.get(augmentedImage));
+        }
+
+        return allAugmentedImages;
+    }
+
     public ARCorePlane createPlane(Plane plane) {
         ARCorePlane arCorePlane = new ARCorePlane(mGvrContext, plane);
         mArPlanes.put(plane, arCorePlane);
         return arCorePlane;
+    }
+
+    public ARCoreAugmentedImage createAugmentedImage(AugmentedImage augmentedImage) {
+        ARCoreAugmentedImage arCoreAugmentedImage = new ARCoreAugmentedImage(augmentedImage);
+        return arCoreAugmentedImage;
     }
 
     public GVRAnchor createAnchor(Anchor arAnchor, GVRSceneObject sceneObject) {
