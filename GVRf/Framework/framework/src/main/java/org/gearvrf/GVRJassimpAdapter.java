@@ -1,5 +1,7 @@
 package org.gearvrf;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 
 import java.io.IOException;
@@ -768,6 +770,12 @@ class   GVRJassimpAdapter {
                     m.setFloat("metallic", metallic);
                     m.setDiffuseColor(baseColorFactor.getRed(), baseColorFactor.getGreen(), baseColorFactor.getBlue(), baseColorFactor.getAlpha());
                 }
+
+                Bitmap bitmap = BitmapFactory.decodeResource(
+                        mContext.getContext().getResources(), R.drawable.brdflookup);
+                GVRTexture brdfLUTtex = new GVRTexture(mContext);
+                brdfLUTtex.setImage(new GVRBitmapImage(mContext, bitmap));
+                m.setTexture("brdfLUTTexture", brdfLUTtex);
                 return m;
             }
             catch (IllegalArgumentException e)

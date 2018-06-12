@@ -1,6 +1,4 @@
 
-
-//
 // Schlick Implementation of microfacet occlusion from
 // "An Inexpensive BRDF Model for Physically based Rendering" by Christophe Schlick.
 //
@@ -49,13 +47,43 @@ float microfacetDistribution(float NdotH, float alphaRoughness)
     return roughnessSq / (M_PI * f * f);
 }
 
+
+
+
+// Calculation of the lighting contribution from an optional Image Based Light source.
+// Precomputed Environment Maps are required uniform inputs.
+vec3 getIBLContribution(float perceptualRoughness, float NdotV, vec3 n, vec3 reflection, vec3 specularColor,
+                        vec3 diffuseColor)
+{
+
+    vec3 diffuse = vec3(0);
+    vec3 specular = vec3(0);
+
+    #ifdef HAS_brdfLUTTexture
+        vec3 brdf = SRGBtoLINEAR(texture(brdfLUTTexture, vec2(NdotV, 1.0 - perceptualRoughness)).rgb);
+        #ifdef HAS_diffuseEnvTex
+            vec3 diffuseLight = SRGBtoLINEAR(texture(diffuseEnvTex, n).rgb);
+            diffuse = diffuseLight * diffuseColor;
+        #endif
+
+        #ifdef HAS_specularEnvTexture
+            vec3 specularLight = SRGBtoLINEAR(texture(specularEnvTexture, reflection).rgb);
+            specular = specularLight * (specularColor * brdf.x + brdf.y);
+        #endif
+
+    #endif
+    return diffuse + specular;
+
+}
+
+
 vec4 AddLight(Surface s, Radiance r)
 {
 	vec3 l = r.direction.xyz;                  // From surface to light, unit length, view-space
     vec3 n = s.viewspaceNormal;                // normal at surface point
-    vec3 v = view_direction;                   // Vector from surface point to camera
+    vec3 v = -viewspace_position;               // Vector from surface point to camera
     vec3 h = normalize(l + v);                 // Half vector between both l and v
-    vec3 reflection = -normalize(reflect(v, n));
+    vec3 reflection = reflect(-v, normalize(n));
     float NdotL = clamp(dot(n, l), 0.001, 1.0);
     float NdotV = abs(dot(n, v)) + 0.001;
     float NdotH = clamp(dot(n, h), 0.0, 1.0);
@@ -87,6 +115,15 @@ vec4 AddLight(Surface s, Radiance r)
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
     vec3 color = NdotL * ((r.diffuse_intensity * kD) + (r.specular_intensity * kS)) + s.emission.xyz;
 
+    mat4 view_i;
+#ifdef HAS_MULTIVIEW
+    view_i = u_view_i_[gl_ViewID_OVR];
+#else
+    view_i = u_view_i;
+#endif
+    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz,
+                                (view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
+
 #ifdef HAS_lightmapTexture
     float ao = texture(lightmapTexture, lightmap_coord).r;
     color = mix(color, color * ao, lightmapStrength);
@@ -95,18 +132,18 @@ vec4 AddLight(Surface s, Radiance r)
     // This section uses mix to override final color for reference app visualization
     // of various parameters in the lighting equation. Might need this if we have an app for demo.
 
-//#ifdef HAS_scaleFGD
-//    color = mix(color, F, scaleFGD.x);
-//    color = mix(color, vec3(G), scaleFGD.y);
-//    color = mix(color, vec3(D), scaleFGD.z);
-//    color = mix(color, kS, scaleFGD.w);
-//#endif
-//#ifdef HAS_scaleDiffBaseMR
-//    color = mix(color, kD, scaleDiffBaseMR.x);
-//    color = mix(color, s.diffuse.rgb, scaleDiffBaseMR.y);
-//    color = mix(color, vec3(s.metallic), scaleDiffBaseMR.z);
-//    color = mix(color, vec3(s.roughness), scaleDiffBaseMR.w);
-//#endif
+    //#ifdef HAS_scaleFGD
+    //    color = mix(color, F, scaleFGD.x);
+    //    color = mix(color, vec3(G), scaleFGD.y);
+    //    color = mix(color, vec3(D), scaleFGD.z);
+    //    color = mix(color, kS, scaleFGD.w);
+    //#endif
+    //#ifdef HAS_scaleDiffBaseMR
+    //    color = mix(color, kD, scaleDiffBaseMR.x);
+    //    color = mix(color, s.diffuse.rgb, scaleDiffBaseMR.y);
+    //    color = mix(color, vec3(s.metallic), scaleDiffBaseMR.z);
+    //    color = mix(color, vec3(s.roughness), scaleDiffBaseMR.w);
+    //#endif
 
     return vec4(pow(color, vec3(1.0 / 2.2)), s.diffuse.w);
 }

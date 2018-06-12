@@ -268,6 +268,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
     rstate.shader_manager = shader_manager;
     rstate.uniforms.u_view = camera->getViewMatrix();
     rstate.uniforms.u_proj = camera->getProjectionMatrix();
+    rstate.uniforms.u_view_inv = glm::inverse(camera->getViewMatrix());
     rstate.javaSceneObject = javaSceneObject;
     rstate.shadow_map = nullptr;
     rstate.lightsChanged = false;

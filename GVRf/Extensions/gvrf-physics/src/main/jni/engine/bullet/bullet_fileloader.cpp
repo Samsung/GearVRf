@@ -39,8 +39,6 @@
 #include "bullet_point2pointconstraint.h"
 #include "bullet_sliderconstraint.h"
 
-static char tag[] = "BulletLoaderN";
-
 static btMatrix3x3 matrixInvIdty(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f);
 static btTransform transformInvIdty(matrixInvIdty);
 
