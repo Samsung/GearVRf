@@ -1,13 +1,13 @@
 @MATERIAL_UNIFORMS
 
 
-layout(set = 0, binding = 5) uniform sampler2D diffuseTexture;
-layout(set = 0, binding = 6) uniform sampler2D ambientTexture;
-layout(set = 0, binding = 7) uniform sampler2D specularTexture;
+layout(set = 0, binding = 4) uniform sampler2D diffuseTexture;
+layout(set = 0, binding = 5) uniform sampler2D ambientTexture;
+layout(set = 0, binding = 6) uniform sampler2D specularTexture;
+layout(set = 0, binding = 7) uniform sampler2D opacityTexture;
 layout(set = 0, binding = 8) uniform sampler2D lightmapTexture;
-layout(set = 0, binding = 9) uniform sampler2D opacityTexture;
+layout(set = 0, binding = 9) uniform sampler2D emissiveTexture;
 layout(set = 0, binding = 10) uniform sampler2D normalTexture;
-layout(set = 0, binding = 11) uniform sampler2D emissiveTexture;
 
 #ifdef HAS_ambientTexture
 layout(location = 5) in vec2 ambient_coord;
@@ -35,19 +35,7 @@ layout(location = 10) in vec2 normal_coord;
 #ifdef HAS_a_tangent
 layout(location = 16) in mat3 tangent_matrix;
 #endif
-#endif
 
-struct Surface
-{
-   vec3 viewspaceNormal;
-   vec4 ambient;
-   vec4 diffuse;
-   vec4 specular;
-   vec4 emission;
-};
-
-
-#ifdef HAS_normalTexture
 mat3 calculateTangentMatrix()
 {
 #ifdef HAS_a_tangent
@@ -67,6 +55,15 @@ mat3 calculateTangentMatrix()
 #endif
 }
 #endif
+
+struct Surface
+{
+   vec3 viewspaceNormal;
+   vec4 ambient;
+   vec4 diffuse;
+   vec4 specular;
+   vec4 emission;
+};
 
 Surface @ShaderName()
 {
