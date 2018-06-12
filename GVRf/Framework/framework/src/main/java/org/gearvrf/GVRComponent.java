@@ -15,7 +15,11 @@
 
 package org.gearvrf;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * Base class for defining components to extend the scene object.
@@ -31,16 +35,76 @@ import java.util.List;
  * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRSceneObject#getComponent(long)
  */
-public class GVRComponent extends GVRHybridObject {
-    public interface IComponentGroup<T extends GVRComponent>
+public class GVRComponent extends GVRHybridObject
+{
+    /**
+     * Interface for component groups
+     * @param <T> class of component the group contains
+     */
+    public interface IComponentGroup<T extends GVRComponent> extends Iterable<T>
     {
-        void addChildComponent(T child);
-        void removeChildComponent(T child);
+        public void addChildComponent(T child);
+        public void removeChildComponent(T child);
+        public int getSize();
+        public T getChildAt(int index);
+    };
+
+    /**
+     * Default implementation for IComponentGroup that
+     * maintains an iterable list of components.
+     *
+     * @param <T> class of component in the group
+     */
+    public class Group<T extends GVRComponent> implements Iterable<T>
+    {
+        List<T> mComponents = new ArrayList<T>();
+
+        public Iterator<T> iterator()
+        {
+            Iterator<T> iter = new Iterator<T>()
+            {
+                int mIndex = 0;
+
+                public boolean hasNext()
+                {
+                    return mIndex < getSize();
+                }
+
+                public T next()
+                {
+                    if (mIndex < getSize())
+                    {
+                        return mComponents.get(mIndex++);
+                    }
+                    return null;
+                }
+            };
+            return iter;
+        }
+
+        public void addChild(T child)
+        {
+            mComponents.add(child);
+        }
+
+        public void removeChild(T child)
+        {
+            mComponents.remove(child);
+        }
+
+        public int getSize()
+        {
+            return mComponents.size();
+        }
+
+        public T getChildAt(int index)
+        {
+            return mComponents.get(index);
+        }
     };
 
     protected boolean mIsEnabled;
     protected long mType = 0;
-    protected GVRComponent mParent = null;
 
     /**
      * Constructor for a component that is not attached to a scene object.
