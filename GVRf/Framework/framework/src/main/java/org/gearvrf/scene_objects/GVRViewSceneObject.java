@@ -45,7 +45,6 @@ import android.widget.TextView;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
@@ -691,20 +690,18 @@ public class GVRViewSceneObject extends GVRSceneObject {
             mSurfaceTexture.setDefaultBufferSize(getWidth(), getHeight());
 
             mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                GVRDrawFrameListener drawFrameListener = new GVRDrawFrameListener() {
+                Runnable onFrameAvailableGLCallback = new Runnable() {
                     @Override
-                    public void onDrawFrame(float frameTime) {
+                    public void run() {
                         mSurfaceTexture.updateTexImage();
-                        mGVRContext.unregisterDrawFrameListener(this);
                     }
                 };
 
                 @Override
                 public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                    mGVRContext.registerDrawFrameListener(drawFrameListener);
+                    mGVRContext.runOnGlThread(onFrameAvailableGLCallback);
                 }
             });
-
         }
 
         @Override

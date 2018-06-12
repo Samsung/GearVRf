@@ -41,7 +41,6 @@ import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
@@ -637,18 +636,18 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             mHovered = false;
             mIsDirty = false;
             mPopupKeyboard = null;
+
             mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                GVRDrawFrameListener drawFrameListener = new GVRDrawFrameListener() {
+                Runnable onFrameAvailableGLCallback = new Runnable() {
                     @Override
-                    public void onDrawFrame(float frameTime) {
+                    public void run() {
                         mSurfaceTexture.updateTexImage();
-                        gvrContext.unregisterDrawFrameListener(this);
                     }
                 };
 
                 @Override
                 public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                    gvrContext.registerDrawFrameListener(drawFrameListener);
+                    gvrContext.runOnGlThread(onFrameAvailableGLCallback);
                 }
             });
         }

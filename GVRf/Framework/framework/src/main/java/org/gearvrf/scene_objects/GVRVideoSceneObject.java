@@ -29,13 +29,10 @@ import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.IActivityEvents;
-import org.gearvrf.utility.Log;
-
-import java.lang.ref.WeakReference;
 
 /**
  * A {@linkplain GVRSceneObject scene object} that shows video, using the
@@ -362,7 +359,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         }
     }
 
-    private static class GVRVideo implements GVRDrawFrameListener {
+    private static class GVRVideo {
 
         private final GVRContext mContext;
         private SurfaceTexture mSurfaceTexture = null;
@@ -386,6 +383,20 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             if (mediaPlayer != null) {
                 setMediaPlayer(mediaPlayer);
             }
+
+            mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+                Runnable onFrameAvailableGLCallback = new Runnable() {
+                    @Override
+                    public void run() {
+                        mSurfaceTexture.updateTexImage();
+                    }
+                };
+
+                @Override
+                public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                    mContext.runOnGlThread(onFrameAvailableGLCallback);
+                }
+            });
         }
 
         /**
@@ -452,7 +463,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             mMediaPlayer = mediaPlayer;
             Surface surface = new Surface(mSurfaceTexture);
             mediaPlayer.setSurface(surface);
-            mContext.registerDrawFrameListener(this);
 
             if (mediaPlayer.canReleaseSurfaceImmediately()) {
                 surface.release();
@@ -478,14 +488,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             if (mMediaPlayer != null) {
                 mMediaPlayer.release();
                 mMediaPlayer = null;
-                mContext.unregisterDrawFrameListener(this);
-            }
-        }
-
-        @Override
-        public void onDrawFrame(float drawTime) {
-            if (mMediaPlayer != null && mActive) {
-                mSurfaceTexture.updateTexImage();
             }
         }
     }
