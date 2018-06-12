@@ -18,6 +18,7 @@ package org.gearvrf.x3d;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRImportSettings;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRSceneObject;
@@ -63,7 +64,7 @@ final class X3DLoader {
                 assetRequest.onModelLoaded(context, root, fileName);
                 GVRAnimator animator = (GVRAnimator) root.getComponent(GVRAnimator.getComponentType());
 
-                if ((animator != null) && (animator.getAnimationCount() == 0))
+                if ((animator != null) && assetRequest.getImportSettings().contains(GVRImportSettings.NO_ANIMATION))
                 {
                     root.detachComponent(GVRAnimator.getComponentType());
                 }
