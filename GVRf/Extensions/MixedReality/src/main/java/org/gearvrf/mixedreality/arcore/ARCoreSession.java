@@ -460,11 +460,20 @@ public class ARCoreSession extends MRCommon {
     }
 
     @Override
-    protected void onSetAugmentedImageBitmap(Bitmap imageBitmap) {
-        AugmentedImageDatabase augmentedImageDatabase = new AugmentedImageDatabase(mSession);
-        augmentedImageDatabase.addImage("image_name", imageBitmap);
-        mConfig.setAugmentedImageDatabase(augmentedImageDatabase);
+    protected void onSetAugmentedImage(Bitmap image) {
+        ArrayList<Bitmap> imagesList = new ArrayList<>();
+        imagesList.add(image);
+        onSetAugmentedImages(imagesList);
+    }
 
+    @Override
+    protected void onSetAugmentedImages(ArrayList<Bitmap> imagesList) {
+        AugmentedImageDatabase augmentedImageDatabase = new AugmentedImageDatabase(mSession);
+        for (Bitmap image: imagesList) {
+            augmentedImageDatabase.addImage("image_name", image);
+        }
+
+        mConfig.setAugmentedImageDatabase(augmentedImageDatabase);
         mSession.configure(mConfig);
     }
 

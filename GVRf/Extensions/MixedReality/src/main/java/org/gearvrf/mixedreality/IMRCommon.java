@@ -126,9 +126,16 @@ public interface IMRCommon {
     /**
      * Set an image to be detected
      *
-     * @param imageBitmap
+     * @param image
      */
-    void setAugmentedImageBitmap(Bitmap imageBitmap);
+    void setAugmentedImage(Bitmap image);
+
+    /**
+     * Set a list of reference images to be detected
+     *
+     * @param imagesList
+     */
+    void setAugmentedImages(ArrayList<Bitmap> imagesList);
 
     /**
      * Get all detected augmented images

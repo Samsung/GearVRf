@@ -109,8 +109,13 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
-    public void setAugmentedImageBitmap(Bitmap imageBitmap) {
-        onSetAugmentedImageBitmap(imageBitmap);
+    public void setAugmentedImage(Bitmap image) {
+        onSetAugmentedImage(image);
+    }
+
+    @Override
+    public void setAugmentedImages(ArrayList<Bitmap> imagesList) {
+        onSetAugmentedImages(imagesList);
     }
 
     @Override
@@ -146,7 +151,9 @@ public abstract class MRCommon implements IMRCommon {
 
     protected abstract GVRLightEstimate onGetLightEstimate();
 
-    protected abstract void onSetAugmentedImageBitmap(Bitmap imageBitmap);
+    protected abstract void onSetAugmentedImage(Bitmap image);
+
+    protected abstract void onSetAugmentedImages(ArrayList<Bitmap> imagesList);
 
     protected abstract ArrayList<GVRAugmentedImage> onGetAllAugmentedImages();
 }

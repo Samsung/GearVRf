@@ -204,8 +204,13 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
-    public void setAugmentedImageBitmap(Bitmap imageBitmap) {
-        mSession.setAugmentedImageBitmap(imageBitmap);
+    public void setAugmentedImage(Bitmap image) {
+        mSession.setAugmentedImage(image);
+    }
+
+    @Override
+    public void setAugmentedImages(ArrayList<Bitmap> imagesList) {
+        mSession.setAugmentedImages(imagesList);
     }
 
     @Override
