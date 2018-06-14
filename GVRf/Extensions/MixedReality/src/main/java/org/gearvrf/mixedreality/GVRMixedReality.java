@@ -132,6 +132,11 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
     }
 
     @Override
+    public void registerAugmentedImageListener(IAugmentedImageEventsListener listener) {
+        mSession.registerAugmentedImageListener(listener);
+    }
+
+    @Override
     public ArrayList<GVRPlane> getAllPlanes() {
         if (mState == SessionState.ON_PAUSE) {
             throw new UnsupportedOperationException("Session is not resumed");

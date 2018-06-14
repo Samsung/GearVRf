@@ -55,6 +55,7 @@ import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
+import org.gearvrf.mixedreality.IAugmentedImageEventsListener;
 import org.gearvrf.mixedreality.ICloudAnchorListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 import org.gearvrf.mixedreality.MRCommon;
@@ -356,6 +357,11 @@ public class ARCoreSession extends MRCommon {
     @Override
     protected void onRegisterAnchorListener(IAnchorEventsListener listener) {
         mArCoreHelper.registerAnchorListener(listener);
+    }
+
+    @Override
+    protected void onRegisterAugmentedImageListener(IAugmentedImageEventsListener listener) {
+        mArCoreHelper.registerAugmentedImageListener(listener);
     }
 
     @Override

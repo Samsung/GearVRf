@@ -49,6 +49,13 @@ public interface IMRCommon {
     void registerAnchorListener(IAnchorEventsListener listener);
 
     /**
+     * Register a listener to GVRAugmentedImage events.
+     *
+     * @param listener
+     */
+    void registerAugmentedImageListener(IAugmentedImageEventsListener listener);
+
+    /**
      * Gets all detected planes.
      *
      * @return A ArrayList of GVRPlanes

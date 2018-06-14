@@ -33,6 +33,7 @@ import org.gearvrf.mixedreality.GVRLightEstimate;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
 import org.gearvrf.mixedreality.IAnchorEventsListener;
+import org.gearvrf.mixedreality.IAugmentedImageEventsListener;
 import org.gearvrf.mixedreality.IPlaneEventsListener;
 
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class ARCoreHelper {
 
     private ArrayList<IPlaneEventsListener> planeEventsListeners = new ArrayList<>();
     private ArrayList<IAnchorEventsListener> anchorEventsListeners = new ArrayList<>();
+    private ArrayList<IAugmentedImageEventsListener> augmentedImageEventsListeners = new ArrayList<>();
 
     public ARCoreHelper(GVRContext gvrContext, GVRScene gvrScene) {
         mGvrContext = gvrContext;
@@ -114,7 +116,7 @@ public class ARCoreHelper {
             }
 
             arCoreAugmentedImage = createAugmentedImage(augmentedImage);
-            //TODO: notify augmented image detection listener
+            notifyAugmentedImageDetectionListeners(arCoreAugmentedImage);
 
             mArAugmentedImages.put(augmentedImage, arCoreAugmentedImage);
         }
@@ -264,6 +266,10 @@ public class ARCoreHelper {
         anchorEventsListeners.add(listener);
     }
 
+    public void registerAugmentedImageListener(IAugmentedImageEventsListener listener) {
+        augmentedImageEventsListeners.add(listener);
+    }
+
     private void notifyPlaneDetectionListeners(GVRPlane plane) {
         for (IPlaneEventsListener listener: planeEventsListeners) {
             listener.onPlaneDetection(plane);
@@ -285,6 +291,12 @@ public class ARCoreHelper {
     private void notifyAnchorStateChangeListeners(GVRAnchor anchor, GVRTrackingState trackingState) {
         for (IAnchorEventsListener listener: anchorEventsListeners) {
             listener.onAnchorStateChange(anchor, trackingState);
+        }
+    }
+
+    private void notifyAugmentedImageDetectionListeners(GVRAugmentedImage image) {
+        for (IAugmentedImageEventsListener listener: augmentedImageEventsListeners) {
+            listener.onAugmentedImageDetection(image);
         }
     }
 }

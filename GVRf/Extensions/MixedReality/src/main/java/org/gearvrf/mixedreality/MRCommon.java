@@ -58,10 +58,14 @@ public abstract class MRCommon implements IMRCommon {
     }
 
     @Override
+    public void registerAugmentedImageListener(IAugmentedImageEventsListener listener) {
+        onRegisterAugmentedImageListener(listener);
+    }
+
+    @Override
     public ArrayList<GVRPlane> getAllPlanes() {
         return onGetAllPlanes();
     }
-
 
     @Override
     public GVRAnchor createAnchor(float[] pose) {
@@ -132,6 +136,8 @@ public abstract class MRCommon implements IMRCommon {
     protected abstract void onRegisterPlaneListener(IPlaneEventsListener listener);
 
     protected abstract void onRegisterAnchorListener(IAnchorEventsListener listener);
+
+    protected abstract void onRegisterAugmentedImageListener(IAugmentedImageEventsListener listener);
 
     protected abstract ArrayList<GVRPlane> onGetAllPlanes();
 
