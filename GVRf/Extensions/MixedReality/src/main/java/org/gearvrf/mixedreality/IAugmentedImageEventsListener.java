@@ -18,4 +18,5 @@ package org.gearvrf.mixedreality;
 
 public interface IAugmentedImageEventsListener {
     void onAugmentedImageDetection(GVRAugmentedImage image);
+    void onAugmentedImageStateChange(GVRAugmentedImage image, GVRTrackingState trackingState);
 }

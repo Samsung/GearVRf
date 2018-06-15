@@ -127,17 +127,17 @@ public class ARCoreHelper {
             if (augmentedImage.getTrackingState() == TrackingState.TRACKING &&
                     arCoreAugmentedImage.getTrackingState() != GVRTrackingState.TRACKING) {
                 arCoreAugmentedImage.setTrackingState(GVRTrackingState.TRACKING);
-                //TODO: notify augmented image state changed
+                notifyAugmentedImageStateChangeListeners(arCoreAugmentedImage, GVRTrackingState.TRACKING);
             }
             else if (augmentedImage.getTrackingState() == TrackingState.PAUSED &&
                     arCoreAugmentedImage.getTrackingState() != GVRTrackingState.PAUSED) {
                 arCoreAugmentedImage.setTrackingState(GVRTrackingState.PAUSED);
-                //TODO: notify augmented image state changed
+                notifyAugmentedImageStateChangeListeners(arCoreAugmentedImage, GVRTrackingState.PAUSED);
             }
             else if (augmentedImage.getTrackingState() == TrackingState.STOPPED &&
                     arCoreAugmentedImage.getTrackingState() != GVRTrackingState.STOPPED) {
                 arCoreAugmentedImage.setTrackingState(GVRTrackingState.STOPPED);
-                //TODO: notify augmented image state changed
+                notifyAugmentedImageStateChangeListeners(arCoreAugmentedImage, GVRTrackingState.STOPPED);
             }
         }
     }
@@ -297,6 +297,12 @@ public class ARCoreHelper {
     private void notifyAugmentedImageDetectionListeners(GVRAugmentedImage image) {
         for (IAugmentedImageEventsListener listener: augmentedImageEventsListeners) {
             listener.onAugmentedImageDetection(image);
+        }
+    }
+
+    private void notifyAugmentedImageStateChangeListeners(GVRAugmentedImage image, GVRTrackingState trackingState) {
+        for (IAugmentedImageEventsListener listener: augmentedImageEventsListeners) {
+            listener.onAugmentedImageStateChange(image, trackingState);
         }
     }
 }
