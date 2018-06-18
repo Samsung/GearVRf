@@ -531,8 +531,8 @@ class   GVRJassimpAdapter {
         GVRAssetLoader.AssetRequest request,
         GVRSceneObject parentSceneObject,
         AiNode node,
-        Hashtable<String,
-                GVRLight> lightlist) {
+        Hashtable<String, GVRLight> lightlist)
+    {
         final GVRSceneObject sceneObject;
         final GVRContext context = mContext;
 

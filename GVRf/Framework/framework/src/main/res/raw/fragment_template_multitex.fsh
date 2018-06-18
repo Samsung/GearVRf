@@ -16,7 +16,7 @@ layout(location = 1) in vec3 viewspace_position;
 layout(location = 2) in vec3 viewspace_normal;
 layout(location = 3) in vec4 local_position;
 
-layout(location = 4) in vec2 diffuse_coord;
+layout(location = 10) in vec2 diffuse_coord;
 
 #ifdef HAS_SHADOWS
 layout(set = 0, binding = 4) uniform highp sampler2DArray u_shadow_maps;

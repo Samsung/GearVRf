@@ -2,40 +2,39 @@
 @MATERIAL_UNIFORMS
 
 #ifdef HAS_ambientTexture
-layout(location = 5) in vec2 ambient_coord;
+layout(location = 11) in vec2 ambient_coord;
 #endif
 
 #ifdef HAS_specularTexture
-layout(location = 6) in vec2 specular_coord;
+layout(location = 12) in vec2 specular_coord;
 #endif
 
 #ifdef HAS_emissiveTexture
-layout(location = 7) in vec2 emissive_coord;
+layout(location = 13) in vec2 emissive_coord;
 #endif
 
 #ifdef HAS_lightmapTexture
-layout(location = 8) in vec2 lightmap_coord;
+layout(location = 14) in vec2 lightmap_coord;
 #endif
 
 #ifdef HAS_opacityTexture
-layout(location = 9) in vec2 opacity_coord;
+layout(location = 15) in vec2 opacity_coord;
 #endif
 
 #ifdef HAS_normalTexture
-layout(location = 10) in vec2 normal_coord;
+layout(location = 16) in vec2 normal_coord;
 
 #ifdef HAS_a_tangent
-layout(location = 16) in mat3 tangent_matrix;
+layout(location = 7) in mat3 tangent_matrix;
 #endif
 #endif
 
-layout(set = 0, binding = 4) uniform sampler2D diffuseTexture;
-layout(set = 0, binding = 5) uniform sampler2D ambientTexture;
-layout(set = 0, binding = 6) uniform sampler2D specularTexture;
-layout(set = 0, binding = 7) uniform sampler2D opacityTexture;
-layout(set = 0, binding = 8) uniform sampler2D lightmapTexture;
-layout(set = 0, binding = 9) uniform sampler2D emissiveTexture;
-layout(set = 0, binding = 10) uniform sampler2D normalTexture;
+layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
+layout(set = 0, binding = 11) uniform sampler2D ambientTexture;
+layout(set = 0, binding = 12) uniform sampler2D specularTexture;
+layout(set = 0, binding = 13) uniform sampler2D opacityTexture;
+layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
+layout(set = 0, binding = 15) uniform sampler2D emissiveTexture;
 
 
 struct Surface
@@ -48,6 +47,8 @@ struct Surface
 };
 
 #ifdef HAS_normalTexture
+layout(set = 0, binding = 16) uniform sampler2D normalTexture;
+
 mat3 calculateTangentMatrix()
 {
 #ifdef HAS_a_tangent

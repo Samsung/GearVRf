@@ -36,7 +36,7 @@ layout(location = 7) in ivec4 a_bone_indices;
 #ifdef HAS_a_tangent
 layout(location = 8) in vec3 a_tangent;
 layout(location = 9) in vec3 a_bitangent;
-layout(location = 16) out mat3 tangent_matrix;
+layout(location = 7) out mat3 tangent_matrix;
 #endif
 #endif
 
@@ -45,18 +45,19 @@ layout(location = 1) out vec3 viewspace_position;
 layout(location = 2) out vec3 viewspace_normal;
 layout(location = 3) out vec4 local_position;
 
-layout(location = 4) out vec2 diffuse_coord;
-layout(location = 5) out vec2 ambient_coord;
-layout(location = 6) out vec2 specular_coord;
-layout(location = 7) out vec2 emissive_coord;
-layout(location = 8) out vec2 lightmap_coord;
-layout(location = 9) out vec2 opacity_coord;
-layout(location = 10) out vec2 normal_coord;
+layout(location = 10) out vec2 diffuse_coord;
+layout(location = 11) out vec2 ambient_coord;
+layout(location = 12) out vec2 specular_coord;
+layout(location = 13) out vec2 emissive_coord;
+layout(location = 14) out vec2 lightmap_coord;
+layout(location = 15) out vec2 opacity_coord;
+layout(location = 16) out vec2 normal_coord;
 
-layout(location = 11) out vec2 diffuse_coord1;
-layout(location = 12) out vec2 ambient_coord1;
-layout(location = 13) out vec2 specular_coord1;
-layout(location = 14) out vec2 emissive_coord1;
+layout(location = 17) out vec2 diffuse_coord1;
+layout(location = 18) out vec2 ambient_coord1;
+layout(location = 19) out vec2 specular_coord1;
+layout(location = 20) out vec2 emissive_coord1;
+layout(location = 21) out vec2 lightmap_coord1;
 
 //
 // The Phong vertex shader supports up to 4 sets of texture coordinates.
