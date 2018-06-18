@@ -43,6 +43,8 @@ project(':ResonanceAudio').projectDir = new File('ResonanceAudio/resonanceaudio'
 include ':x3d'
 project(':x3d').projectDir = new File('x3d')
 
-include ':platformsdk_support'
-project(':platformsdk_support').projectDir = new File('platformsdk_support')
+if (hasProperty('OVR_PLATFORM_SDK')){
+    include ':platformsdk_support'
+    project(':platformsdk_support').projectDir = new File('platformsdk_support')
+}
 
