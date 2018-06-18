@@ -273,9 +273,10 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         {
             for (GVRComponent component : mComponents.values())
             {
-                if (component != null)
+                while (component != null)
                 {
                     component.setOwnerObject(null);
+                    component = component.mNext;
                 }
             }
             mComponents.clear();
@@ -334,11 +335,13 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
     /**
      * Attach a component to this scene object.
      *
-     * Each scene object has a list of components that may
-     * be attached to it. Only one component of a particular type
-     * can be attached. Components are retrieved based on their type.
+     * Each scene object has a list of components that maybe attached to it.
+     * Components not exclusive may be attached as you need, otherwise only
+     * one component of a particular type can be attached.
+     * Components are retrieved based on their type.
      *
-     * @return true if component is attached, false if a component of that class is already attached.
+     * @return true if component is attached, false if a exclusive component
+     *      of that class is already attached.
      * @param component component to attach.
      * @see GVRSceneObject#detachComponent(long)
      * @see GVRSceneObject#getComponent(long)
@@ -347,35 +350,124 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         if (component.getNative() != 0) {
             NativeSceneObject.attachComponent(getNative(), component.getNative());
         }
+
         synchronized (mComponents) {
             long type = component.getType();
-            if (!mComponents.containsKey(type)) {
+            GVRComponent front = mComponents.get(type);
+
+            if (front != null) {
+                if (front.isExclusive() || front == component) {
+                    return false;
+                }
+
+                while (front.mNext != null) {
+                    if (front.mNext == component) {
+                        return false;
+                    }
+                    front = front.mNext;
+                }
+                front.mNext = component;
+            } else {
                 mComponents.put(type, component);
-                component.setOwnerObject(this);
-                return true;
             }
+            component.setOwnerObject(this);
+            component.mNext = null;
         }
-        return false;
+        return true;
+    }
+
+    /**
+     * Detach the component from this scene object.
+     *
+     * @return true Whether success or false if component not found.
+     * @param component  component to detach.
+     * @see GVRSceneObject#attachComponent(GVRComponent)
+     */
+    public boolean detachComponent(GVRComponent component) {
+        if (component == null)
+            return false;
+
+        NativeSceneObject.detachComponent(getNative(), component.getNative());
+
+        synchronized (mComponents) {
+            GVRComponent front = mComponents.get(component.getType());
+
+            if (front == null)
+                return false;
+
+            if (front == component) {
+                if (front.mNext != null) {
+                    mComponents.put(front.getType(), front.mNext);
+                } else {
+                    mComponents.remove(front);
+                }
+            } else {
+                while (front.mNext != component) {
+                    if (front.mNext == null) {
+                        return false;
+                    }
+                }
+                front.mNext = component.mNext;
+            }
+            component.mNext = null;
+            component.setOwnerObject(null);
+            return true;
+        }
     }
 
     /**
      * Detach the component of the specified type from this scene object.
      *
-     * Each scene object has a list of components. Only one component
-     * of a particular type can be attached. Components are detached based on their type.
+     * Each scene object has a list of components. Not exclusive component type
+     * will be detached only the first one attached.
      *
      * @return GVRComponent detached or null if component not found
      * @param type  type of component to detach
-     * @see GVRSceneObject#attachComponent(GVRComponent)
+     * @see GVRSceneObject#detachComponents(long)
      */
     public GVRComponent detachComponent(long type) {
-        NativeSceneObject.detachComponent(getNative(), type);
-        synchronized (mComponents) {
-            GVRComponent component = mComponents.remove(type);
-            if (component != null) {
+        GVRComponent component = mComponents.get(type);
+
+        if (component != null) {
+            NativeSceneObject.detachComponent(getNative(), component.getNative());
+
+            synchronized (mComponents) {
+                if (component.mNext != null) {
+                    mComponents.put(component.getType(), component.mNext);
+                } else {
+                    mComponents.remove(component);
+                }
+                component.mNext = null;
                 component.setOwnerObject(null);
             }
-            return component;
+        }
+
+        return component;
+    }
+
+    /**
+     * Detach all components of the specified type from this scene object.
+     *
+     * Each scene object has a list of components. Not exclusive components may be
+     * attached as you need, otherwise only one component of a particular type can be attached.
+     *
+     * @return true Whether success or false if component not found.
+     * @param type  type of component to detach.
+     * @see GVRSceneObject#attachComponent(GVRComponent)
+     */
+    public boolean detachComponents(long type) {
+        NativeSceneObject.detachComponents(getNative(), type);
+        synchronized (mComponents) {
+            GVRComponent front = mComponents.remove(type);
+            GVRComponent component = front;
+            while (component != null) {
+                front = component;
+                component = component.mNext;
+
+                front.setOwnerObject(null);
+                front.mNext = null;
+            }
+            return front != null;
         }
     }
 
@@ -867,9 +959,12 @@ public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScr
         synchronized (mComponents)
         {
             GVRComponent comp = getComponent(componentType);
-            if ((comp != null) && !visitor.visit(comp))
-            {
-                return;
+
+            while (comp != null) {
+                if (!visitor.visit(comp)) {
+                    return;
+                }
+                comp = comp.mNext;
             }
         }
         synchronized (mChildren)
@@ -1302,7 +1397,9 @@ class NativeSceneObject {
 
     static native boolean attachComponent(long sceneObject, long component);
 
-    static native boolean detachComponent(long sceneObject, long type);
+    static native boolean detachComponent(long sceneObject, long component);
+
+    static native boolean detachComponents(long sceneObject, long type);
 
     static native long findComponent(long sceneObject, long type);
 

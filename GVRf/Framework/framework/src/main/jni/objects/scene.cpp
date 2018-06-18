@@ -123,12 +123,14 @@ void Scene::clearAllColliders() {
 }
 
 void Scene::pick(SceneObject* sceneobj) {
-    if (pick_visible_) {
-         Collider* collider = static_cast<Collider*>(sceneobj->getComponent(Collider::getComponentType()));
-        if (collider) {
-            visibleColliders.push_back(collider);
-        }
-     }
+    if (!pick_visible_)
+        return;
+
+    Collider* collider = static_cast<Collider*>(sceneobj->getComponent(Collider::getComponentType()));
+    while (collider != nullptr) {
+        visibleColliders.push_back(collider);
+        collider = static_cast<Collider*>(collider->next());
+    }
 }
 
 void Scene::addCollider(Collider* collider) {

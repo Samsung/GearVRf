@@ -48,6 +48,11 @@ public:
     bool enabled() const;
     virtual void set_enable(bool enable);
 
+    Component *next() const;
+    void set_next(Component *next);
+
+    virtual bool is_exclusive() const { return true;}
+
 private:
     Component(const Component& component) = delete;
     Component(Component&& component) = delete;
@@ -60,6 +65,7 @@ protected:
 
 private:
     long long    type_;
+    Component *next_;
 
 };
 

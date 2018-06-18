@@ -111,6 +111,8 @@ public:
     virtual void onRemovedFromScene(Scene* scene);
     static void transformSphere(const glm::mat4& model_matrix, float* sphere);
 
+    virtual bool is_exclusive() const { return false;}
+
 protected:
     Collider() : Component(Collider::getComponentType()), pick_distance_(0) {}
     explicit Collider(long long type) : Component(type), pick_distance_(0) {}

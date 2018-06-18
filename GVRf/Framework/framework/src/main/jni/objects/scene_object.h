@@ -80,7 +80,9 @@ public:
     }
 
     bool attachComponent(Component* component);
-    Component* detachComponent(long long type);
+    bool detachComponent(Component* component);
+    bool detachComponents(long long type);
+
     Component* getComponent(long long type) const;
     void getAllComponents(std::vector<Component*>& components, long long type);
 
