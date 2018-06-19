@@ -45,6 +45,8 @@ layout(location = 5) out vec2 ambient_coord;
 layout(location = 6) out vec2 specular_coord;
 layout(location = 7) out vec2 emissive_coord;
 layout(location = 8) out vec2 lightmap_coord;
+layout(location = 9) out vec2 opacity_coord;
+layout(location = 10) out vec2 normal_coord;
 
 struct Vertex
 {

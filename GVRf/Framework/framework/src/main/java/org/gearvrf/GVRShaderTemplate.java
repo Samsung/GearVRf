@@ -425,6 +425,7 @@ public class GVRShaderTemplate extends GVRShader
      * @param scene
      *            scene being rendered
      */
+    @Override
     public int bindShader(GVRContext context, IRenderable rdata, GVRScene scene, boolean isMultiview)
     {
         GVRMesh mesh = rdata.getMesh();
