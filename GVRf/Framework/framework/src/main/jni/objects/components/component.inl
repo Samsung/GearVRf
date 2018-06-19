@@ -18,27 +18,30 @@
 
 namespace gvr {
 inline Component::Component() :
-        HybridObject(), type_(0), owner_object_(0), enabled_(true) {
+        HybridObject(), type_(0), owner_object_(0), enabled_(true), next_(nullptr) {
 }
 
 inline Component::Component(long long type) :
-        HybridObject(), type_(type), owner_object_(0), enabled_(true) {
+        HybridObject(), type_(type), owner_object_(0), enabled_(true), next_(nullptr) {
 }
 
 inline Component::Component(SceneObject* owner_object) :
     type_(0),
     enabled_(true),
-    owner_object_(owner_object) {
+    owner_object_(owner_object),
+    next_(nullptr) {
 }
 
 inline Component::Component(long long type, SceneObject* owner_object) :
         type_(type),
-         enabled_(true),
-        owner_object_(owner_object) {
+        enabled_(true),
+        owner_object_(owner_object),
+        next_(nullptr) {
 }
 
 inline Component::~Component() {
     owner_object_ = nullptr;
+    next_ = nullptr;
 }
 
 inline SceneObject *Component::owner_object() const {
@@ -67,6 +70,14 @@ inline bool Component::enabled() const {
 
 inline void Component::set_enable(bool enable) {
     enabled_ = enable;
+}
+
+inline Component *Component::next() const {
+    return next_;
+}
+
+inline void Component::set_next(Component *next) {
+    next_ = next;
 }
 
 }

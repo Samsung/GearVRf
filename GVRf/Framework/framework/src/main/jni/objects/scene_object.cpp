@@ -43,12 +43,30 @@ SceneObject::~SceneObject() {
 }
 
 bool SceneObject::attachComponent(Component* component) {
+    Component *front_component = nullptr;
     for (auto it = components_.begin(); it != components_.end(); ++it) {
-        if ((*it)->getType() == component->getType())
-            return false;
+        if ((*it)->getType() == component->getType()) {
+            front_component = static_cast<Component*>(*it);
+            break;
+        }
     }
+
+    if (front_component != nullptr) {
+        if (front_component->is_exclusive() || front_component == component) {
+            return false;
+        }
+        while (front_component->next() != nullptr) {
+            if (front_component->next() == component) {
+                return false;
+            }
+            front_component = front_component->next();
+        }
+        front_component->set_next(component);
+    } else {
+        components_.push_back(component);
+    }
+
     component->set_owner_object(this);
-    components_.push_back(component);
     SceneObject* par = parent();
     if (par)
     {
@@ -70,38 +88,91 @@ bool SceneObject::attachComponent(Component* component) {
     return true;
 }
 
-
-Component* SceneObject::detachComponent(long long type)
+bool SceneObject::detachComponent(Component* component)
 {
-    for (auto it = components_.begin(); it != components_.end(); ++it)
-    {
-        if ((*it)->getType() == type)
-        {
-            Component* component = *it;
-            SceneObject* par = parent();
-            if (par)
-            {
-                Scene* scene = Scene::main_scene();
-                SceneObject* root = scene->getRoot();
-                if (scene != NULL)
-                {
-                    while (par)
-                    {
-                        if (par == root)
-                        {
-                            component->onRemovedFromScene(scene);
-                            break;
-                        }
-                        par = par->parent();
-                    }
-                }
-            }
-            component->set_owner_object(NULL);
+    Component *front_component = nullptr;
+    for (auto it = components_.begin(); it != components_.end(); ++it) {
+        if ((*it)->getType() == component->getType()) {
+            front_component = static_cast<Component*>(*it);
             components_.erase(it);
-            return component;
+            break;
         }
     }
-    return (Component*) NULL;
+
+    if (front_component == nullptr) {
+        return false;
+    }
+
+    if (front_component == component) {
+        if (front_component->next() != nullptr) {
+            components_.push_back(front_component->next());
+        }
+    } else {
+        components_.push_back(front_component);
+        while (front_component->next() != component) {
+            if (front_component->next() == nullptr) {
+                return false;
+            }
+        }
+        front_component->set_next(component->next());
+    }
+
+    component->set_next(nullptr);
+
+    SceneObject* par = parent();
+    if (par) {
+        Scene* scene = Scene::main_scene();
+        SceneObject* root = scene->getRoot();
+        if (scene != nullptr) {
+            while (par) {
+                if (par == root) {
+                    component->onRemovedFromScene(scene);
+                    break;
+                }
+                par = par->parent();
+            }
+        }
+    }
+    component->set_owner_object(nullptr);
+    return true;
+}
+
+bool SceneObject::detachComponents(long long type)
+{
+    Component *front_component = nullptr;
+    Component *component = nullptr;
+    for (auto it = components_.begin(); it != components_.end(); ++it) {
+        if ((*it)->getType() == component->getType()) {
+            front_component = static_cast<Component*>(*it);
+            components_.erase(it);
+            break;
+        }
+    }
+
+    component = front_component;
+
+    while (component != nullptr) {
+        SceneObject *par = parent();
+        if (par) {
+            Scene *scene = Scene::main_scene();
+            SceneObject *root = scene->getRoot();
+            if (scene != nullptr) {
+                while (par) {
+                    if (par == root) {
+                        component->onRemovedFromScene(scene);
+                        break;
+                    }
+                    par = par->parent();
+                }
+            }
+        }
+        front_component = component;
+        component = component->next();
+
+        front_component->set_next(nullptr);
+        front_component->set_owner_object(nullptr);
+    }
+    return front_component != nullptr;
 }
 
 Component* SceneObject::getComponent(long long type) const {

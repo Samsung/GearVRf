@@ -38,6 +38,8 @@ namespace gvr {
             return COMPONENT_TYPE_PHYSICS_CONSTRAINT;
         }
 
+        virtual bool is_exclusive() const { return false;}
+
         virtual int getConstraintType() const = 0;
 
     //virtual float getAppliedImpulse() const = 0;

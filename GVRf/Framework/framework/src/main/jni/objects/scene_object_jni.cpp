@@ -40,7 +40,11 @@ extern "C" {
             jobject obj, jlong jscene_object, jlong jcomponent);
 
     JNIEXPORT bool JNICALL
-    Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env,
+    Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env, jobject obj,
+            jlong jscene_object, jlong jcomponent);
+
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeSceneObject_detachComponents(JNIEnv * env,
             jobject obj, jlong jscene_object, jlong type);
 
     JNIEXPORT long JNICALL
@@ -123,10 +127,19 @@ Java_org_gearvrf_NativeSceneObject_attachComponent(JNIEnv * env,
 }
 
 JNIEXPORT bool JNICALL
-Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env,
+Java_org_gearvrf_NativeSceneObject_detachComponent(JNIEnv * env, jobject obj,
+        jlong jscene_object, jlong jcomponent) {
+    SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
+    Component* component = reinterpret_cast<Component*>(jcomponent);
+    return scene_object->detachComponent(component);
+}
+
+
+JNIEXPORT bool JNICALL
+Java_org_gearvrf_NativeSceneObject_detachComponents(JNIEnv * env,
         jobject obj, jlong jscene_object, jlong type) {
     SceneObject* scene_object = reinterpret_cast<SceneObject*>(jscene_object);
-    return scene_object->detachComponent(type) != NULL;
+    return scene_object->detachComponents(type);
 }
 
 

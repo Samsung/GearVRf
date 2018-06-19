@@ -40,7 +40,11 @@ public class GVRComponent extends GVRHybridObject {
 
     protected boolean mIsEnabled;
     protected long mType = 0;
-    protected GVRComponent mParent = null;
+    protected boolean mExclusive = true;
+    /* mNex is used by scene object to handle the collision of not
+       exclusive components attached to the same scene object.
+     */
+    protected GVRComponent mNext = null;
 
     /**
      * Constructor for a component that is not attached to a scene object.
@@ -186,6 +190,24 @@ public class GVRComponent extends GVRHybridObject {
     }
 
     /**
+     * @return true whether it is a exclusive component type, otherwise returns false.
+     */
+    public boolean isExclusive() {
+        if (getNative() != 0)
+            return NativeComponent.isExclusive(getNative());
+
+        return mExclusive;
+    }
+
+    /**
+     * @return The next component of same type attached to the same scene object
+     *      if it is not a component of type exclusivej, otherwise returns null.
+     */
+    public GVRComponent next() {
+        return mNext;
+    }
+
+    /**
      * Get the transform of the scene object this component is attached to.
      * 
      * @return GVRTransform of scene object
@@ -253,4 +275,5 @@ class NativeComponent {
     static native void setEnable(long component, boolean flag);
     static native void addChildComponent(long component, long child);
     static native void removeChildComponent(long component, long child);
+    static native boolean isExclusive(long component);
 }
