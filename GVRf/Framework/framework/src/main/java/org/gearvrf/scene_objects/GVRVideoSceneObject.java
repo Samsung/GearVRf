@@ -519,7 +519,12 @@ public class GVRVideoSceneObject extends GVRSceneObject {
 
             @Override
             public void pause() {
-                mediaPlayer.pause();
+                try {
+                    mediaPlayer.pause();
+                } catch (final IllegalStateException exc) {
+                    //intentionally ignored; might have been released already or never got to be
+                    //initialized
+                }
             }
 
             @Override
