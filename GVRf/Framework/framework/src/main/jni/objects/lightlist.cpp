@@ -110,6 +110,7 @@ bool LightList::removeLight(Light* light)
         if (lights.size() == 1)
         {
             mClassMap.erase(it3);
+            mDirty |= LIGHT_REMOVED | REBUILD_SHADERS;
             return true;
         }
         /*
@@ -261,7 +262,10 @@ void LightList::useLights(Renderer* renderer, Shader* shader)
 {
     if (mUseUniformBlock)
     {
-        mLightBlock->bindBuffer(shader, renderer);
+        if (mLightBlock)
+        {
+            mLightBlock->bindBuffer(shader, renderer);
+        }
     }
     else
     {
