@@ -87,6 +87,8 @@ public final class GVRGearCursorController extends GVRCursorController
         void onResume();
 
         void updatePosData();
+
+        String getModelFileName();
     }
 
     public static class ControllerReaderStubs implements ControllerReader
@@ -119,6 +121,10 @@ public final class GVRGearCursorController extends GVRCursorController
         public void onResume() { }
         @Override
         public void updatePosData(){}
+        @Override
+        public String getModelFileName(){
+            return "gear_vr_controller.obj";
+        }
     }
 
     public enum CONTROLLER_KEYS
@@ -172,7 +178,6 @@ public final class GVRGearCursorController extends GVRCursorController
     private float touchDownX = 0.0f;
     private final int controllerID;
     private static final float DEPTH_SENSITIVITY = 0.01f;
-    private static int maxControllers = 0;
 
     private Vector3f result = new Vector3f();
     private int prevButtonEnter = KeyEvent.ACTION_UP;
@@ -354,8 +359,9 @@ public final class GVRGearCursorController extends GVRCursorController
         {
             EnumSet<GVRImportSettings> settings = GVRImportSettings.getRecommendedSettingsWith(
                     EnumSet.of(GVRImportSettings.NO_LIGHTING));
+
             mControllerModel =
-                    context.getAssetLoader().loadModel("gear_vr_controller.obj", settings, true,
+                    context.getAssetLoader().loadModel(mControllerReader.getModelFileName(), settings, true,
                                                        null);
         }
         catch (IOException ex)
