@@ -59,12 +59,12 @@ project.ext.jomlVersion = "1.9.3-SNAPSHOT"
 project.ext.daydreamVersion = '1.130.0'
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile "com.google.vr:sdk-base:${daydreamVersion}"
-    compile "com.google.vr:sdk-controller:${daydreamVersion}"
-    compile project(':framework')
-    compile "org.joml:joml-android:${jomlVersion}"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar'], dir: 'src/main/libs')
+    implementation "com.google.vr:sdk-base:${daydreamVersion}"
+    implementation "com.google.vr:sdk-controller:${daydreamVersion}"
+    implementation project(':framework')
+    implementation "org.joml:joml-android:${jomlVersion}"
 }
 
 clean {}.doLast {
