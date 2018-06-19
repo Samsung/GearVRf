@@ -34,9 +34,63 @@ import java.util.List;
  * One can use this class to specify multiple colliders for a
  * single {@link GVRSceneObject}.
  */
-public class GVRColliderGroup extends GVRCollider implements GVRComponent.IComponentGroup<GVRCollider>
+public class GVRColliderGroup extends GVRCollider implements IComponentGroup<GVRCollider>
 {
-    GVRComponent.Group<GVRCollider> mGroup = new GVRComponent.Group<GVRCollider>();
+    /**
+     * Default implementation for IComponentGroup that
+     * maintains an iterable list of components.
+     *
+     * @param <T> class of component in the group
+     */
+    private final static class Group<T extends GVRComponent> implements Iterable<T>
+    {
+        List<T> mComponents = new ArrayList<T>();
+
+        public Iterator<T> iterator()
+        {
+            Iterator<T> iter = new Iterator<T>()
+            {
+                int mIndex = 0;
+
+                public boolean hasNext()
+                {
+                    return mIndex < getSize();
+                }
+
+                public T next()
+                {
+                    if (mIndex < getSize())
+                    {
+                        return mComponents.get(mIndex++);
+                    }
+                    return null;
+                }
+            };
+            return iter;
+        }
+
+        public void addChild(T child)
+        {
+            mComponents.add(child);
+        }
+
+        public void removeChild(T child)
+        {
+            mComponents.remove(child);
+        }
+
+        public int getSize()
+        {
+            return mComponents.size();
+        }
+
+        public T getChildAt(int index)
+        {
+            return mComponents.get(index);
+        }
+    };
+
+    Group<GVRCollider> mGroup = new Group<>();
 
     /**
      * Constructor
