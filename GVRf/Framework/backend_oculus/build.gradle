@@ -124,10 +124,10 @@ android {
 project.ext.jomlVersion = "1.9.3-SNAPSHOT"
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile fileTree(include: ['*.jar'], dir: 'src/main/libs')
-    compile project(':framework')
-    compile "org.joml:joml-android:${jomlVersion}"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar'], dir: 'src/main/libs')
+    implementation project(':framework')
+    implementation "org.joml:joml-android:${jomlVersion}"
 }
 
 clean {}.doLast {
