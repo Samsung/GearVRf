@@ -176,21 +176,34 @@ public class AnchorImplementation {
 
             @Override
             public void onSensorEvent(SensorEvent event) {
-                // Getting event group stuff.
+                // Anchor event could either call for new .x3d file, new camera location
+                // or to load a web page
                 if (event.isActive()) {
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
+
+                        // Get rid of any single or double quotes surrounding the filename.
+                        // this happens when the url = '"filename.x3d"' for example
+                        if ( (url.indexOf("\"") == 0) || (url.indexOf("\'") == 0) ) {
+                            url = url.substring(1, url.length());
+                        }
+                        if ( (url.indexOf("\"") == (url.length()-1)) || (url.indexOf("\'") == (url.length()-1)) ) {
+                            url = url.substring(0, url.length()-1);
+                        }
                         if (url.toLowerCase().endsWith(".x3d")) {
                             if ( !newSceneLoaded ) {
                                 // Go to another X3D scene
+                                newSceneLoaded = true;
                                 GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
                                 GVRSceneObject gvrSceneObjectAnchor = new GVRSceneObject(gvrContext);
                                 gvrSceneObjectAnchor.attachComponent( gvrExternalScene );
                                 boolean load = gvrExternalScene.load(gvrContext.getMainScene());
-                                newSceneLoaded = true;
                                 if (!load) Log.e(TAG, "Error loading new X3D scene " + url);
-                                else Log.e(TAG, "New X3D scene " + url + " loaded.");
+                                else {
+                                    interactiveObjectFinal.getSensor().disable();
+                                    Log.e(TAG, "New X3D scene " + url + " loaded.");
+                                }
 
                             }
                         }  // end if .x3d file
