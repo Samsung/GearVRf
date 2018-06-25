@@ -23,9 +23,18 @@ import org.gearvrf.GVRSceneObject;
 
 import java.util.ArrayList;
 
+/**
+ * This interface defines the AR functionalities of the MixedReality API.
+ */
 public interface IMRCommon {
+    /**
+     * Resume the usage of AR functions.
+     */
     void resume();
 
+    /**
+     * Pause the usage of AR functions.
+     */
     void pause();
 
     /**

@@ -15,7 +15,9 @@
 
 package org.gearvrf.mixedreality;
 
-
+/**
+ * Describe the tracking state of an AR object
+ */
 public enum GVRTrackingState {
     TRACKING,
     PAUSED,

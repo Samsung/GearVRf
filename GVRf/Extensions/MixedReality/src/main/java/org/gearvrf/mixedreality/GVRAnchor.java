@@ -18,6 +18,9 @@ package org.gearvrf.mixedreality;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
+/**
+ * Represents a fixed location and orientation in the real world.
+ */
 public abstract class GVRAnchor extends GVRSceneObject {
     protected GVRTrackingState mTrackingState;
 

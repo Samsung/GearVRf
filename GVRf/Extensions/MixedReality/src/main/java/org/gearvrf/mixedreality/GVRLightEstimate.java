@@ -16,7 +16,7 @@
 package org.gearvrf.mixedreality;
 
 /**
- * Represents the light estimate of a frame in arcore scene
+ * Represents the light estimate of a frame in scene
  */
 public abstract class GVRLightEstimate {
     protected float mPixelIntensity;
@@ -34,6 +34,9 @@ public abstract class GVRLightEstimate {
      */
     public abstract GVRLightEstimateState getLightEstimateState();
 
+    /**
+     * Describes the two possible states of a light estimative.
+     */
     public enum GVRLightEstimateState {
         NOT_VALID,
         VALID

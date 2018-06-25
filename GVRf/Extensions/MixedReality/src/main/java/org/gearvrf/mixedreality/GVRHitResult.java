@@ -15,7 +15,9 @@
 
 package org.gearvrf.mixedreality;
 
-
+/**
+ * Represents an intersection between a ray and estimated a real world geometry.
+ */
 public class GVRHitResult {
     private float[] mPose;
     private float mDistance;

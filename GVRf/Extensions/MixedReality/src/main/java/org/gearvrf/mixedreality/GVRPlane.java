@@ -20,7 +20,9 @@ import org.gearvrf.GVRSceneObject;
 
 import java.nio.FloatBuffer;
 
-
+/**
+ * Represents the  current best knowledge of a real-world planar surface.
+ */
 public abstract class GVRPlane extends GVRSceneObject {
     protected Type mType;
     protected GVRTrackingState mTrackingState;
@@ -91,7 +93,9 @@ public abstract class GVRPlane extends GVRSceneObject {
      */
     public abstract GVRPlane getParentPlane();
 
-
+    /**
+     * Describes the possible types of planes
+     */
     public enum Type {
         HORIZONTAL_DOWNWARD_FACING,
         HORIZONTAL_UPWARD_FACING,
