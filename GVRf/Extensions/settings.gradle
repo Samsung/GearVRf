@@ -48,3 +48,5 @@ if (hasProperty('OVR_PLATFORM_SDK')){
     project(':platformsdk_support').projectDir = new File('platformsdk_support')
 }
 
+include ':MixedReality'
+project(':MixedReality').projectDir = new File('MixedReality')
