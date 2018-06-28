@@ -50,14 +50,18 @@ public class GVRVideoSceneObject extends GVRSceneObject {
     };
 
     private IActivityEvents mActivityEventsListener = new GVREventListeners.ActivityEvents() {
+        private boolean wasPlaying;
         @Override
         public void onPause() {
+            wasPlaying = gvrVideoSceneObjectPlayer.isPlaying();
             gvrVideoSceneObjectPlayer.pause();
         }
 
         @Override
         public void onResume() {
-            gvrVideoSceneObjectPlayer.start();
+            if (wasPlaying) {
+                gvrVideoSceneObjectPlayer.start();
+            }
         }
 
         @Override
@@ -296,11 +300,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @return current {@link MediaPlayer}
      */
     public GVRVideoSceneObjectPlayer getMediaPlayer() {
-        if (mVideo == null) {
-            return null;
-        }
-
-        return mVideo.getMediaPlayer();
+        return gvrVideoSceneObjectPlayer;
     }
 
     /**
@@ -530,6 +530,11 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             @Override
             public void start() {
                 mediaPlayer.start();
+            }
+
+            @Override
+            public boolean isPlaying() {
+                return mediaPlayer.isPlaying();
             }
         };
     }

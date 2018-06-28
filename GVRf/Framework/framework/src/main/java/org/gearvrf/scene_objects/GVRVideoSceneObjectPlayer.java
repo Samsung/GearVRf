@@ -42,4 +42,9 @@ public interface GVRVideoSceneObjectPlayer<T> {
      * Start playback
      */
     void start();
+
+    /**
+     * Is the player currently playing
+     */
+    boolean isPlaying();
 }
