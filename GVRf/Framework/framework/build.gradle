@@ -119,8 +119,7 @@ project.ext.jomlVersion = "1.9.3-SNAPSHOT"
 project.ext.gsonVersion = '2.8.2'
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    api fileTree(dir: 'src/main/libs', include: ['*.jar'])
     api "org.joml:joml-android:${jomlVersion}"
     implementation "com.google.code.gson:gson:$gsonVersion"
 }
