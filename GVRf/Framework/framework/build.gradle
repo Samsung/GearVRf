@@ -113,6 +113,11 @@ android {
             srcDir "${android.ndkDirectory}/sources/third_party/vulkan/src/build-android/jniLibs"
         }
     }
+
+    packagingOptions {
+        exclude 'lib/mips/*'
+        exclude 'lib/mips64/*'
+    }
 }
 
 project.ext.jomlVersion = "1.9.3-SNAPSHOT"
