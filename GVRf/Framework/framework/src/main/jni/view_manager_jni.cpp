@@ -43,7 +43,6 @@ extern "C" {
                                                       jlong jrenderTarget, jlong jscene,
                                                       jobject javaSceneObject,
                                                       jlong jshader_manager,
-                                                      jlong jpost_effect_shader_manager,
                                                       jlong jpost_effect_render_texture_a,
                                                       jlong jpost_effect_render_texture_b)
     {
@@ -51,8 +50,6 @@ extern "C" {
         RenderTarget *renderTarget = reinterpret_cast<RenderTarget *>(jrenderTarget);
         ShaderManager *shader_manager =
                 reinterpret_cast<ShaderManager *>(jshader_manager);
-        PostEffectShaderManager *post_effect_shader_manager =
-                reinterpret_cast<PostEffectShaderManager *>(jpost_effect_shader_manager);
         RenderTexture *post_effect_render_texture_a =
                 reinterpret_cast<RenderTexture *>(jpost_effect_render_texture_a);
         RenderTexture *post_effect_render_texture_b =
