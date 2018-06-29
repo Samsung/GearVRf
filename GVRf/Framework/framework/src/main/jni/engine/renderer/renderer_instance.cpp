@@ -60,6 +60,7 @@ int Renderer::getVulkanPropValue(){
     if(vulkanPropValue != -1)
         return vulkanPropValue;
 
+    vulkanPropValue = 0; //defaults to GL
     const prop_info *pi = __system_property_find("debug.gearvrf.vulkan");
     char buffer[PROP_VALUE_MAX];
     int len = 0;
