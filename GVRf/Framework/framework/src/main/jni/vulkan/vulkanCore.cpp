@@ -122,54 +122,154 @@ namespace gvr {
                 1, &imageMemoryBarrier);
     }
 
+    std::vector<const char*> VulkanCore::getInstanceLayers()
+    {
+        std::vector<const char*> presentLayers;
+        std::vector<const char*>  instanceLayers
+        {
+            "VK_LAYER_GOOGLE_threading",
+            "VK_LAYER_LUNARG_parameter_validation",
+            "VK_LAYER_LUNARG_object_tracker",
+            // Enable this extension if required
+            //   "VK_LAYER_LUNARG_core_validation",
+            "VK_LAYER_LUNARG_image",
+            "VK_LAYER_LUNARG_swapchain",
+            "VK_LAYER_GOOGLE_unique_objects"
+        };
+
+        // Determine the number of instance layers that Vulkan reports
+        uint32_t numInstanceLayers = 0;
+        vkEnumerateInstanceLayerProperties(&numInstanceLayers, nullptr);
+
+        std::unique_ptr<VkLayerProperties[]> layerProperties{new VkLayerProperties[numInstanceLayers]};
+        vkEnumerateInstanceLayerProperties(&numInstanceLayers, layerProperties.get());
+
+        for (uint32_t i = 0; i < instanceLayers.size(); i++)
+        {
+            bool found = false;
+            for (uint32_t j = 0; j < numInstanceLayers; j++)
+            {
+                if (strcmp(instanceLayers[i], layerProperties.get()[j].layerName) == 0)
+                {
+                    found = true;
+                    presentLayers.push_back(instanceLayers[i]);
+                    break;
+                }
+            }
+            if (!found)
+            {
+                LOGE("Instance Layer not found: %s", instanceLayers[i]);
+            }
+        }
+
+        return presentLayers;
+    }
+
+    bool VulkanCore::checkInstanceExtensions(std::vector<const char*> &instanceExtensions)
+    {
+        bool result = true;
+        uint32_t instanceExtensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
+
+        std::unique_ptr<VkExtensionProperties[]> extensionProperties{new VkExtensionProperties[instanceExtensionCount]};
+        vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, extensionProperties.get());
+
+        for (uint32_t i = 0; i < instanceExtensions.size(); i++)
+        {
+            bool found = false;
+            for (uint32_t j = 0; j < instanceExtensionCount; j++)
+            {
+                if (strcmp(instanceExtensions[i], extensionProperties.get()[j].extensionName) == 0)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                LOGE("Instance Layer not found: %s", instanceExtensions[i]);
+                result = false;
+            }
+        }
+
+        return result;
+    }
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
+            VkDebugReportFlagsEXT msgFlags,
+            VkDebugReportObjectTypeEXT objType,
+            uint64_t srcObject, size_t location,
+            int32_t msgCode, const char * pLayerPrefix,
+            const char * pMsg, void * pUserData )
+    {
+        if (msgFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
+        {
+            LOGI("GVR INFORMATION: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
+        }
+        else if (msgFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
+        {
+            LOGW("GVR WARNING: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
+        }
+        else if (msgFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+        {
+            LOGW("GVR PERFORMANCE WARNING: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
+        }
+        else if (msgFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+        {
+            LOGE("GVR ERROR: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
+        }
+        else if (msgFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
+        {
+            LOGD("GVR DEBUG: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
+        }
+
+        return false;
+    }
+
+    void VulkanCore::CreateValidationCallbacks()
+    {
+        mCreateDebugReportCallbackEXT   = (PFN_vkCreateDebugReportCallbackEXT)  vkGetInstanceProcAddr( m_instance, "vkCreateDebugReportCallbackEXT");
+        mDestroyDebugReportCallbackEXT  = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr( m_instance, "vkDestroyDebugReportCallbackEXT");
+
+        GVR_VK_CHECK(mCreateDebugReportCallbackEXT);
+        GVR_VK_CHECK(mDestroyDebugReportCallbackEXT);
+
+        // Create the debug report callback..
+        VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;
+        dbgCreateInfo.sType         = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
+        dbgCreateInfo.pNext         = NULL;
+        dbgCreateInfo.pfnCallback   = DebugReportCallback;
+        dbgCreateInfo.pUserData     = NULL;
+        dbgCreateInfo.flags         =   VK_DEBUG_REPORT_ERROR_BIT_EXT               |
+                                        VK_DEBUG_REPORT_WARNING_BIT_EXT             |
+                                        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+                                        // Uncomment this flag for verbose information logging
+                                        //VK_DEBUG_REPORT_INFORMATION_BIT_EXT         |
+                                        VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+
+        VkResult ret = mCreateDebugReportCallbackEXT(m_instance, &dbgCreateInfo, NULL, &mDebugReportCallback);
+        GVR_VK_CHECK(!ret);
+    }
+
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
-        // Discover the number of extensions listed in the instance properties in order to allocate
-        // a buffer large enough to hold them.
-        uint32_t instanceExtensionCount = 0;
-        ret = vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
-        GVR_VK_CHECK(!ret);
+        std::vector<const char*>  instanceLayers;
 
-        VkBool32 surfaceExtFound = 0;
-        VkBool32 platformSurfaceExtFound = 0;
-        VkExtensionProperties *instanceExtensions = nullptr;
-        instanceExtensions = new VkExtensionProperties[instanceExtensionCount];
-
-        // Now request instanceExtensionCount VkExtensionProperties elements be read into out buffer
-        ret = vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount,
-                                                     instanceExtensions);
-        GVR_VK_CHECK(!ret);
-
-        // We require two extensions, VK_KHR_surface and VK_KHR_android_surface. If they are found,
-        // add them to the extensionNames list that we'll use to initialize our instance with later.
-        uint32_t enabledExtensionCount = 0;
-        const char *extensionNames[16];
-        for (uint32_t i = 0; i < instanceExtensionCount; i++) {
-            if (!strcmp(VK_KHR_SURFACE_EXTENSION_NAME, instanceExtensions[i].extensionName)) {
-                surfaceExtFound = 1;
-                extensionNames[enabledExtensionCount++] = VK_KHR_SURFACE_EXTENSION_NAME;
-            }
-
-            if (!strcmp(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
-                        instanceExtensions[i].extensionName)) {
-                platformSurfaceExtFound = 1;
-                extensionNames[enabledExtensionCount++] = VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
-            }
-            GVR_VK_CHECK(enabledExtensionCount < 16);
+        if(validationLayers){
+            instanceLayers = getInstanceLayers();
         }
-        if (!surfaceExtFound) {
-            LOGE("vkEnumerateInstanceExtensionProperties failed to find the "
-                         VK_KHR_SURFACE_EXTENSION_NAME
-                         " extension.");
-            return false;
-        }
-        if (!platformSurfaceExtFound) {
-            LOGE("vkEnumerateInstanceExtensionProperties failed to find the "
-                         VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
-                         " extension.");
-            return false;
-        }
+
+
+        std::vector<const char*>  instanceExtensions
+        {
+            "VK_KHR_surface",
+            "VK_KHR_android_surface"
+        };
+
+        if(validationLayers)
+            instanceExtensions.push_back("VK_EXT_debug_report");
+        GVR_VK_CHECK(checkInstanceExtensions(instanceExtensions));
 
         // We specify the Vulkan version our application was built with,
         // as well as names and versions for our application and engine,
@@ -190,18 +290,14 @@ namespace gvr {
         instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instanceCreateInfo.pNext = nullptr;
         instanceCreateInfo.pApplicationInfo = &applicationInfo;
-        instanceCreateInfo.enabledLayerCount = 0;
-        instanceCreateInfo.ppEnabledLayerNames = nullptr;
-        instanceCreateInfo.enabledExtensionCount = enabledExtensionCount;
-        instanceCreateInfo.ppEnabledExtensionNames = extensionNames;
-
+        instanceCreateInfo.enabledLayerCount = validationLayers ? instanceLayers.size() : 0;
+        instanceCreateInfo.ppEnabledLayerNames = validationLayers ? instanceLayers.data() : nullptr;
+        instanceCreateInfo.enabledExtensionCount = instanceExtensions.size();
+        instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
 
         // The main Vulkan instance is created with the creation infos above.
         // We do not specify a custom memory allocator for instance creation.
         ret = vkCreateInstance(&instanceCreateInfo, nullptr, &(m_instance));
-
-        // we can delete the list of extensions after calling vkCreateInstance
-        delete[] instanceExtensions;
 
         // Vulkan API return values can expose further information on a failure.
         // For instance, INCOMPATIBLE_DRIVER may be returned if the API level
@@ -216,6 +312,9 @@ namespace gvr {
         } else {
             GVR_VK_CHECK(!ret);
         }
+
+        if(validationLayers)
+            CreateValidationCallbacks();
 
         return true;
 }
@@ -1355,6 +1454,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
+
+        if(validationLayers)
+            mDestroyDebugReportCallbackEXT(m_instance, mDebugReportCallback, nullptr);
     }
 
     void VulkanCore::initVulkanCore() {

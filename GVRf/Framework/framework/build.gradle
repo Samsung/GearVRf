@@ -108,6 +108,10 @@ android {
     sourceSets.main {
         java.srcDirs = ['src/main/java']
         resources.srcDir 'src/main/libs'
+
+        jniLibs {
+            srcDir "${android.ndkDirectory}/sources/third_party/vulkan/src/build-android/jniLibs"
+        }
     }
 }
 

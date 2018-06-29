@@ -174,7 +174,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
         mStatsLine.addColumn(mTracerDrawEyes2.getStatColumn());
         mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
 
-        if(NativeVulkanCore.useVulkanInstance()){
+        if(NativeVulkanCore.getVulkanPropValue() > 0){
             isVulkanInstance = true;
             mRenderTarget[0] = null;
             eyeBufferParams.setResolutionWidth(mViewportWidth);
@@ -204,7 +204,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                             NativeVulkanCore.recreateSwapchain(vulkanSurfaceView.getHolder().getSurface());
                         }
 
-                        vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
+                        vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface(), NativeVulkanCore.getVulkanPropValue());
                         Thread currentThread = Thread.currentThread();
 
                         // Reduce contention with other Android processes
@@ -270,7 +270,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
         super.onPause();
         mRotationSensor.onPause();
 
-        if(NativeVulkanCore.useVulkanInstance()) {
+        if(NativeVulkanCore.getVulkanPropValue() > 0) {
             activeFlag = false;
 
             if (vulkanDrawThread != null){
@@ -452,10 +452,10 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
 
 class NativeVulkanCore {
-    static native long getInstance(Object surface);
+    static native long getInstance(Object surface, int vulkanPropValue);
     static native int getSwapChainIndexToRender();
     static native void resetTheInstance();
     static native void recreateSwapchain(Object surface);
-    static native boolean useVulkanInstance();
+    static native int getVulkanPropValue();
     static native boolean isInstancePresent();
 }

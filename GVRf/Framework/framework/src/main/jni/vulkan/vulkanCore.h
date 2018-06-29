@@ -81,22 +81,22 @@ class VkRenderTarget;
 class RenderTarget;
 class LightList;
 class VKDeviceComponent;
+class Renderer;
 
 class VulkanCore final {
 
 public:
     // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
-    static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
+    static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr, int vulkanPropVaule = 0) {
         if (!theInstance) {
 
-            theInstance = new VulkanCore(newNativeWindow);
+            theInstance = new VulkanCore(newNativeWindow, vulkanPropVaule);
             theInstance->initVulkanCore();
         }
         if (theInstance->m_Vulkan_Initialised)
             return theInstance;
         return NULL;
     }
-
 
     //check if Vulkan has been initialised.
     static bool isInstancePresent(){
@@ -210,8 +210,9 @@ private:
     static VulkanCore *theInstance;
     std::unordered_map<std::string, VkPipeline> pipelineHashMap;
 
-    explicit VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL){
+    explicit VulkanCore(ANativeWindow *newNativeWindow, int vulkanPropValue = 0) : m_pPhysicalDevices(NULL){
         m_Vulkan_Initialised = false;
+        validationLayers = (vulkanPropValue == 2);
         initVulkanDevice(newNativeWindow);
     }
 
@@ -277,6 +278,13 @@ private:
     std::unordered_map<int, VkRenderPass> mRenderPassMap;
 
     std::vector<VKDeviceComponent * > mDeviceComponents;
+    bool validationLayers = false;
+    std::vector<const char*> getInstanceLayers();
+    bool checkInstanceExtensions(std::vector<const char*>&);
+    void CreateValidationCallbacks();
+    PFN_vkCreateDebugReportCallbackEXT  mCreateDebugReportCallbackEXT;
+    PFN_vkDestroyDebugReportCallbackEXT mDestroyDebugReportCallbackEXT;
+    VkDebugReportCallbackEXT            mDebugReportCallback;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H
