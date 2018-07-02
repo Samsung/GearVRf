@@ -22,13 +22,13 @@ import org.gearvrf.utility.VrAppSettings;
 /**
  * {@inheritDoc}
  */
-final class DaydreamActivityDelegate extends GVRActivity.ActivityDelegateStubs implements IActivityNative {
-    private GVRActivity mActivity;
+final class DaydreamActivityDelegate extends GVRApplication.ActivityDelegateStubs implements IActivityNative {
+    private GVRApplication mApplication;
     private DaydreamViewManager daydreamViewManager;
 
     @Override
-    public void onCreate(GVRActivity activity) {
-        mActivity = activity;
+    public void onCreate(GVRApplication application) {
+        mApplication = application;
     }
 
     @Override
@@ -38,7 +38,7 @@ final class DaydreamActivityDelegate extends GVRActivity.ActivityDelegateStubs i
 
     @Override
     public GVRViewManager makeViewManager() {
-        return new DaydreamViewManager(mActivity, mActivity.getMain());
+        return new DaydreamViewManager(mApplication, mApplication.getMain());
     }
 
     @Override
@@ -47,8 +47,8 @@ final class DaydreamActivityDelegate extends GVRActivity.ActivityDelegateStubs i
     }
 
     @Override
-    public GVRConfigurationManager makeConfigurationManager(GVRActivity activity) {
-        return new GVRConfigurationManager(activity) {
+    public GVRConfigurationManager makeConfigurationManager() {
+        return new GVRConfigurationManager(mApplication) {
             @Override
             public boolean isHmtConnected() {
                 return false;
@@ -64,12 +64,12 @@ final class DaydreamActivityDelegate extends GVRActivity.ActivityDelegateStubs i
     public void onInitAppSettings(VrAppSettings appSettings) {
         // This is the only place where the setDockListenerRequired flag can be set before
         // the check in GVRActivity.
-        mActivity.getConfigurationManager().setDockListenerRequired(false);
+        mApplication.getConfigurationManager().setDockListenerRequired(false);
     }
 
     @Override
     public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
-        new DaydreamXMLParser(assetManager, dataFilename, mActivity.getAppSettings());
+        new DaydreamXMLParser(assetManager, dataFilename, mApplication.getAppSettings());
     }
 
     @Override

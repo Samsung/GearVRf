@@ -299,7 +299,7 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
         GVRRenderPass pass = mRenderPassList.get(0);
         GVRShaderId shader = pass.getMaterial().getShaderType();
         GVRShader template = shader.getTemplate(getGVRContext());
-        boolean isMultiview = getGVRContext().getActivity().getAppSettings().isMultiviewSet();
+        boolean isMultiview = getGVRContext().getApplication().getAppSettings().isMultiviewSet();
         if (template != null)
         {
             template.bindShader(getGVRContext(), this, scene, isMultiview);

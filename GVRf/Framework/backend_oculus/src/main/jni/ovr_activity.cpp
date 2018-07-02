@@ -26,7 +26,8 @@
 #include <engine/renderer/vulkan_renderer.h>
 #include <objects/textures/render_texture.h>
 
-static const char* activityClassName = "org/gearvrf/GVRActivity";
+static const char* activityClassName = "android/app/Activity";
+static const char* applicationClassName = "org/gearvrf/GVRApplication";
 static const char* viewManagerClassName = "org/gearvrf/OvrViewManager";
 
 namespace gvr {
@@ -35,15 +36,17 @@ namespace gvr {
 //                             GVRActivity
 //=============================================================================
 
-    GVRActivity::GVRActivity(JNIEnv& env, jobject activity, jobject vrAppSettings,
-                             jobject) : envMainThread_(&env), configurationHelper_(env, vrAppSettings)
+GVRActivity::GVRActivity(JNIEnv &env, jobject activity, jobject vrAppSettings) : envMainThread_(
+        &env), configurationHelper_(env, vrAppSettings)
     {
         activity_ = env.NewGlobalRef(activity);
         activityClass_ = GetGlobalClassReference(env, activityClassName);
+        applicationClass_ = GetGlobalClassReference(env, applicationClassName);
 
-        onDrawEyeMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "onDrawEye", "(IIZ)V");
-        onBeforeDrawEyesMethodId = GetMethodId(env, env.FindClass(viewManagerClassName), "beforeDrawEyes", "()V");
-        updateSensoredSceneMethodId = GetMethodId(env, activityClass_, "updateSensoredScene", "()Z");
+        jclass viewManagerClass = env.FindClass(viewManagerClassName);
+        onDrawEyeMethodId = GetMethodId(env, viewManagerClass, "onDrawEye", "(IIZ)V");
+        onBeforeDrawEyesMethodId = GetMethodId(env, viewManagerClass, "beforeDrawEyes", "()V");
+        updateSensoredSceneMethodId = GetMethodId(env, viewManagerClass, "updateSensoredScene", "()Z");
 
         mainThreadId_ = gettid();
     }
@@ -92,8 +95,8 @@ namespace gvr {
         vrapi_ShowSystemUI(&oculusJavaGlThread_, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
     }
 
-    bool GVRActivity::updateSensoredScene() {
-        return oculusJavaGlThread_.Env->CallBooleanMethod(oculusJavaGlThread_.ActivityObject, updateSensoredSceneMethodId);
+    bool GVRActivity::updateSensoredScene(jobject jViewManager) {
+        return oculusJavaGlThread_.Env->CallBooleanMethod(jViewManager, updateSensoredSceneMethodId);
     }
 
     void GVRActivity::setCameraRig(jlong cameraRig) {
@@ -294,7 +297,7 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
     cameraRig_->updateRotation();
 
     if (!sensoredSceneUpdated_) {
-        sensoredSceneUpdated_ = updateSensoredScene();
+        sensoredSceneUpdated_ = updateSensoredScene(jViewManager);
     }
     oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onBeforeDrawEyesMethodId);
 

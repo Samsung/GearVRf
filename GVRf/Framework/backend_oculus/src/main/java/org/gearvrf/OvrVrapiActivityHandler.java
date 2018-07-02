@@ -45,7 +45,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
-    private final GVRActivity mActivity;
+    private final GVRApplication mApplication;
     private long mPtr;
     private GLSurfaceView mSurfaceView;
     private EGLSurface mPixelBuffer;
@@ -55,21 +55,21 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
     private OvrViewManager mViewManager;
     private int mCurrentSurfaceWidth, mCurrentSurfaceHeight;
 
-    OvrVrapiActivityHandler(final GVRActivity activity, final OvrActivityNative activityNative) throws VrapiNotAvailableException {
-        if (null == activity) {
+    OvrVrapiActivityHandler(final GVRApplication application, final OvrActivityNative activityNative) throws VrapiNotAvailableException {
+        if (null == application) {
             throw new IllegalArgumentException();
         }
         try {
-            activity.getPackageManager().getPackageInfo("com.oculus.systemdriver", PackageManager.GET_SIGNATURES);
+            application.getActivity().getPackageManager().getPackageInfo("com.oculus.systemdriver", PackageManager.GET_SIGNATURES);
         } catch (final PackageManager.NameNotFoundException e) {
             try {
-                activity.getPackageManager().getPackageInfo("com.oculus.systemactivities", PackageManager.GET_SIGNATURES);
+                application.getActivity().getPackageManager().getPackageInfo("com.oculus.systemactivities", PackageManager.GET_SIGNATURES);
             } catch (PackageManager.NameNotFoundException e1) {
                 Log.e(TAG, "oculus packages missing, assuming vrapi will not work");
                 throw new VrapiNotAvailableException();
             }
         }
-        mActivity = activity;
+        mApplication = application;
         mPtr = activityNative.getNative();
 
         if (null != sVrapiOwner.get()) {
@@ -145,12 +145,12 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onSetScript() {
-        mSurfaceView = new GLSurfaceView(mActivity);
+        mSurfaceView = new GLSurfaceView(mApplication.getActivity());
         mSurfaceView.setZOrderOnTop(true);
 
         final DisplayMetrics metrics = new DisplayMetrics();
-        mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        final VrAppSettings appSettings = mActivity.getAppSettings();
+        mApplication.getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        final VrAppSettings appSettings = mApplication.getAppSettings();
         int defaultWidthPixels = Math.max(metrics.widthPixels, metrics.heightPixels);
         int defaultHeightPixels = Math.min(metrics.widthPixels, metrics.heightPixels);
         final int frameBufferWidth = appSettings.getFramebufferPixelsWide();
@@ -179,7 +179,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         mSurfaceView.setRenderer(mRenderer);
         mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
-        mActivity.setContentView(mSurfaceView);
+        mApplication.getActivity().setContentView(mSurfaceView);
     }
 
     private final EGLContextFactory mContextFactory = new EGLContextFactory() {
@@ -263,7 +263,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
             configAttribs[counter++] = 0;
 
             Log.v(TAG, "--- window surface configuration ---");
-            final VrAppSettings appSettings = mActivity.getAppSettings();
+            final VrAppSettings appSettings = mApplication.getAppSettings();
             if (appSettings.useSrgbFramebuffer) {
                 final int EGL_GL_COLORSPACE_KHR = 0x309D;
                 final int EGL_GL_COLORSPACE_SRGB_KHR = 0x3089;

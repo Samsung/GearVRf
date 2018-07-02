@@ -1,20 +1,15 @@
 package org.gearvrf;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.script.GVRScriptManager;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.concurrent.Future;
 
 /**
  * Class that supports the scripting feature. Not meant for anything
@@ -35,7 +30,7 @@ public final class GVRContextProxy extends GVRContext {
         return mContext.get().getContext();
     }
 
-    public GVRActivity getActivity() {
+    public Activity getActivity() {
         return mContext.get().getActivity();
     }
 

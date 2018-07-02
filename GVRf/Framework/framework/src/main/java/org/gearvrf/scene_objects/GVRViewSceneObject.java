@@ -44,7 +44,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import org.gearvrf.GVRActivity;
+import org.gearvrf.GVRApplication;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRExternalTexture;
@@ -193,32 +193,32 @@ public class GVRViewSceneObject extends GVRSceneObject {
     private GVRViewSceneObject(GVRContext gvrContext, final View view, final int viewId,
                                IViewEvents eventsListener, GVRMesh mesh) {
         super(gvrContext, mesh);
-        final GVRActivity activity = gvrContext.getActivity();
+        final GVRApplication application = gvrContext.getApplication();
 
         mEventsListener = eventsListener;
         mLock = new Object();
 
-        mRootViewGroup = new RootViewGroup(activity, this);
+        mRootViewGroup = new RootViewGroup(application, this);
 
-        activity.runOnUiThread(new Runnable() {
+        application.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if (viewId != View.NO_ID) {
-                    addView(activity, viewId);
+                    addView(application, viewId);
                 } else {
-                    addView(activity, view);
+                    addView(application, view);
                 }
             }
         });
     }
 
     // UI thread
-    private void addView(GVRActivity gvrActivity, int viewId) {
-        addView(gvrActivity, View.inflate(gvrActivity, viewId, null));
+    private void addView(GVRApplication application, int viewId) {
+        addView(application, View.inflate(application.getActivity(), viewId, null));
     }
 
     // UI thread
-    private void addView(GVRActivity gvrActivity, View view) {
+    private void addView(GVRApplication application, View view) {
         if (view == null) {
             throw new IllegalArgumentException("Android view cannot be null.");
         } else if (view.getParent() != null) {
@@ -233,7 +233,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         getEventReceiver().addListener(mRootViewGroup);
 
         // To fix invalidate issue at S6/Note5
-        gvrActivity.getFullScreenView().invalidate();
+        application.getFullScreenView().invalidate();
     }
 
     public RootViewGroup getRootView() { return mRootViewGroup; }
@@ -248,7 +248,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
     @Override
     protected void onNewParentObject(GVRSceneObject parent) {
         super.onNewParentObject(parent);
-        final GVRActivity activity = getGVRContext().getActivity();
+        final Activity activity = getGVRContext().getActivity();
 
         synchronized (mLock) {
             if (getRenderData() != null) {
@@ -266,7 +266,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
     @Override
     protected void onRemoveParentObject(GVRSceneObject parent) {
         super.onRemoveParentObject(parent);
-        final GVRActivity activity = getGVRContext().getActivity();
+        final Activity activity = getGVRContext().getActivity();
 
         synchronized (mLock) {
             if (getRenderData() != null) {
@@ -526,19 +526,19 @@ public class GVRViewSceneObject extends GVRSceneObject {
         SoftInputController mSoftInputController;
         int mTextureBufferSize = 512;
 
-        public RootViewGroup(GVRActivity gvrActivity, GVRViewSceneObject sceneObject) {
-            super(gvrActivity);
+        public RootViewGroup(GVRApplication application, GVRViewSceneObject sceneObject) {
+            super(application.getActivity());
 
             setLayoutParams(new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
                     LayoutParams.WRAP_CONTENT));
 
-            mGVRContext = gvrActivity.getGVRContext();
+            mGVRContext = application.getGVRContext();
             mSceneObject = sceneObject;
 
             // To optimization
             setWillNotDraw(true);
 
-            mSoftInputController = new SoftInputController(gvrActivity, sceneObject);
+            mSoftInputController = new SoftInputController(application.getActivity(), sceneObject);
 
 
             // To block Android's popups
@@ -672,7 +672,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
                         }
                     });
 
-            mGVRContext.getActivity().registerView(this);
+            mGVRContext.getApplication().registerView(this);
         }
 
         private void onLayoutReady() {

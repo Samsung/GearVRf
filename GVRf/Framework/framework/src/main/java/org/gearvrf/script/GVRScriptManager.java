@@ -57,7 +57,7 @@ public class GVRScriptManager {
     // For script bundles. All special targets start with @.
     public static final String TARGET_PREFIX = "@";
     public static final String TARGET_GVRMAIN = "@GVRMain";
-    public static final String TARGET_GVRACTIVITY = "@GVRActivity";
+    public static final String TARGET_GVRAPPLICATION = "@GVRApplication";
 
     interface TargetResolver {
         IScriptable getTarget(GVRContext gvrContext, String name);
@@ -74,16 +74,16 @@ public class GVRScriptManager {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
                                          String name) {
-                return gvrContext.getActivity().getMain();
+                return gvrContext.getApplication().getMain();
             }
         });
 
         // Target resolver for "@GVRActivity"
-        sBuiltinTargetMap.put(TARGET_GVRACTIVITY, new TargetResolver() {
+        sBuiltinTargetMap.put(TARGET_GVRAPPLICATION, new TargetResolver() {
             @Override
             public IScriptable getTarget(GVRContext gvrContext,
                                          String name) {
-                return gvrContext.getActivity();
+                return gvrContext.getApplication();
             }
         });
     }
@@ -359,7 +359,7 @@ public class GVRScriptManager {
                     toBind = true;
                 }
 
-                if ((bindMask & BIND_MASK_GVRACTIVITY) != 0 && targetName.equalsIgnoreCase(TARGET_GVRACTIVITY)) {
+                if ((bindMask & BIND_MASK_GVRACTIVITY) != 0 && targetName.equalsIgnoreCase(TARGET_GVRAPPLICATION)) {
                     toBind = true;
                 }
 

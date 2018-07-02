@@ -22,31 +22,25 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.Gravity;
 
-import org.gearvrf.GVRAndroidResource.MeshCallback;
 import org.gearvrf.GVRHybridObject.NativeCleanupHandler;
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.animation.GVRMaterialAnimation;
 import org.gearvrf.animation.GVROnFinish;
-import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.script.GVRScriptManager;
 import org.gearvrf.utility.Log;
-import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.Threads;
 
-import java.io.IOException;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 /**
  * Like the Android {@link Context} class, {@code GVRContext} provides core
@@ -85,7 +79,7 @@ import java.util.concurrent.Future;
 public abstract class GVRContext implements IEventReceiver {
     private static final String TAG = Log.tag(GVRContext.class);
 
-    private final GVRActivity mContext;
+    private final GVRApplication mApplication;
 
     private GVREventReceiver mEventReceiver;
     /*
@@ -179,8 +173,8 @@ public abstract class GVRContext implements IEventReceiver {
      * Methods
      */
 
-    GVRContext(GVRActivity context) {
-        mContext = context;
+    GVRContext(GVRApplication context) {
+        mApplication = context;
         mEventReceiver = new GVREventReceiver(this);
 
         mHandlerThread = new HandlerThread("gvrf-main");
@@ -192,7 +186,7 @@ public abstract class GVRContext implements IEventReceiver {
      * Just for proxy-ing. See GVRContextProxy.
      */
     GVRContext() {
-        mContext = null;
+        mApplication = null;
         mHandler = null;
         mHandlerThread = null;
     }
@@ -207,7 +201,7 @@ public abstract class GVRContext implements IEventReceiver {
      * @return An Android {@code Context}
      */
     public Context getContext() {
-        return mContext;
+        return mApplication.getActivity();
     }
 
     /**
@@ -218,17 +212,14 @@ public abstract class GVRContext implements IEventReceiver {
      * also provides additional services, including
      * {@link Activity#runOnUiThread(Runnable)}.
      * 
-     * @return The {@link GVRActivity} which launched your GVRF app. The
-     *         {@link GVRActivity} class doesn't actually add much useful
-     *         functionality besides
-     *         {@link GVRActivity#setMain(GVRMain, String)}, but returning
-     *         the most-derived class here may prevent someone from having to
-     *         write {@code (GVRActivity) gvrContext.getActivity();}.
-     * 
-     * @since 2.0.1
+     * @return The {@link Activity} which launched your GVRF app.
      */
-    public GVRActivity getActivity() {
-        return mContext;
+    public Activity getActivity() {
+        return mApplication.getActivity();
+    }
+
+    public GVRMain getMain() {
+        return mApplication.getMain();
     }
 
     /**
@@ -788,6 +779,14 @@ public abstract class GVRContext implements IEventReceiver {
         while (null != (reference = (GVRReference)mReferenceQueue.poll())) {
             reference.close(mReferenceSet);
         }
+    }
+
+    /**
+     *
+     * @return
+     */
+    public GVRApplication getApplication() {
+        return mApplication;
     }
 
     final static class UndertakerThread extends Thread {

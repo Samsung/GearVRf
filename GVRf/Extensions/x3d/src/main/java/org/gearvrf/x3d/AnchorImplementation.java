@@ -362,7 +362,7 @@ public class AnchorImplementation {
                 public void run() {
 
                     // Launch a new WebView window and place the web page there.
-                    gvrWebView = new GVRWebView(gvrContext.getActivity());
+                    gvrWebView = new GVRWebView(gvrContext.getApplication());
                     gvrWebView.setInitialScale(100);
                     gvrWebView.measure(1600, 1200);
                     gvrWebView.layout(0, 0, 1600, 1200);

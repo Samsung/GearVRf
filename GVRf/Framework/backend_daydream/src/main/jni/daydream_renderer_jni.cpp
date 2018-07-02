@@ -21,6 +21,7 @@
   JNIEXPORT return_type JNICALL              \
       Java_org_gearvrf_DaydreamRenderer_##method_name
 
+
 namespace {
 
 inline jlong jptr(DaydreamRenderer *native_daydream_renderer) {

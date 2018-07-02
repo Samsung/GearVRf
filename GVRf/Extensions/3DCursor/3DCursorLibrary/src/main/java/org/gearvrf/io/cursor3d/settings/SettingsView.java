@@ -15,6 +15,7 @@
 
 package org.gearvrf.io.cursor3d.settings;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -29,16 +30,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
+import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.CursorType;
 import org.gearvrf.io.cursor3d.IoDevice;
 import org.gearvrf.io.cursor3d.R;
 import org.gearvrf.utility.Log;
-import org.gearvrf.io.GVRTouchPadGestureListener;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -75,7 +75,7 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
     {
         super(context, scene, settingsCursorId, R.layout.settings_layout);
         Log.d(TAG, "new SettingsView, hash=" + this.hashCode());
-        final GVRActivity activity = context.getActivity();
+        final Activity activity = context.getActivity();
         this.changeListener = changeListener;
         this.cursorManager = cursorManager;
         cursorList = (ListView) findViewById(R.id.lvCursors);

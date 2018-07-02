@@ -14,15 +14,15 @@
  */
 package org.gearvrf;
 
+import org.gearvrf.shaders.GVRPhongShader;
+import org.gearvrf.utility.Log;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.gearvrf.shaders.GVRPhongShader;
-import org.gearvrf.utility.Log;
 
 /**
  * Generates a set of native vertex and fragment shaders from source code segments.
@@ -544,7 +544,7 @@ public class GVRShaderTemplate extends GVRShader
         int castShadow = 0;
         GVRLight[] lights = (scene != null) ? scene.getLightList() : null;
 
-        if (renderable.getGVRContext().getActivity().getAppSettings().isMultiviewSet())
+        if (renderable.getGVRContext().getApplication().getAppSettings().isMultiviewSet())
         {
             defines.put("MULTIVIEW", 1);
         }

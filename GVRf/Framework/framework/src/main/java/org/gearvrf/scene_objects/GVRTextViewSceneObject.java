@@ -15,21 +15,7 @@
 
 package org.gearvrf.scene_objects;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMaterial.GVRShaderType;
-
-import java.lang.ref.WeakReference;
-import java.util.Locale;
-
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
-
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -37,15 +23,25 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.text.Layout;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
+
+import java.lang.ref.WeakReference;
 
 public class GVRTextViewSceneObject extends GVRSceneObject {
     private static final String TAG = GVRTextViewSceneObject.class.getSimpleName();
@@ -148,7 +144,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
             canvasHeight = MAX_IMAGE_SIZE;
         }
 
-        final GVRActivity activity = gvrContext.getActivity();
+        final Activity activity = gvrContext.getActivity();
         mTextView = new TextView(activity);
         mTextView.setBackgroundColor(Color.TRANSPARENT);
         mTextView.setTextColor(Color.WHITE);
@@ -234,7 +230,7 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         super(gvrContext);
 
         setName(name);
-        final GVRActivity activity = gvrContext.getActivity();
+        final Activity activity = gvrContext.getActivity();
         mTextView = new TextView(activity);
         mTextView.setBackgroundColor(Color.TRANSPARENT);
         mTextView.setTextColor(Color.WHITE);

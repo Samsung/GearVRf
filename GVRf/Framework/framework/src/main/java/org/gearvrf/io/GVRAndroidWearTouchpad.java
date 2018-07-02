@@ -16,6 +16,7 @@
 
 package org.gearvrf.io;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,7 +29,6 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventListeners.ActivityEvents;
 import org.gearvrf.GVREventManager;
@@ -46,7 +46,7 @@ class GVRAndroidWearTouchpad {
     private Messenger sendMessenger = null;
     private Messenger receiveMessenger = null;
     private GVRContext gvrContext;
-    private GVRActivity activity;
+    private Activity activity;
     private GVREventManager eventManager;
     private boolean boundToService;
     private boolean connectedToWatch;
@@ -55,7 +55,7 @@ class GVRAndroidWearTouchpad {
         gvrContext = context;
         activity = gvrContext.getActivity();
         eventManager = gvrContext.getEventManager();
-        gvrContext.getActivity().getEventReceiver().addListener(new ActivityPauseEvent());
+        gvrContext.getApplication().getEventReceiver().addListener(new ActivityPauseEvent());
         connectToWatch();
     }
 

@@ -2,15 +2,15 @@ package org.gearvrf;
 
 import android.graphics.PointF;
 
+import com.google.vr.sdk.controller.Controller;
+import com.google.vr.sdk.controller.Controller.ConnectionStates;
+import com.google.vr.sdk.controller.ControllerManager;
+import com.google.vr.sdk.controller.Orientation;
+
 import org.gearvrf.io.GVRGearCursorController;
 import org.joml.Math;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-
-import com.google.vr.sdk.controller.Controller;
-import com.google.vr.sdk.controller.ControllerManager;
-import com.google.vr.sdk.controller.Orientation;
-import com.google.vr.sdk.controller.Controller.ConnectionStates;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -22,16 +22,16 @@ class DayDreamControllerReader extends GVRGearCursorController.ControllerReaderS
     private Controller mController;
     private int mConnectionState = ConnectionStates.DISCONNECTED;
     private FloatBuffer readbackBuffer = null;
-    private GVRActivity mActivity = null;
+    private GVRApplication mApplication;
     private final float OCULUS_SCALE = 256.0f;
 
-    DayDreamControllerReader(GVRActivity gvrActivity) {
+    DayDreamControllerReader(GVRApplication application) {
         EventListener listener = new EventListener();
-        mControllerManager = new ControllerManager(gvrActivity, listener);
+        mControllerManager = new ControllerManager(application.getActivity(), listener);
         mController = mControllerManager.getController();
         mController.setEventListener(listener);
         mControllerManager.start();
-        mActivity = gvrActivity;
+        mApplication = application;
     }
 
     @Override
@@ -48,7 +48,7 @@ class DayDreamControllerReader extends GVRGearCursorController.ControllerReaderS
         ByteBuffer readbackBufferB = ByteBuffer.allocateDirect(4);
         readbackBufferB.order(ByteOrder.nativeOrder());
         readbackBuffer = readbackBufferB.asFloatBuffer();
-        GVRViewManager gvrViewManager = mActivity.getViewManager();
+        GVRViewManager gvrViewManager = mApplication.getViewManager();
         DaydreamViewManager viewManager = (DaydreamViewManager)gvrViewManager;
         setNativeBuffer(viewManager.getNativeRenderer(), readbackBufferB);
         updateHandedness(viewManager.getNativeRenderer());

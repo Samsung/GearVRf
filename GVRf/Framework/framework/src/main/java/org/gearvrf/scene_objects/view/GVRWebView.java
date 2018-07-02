@@ -15,13 +15,12 @@
 
 package org.gearvrf.scene_objects.view;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.scene_objects.GVRViewSceneObject;
-
-import android.graphics.Canvas;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import org.gearvrf.GVRApplication;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 /**
  * This class represents a {@link WebView} that is rendered
@@ -32,11 +31,12 @@ import android.webkit.WebViewClient;
 public class GVRWebView extends WebView implements GVRView {
     private GVRViewSceneObject mSceneObject = null;
 
-    public GVRWebView(GVRActivity context) {
-        super(context);
+    @Deprecated
+    public GVRWebView(GVRApplication application) {
+        super(application.getActivity());
 
         setWebViewClient(new WebViewClient());
-        context.registerView(this);
+        application.registerView(this);
     }
 
     @Override

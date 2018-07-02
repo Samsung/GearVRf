@@ -139,7 +139,7 @@ public class GVRCameraSceneObject extends GVRSceneObject {
         }
 
         cameraActivityEvents = new CameraActivityEvents();
-        gvrContext.getActivity().getEventReceiver().addListener(cameraActivityEvents);
+        gvrContext.getApplication().getEventReceiver().addListener(cameraActivityEvents);
     }
 
     /**
@@ -266,7 +266,7 @@ public class GVRCameraSceneObject extends GVRSceneObject {
     public void close() {
         closeCamera();
         if(cameraActivityEvents != null){
-            gvrContext.getActivity().getEventReceiver().removeListener(cameraActivityEvents);
+            gvrContext.getApplication().getEventReceiver().removeListener(cameraActivityEvents);
         }
     }
 

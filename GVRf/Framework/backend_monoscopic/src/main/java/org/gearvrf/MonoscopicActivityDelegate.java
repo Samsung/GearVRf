@@ -22,19 +22,19 @@ import org.gearvrf.utility.VrAppSettings;
 /**
  * {@inheritDoc}
  */
-final class MonoscopicActivityDelegate extends GVRActivity.ActivityDelegateStubs {
+final class MonoscopicActivityDelegate extends GVRApplication.ActivityDelegateStubs {
     @Override
-    public void onCreate(GVRActivity activity) {
+    public void onCreate(GVRApplication activity) {
         if (null == activity) {
             throw new IllegalArgumentException();
         }
 
-        mActivity = activity;
+        mApplication = activity;
     }
 
     @Override
     public GVRViewManager makeViewManager() {
-        return new MonoscopicViewManager(mActivity, mActivity.getMain(), mXmlParser);
+        return new MonoscopicViewManager(mApplication, mApplication.getMain(), mXmlParser);
     }
 
     @Override
@@ -43,13 +43,13 @@ final class MonoscopicActivityDelegate extends GVRActivity.ActivityDelegateStubs
     }
 
     @Override
-    public GVRConfigurationManager makeConfigurationManager(GVRActivity activity) {
-        return new MonoscopicConfigurationManager(activity);
+    public GVRConfigurationManager makeConfigurationManager() {
+        return new MonoscopicConfigurationManager(mApplication);
     }
 
     @Override
     public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
-        mXmlParser = new MonoscopicXMLParser(assetManager, dataFilename, mActivity.getAppSettings());
+        mXmlParser = new MonoscopicXMLParser(assetManager, dataFilename, mApplication.getAppSettings());
     }
 
     @Override
@@ -67,6 +67,6 @@ final class MonoscopicActivityDelegate extends GVRActivity.ActivityDelegateStubs
         return new MonoscopicVrAppSettings();
     }
 
-    private GVRActivity mActivity;
+    private GVRApplication mApplication;
     private MonoscopicXMLParser mXmlParser;
 }

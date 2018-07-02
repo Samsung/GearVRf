@@ -15,6 +15,7 @@
 
 package org.gearvrf.io.cursor3d.settings;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
@@ -22,7 +23,6 @@ import android.view.GestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
@@ -37,7 +37,7 @@ abstract class BaseView {
     private float quadHeight;
     private float quadWidth;
     GVRScene scene;
-    GVRActivity activity;
+    final Activity activity;
     GVRContext context;
     private GVRViewSceneObject layoutSceneObject;
     private Handler glThreadHandler;

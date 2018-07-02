@@ -15,6 +15,7 @@
 
 package org.gearvrf.io.cursor3d.settings;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
@@ -28,7 +29,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.io.GVRTouchPadGestureListener;
@@ -73,7 +73,7 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
             currentCursor, final GVRScene scene, int
                              settingsCursorId, SettingsChangeListener changeListener) {
         super(context, scene, settingsCursorId, R.layout.cursor_configuration_layout);
-        final GVRActivity activity = context.getActivity();
+        final Activity activity = context.getActivity();
         loadDrawables(activity);
         layoutInflater = (LayoutInflater) activity.getSystemService(Context
                 .LAYOUT_INFLATER_SERVICE);

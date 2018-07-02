@@ -31,22 +31,22 @@ import java.util.HashMap;
 
 abstract class GVRConfigurationManager {
 
-    protected WeakReference<GVRActivity> mActivity;
+    protected WeakReference<GVRApplication> mApplication;
     private boolean isDockListenerRequired = true;
     private boolean mResetFovY;
     private final long mPtr;
 
-    protected GVRConfigurationManager(GVRActivity activity) {
+    protected GVRConfigurationManager(GVRApplication activity) {
         mPtr = NativeConfigurationManager.ctor();
 
-        mActivity = new WeakReference<>(activity);
+        mApplication = new WeakReference<>(activity);
 
         mResetFovY = (0 == Float.compare(0, activity.getAppSettings().getEyeBufferParams().getFovY()));
 
     }
 
-    protected void addDockListener(GVRActivity activity) {
-        activity.addDockListener(new GVRActivity.DockListener() {
+    protected void addDockListener(GVRApplication activity) {
+        activity.addDockListener(new GVRApplication.DockListener() {
             @Override
             public void onDock() {
                 handleOnDock();
@@ -64,13 +64,13 @@ abstract class GVRConfigurationManager {
 
         @Override
         public void run() {
-            final GVRActivity activity = mActivity.get();
-            if (null == activity) {
+            final GVRApplication application = mApplication.get();
+            if (null == application) {
                 return;
             }
 
             SystemClock.sleep(100);
-            activity.runOnUiThread(new Runnable() {
+            application.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     final String model = scanUsbDevicesForHeadset();
@@ -96,13 +96,13 @@ abstract class GVRConfigurationManager {
 
     protected void configureForHeadset(final String model) {
         mHeadsetModel = model;
-        final GVRActivity activity = mActivity.get();
-        if (null == activity || !mResetFovY) {
+        final GVRApplication application = mApplication.get();
+        if (null == application || !mResetFovY) {
             return;
         }
 
         final float fovY;
-        final GVRViewManager viewManager = activity.getViewManager();
+        final GVRViewManager viewManager = application.getViewManager();
 
         //must determine the default fov
         if (model.contains("R323")) {
@@ -116,13 +116,13 @@ abstract class GVRConfigurationManager {
     }
 
     void setFovY(float fovY) {
-        final GVRActivity activity = mActivity.get();
-        if (null == activity) {
+        final GVRApplication application = mApplication.get();
+        if (null == application) {
             return;
         }
-        final GVRViewManager viewManager = activity.getViewManager();
+        final GVRViewManager viewManager = application.getViewManager();
 
-        activity.getAppSettings().getEyeBufferParams().setFovY(fovY);
+        application.getAppSettings().getEyeBufferParams().setFovY(fovY);
         GVRPerspectiveCamera.setDefaultFovY(fovY);
 
         if (null != viewManager) {
@@ -165,7 +165,7 @@ abstract class GVRConfigurationManager {
 
     public boolean usingMultiview()
     {
-        return nativeUsingMultiview(mActivity.get().getNative());
+        return nativeUsingMultiview(mApplication.get().getNative());
     }
 
     private String getHmtModel() {
@@ -174,15 +174,15 @@ abstract class GVRConfigurationManager {
 
     @SuppressLint("NewApi")
     private String scanUsbDevicesForHeadset() {
-        final GVRActivity activity = mActivity.get();
-        if (null == activity) {
+        final GVRApplication application = mApplication.get();
+        if (null == application) {
             return null;
         }
 
         final int vendorId = 1256;
         final int productId = 42240;
 
-        final UsbManager usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
+        final UsbManager usbManager = (UsbManager) application.getActivity().getSystemService(Context.USB_SERVICE);
         final HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         for (final UsbDevice device : deviceList.values()) {
             if (device.getVendorId() == vendorId && device.getProductId() == productId) {
@@ -198,8 +198,8 @@ abstract class GVRConfigurationManager {
      * @return
      */
     public boolean isHomeKeyPresent() {
-        final GVRActivity activity = mActivity.get();
-        if (null != activity) {
+        final GVRApplication application = mApplication.get();
+        if (null != application) {
             final String model = getHmtModel();
             if (null != model && model.contains("R323")) {
                 return true;

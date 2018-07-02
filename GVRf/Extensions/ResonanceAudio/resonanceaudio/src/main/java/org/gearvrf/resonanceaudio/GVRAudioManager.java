@@ -15,9 +15,10 @@
 
 package org.gearvrf.resonanceaudio;
 
+import android.app.Activity;
+
 import com.google.vr.sdk.audio.GvrAudioEngine;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
@@ -77,13 +78,13 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
         if (flag)
         {
             mContext.registerDrawFrameListener(this);
-            mContext.getActivity().getEventReceiver().addListener(this);
+            mContext.getApplication().getEventReceiver().addListener(this);
             mAudioEngine.resume();
         }
         else
         {
             mContext.unregisterDrawFrameListener(this);
-            mContext.getActivity().getEventReceiver().removeListener(this);
+            mContext.getApplication().getEventReceiver().removeListener(this);
             mAudioEngine.pause();
         }
     }
@@ -231,7 +232,7 @@ public class GVRAudioManager extends GVREventListeners.ActivityEvents
     public void onDestroy()
     {
         super.onDestroy();
-        GVRActivity activity = mContext.getActivity();
+        Activity activity = mContext.getActivity();
         if (activity.isFinishing())
         {
             setEnable(false);

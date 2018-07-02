@@ -2,7 +2,6 @@ package org.gearvrf.io;
 
 import android.view.MotionEvent;
 
-import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.IEvents;
 

@@ -26,8 +26,8 @@ class OvrActivityNative implements IActivityNative {
 
     private final long mPtr;
 
-    OvrActivityNative(Activity act, VrAppSettings vrAppSettings) {
-        mPtr = onCreate(act, vrAppSettings);
+    OvrActivityNative(GVRApplication application) {
+        mPtr = onCreate(application.getActivity(), application.getAppSettings());
     }
 
     @Override

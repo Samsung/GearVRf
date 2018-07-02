@@ -15,9 +15,10 @@
 
 package org.gearvrf;
 
-import static org.gearvrf.utility.Assert.*;
-
 import org.gearvrf.utility.Log;
+
+import static org.gearvrf.utility.Assert.checkFloatNotNaNOrInfinity;
+import static org.gearvrf.utility.Assert.checkStringNotNullOrEmpty;
 
 /** Holds the GVRCameras. */
 public class GVRCameraRig extends GVRComponent implements PrettyPrint {
@@ -73,7 +74,7 @@ public class GVRCameraRig extends GVRComponent implements PrettyPrint {
      * lead to native crashes.
      */
     public static GVRCameraRig makeInstance(GVRContext gvrContext) {
-        final GVRCameraRig result = gvrContext.getActivity().getDelegate().makeCameraRig(gvrContext);
+        final GVRCameraRig result = gvrContext.getApplication().getDelegate().makeCameraRig(gvrContext);
         result.init(gvrContext);
         return result;
     }

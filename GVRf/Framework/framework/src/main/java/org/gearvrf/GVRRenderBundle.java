@@ -14,8 +14,6 @@
  */
 package org.gearvrf;
 
-import android.transition.Scene;
-
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.VrAppSettings;
 
@@ -41,7 +39,7 @@ class GVRRenderBundle {
         mGVRContext = gvrContext;
         mShaderManager = new GVRShaderManager(gvrContext);
 
-        final VrAppSettings appSettings = mGVRContext.getActivity().getAppSettings();
+        final VrAppSettings appSettings = mGVRContext.getApplication().getAppSettings();
         mSampleCount = appSettings.getEyeBufferParams().getMultiSamples() < 0 ? 0
                 : appSettings.getEyeBufferParams().getMultiSamples();
         if (mSampleCount > 1) {
@@ -50,8 +48,8 @@ class GVRRenderBundle {
                 mSampleCount = maxSampleCount;
             }
         }
-        mWidth = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionWidth();
-        mHeight = mGVRContext.getActivity().getAppSettings().getEyeBufferParams().getResolutionHeight();
+        mWidth = mGVRContext.getApplication().getAppSettings().getEyeBufferParams().getResolutionWidth();
+        mHeight = mGVRContext.getApplication().getAppSettings().getEyeBufferParams().getResolutionHeight();
     }
     public void createRenderTarget(int index, GVRViewManager.EYE eye, GVRRenderTexture renderTexture){
 
@@ -139,13 +137,13 @@ class GVRRenderBundle {
 
     public GVRRenderTexture getPostEffectRenderTextureA() {
         if(mPostEffectRenderTextureA == null)
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
+            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getApplication().getAppSettings().isMultiviewSet() ? 2 : 1);
         return mPostEffectRenderTextureA;
     }
 
     public GVRRenderTexture getPostEffectRenderTextureB() {
         if(mPostEffectRenderTextureB == null)
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
+            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getApplication().getAppSettings().isMultiviewSet() ? 2 : 1);
 
         return mPostEffectRenderTextureB;
     }

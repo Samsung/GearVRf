@@ -1,13 +1,11 @@
 package org.gearvrf.scene_objects.view;
 
-import org.gearvrf.GVRActivity;
-import org.gearvrf.scene_objects.GVRViewSceneObject;
-
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.view.View;
 import android.widget.FrameLayout;
+
+import org.gearvrf.GVRApplication;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 /**
  * This class represents a {@link FrameLayout} that is rendered
@@ -20,8 +18,9 @@ import android.widget.FrameLayout;
 public class GVRFrameLayout extends FrameLayout implements GVRView {
     private GVRViewSceneObject mSceneObject = null;
 
-    public GVRFrameLayout(GVRActivity  context) {
-        super(context);
+    @Deprecated
+    public GVRFrameLayout(GVRApplication application) {
+        super(application.getActivity());
 
         /* Setting background color to avoid complex logic,
          * otherwise android will call just drawChild
@@ -30,7 +29,7 @@ public class GVRFrameLayout extends FrameLayout implements GVRView {
          */
         setBackgroundColor(Color.TRANSPARENT);
 
-        context.registerView(this);
+        application.registerView(this);
     }
 
     @Override

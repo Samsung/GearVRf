@@ -73,7 +73,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         NativeScene.setJava(getNative(), this);
 
         if(MAX_LIGHTS == 0) {
-            MAX_LIGHTS = gvrContext.getActivity().getConfigurationManager().getMaxLights();
+            MAX_LIGHTS = gvrContext.getApplication().getConfigurationManager().getMaxLights();
         }
 
         mSceneRoot = new GVRSceneObject(gvrContext);
@@ -252,7 +252,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
 
         final GVRContext gvrContext = getGVRContext();
         if (this == gvrContext.getMainScene()) {
-            gvrContext.getActivity().setCameraRig(getMainCameraRig());
+            gvrContext.getApplication().setCameraRig(getMainCameraRig());
         }
     }
 

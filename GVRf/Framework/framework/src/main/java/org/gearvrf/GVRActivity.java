@@ -16,36 +16,17 @@
 package org.gearvrf;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
-import android.content.res.AssetManager;
 import android.content.res.Configuration;
-import android.media.AudioManager;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 
 import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.script.IScriptable;
-import org.gearvrf.utility.DockEventReceiver;
-import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
-import org.gearvrf.utility.Log;
-import org.gearvrf.utility.Threads;
 import org.gearvrf.utility.VrAppSettings;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The typical GVRF application will have a single Android {@link Activity},
@@ -63,198 +44,37 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * making sure the activity is using the full screen.
  */
 public class GVRActivity extends Activity implements IEventReceiver, IScriptable {
-
-    static {
-        System.loadLibrary("gvrf");
-    }
-    protected static final String TAG = "GVRActivity";
-
-    private GVRViewManager mViewManager;
-    private volatile GVRConfigurationManager mConfigurationManager;
-    private GVRMain mGVRMain;
-    private VrAppSettings mAppSettings;
-    private static View mFullScreenView;
-
-    // Group of views that are going to be drawn
-    // by some GVRViewSceneObject to the scene.
-    private ViewGroup mRenderableViewGroup;
-    private IActivityNative mActivityNative;
-    private boolean mPaused = true;
-
-    // Send to listeners and scripts but not this object itself
-    private static final int SEND_EVENT_MASK =
-            GVREventManager.SEND_MASK_ALL & ~GVREventManager.SEND_MASK_OBJECT;
-
-    private GVREventReceiver mEventReceiver = new GVREventReceiver(this);
+    private GVRApplication mApplication;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        android.util.Log.i(TAG, "onCreate " + Integer.toHexString(hashCode()));
+        mApplication = new GVRApplication(this);
         super.onCreate(savedInstanceState);
-
-        final int backendId = SystemPropertyUtil.getSystemProperty(DEBUG_GEARVRF_BACKEND);
-        if (-1 != backendId) {
-            mDelegate = tryBackend(backendId);
-        } else {
-            for (int i = 0; i <= MAX_BACKEND_ID; ++i) {
-                mDelegate = tryBackend(i);
-                if (null != mDelegate) {
-                    break;
-                }
-            }
-        }
-
-        if (null == mDelegate) {
-            throw new IllegalStateException("Fatal error: no backend available");
-        }
-
-        if (null != Threads.getThreadPool()) {
-            Threads.getThreadPool().shutdownNow();
-        }
-        Threads.setThreadPool(new GrowBeforeQueueThreadPoolExecutor("gvrf"));
-
-        /*
-         * Removes the title bar and the status bar.
-         */
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-        mRenderableViewGroup = (ViewGroup) findViewById(android.R.id.content).getRootView();
-
-        mActivityNative = mDelegate.getActivityNative();
-    }
-
-    private final GVRActivityDelegate tryBackend(final int backendId) {
-        InputStream inputStream = null;
-        BufferedReader reader = null;
-        try {
-            inputStream = getAssets().open("backend_" + backendId + ".txt");
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-
-            final String line = reader.readLine();
-            Log.i(TAG, "trying backend " + line);
-            final Class<?> aClass = Class.forName(line);
-
-            GVRActivityDelegate delegate = (GVRActivityDelegate) aClass.newInstance();
-            mAppSettings = delegate.makeVrAppSettings();
-            delegate.onCreate(this);
-
-            return delegate;
-        } catch (final Exception exc) {
-            return null;
-        } finally {
-            if (null != reader) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                }
-            }
-            if (null != inputStream) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-    }
-
-    protected void onInitAppSettings(VrAppSettings appSettings) {
-        mDelegate.onInitAppSettings(appSettings);
-    }
-
-    private void onConfigure(final String dataFilename) {
-        mConfigurationManager = mDelegate.makeConfigurationManager(this);
-        mConfigurationManager.addDockListener(this);
-        mConfigurationManager.configureForHeadset(GVRConfigurationManager.DEFAULT_HEADSET_MODEL);
-        mDelegate.parseXmlSettings(getAssets(), dataFilename);
-
-        onInitAppSettings(mAppSettings);
     }
 
     public final VrAppSettings getAppSettings() {
-        return mAppSettings;
+        return mApplication.getAppSettings();
     }
 
     public final GVRViewManager getViewManager() {
-        return mViewManager;
-    }
-
-    final boolean isPaused() {
-        return mPaused;
+        return mApplication.getViewManager();
     }
 
     @Override
     protected void onPause() {
-        android.util.Log.i(TAG, "onPause " + Integer.toHexString(hashCode()));
-
-        mDelegate.onPause();
-        mPaused = true;
-        if (mViewManager != null) {
-            mViewManager.onPause();
-
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onPause");
-        }
+        mApplication.pause();
         super.onPause();
     }
 
     @Override
     protected void onResume() {
-        android.util.Log.i(TAG, "onResume " + Integer.toHexString(hashCode()));
-
-        mDelegate.onResume();
-        mPaused = false;
+        mApplication.resume();
         super.onResume();
-        if (mViewManager != null) {
-            mViewManager.onResume();
-
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onResume");
-        }
     }
 
     @Override
     protected void onDestroy() {
-        android.util.Log.i(TAG, "onDestroy " + Integer.toHexString(hashCode()));
-        mDelegate.onDestroy();
-
-        if (mViewManager != null) {
-            mViewManager.onDestroy();
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onDestroy");
-            mViewManager = null;
-        }
-        if (null != mDockEventReceiver) {
-            mDockEventReceiver.stop();
-        }
-
-        if (null != mConfigurationManager && !mConfigurationManager.isDockListenerRequired()) {
-            handleOnUndock();
-        }
-
-        if (null != mActivityNative) {
-            mActivityNative.onDestroy();
-            mActivityNative = null;
-        }
-
-        mDockListeners.clear();
-        mGVRMain = null;
-        mDelegate = null;
-        mAppSettings = null;
-        mRenderableViewGroup = null;
-        mConfigurationManager = null;
-
+        mApplication.destroy();
         super.onDestroy();
     }
 
@@ -273,45 +93,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      *            directory under the application's {@code assets} directory.
      */
     public void setMain(GVRMain gvrMain, String dataFileName) {
-        this.mGVRMain = gvrMain;
-        if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            onConfigure(dataFileName);
-            if (!mDelegate.setMain(gvrMain, dataFileName)) {
-                Log.w(TAG, "delegate's setMain failed");
-                return;
-            }
-
-            mViewManager = mDelegate.makeViewManager();
-            mDelegate.setViewManager(mViewManager);
-
-            if (mConfigurationManager.isDockListenerRequired()) {
-                startDockEventReceiver();
-            } else {
-                handleOnDock();
-            }
-
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onSetMain", gvrMain);
-
-            final GVRConfigurationManager localConfigurationManager = mConfigurationManager;
-            if (null != mDockEventReceiver && localConfigurationManager.isDockListenerRequired()) {
-                getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
-                    @Override
-                    public void onDrawFrame(float frameTime) {
-                        if (localConfigurationManager.isHmtConnected()) {
-                            handleOnDock();
-                            getGVRContext().unregisterDrawFrameListener(this);
-                        }
-                    }
-                });
-            }
-        } else {
-            throw new IllegalArgumentException(
-                    "You can not set orientation to portrait for GVRF apps.");
-        }
+        mApplication.setMain(gvrMain, dataFileName);
     }
 
     /**
@@ -322,21 +104,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * @return full screen View object
      */
     public View getFullScreenView() {
-        if (mFullScreenView != null) {
-            return mFullScreenView;
-        }
-
-        final DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        final int screenWidthPixels = Math.max(metrics.widthPixels, metrics.heightPixels);
-        final int screenHeightPixels = Math.min(metrics.widthPixels, metrics.heightPixels);
-
-        final ViewGroup.LayoutParams layout = new ViewGroup.LayoutParams(screenWidthPixels, screenHeightPixels);
-        mFullScreenView = new View(this);
-        mFullScreenView.setLayoutParams(layout);
-        mRenderableViewGroup.addView(mFullScreenView);
-
-        return mFullScreenView;
+        return mApplication.getFullScreenView();
     }
 
     /**
@@ -344,7 +112,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * @return the {@link GVRMain}.
      */
     public final GVRMain getMain() {
-        return mGVRMain;
+        return mApplication.getMain();
     }
 
     /**
@@ -355,69 +123,9 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         setMain(gvrMain, "_gvr.xml");
     }
 
-    final long getNative() {
-        return null != mActivityNative ? mActivityNative.getNative() : 0;
-    }
-
-    final IActivityNative getActivityNative() {
-        return mActivityNative;
-    }
-
-    final void setCameraRig(GVRCameraRig cameraRig) {
-        if (null != mActivityNative) {
-            mActivityNative.setCameraRig(cameraRig);
-        }
-    }
-
-    private long mBackKeyDownTime;
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        final int keyAction = event.getAction();
-        if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
-            if (KeyEvent.ACTION_DOWN == keyAction) {
-                if (0 == mBackKeyDownTime) {
-                    mBackKeyDownTime = event.getDownTime();
-                }
-            } else if (KeyEvent.ACTION_UP == keyAction) {
-                final long duration = event.getEventTime() - mBackKeyDownTime;
-                mBackKeyDownTime = 0;
-                if (!isPaused()) {
-                    if (duration < 250) {
-                        if (!mGVRMain.onBackPress()) {
-                            if (!mDelegate.onBackPress()) {
-                                mViewManager.getActivity().finish();
-                            }
-                        }
-                    }
-                }
-            }
-            return true;
-        } else {
-            switch (event.getKeyCode()) {
-                case KeyEvent.KEYCODE_VOLUME_UP:
-                    if (keyAction == KeyEvent.ACTION_DOWN) {
-                        final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                                AudioManager.ADJUST_RAISE, 0);
-                        return true;
-                    }
-                case KeyEvent.KEYCODE_VOLUME_DOWN:
-                    if (keyAction == KeyEvent.ACTION_DOWN) {
-                        final AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-                        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-                                AudioManager.ADJUST_LOWER, 0);
-                        return true;
-                    }
-            }
-        }
-
-        mViewManager.getEventManager().sendEventWithMask(
-                SEND_EVENT_MASK,
-                this,
-                IActivityEvents.class,
-                "dispatchKeyEvent", event);
-
-        if (mViewManager.dispatchKeyEvent(event)) {
+        if (mApplication.dispatchKeyEvent(event)) {
             return true;
         }
         return super.dispatchKeyEvent(event);
@@ -425,7 +133,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (mDelegate.onKeyDown(keyCode, event)) {
+        if (mApplication.keyDown(keyCode, event)) {
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -433,7 +141,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        if (mDelegate.onKeyLongPress(keyCode, event)) {
+        if (mApplication.keyLongPress(keyCode, event)) {
             return true;
         }
         return super.onKeyLongPress(keyCode, event);
@@ -441,7 +149,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (mDelegate.onKeyUp(keyCode, event)) {
+        if (mApplication.keyUp(keyCode, event)) {
             return true;
         }
         return super.onKeyUp(keyCode, event);
@@ -449,90 +157,38 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        boolean handled = mViewManager.dispatchMotionEvent(event);
-        if (handled == false) {
-            handled = super.dispatchGenericMotionEvent(event);
+        if(mApplication.dispatchGenericMotionEvent(event)) {
+            return true;
         }
-        return handled;
+        return super.dispatchGenericMotionEvent(event);
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        boolean handled = mViewManager.dispatchMotionEvent(event);
-        if (handled == false) {
-            handled = super.dispatchTouchEvent(event);// VrActivity's
+        if(mApplication.dispatchTouchEvent(event)) {
+            return true;
         }
-
-        mViewManager.getEventManager().sendEventWithMask(
-                SEND_EVENT_MASK,
-                this,
-                IActivityEvents.class,
-                "dispatchTouchEvent", event);
-
-        return handled;
+        return super.dispatchTouchEvent(event);
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-        mDelegate.onConfigurationChanged(newConfig);
-
-        if (mViewManager != null) {
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onConfigurationChanged", newConfig);
-        }
-
+        mApplication.configurationChanged(newConfig);
         super.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (mViewManager != null) {
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onTouchEvent", event);
+        if(mApplication.touchEvent(event)) {
+            return true;
         }
-
         return super.onTouchEvent(event);
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
-        if (mViewManager != null) {
-            mViewManager.getEventManager().sendEventWithMask(
-                    SEND_EVENT_MASK,
-                    this,
-                    IActivityEvents.class,
-                    "onWindowFocusChanged", hasFocus);
-        }
-
+        mApplication.windowFocusChanged(hasFocus);
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            setImmersiveSticky();
-        }
-    }
-
-    // Set Immersive Sticky as described here:
-    // https://developer.android.com/training/system-ui/immersive.html
-    private void setImmersiveSticky() {
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
-
-    /**
-     * Called from C++
-     */
-    final boolean updateSensoredScene() {
-        return mViewManager.updateSensoredScene();
     }
 
     /**
@@ -543,16 +199,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      *            {@link GVRViewSceneObject}.
      */
     public final void registerView(final View view) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (null != mRenderableViewGroup) {
-                    /* The full screen should be updated otherwise just the children's bounds may be refreshed. */
-                    mRenderableViewGroup.setClipChildren(false);
-                    mRenderableViewGroup.addView(view);
-                }
-            }
-        });
+        mApplication.registerView(view);
     }
 
     /**
@@ -561,104 +208,20 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * @param view View to be removed.
      */
     public final void unregisterView(final View view) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (null != mRenderableViewGroup) {
-                    mRenderableViewGroup.removeView(view);
-                }
-            }
-        });
+        mApplication.unregisterView(view);
     }
 
     public final GVRContext getGVRContext() {
-        return mViewManager;
+        return mApplication.getGVRContext();
     }
 
     @Override
     public final GVREventReceiver getEventReceiver() {
-        return mEventReceiver;
-    }
-
-    private boolean mIsDocked = false;
-
-    protected final void handleOnDock() {
-        Log.i(TAG, "handleOnDock");
-        final Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                if (!mIsDocked) {
-                    mIsDocked = true;
-
-                    if (null != mActivityNative) {
-                        mActivityNative.onDock();
-                    }
-
-                    for (final DockListener dl : mDockListeners) {
-                        dl.onDock();
-                    }
-                }
-            }
-        };
-        runOnUiThread(r);
-    }
-
-    protected final void handleOnUndock() {
-        Log.i(TAG, "handleOnUndock");
-        final Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                if (mIsDocked) {
-                    mIsDocked = false;
-
-                    if (null != mActivityNative) {
-                        mActivityNative.onUndock();
-                    }
-
-                    for (final DockListener dl : mDockListeners) {
-                        dl.onUndock();
-                    }
-                }
-            }
-        };
-        runOnUiThread(r);
+        return mApplication.getEventReceiver();
     }
 
     public GVRConfigurationManager getConfigurationManager() {
-        return mConfigurationManager;
-    }
-
-    interface DockListener {
-        void onDock();
-        void onUndock();
-    }
-
-    private final List<DockListener> mDockListeners = new CopyOnWriteArrayList<DockListener>();
-
-    final void addDockListener(final DockListener dl) {
-        mDockListeners.add(dl);
-    }
-
-    private DockEventReceiver mDockEventReceiver;
-
-    private void startDockEventReceiver() {
-        mDockEventReceiver = mConfigurationManager.makeDockEventReceiver(this,
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        handleOnDock();
-                    }
-                }, new Runnable() {
-                    @Override
-                    public void run() {
-                        handleOnUndock();
-                    }
-                });
-        if (null != mDockEventReceiver) {
-            mDockEventReceiver.start();
-        } else {
-            Log.w(TAG, "dock listener not started");
-        }
+        return mApplication.getConfigurationManager();
     }
 
     /**
@@ -669,158 +232,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
      * @see GVRTouchPadGestureListener
      */
     public synchronized void enableGestureDetector() {
-        final GVRTouchPadGestureListener gestureListener = new GVRTouchPadGestureListener() {
-            @Override
-            public boolean onSwipe(MotionEvent e, Action action, float vx, float vy) {
-                if (null != mGVRMain) {
-                    mGVRMain.onSwipe(action, vx);
-                }
-                return true;
-            }
-
-            @Override
-            public boolean onSingleTapUp(MotionEvent e) {
-                if (null != mGVRMain) {
-                    mGVRMain.onSingleTapUp(e);
-                }
-                return true;
-            }
-        };
-        mGestureDetector = new GestureDetector(getApplicationContext(), gestureListener);
-        getEventReceiver().addListener(new GVREventListeners.ActivityEvents() {
-            @Override
-            public void dispatchTouchEvent(MotionEvent event) {
-                mGestureDetector.onTouchEvent(event);
-            }
-        });
+        mApplication.enableGestureDetector();
     }
 
-    private GestureDetector mGestureDetector;
-
-    private GVRActivityDelegate mDelegate;
-
-    GVRActivityDelegate getDelegate() {
-        return mDelegate;
+    public GVRApplication getGVRApplication() {
+        return mApplication;
     }
-
-    interface GVRActivityDelegate {
-        void onCreate(GVRActivity activity);
-        void onPause();
-        void onResume();
-        void onDestroy();
-        void onConfigurationChanged(final Configuration newConfig);
-
-        boolean onKeyDown(int keyCode, KeyEvent event);
-        boolean onKeyUp(int keyCode, KeyEvent event);
-        boolean onKeyLongPress(int keyCode, KeyEvent event);
-
-        boolean setMain(GVRMain gvrMain, String dataFileName);
-        void setViewManager(GVRViewManager viewManager);
-        void onInitAppSettings(VrAppSettings appSettings);
-
-        VrAppSettings makeVrAppSettings();
-        IActivityNative getActivityNative();
-        GVRViewManager makeViewManager();
-        GVRCameraRig makeCameraRig(GVRContext context);
-        GVRConfigurationManager makeConfigurationManager(GVRActivity activity);
-        void parseXmlSettings(AssetManager assetManager, String dataFilename);
-
-        boolean onBackPress();
-    }
-
-    static class ActivityDelegateStubs implements GVRActivityDelegate {
-
-        @Override
-        public void onCreate(GVRActivity activity) {
-
-        }
-
-        @Override
-        public void onPause() {
-
-        }
-
-        @Override
-        public void onResume() {
-
-        }
-
-        @Override
-        public void onDestroy() {
-
-        }
-
-        @Override
-        public void onConfigurationChanged(Configuration newConfig) {
-
-        }
-
-        @Override
-        public boolean onKeyDown(int keyCode, KeyEvent event) {
-            return false;
-        }
-
-        @Override
-        public boolean onKeyUp(int keyCode, KeyEvent event) {
-            return false;
-        }
-
-        @Override
-        public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-            return false;
-        }
-
-        @Override
-        public boolean setMain(GVRMain gvrMain, String dataFileName) {
-            return false;
-        }
-
-        @Override
-        public void setViewManager(GVRViewManager viewManager) {
-
-        }
-
-        @Override
-        public void onInitAppSettings(VrAppSettings appSettings) {
-
-        }
-
-        @Override
-        public VrAppSettings makeVrAppSettings() {
-            return null;
-        }
-
-        @Override
-        public IActivityNative getActivityNative() {
-            return null;
-        }
-
-        @Override
-        public GVRViewManager makeViewManager() {
-            return null;
-        }
-
-        @Override
-        public GVRCameraRig makeCameraRig(GVRContext context) {
-            return null;
-        }
-
-        @Override
-        public GVRConfigurationManager makeConfigurationManager(GVRActivity activity) {
-            return null;
-        }
-
-        @Override
-        public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
-
-        }
-
-        @Override
-        public boolean onBackPress() {
-            return false;
-        }
-    }
-
-    private final static String DEBUG_GEARVRF_BACKEND = "debug.gearvrf.backend";
-    private final static int MAX_BACKEND_ID = 9;
 }

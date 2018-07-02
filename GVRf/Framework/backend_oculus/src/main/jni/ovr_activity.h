@@ -31,10 +31,10 @@ namespace gvr {
     class GVRActivity
     {
     public:
-        GVRActivity(JNIEnv& jni, jobject activity, jobject vrAppSettings, jobject callbacks);
+        GVRActivity(JNIEnv& jni, jobject activity, jobject vrAppSettings);
         ~GVRActivity();
 
-        bool updateSensoredScene();
+        bool updateSensoredScene(jobject jViewManager);
         void setCameraRig(jlong cameraRig);
 
         CameraRig* cameraRig_ = nullptr;   // this needs a global ref on the java object; todo
@@ -43,6 +43,7 @@ namespace gvr {
     private:
         JNIEnv* envMainThread_ = nullptr;           // for use by the Java UI thread
         jclass activityClass_ = nullptr;            // must be looked up from main thread or FindClass() will fail
+        jclass applicationClass_ = nullptr;
 
         jmethodID onDrawEyeMethodId = nullptr;
         jmethodID onBeforeDrawEyesMethodId = nullptr;

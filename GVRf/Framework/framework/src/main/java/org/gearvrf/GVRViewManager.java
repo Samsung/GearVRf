@@ -48,10 +48,10 @@ abstract class GVRViewManager extends GVRContext {
     enum EYE {
         LEFT, RIGHT, MULTIVIEW, CENTER;
     }
-    GVRViewManager(GVRActivity activity, GVRMain main) {
+    GVRViewManager(GVRApplication activity, GVRMain main) {
         super(activity);
 
-        mActivity = activity;
+        mApplication = activity;
         mMain = main;
 
         VrAppSettings vrAppSettings = activity.getAppSettings();
@@ -142,7 +142,7 @@ abstract class GVRViewManager extends GVRContext {
     private void setMainSceneImpl(GVRScene scene) {
         mMainScene = scene;
         NativeScene.setMainScene(scene.getNative());
-        getActivity().setCameraRig(scene.getMainCameraRig());
+        mApplication.setCameraRig(scene.getMainCameraRig());
         mInputManager.setScene(scene);
     }
 
@@ -218,12 +218,12 @@ abstract class GVRViewManager extends GVRContext {
         setMainSceneImpl(scene);
         mRenderBundle = makeRenderBundle();
 
-        final DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
-        getActivity().getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
+        final DepthFormat depthFormat = mApplication.getAppSettings().getEyeBufferParams().getDepthFormat();
+        mApplication.getConfigurationManager().configureRendering(DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
     }
 
     private void createMainScene() {
-        if (getActivity().getAppSettings().showLoadingIcon) {
+        if (mApplication.getAppSettings().showLoadingIcon) {
             mSplashScreen = mMain.createSplashScreen();
             if (mSplashScreen != null) {
                 mMainSceneLock.lock();
@@ -594,7 +594,7 @@ abstract class GVRViewManager extends GVRContext {
 
     protected void readRenderResult(GVRRenderTarget renderTarget, GVRViewManager.EYE eye, boolean useMultiview) {
         if (mReadbackBuffer == null) {
-            final VrAppSettings settings = mActivity.getAppSettings();
+            final VrAppSettings settings = mApplication.getAppSettings();
             final VrAppSettings.EyeBufferParams eyeBufferParams = settings.getEyeBufferParams();
             mReadbackBufferWidth = eyeBufferParams.getResolutionWidth();
             mReadbackBufferHeight = eyeBufferParams.getResolutionHeight();
@@ -812,7 +812,7 @@ abstract class GVRViewManager extends GVRContext {
     }
     GVRGearCursorController.ControllerReader mControllerReader;
     private final GVRScriptManager mScriptManager;
-    protected final GVRActivity mActivity;
+    protected final GVRApplication mApplication;
     protected float mFrameTime;
     protected long mPreviousTimeNanos;
 

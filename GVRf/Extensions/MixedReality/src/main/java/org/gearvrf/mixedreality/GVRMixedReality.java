@@ -15,23 +15,16 @@
 
 package org.gearvrf.mixedreality;
 
-import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.PointF;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
 
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRMain;
+import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IActivityEvents;
 import org.gearvrf.mixedreality.arcore.ARCoreSession;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 
@@ -223,7 +216,7 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         return mSession.getAllAugmentedImages();
     }
 
-    private class ActivityEventsHandler implements IActivityEvents {
+    private class ActivityEventsHandler extends GVREventListeners.ActivityEvents {
         @Override
         public void onPause() {
             pause();
@@ -233,35 +226,7 @@ public class GVRMixedReality extends GVRBehavior implements IMRCommon {
         public void onResume() {
             resume();
         }
-
-        @Override
-        public void onDestroy() {}
-
-        @Override
-        public void onSetMain(GVRMain script) {}
-
-        @Override
-        public void onWindowFocusChanged(boolean hasFocus) {}
-
-        @Override
-        public void onConfigurationChanged(Configuration config) {}
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {}
-
-        @Override
-        public void onTouchEvent(MotionEvent event) {}
-
-        @Override
-        public void dispatchTouchEvent(MotionEvent event) {}
-
-        @Override
-        public void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration, Vector3f angularVelocity) {}
-
-        @Override
-        public void dispatchKeyEvent(KeyEvent keyEvent) {}
     }
-
 
     private enum SessionState {
         ON_RESUME,

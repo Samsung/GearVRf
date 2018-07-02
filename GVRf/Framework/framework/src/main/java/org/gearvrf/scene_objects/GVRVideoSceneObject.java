@@ -172,7 +172,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         GVRShaderId materialType;
 
         gvrVideoSceneObjectPlayer = mediaPlayer;
-        gvrContext.getActivity().getEventReceiver().addListener(mActivityEventsListener);
+        gvrContext.getApplication().getEventReceiver().addListener(mActivityEventsListener);
 
 
         switch (videoType) {
