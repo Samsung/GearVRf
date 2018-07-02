@@ -76,6 +76,10 @@ public final class GVRGearCursorController extends GVRCursorController
 
         void updatePosition(Vector3f vec, int index);
 
+        void updateAngularVelocity(Vector3f vec, int index);
+
+        void updateAngularAcceleration(Vector3f vec, int index);
+
         int getKey(int index);
 
         float getHandedness();
@@ -125,6 +129,11 @@ public final class GVRGearCursorController extends GVRCursorController
         public String getModelFileName(){
             return "gear_vr_controller.obj";
         }
+
+        @Override
+        public void updateAngularVelocity(Vector3f vec, int index){}
+        @Override
+        public void updateAngularAcceleration(Vector3f vec, int index){}
     }
 
     public enum CONTROLLER_KEYS
@@ -411,6 +420,8 @@ public final class GVRGearCursorController extends GVRCursorController
             ControllerEvent event = ControllerEvent.obtain();
             mControllerReader.updateRotation(event.rotation,controllerID);
             mControllerReader.updatePosition(event.position,controllerID);
+            mControllerReader.updateAngularAcceleration(event.angularAcceleration,controllerID);
+            mControllerReader.updateAngularVelocity(event.angularVelocity,controllerID);
             event.touched = mControllerReader.isTouched(controllerID);
             event.key = mControllerReader.getKey(controllerID);
             event.handedness = mControllerReader.getHandedness();
@@ -510,7 +521,7 @@ public final class GVRGearCursorController extends GVRCursorController
         context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class,
                                             "onControllerEvent",
                                             event.position, event.rotation, event.pointF,
-                                            event.touched);
+                                            event.touched, event.angularAcceleration,event.angularVelocity);
 
         this.currentControllerEvent = event;
         int key = event.key;
@@ -711,6 +722,8 @@ public final class GVRGearCursorController extends GVRCursorController
         private ControllerEvent next;
         private Quaternionf rotation = new Quaternionf();
         private Vector3f position = new Vector3f();
+        private Vector3f angularVelocity = new Vector3f();
+        private Vector3f angularAcceleration = new Vector3f();
         private PointF pointF = new PointF();
         private int key;
         private float handedness;

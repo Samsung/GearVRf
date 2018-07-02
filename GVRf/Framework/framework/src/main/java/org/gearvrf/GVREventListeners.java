@@ -93,7 +93,8 @@ public class GVREventListeners {
         }
 
         @Override
-        public void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched) {
+        public void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
+                                      Vector3f angularVelocity) {
         }
 
         @Override

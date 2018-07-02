@@ -49,12 +49,15 @@ public interface IActivityEvents extends IEvents {
     /**
      * Invoked every frame with the latest controller position and orientation; the parameters
      * should be copied if they need to be used after the callback returns.
-     * @param position      X, Y, Z position of the controller
-     * @param orientation   orientation of the controller as a quaternion
-     * @param touchpadPoint X, Y position on the touchpad
-     * @param touched       true if pad is touched
+     * @param position              X, Y, Z position of the controller
+     * @param orientation           orientation of the controller as a quaternion
+     * @param touchpadPoint         X, Y position on the touchpad
+     * @param touched               true if pad is touched
+     * @param angularAcceleration   angularAcceleration of the controller
+     * @param angularVelocity       angularVelocity of the controller
      */
-    void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched);
+    void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
+                           Vector3f angularVelocity);
 
     void dispatchTouchEvent(MotionEvent event);
     void dispatchKeyEvent(KeyEvent event);
