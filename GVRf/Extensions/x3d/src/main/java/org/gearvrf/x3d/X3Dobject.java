@@ -189,6 +189,11 @@ public class X3Dobject {
                     Log.e(TAG, "movie start.");
                     player.setPlayWhenReady(true);
                 }
+
+                @Override
+                public boolean isPlaying() {
+                    return player.getPlayWhenReady();
+                }
             };
         }
         catch (Exception e) {
