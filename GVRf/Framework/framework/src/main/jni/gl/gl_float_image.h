@@ -27,7 +27,7 @@ namespace gvr {
     class GLFloatImage : public GLImage, public FloatImage
     {
     public:
-        GLFloatImage() : FloatImage(), GLImage(GL_TEXTURE_2D)
+        GLFloatImage(int pixelFormat = GL_RG) : FloatImage(pixelFormat), GLImage(GL_TEXTURE_2D)
         { }
         virtual ~GLFloatImage() {}
         virtual int getId() { return mId; }
@@ -43,23 +43,28 @@ namespace gvr {
                 mTexParamsDirty = true;
             }
         }
-        void updateTexParams() {
+
+        void updateTexParams()
+        {
             int min_filter = mTexParams.getMinFilter();
 
-            if(mIsCompressed && mLevels <= 1 && min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST)
+            if (mIsCompressed &&
+                (mLevels <= 1) &&
+                (min_filter >= TextureParameters::NEAREST_MIPMAP_NEAREST))
+            {
                 mTexParams.setMinFilter(GL_LINEAR);
-
+            }
             GLImage::updateTexParams(mTexParams);
         }
     protected:
         virtual void update(int texid)
         {
-            JNIEnv *env = getCurrentEnv(mJava);
+            JNIEnv* env = getCurrentEnv(mJava);
             jfloatArray array = static_cast<jfloatArray>(env->NewLocalRef(mData));
             float* pixels = env->GetFloatArrayElements(array, 0);
+            int internalFormat = (mFormat == GL_RGB) ? GL_RGB32F : GL_RG32F;
             glBindTexture(mType, texid);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, mWidth, mHeight, 0, GL_RG, GL_FLOAT, pixels);
-            glGenerateMipmap(mType);
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, mWidth, mHeight, 0, mFormat, GL_FLOAT, pixels);
             env->ReleaseFloatArrayElements(array, pixels, 0);
             env->DeleteLocalRef(array);
             clearData(env);

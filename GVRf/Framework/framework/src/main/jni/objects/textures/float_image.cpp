@@ -16,7 +16,7 @@
 #include "float_image.h"
 
 namespace gvr {
-    FloatImage::FloatImage() : Image(ImageType::FLOAT_BITMAP, GL_RG),
+    FloatImage::FloatImage(int pixelFormat) : Image(ImageType::FLOAT_BITMAP, pixelFormat),
                                mJava(NULL), mData(NULL)
     {
     }
@@ -31,13 +31,17 @@ namespace gvr {
         }
     }
 
-    void FloatImage::update(JNIEnv* env, int width, int height, jfloatArray data)
+    void FloatImage::update(JNIEnv* env, int width, int height, jfloatArray data, int pixelFormat)
     {
         std::lock_guard<std::mutex> lock(mUpdateLock);
         env->GetJavaVM(&mJava);
         clearData(env);
         mWidth = width;
         mHeight = height;
+        if (pixelFormat)
+        {
+            mFormat = pixelFormat;
+        }
         if (data != NULL)
         {
             mData = static_cast<jfloatArray>(env->NewGlobalRef(data));

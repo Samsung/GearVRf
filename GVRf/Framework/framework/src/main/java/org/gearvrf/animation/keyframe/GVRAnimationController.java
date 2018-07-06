@@ -8,6 +8,8 @@ public abstract class GVRAnimationController {
         this.animation = animation;
     }
 
+    protected GVRAnimationController() { this.animation = null; }
+
     /**
      * Update animation to {@code timeInSeconds}. This function converts
      * time to ticks and invokes {@link #animateImpl}.

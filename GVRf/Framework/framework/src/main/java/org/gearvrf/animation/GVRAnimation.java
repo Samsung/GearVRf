@@ -96,27 +96,27 @@ public abstract class GVRAnimation {
     public static final int DEFAULT_REPEAT_COUNT = 2;
 
     // Immutable values, passed to constructor
-    private final GVRHybridObject mTarget;
-    private final float mDuration;
+    protected final GVRHybridObject mTarget;
+    protected final float mDuration;
 
     // Defaulted values, which should be set before start()
-    private GVRInterpolator mInterpolator = null;
-    private int mRepeatMode = GVRRepeatMode.ONCE;
-    private int mRepeatCount = DEFAULT_REPEAT_COUNT;
-    private GVROnFinish mOnFinish = null;
+    protected GVRInterpolator mInterpolator = null;
+    protected int mRepeatMode = GVRRepeatMode.ONCE;
+    protected int mRepeatCount = DEFAULT_REPEAT_COUNT;
+    protected GVROnFinish mOnFinish = null;
 
     /**
      * This is derived from {@link #mOnFinish}. Doing the {@code instanceof}
      * test in {@link #setOnFinish(GVROnFinish)} means we <em>don't</em> have to
      * do it on every call, in {@link #onDrawFrame(float)}
      */
-    private GVROnRepeat mOnRepeat = null;
+    protected GVROnRepeat mOnRepeat = null;
 
     // Running state
-    private float mElapsedTime = 0f;
-    private int mIterations = 0;
-    
-    private boolean isFinished = false;
+    protected float mElapsedTime = 0f;
+    protected int mIterations = 0;
+
+    protected boolean isFinished = false;
 
     /**
      * Base constructor.

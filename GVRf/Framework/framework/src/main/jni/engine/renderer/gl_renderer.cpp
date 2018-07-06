@@ -95,13 +95,13 @@ namespace gvr
         return new GLUniformBlock(desc, binding, name, maxelems);
     }
 
-    Image *GLRenderer::createImage(int type, int format)
+    Image* GLRenderer::createImage(int type, int format)
     {
         switch (type)
         {
             case Image::ImageType::BITMAP: return new GLBitmapImage(format);
             case Image::ImageType::CUBEMAP: return new GLCubemapImage(format);
-            case Image::ImageType::FLOAT_BITMAP: return new GLFloatImage();
+            case Image::ImageType::FLOAT_BITMAP: return new GLFloatImage(format);
         }
         return NULL;
     }

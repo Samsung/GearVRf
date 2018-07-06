@@ -1,14 +1,12 @@
 @MATERIAL_UNIFORMS
 
-layout ( set = 0, binding = 11 ) uniform sampler2D ambientTexture;
 layout ( set = 0, binding = 10 ) uniform sampler2D diffuseTexture;
+layout ( set = 0, binding = 11 ) uniform sampler2D ambientTexture;
 layout ( set = 0, binding = 12 ) uniform sampler2D specularTexture;
 layout ( set = 0, binding = 13 ) uniform sampler2D opacityTexture;
 layout ( set = 0, binding = 14 ) uniform sampler2D lightmapTexture;
-layout ( set = 0, binding = 16 ) uniform sampler2D emissiveTexture;
 layout ( set = 0, binding = 15 ) uniform sampler2D normalTexture;
-layout ( set = 0, binding = 8 ) uniform vec2 u_lightmap_offset;
-layout ( set = 0, binding = 9 ) uniform vec2 u_lightmap_scale;
+layout ( set = 0, binding = 16 ) uniform sampler2D emissiveTexture;
 
 struct Surface
 {

@@ -64,7 +64,6 @@ int GLBitmapImage::updateFromBitmap(JNIEnv *env, int target, jobject bitmap, boo
             case GL_RGBA16F:
                 dataFormat = GL_HALF_FLOAT;
                 break;
-
         }
         glTexImage2D(target, 0, internalFormat, info.width, info.height, 0, pixelFormat,
                      dataFormat, pixels);
