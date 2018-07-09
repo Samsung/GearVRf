@@ -560,7 +560,7 @@ public class X3Dobject {
             {
                 descriptor += " float2 a_texcoord";
             }
-            if (mUseNormals && hasNormals)
+            if (mUseNormals)
             {
                 descriptor += " float3 a_normal";
             }
@@ -4374,6 +4374,7 @@ public class X3Dobject {
                         if(controller.getControllerType() == GVRControllerType.GAZE);
                         {
                             gazeController = controller;
+                            gazeController.setCursorControl(GVRCursorController.CursorControl.PROJECT_CURSOR_ON_SURFACE);
                             break;
                         }
                     }
