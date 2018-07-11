@@ -44,8 +44,10 @@ public class GVRGenericConstraint extends GVRConstraint {
      */
     public GVRGenericConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB, final float joint[],
                                 final float rotationA[], final float rotationB[]) {
-        super(gvrContext, Native3DGenericConstraint.ctor(
+        this(gvrContext, Native3DGenericConstraint.ctor(
                 rigidBodyB.getNative(), joint, rotationA, rotationB));
+
+        mBodyB = rigidBodyB;
     }
 
     /** Used only by {@link GVRPhysicsLoader} */

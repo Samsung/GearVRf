@@ -20,6 +20,8 @@ import android.util.Log;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRCollider;
+import org.gearvrf.GVRComponent;
+import org.gearvrf.GVRComponentGroup;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRResourceVolume;
@@ -86,8 +88,22 @@ public class GVRPhysicsLoader {
             String name = NativePhysics3DLoader.getRigidBodyName(loader, nativeRigidBody);
             GVRSceneObject sceneObject = sceneRoot.getSceneObjectByName(name);
             if (sceneObject == null) {
-                Log.d(TAG, "Did not found scene object for rigid body '" + name + "'");
+                Log.w(TAG, "Didn't find scene object for rigid body '" + name + "'");
                 continue;
+            }
+
+            if (sceneObject.getComponent(GVRCollider.getComponentType()) == null) {
+                GVRMeshCollider collider = new GVRMeshCollider(gvrContext, true);
+                // Collider for picking.
+                sceneObject.attachComponent(collider);
+            }
+
+            if (sceneObject.getParent() != sceneRoot) {
+                // Rigid bodies must be at scene root.
+                float[] modelmtx = sceneObject.getTransform().getModelMatrix();
+                sceneObject.getParent().removeChildObject(sceneObject);
+                sceneObject.getTransform().setModelMatrix(modelmtx);
+                sceneRoot.addChildObject(sceneObject);
             }
 
             GVRRigidBody rigidBody = new GVRRigidBody(gvrContext, nativeRigidBody);
@@ -97,6 +113,7 @@ public class GVRPhysicsLoader {
 
         long nativeConstraint;
         long nativeRigidBodyB;
+
         while ((nativeConstraint = NativePhysics3DLoader.getNextConstraint(loader)) != 0) {
             nativeRigidBody = NativePhysics3DLoader.getConstraintBodyA(loader, nativeConstraint);
             nativeRigidBodyB = NativePhysics3DLoader.getConstraintBodyB(loader, nativeConstraint);
@@ -105,12 +122,13 @@ public class GVRPhysicsLoader {
 
             if (sceneObject == null || sceneObjectB == null) {
                 // There is no scene object to own this constraint
-                Log.d(TAG, "Found constraint with missing rigid body: will ignore");
+                Log.w(TAG, "Ignoring constraint with missing rigid body.");
                 continue;
             }
 
             int constraintType = Native3DConstraint.getConstraintType(nativeConstraint);
             GVRConstraint constraint = null;
+
             if (constraintType == GVRConstraint.fixedConstraintId) {
                 constraint = new GVRFixedConstraint(gvrContext, nativeConstraint);
             } else if (constraintType == GVRConstraint.point2pointConstraintId) {
@@ -126,7 +144,15 @@ public class GVRPhysicsLoader {
             }
 
             if (constraint != null) {
-                sceneObject.attachComponent(constraint);
+                GVRComponentGroup<GVRConstraint> group;
+                group = (GVRComponentGroup)sceneObject.getComponent(GVRConstraint.getComponentType());
+                if (group == null) {
+                    group = new GVRComponentGroup<>(gvrContext, GVRConstraint.getComponentType());
+                    sceneObject.attachComponent(group);
+                }
+
+                group.addChildComponent(constraint);
+                constraint.setOwnerObject(sceneObject);
             }
         }
 

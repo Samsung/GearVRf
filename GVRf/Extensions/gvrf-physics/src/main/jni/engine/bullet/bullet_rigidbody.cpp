@@ -45,6 +45,16 @@ BulletRigidBody::BulletRigidBody(btRigidBody *rigidBody)
           mSimType(SimulationType::DYNAMIC)
 {
     mRigidBody->setUserPointer(this);
+    mConstructionInfo.m_mass = rigidBody->isStaticObject() ? 0.f : 1.f / rigidBody->getInvMass();
+    mSimType = SimulationType ::DYNAMIC;
+    if (rigidBody->isStaticObject())
+    {
+        mSimType = SimulationType ::STATIC;
+    }
+    else if (rigidBody->isKinematicObject())
+    {
+        mSimType = SimulationType::KINEMATIC;
+    }
 }
 
 BulletRigidBody::~BulletRigidBody() {
@@ -100,6 +110,10 @@ void BulletRigidBody::updateConstructionInfo() {
             {
                 mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
                         mConstructionInfo.m_localInertia);
+            }
+            else
+            {
+                mSimType = SimulationType ::STATIC;
             }
             mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
             mRigidBody->setMassProps(getMass(), mConstructionInfo.m_localInertia);

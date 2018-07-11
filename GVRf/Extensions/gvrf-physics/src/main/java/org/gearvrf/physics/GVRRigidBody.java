@@ -170,15 +170,6 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
     }
 
     /**
-     * Set mass.
-     *
-     * @param mass The mass to the body.
-     */
-    public void setMass(float mass) {
-        Native3DRigidBody.setMass(getNative(), mass);
-    }
-
-    /**
      * Apply a central force vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
      *
      * @param x factor on the 'X' axis.
@@ -539,8 +530,6 @@ class Native3DRigidBody {
     static native long getComponentType();
 
     static native float getMass(long jrigid_body);
-
-    static native void setMass(long jrigid_body, float jmass);
 
     static native void applyCentralForce(long jrigid_body, float x, float y, float z);
 

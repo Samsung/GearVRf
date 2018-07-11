@@ -38,10 +38,6 @@ extern "C" {
             jlong jrigid_body);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_physics_Native3DRigidBody_setMass(JNIEnv * env, jobject obj,
-            jlong jrigid_body, jfloat mass);
-
-    JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_Native3DRigidBody_applyCentralForce(JNIEnv * env, jobject obj,
             jlong jrigid_body, jfloat x, jfloat y, jfloat z);
 
@@ -191,14 +187,6 @@ Java_org_gearvrf_physics_Native3DRigidBody_getMass(JNIEnv * env, jobject obj,
     PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
 
     return rigid_body->getMass();
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_Native3DRigidBody_setMass(JNIEnv * env, jobject obj,
-        jlong jrigid_body, jfloat mass) {
-    PhysicsRigidBody* rigid_body = reinterpret_cast<PhysicsRigidBody*>(jrigid_body);
-
-    rigid_body->setMass(mass);
 }
 
 JNIEXPORT void JNICALL

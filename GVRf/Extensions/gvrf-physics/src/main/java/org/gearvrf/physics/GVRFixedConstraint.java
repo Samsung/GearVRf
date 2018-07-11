@@ -30,7 +30,9 @@ public class GVRFixedConstraint extends GVRConstraint {
      * @param rigidBodyB the second rigid body (not the owner) in this constraint
      */
     public GVRFixedConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB) {
-        super(gvrContext, Native3DFixedConstraint.ctor(rigidBodyB.getNative()));
+        this(gvrContext, Native3DFixedConstraint.ctor(rigidBodyB.getNative()));
+
+        mBodyB = rigidBodyB;
     }
 
     /** Used only by {@link GVRPhysicsLoader} */
