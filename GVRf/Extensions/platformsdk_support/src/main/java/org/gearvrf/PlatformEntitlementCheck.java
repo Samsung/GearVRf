@@ -57,7 +57,7 @@ public final class PlatformEntitlementCheck {
             throw new IllegalArgumentException("listener cannot be null");
         }
 
-        final GVRActivity activity = context.getActivity();
+        final Activity activity = context.getActivity();
         final long result = create(activity, appId);
         if (0 != result) {
             throw new IllegalStateException("Could not initialize the platform sdk; error code: " + result);
