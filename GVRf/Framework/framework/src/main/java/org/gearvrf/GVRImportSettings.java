@@ -109,7 +109,7 @@ public enum GVRImportSettings {
     private int mValue;
     
     private static EnumSet<GVRImportSettings> recommendedSettings = EnumSet.of(TRIANGULATE, FLIP_UV, JOIN_IDENTICAL_VERTICES,
-            LIMIT_BONE_WEIGHT, SORTBY_PRIMITIVE_TYPE);
+            LIMIT_BONE_WEIGHT, CALCULATE_TANGENTS, SORTBY_PRIMITIVE_TYPE);
     
     private GVRImportSettings(int settings) {
         mValue = settings;

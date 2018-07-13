@@ -40,6 +40,7 @@ public class GVRPBRShader extends GVRShaderTemplate
     private static String vtxShader = null;
     private static String normalShader = null;
     private static String skinShader = null;
+    private static String morphShader = null;
 
     public GVRPBRShader(GVRContext gvrcontext)
     {
@@ -56,6 +57,7 @@ public class GVRPBRShader extends GVRShaderTemplate
             surfaceShader = TextFile.readTextFile(context, R.raw.pbr_surface);
             vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_multitex);
             normalShader = TextFile.readTextFile(context, R.raw.normalmap);
+            morphShader = TextFile.readTextFile(context, R.raw.vertexmorph);
             skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
             addLight = TextFile.readTextFile(context, R.raw.pbr_addlight);
         }
@@ -67,6 +69,7 @@ public class GVRPBRShader extends GVRShaderTemplate
         setSegment("VertexSkinShader", skinShader);
         setSegment("VertexShader", vtxShader);
         setSegment("VertexNormalShader", normalShader);
+        setSegment("VertexMorphShader", morphShader);
 
         mHasVariants = true;
         mUsesLights = true;
@@ -90,5 +93,7 @@ public class GVRPBRShader extends GVRShaderTemplate
         material.setFloat("normalScale", 1);
         material.setFloat("lightmapStrength", 1);
     }
+
+
 }
 
