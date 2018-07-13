@@ -58,6 +58,7 @@ public class GVRTextureShader extends GVRShaderTemplate
         setSegment("VertexTemplate", vtxTemplate);
         setSegment("FragmentSurface", surfaceShader);
         setSegment("FragmentAddLight", addLight);
+        setSegment("VertexMorphShader", "");
         setSegment("VertexShader", vtxShader);
         setSegment("VertexNormalShader", "");
         setSegment("VertexSkinShader", "");
