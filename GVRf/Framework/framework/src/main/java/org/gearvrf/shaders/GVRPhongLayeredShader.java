@@ -40,10 +40,12 @@ public class GVRPhongLayeredShader extends GVRShaderTemplate
     private static String vtxShader = null;
     private static String normalShader = null;
     private static String skinShader = null;
+    private static String morphShader = null;
 
     public GVRPhongLayeredShader(GVRContext gvrcontext)
     {
          super( "float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float3 u_color; float u_opacity; " +
+                 "float2 u_lightmap_offset; float2 u_lightmap_scale; " +
                 "int diffuseTexture1_blendop; int ambientTexture1_blendop; int specularTexture1_blendop; " +
                 "int emissiveTexture1_blendop; int lightmapTexture1_blendop; " +
                 "float specular_exponent; float line_width",
@@ -63,6 +65,7 @@ public class GVRPhongLayeredShader extends GVRShaderTemplate
             vtxShader = TextFile.readTextFile(context, R.raw.pos_norm_multitex);
             normalShader = TextFile.readTextFile(context, R.raw.normalmap);
             skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
+            morphShader = TextFile.readTextFile(context, R.raw.vertexmorph);
             addLight = TextFile.readTextFile(context, R.raw.addlight);
         }
         setSegment("FragmentTemplate", fragTemplate);
@@ -72,6 +75,7 @@ public class GVRPhongLayeredShader extends GVRShaderTemplate
         setSegment("VertexSkinShader", skinShader);
         setSegment("VertexShader", vtxShader);
         setSegment("VertexNormalShader", normalShader);
+        setSegment("VertexMorphShader", morphShader);
 
         mHasVariants = true;
         mUsesLights = true;

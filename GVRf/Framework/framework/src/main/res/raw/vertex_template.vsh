@@ -35,25 +35,31 @@ layout(location = 7) in ivec4 a_bone_indices;
 #endif
 
 #ifdef HAS_VertexNormalShader
+#ifdef HAS_a_tangent
 layout(location = 8) in vec3 a_tangent;
 layout(location = 9) in vec3 a_bitangent;
+layout(location = 7) out mat3 tangent_matrix;
+#endif
 #endif
 
 layout(location = 0) out vec3 view_direction;
 layout(location = 1) out vec3 viewspace_position;
 layout(location = 2) out vec3 viewspace_normal;
 
+
 layout(location = 10) out vec2 diffuse_coord;
 layout(location = 11) out vec2 ambient_coord;
 layout(location = 12) out vec2 specular_coord;
-layout(location = 13) out vec2 opacity_coord;
+layout(location = 13) out vec2 emissive_coord;
 layout(location = 14) out vec2 lightmap_coord;
-layout(location = 15) out vec2 normal_coord;
-layout(location = 16) out vec2 emissive_coord;
+layout(location = 15) out vec2 opacity_coord;
+layout(location = 16) out vec2 normal_coord;
+
 
 #ifdef HAS_blendshapeTexture
 layout (set = 0, binding = 17) uniform sampler2D blendshapeTexture;
 #endif
+
 
 struct Vertex
 {

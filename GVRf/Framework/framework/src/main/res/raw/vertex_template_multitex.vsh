@@ -35,9 +35,11 @@ layout(location = 7) in ivec4 a_bone_indices;
 #endif
 
 #ifdef HAS_VertexNormalShader
+#ifdef HAS_a_tangent
 layout(location = 8) in vec3 a_tangent;
 layout(location = 9) in vec3 a_bitangent;
-layout(location = 15) out mat3 tangent_matrix;
+layout(location = 7) out mat3 tangent_matrix;
+#endif
 #endif
 
 layout(location = 0) out vec3 view_direction;
@@ -47,15 +49,16 @@ layout(location = 2) out vec3 viewspace_normal;
 layout(location = 10) out vec2 diffuse_coord;
 layout(location = 11) out vec2 ambient_coord;
 layout(location = 12) out vec2 specular_coord;
-layout(location = 13) out vec2 opacity_coord;
+layout(location = 13) out vec2 emissive_coord;
 layout(location = 14) out vec2 lightmap_coord;
-layout(location = 15) out vec2 normal_coord;
-layout(location = 16) out vec2 emissive_coord;
+layout(location = 15) out vec2 opacity_coord;
+layout(location = 16) out vec2 normal_coord;
 
-layout(location = 18) out vec2 diffuse_coord1;
-layout(location = 19) out vec2 ambient_coord1;
-layout(location = 20) out vec2 specular_coord1;
-layout(location = 21) out vec2 emissive_coord1;
+layout(location = 17) out vec2 diffuse_coord1;
+layout(location = 18) out vec2 ambient_coord1;
+layout(location = 19) out vec2 specular_coord1;
+layout(location = 20) out vec2 emissive_coord1;
+layout(location = 21) out vec2 lightmap_coord1;
 
 #ifdef HAS_blendshapeTexture
 layout (set = 0, binding = 17) uniform sampler2D blendshapeTexture;
@@ -93,13 +96,14 @@ struct Vertex
 // This section contains code to compute
 // vertex contributions to lighting.
 //
-	@LIGHTSOURCES
+@LIGHTSOURCES
 #endif
 	
 void main() {
 	Vertex vertex;
 
 	vertex.local_position = vec4(a_position.xyz, 1.0);
+
 #ifdef HAS_a_normal
     vertex.local_normal = vec4(normalize(a_normal), 0.0);
 #endif
@@ -123,25 +127,35 @@ void main() {
 // This section contains code to compute
 // vertex contributions to lighting.
 //
-	LightVertex(vertex);
+    LightVertex(vertex);
 #endif
+
 #ifdef HAS_TEXCOORDS
 //
 // This section contains assignment statements from
 // input vertex attributes to output shader variables
 // generate by GVRShaderTemplate during shader construction.
 //
-	@TEXCOORDS
+@TEXCOORDS
+
 #endif
 	viewspace_position = vertex.viewspace_position;
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
 #ifdef HAS_MULTIVIEW
+<<<<<<< HEAD
 	 bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
      mat4 mvp = u_mvp_[gl_ViewID_OVR];
      if(!render_mask)
          mvp = mat4(0.0);  //  if render_mask is not set for particular eye, dont render that object
      gl_Position = mvp  * vertex.local_position;
+=======
+    bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
+    mat4 mvp = u_mvp_[gl_ViewID_OVR];
+    if(!render_mask)
+        mvp = mat4(0.0);  //  if render_mask is not set for particular eye, dont render that object
+    gl_Position = mvp  * vertex.local_position;
+>>>>>>> normalmap
 #else
 	gl_Position = u_mvp * vertex.local_position;	
 #endif
