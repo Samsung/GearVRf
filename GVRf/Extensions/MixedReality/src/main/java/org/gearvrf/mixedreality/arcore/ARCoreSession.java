@@ -163,7 +163,7 @@ public class ARCoreSession extends MRCommon {
     }
 
     private boolean checkARCoreAndCamera() {
-        Activity activity = mGvrContext.getActivity();
+        Activity activity = mGvrContext.getApplication().getActivity();
         Exception exception = null;
         String message = null;
         try {
