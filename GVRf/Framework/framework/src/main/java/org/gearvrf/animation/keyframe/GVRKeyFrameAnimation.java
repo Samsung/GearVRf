@@ -126,7 +126,7 @@ public class GVRKeyFrameAnimation extends GVRAnimation implements PrettyPrint {
     protected Matrix4f[] getTransforms(float animationTime) {
         int i = 0;
         for (GVRAnimationChannel channel : mChannels) {
-            mTransforms[i++].set(channel.animate(animationTime));
+            channel.animate(animationTime, mTransforms[i++]);
         }
         return mTransforms;
     }

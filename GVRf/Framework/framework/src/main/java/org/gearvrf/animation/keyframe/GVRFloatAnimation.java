@@ -2,30 +2,27 @@ package org.gearvrf.animation.keyframe;
 
 import org.gearvrf.PrettyPrint;
 import org.gearvrf.utility.Log;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-/** 
+/**
  * Describes the animation of a set of floating point values.
  */
-public final class GVRFloatAnimation implements PrettyPrint
+public class GVRFloatAnimation implements PrettyPrint
 {
     private static final String TAG = GVRFloatAnimation.class.getSimpleName();
 
-    public static class FloatKeyInterpolator
+    public static class LinearInterpolator
     {
-        private final int mFloatsPerKey;
-        private final float[] mKeyData;
-        private final float mDuration;
-        private int mLastKeyIndex;
+        protected final int mFloatsPerKey;
+        protected int mLastKeyIndex;
+        protected float[] mKeyData;
 
-        public FloatKeyInterpolator(float[] keyData, int keySize)
+        public LinearInterpolator(float[] keyData, int keySize)
         {
             mKeyData = keyData;
             mFloatsPerKey = keySize;
             mLastKeyIndex = -1;
-            mDuration = keyData[keyData.length - keySize] - keyData[0];Log.d("MORPH", "numkeys = %d floats per key = %d duration = %f ", getNumKeys(), mFloatsPerKey, mDuration);
         }
 
         protected float[] interpolate(float time, float[] destValues)
@@ -59,9 +56,11 @@ public final class GVRFloatAnimation implements PrettyPrint
             return destValues;
         }
 
-        public float getDuration()
+        float[] getKeyData() { return mKeyData; }
+
+        void setKeyData(float[] keyData)
         {
-            return mDuration;
+            mKeyData = keyData;
         }
 
         public int getKeyOffset(int keyIndex)
@@ -95,6 +94,15 @@ public final class GVRFloatAnimation implements PrettyPrint
             return -1.0f;
         }
 
+        public void setTime(int keyIndex, float time)
+        {
+            int ofs = getKeyOffset(keyIndex);
+            if(ofs>=0)
+            {
+                mKeyData[ofs] = time;
+            }
+        }
+
         public boolean setValues(int keyIndex, float[] values)
         {
             int ofs = getKeyOffset(keyIndex);
@@ -111,9 +119,15 @@ public final class GVRFloatAnimation implements PrettyPrint
             int firstOfs = getKeyOffset(keyIndex);
             int lastOfs = getKeyOffset(keyIndex + 1);
 
-            for (int i = 1; i < mFloatsPerKey; ++i)
+            if ((firstOfs < 0) || (lastOfs < 0))
             {
-                values[i - 1] = (1.0f - factor) * mKeyData[firstOfs + i] + factor * mKeyData[lastOfs + i];
+                return false;
+            }
+            ++firstOfs;
+            ++lastOfs;
+            for (int i = 0; i < mFloatsPerKey - 1; ++i)
+            {
+                values[i] = factor * mKeyData[lastOfs + i] + (1.0f - factor) * mKeyData[firstOfs + i];
             }
             return true;
         }
@@ -210,7 +224,9 @@ public final class GVRFloatAnimation implements PrettyPrint
         }
     };
 
-    final private FloatKeyInterpolator mFloatInterpolator;
+    final protected int mFloatsPerKey;
+    protected float[] mKeys;
+    protected LinearInterpolator mFloatInterpolator;
 
     /**
      * Constructor.
@@ -228,26 +244,128 @@ public final class GVRFloatAnimation implements PrettyPrint
         {
             throw new IllegalArgumentException("Not enough key data");
         }
-        mFloatInterpolator = new FloatKeyInterpolator(keyData, keySize);
+        mFloatsPerKey = keySize;
+        mKeys = keyData;
+        mFloatInterpolator = new LinearInterpolator(mKeys, keySize);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param numKeys number of keys
+     * @param keySize number of floats per key
+     */
+    public GVRFloatAnimation(int numKeys, int keySize)
+    {
+        if (keySize <= 2)
+        {
+            throw new IllegalArgumentException("The number of floats per key must be > 1, the key includes time");
+        }
+        mFloatsPerKey = keySize;
+        mKeys = new float[numKeys * keySize];
+        mFloatInterpolator = new LinearInterpolator(mKeys, keySize);
+    }
+
+    /**
+     * Returns the number of keys.
+     *
+     * @return the number of keys
+     */
+    public int getNumKeys()
+    {
+        return mKeys.length / mFloatsPerKey;
+    }
+
+    public float getDuration()
+    {
+        if (mKeys.length > mFloatsPerKey)
+        {
+            return mKeys[mKeys.length - mFloatsPerKey] - mKeys[0];
+        }
+        return 0;
+    }
+
+    /**
+     * Returns the time component of the specified key.
+     *
+     * @param keyIndex the index of the position key
+     * @return the time component
+     */
+    public float getTime(int keyIndex)
+    {
+        return mKeys[keyIndex * mFloatsPerKey];
+    }
+
+    /**
+     * Returns the key value in the given array.
+     *
+     * @param keyIndex the index of the scale key
+     */
+    public void getKey(int keyIndex, float[] values)
+    {
+        int index = keyIndex * mFloatsPerKey;
+        System.arraycopy(mKeys, index + 1, values, 0, values.length);
+    }
+
+    /**
+     * Set the time and value of the key at the given index
+     * @param keyIndex  0 based index of key
+     * @param time      key time in seconds
+     * @param values    key values
+     */
+    public void setKey(int keyIndex, float time, final float[] values)
+    {
+        int index = keyIndex * mFloatsPerKey;
+        Integer valSize = mFloatsPerKey-1;
+
+        if (values.length != valSize)
+        {
+
+            throw new IllegalArgumentException("This key needs " + valSize.toString() + " float per value");
+        }
+        mKeys[index] = time;
+        System.arraycopy(values, 0, mKeys, index + 1, values.length);
     }
 
     /**
      * Obtains the transform for a specific time in animation.
-     * 
+     *
      * @param animationTime The time in animation.
-     * 
+     *
      * @return The transform.
      */
     public void animate(float animationTime, float[] destValues)
     {
-        mFloatInterpolator.interpolate(animationTime * mFloatInterpolator.getDuration(), destValues);
+        mFloatInterpolator.interpolate(animationTime, destValues);
+    }
+
+    /**
+     * Resize the key data area.
+     * This function will truncate the keys if the
+     * initial setting was too large.
+     *
+     * @oaran numKeys the desired number of keys
+     */
+    public void resizeKeys(int numKeys)
+    {
+        int n = numKeys * mFloatsPerKey;
+        if (mKeys.length == n)
+        {
+            return;
+        }
+        float[] newKeys = new float[n];
+        n = Math.min(n, mKeys.length);
+
+        System.arraycopy(mKeys, 0, newKeys, 0, n);
+        mKeys = newKeys;
+        mFloatInterpolator.setKeyData(mKeys);
     }
 
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         sb.append(Log.getSpaces(indent));
         sb.append(GVRFloatAnimation.class.getSimpleName());
-        sb.append(" [ Key[" + mFloatInterpolator.getNumKeys() + "]");
+        sb.append(" [ Keys=" + mKeys.length + "]");
         sb.append(System.lineSeparator());
     }
 

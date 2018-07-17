@@ -33,7 +33,7 @@ public final class GVRMorphAnimation extends GVRAnimation implements PrettyPrint
     public void animate(GVRHybridObject object, float animationTime)
     {
         GVRMeshMorph morph  = (GVRMeshMorph) mTarget;
-        mKeyInterpolator.animate(animationTime, mCurrentValues);
+        mKeyInterpolator.animate(animationTime * mDuration, mCurrentValues);
         morph.setWeights(mCurrentValues);
     }
 
