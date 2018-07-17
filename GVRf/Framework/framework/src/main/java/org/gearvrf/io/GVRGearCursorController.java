@@ -518,7 +518,7 @@ public final class GVRGearCursorController extends GVRCursorController
 
     private void handleControllerEvent(final ControllerEvent event)
     {
-        context.getEventManager().sendEvent(context.getActivity(), IActivityEvents.class,
+        context.getEventManager().sendEvent(context.getApplication(), IActivityEvents.class,
                                             "onControllerEvent",
                                             event.position, event.rotation, event.pointF,
                                             event.touched, event.angularAcceleration,event.angularVelocity);
