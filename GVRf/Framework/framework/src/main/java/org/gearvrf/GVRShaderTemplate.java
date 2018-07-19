@@ -65,8 +65,8 @@ import java.util.regex.Pattern;
 public class GVRShaderTemplate extends GVRShader
 {
     private final static String TAG = "GVRShaderTemplate";
-    // Keeping the start of shadow attribute from 20 since locations less than it are used up by vertex descriptor and texture coords.
-    private final int shadowmapStartLocation = 20;
+    // Keeping the start of shadow attribute from 25 since locations less than it are used up by vertex descriptor and texture coords.
+    private final int shadowmapStartLocation = 25;
 
     protected class LightClass
     {
@@ -470,6 +470,10 @@ public class GVRShaderTemplate extends GVRShader
                 }
                 Log.i(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
+            else
+            {
+                Log.i(TAG, "SHADER: found shader #%d %s", nativeShader, signature);
+            }
             if (nativeShader > 0)
             {
                 rdata.setShader(nativeShader, isMultiview);
@@ -520,6 +524,10 @@ public class GVRShaderTemplate extends GVRShader
                     writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
                 }
                 Log.i(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
+            }
+            else
+            {
+                Log.i(TAG, "SHADER: found shader #%d %s", nativeShader, signature);
             }
             return nativeShader;
         }

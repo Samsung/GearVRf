@@ -62,6 +62,7 @@ public class GVRTextureShader extends GVRShaderTemplate
         setSegment("VertexShader", vtxShader);
         setSegment("VertexNormalShader", "");
         setSegment("VertexSkinShader", "");
+        setSegment("VertexMorph", "");
         mHasVariants = true;
         mUsesLights = true;
     }

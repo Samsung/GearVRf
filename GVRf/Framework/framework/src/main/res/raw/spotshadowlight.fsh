@@ -8,7 +8,7 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
 	vec4 spotDir =  normalize(u_view * data.world_direction);
 #endif
      vec3 lightdir = normalize(lightpos.xyz - viewspace_position.xyz);
-          
+
      // Attenuation
      float distance    = length(lightpos.xyz - viewspace_position);
      float attenuation = 1.0 / (data.attenuation_constant + data.attenuation_linear * distance + 

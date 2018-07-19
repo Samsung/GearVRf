@@ -109,7 +109,7 @@ public enum GVRImportSettings {
     private int mValue;
     
     private static EnumSet<GVRImportSettings> recommendedSettings = EnumSet.of(TRIANGULATE, FLIP_UV, JOIN_IDENTICAL_VERTICES,
-            LIMIT_BONE_WEIGHT, SORTBY_PRIMITIVE_TYPE);
+            LIMIT_BONE_WEIGHT, CALCULATE_TANGENTS, SORTBY_PRIMITIVE_TYPE);
     
     private GVRImportSettings(int settings) {
         mValue = settings;
@@ -160,13 +160,25 @@ public enum GVRImportSettings {
         additionalSettings.addAll(recommendedSettings);
         return additionalSettings;
     }
-    
+
+    /**
+     * Get Recommended settings for morphed meshes.
+     * These settings make sure all the blend shapes have the same
+     * number of vertices.
+     * @return EnumSet recommended for morphed meshes.
+     */
+    public static EnumSet<GVRImportSettings> getRecommendedMorphSettings() {
+        EnumSet<GVRImportSettings> bumpmapSettings = EnumSet.of(TRIANGULATE, FLIP_UV, LIMIT_BONE_WEIGHT, CALCULATE_TANGENTS);
+        return bumpmapSettings;
+    }
+
     /**
      * Get Recommended settings for simple bumpmap meshes.
      * @return EnumSet recommended for bumpmapped meshes.
      */
     public static EnumSet<GVRImportSettings> getRecommendedBumpmapSettings() {
-        EnumSet<GVRImportSettings> bumpmapSettings = EnumSet.of(CALCULATE_SMOOTH_NORMALS, CALCULATE_TANGENTS);
+        EnumSet<GVRImportSettings> bumpmapSettings = EnumSet.of(TRIANGULATE, FLIP_UV,
+                LIMIT_BONE_WEIGHT,  CALCULATE_SMOOTH_NORMALS, CALCULATE_TANGENTS);
         return bumpmapSettings;
     }
 }

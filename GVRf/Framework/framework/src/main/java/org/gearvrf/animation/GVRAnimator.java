@@ -75,6 +75,12 @@ public class GVRAnimator extends GVRBehavior
     }
 
     /**
+     * Query the number of animations owned by this animator.
+     * @return number of animations added to this animator
+     */
+    public int getAnimationCount() { return mAnimations.size(); }
+
+    /**
      * Adds an animation to this animator.
      * <p>
      * This animation will participate in any subsequent operations
