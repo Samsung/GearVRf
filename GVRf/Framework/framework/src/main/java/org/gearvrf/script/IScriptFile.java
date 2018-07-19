@@ -15,8 +15,26 @@
 
 package org.gearvrf.script;
 
+import java.io.InputStream;
+
+/**
+ * This interface represents a script file, which can be attached to an
+ * object to handle events delivered to it.
+ */
 public interface IScriptFile {
 
+    /**
+     * Invokes a function defined in the script.
+     *
+     * @param funcName
+     *     The function name.
+     * @param params
+     *     The parameter array.
+     * @return
+     *     A boolean value representing whether the function is
+     * executed correctly. If the function cannot be found, or
+     * parameters don't match, {@code false} is returned.
+     */
     boolean invokeFunction(String funcName, Object[] params);
 
 }

@@ -18,13 +18,23 @@ package org.gearvrf.script;
 import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 
+/**
+ * Base class for adding javascript related behaviors to a scene object.
+ */
 public abstract class GVRScriptBehaviorBase extends GVRBehavior {
 
     protected static long TYPE_SCRIPT_BEHAVIOR = newComponentType(GVRScriptBehaviorBase.class);
 
+    /**
+     * Constructor for a script behavior component.
+     * @param gvrContext    The current GVRF context
+     */
     public GVRScriptBehaviorBase(GVRContext gvrContext) {
         super(gvrContext);
     }
 
+    /**
+     * @return the component type (TYPE_SCRIPT_BEHAVIOR)
+     */
     public static long getComponentType() { return TYPE_SCRIPT_BEHAVIOR; }
 }

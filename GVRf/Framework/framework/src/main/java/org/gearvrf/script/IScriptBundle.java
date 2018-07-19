@@ -15,6 +15,9 @@
 
 package org.gearvrf.script;
 
+/**
+ * Represents a script bundle loaded from a JSON file, and its storage
+ * volume.
+ */
 public interface IScriptBundle {
-
 }
