@@ -812,7 +812,7 @@ public final class GVRApplication implements IEventReceiver, IScriptable {
 
         @Override
         public boolean setMain(GVRMain gvrMain, String dataFileName) {
-            return false;
+            return true;
         }
 
         @Override
