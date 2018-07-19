@@ -18,10 +18,7 @@ package org.gearvrf.script;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRResourceVolume;
-<<<<<<< HEAD
-=======
 import org.gearvrf.GVRScene;
->>>>>>> GVRf Javascript Extension
 
 import java.io.IOException;
 
