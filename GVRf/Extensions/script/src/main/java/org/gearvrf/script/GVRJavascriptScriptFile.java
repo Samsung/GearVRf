@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.script.IScriptManager;
 
 /**
  * Represents a Javascript file. The script text can be loaded in one
@@ -36,7 +37,7 @@ public class GVRJavascriptScriptFile extends GVRScriptFile {
      * @throws IOException if the script cannot be read.
      */
     public GVRJavascriptScriptFile(GVRContext gvrContext, InputStream inputStream) throws IOException {
-        super(gvrContext, GVRScriptManager.LANG_JAVASCRIPT);
+        super(gvrContext, IScriptManager.LANG_JAVASCRIPT);
         load(inputStream);
     }
 
@@ -49,7 +50,7 @@ public class GVRJavascriptScriptFile extends GVRScriptFile {
      *     String containing a Javascript program.
      */
     public GVRJavascriptScriptFile(GVRContext gvrContext, String scriptText) {
-        super(gvrContext, GVRScriptManager.LANG_JAVASCRIPT);
+        super(gvrContext, IScriptManager.LANG_JAVASCRIPT);
         setScriptText(scriptText);
     }
     

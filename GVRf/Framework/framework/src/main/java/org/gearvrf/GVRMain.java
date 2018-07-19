@@ -17,7 +17,7 @@ package org.gearvrf;
 
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.io.GVRTouchPadGestureListener;
-import org.gearvrf.script.GVRScriptFile;
+import org.gearvrf.script.IScriptFile;
 import org.gearvrf.script.IScriptable;
 
 import android.graphics.Bitmap;
@@ -98,22 +98,22 @@ public abstract class GVRMain implements IScriptEvents, IScriptable, IEventRecei
      *
      * This is where you do some post-processing of the initial scene graph
      * created in the method {@link #onInit(GVRContext)}, a listener added to
-     * {@link GVREventReceiver} or a {@link org.gearvrf.script.GVRScriptFile} attached to this {@link
-     * GVRMain} using {@link org.gearvrf.script.GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}.
+     * {@link GVREventReceiver} or a {@link org.gearvrf.script.IScriptFile} attached to this {@link
+     * GVRMain} using {@link org.gearvrf.script.IScriptManager#attachScriptFile(IScriptable, IScriptFile)}.
      */
     @Override
     public void onAfterInit() {
     }
 
     /**
-     * Called when the script is attached to a target using {@link org.gearvrf.script.GVRScriptManager#attachScriptFile(IScriptable, GVRScriptFile)}.
+     * Called when the script is attached to a target using {@link org.gearvrf.script.IScriptManager#attachScriptFile(IScriptable, IScriptFile)}.
      */
     @Override
     public void onAttach(IScriptable target) {
     }
 
     /**
-     * Called when the script is detached from the target using {@link org.gearvrf.script.GVRScriptManager#detachScriptFile(IScriptable)}.
+     * Called when the script is detached from the target using {@link org.gearvrf.script.IScriptManager#detachScriptFile(IScriptable)}.
      */
     @Override
     public void onDetach(IScriptable target) {

@@ -30,6 +30,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.script.IScriptFile;
 
 /**
  * This class represents a script file, which can be attached to an
@@ -44,7 +45,7 @@ import org.gearvrf.GVRContext;
  *   {@link #load(InputStream)}. </li>
  * </ul>
  */
-public abstract class GVRScriptFile {
+public abstract class GVRScriptFile implements IScriptFile {
     private static final String TAG = GVRScriptFile.class.getSimpleName();
     protected final GVRContext mGvrContext;
     protected final String mLanguage;
@@ -168,6 +169,7 @@ public abstract class GVRScriptFile {
      * executed correctly. If the function cannot be found, or
      * parameters don't match, {@code false} is returned.
      */
+    @Override
     public boolean invokeFunction(String funcName, Object[] params) {
         // Run script if it is dirty. This makes sure the script is run
         // on the same thread as the caller (suppose the caller is always

@@ -31,7 +31,7 @@ import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
-import org.gearvrf.script.GVRScriptManager;
+import org.gearvrf.script.IScriptManager;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 
@@ -396,13 +396,13 @@ public abstract class GVRContext implements IEventReceiver {
     public abstract GVREventManager getEventManager();
 
     /**
-     * Returns the {@link GVRScriptManager}.
+     * Returns the {@link IScriptManager}.
      *
      * @return A {@link GVRInputManager} to help the GVRf application to
      * create, load or execute scripts.
      *
      */
-    public abstract GVRScriptManager getScriptManager();
+    public abstract IScriptManager getScriptManager();
 
     /**
      * The interval between this frame and the previous frame, in seconds: a

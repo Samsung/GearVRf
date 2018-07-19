@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRBehavior;
+import org.gearvrf.script.GVRScriptBehaviorBase;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
@@ -37,9 +37,8 @@ import org.gearvrf.SensorEvent;
  *      onNoPick(GVRPicker)     called when nothing is picked
  *
  */
-public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISensorEvents, ISceneEvents
+public class GVRScriptBehavior extends GVRScriptBehaviorBase implements IPickEvents, ISensorEvents, ISceneEvents
 {
-    static private long TYPE_SCRIPT_BEHAVIOR = newComponentType(GVRScriptBehavior.class);
     static private Object[] noargs = new Object[0];
     protected GVRScriptFile mScriptFile = null;
     protected boolean mIsAttached = false;
@@ -91,8 +90,6 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
         return mScriptFile;
     }
     
-    public static long getComponentType() { return TYPE_SCRIPT_BEHAVIOR; }
-    
     /**
      * Sets the path to the script file to load and loads the script.
      * 
@@ -118,7 +115,7 @@ public class GVRScriptBehavior extends GVRBehavior implements IPickEvents, ISens
                 FileNameUtils.getParentDirectory(filePath));
         GVRAndroidResource resource = volume.openResource(filePath);
          
-        setScriptFile(getGVRContext().getScriptManager().loadScript(resource, mLanguage));
+        setScriptFile((GVRScriptFile)getGVRContext().getScriptManager().loadScript(resource, mLanguage));
     }
     
     /**

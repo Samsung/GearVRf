@@ -24,6 +24,8 @@ import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IScriptEvents;
+import org.gearvrf.script.IScriptManager;
+import org.gearvrf.script.GVRScriptException;
 import org.gearvrf.script.javascript.RhinoScriptEngineFactory;
 
 import java.io.IOException;
@@ -42,9 +44,8 @@ import javax.script.ScriptEngine;
  * detachment with scriptable objects, and other operation related to
  * scripting.
  */
-public class GVRScriptManager {
+public class GVRScriptManager implements IScriptManager {
     private static final String TAG = GVRScriptManager.class.getSimpleName();
-    public static final String LANG_JAVASCRIPT = "js";
     public static final String VAR_NAME_GVRF = "gvrf";
 
     protected GVRContext mGvrContext;
@@ -52,7 +53,7 @@ public class GVRScriptManager {
 
     protected Map<String, Object> mGlobalVariables;
 
-    protected Map<IScriptable, GVRScriptFile> mScriptMap;
+    protected Map<IScriptable, IScriptFile> mScriptMap;
 
     // For script bundles. All special targets start with @.
     public static final String TARGET_PREFIX = "@";
@@ -97,7 +98,7 @@ public class GVRScriptManager {
     public GVRScriptManager(GVRContext gvrContext) {
         mGvrContext = gvrContext;
         mGlobalVariables = new TreeMap<String, Object>();
-        mScriptMap = Collections.synchronizedMap(new HashMap<IScriptable, GVRScriptFile>());
+        mScriptMap = Collections.synchronizedMap(new HashMap<IScriptable, IScriptFile>());
 
         Thread.currentThread().setContextClassLoader(
                 gvrContext.getActivity().getClassLoader());
@@ -126,7 +127,8 @@ public class GVRScriptManager {
         }
     }
 
-    protected void addGlobalBindings(final ScriptEngine engine) {
+    @Override
+    public void addGlobalBindings(final ScriptEngine engine) {
         Bindings bindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
         if (bindings == null) {
             bindings = engine.createBindings();
@@ -159,6 +161,7 @@ public class GVRScriptManager {
      * @return The engine object. {@code null} if the specified engine is
      * not found.
      */
+    @Override
     public ScriptEngine getEngine(String language) {
         return mEngines.get(language);
     }
@@ -182,7 +185,8 @@ public class GVRScriptManager {
      * @param target The scriptable target.
      * @param scriptFile The script file object.
      */
-    public void attachScriptFile(IScriptable target, GVRScriptFile scriptFile) {
+    @Override
+    public void attachScriptFile(IScriptable target, IScriptFile scriptFile) {
         mScriptMap.put(target, scriptFile);
         scriptFile.invokeFunction("onAttach", new Object[] { target });
     }
@@ -192,8 +196,9 @@ public class GVRScriptManager {
      *
      * @param target The scriptable target.
      */
+    @Override
     public void detachScriptFile(IScriptable target) {
-        GVRScriptFile scriptFile = mScriptMap.remove(target);
+        IScriptFile scriptFile = mScriptMap.remove(target);
         if (scriptFile != null) {
             scriptFile.invokeFunction("onDetach", new Object[] { target });
         }
@@ -204,7 +209,7 @@ public class GVRScriptManager {
      * @param target The scriptable target.
      * @return The script file or {@code null}.
      */
-    public GVRScriptFile getScriptFile(IScriptable target) {
+    public IScriptFile getScriptFile(IScriptable target) {
         return mScriptMap.get(target);
     }
 
@@ -216,13 +221,14 @@ public class GVRScriptManager {
      * @throws IOException if script file cannot be read.
      * @throws GVRScriptException if script processing error occurs.
      */
-    public GVRScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException, GVRScriptException {
+    @Override
+    public IScriptFile loadScript(GVRAndroidResource resource, String language) throws IOException, GVRScriptException {
         if (getEngine(language) == null) {
             mGvrContext.logError("Script language " + language + " unsupported", this);
             throw new GVRScriptException(String.format("The language is unknown: %s", language));
         }
 
-        GVRScriptFile script = null;
+        IScriptFile script = null;
         if (language.equals(LANG_JAVASCRIPT)) {
             script = new GVRJavascriptScriptFile(mGvrContext, resource.getStream());
         }
@@ -346,7 +352,7 @@ public class GVRScriptManager {
                 rc = new GVRResourceVolume(mGvrContext, volumeType).openResource(entry.script);
             }
 
-            GVRScriptFile scriptFile = loadScript(rc, entry.language);
+            GVRScriptFile scriptFile = (GVRScriptFile)loadScript(rc, entry.language);
 
             String targetName = entry.target;
             if (targetName.startsWith(TARGET_PREFIX)) {
@@ -385,6 +391,8 @@ public class GVRScriptManager {
             }
         }
     }
+
+    @Override
     public void destroy() {
         synchronized (mGlobalVariables) {
             for (final Runnable r : mBindingsClosers) {

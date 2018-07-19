@@ -7,7 +7,7 @@ import org.gearvrf.animation.GVRAnimationEngine;
 import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.periodic.GVRPeriodicEngine;
-import org.gearvrf.script.GVRScriptManager;
+import org.gearvrf.script.IScriptManager;
 
 import java.lang.ref.WeakReference;
 
@@ -87,7 +87,7 @@ public final class GVRContextProxy extends GVRContext {
         return mContext.get().getEventManager();
     }
 
-    public GVRScriptManager getScriptManager() {
+    public IScriptManager getScriptManager() {
         return mContext.get().getScriptManager();
     }
 
