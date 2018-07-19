@@ -172,6 +172,7 @@ public class GVRScriptManager implements IScriptManager {
      * @param varName The variable name.
      * @param value The variable value.
      */
+    @Override
     public void addVariable(String varName, Object value) {
         synchronized (mGlobalVariables) {
             mGlobalVariables.put(varName, value);
@@ -250,7 +251,8 @@ public class GVRScriptManager implements IScriptManager {
      *
      * @throws IOException if script bundle file cannot be read.
      */
-    public GVRScriptBundle loadScriptBundle(String filePath, GVRResourceVolume volume) throws IOException {
+    @Override
+    public IScriptBundle loadScriptBundle(String filePath, GVRResourceVolume volume) throws IOException {
         GVRScriptBundle bundle = GVRScriptBundle.loadFromFile(mGvrContext, filePath, volume);
         return bundle;
     }
@@ -267,10 +269,11 @@ public class GVRScriptManager implements IScriptManager {
      * @throws IOException if script bundle file cannot be read.
      * @throws GVRScriptException if script processing error occurs.
      */
-    public void bindScriptBundle(final GVRScriptBundle scriptBundle, final GVRMain gvrMain, boolean bindToMainScene)
+    @Override
+    public void bindScriptBundle(final IScriptBundle scriptBundle, final GVRMain gvrMain, boolean bindToMainScene)
             throws IOException, GVRScriptException {
         // Here, bind to all targets except SCENE_OBJECTS. Scene objects are bound when scene is set.
-        bindHelper(scriptBundle, null, BIND_MASK_GVRSCRIPT | BIND_MASK_GVRACTIVITY);
+        bindHelper((GVRScriptBundle)scriptBundle, null, BIND_MASK_GVRSCRIPT | BIND_MASK_GVRACTIVITY);
 
         if (bindToMainScene) {
             final IScriptEvents bindToSceneListener = new GVREventListeners.ScriptEvents() {
@@ -284,7 +287,7 @@ public class GVRScriptManager implements IScriptManager {
                 @Override
                 public void onAfterInit() {
                     try {
-                        bindScriptBundleToScene(scriptBundle, mainScene);
+                        bindScriptBundleToScene((GVRScriptBundle)scriptBundle, mainScene);
                     } catch (IOException e) {
                         mGvrContext.logError(e.getMessage(), this);
                     } catch (GVRScriptException e) {

@@ -16,6 +16,8 @@
 package org.gearvrf.script;
 
 import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.GVRMain;
+import org.gearvrf.GVRResourceVolume;
 
 import java.io.IOException;
 
@@ -37,5 +39,12 @@ public interface IScriptManager {
 
     void detachScriptFile(IScriptable target);
 
-    void addGlobalBindings(final ScriptEngine engine);
+    void addVariable(String varName, Object value);
+
+    void addGlobalBindings(ScriptEngine engine);
+
+    IScriptBundle loadScriptBundle(String filePath, GVRResourceVolume volume) throws IOException;
+
+    void bindScriptBundle(IScriptBundle scriptBundle, GVRMain gvrMain, boolean bindToMainScene)
+            throws IOException, GVRScriptException;
 }

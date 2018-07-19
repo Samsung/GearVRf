@@ -14,7 +14,7 @@ import com.google.gson.Gson;
  * Represents a script bundle loaded from a JSON file, and its storage
  * volume.
  */
-public class GVRScriptBundle {
+public class GVRScriptBundle implements IScriptBundle {
     /**
      * The content of the bundle file is loaded from a JSON file.
      */
