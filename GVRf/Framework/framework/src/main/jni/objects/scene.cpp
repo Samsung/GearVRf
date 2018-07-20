@@ -102,15 +102,15 @@ void Scene::makeDepthShaders(jobject jscene)
 }
 
 void Scene::addSceneObject(SceneObject* scene_object) {
-    scene_root_.addChildObject(&scene_root_, scene_object);
+    scene_root_->addChildObject(scene_root_, scene_object);
 }
 
 void Scene::removeSceneObject(SceneObject* scene_object) {
-    scene_root_.removeChildObject(scene_object);
+    scene_root_->removeChildObject(scene_object);
 }
 
 void Scene::removeAllSceneObjects() {
-    scene_root_.clear();
+    scene_root_->clear();
     clearAllColliders();
 }
 
@@ -160,7 +160,7 @@ void Scene::set_main_scene(Scene* scene) {
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     std::vector<SceneObject*> scene_objects;
-    scene_root_.getDescendants(scene_objects);
+    scene_root_->getDescendants(scene_objects);
     return scene_objects;
 }
 
@@ -181,6 +181,10 @@ bool Scene::removeLight(Light* light)
 void Scene::clearLights()
 {
     lights_.clear();
+}
+
+void Scene::setSceneRoot(SceneObject* sceneRoot) {
+    scene_root_ = sceneRoot;
 }
 
 }

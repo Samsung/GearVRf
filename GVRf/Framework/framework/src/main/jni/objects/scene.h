@@ -44,7 +44,7 @@ public:
     Scene();
     virtual ~Scene();
     void set_java(JavaVM* javaVM, jobject javaScene);
-    SceneObject* getRoot() { return &scene_root_; }
+    SceneObject* getRoot() { return scene_root_; }
     void addSceneObject(SceneObject* scene_object);
     void removeSceneObject(SceneObject* scene_object);
     void removeAllSceneObjects();
@@ -192,6 +192,8 @@ public:
         javaVM_->DetachCurrentThread();
     }
 
+    void setSceneRoot(SceneObject *sceneRoot);
+
 private:
     Scene(const Scene& scene) = delete;
     Scene(Scene&& scene) = delete;
@@ -204,7 +206,7 @@ private:
     static Scene* main_scene_;
     JavaVM* javaVM_;
     jmethodID makeDepthShadersMethod_;
-    SceneObject scene_root_;
+    SceneObject* scene_root_ = nullptr;
     CameraRig* main_camera_rig_;
     int dirtyFlag_;
     bool frustum_flag_;

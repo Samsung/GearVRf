@@ -70,14 +70,16 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public GVRScene(GVRContext gvrContext) {
         super(gvrContext, NativeScene.ctor());
+
+        mSceneRoot = new GVRSceneObject(gvrContext);
+        NativeScene.setSceneRoot(getNative(), mSceneRoot.getNative());
+
         NativeScene.setJava(getNative(), this);
 
         if(MAX_LIGHTS == 0) {
             MAX_LIGHTS = gvrContext.getApplication().getConfigurationManager().getMaxLights();
         }
 
-        mSceneRoot = new GVRSceneObject(gvrContext);
-        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
 
@@ -103,14 +105,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         getEventReceiver().addListener(mSceneEventListener);
     }
 
-    private GVRScene(GVRContext gvrContext, long ptr) {
-        super(gvrContext, ptr);
-        NativeScene.setJava(getNative(), this);
-        mSceneRoot = new GVRSceneObject(gvrContext);
-        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
-        setFrustumCulling(true);
-    }
-    
     /**
      * Add a {@linkplain GVRSceneObject scene object} as
      * a child of the scene root.
@@ -671,4 +665,6 @@ class NativeScene {
     static native void setMainScene(long scene);
     
     static native void setPickVisible(long scene, boolean flag);
+
+    static native void setSceneRoot(long scene, long sceneRoot);
 }

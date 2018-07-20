@@ -94,6 +94,14 @@ extern "C" {
         Scene* scene = reinterpret_cast<Scene*>(jscene);
         scene->clearLights();
     }
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeScene_setSceneRoot(JNIEnv *env, jclass type, jlong scene, jlong sceneRoot) {
+        Scene* aScene = reinterpret_cast<Scene*>(scene);
+        SceneObject* aSceneRoot = reinterpret_cast<SceneObject*>(sceneRoot);
+        aScene->setSceneRoot(aSceneRoot);
+    }
+
 };
 
 JNIEXPORT jlong JNICALL
