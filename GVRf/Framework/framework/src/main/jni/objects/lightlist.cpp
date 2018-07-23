@@ -228,6 +228,7 @@ ShadowMap* LightList::updateLightBlock(Renderer* renderer)
             LOGD("LIGHT: clearing light uniform block");
 #endif
         }
+        mDirty = 0;
         return NULL;
     }
     for (auto it1 = mClassMap.begin();
