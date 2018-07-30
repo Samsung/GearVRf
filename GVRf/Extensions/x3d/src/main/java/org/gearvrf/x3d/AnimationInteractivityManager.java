@@ -1,4 +1,3 @@
-
 /* Copyright 2016 Samsung Electronics Co., LTD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -537,9 +536,9 @@ public class AnimationInteractivityManager {
                         gvrAnimationChannel.setPosKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
                                         * interactiveObject.getTimeSensor().getCycleInterval()
-                                        * FRAMES_PER_SECOND, interactiveObject.getInterpolator().keyValue[j * 3],
-                                interactiveObject.getInterpolator().keyValue[j * 3 + 1],
-                                interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
+                                        * FRAMES_PER_SECOND, new float[] { interactiveObject.getInterpolator().keyValue[j * 3],
+                                        interactiveObject.getInterpolator().keyValue[j * 3 + 1],
+                                        interactiveObject.getInterpolator().keyValue[j * 3 + 2] });
                     }
                 }  //  end translation
 
@@ -558,11 +557,12 @@ public class AnimationInteractivityManager {
                                 interactiveObject.getInterpolator().keyValue[j * 4],
                                 interactiveObject.getInterpolator().keyValue[j * 4 + 1],
                                 interactiveObject.getInterpolator().keyValue[j * 4 + 2]);
-                        Quaternionf quaternionf = new Quaternionf(axisAngle4f);
+                        Quaternionf q = new Quaternionf(axisAngle4f);
+                        float[] tmp = new float[]{ q.x, q.y, q.z, q.w};
                         gvrAnimationChannel.setRotKeyQuaternion(j,
                                 interactiveObject.getInterpolator().key[j]
                                         * interactiveObject.getTimeSensor().getCycleInterval()
-                                        * FRAMES_PER_SECOND, quaternionf);
+                                        * FRAMES_PER_SECOND, tmp);
                     }
                 }   //  end rotation
 
@@ -577,9 +577,9 @@ public class AnimationInteractivityManager {
                         gvrAnimationChannel.setScaleKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
                                         * interactiveObject.getTimeSensor().getCycleInterval()
-                                        * FRAMES_PER_SECOND, interactiveObject.getInterpolator().keyValue[j * 3],
-                                interactiveObject.getInterpolator().keyValue[j * 3 + 1],
-                                interactiveObject.getInterpolator().keyValue[j * 3 + 2]);
+                                        * FRAMES_PER_SECOND, new float[] { interactiveObject.getInterpolator().keyValue[j * 3],
+                                        interactiveObject.getInterpolator().keyValue[j * 3 + 1],
+                                        interactiveObject.getInterpolator().keyValue[j * 3 + 2] });
                     }
                 }  //  end scale
                 else {
@@ -663,14 +663,14 @@ public class AnimationInteractivityManager {
 
                 if (interactiveObject.getSensor().getSensorType() == Sensor.Type.TOUCH) {
                     interactiveObject.getSensor().getOwnerObject().forAllDescendants(
-                        new GVRSceneObject.SceneVisitor()
-                        {
-                            public boolean visit (GVRSceneObject obj)
+                            new GVRSceneObject.SceneVisitor()
                             {
-                                obj.attachCollider(new GVRMeshCollider(gvrContext, true));
-                                return true;
-                            }
-                        });
+                                public boolean visit (GVRSceneObject obj)
+                                {
+                                    obj.attachCollider(new GVRMeshCollider(gvrContext, true));
+                                    return true;
+                                }
+                            });
                     interactiveObject.getSensor().addISensorEvents(new ISensorEvents() {
                         boolean stateChanged = false;
 
@@ -1211,7 +1211,7 @@ public class AnimationInteractivityManager {
                             Log.e(TAG, "Problem with Cylinder Sensor: no receiving object.");
                         }
                     }   //  end if CylinderSensor
-                   else if (mSensorType == Sensor.Type.SPHERE) {
+                    else if (mSensorType == Sensor.Type.SPHERE) {
 
                         GVRSceneObject gvrSceneObjectTranslation = root
                                 .getSceneObjectByName((mGVRSceneObject.getName() + x3dObject.TRANSFORM_TRANSLATION_));
@@ -1978,12 +1978,12 @@ public class AnimationInteractivityManager {
                     else if (fieldType.equalsIgnoreCase("MFString") ) {
                         // TODO: need MFString to support more than one argument due to being used for Text Strings
                         gearVRinitJavaScript += scriptObject.getFieldName(field) + " = new " + scriptObject.getFieldType(field) +
-                            "( params[" + argumentNum + "]);\n";
+                                "( params[" + argumentNum + "]);\n";
                         argumentNum += 1;
                     }  // end if MFString
                     else {
                         Log.e(TAG, "Error unsupported field type '" + fieldType + "' in SCRIPT '" +
-                            interactiveObject.getScriptObject().getName() + "'");
+                                interactiveObject.getScriptObject().getName() + "'");
                     }
                 }
                 else if (scriptObject.getFromEventUtility(field) != null) {
@@ -2202,7 +2202,7 @@ public class AnimationInteractivityManager {
                                         } else if ( StringFieldMatch( scriptObject.getToDefinedItemField(fieldNode), "intensity") ) {
                                             //TODO: we aren't changing intensity since this would be multiplied by color
                                         } else if ( StringFieldMatch( scriptObject.getToDefinedItemField(fieldNode), "radius") ) {
-                                           //TODO: radius is not currently supported in GearVR for the spot light
+                                            //TODO: radius is not currently supported in GearVR for the spot light
                                         }
                                     } else if (gvrComponent instanceof GVRPointLight) {
                                         GVRPointLight gvrPointLightBase = (GVRPointLight) gvrComponent;
@@ -2309,7 +2309,7 @@ public class AnimationInteractivityManager {
                                 //  SFVec3f change to a GVRSceneObject
                                 GVRSceneObject gvrSceneObject = scriptObjectToDefinedItem.getGVRSceneObject();
                                 if ( StringFieldMatch( scriptObject.getToDefinedItemField(fieldNode), "translation")  ||
-                                    StringFieldMatch( scriptObject.getToDefinedItemField(fieldNode), "location") ) {
+                                        StringFieldMatch( scriptObject.getToDefinedItemField(fieldNode), "location") ) {
                                     // location applies to point light and spot light
                                     GVRSceneObject gvrSceneObjectTranslation = root
                                             .getSceneObjectByName((scriptObjectToDefinedItem.getGVRSceneObject().getName() + x3dObject.TRANSFORM_TRANSLATION_));
@@ -2425,7 +2425,7 @@ public class AnimationInteractivityManager {
                                 SFInt32 sfInt32 = new SFInt32(new Integer(returnedJavaScriptValue.toString()).intValue() );
                                 if (scriptObjectToDefinedItem.getGVRSceneObject() != null) {
                                     // Check if the field is 'whichChoice', meaning it's a Switch node
-                                     if ( StringFieldMatch(scriptObject.getToDefinedItemField(fieldNode), "whichChoice") ) {
+                                    if ( StringFieldMatch(scriptObject.getToDefinedItemField(fieldNode), "whichChoice") ) {
                                         GVRSceneObject gvrSwitchSceneObject = scriptObject.getToDefinedItem(fieldNode).getGVRSceneObject();
                                         GVRComponent gvrComponent = gvrSwitchSceneObject.getComponent(GVRSwitch.getComponentType());
                                         if (gvrComponent instanceof GVRSwitch) {
@@ -2487,7 +2487,7 @@ public class AnimationInteractivityManager {
                                         if (!gvrTexture.getImage().getFileName().equals(mfString.get1Value(0))) {
                                             // Only loadTexture if it is different than the current
                                             GVRAssetLoader.TextureRequest request = new GVRAssetLoader.TextureRequest(assetRequest,
-                                                        gvrTexture, mfString.get1Value(0));
+                                                    gvrTexture, mfString.get1Value(0));
                                             assetRequest.loadTexture(request);
                                         }
                                     } // end having GVRMaterial containing GVRTexture
@@ -2550,7 +2550,7 @@ public class AnimationInteractivityManager {
             }  // end for-loop list of fields for a single script
         } catch (Exception e) {
             Log.e(TAG, "Error setting values returned from JavaScript in SCRIPT '" +
-                            interactiveObjectFinal.getScriptObject().getName() +
+                    interactiveObjectFinal.getScriptObject().getName() +
                     "'. Check JavaScript or ROUTE's.  Exception: " + e);
 
         }
@@ -2625,7 +2625,4 @@ public class AnimationInteractivityManager {
     }
 
 
-}  //  end AnimationInteractivityManager class
-
-
-
+} //  end AnimationInteractivityManager class
