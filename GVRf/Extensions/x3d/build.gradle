@@ -47,6 +47,11 @@ dependencies {
     } else {
         compile(name: 'framework-debug', ext: 'aar')
     }
+    if (findProject(':script')) {
+        compile project (':script')
+    } else {
+        compile(name: 'script-debug', ext: 'aar')
+    }
 }
 
 

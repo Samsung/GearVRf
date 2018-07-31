@@ -25,7 +25,7 @@ import org.gearvrf.animation.GVROpacityAnimation;
 import org.gearvrf.asynchronous.GVRAsynchronousResourceLoader;
 import org.gearvrf.io.GVRGearCursorController;
 import org.gearvrf.io.GVRInputManager;
-import org.gearvrf.script.GVRScriptManager;
+import org.gearvrf.script.IScriptManager;
 import org.gearvrf.utility.ImageUtils;
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
@@ -62,7 +62,7 @@ abstract class GVRViewManager extends GVRContext {
 
         GVRAsynchronousResourceLoader.setup(this);
         VrAppSettings appSettings = activity.getAppSettings();
-        mScriptManager = new GVRScriptManager(this);
+        initScriptManager();
         mEventManager = new GVREventManager(this);
         mInputManager = new GVRInputManager(this, appSettings.getCursorControllerTypes(),appSettings.getNumControllers());
         mInputManager.scanDevices();
@@ -82,7 +82,9 @@ abstract class GVRViewManager extends GVRContext {
 
     void onDestroy() {
         mInputManager.close();
-        mScriptManager.destroy();
+        if (mScriptManager != null) {
+            mScriptManager.destroy();
+        }
 
         mFrameListeners.clear();
         mRunnables.clear();
@@ -546,7 +548,7 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     @Override
-    public GVRScriptManager getScriptManager() {
+    public IScriptManager getScriptManager() {
         return mScriptManager;
     }
 
@@ -810,8 +812,20 @@ abstract class GVRViewManager extends GVRContext {
             mReadbackBuffer = null;
         }
     }
+
+    private void initScriptManager() {
+        try
+        {
+            final Class<?> cls = Class.forName("org.gearvrf.script.GVRScriptManager");
+            mScriptManager = (IScriptManager)cls.getConstructor(GVRContext.class).newInstance(this);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     GVRGearCursorController.ControllerReader mControllerReader;
-    private final GVRScriptManager mScriptManager;
+    private IScriptManager mScriptManager = null;
     protected final GVRApplication mApplication;
     protected float mFrameTime;
     protected long mPreviousTimeNanos;

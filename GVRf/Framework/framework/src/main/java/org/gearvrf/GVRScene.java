@@ -20,7 +20,7 @@ import android.os.Environment;
 import org.gearvrf.GVRCameraRig.GVRCameraRigType;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
-import org.gearvrf.script.GVRScriptBehavior;
+import org.gearvrf.script.GVRScriptBehaviorBase;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
@@ -556,7 +556,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         private void recursivelySendOnInit(GVRSceneObject sceneObject) {
             getGVRContext().getEventManager().sendEvent(
                     sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
-            GVRScriptBehavior script = (GVRScriptBehavior) sceneObject.getComponent(GVRScriptBehavior.getComponentType());
+            GVRScriptBehaviorBase script = (GVRScriptBehaviorBase) sceneObject.getComponent(GVRScriptBehaviorBase.getComponentType());
             if (script != null) {
                 getGVRContext().getEventManager().sendEvent(
                         script, ISceneEvents.class, "onInit", getGVRContext(), GVRScene.this);

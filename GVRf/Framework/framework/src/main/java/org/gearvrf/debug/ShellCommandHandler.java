@@ -25,7 +25,7 @@ import org.gearvrf.debug.cli.Command;
 import org.gearvrf.debug.cli.HelpCommandHandler;
 import org.gearvrf.debug.cli.Shell;
 import org.gearvrf.debug.cli.ShellDependent;
-import org.gearvrf.script.GVRScriptManager;
+import org.gearvrf.script.IScriptManager;
 
 /**
  * Shell commands for GVRf debug console.
@@ -44,12 +44,16 @@ public class ShellCommandHandler implements ShellDependent {
 
     @Command
     public String js() {
-        return enterLanguage(GVRScriptManager.LANG_JAVASCRIPT);
+        return enterLanguage(IScriptManager.LANG_JAVASCRIPT);
     }
 
     private String enterLanguage(String language) {
-        ScriptEngine engine = mGVRContext.getScriptManager().getEngine(language);
+        IScriptManager sm = mGVRContext.getScriptManager();
+        if (sm == null) {
+            return "Script extension is not enabled";
+        }
 
+        ScriptEngine engine = sm.getEngine(language);
         if (engine == null) {
             return "Cannot find the language engine for " + language;
         }

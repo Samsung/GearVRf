@@ -21,11 +21,6 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libassimp.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE    := jav8
-LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libjav8.so
-include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
@@ -87,7 +82,6 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/vulkan/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += assimp
-LOCAL_SHARED_LIBRARIES += jav8
 LOCAL_STATIC_LIBRARIES += shaderc
 
 ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))

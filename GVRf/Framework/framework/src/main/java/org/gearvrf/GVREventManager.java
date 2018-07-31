@@ -17,13 +17,13 @@ package org.gearvrf;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 
-import org.gearvrf.script.GVRScriptFile;
+import org.gearvrf.script.IScriptManager;
+import org.gearvrf.script.IScriptFile;
 import org.gearvrf.script.IScriptable;
 
 /**
@@ -295,7 +295,12 @@ public class GVREventManager {
 
     private boolean tryInvokeScript(IScriptable target, String eventName,
             Object[] params) {
-        GVRScriptFile script = mGvrContext.getScriptManager().getScriptFile(target);
+        IScriptManager sm = mGvrContext.getScriptManager();
+        if (sm == null) {
+            return false;
+        }
+
+        IScriptFile script = sm.getScriptFile(target);
         if (script == null)
             return false;
 
