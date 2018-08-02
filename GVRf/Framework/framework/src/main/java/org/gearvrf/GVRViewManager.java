@@ -820,7 +820,6 @@ abstract class GVRViewManager extends GVRContext {
             mScriptManager = (IScriptManager)cls.getConstructor(GVRContext.class).newInstance(this);
         }
         catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
