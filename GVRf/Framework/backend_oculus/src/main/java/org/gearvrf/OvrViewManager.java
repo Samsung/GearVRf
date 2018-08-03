@@ -196,8 +196,6 @@ class OvrViewManager extends GVRViewManager {
                 captureRightEye(renderTarget, true);
                 captureLeftEye(renderTarget, true);
 
-                captureFinish();
-
                 if (DEBUG_STATS) {
                     mTracerDrawEyes1.leave();
                     mTracerDrawEyes2.leave();
@@ -217,7 +215,6 @@ class OvrViewManager extends GVRViewManager {
                              mRenderBundle.getPostEffectRenderTextureB());
                     captureRightEye(renderTarget, false);
 
-                    captureFinish();
                     if (DEBUG_STATS) {
                         mTracerDrawEyes1.leave();
                         mTracerDrawEyes.leave();
@@ -236,6 +233,7 @@ class OvrViewManager extends GVRViewManager {
 
                     renderTarget.cullFromCamera(mMainScene, mainCameraRig.getCenterCamera(), mRenderBundle.getShaderManager());
                     captureCenterEye(renderTarget, false);
+                    captureSticker();
                     renderTarget.render(mMainScene, leftCamera, mRenderBundle.getShaderManager(), mRenderBundle.getPostEffectRenderTextureA(), mRenderBundle.getPostEffectRenderTextureB());
 
                     captureLeftEye(renderTarget, false);

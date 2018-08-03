@@ -24,6 +24,8 @@ class GVRRenderBundle {
     private  GVRRenderTexture mPostEffectRenderTextureA = null;
     private  GVRRenderTexture mPostEffectRenderTextureB = null;
     private  GVRRenderTarget mEyeCaptureRenderTarget = null;
+    // Three render targets for sticker generation
+    private  GVRRenderTarget mStickerRenderTarget[] = {null, null, null};
 
     protected int  mSampleCount;
     protected int mWidth, mHeight;
@@ -92,6 +94,15 @@ class GVRRenderBundle {
         }
         return  mEyeCaptureRenderTarget;
     }
+
+    public GVRRenderTarget getStickerRenderTarget(int index) {
+        if(mStickerRenderTarget[index] == null){
+            mStickerRenderTarget[index]  = new GVRRenderTarget(new GVRRenderTexture(mGVRContext, mWidth, mHeight, mSampleCount), mGVRContext.getMainScene());
+            mStickerRenderTarget[index].setCamera(mGVRContext.getMainScene().getMainCameraRig().getCenterCamera());
+        }
+        return  mStickerRenderTarget[index];
+    }
+
     void beginRendering(int bufferIdx, GVRViewManager.EYE eye) {
         getRenderTexture(bufferIdx,eye).beginRendering();
     }

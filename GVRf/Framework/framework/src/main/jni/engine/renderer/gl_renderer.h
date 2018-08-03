@@ -65,6 +65,11 @@ protected:
         if(transform_ubo_[1])
             delete transform_ubo_[1];
 
+        GLuint* &pbos = getPBOs();
+        if(pbos != NULL) {
+            glDeleteBuffers(3, pbos);
+        }
+
     }
 
 public:
@@ -103,6 +108,8 @@ public:
     GLUniformBlock* getTransformUbo(int index) { return transform_ubo_[index]; }
     virtual void updatePostEffectMesh(Mesh*);
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData,  int);
+    virtual bool readRenderResultInPBO(int);
+    virtual bool readRenderResultFromPBO(uint8_t *readback_buffer, int pboIndex);
 
 private:
     virtual void renderMesh(RenderState& rstate, RenderData* render_data);

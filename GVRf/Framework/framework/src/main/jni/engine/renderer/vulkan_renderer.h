@@ -135,7 +135,8 @@ public:
 
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual void updatePostEffectMesh(Mesh*);
-
+    virtual bool readRenderResultInPBO(int){}
+    virtual bool readRenderResultFromPBO(uint8_t *readback_buffer, int pboIndex){}
 private:
     VulkanCore* vulkanCore_;
     void renderMesh(RenderState& rstate, RenderData* render_data){}

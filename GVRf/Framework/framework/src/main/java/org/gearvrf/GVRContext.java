@@ -584,6 +584,8 @@ public abstract class GVRContext implements IEventReceiver {
      */
     public abstract void captureScreenCenter(GVRScreenshotCallback callback);
 
+    abstract boolean captureSticker(GVRScreenshotCallback callback, int pboIndex);
+
     /**
      * Capture a 2D screenshot from the position of left eye.
      * 

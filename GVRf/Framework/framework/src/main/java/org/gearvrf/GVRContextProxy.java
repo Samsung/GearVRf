@@ -127,6 +127,10 @@ public final class GVRContextProxy extends GVRContext {
         mContext.get().captureScreenCenter(callback);
     }
 
+    public boolean captureSticker(GVRScreenshotCallback callback, int pboIndex) {
+        return mContext.get().captureSticker(callback, pboIndex);
+    }
+
     public void captureScreenLeft(GVRScreenshotCallback callback) {
         mContext.get().captureScreenLeft(callback);
     }

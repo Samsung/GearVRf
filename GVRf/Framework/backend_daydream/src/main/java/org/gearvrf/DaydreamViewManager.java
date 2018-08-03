@@ -146,7 +146,6 @@ class DaydreamViewManager extends GVRViewManager {
                     mRenderBundle.getPostEffectRenderTextureB());
             captureRightEye(renderTarget,false);
         }
-        captureFinish();
     }
 
     void setCameraRig(GVRCameraRig cameraRig) {

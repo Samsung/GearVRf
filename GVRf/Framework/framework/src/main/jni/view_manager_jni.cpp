@@ -85,6 +85,13 @@ extern "C" {
     Java_org_gearvrf_GVRViewManager_readRenderResultNative(JNIEnv *env, jclass clazz,
                                                            jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview);
 
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_GVRViewManager_readRenderResultInPBONative(JNIEnv *env, jclass clazz,
+                                                       jint pboIndex);
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_GVRViewManager_readRenderResultFromPBONative(JNIEnv *env, jclass clazz,
+                                                       jobject jreadback_buffer, jint pboIndex);
 } // extern "C"
 
 
@@ -98,4 +105,15 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
     }
     renderTexture->readRenderResult(readback_buffer);
 }
+
+    JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultInPBONative(JNIEnv *env, jclass clazz,
+                                                                                  jint pboIndex){
+        gRenderer->readRenderResultInPBO(pboIndex);
+    }
+
+    JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultFromPBONative(JNIEnv *env, jclass clazz,
+                                                                                  jobject jreadback_buffer, jint pboIndex){
+        uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
+        gRenderer->readRenderResultFromPBO(readback_buffer, pboIndex);
+    }
 }

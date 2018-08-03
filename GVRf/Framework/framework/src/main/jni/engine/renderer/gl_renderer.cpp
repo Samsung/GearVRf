@@ -713,5 +713,46 @@ namespace gvr
         copy_mesh->setTriangles(faces, faces_size);
     }
 
+    bool GLRenderer::readRenderResultInPBO(int pboIndex) {
+        static GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT,viewport);
+
+        GLuint* &pbos = gRenderer->getPBOs();
+        if(pbos == NULL){
+            pbos = new GLuint[3];
+            glGenBuffers(3, pbos);
+
+            long neededCapacity = viewport[2] * viewport[3] * 4;
+            for(int i = 0; i < 3; i++){
+                glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[i]);
+                glBufferData(GL_PIXEL_PACK_BUFFER, neededCapacity, NULL, GL_DYNAMIC_READ);
+            }
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        }
+
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[pboIndex]);
+        glReadPixels(0, 0, viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        return true;
+    }
+
+    bool GLRenderer::readRenderResultFromPBO(uint8_t *readback_buffer, int pboIndex) {
+        static GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT,viewport);
+        long pboSize = viewport[2] * viewport[3] * 4;
+
+        GLuint * pbos = gRenderer->getPBOs();
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[pboIndex]);
+
+        uint8_t* ptr = (uint8_t*)glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, pboSize, GL_MAP_READ_BIT);
+
+        if (NULL != ptr) {
+            memcpy(readback_buffer, ptr, pboSize);
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        }
+        else {
+            LOGE("Failed to map the buffer");
+        }
+        return true;
+    }
 }
 

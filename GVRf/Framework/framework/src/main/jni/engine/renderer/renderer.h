@@ -202,10 +202,13 @@ public:
         }
         return nullptr;
     }
+    virtual bool readRenderResultInPBO(int) = 0;
+    virtual bool readRenderResultFromPBO(uint8_t *, int) = 0;
 private:
     RenderTarget* mLeftRenderTarget[3];
     RenderTarget* mRightRenderTarget[3];
     RenderTarget* mMultiviewRenderTarget[3];
+    GLuint * pbos = NULL;
     static bool isVulkan_;
     virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
     virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
@@ -243,6 +246,9 @@ public:
     void setUseStencilBuffer(bool enable) { useStencilBuffer_ = enable; }
     bool useStencilBuffer(){
         return  useStencilBuffer_;
+    }
+    GLuint* & getPBOs(){
+        return pbos;
     }
 };
 extern Renderer* gRenderer;

@@ -561,6 +561,8 @@ abstract class GVRViewManager extends GVRContext {
     protected GVRScreenshotCallback mScreenshotLeftCallback;
     protected GVRScreenshotCallback mScreenshotRightCallback;
     protected GVRScreenshot3DCallback mScreenshot3DCallback;
+    protected GVRScreenshotCallback mStickerCallback;
+    protected int mPboIndex = 0;
 
     @Override
     public void captureScreenCenter(GVRScreenshotCallback callback) {
@@ -569,6 +571,21 @@ abstract class GVRViewManager extends GVRContext {
         } else {
             mScreenshotCenterCallback = callback;
         }
+    }
+
+    @Override
+    public boolean captureSticker(GVRScreenshotCallback callback, int pboIndex) {
+        // Avoids making null of previous mStickerCallback if it is not completed
+        if(mStickerCallback != null)
+            return false;
+        if (callback == null) {
+            throw new IllegalArgumentException("callback should not be null.");
+        } else {
+            mStickerCallback = callback;
+            mPboIndex = pboIndex;
+        }
+
+        return true;
     }
 
     @Override
@@ -595,21 +612,41 @@ abstract class GVRViewManager extends GVRContext {
     }
 
     protected void readRenderResult(GVRRenderTarget renderTarget, GVRViewManager.EYE eye, boolean useMultiview) {
-        if (mReadbackBuffer == null) {
+        if (mReadbackBuffer[mPboIndex] == null) {
             final VrAppSettings settings = mApplication.getAppSettings();
             final VrAppSettings.EyeBufferParams eyeBufferParams = settings.getEyeBufferParams();
             mReadbackBufferWidth = eyeBufferParams.getResolutionWidth();
             mReadbackBufferHeight = eyeBufferParams.getResolutionHeight();
 
-            mReadbackBuffer = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
-            mReadbackBuffer.order(ByteOrder.nativeOrder());
+            mReadbackBuffer[mPboIndex] = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
+            mReadbackBuffer[mPboIndex].order(ByteOrder.nativeOrder());
         }
-        readRenderResultNative(mReadbackBuffer,renderTarget.getNative(), eye.ordinal(), useMultiview );
+        readRenderResultNative(mReadbackBuffer[mPboIndex],renderTarget.getNative(), eye.ordinal(), useMultiview );
+    }
+
+    protected void readRenderResultInPBO(int pboIndex) {
+        if (mReadbackBuffer[mPboIndex] == null) {
+            final VrAppSettings settings = mApplication.getAppSettings();
+            final VrAppSettings.EyeBufferParams eyeBufferParams = settings.getEyeBufferParams();
+            mReadbackBufferWidth = eyeBufferParams.getResolutionWidth();
+            mReadbackBufferHeight = eyeBufferParams.getResolutionHeight();
+
+            mReadbackBuffer[pboIndex] = ByteBuffer.allocateDirect(mReadbackBufferWidth * mReadbackBufferHeight * 4);
+            mReadbackBuffer[pboIndex].order(ByteOrder.nativeOrder());
+        }
+
+        readRenderResultInPBONative(pboIndex);
+    }
+
+    protected void readRenderResultFromPBO(ByteBuffer readbackBuffer, int pboIndex) {
+        if(readbackBuffer == null)
+            return;
+        readRenderResultFromPBONative(readbackBuffer, pboIndex);
     }
 
     protected void returnScreenshotToCaller(final GVRScreenshotCallback callback, final int width, final int height) {
         // run the callback function in a background thread
-        final byte[] byteArray = Arrays.copyOf(mReadbackBuffer.array(), mReadbackBuffer.array().length);
+        final byte[] byteArray = Arrays.copyOf(mReadbackBuffer[mPboIndex].array(), mReadbackBuffer[mPboIndex].array().length);
         Threads.spawn(new Runnable() {
             public void run() {
                 final Bitmap capturedBitmap = ImageUtils.generateBitmapFlipV(byteArray, width, height);
@@ -692,6 +729,7 @@ abstract class GVRViewManager extends GVRContext {
         }
         readRenderResult(renderTarget,eye,useMultiview);
         returnScreenshotToCaller(callback, mReadbackBufferWidth, mReadbackBufferHeight);
+        mReadbackBuffer[mPboIndex] = null;
     }
 
     // capture center eye
@@ -729,8 +767,8 @@ abstract class GVRViewManager extends GVRContext {
             renderTarget.endRendering();
 
         final Bitmap bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
-        mReadbackBuffer.rewind();
-        bitmap.copyPixelsFromBuffer(mReadbackBuffer);
+        mReadbackBuffer[mPboIndex].rewind();
+        bitmap.copyPixelsFromBuffer(mReadbackBuffer[mPboIndex]);
         final GVRScreenshotCallback callback = mScreenshotCenterCallback;
         Threads.spawn(new Runnable() {
             public void run() {
@@ -741,6 +779,55 @@ abstract class GVRViewManager extends GVRContext {
         mScreenshotCenterCallback = null;
     }
 
+    // Capture sticker
+    protected void captureSticker() {
+        if (mStickerCallback == null) {
+            return;
+        }
+
+        // TODO: when we will use multithreading, create new camera using centercamera as we are adding posteffects into it
+        final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
+        final GVRMaterial postEffect = new GVRMaterial(this, GVRMaterial.GVRShaderType.HorizontalFlip.ID);
+        centerCamera.addPostEffect(postEffect);
+
+        GVRRenderTexture posteffectRenderTextureA = mRenderBundle.getPostEffectRenderTextureA();
+        GVRRenderTexture posteffectRenderTextureB = mRenderBundle.getPostEffectRenderTextureB();
+
+        GVRRenderTarget renderTarget = mRenderBundle.getStickerRenderTarget(mPboIndex);
+        renderTarget.cullFromCamera(mMainScene, centerCamera ,mRenderBundle.getShaderManager());
+
+        renderTarget.beginRendering(centerCamera);
+        renderTarget.render(mMainScene,centerCamera, mRenderBundle.getShaderManager(), posteffectRenderTextureA, posteffectRenderTextureB);
+        centerCamera.removePostEffect(postEffect);
+        readRenderResultInPBO(mPboIndex);
+        renderTarget.endRendering();
+
+        // Read the previous PBO's result into readbackBuffer
+        int pboIndex = (mPboIndex - 1) < 0 ? 2 : mPboIndex - 1;
+        final ByteBuffer readbackBuffer = mReadbackBuffer[pboIndex];
+
+        if(readbackBuffer != null) {
+            readRenderResultFromPBO(readbackBuffer, pboIndex);
+            readbackBuffer.rewind();
+        }
+
+        final GVRScreenshotCallback callback = mStickerCallback;
+
+        Threads.spawn(new Runnable() {
+            public void run() {
+                Bitmap bitmap = null;
+                // Copying asynchronously readback buffers data into bitmap
+                if(readbackBuffer != null) {
+                    bitmap = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
+                    bitmap.copyPixelsFromBuffer(readbackBuffer);
+                }
+                callback.onScreenCaptured(bitmap);
+            }
+        });
+
+        mStickerCallback = null;
+    }
+
     private void renderOneCameraAndAddToList(final GVRPerspectiveCamera centerCamera, final Bitmap[] bitmaps, int index,
                                              GVRRenderTarget renderTarget, GVRRenderTexture postEffectRenderTextureA, GVRRenderTexture postEffectRenderTextureB ) {
 
@@ -749,8 +836,8 @@ abstract class GVRViewManager extends GVRContext {
         readRenderResult(renderTarget,EYE.CENTER, false);
 
         bitmaps[index] = Bitmap.createBitmap(mReadbackBufferWidth, mReadbackBufferHeight, Bitmap.Config.ARGB_8888);
-        mReadbackBuffer.rewind();
-        bitmaps[index].copyPixelsFromBuffer(mReadbackBuffer);
+        mReadbackBuffer[mPboIndex].rewind();
+        bitmaps[index].copyPixelsFromBuffer(mReadbackBuffer[mPboIndex]);
     }
 
     private void renderSixCamerasAndReadback(final GVRCameraRig mainCameraRig, final Bitmap[] bitmaps, GVRRenderTarget renderTarget, boolean isMultiview) {
@@ -806,13 +893,6 @@ abstract class GVRViewManager extends GVRContext {
             renderTarget.endRendering();
     }
 
-    protected void captureFinish() {
-        if (mScreenshotLeftCallback == null && mScreenshotRightCallback == null
-                && mScreenshotCenterCallback == null && mScreenshot3DCallback == null) {
-            mReadbackBuffer = null;
-        }
-    }
-
     private void initScriptManager() {
         try
         {
@@ -847,15 +927,16 @@ abstract class GVRViewManager extends GVRContext {
 
     protected GVRMain mMain;
 
-    protected ByteBuffer mReadbackBuffer;
+    protected ByteBuffer mReadbackBuffer[] = {null, null, null};
     protected int mReadbackBufferWidth;
     protected int mReadbackBufferHeight;
 
     protected native void makeShadowMaps(long scene, GVRScene javaSceneObject, long shader_manager, int width, int height);
     protected native void cullAndRender(long render_target, long scene, GVRScene javaSceneObject, long shader_manager, long postEffectRenderTextureA, long postEffectRenderTextureB);
     private native static void readRenderResultNative(Object readbackBuffer, long renderTarget, int eye, boolean useMultiview);
+    private native static void readRenderResultInPBONative(int pboIndex);
+    private native static void readRenderResultFromPBONative(Object readbackBuffer, int pboIndex);
 
     private static final String TAG = "GVRViewManager";
-
 }
 
