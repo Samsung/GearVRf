@@ -36,7 +36,7 @@ struct VulkanRenderPass : public RenderPass
     bool descriptorSetNull = true;
     VkDescriptorPool m_descriptorPool;
     VkPipeline m_pipeline;
-    VkDescriptorSet m_descriptorSet;
+    VkDescriptorSet m_descriptorSet[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE};
 };
 
 
@@ -77,7 +77,7 @@ struct VulkanRenderPass : public RenderPass
         VkDescriptorSet getDescriptorSet(int pass)
         {
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
-            return renderPass->m_descriptorSet;
+            return renderPass->m_descriptorSet[0];
         }
         void setPipeline(VkPipeline pipeline, int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
@@ -92,16 +92,6 @@ struct VulkanRenderPass : public RenderPass
         VkDescriptorPool& getDescriptorPool(int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
             return renderPass->m_descriptorPool;
-
-        }
-        void setDescriptorSet(VkDescriptorSet descriptorSet, int pass){
-            VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
-            renderPass->m_descriptorSet= descriptorSet;
-
-        }
-        void setDescriptorSetNull(bool flag, int pass){
-            VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
-            renderPass->descriptorSetNull = flag;
 
         }
         void generateVbos(const std::string& descriptor, VulkanRenderer* renderer, Shader* shader){

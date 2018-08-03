@@ -19,9 +19,9 @@
 precision highp float;
 
 #ifdef HAS_MULTIVIEW
-layout ( set = 0, binding = 10 )uniform lowp sampler2DArray u_texture;
+layout ( set = 1, binding = 10 )uniform lowp sampler2DArray u_texture;
 #else
-layout ( set = 0, binding = 10 )uniform lowp sampler2D u_texture;
+layout ( set = 1, binding = 10 )uniform lowp sampler2D u_texture;
 #endif
 
 

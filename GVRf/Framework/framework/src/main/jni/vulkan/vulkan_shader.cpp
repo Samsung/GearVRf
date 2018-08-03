@@ -40,7 +40,7 @@ void VulkanShader::initialize()
 {
 }
 
-int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights)
+void VulkanShader::makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights)
 {
     VkDescriptorSetLayoutBinding dummy_binding ={} ;
     if (usesMatrixUniforms()) {
@@ -88,26 +88,27 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     layoutBinding.pImmutableSamplers = nullptr;
     (samplerBinding).push_back(layoutBinding);
-
-    index = TEXTURE_BIND_START;
-    vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
-    {
-        const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
-        if ((entry == NULL) || entry->NotUsed)
-        {
-            return;
-        }
-        VkDescriptorSetLayoutBinding layoutBinding;
-        layoutBinding.binding = entry->Index + TEXTURE_BIND_START;
-        layoutBinding.descriptorCount = 1;
-        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        layoutBinding.pImmutableSamplers = nullptr;
-        (samplerBinding).push_back(layoutBinding);
-    });
-
-    return index;
 }
+
+void VulkanShader::makeSamplerLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding)
+{
+    vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
+                         {
+                            const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
+                            if ((entry == NULL) || entry->NotUsed)
+                            {
+                                return;
+                            }
+                            VkDescriptorSetLayoutBinding layoutBinding;
+                            layoutBinding.binding = entry->Index + TEXTURE_BIND_START;
+                            layoutBinding.descriptorCount = 1;
+                            layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                            layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+                            layoutBinding.pImmutableSamplers = nullptr;
+                            (samplerBinding).push_back(layoutBinding);
+                         });
+}
+
 bool VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet)
 {
     bool success = true;

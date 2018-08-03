@@ -29,12 +29,12 @@ layout(location = 7) in mat3 tangent_matrix;
 #endif
 #endif
 
-layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
-layout(set = 0, binding = 11) uniform sampler2D ambientTexture;
-layout(set = 0, binding = 12) uniform sampler2D specularTexture;
-layout(set = 0, binding = 13) uniform sampler2D opacityTexture;
-layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
-layout(set = 0, binding = 15) uniform sampler2D emissiveTexture;
+layout(set = 1, binding = 10) uniform sampler2D diffuseTexture;
+layout(set = 1, binding = 11) uniform sampler2D ambientTexture;
+layout(set = 1, binding = 12) uniform sampler2D specularTexture;
+layout(set = 1, binding = 13) uniform sampler2D opacityTexture;
+layout(set = 1, binding = 14) uniform sampler2D lightmapTexture;
+layout(set = 1, binding = 15) uniform sampler2D emissiveTexture;
 
 
 struct Surface

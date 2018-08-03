@@ -35,17 +35,16 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
 
     VulkanShader *Vkshader = reinterpret_cast<VulkanShader *>(shader);
 
-    VkDescriptorSet descriptorSet = getDescriptorSet(curr_pass);
-    //bind out descriptor set, which handles our uniforms and samplers
-    if(static_cast<VulkanShader*>(shader)->isDepthShader()){
+    if(rp->m_descriptorSet[0]) {
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 Vkshader->getPipelineLayout(), 0, 1,
-                                &rp->m_descriptorSet, 0, NULL);
+                                &rp->m_descriptorSet[0], 0, NULL);
     }
-    else if (!isDescriptorSetNull(curr_pass)) {
+
+    if(rp->m_descriptorSet[1]) {
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                Vkshader->getPipelineLayout(), 0, 1,
-                                &descriptorSet, 0, NULL);
+                                Vkshader->getPipelineLayout(), 1, 1,
+                                &rp->m_descriptorSet[1], 0, NULL);
     }
 
     // Bind our vertex buffer, with a 0 offset.

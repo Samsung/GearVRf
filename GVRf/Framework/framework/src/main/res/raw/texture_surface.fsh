@@ -1,7 +1,7 @@
 #ifdef HAS_diffuseTexture
-layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
+layout(set = 1, binding = 10) uniform sampler2D diffuseTexture;
 #else
-layout(set = 0, binding = 10) uniform sampler2D u_texture;
+layout(set = 1, binding = 10) uniform sampler2D u_texture;
 #endif
 
 @MATERIAL_UNIFORMS

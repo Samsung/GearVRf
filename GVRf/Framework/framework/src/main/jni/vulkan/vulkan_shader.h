@@ -83,9 +83,9 @@ public:
         return m_pipelineLayout;
     }
 
-    VkDescriptorSetLayout &getDescriptorLayout()
+    VkDescriptorSetLayout* getDescriptorLayouts()
     {
-        return m_descriptorLayout;
+        return &m_descriptorLayout[0];
     }
     bool isDepthShader(){
         return isDepthShaderFlag;
@@ -98,12 +98,13 @@ public:
     void  convertToVkShaders();
     virtual void bindLights(LightList&, Renderer* r) { }
 
-    int makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights);
+    void makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights);
+    void makeSamplerLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding);
     bool bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet);
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
 private:
     VkPipelineLayout m_pipelineLayout;
-    VkDescriptorSetLayout m_descriptorLayout;
+    VkDescriptorSetLayout m_descriptorLayout[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE};
 
     VulkanShader(const VulkanShader& shader) = delete;
     VulkanShader(VulkanShader&& shader) = delete;

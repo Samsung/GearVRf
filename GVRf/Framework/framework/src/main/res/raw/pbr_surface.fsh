@@ -2,31 +2,31 @@
 const float M_PI = 3.141592653589793;
 const float c_MinRoughness = 0.04;
 
-layout (set = 0, binding = 10) uniform sampler2D diffuseTexture;
+layout (set = 1, binding = 10) uniform sampler2D diffuseTexture;
 
 #ifdef HAS_metallicRoughnessTexture
 layout(location = 11) in vec2 metallicRoughness_coord;
-layout(set = 0, binding = 11) uniform sampler2D metallicRoughnessTexture;
+layout(set = 1, binding = 11) uniform sampler2D metallicRoughnessTexture;
 #endif
 
 #ifdef HAS_specularTexture
 layout(location = 12) in vec2 specular_coord;
-layout(set = 0, binding = 12) uniform sampler2D specularTexture;
+layout(set = 1, binding = 12) uniform sampler2D specularTexture;
 #endif
 
 #ifdef HAS_emissiveTexture
 layout(location = 13) in vec2 emissive_coord;
-layout (set = 0, binding = 13) uniform sampler2D emissiveTexture;
+layout (set = 1, binding = 13) uniform sampler2D emissiveTexture;
 #endif
 
 #ifdef HAS_lightmapTexture
 layout(location = 14) in vec2 lightmap_coord;
-layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
+layout(set = 1, binding = 14) uniform sampler2D lightmapTexture;
 #endif
 
 #ifdef HAS_normalTexture
 layout(location = 15) in vec2 normal_coord;
-layout(set = 0, binding = 15) uniform sampler2D normalTexture;
+layout(set = 1, binding = 15) uniform sampler2D normalTexture;
 
 #ifdef HAS_a_tangent
 layout(location = 7) in mat3 tangent_matrix;
@@ -53,15 +53,15 @@ layout(location = 7) in mat3 tangent_matrix;
 #endif
 
 #ifdef HAS_brdfLUTTexture
-layout(set = 0, binding = 16) uniform sampler2D brdfLUTTexture;
+layout(set = 1, binding = 16) uniform sampler2D brdfLUTTexture;
 #endif
 
 #ifdef HAS_diffuseEnvTex
-layout(set = 0, binding = 17) uniform samplerCube diffuseEnvTex;
+layout(set = 1, binding = 17) uniform samplerCube diffuseEnvTex;
 #endif
 
 #ifdef HAS_specularEnvTexture
-layout(set = 0, binding = 18) uniform samplerCube specularEnvTexture;
+layout(set = 1, binding = 18) uniform samplerCube specularEnvTexture;
 #endif
 
 

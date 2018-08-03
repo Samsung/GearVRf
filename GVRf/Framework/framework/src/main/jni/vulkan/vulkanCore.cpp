@@ -688,22 +688,32 @@ void VulkanCore::InitCommandPools(){
 
         VkResult ret = VK_SUCCESS;
         uint32_t index = 0;
-        std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
+        std::vector<VkDescriptorSetLayoutBinding> uniformBinding;
+        std::vector<VkDescriptorSetLayoutBinding> samplerBinding;
 
-        vk_shader->makeLayout(*vkMtl, uniformAndSamplerBinding,  index, vkdata, lights);
+        vk_shader->makeUniformLayout(*vkMtl, uniformBinding,  index, vkdata, lights);
+        vk_shader->makeSamplerLayout(*vkMtl, samplerBinding);
 
-        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
-
+        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayouts();
         ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
-                                                                                       uniformAndSamplerBinding.size(),
-                                                                                       uniformAndSamplerBinding.data()),
+                                                                                       uniformBinding.size(),
+                                                                                       uniformBinding.data()),
                                           nullptr,
-                                          &descriptorLayout);
+                                          &descriptorLayout[0]);
         GVR_VK_CHECK(!ret);
+
+        if(samplerBinding.size()){
+            ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
+                                                                                           samplerBinding.size(),
+                                                                                           samplerBinding.data()),
+                                              nullptr,
+                                              &descriptorLayout[1]);
+            GVR_VK_CHECK(!ret);
+        }
 
         VkPipelineLayout &pipelineLayout = static_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
-                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0, 0),
+                                     gvr::PipelineLayoutCreateInfo(0, (samplerBinding.size() ? 2 : 1), &descriptorLayout[0], 0, 0),
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
         shader->setShaderDirty(false);
@@ -1294,7 +1304,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptorPoolCreateInfo.pNext = nullptr;
-        descriptorPoolCreateInfo.maxSets = 1;
+        descriptorPoolCreateInfo.maxSets = 2;
         descriptorPoolCreateInfo.poolSizeCount = 3;
         descriptorPoolCreateInfo.pPoolSizes = poolSize;
 
@@ -1315,21 +1325,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VulkanShader* vkShader = static_cast<VulkanShader*>(shader);
         bool bones_present = shader->hasBones();
 
-        std::vector<VkWriteDescriptorSet> writes;
-        VkDescriptorPool descriptorPool;
-        GetDescriptorPool(descriptorPool);
-        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
-        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
-        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptorSetAllocateInfo.pNext = nullptr;
-        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = 1;
-        descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
-
-        VkDescriptorSet descriptorSet;
-        VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
-        GVR_VK_CHECK(!err);
-
         VulkanRenderPass * rp;
         if(vkShader->isDepthShader()){
             rp = vkData->getShadowRenderPass();
@@ -1337,25 +1332,49 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         else {
             rp = vkData->getRenderPass(pass);
         }
-        rp->m_descriptorSet = descriptorSet;
+
+        std::vector<VkWriteDescriptorSet> writes;
+        VkDescriptorPool descriptorPool;
+        GetDescriptorPool(descriptorPool);
+        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayouts();
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.pNext = nullptr;
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout[0];
+
+        VkDescriptorSet descriptorSet;
+
+        VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+        GVR_VK_CHECK(!err);
+        rp->m_descriptorSet[0] = descriptorSet;
+
+        if(descriptorLayout[1]) {
+            descriptorSetAllocateInfo.descriptorSetCount = 1;
+            descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout[1];
+            err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+            GVR_VK_CHECK(!err);
+            rp->m_descriptorSet[1] = descriptorSet;
+        }
 
         if (transformUboPresent) {
-            vkData->getTransformUbo().setDescriptorSet(descriptorSet);
+            vkData->getTransformUbo().setDescriptorSet(rp->m_descriptorSet[0]);
             writes.push_back(vkData->getTransformUbo().getDescriptorSet());
         }
 
         if (uniformDescriptor.getNumEntries()) {
-            static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).setDescriptorSet(descriptorSet);
+            static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).setDescriptorSet(rp->m_descriptorSet[0]);
             writes.push_back(static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).getDescriptorSet());
         }
 
         if(vkData->mesh()->hasBones() && bones_present){
-            static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(descriptorSet);
+            static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(rp->m_descriptorSet[0]);
             writes.push_back(static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->getDescriptorSet());
         }
 
         if(lights != NULL && lights->getUBO() != nullptr){
-            static_cast<VulkanUniformBlock*>(lights->getUBO())->setDescriptorSet(descriptorSet);
+            static_cast<VulkanUniformBlock*>(lights->getUBO())->setDescriptorSet(rp->m_descriptorSet[0]);
             writes.push_back(static_cast<VulkanUniformBlock*>(lights->getUBO())->getDescriptorSet());
         }
 
@@ -1374,7 +1393,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
                 write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 write.dstBinding = 4;
-                write.dstSet = descriptorSet;
+                write.dstSet = rp->m_descriptorSet[0];
                 write.descriptorCount = 1;
                 write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write.pImageInfo = &(static_cast<VkRenderTexture *>(rt->getTexture())->getDescriptorImage(
@@ -1383,11 +1402,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             }
         }
 
-        if(vkShader->bindTextures(vkmtl, writes,  descriptorSet) == false)
-            return false;
 
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         rp->descriptorSetNull = false;
+        writes.clear();
+
+        if(vkShader->bindTextures(vkmtl, writes,  rp->m_descriptorSet[1]) == false) {
+                return false;
+        }
+
+        vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
+
         LOGI("Vulkan after update descriptor");
         return true;
     }

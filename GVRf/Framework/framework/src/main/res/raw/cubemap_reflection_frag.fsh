@@ -4,7 +4,7 @@
 #extension GL_OVR_multiview2 : enable
 #endif
 precision highp float;
-layout( set = 0, binding = 10 ) uniform mediump samplerCube u_texture;
+layout( set = 1, binding = 10 ) uniform mediump samplerCube u_texture;
 
 @MATERIAL_UNIFORMS
 
