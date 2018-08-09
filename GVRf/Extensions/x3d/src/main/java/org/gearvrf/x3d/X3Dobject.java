@@ -1799,7 +1799,6 @@ public class X3Dobject {
                 if (centerAttribute != null) {
                     float[] center = parseFixedLengthFloatString(centerAttribute, 2,
                             false, false);
-                    center[0] = -center[0];
                     shaderSettings.setTextureCenter(center);
                 }
                 String rotationAttribute = attributes.getValue("rotation");
