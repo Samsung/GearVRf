@@ -1029,7 +1029,109 @@ static bool loadMeshes(JNIEnv *env, const aiScene* cScene, jobject& jScene)
 					return false;
 				}
 			}
+
 		}
+
+
+        //animation meshes-------------------------------------------------------------------------
+        for(unsigned int i = 0; i < cMesh->mNumAnimMeshes; ++i )
+        {
+
+            //todo: validity checks for animation meshes
+
+            aiAnimMesh * aMesh = cMesh->mAnimMeshes[i];
+            aMesh->mNumVertices = cMesh->mNumVertices;
+
+            jobject jAnimMesh;
+            SmartLocalRef refAnimMesh(env, jAnimMesh);
+            if (!createInstance(env, "org/gearvrf/jassimp/AiAnimMesh", jAnimMesh))
+            {
+                return false;
+            }
+
+            /* add animation mesh to m_animMeshes java.util.List */
+            jobject jAnimMeshes = NULL;
+            SmartLocalRef refAnimMeshes(env, jAnimMeshes);
+
+            if (!getField(env, jMesh, "m_animMeshes", "Ljava/util/List;", jAnimMeshes))
+            {
+                return false;
+            }
+
+            jvalue addParams[1];
+            addParams[0].l = jAnimMesh;
+            if (!call(env, jAnimMeshes, "java/util/Collection", "add", "(Ljava/lang/Object;)Z", addParams))
+            {
+                return false;
+            }
+
+            /* allocate buffers - we do this from java so they can be garbage collected */
+
+            jvalue allocateBuffersParams[1];
+            allocateBuffersParams[0].i = aMesh->mNumVertices;
+            if (!callv(env, jAnimMesh, "org/gearvrf/jassimp/AiAnimMesh", "allocateBuffers", "(I)V", allocateBuffersParams))
+            {
+                return false;
+            }
+
+
+            if (aMesh->mNumVertices > 0)
+            {
+                /* push vertex data to java */
+                if (!copyBuffer(env, jAnimMesh, "m_vertices", aMesh->mVertices, aMesh->mNumVertices * sizeof(aiVector3D)))
+                {
+                    lprintf("could not copy animation vertex data\n");
+                    return false;
+                }
+                lprintf("    with %u vertices\n", aMesh->mNumVertices);
+            }
+
+            /* push normals to java */
+            if (aMesh->mNormals != NULL)
+            {
+                jvalue allocateDataChannelParams[1];
+                allocateDataChannelParams[0].i = 0;
+                if (!callv(env, jAnimMesh, "org/gearvrf/jassimp/AiAnimMesh", "allocateDataChannel", "(I)V", allocateDataChannelParams))
+                {
+                    lprintf("could not allocate animation normal data channel\n");
+                    return false;
+                }
+                if (!copyBuffer(env, jAnimMesh, "m_normals", aMesh->mNormals, aMesh->mNumVertices * 3 * sizeof(float)))
+                {
+                    lprintf("could not copy animation normal data\n");
+                    return false;
+                }
+
+                lprintf("   with animation mesh normals\n");
+            }
+
+
+            /* push tangents to java */
+            if (aMesh->mTangents != NULL)
+            {
+                jvalue allocateDataChannelParams[1];
+                allocateDataChannelParams[0].i = 1;
+                if (!callv(env, jAnimMesh, "org/gearvrf/jassimp/AiAnimMesh", "allocateDataChannel", "(I)V", allocateDataChannelParams))
+                {
+                    lprintf("could not allocate tangents data channel\n");
+                    return false;
+                }
+                if (!copyBuffer(env, jAnimMesh, "m_tangents", aMesh->mTangents, aMesh->mNumVertices * 3 * sizeof(float)))
+                {
+                    lprintf("could not copy animation tangents data\n");
+                    return false;
+                }
+
+                lprintf("   with animation mesh tangents\n");
+            }
+
+            //set default weight of animation mesh
+            if (!setFloatField(env, jAnimMesh, "m_weight", aMesh->mWeight))
+            {
+                return false;
+            }
+        }
+
 	}
 
 	return true;

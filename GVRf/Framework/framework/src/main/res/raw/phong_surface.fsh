@@ -1,6 +1,5 @@
 @MATERIAL_UNIFORMS
 
-
 #ifdef HAS_ambientTexture
 layout(location = 11) in vec2 ambient_coord;
 #endif

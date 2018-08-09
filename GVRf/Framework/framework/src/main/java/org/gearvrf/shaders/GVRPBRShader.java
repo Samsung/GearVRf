@@ -44,9 +44,9 @@ public class GVRPBRShader extends GVRShaderTemplate
 
     public GVRPBRShader(GVRContext gvrcontext)
     {
-         super("float4 diffuse_color; float4 specular_color; float4 emissive_color; float metallic; float roughness; float specular_exponent; float lightmapStrength; float normalScale; float glossinessFactor",
-                "sampler2D diffuseTexture; sampler2D metallicRoughnessTexture; sampler2D specularTexture; sampler2D lightmapTexture; sampler2D diffuseTexture1; sampler2D normalTexture; sampler2D emissiveTexture; sampler2D brdfLUTTexture; samplerCube diffuseEnvTex; samplerCube specularEnvTexture",
-                "float3 a_position float2 a_texcoord float2 a_texcoord1 float2 a_texcoord2 float2 a_texcoord3 float3 a_normal float4 a_bone_weights int4 a_bone_indices float4 a_tangent float4 a_bitangent",
+         super("float4 diffuse_color; float4 specular_color; float4 emissive_color; float metallic; float roughness; float specular_exponent; float lightmapStrength; float normalScale; float glossinessFactor; int u_numblendshapes; float u_blendweights[75];",
+                "sampler2D diffuseTexture; sampler2D metallicRoughnessTexture; sampler2D specularTexture; sampler2D lightmapTexture; sampler2D diffuseTexture1; sampler2D normalTexture; sampler2D emissiveTexture; sampler2D brdfLUTTexture; samplerCube diffuseEnvTex; samplerCube specularEnvTexture; sampler2D blendshapeTexture",
+                "float3 a_position float2 a_texcoord float2 a_texcoord1 float2 a_texcoord2 float2 a_texcoord3 float3 a_normal float4 a_bone_weights int4 a_bone_indices float3 a_tangent float3 a_bitangent",
                 GLSLESVersion.VULKAN);
 
         if (fragTemplate == null)
@@ -59,6 +59,7 @@ public class GVRPBRShader extends GVRShaderTemplate
             normalShader = TextFile.readTextFile(context, R.raw.normalmap);
             morphShader = TextFile.readTextFile(context, R.raw.vertexmorph);
             skinShader = TextFile.readTextFile(context, R.raw.vertexskinning);
+            morphShader = TextFile.readTextFile(context, R.raw.vertexmorph);
             addLight = TextFile.readTextFile(context, R.raw.pbr_addlight);
         }
         String defines = "#define ambient_coord metallicRoughness_coord\n";
@@ -67,10 +68,10 @@ public class GVRPBRShader extends GVRShaderTemplate
         setSegment("FragmentSurface", surfaceShader);
         setSegment("FragmentAddLight", addLight);
         setSegment("VertexSkinShader", skinShader);
-        setSegment("VertexMorphShader", "");
+        setSegment("VertexMorphShader", morphShader);
         setSegment("VertexShader", vtxShader);
         setSegment("VertexNormalShader", normalShader);
-        setSegment("VertexMorphShader", morphShader);
+
 
         mHasVariants = true;
         mUsesLights = true;

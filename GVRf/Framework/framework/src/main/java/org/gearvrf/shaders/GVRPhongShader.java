@@ -46,7 +46,7 @@ import org.gearvrf.R;
 
        public GVRPhongShader(GVRContext gvrcontext)
        {
-            super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float3 u_color; float u_opacity; float specular_exponent; float line_width; float2 u_lightmap_offset; float2 u_lightmap_scale; int u_numblendshapes; float u_blendweights[20];",
+            super("float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float3 u_color; float u_opacity; float specular_exponent; float line_width; float2 u_lightmap_offset; float2 u_lightmap_scale; int u_numblendshapes; float u_blendweights[75];",
                    "sampler2D diffuseTexture; sampler2D ambientTexture; sampler2D specularTexture; sampler2D opacityTexture; sampler2D lightmapTexture; sampler2D normalTexture; sampler2D emissiveTexture; sampler2D blendshapeTexture",
                    "float3 a_position float2 a_texcoord float2 a_texcoord1 float2 a_texcoord2 float2 a_texcoord3 float3 a_normal float4 a_bone_weights int4 a_bone_indices float3 a_tangent float3 a_bitangent",
                    GLSLESVersion.VULKAN);

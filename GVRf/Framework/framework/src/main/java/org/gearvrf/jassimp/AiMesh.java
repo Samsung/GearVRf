@@ -40,6 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.gearvrf.jassimp;
 
+import org.gearvrf.utility.Log;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -550,9 +552,10 @@ public final class AiMesh {
      */
     public FloatBuffer getTangentBuffer() {
         if (m_tangents == null) {
+
             return null;
         }
-        
+
         return m_tangents.asFloatBuffer();
     }
     
@@ -1176,8 +1179,15 @@ public final class AiMesh {
                 vertex * 3 * SIZEOF_FLOAT, getNumUVComponents(coords));
     }
     // }}
-    
-    
+
+    /**
+     *
+     * @return list of blend shapes
+     */
+    public List<AiAnimMesh> getAnimationMeshes() {
+        return m_animMeshes;
+    }
+
     // {{ Helpers
     /**
      * Throws an exception if the vertex index is not in the allowed range.
@@ -1424,10 +1434,15 @@ public final class AiMesh {
      */
     private ByteBuffer[] m_texcoords = 
             new ByteBuffer[JassimpConfig.MAX_NUMBER_TEXCOORDS];
-    
-    
+
     /**
      * Bones.
      */
     private final List<AiBone> m_bones = new ArrayList<AiBone>();
+
+
+    /**
+     * Morph targets
+     */
+    private final List<AiAnimMesh> m_animMeshes = new ArrayList<AiAnimMesh>();
 }

@@ -105,6 +105,7 @@ public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
         super(srcVerts.getGVRContext(), NativeVertexBuffer.ctor(descriptor, srcVerts.getVertexCount()));
         Pattern pattern = Pattern.compile("([a-zA-Z0-9]+)[ \t]+([a-zA-Z0-9_]+)[^ ]*");
         final String srcDesc = srcVerts.getDescriptor();
+
         Matcher matcher = pattern.matcher(srcDesc);
         mDescriptor = descriptor;
 
