@@ -340,9 +340,6 @@ public abstract class GVRAnimation {
         if (cycled && mRepeatMode != GVRRepeatMode.ONCE) {
             // End of a cycle - see if we should continue
             mIterations += 1;
-            if (mOnFinish != null && mOnRepeat == null) {
-                mOnFinish.finished(this);
-            }
             if (mRepeatCount == 0) {
                 stillRunning = false; // last pass
             } else if (mRepeatCount > 0) {
