@@ -23,6 +23,8 @@
 
 #include "objects/scene_object.h"
 #include <math.h>
+#include <glm/gtx/matrix_decompose.hpp>
+
 namespace gvr {
 
 Transform::Transform() :
@@ -116,47 +118,17 @@ glm::mat4 Transform::getLocalModelMatrix() {
 }
 
 void Transform::setModelMatrix(glm::mat4 matrix) {
+    glm::vec3 scale;
+    glm::quat rotation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(matrix, scale, rotation, translation, skew, perspective);
 
-    glm::vec3 new_position(matrix[3][0], matrix[3][1], matrix[3][2]);
-
-    glm::vec3 Xaxis(matrix[0][0], matrix[0][1], matrix[0][2]);
-    glm::vec3 Yaxis(matrix[1][0], matrix[1][1], matrix[1][2]);
-    glm::vec3 Zaxis(matrix[2][0], matrix[2][1], matrix[2][2]);
-
-    double zs = glm::dot(glm::cross(Xaxis, Yaxis), Zaxis);
-    double ys = glm::dot(glm::cross(Zaxis, Xaxis), Yaxis);
-    double xs = glm::dot(glm::cross(Yaxis, Zaxis), Xaxis);
-
-
-    xs = std::signbit(xs);
-    ys = std::signbit(ys);
-    zs = std::signbit(zs);
-
-    xs = (xs > 0.0 ? -1 : 1);
-    ys = (ys > 0.0 ? -1 : 1);
-    zs = (zs > 0.0 ? -1 : 1);
-
-    glm::vec3 new_scale;
-    new_scale.x = xs * glm::sqrt(
-            matrix[0][0] * matrix[0][0] + matrix[0][1] * matrix[0][1]
-            + matrix[0][2] * matrix[0][2]);
-    new_scale.y = ys * glm::sqrt(
-            matrix[1][0] * matrix[1][0] + matrix[1][1] * matrix[1][1]
-            + matrix[1][2] * matrix[1][2]);
-    new_scale.z = zs * glm::sqrt(
-            matrix[2][0] * matrix[2][0] + matrix[2][1] * matrix[2][1]
-            + matrix[2][2] * matrix[2][2]);
-
-
-    glm::mat3 rotation_mat(matrix[0][0] / new_scale.x,
-                           matrix[0][1] / new_scale.y, matrix[0][2] / new_scale.z,
-                           matrix[1][0] / new_scale.x, matrix[1][1] / new_scale.y,
-                           matrix[1][2] / new_scale.z, matrix[2][0] / new_scale.x,
-                           matrix[2][1] / new_scale.y, matrix[2][2] / new_scale.z);
     mutex_.lock();
-    position_ = new_position;
-    scale_ = new_scale;
-    rotation_ = glm::quat_cast(rotation_mat);
+    position_ = translation;
+    scale_ = scale;
+    rotation_ = glm::conjugate(rotation);
     mutex_.unlock();
     invalidate(true);
 }
