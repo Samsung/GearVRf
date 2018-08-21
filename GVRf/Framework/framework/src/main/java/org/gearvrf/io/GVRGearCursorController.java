@@ -138,6 +138,7 @@ public final class GVRGearCursorController extends GVRCursorController
 
     public enum CONTROLLER_KEYS
     {
+        BUTTON_NONE(0),
         BUTTON_A(0x00000001),
         BUTTON_ENTER(0x00100000),
         BUTTON_BACK(0x00200000),
@@ -148,6 +149,7 @@ public final class GVRGearCursorController extends GVRCursorController
         BUTTON_VOLUME_UP(0x00400000),
         BUTTON_VOLUME_DOWN(0x00800000),
         BUTTON_HOME(0x01000000);
+
         private int numVal;
 
         CONTROLLER_KEYS(int numVal)
@@ -158,6 +160,34 @@ public final class GVRGearCursorController extends GVRCursorController
         public int getNumVal()
         {
             return numVal;
+        }
+
+        static public CONTROLLER_KEYS fromValue(int value) {
+            switch (value) {
+                case 0:
+                    return BUTTON_NONE;
+                case 0x00000001:
+                    return BUTTON_A;
+                case 0x00100000:
+                    return BUTTON_ENTER;
+                case 0x00200000:
+                    return BUTTON_BACK;
+                case 0x00010000:
+                    return BUTTON_UP;
+                case 0x00020000:
+                    return BUTTON_DOWN;
+                case 0x00040000:
+                    return BUTTON_LEFT;
+                case 0x00080000:
+                    return BUTTON_RIGHT;
+                case 0x00400000:
+                    return BUTTON_VOLUME_UP;
+                case 0x00800000:
+                    return BUTTON_VOLUME_DOWN;
+                case 0x01000000:
+                    return BUTTON_HOME;
+            }
+            throw new IllegalArgumentException("Unknown value "+value);
         }
     }
 
@@ -177,7 +207,6 @@ public final class GVRGearCursorController extends GVRCursorController
     private boolean mShowControllerModel = false;
     private Matrix4f mTempPivotMtx = new Matrix4f();
     private Quaternionf mTempRotation = new Quaternionf();
-    private final Vector3f FORWARD = new Vector3f(0, 0, -1);
     private final MotionEvent.PointerCoords pointerCoords = new MotionEvent.PointerCoords();
     private final MotionEvent.PointerProperties[] pointerPropertiesArray;
     private final MotionEvent.PointerCoords[] pointerCoordsArray;
@@ -188,7 +217,6 @@ public final class GVRGearCursorController extends GVRCursorController
     private final int controllerID;
     private static final float DEPTH_SENSITIVITY = 0.01f;
 
-    private Vector3f result = new Vector3f();
     private int prevButtonEnter = KeyEvent.ACTION_UP;
     private int prevButtonA = KeyEvent.ACTION_UP;
     private int prevButtonBack = KeyEvent.ACTION_UP;
@@ -519,7 +547,7 @@ public final class GVRGearCursorController extends GVRCursorController
     {
         context.getEventManager().sendEvent(context.getApplication(), IActivityEvents.class,
                                             "onControllerEvent",
-                                            event.position, event.rotation, event.pointF,
+                                            CONTROLLER_KEYS.fromValue(event.key), event.position, event.rotation, event.pointF,
                                             event.touched, event.angularAcceleration,event.angularVelocity);
 
         this.currentControllerEvent = event;
