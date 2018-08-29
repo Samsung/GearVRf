@@ -156,20 +156,19 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     /**
      * Remove all scene objects.
      */
-    public void removeAllSceneObjects() {
+    public synchronized void removeAllSceneObjects() {
         final GVRCameraRig rig = getMainCameraRig();
         final GVRSceneObject head = rig.getOwnerObject();
         rig.removeAllChildren();
-        final GVRSceneObject oldRoot = mSceneRoot;
 
         NativeScene.removeAllSceneObjects(getNative());
+        for (final GVRSceneObject child : mSceneRoot.getChildren()) {
+            child.getParent().removeChildObject(child);
+        }
 
-        mSceneRoot = new GVRSceneObject(getGVRContext());
         if (null != head) {
-            head.getParent().removeChildObject(head);
             mSceneRoot.addChildObject(head);
         }
-        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
 
         final int numControllers = getGVRContext().getInputManager().clear();
         if (numControllers > 0)
@@ -180,12 +179,6 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         getGVRContext().runOnGlThread(new Runnable() {
             @Override
             public void run() {
-                //to prevent components from being deleted concurrently
-                for (final GVRSceneObject child : oldRoot.getChildren()) {
-                    child.detachAllComponents();
-                    child.getParent().removeChildObject(child);
-                }
-
                 NativeScene.deleteLightsAndDepthTextureOnRenderThread(getNative());
             }
         });
@@ -229,7 +222,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @return The {@link GVRCameraRig camera rig} used for rendering the scene
      *         on the screen.
      */
-    public GVRCameraRig getMainCameraRig() {
+    public synchronized GVRCameraRig getMainCameraRig() {
         return mMainCameraRig;
     }
 
@@ -240,7 +233,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @param cameraRig
      *            The {@link GVRCameraRig camera rig} to render with.
      */
-    public void setMainCameraRig(GVRCameraRig cameraRig) {
+    public synchronized void setMainCameraRig(GVRCameraRig cameraRig) {
         mMainCameraRig = cameraRig;
         NativeScene.setMainCameraRig(getNative(), cameraRig.getNative());
 
@@ -529,7 +522,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * know you don't want the corresponding glClear call then you can use these
      * special values to skip it.
      */
-    public final void setBackgroundColor(float r, float g, float b, float a) {
+    public synchronized final void setBackgroundColor(float r, float g, float b, float a) {
         mMainCameraRig.getLeftCamera().setBackgroundColor(r, g, b, a);
         mMainCameraRig.getRightCamera().setBackgroundColor(r, g, b, a);
         mMainCameraRig.getCenterCamera().setBackgroundColor(r, g, b, a);
@@ -636,8 +629,6 @@ class NativeScene {
 
     static native void setJava(long scene, GVRScene javaScene);
 
-    static native void addSceneObject(long scene, long sceneObject);
-   
     static native void removeAllSceneObjects(long scene);
 
     static native void deleteLightsAndDepthTextureOnRenderThread(long scene);
@@ -655,10 +646,6 @@ class NativeScene {
     public static native int getNumberTriangles(long scene);
 
     public static native void exportToFile(long scene, String file_path);
-
-    static native boolean addLight(long scene, long light);
-
-    static native void clearLights(long scene);
 
     static native GVRLight[] getLightList(long scene);
 

@@ -171,7 +171,7 @@ public final class GVRGearCursorController extends GVRCursorController
 
     private GVRSceneObject mControllerModel;
     private GVRSceneObject mRayModel;
-    private GVRSceneObject mPivotRoot;
+    private final GVRSceneObject mPivotRoot;
     private GVRSceneObject mControllerGroup;
     private ControllerReader mControllerReader;
     private boolean mShowControllerModel = false;
@@ -375,8 +375,7 @@ public final class GVRGearCursorController extends GVRCursorController
         }
         catch (IOException ex)
         {
-            Log.e("GearCursorController",
-                  "ERROR: cannot load controller model gear_vr_controller.obj");
+            Log.e(TAG, "cannot load controller model gear_vr_controller.obj");
             return;
         }
         mControllerGroup.addChildObject(mControllerModel);
@@ -386,17 +385,17 @@ public final class GVRGearCursorController extends GVRCursorController
     @Override
     public void setScene(GVRScene scene)
     {
-        GVRSceneObject parent = mPivotRoot.getParent();
+        synchronized (mPivotRoot) {
+            GVRSceneObject parent = mPivotRoot.getParent();
 
-        mPicker.setScene(scene);
-        this.scene = scene;
-        if (parent != null)
-        {
-            parent.removeChildObject(mPivotRoot);
-        }
-        if (scene != null)
-        {
-            scene.addSceneObject(mPivotRoot);
+            mPicker.setScene(scene);
+            this.scene = scene;
+            if (parent != null) {
+                parent.removeChildObject(mPivotRoot);
+            }
+            if (scene != null) {
+                scene.addSceneObject(mPivotRoot);
+            }
         }
         showControllerModel(mShowControllerModel);
     }
@@ -541,7 +540,9 @@ public final class GVRGearCursorController extends GVRCursorController
         mTempRotation.mul(q);
         mTempPivotMtx.rotation(mTempRotation);  // translate pivot by combined event and camera translation
         mTempPivotMtx.setTranslation(x, y, z);
-        mPivotRoot.getTransform().setModelMatrix(mTempPivotMtx);
+        synchronized (mPivotRoot) {
+            mPivotRoot.getTransform().setModelMatrix(mTempPivotMtx);
+        }
         setOrigin(x, y, z);
 
         int handleResult = handleEnterButton(key, event.pointF, event.touched);
@@ -663,7 +664,7 @@ public final class GVRGearCursorController extends GVRCursorController
                                                          0, MotionEvent.BUTTON_SECONDARY, 1f, 1f, 0,
                                                          0, InputDevice.SOURCE_TOUCHPAD, 0);
             setMotionEvent(motionEvent);
-            Log.d("EVENT:", "handleAButton action=%d button=%d x=%f y=%f",
+            Log.d(TAG, "handleAButton action=%d button=%d x=%f y=%f",
                   motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(),
                   motionEvent.getY());
         }
@@ -682,7 +683,7 @@ public final class GVRGearCursorController extends GVRCursorController
             {
                 setActive(true);
             }
-            Log.d("EVENT:", "handleAButton action=%d button=%d x=%f y=%f",
+            Log.d(TAG, "handleAButton action=%d button=%d x=%f y=%f",
                   motionEvent.getAction(), motionEvent.getButtonState(), motionEvent.getX(),
                   motionEvent.getY());
         }
@@ -693,7 +694,7 @@ public final class GVRGearCursorController extends GVRCursorController
     {
         if ((key & button.getNumVal()) != 0)
         {
-            Log.d("EVENT:", "keyPress button=%d code=%d", button.getNumVal(), keyCode);
+            Log.d(TAG, "keyPress button=%d code=%d", button.getNumVal(), keyCode);
             if (prevButton != KeyEvent.ACTION_DOWN)
             {
                 KeyEvent keyEvent = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
@@ -814,4 +815,6 @@ public final class GVRGearCursorController extends GVRCursorController
             }
         }
     }
+
+    private static final String TAG = "GearCursorController";
 }
