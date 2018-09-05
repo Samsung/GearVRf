@@ -84,8 +84,6 @@ public class GVRMeshMorph extends GVRBehavior
      * @param ctx  The current GVRF context.
      * @param numBlendShapes number of blend shapes to be set.
      */
-
-
     public GVRMeshMorph(GVRContext ctx, int numBlendShapes)
     {
         super(ctx, 0);
@@ -104,9 +102,6 @@ public class GVRMeshMorph extends GVRBehavior
 
     static public long getComponentType() { return TYPE_MESHMORPH; }
 
-
-
-
     /**
      * Attaches a morph to scene object with a base mesh
      * @param sceneObj is the base mesh.
@@ -114,14 +109,12 @@ public class GVRMeshMorph extends GVRBehavior
      * @throws IllegalStateException if mesh is null
      * @throws IllegalStateException if material is null
      */
-
-
     public void onAttach(GVRSceneObject sceneObj)
     {
 
         super.onAttach(sceneObj);
         GVRComponent comp = getComponent(GVRRenderData.getComponentType());
-        Log.i("componne",""+getComponentType());
+
         if (comp == null)
         {
             throw new IllegalStateException("Cannot attach a morph to a scene object without a base mesh");
@@ -135,12 +128,10 @@ public class GVRMeshMorph extends GVRBehavior
         GVRShaderData mtl = getMaterial();
 
         if ((mtl == null) ||
-                !mtl.getTextureDescriptor().contains("blendshapeTexture"))
+            !mtl.getTextureDescriptor().contains("blendshapeTexture"))
         {
-
             throw new IllegalStateException("Scene object shader does not support morphing");
         }
-
         copyBaseShape(mesh.getVertexBuffer());
         mtl.setInt("u_numblendshapes", mNumBlendShapes);
         mtl.setFloatArray("u_blendweights", mWeights);
@@ -157,10 +148,7 @@ public class GVRMeshMorph extends GVRBehavior
     {
         String baseDescriptor = baseShape.getDescriptor();
 
-
-
         mFloatsPerVertex = 3;
-
         if (baseDescriptor.contains("a_normal"))
         {
             mDescriptorFlags |= HAS_NORMAL;
@@ -168,15 +156,11 @@ public class GVRMeshMorph extends GVRBehavior
         }
         if (baseDescriptor.contains("a_tangent"))
         {
-
-
             mDescriptorFlags |= HAS_TANGENT;
             mFloatsPerVertex += 6;
         }
         mbaseShape = baseShape;
-
         mNumVerts = baseShape.getVertexCount();
-
         if (mNumVerts <= 0)
         {
             throw new IllegalArgumentException("Base shape has no vertices");
@@ -185,7 +169,6 @@ public class GVRMeshMorph extends GVRBehavior
         mBaseBlendShape = new float[mFloatsPerVertex * mNumVerts];
         mWeights = new float[mNumBlendShapes];
         mBlendShapeDiffs = new float[mTexWidth * mNumVerts];
-
 
         copyBaseAttribute(baseShape, "a_position", 0);
         if ((mDescriptorFlags & HAS_NORMAL) != 0)
@@ -202,7 +185,6 @@ public class GVRMeshMorph extends GVRBehavior
 
     protected void copyBaseAttribute(GVRVertexBuffer baseShape, String attrName, int baseOfs)
     {
-
         float[] vec3data = baseShape.getFloatArray(attrName);
         for (int i = 0; i < mNumVerts; ++i)
         {
@@ -223,9 +205,6 @@ public class GVRMeshMorph extends GVRBehavior
         {
             throw new IllegalArgumentException("All blend shapes must have the same number of vertices");
         }
-
-
-
         for (int i = 0; i < mNumVerts; ++i)
         {
             int b = i * mFloatsPerVertex + baseofs;
@@ -258,14 +237,13 @@ public class GVRMeshMorph extends GVRBehavior
 
     public void setBlendShape(int index, GVRSceneObject obj)
     {
-
         GVRRenderData rdata = obj.getRenderData();
         GVRMesh mesh;
         GVRVertexBuffer vbuf;
 
         if ((rdata == null) ||
-                ((mesh = rdata.getMesh()) == null) ||
-                ((vbuf = mesh.getVertexBuffer()) == null))
+            ((mesh = rdata.getMesh()) == null) ||
+            ((vbuf = mesh.getVertexBuffer()) == null))
         {
             throw new IllegalArgumentException("Scene object must have a mesh to be used as a blend shape");
         }
@@ -307,11 +285,8 @@ public class GVRMeshMorph extends GVRBehavior
         GVRComponent comp = getComponent(GVRRenderData.getComponentType());
         if (comp == null)
         {
-
             return null;
-
         }
-
         return ((GVRRenderData) comp).getMaterial();
     }
 
