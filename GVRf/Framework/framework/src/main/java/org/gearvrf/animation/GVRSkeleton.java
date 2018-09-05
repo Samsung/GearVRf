@@ -465,6 +465,9 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
          */
         else if (poseSpace == ROTATION_ONLY)
         {
+            Vector3f v = new Vector3f();
+            newpose.getWorldPosition(0, v);
+            mPose.setPosition(v.x, v.y, v.z);
             for (int i = 0; i < numbones; ++i)
             {
                 GVRPose.Bone srcBone = newpose.getBone(i);

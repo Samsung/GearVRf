@@ -139,10 +139,11 @@ public class GVRPose implements PrettyPrint
     public void     getWorldPosition(int boneindex, Vector3f pos) 
     {
         Bone bone = mBones[boneindex];
+        int boneParent = mSkeleton.getParentBoneIndex(boneindex);
 
-        if ((bone.Changed & LOCAL_ROT) == LOCAL_ROT)
+        if ((boneParent >= 0) && ((bone.Changed & LOCAL_ROT) == LOCAL_ROT))
         {
-            calcWorld(bone, mSkeleton.getParentBoneIndex(boneindex));
+            calcWorld(bone, boneParent);
         }
         pos.x = bone.WorldMatrix.m30();
         pos.y = bone.WorldMatrix.m31();
@@ -831,9 +832,7 @@ public class GVRPose implements PrettyPrint
             bone.WorldMatrix.m30(bone.WorldMatrix.m30() + dx);
             bone.WorldMatrix.m31(bone.WorldMatrix.m31() + dy);
             bone.WorldMatrix.m32(bone.WorldMatrix.m32() + dz);
-            bone.Changed = WORLD_ROT | WORLD_POS;
         }
-        mNeedSync = true;
         if (sDebug)
         {
             Log.d("BONE", "setWorldPosition: %s ", mSkeleton.getBoneName(0), bone.toString());

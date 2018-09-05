@@ -161,7 +161,7 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
         {
             mModelRoot.removeChildObject(previousAvatar);
         }
-        ctx.getAssetLoader().loadModel(volume, mModelRoot, settings, true, mLoadModelHandler);
+        ctx.getAssetLoader().loadModel(volume, mModelRoot, settings, false, mLoadModelHandler);
     }
 
     public void loadAnimation(GVRAndroidResource animResource)
@@ -351,14 +351,14 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
         {
             List<GVRComponent> components = avatar.getAllComponents(GVRSkeleton.getComponentType());
 
-            if (!"".equals(errors))
+            if ((errors != null) && !errors.isEmpty())
             {
                 Log.e(TAG, "Asset load errors: " + errors);
             }
             if (components.size() > 0)
             {
                 mSkeleton = (GVRSkeleton) components.get(0);
-                mSkeleton.getPose().clearRotations();
+                mSkeleton.poseFromBones();
                 mSkeleton.updateSkinPose();
             }
             else
