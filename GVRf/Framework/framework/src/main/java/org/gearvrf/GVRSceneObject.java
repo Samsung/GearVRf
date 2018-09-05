@@ -59,7 +59,7 @@ import org.joml.Vector3f;
  * </pre>
  */
 public class GVRSceneObject extends GVRHybridObject implements PrettyPrint, IScriptable, IEventReceiver {
-    private Map<Long, GVRComponent> mComponents = new HashMap<Long, GVRComponent>();
+    private final Map<Long, GVRComponent> mComponents = new HashMap<Long, GVRComponent>();
     private GVRSceneObject mParent;
     private Object mTag;
     private final List<GVRSceneObject> mChildren = new CopyOnWriteArrayList<GVRSceneObject>();
