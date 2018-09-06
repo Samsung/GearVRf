@@ -96,7 +96,7 @@ public abstract class GVRAnimation {
     public static final int DEFAULT_REPEAT_COUNT = 2;
 
     // Immutable values, passed to constructor
-    protected final GVRHybridObject mTarget;
+    protected GVRHybridObject mTarget;
     protected final float mDuration;
 
     // Defaulted values, which should be set before start()

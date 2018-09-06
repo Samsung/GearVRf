@@ -20,9 +20,13 @@ import static java.lang.Math.max;
 
 import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimator;
+import org.gearvrf.animation.GVRPose;
+import org.gearvrf.animation.GVRSkeleton;
+import org.gearvrf.animation.GVRSkin;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
-import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.animation.keyframe.GVRNodeAnimation;
+import org.gearvrf.animation.keyframe.GVRSkeletonAnimation;
 import org.gearvrf.jassimp.AiAnimBehavior;
 import org.gearvrf.jassimp.AiAnimMesh;
 import org.gearvrf.jassimp.AiAnimation;
@@ -44,7 +48,6 @@ import org.gearvrf.jassimp.AiTextureType;
 import org.gearvrf.jassimp.GVRNewWrapperProvider;
 import org.gearvrf.jassimp.Jassimp;
 import org.gearvrf.jassimp.JassimpConfig;
-import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.shaders.GVRPBRShader;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
@@ -53,35 +56,45 @@ import org.joml.Vector3f;
 
 import static java.lang.Integer.parseInt;
 
-class   GVRJassimpAdapter {
+class  GVRJassimpAdapter
+{
     private static final String TAG = GVRJassimpAdapter.class.getSimpleName();
     public static GVRNewWrapperProvider sWrapperProvider = new GVRNewWrapperProvider();
-    private GVRAssetLoader  mLoader;
-    private List<INodeFactory> mNodeFactories;
     private AiScene mScene;
     private GVRContext mContext;
     private String mFileName;
+    private GVRSkeleton mSkeleton;
+
     private static final int MAX_TEX_COORDS = JassimpConfig.MAX_NUMBER_TEXCOORDS;
     private static final int MAX_VERTEX_COLORS = JassimpConfig.MAX_NUMBER_COLORSETS;
 
+    /*
+     * Maps the name of the GVRSceneObject / AiNode to the GVRBone
+     * attached to the GVRSceneObject
+     */
+    private Hashtable<String, AiBone> mBoneMap = new Hashtable<>();
 
-    public interface INodeFactory {
-        GVRSceneObject createSceneObject(GVRContext ctx, AiNode node);
-    }
+    /*
+     * Maps GVRSceneObject created for each Assimp node to the Assimp
+     * mesh ID (the index of the mesh in AiScene).
+     */
+    private HashMap<GVRSceneObject, Integer> mNodeMap = new HashMap<>();
 
-    public GVRJassimpAdapter(GVRAssetLoader loader, String filename) {
-        mLoader = loader;
+    /**
+     * Maps the Assimp mesh ID to the corresponding GVRMesh
+     */
+    private GVRMesh[] mMeshes;
+
+    /**
+     * Maps the Assimp material ID (index of the material in AiScene)
+     *  to the corresponding GVRMaterial
+     */
+    private GVRMaterial[] mMaterials;
+
+
+    public GVRJassimpAdapter(GVRAssetLoader loader, String filename)
+    {
         mFileName = filename;
-        mNodeFactories = new ArrayList<INodeFactory>();
-    }
-
-    public void addNodeFactory(INodeFactory factory) {
-        // Insert new factory in front of the list to support overriding
-        mNodeFactories.add(0, factory);
-    }
-
-    public void removeNodeFactory(INodeFactory factory) {
-        mNodeFactories.remove(factory);
     }
 
     public GVRMesh createMesh(GVRContext ctx, AiMesh aiMesh, EnumSet<GVRImportSettings> settings)
@@ -93,11 +106,11 @@ class   GVRJassimpAdapter {
         float[] normalsArray = null;
         boolean doTexturing = !settings.contains(GVRImportSettings.NO_TEXTURING);
         boolean doLighting = !settings.contains(GVRImportSettings.NO_LIGHTING);
-        boolean doAnimation = !settings.contains(GVRImportSettings.NO_ANIMATION);
 
         // Vertices
         FloatBuffer verticesBuffer = aiMesh.getPositionBuffer();
-        if (verticesBuffer != null) {
+        if (verticesBuffer != null)
+        {
             verticesArray = new float[verticesBuffer.capacity()];
             verticesBuffer.get(verticesArray, 0, verticesBuffer.capacity());
         }
@@ -132,15 +145,7 @@ class   GVRJassimpAdapter {
 
         }
 
-
-
-
-
-
-
-
-
-        for(int c = 0; c < MAX_VERTEX_COLORS; c++)
+        for (int c = 0; c < MAX_VERTEX_COLORS; c++)
         {
             FloatBuffer fbuf = aiMesh.getColorBuffer(c);
             if (fbuf != null)
@@ -155,7 +160,7 @@ class   GVRJassimpAdapter {
             }
         }
 
-        if (doAnimation && aiMesh.hasBones())
+        if (aiMesh.hasBones())
         {
             vertexDescriptor += " float4 a_bone_weights int4 a_bone_indices";
         }
@@ -221,9 +226,7 @@ class   GVRJassimpAdapter {
         }
         if (tangentsArray != null)
         {
-
             mesh.setFloatArray("a_tangent", tangentsArray);
-
         }
         if (bitangentsArray != null)
         {
@@ -257,82 +260,85 @@ class   GVRJassimpAdapter {
                 }
             }
         }
-        // Bones
-        if (doAnimation && aiMesh.hasBones())
-        {
-            processBones(mesh, aiMesh.getBones());
-        }
         return mesh;
     }
 
     public void setMeshMorphComponent(GVRMesh mesh, GVRSceneObject sceneObject, AiMesh aiMesh)
     {
-
         int nAnimationMeshes = aiMesh.getAnimationMeshes().size();
-        if(nAnimationMeshes == 0)
+        if (nAnimationMeshes == 0)
             return;
 
-        GVRMeshMorph morph = new GVRMeshMorph(mContext, nAnimationMeshes);
-        sceneObject.attachComponent(morph);
-        int blendShapeNum = 0;
-
-        for(AiAnimMesh animMesh : aiMesh.getAnimationMeshes())
+        try
         {
-            GVRVertexBuffer animBuff = new GVRVertexBuffer(mesh.getVertexBuffer(),
-                    "float3 a_position float3 a_tangent float3 a_normal float3 a_bitangent");
+            GVRMeshMorph morph = new GVRMeshMorph(mContext, nAnimationMeshes);
+            sceneObject.attachComponent(morph);
+            int blendShapeNum = 0;
 
-            float[] vertexArray = null;
-            float[] normalArray = null;
-            float[] tangentArray = null;
-            float[] bitangentArray = null;
-
-            //copy target positions to anim vertex buffer
-            FloatBuffer animPositionBuffer = animMesh.getPositionBuffer();
-            if (animPositionBuffer != null) {
-                vertexArray = new float[animPositionBuffer.capacity()];
-                animPositionBuffer.get(vertexArray, 0, animPositionBuffer.capacity());
-            }
-            animBuff.setFloatArray("a_position",vertexArray);
-
-            //copy target normals to anim normal buffer
-            FloatBuffer animNormalBuffer = animMesh.getNormalBuffer();
-            if (animNormalBuffer != null) {
-                normalArray = new float[animNormalBuffer.capacity()];
-                animNormalBuffer.get(normalArray, 0, animNormalBuffer.capacity());
-            }
-            animBuff.setFloatArray("a_normal",normalArray);
-
-
-            //copy target tangents to anim tangent buffer
-            FloatBuffer animTangentBuffer = animMesh.getTangentBuffer();
-            if (animTangentBuffer != null) {
-                tangentArray = new float[animTangentBuffer.capacity()];
-                animTangentBuffer.get(tangentArray, 0, animTangentBuffer.capacity());
-            }
-            animBuff.setFloatArray("a_tangent",tangentArray);
-
-            //calculate bitangents
-
-            bitangentArray = new float[tangentArray.length];
-            for(int i = 0; i < tangentArray.length; i += 3)
+            for (AiAnimMesh animMesh : aiMesh.getAnimationMeshes())
             {
-                Vector3f tangent = new Vector3f(tangentArray[i], tangentArray[i + 1], tangentArray[i + 2]);
-                Vector3f normal = new Vector3f(normalArray[i], normalArray[i + 1], normalArray[i + 2]);
-                Vector3f bitangent = new Vector3f();
-                normal.cross(tangent, bitangent);
-                bitangentArray[i] = bitangent.x; bitangentArray[i+1] = bitangent.y; bitangentArray[i + 2] = bitangent.z;
+                GVRVertexBuffer animBuff = new GVRVertexBuffer(mesh.getVertexBuffer(),
+                                                               "float3 a_position float3 a_normal float3 a_tangent float3 a_bitangent");
+
+                float[] vertexArray = null;
+                float[] normalArray = null;
+                float[] tangentArray = null;
+                float[] bitangentArray = null;
+
+                //copy target positions to anim vertex buffer
+                FloatBuffer animPositionBuffer = animMesh.getPositionBuffer();
+                if (animPositionBuffer != null)
+                {
+                    vertexArray = new float[animPositionBuffer.capacity()];
+                    animPositionBuffer.get(vertexArray, 0, animPositionBuffer.capacity());
+                    animBuff.setFloatArray("a_position", vertexArray);
+                }
+
+                //copy target normals to anim normal buffer
+                FloatBuffer animNormalBuffer = animMesh.getNormalBuffer();
+                if (animNormalBuffer != null)
+                {
+                    normalArray = new float[animNormalBuffer.capacity()];
+                    animNormalBuffer.get(normalArray, 0, animNormalBuffer.capacity());
+                    animBuff.setFloatArray("a_normal", normalArray);
+                }
+
+                //copy target tangents to anim tangent buffer
+                FloatBuffer animTangentBuffer = animMesh.getTangentBuffer();
+                if (animTangentBuffer != null)
+                {
+                    tangentArray = new float[animTangentBuffer.capacity()];
+                    animTangentBuffer.get(tangentArray, 0, animTangentBuffer.capacity());
+                    animBuff.setFloatArray("a_tangent", tangentArray);
+
+                    //calculate bitangents
+                    bitangentArray = new float[tangentArray.length];
+                    for (int i = 0; i < tangentArray.length; i += 3)
+                    {
+                        Vector3f tangent =
+                            new Vector3f(tangentArray[i], tangentArray[i + 1], tangentArray[i + 2]);
+                        Vector3f normal =
+                            new Vector3f(normalArray[i], normalArray[i + 1], normalArray[i + 2]);
+                        Vector3f bitangent = new Vector3f();
+                        normal.cross(tangent, bitangent);
+                        bitangentArray[i] = bitangent.x;
+                        bitangentArray[i + 1] = bitangent.y;
+                        bitangentArray[i + 2] = bitangent.z;
+                        animBuff.setFloatArray("a_bitangent", bitangentArray);
+                    }
+                }
+                morph.setBlendShape(blendShapeNum, animBuff);
+                blendShapeNum++;
             }
-
-            animBuff.setFloatArray("a_bitangent", bitangentArray);
-
-            morph.setBlendShape(blendShapeNum, animBuff);
-            blendShapeNum++;
+            morph.update();
         }
-
-        morph.update();
+        catch (IllegalArgumentException ex)
+        {
+            sceneObject.detachComponent(GVRMeshMorph.getComponentType());
+        }
     }
 
-    public void processBones(GVRMesh mesh, List<AiBone> aiBones)
+    public GVRSkin processBones(GVRMesh mesh, List<AiBone> aiBones)
     {
         final int MAX_WEIGHTS = 4;
         GVRVertexBuffer vbuf = mesh.getVertexBuffer();
@@ -340,13 +346,13 @@ class   GVRJassimpAdapter {
         int n = nverts * MAX_WEIGHTS;
         float[] weights = new float[n];
         int[] indices = new int[n];
-        GVRContext ctx = mesh.getGVRContext();
+        int[] boneMap = new int[aiBones.size()];
+        int boneIndex = -1;
+        GVRSkin skin = new GVRSkin(mSkeleton);
 
         // Process bones
-        int boneId = -1;
         Arrays.fill(weights, 0, n - 1,  0.0f);
         Arrays.fill(indices, 0, n - 1, 0);
-        ArrayList<GVRBone> bones = new ArrayList<GVRBone>();
 
         /*
          * Accumulate vertex weights and indices for all the bones
@@ -355,22 +361,27 @@ class   GVRJassimpAdapter {
          */
         for (AiBone aiBone : aiBones)
         {
-            GVRBone b = createBone(ctx, aiBone);
-            bones.add(b);
-            boneId++;
-            Log.e("BONE", aiBone.getName() + " " + boneId);
+            String boneName = aiBone.getName();
+            int boneId = mSkeleton.getBoneIndex(boneName);
 
+            if (boneId < 0)
+            {
+                Log.e("BONE", "Bone %s not found in skeleton", boneName);
+                continue;
+            }
+            Log.e("BONE", "%d %s -> %d", boneId, boneName, boneIndex + 1);
+            boneMap[++boneIndex] = boneId;
             List<AiBoneWeight> boneWeights = aiBone.getBoneWeights();
             for (AiBoneWeight weight : boneWeights)
             {
                 int vertexId = weight.getVertexId() * MAX_WEIGHTS;
-                int i, j = 0;
+                int i;
                 for (i = 0; i < MAX_WEIGHTS; ++i)
                 {
-                    j = vertexId + i;
+                    int j = vertexId + i;
                     if (weights[j] == 0.0f)
                     {
-                        indices[j] = boneId;
+                        indices[j] = boneIndex;
                         weights[j] = weight.getWeight();
                         break;
                     }
@@ -381,6 +392,7 @@ class   GVRJassimpAdapter {
                 }
             }
         }
+        skin.setBoneMap(boneMap);
         /*
          * Normalize the weights for each vertex.
          * Sum the weights and divide by the sum.
@@ -408,93 +420,381 @@ class   GVRJassimpAdapter {
         }
         vbuf.setFloatArray("a_bone_weights", weights);
         vbuf.setIntArray("a_bone_indices", indices);
-        mesh.setBones(bones);
+        return skin;
     }
 
-    private GVRBone createBone(GVRContext ctx, AiBone aiBone) {
-        float[] mtx = aiBone.getOffsetMatrix(sWrapperProvider);
-        GVRBone bone = new GVRBone(ctx);
 
-        bone.setName(aiBone.getName());
-        bone.setOffsetMatrix(mtx);
-        return bone;
-    }
+    private class BoneCollector implements GVRSceneObject.SceneVisitor
+    {
+        /**
+         * List of node names in the order they are encountered
+         * traversing the parents of the nodes before their children.
+         * Only named nodes below the root which are animated and have
+         * associated bones are in this list.
+         */
+        final List<String> mBoneNames = new ArrayList<>();
+        private GVRSceneObject mRoot = null;
 
-    public GVRSceneObject createSceneObject(GVRContext ctx, AiNode node) {
-        GVRSceneObject sceneObject = null;
-
-        for (INodeFactory factory : mNodeFactories) {
-            sceneObject = factory.createSceneObject(ctx, node);
-            if (sceneObject != null)
-                return sceneObject;
+        public BoneCollector()
+        {
         }
 
-        // Default
-        sceneObject = new GVRSceneObject(ctx);
-        sceneObject.setName(node.getName());
+        public List<String> getBoneNames() { return mBoneNames; }
 
-        return sceneObject;
-    }
+        @Override
+        public boolean visit(GVRSceneObject obj)
+        {
+            String nodeName = obj.getName();
 
-    public GVRKeyFrameAnimation createAnimation(AiAnimation aiAnim, GVRSceneObject target) {
-        GVRKeyFrameAnimation anim = new GVRKeyFrameAnimation(aiAnim.getName(), target,
-                (float)aiAnim.getDuration(), (float)aiAnim.getTicksPerSecond());
+            if (!"".equals(nodeName))
+            {
+                AiBone aiBone = mBoneMap.get(nodeName);
 
-        // Convert node anims
-        for (AiNodeAnim aiNodeAnim : aiAnim.getChannels()) {
-            GVRAnimationChannel channel = createAnimChannel(aiNodeAnim);
-            anim.addChannel(channel);
+                if (mBoneNames.contains(nodeName))    // duplicate bone ID
+                {
+                    Log.e("BONE", "Multiple bones with the same name: " + nodeName);
+                    return true;
+                }
+                if (aiBone == null)
+                {
+                    GVRSceneObject parent = obj.getParent();
+
+                    if (obj.getChildrenCount() == 0)
+                    {
+                        return true;
+                    }
+                    if (parent == null)
+                    {
+                        return true;
+                    }
+                    String parName = parent.getName();
+
+                    if ("".equals(parName))
+                    {
+                        return true;
+                    }
+                    int parBoneId = mBoneNames.indexOf(parName);
+
+                    if (parBoneId < 0)
+                    {
+                        return true;
+                    }
+                }
+                int boneId = mBoneNames.size();
+                mBoneNames.add(nodeName);
+                if (mRoot == null)
+                {
+                    mRoot = obj;
+                    Log.d("BONE", "Root bone %s id = %d", nodeName, boneId);
+                }
+                else if (mRoot.getParent() == obj.getParent())
+                {
+                    mRoot = mRoot.getParent();
+                    mBoneNames.add(0, mRoot.getName());
+                    Log.d("BONE", "Root bone %s id = %d", nodeName, mBoneNames.indexOf(mRoot.getName()));
+                }
+                Log.d("BONE", "Adding bone %s id = %d", nodeName, boneId);
+            }
+            return true;
         }
+    };
 
-        anim.prepare();
+    public void createAnimation(AiAnimation aiAnim, GVRSceneObject target, GVRAnimator animator)
+    {
+        Map<String, GVRAnimationChannel> animMap = new HashMap<>();
+        float duration =  (float) (aiAnim.getDuration() / aiAnim.getTicksPerSecond());
 
-        return anim;
+        for (AiNodeAnim aiNodeAnim : aiAnim.getChannels())
+        {
+            String nodeName = aiNodeAnim.getNodeName();
+            GVRAnimationChannel channel = createAnimChannel(aiNodeAnim, (float) aiAnim.getTicksPerSecond());
+
+            animMap.put(nodeName, channel);
+        }
+        /*
+         * if there was a skinned mesh the bone map acts as a lookup
+         * table that maps bone names to their corresponding AiBone objects.
+         * The BoneCollector constructs the skeleton from the bone names in
+         * the map and the scene nodes, attempting to connect bones
+         * where there are gaps to produce a complete skeleton.
+         * Then it attaches the corresponding animation channels
+         * (based on bone name) to the skeleton animation.
+         */
+        if (!mBoneMap.isEmpty())
+        {
+            BoneCollector nodeProcessor = new BoneCollector();
+            GVRSkeletonAnimation anim = new GVRSkeletonAnimation(aiAnim.getName(), target, duration);
+
+            target.forAllDescendants(nodeProcessor);
+            List<String> boneNames = nodeProcessor.getBoneNames();
+            mSkeleton = anim.createSkeleton(boneNames);
+            attachBoneAnimations(anim, animMap);
+            animator.addAnimation(anim);
+        }
+        /*
+         * Any animation channels that are not part of the skeleton
+         * are added separately as node animations (which just modify
+         * a single node's matrix)
+         */
+        for (AiNodeAnim aiNodeAnim : aiAnim.getChannels())
+        {
+            String nodeName = aiNodeAnim.getNodeName();
+            GVRAnimationChannel channel = animMap.get(nodeName);
+
+            if (channel == null)
+            {
+                continue;
+            }
+            GVRSceneObject obj = target.getSceneObjectByName(nodeName);
+            if (obj != null)
+            {
+                GVRNodeAnimation nodeAnim = new GVRNodeAnimation(nodeName, obj, duration, channel);
+                animator.addAnimation(nodeAnim);
+                Log.d("BONE", "Adding node animation for %s", nodeName);
+            }
+        }
     }
 
-    private GVRAnimationChannel createAnimChannel(AiNodeAnim aiNodeAnim) {
-        GVRAnimationChannel node = new GVRAnimationChannel(aiNodeAnim.getNodeName(), aiNodeAnim.getNumPosKeys(),
+    /*
+     * if there was a skinned mesh the bone map acts as a lookup
+     * table that maps bone names to their corresponding AiBone objects.
+     * The BoneCollector constructs the skeleton from the bone names in
+     * the map and the scene nodes, attempting to connect bones
+     * where there are gaps to produce a complete skeleton.
+     */
+    private void makeSkeleton(GVRSceneObject root)
+    {
+        if (!mBoneMap.isEmpty())
+        {
+            BoneCollector nodeProcessor = new BoneCollector();
+
+            root.forAllDescendants(nodeProcessor);
+            mSkeleton = new GVRSkeleton(root, nodeProcessor.getBoneNames());
+            GVRPose bindPose = new GVRPose(mSkeleton);
+            Matrix4f bindPoseMtx = new Matrix4f();
+            GVRSceneObject skelRoot = mSkeleton.getOwnerObject().getParent();
+            Matrix4f rootMtx = skelRoot.getTransform().getModelMatrix4f();
+
+            rootMtx.invert();
+            for (int boneId = 0; boneId < mSkeleton.getNumBones(); ++boneId)
+            {
+                String boneName = mSkeleton.getBoneName(boneId);
+                AiBone aiBone = mBoneMap.get(boneName);
+                GVRSceneObject bone = mSkeleton.getBone(boneId);
+
+                if (aiBone != null)
+                {
+                    float[] matrixdata = aiBone.getOffsetMatrix(sWrapperProvider);
+
+                    bindPoseMtx.set(matrixdata);
+                    bindPoseMtx.invert();
+                    bindPose.setWorldMatrix(boneId, bindPoseMtx);
+                }
+                else
+                {
+                    GVRTransform t = bone.getTransform();
+                    Matrix4f mtx = t.getModelMatrix4f();
+
+                    mtx.invert();
+                    rootMtx.mul(mtx, mtx);
+                    bindPose.setWorldMatrix(boneId, mtx);
+                    Log.e("BONE", "no bind pose matrix for bone %s", boneName);
+                }
+            }
+            mSkeleton.setBindPose(bindPose);
+        }
+    }
+
+    private void attachBoneAnimations(GVRSkeletonAnimation skelAnim, Map<String, GVRAnimationChannel> animMap)
+    {
+        GVRPose bindPose = mSkeleton.getBindPose();
+        Matrix4f bindPoseMtx = new Matrix4f();
+        Vector3f vec = new Vector3f();
+        final float EPSILON = 0.00001f;
+
+        for (int boneId = 0; boneId < mSkeleton.getNumBones(); ++boneId)
+        {
+            String boneName = mSkeleton.getBoneName(boneId);
+            AiBone aiBone = mBoneMap.get(boneName);
+            GVRAnimationChannel channel = animMap.get(boneName);
+
+            if (aiBone != null)
+            {
+                bindPose.getWorldMatrix(boneId, bindPoseMtx);
+                bindPoseMtx.getScale(vec);
+                if (channel != null)
+                {
+                    skelAnim.addChannel(boneName, channel);
+                    animMap.remove(boneName);
+                    /*
+                     * This is required because of a bug in the FBX importer
+                     * which does not scale the animations to match the bind pose
+                     */
+                    if (boneId == 0)
+                    {
+                        bindPoseMtx.getScale(vec);
+                        float delta = vec.lengthSquared();
+                        delta = 3.0f - delta;
+                        if (Math.abs(delta) > EPSILON)
+                        {
+                            fixKeys(channel, vec);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Log.e("BONE", "no bind pose matrix for bone %s", boneName);
+                if (channel != null)
+                {
+                    skelAnim.addChannel(boneName, channel);
+                    animMap.remove(boneName);
+                }
+            }
+        }
+    }
+
+    /*
+     * Some FBX files are exported as centimeters. Assimp does not correctly compute the scale keys.
+     * They should include the scaling from the bind pose since the animations are NOT relative
+     * to the bind pose.
+     */
+    private void fixKeys(GVRAnimationChannel channel, Vector3f scaleFactor)
+    {
+        float[] temp = new float[3];
+        for (int i = 0; i < channel.getNumPosKeys(); ++i)
+        {
+            float time = (float) channel.getPosKeyTime(i);
+            channel.getPosKeyVector(i, temp);
+            temp[0] *= scaleFactor.x;
+            temp[1] *= scaleFactor.y;
+            temp[2] *= scaleFactor.z;
+            channel.setPosKeyVector(i, time, temp);
+        }
+        for (int i = 0; i < channel.getNumScaleKeys(); ++i)
+        {
+            float time = (float) channel.getScaleKeyTime(i);
+            channel.getScaleKeyVector(i, temp);
+            temp[0] *= scaleFactor.x;
+            temp[1] *= scaleFactor.y;
+            temp[2] *= scaleFactor.z;
+            channel.setScaleKeyVector(i, time, temp);
+        }
+    }
+
+    private GVRAnimationChannel createAnimChannel(AiNodeAnim aiNodeAnim, float ticksPerSec)
+    {
+        GVRAnimationChannel channel = new GVRAnimationChannel(aiNodeAnim.getNodeName(), aiNodeAnim.getNumPosKeys(),
                 aiNodeAnim.getNumRotKeys(),  aiNodeAnim.getNumScaleKeys(),
                 convertAnimationBehavior(aiNodeAnim.getPreState()),
                 convertAnimationBehavior(aiNodeAnim.getPostState()));
-
         // Pos keys
         int i;
-        Quaternionf q = new Quaternionf();
-        for (i = 0; i < aiNodeAnim.getNumPosKeys(); ++i) {
-            float[] pos = aiNodeAnim.getPosKeyVector(i, sWrapperProvider);
-            node.setPosKeyVector(i, (float)aiNodeAnim.getPosKeyTime(i), pos);
+        float t;
+
+        if (aiNodeAnim.getNumPosKeys() > 0)
+        {
+            float[] curpos = aiNodeAnim.getPosKeyVector(0, sWrapperProvider);
+            int nextIndex = 1;
+
+            t = (float) aiNodeAnim.getPosKeyTime(0) / ticksPerSec;
+            channel.setPosKeyVector(0, t, curpos);
+            for (i = 1; i < aiNodeAnim.getNumPosKeys(); ++i)
+            {
+                float[] pos = aiNodeAnim.getPosKeyVector(i, sWrapperProvider);
+                if (!isEqual(pos, curpos))
+                {
+                    t = (float) aiNodeAnim.getPosKeyTime(i) / ticksPerSec;
+                    channel.setPosKeyVector(nextIndex++, t, pos);
+                    curpos = pos;
+                }
+            }
+            channel.resizePosKeys(nextIndex);
         }
 
-        // Rot keys
-        for (i = 0; i < aiNodeAnim.getNumRotKeys(); ++i) {
-            q = aiNodeAnim.getRotKeyQuaternion(i, sWrapperProvider);
-            float[] rot = new float[] { q.x, q.y, q.z, q.w };
-            node.setRotKeyQuaternion(i, (float)aiNodeAnim.getRotKeyTime(i), rot);
+        if (aiNodeAnim.getNumRotKeys() > 0)
+        {
+            Quaternionf currot = aiNodeAnim.getRotKeyQuaternion(0, sWrapperProvider);
+            int nextIndex = 1;
+
+            t = (float) aiNodeAnim.getRotKeyTime(0) / ticksPerSec;
+            channel.setRotKeyQuaternion(0, t, currot);
+            for (i = 1; i < aiNodeAnim.getNumRotKeys(); ++i)
+            {
+                Quaternionf rot = aiNodeAnim.getRotKeyQuaternion(i, sWrapperProvider);
+                if (!isEqual(rot, currot))
+                {
+                    t = (float) aiNodeAnim.getRotKeyTime(i) / ticksPerSec;
+                    channel.setRotKeyQuaternion(nextIndex++, t, rot);
+                    currot = rot;
+                }
+            }
+            channel.resizeRotKeys(nextIndex);
         }
 
-        // Scale keys
-        for (i = 0; i < aiNodeAnim.getNumScaleKeys(); ++i) {
-            float[] scale = aiNodeAnim.getScaleKeyVector(i, sWrapperProvider);
-            node.setScaleKeyVector(i, (float)aiNodeAnim.getScaleKeyTime(i), scale);
-        }
+        if (aiNodeAnim.getNumScaleKeys() > 0)
+        {
+            int nextIndex = 1;
+            float[] curscale = aiNodeAnim.getScaleKeyVector(0, sWrapperProvider);
 
-        return node;
+            t = (float) aiNodeAnim.getScaleKeyTime(0) / ticksPerSec;
+            channel.setScaleKeyVector(0, t, curscale);
+            for (i = 1; i < aiNodeAnim.getNumScaleKeys(); ++i)
+            {
+                float[] scale = aiNodeAnim.getScaleKeyVector(i, sWrapperProvider);
+
+                if (!isEqual(scale, curscale))
+                {
+                    t = (float) aiNodeAnim.getScaleKeyTime(i) / ticksPerSec;
+                    channel.setScaleKeyVector(nextIndex++, t, scale);
+                }
+            }
+            channel.resizeScaleKeys(nextIndex);
+        }
+        return channel;
     }
 
-    private GVRAnimationBehavior convertAnimationBehavior(AiAnimBehavior behavior) {
-        switch (behavior) {
-            case DEFAULT:
-                return GVRAnimationBehavior.DEFAULT;
-            case CONSTANT:
-                return GVRAnimationBehavior.CONSTANT;
-            case LINEAR:
-                return GVRAnimationBehavior.LINEAR;
-            case REPEAT:
-                return GVRAnimationBehavior.REPEAT;
-            default:
-                // Unsupported setting
-                Log.e(TAG, "Cannot convert animation behavior: %s", behavior);
-                return GVRAnimationBehavior.DEFAULT;
+    private boolean isEqual(float[] arr1, float[] arr2)
+    {
+        final float EPSILON = 0.0001f;
+
+        for (int i = 0; i < arr1.length; ++i)
+        {
+            if (Math.abs(arr2[i] - arr1[i]) > EPSILON)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isEqual(Quaternionf q1, Quaternionf q2)
+    {
+        final float EPSILON = 0.00001f;
+
+        if (Math.abs(q1.x - q2.x) > EPSILON) return false;
+        if (Math.abs(q1.y - q2.y) > EPSILON) return false;
+        if (Math.abs(q1.z - q2.z) > EPSILON) return false;
+        if (Math.abs(q1.w - q2.w) > EPSILON) return false;
+        return true;
+    }
+
+    private GVRAnimationBehavior convertAnimationBehavior(AiAnimBehavior behavior)
+    {
+        switch (behavior)
+        {
+        case DEFAULT:
+            return GVRAnimationBehavior.DEFAULT;
+        case CONSTANT:
+            return GVRAnimationBehavior.CONSTANT;
+        case LINEAR:
+            return GVRAnimationBehavior.LINEAR;
+        case REPEAT:
+            return GVRAnimationBehavior.REPEAT;
+        default:
+            // Unsupported setting
+            Log.e(TAG, "Cannot convert animation behavior: %s", behavior);
+            return GVRAnimationBehavior.DEFAULT;
         }
     }
 
@@ -548,55 +848,71 @@ class   GVRJassimpAdapter {
         }
     }
 
-    public void processScene(GVRAssetLoader.AssetRequest request, GVRSceneObject model, AiScene scene, GVRResourceVolume volume, boolean startAnimations)
+    public void processScene(GVRAssetLoader.AssetRequest request, final GVRSceneObject model, AiScene scene)
     {
-        List<AiLight> aiLights = scene.getLights();
         Hashtable<String, GVRLight> lightList = new Hashtable<String, GVRLight>();
-        GVRSceneObject camera;
-
         EnumSet<GVRImportSettings> settings = request.getImportSettings();
+        boolean doAnimation = !settings.contains(GVRImportSettings.NO_ANIMATION);
+        GVRSceneObject modelParent = model.getParent();
+
+        if (modelParent != null)
+        {
+            modelParent.removeChildObject(model);
+        }
         mScene = scene;
         mContext = model.getGVRContext();
-        camera = makeCamera();
+        if (scene == null)
+        {
+            return;
+        }
+        GVRSceneObject camera = makeCamera();
         if (camera != null)
         {
             model.addChildObject(camera);
         }
         if (!settings.contains(GVRImportSettings.NO_LIGHTING))
         {
-            importLights(aiLights, lightList);
+            importLights(scene.getLights(), lightList);
         }
-        if (scene == null)
+        mMeshes = new GVRMesh[scene.getNumMeshes()];
+        mMaterials = new GVRMaterial[scene.getNumMaterials()];
+
+        traverseGraph(model, scene.getSceneRoot(sWrapperProvider), lightList);
+        if (!doAnimation ||
+            (processAnimations(model, scene, settings.contains(GVRImportSettings.START_ANIMATIONS)) == null))
         {
-            return;
+            makeSkeleton(model);
         }
-        recurseAssimpNodes(request, model, scene.getSceneRoot(sWrapperProvider), lightList);
-        if (!settings.contains(GVRImportSettings.NO_ANIMATION))
+        for (Map.Entry<GVRSceneObject, Integer> entry : mNodeMap.entrySet())
         {
-            List<AiAnimation> animations = scene.getAnimations();
-            if (animations.size() > 0)
+            GVRSceneObject obj = entry.getKey();
+            int meshId = entry.getValue();
+
+            if (meshId >= 0)
             {
-                GVRAnimator animator = new GVRAnimator(mContext, startAnimations);
-                model.attachComponent(animator);
-                for (AiAnimation aiAnim : scene.getAnimations())
-                {
-                    GVRAnimation animation = createAnimation(aiAnim, model);
-                    GVRModelSceneObject modelRoot = null;
-                    if (GVRModelSceneObject.class.isAssignableFrom(model.getClass()))
-                    {
-                        modelRoot = (GVRModelSceneObject) model;
-                    }
-                    if (animation != null)
-                    {
-                        animator.addAnimation(animation);
-                        if (modelRoot != null)
-                        {
-                            modelRoot.getAnimations().add(animation);
-                        }
-                    }
-                }
+                processMesh(request, obj, meshId);
             }
         }
+        if (modelParent != null)
+        {
+            modelParent.addChildObject(model);
+        }
+    }
+
+    private GVRAnimator processAnimations(GVRSceneObject model, AiScene scene, boolean startAnimations)
+    {
+        List<AiAnimation> animations = scene.getAnimations();
+        if (animations.size() > 0)
+        {
+            GVRAnimator animator = new GVRAnimator(mContext, startAnimations);
+            model.attachComponent(animator);
+            for (AiAnimation aiAnim : scene.getAnimations())
+            {
+                createAnimation(aiAnim, model, animator);
+            }
+            return animator;
+        }
+        return null;
     }
 
     private GVRSceneObject makeCamera()
@@ -625,65 +941,122 @@ class   GVRJassimpAdapter {
         return mainCamera;
     }
 
-    private void recurseAssimpNodes(
-        GVRAssetLoader.AssetRequest request,
-        GVRSceneObject parentSceneObject,
-        AiNode node,
-        Hashtable<String, GVRLight> lightlist)
+    private void traverseGraph(GVRSceneObject parent, AiNode node, Hashtable<String, GVRLight> lightlist)
     {
-        final GVRSceneObject sceneObject;
-        final GVRContext context = mContext;
+        GVRSceneObject sceneObject = new GVRSceneObject(mContext);
+        final int[] nodeMeshes = node.getMeshes();
+        String nodeName = node.getName();
+        AiNode aiChild = null;
 
-        if (node.getNumMeshes() == 0) {
-            sceneObject = createSceneObject(mContext, node);
-            parentSceneObject.addChildObject(sceneObject);
-        } else if (node.getNumMeshes() == 1) {
-            // add the scene object to the scene graph
-            AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[0]);
-            sceneObject = createSubSceneObject(request, parentSceneObject, node, aiMesh);
-        } else {
-            sceneObject = createSceneObject(mContext, node);
-            parentSceneObject.addChildObject(sceneObject);
-            for (int i = 0; i < node.getNumMeshes(); i++) {
-                AiMesh aiMesh = mScene.getMeshes().get(node.getMeshes()[i]);
-                GVRSceneObject childSceneObject = createSubSceneObject(request, sceneObject, node, aiMesh);
-            }
-        }
-
-        if (node.getTransform(sWrapperProvider) != null) {
+        mNodeMap.put(sceneObject, -1);
+        sceneObject.setName(nodeName);
+        attachLights(lightlist, sceneObject);
+        parent.addChildObject(sceneObject);
+        if (node.getTransform(sWrapperProvider) != null)
+        {
             float[] matrix = node.getTransform(sWrapperProvider);
             sceneObject.getTransform().setModelMatrix(matrix);
         }
-        if (!request.getImportSettings().contains(GVRImportSettings.NO_LIGHTING))
-        {
-            attachLights(lightlist, sceneObject);
-        }
-        for (AiNode child : node.getChildren()) {
-            recurseAssimpNodes(request, sceneObject, child, lightlist);
-        }
 
-        context.runOnTheFrameworkThread(new Runnable() {
-            public void run() {
-                // Inform the loaded object after it has been attached to the scene graph
-                context.getEventManager().sendEvent(
-                        sceneObject,
-                        ISceneObjectEvents.class,
-                        "onLoaded");
+        if (node.getNumMeshes() == 1)
+        {
+            Integer meshId = nodeMeshes[0];
+            if ("".equals(nodeName))
+            {
+                if ((mNodeMap.get(parent) == null) ||
+                    ((aiChild = handleNoName(node, sceneObject)) == null))
+                {
+                    nodeName = "mesh";
+                    sceneObject.setName(nodeName + "-" + meshId);
+                }
+                else
+                {
+                    node = aiChild;
+                }
             }
-        });
+            mNodeMap.put(sceneObject, meshId);
+            findBones(mScene.getMeshes().get(meshId));
+        }
+        else if (node.getNumMeshes() > 1)
+        {
+            for (Integer i = 0; i < node.getNumMeshes(); i++)
+            {
+                int meshId = nodeMeshes[i];
+                GVRSceneObject child = new GVRSceneObject(mContext);
+                child.setName(nodeName + "-" + meshId);
+                sceneObject.addChildObject(child);
+                mNodeMap.put(child, meshId);
+                findBones(mScene.getMeshes().get(meshId));
+            }
+        }
+        else if ("".equals(nodeName) &&
+                ((aiChild = handleNoName(node, sceneObject)) != null))
+        {
+            node = aiChild;
+        }
+        for (AiNode child : node.getChildren())
+        {
+            traverseGraph(sceneObject, child, lightlist);
+        }
     }
 
-    private void attachLights(Hashtable<String, GVRLight> lightlist, GVRSceneObject sceneObject){
+    private AiNode handleNoName(AiNode ainode, GVRSceneObject gvrnode)
+    {
+        if (ainode.getNumChildren() > 1)
+        {
+            return null;
+        }
+        AiNode aichild = ainode.getChildren().get(0);
+        String childName = aichild.getName();
+
+        if ("".equals(childName))
+        {
+            return null;
+        }
+        if (aichild.getNumMeshes() > 0)
+        {
+            return null;
+        }
+        gvrnode.setName(childName);
+        float[] matrix = aichild.getTransform(sWrapperProvider);
+        Matrix4f childMtx = new Matrix4f();
+        Matrix4f parMtx = gvrnode.getTransform().getLocalModelMatrix4f();
+        childMtx.set(matrix);
+        parMtx.mul(childMtx);
+        gvrnode.getTransform().setModelMatrix(parMtx);
+        return aichild;
+    }
+
+    private void findBones(AiMesh aiMesh)
+    {
+        for (AiBone aiBone : aiMesh.getBones())
+        {
+            String boneName = aiBone.getName();
+
+            if (mBoneMap.get(boneName) == null)
+            {
+                mBoneMap.put(aiBone.getName(), aiBone);
+                Log.e("BONE", "Adding bone %s", boneName);
+            }
+        }
+    }
+
+    private void attachLights(Hashtable<String, GVRLight> lightlist, GVRSceneObject sceneObject)
+    {
         String name = sceneObject.getName();
+        if ("".equals(name))
+        {
+            return;
+        }
         GVRLight light =  lightlist.get(name);
-        if (light != null) {
+        if (light != null)
+        {
             Quaternionf q = new Quaternionf();
             q.rotationX((float) -Math.PI / 2.0f);
             q.normalize();
             light.setDefaultOrientation(q);
             sceneObject.attachLight(light);
         }
-
     }
 
     /**
@@ -692,93 +1065,54 @@ class   GVRJassimpAdapter {
      * @param assetRequest
      *            GVRAssetRequest containing the original request to load the model
      *
-     * @param node
-     *            A reference to the AiNode for which we want to recurse all its
-     *            children and meshes.
+     * @param sceneObject
+     *            The GVRSceneObject to process
      *
-     * @param aiMesh
-     *            The assimp mesh
-     **
-     * @return The new {@link GVRSceneObject} with the input mesh for the node {@linknode}
-     *
-     * @throws IOException
-     *             File does not exist or cannot be read
+     * @param meshId
+     *            The index of the assimp mesh in the AiScene mesh list
      */
-    private GVRSceneObject createSubSceneObject(
+    private void processMesh(
             GVRAssetLoader.AssetRequest assetRequest,
-            GVRSceneObject parent,
-            AiNode node,
-            AiMesh aiMesh)
+            GVRSceneObject sceneObject,
+            int meshId)
     {
         EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
-        GVRMesh mesh = createMesh(mContext, aiMesh, settings);
-        AiMaterial material = mScene.getMaterials().get(aiMesh.getMaterialIndex());
-        final GVRMaterial meshMaterial = createMaterial(material, assetRequest.getImportSettings());
-        GVRSceneObject sceneObject = createSceneObject(mContext, node);
-        GVRRenderData sceneObjectRenderData = new GVRRenderData(mContext);
-        AiColor diffuseColor = material.getDiffuseColor(sWrapperProvider);        /* Opacity */
-        float opacity = diffuseColor.getAlpha();
+        AiMesh aiMesh = mScene.getMeshes().get(meshId);
+        GVRMesh mesh = mMeshes[meshId];
+        GVRMaterial gvrMaterial = mMaterials[aiMesh.getMaterialIndex()];
 
-        sceneObjectRenderData.setMesh(mesh);
-        if (!settings.contains(GVRImportSettings.NO_TEXTURING))
+        if (mesh == null)
         {
-            loadTextures(assetRequest, material, meshMaterial, aiMesh);
-        }
-        if (settings.contains(GVRImportSettings.NO_LIGHTING))
-        {
-            sceneObjectRenderData.disableLight();
-            if (material.getOpacity() > 0)
+            mesh = createMesh(mContext, aiMesh, settings);
+            mMeshes[meshId] = mesh;
+            if (aiMesh.hasBones() && (mSkeleton != null))
             {
-                opacity *= material.getOpacity();
+                GVRSkin skin = processBones(mesh, aiMesh.getBones());
+                if (skin != null)
+                {
+                    sceneObject.attachComponent(skin);
+                }
             }
-            meshMaterial.setVec3("u_color",
-                    diffuseColor.getRed(),
-                    diffuseColor.getGreen(),
-                    diffuseColor.getBlue());
-            meshMaterial.setFloat("u_opacity", opacity);
         }
         else
         {
-            /* Diffuse color & Opacity */
-            if (material.getOpacity() > 0)
-            {
-                opacity *= material.getOpacity();
-            }
-            meshMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
-                    diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
-
-            /* Specular color */
-            AiColor specularColor = material.getSpecularColor(sWrapperProvider);
-            meshMaterial.setSpecularColor(specularColor.getRed(),
-                    specularColor.getGreen(), specularColor.getBlue(),
-                    specularColor.getAlpha());
-
-
-            /* Ambient color */
-            AiColor ambientColor = material.getAmbientColor(sWrapperProvider);
-            if (meshMaterial.hasUniform("ambient_color"))
-            {
-                meshMaterial.setAmbientColor(ambientColor.getRed(),
-                        ambientColor.getGreen(), ambientColor.getBlue(),
-                        ambientColor.getAlpha());
-            }
-
-
-            /* Emissive color */
-            AiColor emissiveColor = material.getEmissiveColor(sWrapperProvider);
-            meshMaterial.setVec4("emissive_color", emissiveColor.getRed(),
-                    emissiveColor.getGreen(), emissiveColor.getBlue(),
-                    emissiveColor.getAlpha());
+            Log.v("BONE", "instancing mesh %s", sceneObject.getName());
         }
+        if (gvrMaterial == null)
+        {
+            AiMaterial material = mScene.getMaterials().get(aiMesh.getMaterialIndex());
+            gvrMaterial = processMaterial(assetRequest, material, aiMesh);
+            mMaterials[aiMesh.getMaterialIndex()] = gvrMaterial;
+        }
+        GVRRenderData renderData = new GVRRenderData(mContext, gvrMaterial);
 
-        /* Specular Exponent */
-        float specularExponent = material.getShininess();
-        meshMaterial.setSpecularExponent(specularExponent);
-        sceneObjectRenderData.setMaterial(meshMaterial);
-        sceneObject.attachRenderData(sceneObjectRenderData);
+        renderData.setMesh(mesh);
+        if (settings.contains(GVRImportSettings.NO_LIGHTING))
+        {
+            renderData.disableLight();
+        }
+        sceneObject.attachRenderData(renderData);
         setMeshMorphComponent(mesh, sceneObject, aiMesh);
-        parent.addChildObject(sceneObject);
-        return sceneObject;
     }
 
     private static final Map<AiTextureType, String> textureMap;
@@ -823,6 +1157,72 @@ class   GVRJassimpAdapter {
         filterMap.put(GLES20.GL_LINEAR_MIPMAP_LINEAR, GVRTextureParameters.TextureFilterType.GL_LINEAR_MIPMAP_LINEAR);
     }
 
+    private GVRMaterial processMaterial(
+            GVRAssetLoader.AssetRequest assetRequest,
+            AiMaterial aiMaterial,
+            AiMesh aiMesh)
+    {
+        EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
+        GVRMaterial gvrMaterial = createMaterial(aiMaterial, settings);
+        AiColor diffuseColor = aiMaterial.getDiffuseColor(sWrapperProvider);
+        float opacity = diffuseColor.getAlpha();
+
+        if (!settings.contains(GVRImportSettings.NO_TEXTURING))
+        {
+            loadTextures(assetRequest, aiMaterial, gvrMaterial, aiMesh);
+        }
+        if (settings.contains(GVRImportSettings.NO_LIGHTING))
+        {
+            if (aiMaterial.getOpacity() > 0)
+            {
+                opacity *= aiMaterial.getOpacity();
+            }
+            gvrMaterial.setVec3("u_color",
+                    diffuseColor.getRed(),
+                    diffuseColor.getGreen(),
+                    diffuseColor.getBlue());
+            gvrMaterial.setFloat("u_opacity", opacity);
+        }
+        else
+        {
+            /* Diffuse color & Opacity */
+            if (aiMaterial.getOpacity() > 0)
+            {
+                opacity *= aiMaterial.getOpacity();
+            }
+            gvrMaterial.setVec4("diffuse_color",diffuseColor.getRed(),
+                    diffuseColor.getGreen(), diffuseColor.getBlue(), opacity);
+
+            /* Specular color */
+            AiColor specularColor = aiMaterial.getSpecularColor(sWrapperProvider);
+            gvrMaterial.setSpecularColor(specularColor.getRed(),
+                    specularColor.getGreen(), specularColor.getBlue(),
+                    specularColor.getAlpha());
+
+
+            /* Ambient color */
+            AiColor ambientColor = aiMaterial.getAmbientColor(sWrapperProvider);
+            if (gvrMaterial.hasUniform("ambient_color"))
+            {
+                gvrMaterial.setAmbientColor(ambientColor.getRed(),
+                        ambientColor.getGreen(), ambientColor.getBlue(),
+                        ambientColor.getAlpha());
+            }
+
+
+            /* Emissive color */
+            AiColor emissiveColor = aiMaterial.getEmissiveColor(sWrapperProvider);
+            gvrMaterial.setVec4("emissive_color", emissiveColor.getRed(),
+                    emissiveColor.getGreen(), emissiveColor.getBlue(),
+                    emissiveColor.getAlpha());
+        }
+
+        /* Specular Exponent */
+        float specularExponent = aiMaterial.getShininess();
+        gvrMaterial.setSpecularExponent(specularExponent);
+        return gvrMaterial;
+    }
+
     private GVRMaterial createMaterial(AiMaterial material, EnumSet<GVRImportSettings> settings)
     {
         boolean layered = false;
@@ -847,7 +1247,7 @@ class   GVRJassimpAdapter {
                 GVRMaterial m = new GVRMaterial(mContext, shaderType);
 
                 //use specular glossiness workflow, if present
-                if(glosspresent)
+                if (glosspresent)
                 {
                     AiColor diffuseFactor = material.getDiffuseColor(sWrapperProvider);
                     AiColor specularFactor = material.getSpecularColor(sWrapperProvider);
@@ -858,7 +1258,8 @@ class   GVRJassimpAdapter {
                     m.setSpecularColor(specularFactor.getRed(), specularFactor.getGreen(), specularFactor.getBlue(), specularFactor.getAlpha());
                     m.setFloat("glossinessFactor", glossinessFactor);
                 }
-                else {
+                else
+                {
                     float metallic = material.getMetallic();
                     float roughness = material.getRoughness();
                     AiColor baseColorFactor = material.getDiffuseColor(sWrapperProvider);
@@ -989,7 +1390,7 @@ class   GVRJassimpAdapter {
 
     private void importLights(List<AiLight> lights, Hashtable<String, GVRLight> lightlist)
     {
-        for(AiLight light: lights)
+        for (AiLight light: lights)
         {
             GVRLight l;
             AiLightType type = light.getType();
@@ -1034,12 +1435,12 @@ class   GVRJassimpAdapter {
             l.setVec4("specular_intensity", c[0], c[1], c[2], 1.0f);
             if ((l instanceof GVRPointLight) || (l instanceof GVRSpotLight))
             {
-                setAttenuatipn(l, light);
+                setAttenuation(l, light);
             }
         }
     }
 
-    private void setAttenuatipn(GVRLight gvrLight, AiLight assimpLight)
+    private void setAttenuation(GVRLight gvrLight, AiLight assimpLight)
     {
         float aconstant = assimpLight.getAttenuationConstant();
         float alinear = assimpLight.getAttenuationLinear();

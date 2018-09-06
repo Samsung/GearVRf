@@ -29,7 +29,8 @@ namespace gvr {
     static const long long COMPONENT_TYPE_PHYSICS_WORLD      = 10011;
     static const long long COMPONENT_TYPE_RENDER_TARGET      = 10012;
     static const long long COMPONENT_TYPE_PHYSICS_CONSTRAINT = 10013;
-
+    static const long long COMPONENT_TYPE_SKELETON           = 10020;
+    static const long long COMPONENT_TYPE_SKIN               = 10021;
 }
 
 #endif

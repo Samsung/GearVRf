@@ -20,8 +20,8 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
 
 /** Size animation. */
-public class GVRScaleAnimation extends GVRTransformAnimation {
-
+public class GVRScaleAnimation extends GVRTransformAnimation
+{
     private final float mStartX, mStartY, mStartZ;
     private final float mDeltaX, mDeltaY, mDeltaZ;
 
@@ -45,13 +45,13 @@ public class GVRScaleAnimation extends GVRTransformAnimation {
      *            Target z scale
      */
     public GVRScaleAnimation(GVRTransform target, float duration, float scaleX,
-            float scaleY, float scaleZ) {
+            float scaleY, float scaleZ)
+    {
         super(target, duration);
 
-        mStartX = mTransform.getScaleX();
-        mStartY = mTransform.getScaleY();
-        mStartZ = mTransform.getScaleZ();
-
+        mStartX = target.getScaleX();
+        mStartY = target.getScaleY();
+        mStartZ = target.getScaleZ();
         mDeltaX = scaleX - mStartX;
         mDeltaY = scaleY - mStartY;
         mDeltaZ = scaleZ - mStartZ;
@@ -72,7 +72,8 @@ public class GVRScaleAnimation extends GVRTransformAnimation {
      * @param scale
      *            Target scale
      */
-    public GVRScaleAnimation(GVRTransform target, float duration, float scale) {
+    public GVRScaleAnimation(GVRTransform target, float duration, float scale)
+    {
         this(target, duration, scale, scale, scale);
     }
 
@@ -96,8 +97,9 @@ public class GVRScaleAnimation extends GVRTransformAnimation {
      *            Target z scale
      */
     public GVRScaleAnimation(GVRSceneObject target, float duration,
-            float scaleX, float scaleY, float scaleZ) {
-        this(getTransform(target), duration, scaleX, scaleY, scaleZ);
+            float scaleX, float scaleY, float scaleZ)
+    {
+        this(target.getTransform(), duration, scaleX, scaleY, scaleZ);
     }
 
     /**
@@ -115,13 +117,15 @@ public class GVRScaleAnimation extends GVRTransformAnimation {
      * @param scale
      *            Target scale
      */
-    public GVRScaleAnimation(GVRSceneObject target, float duration, float scale) {
+    public GVRScaleAnimation(GVRSceneObject target, float duration, float scale)
+    {
         this(target, duration, scale, scale, scale);
     }
 
     @Override
-    protected void animate(GVRHybridObject target, float ratio) {
-        mTransform.setScale(mStartX + ratio * mDeltaX, mStartY + ratio
+    protected void animate(GVRHybridObject target, float ratio)
+    {
+        setScale(mStartX + ratio * mDeltaX, mStartY + ratio
                 * mDeltaY, mStartZ + ratio * mDeltaZ);
     }
 }

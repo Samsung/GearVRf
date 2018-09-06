@@ -25,6 +25,9 @@
 #include <glslang/Include/Common.h>
 #include "vulkan/vulkan_render_data.h"
 #include "vulkan/vk_render_to_texture.h"
+#include "objects/components/skin.h"
+#include "objects/scene_object.h"
+
 namespace gvr {
 
 VulkanShader::VulkanShader(int id,
@@ -62,7 +65,7 @@ void VulkanShader::makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescri
         samplerBinding.push_back(dummy_binding);
     }
 
-    if(vkdata->mesh()->hasBones() && hasBones()){
+    if (vkdata->owner_object()->getComponent(Skin::getComponentType()) && hasBones()){
        VkDescriptorSetLayoutBinding &bones_uniformBinding = static_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
        samplerBinding.push_back(bones_uniformBinding);
    }

@@ -18,6 +18,8 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 /**
  * This animation uses
@@ -27,8 +29,8 @@ import org.gearvrf.GVRTransform;
  */
 public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
 
-    private final Orientation mOrientation;
-    private final Position mPosition;
+    private final Quaternionf mStartRotation = new Quaternionf();
+    private final Vector3f mStartPosition = new Vector3f();
     private final float mAngle, //
             mAxisX, mAxisY, mAxisZ, //
             mPivotX, mPivotY, mPivotZ;
@@ -61,10 +63,8 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
             float duration, float angle, float axisX, float axisY, float axisZ,
             float pivotX, float pivotY, float pivotZ) {
         super(target, duration);
-
-        mOrientation = new Orientation();
-        mPosition = new Position();
-
+        mStartRotation.set(mRotation);
+        mStartPosition.set(mPosition);
         mAngle = angle;
         mAxisX = axisX;
         mAxisY = axisY;
@@ -100,8 +100,9 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
      */
     public GVRRotationByAxisWithPivotAnimation(GVRSceneObject target,
             float duration, float angle, float axisX, float axisY, float axisZ,
-            float pivotX, float pivotY, float pivotZ) {
-        this(getTransform(target), duration, angle, axisX, axisY, axisZ,
+            float pivotX, float pivotY, float pivotZ)
+    {
+        this(target.getTransform(), duration, angle, axisX, axisY, axisZ,
                 pivotX, pivotY, pivotZ);
     }
 
@@ -110,12 +111,14 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
         // Reset rotation and position (this is pretty cheap - GVRF uses a 'lazy
         // update' policy on the matrix, so three changes don't cost all that
         // much more than one)
-        mOrientation.setOrientation();
-        mPosition.setPosition();
-
         // Rotate with pivot, from start orientation & position
         float angle = ratio * mAngle;
-        mTransform.rotateByAxisWithPivot(angle, mAxisX, mAxisY, mAxisZ,
-                mPivotX, mPivotY, mPivotZ);
+
+        mStartPosition.sub(mPivotX, mPivotY, mPivotZ, mPosition);
+        mRotation.rotateAxis(mAngle, mAxisX, mAxisY, mAxisZ);
+        mRotation.mul(mStartRotation);
+        mTempMtx.translationRotateScale(mPosition, mRotation, mScale);
+        mStartPosition.add(mPivotX, mPivotY, mPivotZ, mPosition);
+        mTempMtx.translate(mPosition);
     }
 }

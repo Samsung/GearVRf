@@ -53,8 +53,9 @@ import org.gearvrf.animation.GVROnFinish;
 import org.gearvrf.animation.GVRRepeatMode;
 import org.gearvrf.animation.keyframe.GVRAnimationBehavior;
 import org.gearvrf.animation.keyframe.GVRAnimationChannel;
-import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.animation.keyframe.GVRNodeAnimation;
 
+import org.gearvrf.animation.keyframe.GVRNodeAnimation;
 import org.gearvrf.scene_objects.GVRVideoSceneObject;
 import org.gearvrf.scene_objects.GVRVideoSceneObjectPlayer;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
@@ -514,7 +515,7 @@ public class AnimationInteractivityManager {
     public void initAnimationsAndInteractivity() {
         for (InteractiveObject interactiveObject : interactiveObjects) {
             GVRAnimationChannel gvrAnimationChannel = null;
-            GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
+            GVRNodeAnimation gvrKeyFrameAnimation = null;
             GVRSceneObject gvrAnimatedObject = null;
 
             // both animated and interactive objects currently must have a time
@@ -588,17 +589,15 @@ public class AnimationInteractivityManager {
 
                 // Second, set up the KeyFrameAnimation object
                 if (gvrAnimatedObject != null) {
-                    gvrKeyFrameAnimation = new GVRKeyFrameAnimation(
+                    gvrKeyFrameAnimation = new GVRNodeAnimation(
                             gvrAnimatedObject.getName() + KEY_FRAME_ANIMATION + animationCount,
                             gvrAnimatedObject,
-                            interactiveObject.getTimeSensor().getCycleInterval() * FRAMES_PER_SECOND,
-                            FRAMES_PER_SECOND);
-                    gvrKeyFrameAnimation.addChannel(gvrAnimationChannel);
+                            interactiveObject.getTimeSensor().getCycleInterval(),
+                            gvrAnimationChannel);
                     if (interactiveObject.getTimeSensor().getLoop()) {
                         gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.REPEATED);
                         gvrKeyFrameAnimation.setRepeatCount(-1);
                     }
-                    gvrKeyFrameAnimation.prepare();
                     animationCount++;
                     interactiveObject.getTimeSensor().addGVRKeyFrameAnimation( gvrKeyFrameAnimation );
 
@@ -611,7 +610,7 @@ public class AnimationInteractivityManager {
                     } else {
                         // this is an interactive object
                         final InteractiveObject interactiveObjectFinal = interactiveObject;
-                        final GVRKeyFrameAnimation gvrKeyFrameAnimationFinal = gvrKeyFrameAnimation;
+                        final GVRNodeAnimation gvrKeyFrameAnimationFinal = gvrKeyFrameAnimation;
                         interactiveObject.getSensor().getOwnerObject().forAllDescendants(
                                 new GVRSceneObject.SceneVisitor()
                                 {

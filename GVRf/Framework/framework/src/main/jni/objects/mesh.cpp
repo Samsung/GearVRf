@@ -15,6 +15,7 @@
 
 #include "mesh.h"
 #include "engine/renderer/renderer.h"
+#include "objects/components/skeleton.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
 namespace gvr
@@ -23,18 +24,18 @@ namespace gvr
     Mesh::Mesh(const char* descriptor)
     : mVertices(nullptr),
       mIndices(nullptr),
-      have_bounding_volume_(false),
-      vertexBoneData_()
+      have_bounding_volume_(false)
     {
         mVertices = Renderer::getInstance()->createVertexBuffer(descriptor, 0);
     }
 
     Mesh::Mesh(VertexBuffer& vbuf)
-    : mVertices(&vbuf), mIndices(nullptr),
-      have_bounding_volume_(false),
-      vertexBoneData_()
+    : mVertices(&vbuf),
+      mIndices(nullptr),
+      have_bounding_volume_(false)
     {
     }
+
 
     Mesh *Mesh::createBoundingBox()
     {

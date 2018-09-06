@@ -25,11 +25,6 @@ layout(location = 15) in vec2 normal_coord;
 layout(location = 16) in vec2 emissive_coord;
 #endif
 
-#ifdef HAS_ambientTexture1
-layout(location = 18) in vec2 ambient_coord1;
-layout(set = 0, binding = 18) uniform sampler2D ambientTexture1;
-#endif
-
 layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
 layout(set = 0, binding = 11) uniform sampler2D ambientTexture;
 layout(set = 0, binding = 12) uniform sampler2D specularTexture;
@@ -38,6 +33,10 @@ layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
 layout(set = 0, binding = 15) uniform sampler2D emissiveTexture;
 layout(set = 0, binding = 16) uniform sampler2D normalTexture;
 
+#ifdef HAS_ambientTexture1
+layout(location = 18) in vec2 ambient_coord1;
+layout(set = 0, binding = 18) uniform sampler2D ambientTexture1;
+#endif
 
 #ifdef HAS_diffuseTexture1
 layout(location = 19) in vec2 diffuse_coord1;
@@ -55,18 +54,9 @@ layout(set = 0, binding = 21) uniform sampler2D emissiveTexture1;
 #endif
 
 #ifdef HAS_lightmapTexture1
-layout(location = 21) in vec2 lightmap_coord1;
-layout(set = 0, binding = 21) uniform sampler2D lightmapTexture1;
+layout(location = 22) in vec2 lightmap_coord1;
+layout(set = 0, binding = 22) uniform sampler2D lightmapTexture1;
 #endif
-
-layout ( set = 0, binding = 10 ) uniform sampler2D diffuseTexture;
-layout ( set = 0, binding = 11 ) uniform sampler2D ambientTexture;
-layout ( set = 0, binding = 12 ) uniform sampler2D specularTexture;
-layout ( set = 0, binding = 13 ) uniform sampler2D opacityTexture;
-layout ( set = 0, binding = 14 ) uniform sampler2D lightmapTexture;
-layout ( set = 0, binding = 15 ) uniform sampler2D normalTexture;
-layout ( set = 0, binding = 16 ) uniform sampler2D emissiveTexture;
-layout ( set = 0, binding = 17 ) uniform sampler2D blendshapeTexture;
 
 struct Surface
 {

@@ -37,15 +37,18 @@ inline Component::Component(long long type, SceneObject* owner_object) :
         owner_object_(owner_object) {
 }
 
-inline Component::~Component() {
+inline Component::~Component()
+{
     owner_object_ = nullptr;
 }
 
-inline SceneObject *Component::owner_object() const {
+inline SceneObject *Component::owner_object() const
+{
     return owner_object_;
 }
 
-inline void Component::set_owner_object(SceneObject *owner_object) {
+inline void Component::set_owner_object(SceneObject *owner_object)
+{
     if (owner_object_)
     {
         onDetach(owner_object_);
@@ -57,15 +60,18 @@ inline void Component::set_owner_object(SceneObject *owner_object) {
     }
 }
 
-inline long long Component::getType() const {
+inline long long Component::getType() const
+{
     return type_;
 }
 
-inline bool Component::enabled() const {
+inline bool Component::enabled() const
+{
     return enabled_;
 }
 
-inline void Component::set_enable(bool enable) {
+inline void Component::set_enable(bool enable)
+{
     enabled_ = enable;
 }
 

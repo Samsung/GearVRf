@@ -456,6 +456,30 @@ public class GVRAndroidResource {
     }
 
     /**
+     * Returns the full path of the resource file with extension.
+     *
+     * @return path of the GVRAndroidResource. May return null if the
+     *         resource is not associated with any file
+     */
+    public String getResourcePath()
+    {
+        switch (resourceType)
+        {
+            case ANDROID_ASSETS: return assetPath;
+
+            case ANDROID_RESOURCE: return resourceFilePath;
+
+            case LINUX_FILESYSTEM: return filePath;
+
+            case NETWORK: return url.getPath();
+
+            case INPUT_STREAM: return inputStreamName;
+
+            default: return null;
+        }
+    }
+
+    /**
      * Returns the filename of the resource with extension.
      * 
      * @return Filename of the GVRAndroidResource. May return null if the

@@ -192,7 +192,7 @@ class Throttler implements Scheduler {
                     try {
                         OUTPUT gvrfResource = converter.convert(gvrContext,
                                 loadedResource);
-                        Log.v("ASSET", "Texture: loaded resource %s", resource.getResourceFilename());
+                        Log.v("ASSET", "Texture: loaded resource %s", resource.getResourcePath());
                         callback.loaded(gvrfResource, resource);
                     } catch (Throwable t) {
                         // Catch converter errors

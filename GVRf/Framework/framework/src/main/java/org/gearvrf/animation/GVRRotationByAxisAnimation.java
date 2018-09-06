@@ -24,9 +24,7 @@ import org.joml.Quaternionf;
 public class GVRRotationByAxisAnimation extends GVRTransformAnimation
 {
     private final float mAngle, mX, mY, mZ;
-    private final Quaternionf mRotation = new Quaternionf();
     private final Quaternionf mStartRotation = new Quaternionf();
-
 
     /**
      * Use {@link GVRTransform#rotateByAxis(float, float, float, float)} to do
@@ -53,7 +51,7 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
         mX = x;
         mY = y;
         mZ = z;
-        mStartRotation.set(target.getRotationX(), target.getRotationY(), target.getRotationZ(), target.getRotationW());
+        mStartRotation.set(mRotation);
     }
 
     /**
@@ -76,7 +74,7 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     public GVRRotationByAxisAnimation(GVRSceneObject target, float duration,
             float angle, float x, float y, float z)
     {
-        this(getTransform(target), duration, angle, x, y, z);
+        this(target.getTransform(), duration, angle, x, y, z);
     }
 
     @Override
@@ -85,6 +83,6 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
         float angle = ratio * mAngle;
         mRotation.fromAxisAngleDeg(mX, mY, mZ, angle);
         mRotation.mul(mStartRotation);
-        mTransform.setRotation(mRotation.w, mRotation.x, mRotation.y, mRotation.z);
+        super.animate(ratio);
     }
 }

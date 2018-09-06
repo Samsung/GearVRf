@@ -18,7 +18,9 @@
 
 #include "util/jni_utils.h"
 #include "objects/scene.h"
+#include "objects/scene_object.h"
 #include "shaders/shader.h"
+#include "objects/components/skin.h"
 #include <glslang/Include/Common.h> //@todo remove; for to_string
 
 namespace gvr {
@@ -166,7 +168,8 @@ bool compareRenderDataByShader(RenderData *i, RenderData *j)
     return i->get_shader(0) < j->get_shader(0);
 }
 
-bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
+bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j)
+{
     //1. rendering order needs to be sorted first to guarantee specified correct order
     if (i->rendering_order() == j->rendering_order())
     {
@@ -213,7 +216,8 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
 
 const std::string& RenderData::getHashCode()
 {
-    if (hash_code_dirty_)    {
+    if (hash_code_dirty_)
+    {
         std::string render_data_string;
         render_data_string.append(std::to_string(getRenderDataFlagsHashCode()));
         render_data_string.append(std::to_string(getComponentType()));
@@ -306,30 +310,20 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
 
 bool RenderData::updateGPU(Renderer* renderer, Shader* shader)
 {
-    VertexBuffer* vbuf = mesh_->getVertexBuffer();
-
-    if (mesh_->hasBones() && shader->hasBones())
+    if (shader->hasBones())
     {
-        VertexBoneData& vbd = mesh_->getVertexBoneData();
-        std::vector<glm::mat4>& bone_matrices = vbd.getBoneMatrices();
-        int numBones = bone_matrices.size();
+        Skin* skin = (Skin*) owner_object()->getComponent(Skin::getComponentType());
 
-        if (numBones > 0)
+        if (skin)
         {
-            if (bones_ubo_ == NULL)
-            {
-                bones_ubo_ = renderer->createUniformBlock("mat4 u_bone_matrix", BONES_UBO_INDEX,
-                                                          "Bones_ubo", MAX_BONES);
-                bones_ubo_->setNumElems(numBones);
-            }
-            bones_ubo_->setRange(0, bone_matrices.data(), numBones);
-            bones_ubo_->updateGPU(renderer);
+            skin->updateGPU(renderer, shader);
         }
     }
-    return vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
+    return mesh_->getVertexBuffer()->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
 }
 
-void RenderData::setBindShaderObject(JNIEnv* env, jobject bindShaderObject) {
+void RenderData::setBindShaderObject(JNIEnv* env, jobject bindShaderObject)
+{
     static const jclass clazz = env->GetObjectClass(bindShaderObject);
     static const jmethodID method = env->GetMethodID(clazz, "call", "(Lorg/gearvrf/GVRScene;Z)V");
     if (method == 0)

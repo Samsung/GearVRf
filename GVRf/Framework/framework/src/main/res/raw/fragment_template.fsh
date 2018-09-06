@@ -10,6 +10,7 @@ layout(location = 0) in vec3 view_direction;
 layout(location = 1) in vec3 viewspace_position;
 layout(location = 2) in vec3 viewspace_normal;
 
+
 layout(location = 10) in vec2 diffuse_coord;
 layout(location = 0) out vec4 fragColor;
 

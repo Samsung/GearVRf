@@ -53,7 +53,6 @@ import java.util.regex.Pattern;
  * @see GVRIndexBuffer
  * @see GVRBone
  * @see GVRAssetLoader
- * @see org.gearvrf.animation.keyframe.GVRSkinningController
  */
 public class GVRVertexBuffer extends GVRHybridObject implements PrettyPrint
 {
