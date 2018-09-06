@@ -1,0 +1,70 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+allprojects {
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+repositories {
+    flatDir {
+        dirs '../../gearvrf-libs'
+    }
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '26.0.2'
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 23
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+    }
+}
+
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
+dependencies {
+    if (findProject(':framework')) {
+        compile project(':framework')
+    } else {
+        compile(name: 'framework-release', ext: 'aar')
+    }
+
+    compile 'com.android.support:support-v4:23.4.0'
+    compile "org.joml:joml-android:${jomlVersion}"
+    compile 'com.google.code.gson:gson:2.8.+'
+}
