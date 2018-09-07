@@ -18,6 +18,9 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.utility.Log;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 /**
  * This animation uses
@@ -27,8 +30,6 @@ import org.gearvrf.GVRTransform;
  */
 public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
 
-    private final Orientation mOrientation;
-    private final Position mPosition;
     private final float mAngle, //
             mAxisX, mAxisY, mAxisZ, //
             mPivotX, mPivotY, mPivotZ;
@@ -61,10 +62,6 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
             float duration, float angle, float axisX, float axisY, float axisZ,
             float pivotX, float pivotY, float pivotZ) {
         super(target, duration);
-
-        mOrientation = new Orientation();
-        mPosition = new Position();
-
         mAngle = angle;
         mAxisX = axisX;
         mAxisY = axisY;
@@ -106,16 +103,15 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
     }
 
     @Override
-    protected void animate(GVRHybridObject target, float ratio) {
-        // Reset rotation and position (this is pretty cheap - GVRF uses a 'lazy
-        // update' policy on the matrix, so three changes don't cost all that
-        // much more than one)
-        mOrientation.setOrientation();
-        mPosition.setPosition();
-
-        // Rotate with pivot, from start orientation & position
+    protected void animate(GVRHybridObject target, float ratio)
+    {
         float angle = ratio * mAngle;
-        mTransform.rotateByAxisWithPivot(angle, mAxisX, mAxisY, mAxisZ,
-                mPivotX, mPivotY, mPivotZ);
+        mTransform.rotateByAxisWithPivot(angle, mAxisX, mAxisY, mAxisZ, mPivotX, mPivotY, mPivotZ);
+        if (sDebug)
+        {
+            Log.d("ANIMATION", "%s angle = %f, pos = %f, %f, %f",
+                  getClass().getSimpleName(), angle, mTransform.getPositionX(),
+                  mTransform.getPositionY(), mTransform.getPositionZ());
+        }
     }
 }

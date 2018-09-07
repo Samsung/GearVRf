@@ -433,7 +433,43 @@ class   GVRJassimpAdapter {
         sceneObject = new GVRSceneObject(ctx);
         sceneObject.setName(node.getName());
 
-        return sceneObject;
+        for (AiNodeAnim aiNodeAnim : aiAnim.getChannels())
+        {
+            String nodeName = aiNodeAnim.getNodeName();
+            GVRAnimationChannel channel = createAnimChannel(aiNodeAnim, (float) aiAnim.getTicksPerSecond());
+
+            animMap.put(nodeName, channel);
+        }
+        if (mSkeleton != null)
+        {
+            GVRSkeletonAnimation anim = new GVRSkeletonAnimation(aiAnim.getName(), target, duration);
+
+            anim.setSkeleton(mSkeleton, null);
+            attachBoneAnimations(anim, animMap);
+            animator.addAnimation(anim);
+        }
+        /*
+         * Any animation channels that are not part of the skeleton
+         * are added separately as node animations (which just modify
+         * a single node's matrix)
+         */
+        for (AiNodeAnim aiNodeAnim : aiAnim.getChannels())
+        {
+            String nodeName = aiNodeAnim.getNodeName();
+            GVRAnimationChannel channel = animMap.get(nodeName);
+
+            if (channel == null)
+            {
+                continue;
+            }
+            GVRSceneObject obj = target.getSceneObjectByName(nodeName);
+            if (obj != null)
+            {
+                GVRNodeAnimation nodeAnim = new GVRNodeAnimation(nodeName, obj, duration, channel);
+                animator.addAnimation(nodeAnim);
+                Log.d("BONE", "Adding node animation for %s", nodeName);
+            }
+        }
     }
 
     public GVRKeyFrameAnimation createAnimation(AiAnimation aiAnim, GVRSceneObject target) {
@@ -446,9 +482,53 @@ class   GVRJassimpAdapter {
             anim.addChannel(channel);
         }
 
-        anim.prepare();
+    private void attachBoneAnimations(GVRSkeletonAnimation skelAnim, Map<String, GVRAnimationChannel> animMap)
+    {
+        GVRPose bindPose = mSkeleton.getBindPose();
+        Matrix4f bindPoseMtx = new Matrix4f();
+        Vector3f vec = new Vector3f();
+        final float EPSILON = 0.00001f;
+        String boneName = mSkeleton.getBoneName(0);
+        GVRAnimationChannel channel = animMap.get(boneName);
+        AiBone aiBone;
 
-        return anim;
+        bindPose.getWorldMatrix(0, bindPoseMtx);
+        bindPoseMtx.getScale(vec);
+        if (channel != null)
+        {
+            skelAnim.addChannel(boneName, channel);
+            animMap.remove(boneName);
+            /*
+             * This is required because of a bug in the FBX importer
+             * which does not scale the animations to match the bind pose
+             */
+            bindPoseMtx.getScale(vec);
+            float delta = vec.lengthSquared();
+            delta = 3.0f - delta;
+            if (Math.abs(delta) > EPSILON)
+            {
+                fixKeys(channel, vec);
+            }
+        }
+        for (int boneId = 1; boneId < mSkeleton.getNumBones(); ++boneId)
+        {
+            boneName = mSkeleton.getBoneName(boneId);
+            aiBone = mBoneMap.get(boneName);
+            channel = animMap.get(boneName);
+
+            if (channel != null)
+            {
+                if (aiBone != null)
+                {
+                    skelAnim.addChannel(boneName, channel);
+                    animMap.remove(boneName);
+                }
+                else
+                {
+                    Log.e("BONE", "no bind pose matrix for bone %s", boneName);
+                }
+            }
+        }
     }
 
     private GVRAnimationChannel createAnimChannel(AiNodeAnim aiNodeAnim) {
@@ -566,9 +646,14 @@ class   GVRJassimpAdapter {
         {
             importLights(aiLights, lightList);
         }
-        if (scene == null)
+        mMeshes = new GVRMesh[scene.getNumMeshes()];
+        mMaterials = new GVRMaterial[scene.getNumMaterials()];
+
+        traverseGraph(model, scene.getSceneRoot(sWrapperProvider), lightList);
+        makeSkeleton(model);
+        if (doAnimation)
         {
-            return;
+            processAnimations(model, scene, settings.contains(GVRImportSettings.START_ANIMATIONS));
         }
         recurseAssimpNodes(request, model, scene.getSceneRoot(sWrapperProvider), lightList);
         if (!settings.contains(GVRImportSettings.NO_ANIMATION))

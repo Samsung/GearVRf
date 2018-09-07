@@ -26,7 +26,13 @@ import org.gearvrf.GVRTransform;
  * The constructors cast their {@code target} parameter to a
  * {@code protected final GVRTransform mTransform} field.
  */
-public abstract class GVRTransformAnimation extends GVRAnimation {
+public class GVRTransformAnimation extends GVRAnimation implements PrettyPrint
+{
+    protected final Matrix4f mTempMtx;
+    protected final Vector3f mPosition = new Vector3f();
+    protected final Vector3f mScale = new Vector3f();
+    protected final Quaternionf mRotation = new Quaternionf();
+    protected final GVRTransform mTransform;
 
     private final static Class<?>[] SUPPORTED = { GVRTransform.class,
             GVRSceneObject.class };
@@ -52,13 +58,11 @@ public abstract class GVRTransformAnimation extends GVRAnimation {
      */
     protected GVRTransformAnimation(GVRHybridObject target, float duration) {
         super(target, duration);
-        Class<?> type = checkTarget(target, SUPPORTED);
-        if (type == GVRTransform.class) {
-            mTransform = (GVRTransform) target;
-        } else {
-            GVRSceneObject sceneObject = (GVRSceneObject) target;
-            mTransform = sceneObject.getTransform();
-        }
+        mTempMtx = target.getLocalModelMatrix4f();
+        mScale.set(target.getScaleX(), target.getScaleY(), target.getScaleZ());
+        mPosition.set(target.getPositionX(), target.getPositionY(), target.getPositionZ());
+        mRotation.set(target.getRotationX(), target.getRotationY(), target.getRotationZ(), target.getRotationW());
+        mTransform = target;
     }
 
     /**
@@ -126,10 +130,10 @@ public abstract class GVRTransformAnimation extends GVRAnimation {
                     mTransform.getRotationZ());
         }
 
-        /** Restores {@link #mTransform}'s starting orientation */
-        protected void setOrientation() {
-            mTransform.setRotation(w, x, y, z);
-        }
+    protected void animate(float timeInSec)
+    {
+        mTempMtx.translationRotateScale(mPosition, mRotation, mScale);
+        mTransform.setModelMatrix(mTempMtx);
     }
 
     /** Latch/restore starting position */
