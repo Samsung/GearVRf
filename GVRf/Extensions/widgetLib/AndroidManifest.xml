@@ -1,0 +1,27 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.samsung.smcl.vr.widgetlib"
+    android:versionCode="1"
+    android:versionName="0.1" xmlns:tools="http://schemas.android.com/tools">
+
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+  <uses-feature android:name="android.hardware.camera" />
+  <uses-feature android:name="android.hardware.camera.autofocus" />
+
+  <!-- the leap daemon communicates to the app via socket -->
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+  <uses-permission android:name="com.qti.permission.PROFILER" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        tools:replace="android:theme"
+        android:theme="@style/AppTheme" >
+    </application>
+
+</manifest>

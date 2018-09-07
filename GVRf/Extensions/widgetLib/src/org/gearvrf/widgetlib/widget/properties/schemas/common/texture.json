@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "texture.json",
+
+  "definitions": {
+    "texture_filter_type": {
+      "type": "string",
+      "enum": [
+        "GL_LINEAR",
+        "GL_NEAREST",
+        "GL_NEAREST_MIPMAP_NEAREST",
+        "GL_NEAREST_MIPMAP_LINEAR",
+        "GL_LINEAR_MIPMAP_NEAREST",
+        "GL_LINEAR_MIPMAP_LINEAR"
+      ]
+    },
+
+    "texture_wrap_type": {
+      "type": "string",
+      "enum": [
+        "GL_CLAMP_TO_EDGE",
+        "GL_MIRRORED_REPEAT",
+        "GL_REPEAT"
+      ]
+    },
+
+    "texture_parameters": {
+      "type": "object",
+      "properties": {
+        "min_filter_type": { "$ref": "#/definitions/texture_filter_type" },
+        "mag_filter_type": { "$ref": "#/definitions/texture_filter_type" },
+        "wrap_s_type": { "$ref": "#/definitions/texture_wrap_type" },
+        "wrap_t_type": { "$ref": "#/definitions/texture_wrap_type" },
+        "anisotropic_value": { "type": "integer", "enum": [ 1, 2, 4, 8, 16 ] }
+      }
+    },
+
+    "bitmap": {
+      "type": "object",
+      "properties": {
+        "resource_type": { "type": "string", "enum": [ "asset", "file", "resource", "user" ] },
+        "type": { "type": "string", "enum": [ "compressed", "compressed_cubemap", "cubemap", "uncompressed" ] },
+        "id": { "type": "string" }
+      },
+      "required": [ "resource_type", "type", "id" ]
+    },
+
+    "bitmap_texture_properties": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "bitmap"},
+        "bitmap": { "$ref": "#/definitions/bitmap" },
+        "texture_parameters": { "$ref": "#/definitions/texture_parameters" }
+      },
+      "required": [ "bitmap", "type" ]
+    },
+
+    "texture": {
+    }
+  },
+
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/definitions/bitmap_texture_properties" }
+  ]
+}

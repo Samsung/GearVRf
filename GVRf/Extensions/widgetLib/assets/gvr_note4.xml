@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lens name="N4" >
+
+    <vr-app-settings
+        framebufferPixelsHigh="DEFAULT"
+        framebufferPixelsWide="DEFAULT"
+        showLoadingIcon="true"
+        useMultiview="false"
+        useProtectedFramebuffer="false"
+        useSrgbFramebuffer="false" >
+
+        <eye-show-params
+            frameRegulator="true"
+            distortion="true"
+            chromatic="true" />
+
+        <performance-parms
+            cpuLevel="2"
+            gpuLevel="2" />
+
+        <mode-params
+            allowPowerSave="true"
+            resetWindowFullScreen="true" />
+
+        <mono-mode-params
+            monoFullScreen="false"
+            monoMode="false" />
+
+        <eye-buffer-params
+            colorFormat="DEFAULT"
+            depthFormat="DEPTH_24_STENCIL_8"
+            fov-y="DEFAULT"
+            multiSamples="2"            
+            resolution="1280"
+            resolutionWidth="1280"
+            resolutionHeight="1280"
+            textureFilter="DEFAULT"/>
+
+        <head-model-params
+            eyeHeight="DEFAULT"
+            headModelDepth="DEFAULT"
+            headModelHeight="DEFAULT"
+            interpupillaryDistance="0.062" />
+    </vr-app-settings>
+
+</lens>

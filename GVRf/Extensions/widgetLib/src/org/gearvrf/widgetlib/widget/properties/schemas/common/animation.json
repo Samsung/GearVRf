@@ -1,0 +1,203 @@
+{
+  "definitions": {
+
+    "color_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "color" },
+        "color": { "$ref": "color.json" }
+      },
+      "required": [ "type", "color" ]
+    },
+
+    "opacity_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "opacity" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": [ "type", "opacity" ]
+    },
+
+    "position_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "position" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "required": [ "type", "x", "y", "z" ]
+    },
+
+    "relative_motion_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "relative_motion" },
+        "delta": { "$ref": "../common/vector3f.json" }
+      },
+      "required": [ "type", "delta" ]
+    },
+
+    "rotation_by_axis_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "rotation_by_axis" },
+        "angle": { "type": "number" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "required": [ "type", "angle", "x", "y", "z" ]
+    },
+
+    "rotation_by_axis_with_pivot_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "rotation_by_axis_with_pivot" },
+        "angle": { "type": "number" },
+        "axis": { "$ref": "../common/vector3f.json" },
+        "pivot": { "$ref": "../common/vector3f.json" }
+      },
+      "required": [ "type", "angle", "axis", "pivot" ]
+    },
+
+    "scale_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "scale" }
+      },
+      "oneOf": [{
+        "properties": {
+          "scale": { "type": "number", "minimum": 0 }
+        },
+        "required": [ "scale" ]
+      }, {
+        "properties": {
+          "scale": { "$ref": "../common/vector3f.json" }
+        },
+        "required": [ "scale" ]
+      }],
+      "required": ["type"]
+    },
+
+    "relative_scale_animation": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "pattern": "relative_scale" }
+      },
+      "oneOf": [{
+        "properties": {
+          "scale": { "type": "number", "minimum": 0 }
+        },
+        "required": [ "scale" ]
+      }, {
+        "properties": {
+          "scale": { "$ref": "../common/vector3f.json" }
+        },
+        "required": [ "scale" ]
+      }],
+      "required": [ "type" ]
+    },
+
+    "easing": {
+      "type": "string",
+      "enum": [
+        "BACK_IN",
+        "BACK_OUT",
+        "BACK_IN_OUT",
+        "BOUNCE_IN",
+        "BOUNCE_OUT",
+        "BOUNCE_IN_OUT",
+        "CIRCULAR_IN",
+        "CIRCULAR_OUT",
+        "CIRCULAR_IN_OUT",
+        "CUBIC_IN",
+        "CUBIC_OUT",
+        "CUBIC_IN_OUT",
+        "ELASTIC_IN",
+        "ELASTIC_OUT",
+        "ELASTIC_IN_OUT",
+        "EXPONENTIAL_IN",
+        "EXPONENTIAL_OUT",
+        "EXPONENTIAL_IN_OUT",
+        "LINEAR",
+        "QUAD_IN",
+        "QUAD_OUT",
+        "QUAD_IN_OUT",
+        "QUART_IN",
+        "QUART_OUT",
+        "QUART_IN_OUT",
+        "QUINT_IN",
+        "QUINT_OUT",
+        "QUINT_IN_OUT",
+        "SINE_IN",
+        "SINE_OUT",
+        "SINE_IN_OUT"
+      ]
+    },
+
+    "animation": {
+      "type": "object",
+      "properties": {
+        "repeat_mode": { "type": "string", "enum": [ "ONCE", "REPEATED"]},
+        "repeat_count": { "type": "integer" },
+        "easing": { "$ref": "#/definitions/easing" }
+      },
+      "oneOf": [
+        { "$ref": "#/definitions/color_animation" },
+        { "$ref": "#/definitions/opacity_animation" },
+        { "$ref": "#/definitions/position_animation" },
+        { "$ref": "#/definitions/relative_motion_animation" },
+        { "$ref": "#/definitions/rotation_by_axis_animation" },
+        { "$ref": "#/definitions/rotation_by_axis_with_pivot_animation" },
+        { "$ref": "#/definitions/scale_animation" }
+      ]
+    }
+  },
+
+  "duration_animation": {
+    "description": "Animation with an absolute duration defined in seconds. This is the standard animation.",
+    "allOf": [{
+      "properties": {
+        "duration": {
+          "type": "number"
+        }
+      }
+    }, {
+      "$ref": "#/definitions/animation"
+    }],
+    "required": [ "duration" ]
+  },
+
+  "rate_animation": {
+    "description": "Animation with a rate of progress defined in units per second. Useful when you want an animation to progress at the same speed over varying distances, resulting in a situation-dependent duration.",
+    "allOf": [{
+      "properties": {
+        "rate": {
+          "type": "number"
+        }
+      }
+    }, {
+      "$ref": "#/definitions/animation"
+    }],
+    "required": [ "rate" ]
+  },
+
+  "type": "object",
+  "oneOf": [
+    {
+      "properties": {
+        "id": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ]
+        }
+      },
+      "required": [ "id" ]
+    },
+    { "$ref": "#/definitions/duration_animation" },
+    { "$ref": "#/definitions/rate_animation" }
+  ]
+}

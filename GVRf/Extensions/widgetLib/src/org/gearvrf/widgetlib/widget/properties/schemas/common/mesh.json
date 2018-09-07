@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "mesh.json",
+
+  "oneOf": [
+    {
+      "description": "Specify the mesh as a quad",
+      "type": "object",
+      "properties": {
+        "size": {
+          "description": "Can either be described as a PointF, or a single number for both dimensions",
+          "type": "object",
+          "oneOf": [{
+            "$ref": "pointf.json"
+          }, {
+            "type": "number"
+          }]
+        }
+      }
+    },
+    {
+      "description": "Specify the 'mesh' as a full-fledged model (only 'assets' directory currently supported)",
+      "type": "object",
+      "properties": {
+        "model": {
+          "id": {
+            "description": "File name relative to 'assets' directory",
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "description": "Specify the 'mesh' as an object",
+      "type": "object",
+      "properties": {
+        "mesh": {
+          "id": {
+            "description": "File name relative to 'assets' directory",
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}
