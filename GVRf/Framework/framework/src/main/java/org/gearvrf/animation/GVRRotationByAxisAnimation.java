@@ -27,7 +27,6 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     private final float mAngle, mAxisX, mAxisY, mAxisZ;
     private final Quaternionf mStartRotation = new Quaternionf();
 
-
     /**
      * Use {@link GVRTransform#rotateByAxis(float, float, float, float)} to do
      * an animated rotation about a specific axis.
@@ -76,7 +75,7 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     public GVRRotationByAxisAnimation(GVRSceneObject target, float duration,
             float angle, float x, float y, float z)
     {
-        this(getTransform(target), duration, angle, x, y, z);
+        this(target.getTransform(), duration, angle, x, y, z);
     }
 
     @Override

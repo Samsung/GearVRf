@@ -25,7 +25,7 @@ package org.gearvrf.x3d;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.animation.GVRRepeatMode;
-import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.animation.keyframe.GVRNodeAnimation;
 
 import java.util.ArrayList;
 
@@ -38,7 +38,7 @@ public class TimeSensor {
 	float resumeTime = 0;
 	float startTime = 0;
 	float stopTime = 0;
-    private ArrayList<GVRKeyFrameAnimation> gvrKeyFrameAnimations = new ArrayList<GVRKeyFrameAnimation>();
+    private ArrayList<GVRNodeAnimation> gvrKeyFrameAnimations = new ArrayList<GVRNodeAnimation>();
 
 	public TimeSensor() {
 		this.name = null;
@@ -76,7 +76,7 @@ public class TimeSensor {
     public void setEnabled(boolean enable, GVRContext gvrContext) {
         if (this.enabled != enabled ) {
             // a change in the animation stopping / starting
-            for (GVRKeyFrameAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
+            for (GVRNodeAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
                 if (enable) gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine());
                 else {
                     gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.ONCE);
@@ -87,8 +87,8 @@ public class TimeSensor {
     }
 
     /**
-     * SetLoop will either set the GVRKeyFrameAnimation's Repeat Mode to REPEATED if loop is true.
-     * or it will set the GVRKeyFrameAnimation's Repeat Mode to ONCE if loop is false
+     * SetLoop will either set the GVRNodeAnimation's Repeat Mode to REPEATED if loop is true.
+     * or it will set the GVRNodeAnimation's Repeat Mode to ONCE if loop is false
      * if loop is set to TRUE, when it was previously FALSE, then start the Animation.
      * @param doLoop
      * @param gvrContext
@@ -96,13 +96,13 @@ public class TimeSensor {
     public void setLoop(boolean doLoop, GVRContext gvrContext) {
         if (this.loop != doLoop ) {
             // a change in the loop
-            for (GVRKeyFrameAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
+            for (GVRNodeAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
                 if (doLoop) gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.REPEATED);
                 else gvrKeyFrameAnimation.setRepeatMode(GVRRepeatMode.ONCE);
             }
             // be sure to start the animations if loop is true
             if ( doLoop ) {
-                for (GVRKeyFrameAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
+                for (GVRNodeAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
                     gvrKeyFrameAnimation.start(gvrContext.getAnimationEngine() );
                 }
             }
@@ -125,7 +125,7 @@ public class TimeSensor {
      */
     public void setCycleInterval(float newCycleInterval) {
         if ( (this.cycleInterval != newCycleInterval) && (newCycleInterval > 0) ) {
-            for (GVRKeyFrameAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
+            for (GVRNodeAnimation gvrKeyFrameAnimation : gvrKeyFrameAnimations) {
                 //TODO Cannot easily change the GVRAnimation's GVRChannel once set.
             }
             this.cycleInterval = newCycleInterval;
@@ -146,7 +146,7 @@ public class TimeSensor {
      * enabled properties for this single TimeSensor
      * @param gvrKeyFrameAnimation
      */
-    public void addGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation) {
+    public void addGVRKeyFrameAnimation(GVRNodeAnimation gvrKeyFrameAnimation) {
         this.gvrKeyFrameAnimations.add(gvrKeyFrameAnimation);
     }
 

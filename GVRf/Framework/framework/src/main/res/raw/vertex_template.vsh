@@ -89,8 +89,6 @@ void main() {
 @VertexMorphShader
 #endif
 
-@VertexShader
-
 #ifdef HAS_VertexSkinShader
 @VertexSkinShader
 #endif
@@ -98,6 +96,8 @@ void main() {
 #ifdef HAS_VertexNormalShader
 @VertexNormalShader
 #endif
+
+@VertexShader
 
 #ifdef HAS_LIGHTSOURCES
     LightVertex(vertex);

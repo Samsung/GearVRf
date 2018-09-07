@@ -21,6 +21,7 @@ import org.joml.Vector3f;
  */
 public final class GVRAnimationChannel implements PrettyPrint {
     private static final String TAG = GVRAnimationChannel.class.getSimpleName();
+    private static final float[] mTempVec = new float[3];
 
     /**
      * Constructor.
@@ -33,8 +34,8 @@ public final class GVRAnimationChannel implements PrettyPrint {
      * @param postBehavior behavior after animation end
      */
     public GVRAnimationChannel(String nodeName, int numPosKeys, int numRotKeys,
-                               int numScaleKeys, GVRAnimationBehavior preBehavior, GVRAnimationBehavior postBehavior) {
-
+                               int numScaleKeys, GVRAnimationBehavior preBehavior, GVRAnimationBehavior postBehavior)
+    {
         m_nodeName = nodeName;
         mPosInterpolator = new GVRFloatAnimation(numPosKeys, 4);
         mRotInterpolator = new GVRQuatAnimation(numRotKeys);
@@ -43,6 +44,38 @@ public final class GVRAnimationChannel implements PrettyPrint {
         mPostState = postBehavior;
     }
 
+    public GVRAnimationChannel(String nodeName, float[] posKeys, float[] rotKeys,
+                               float[] scaleKeys, GVRAnimationBehavior preBehavior,
+                               GVRAnimationBehavior postBehavior)
+    {
+        m_nodeName = nodeName;
+        if (posKeys != null)
+        {
+            mPosInterpolator = new GVRFloatAnimation(posKeys, 4);
+        }
+        else
+        {
+            mPosInterpolator = new GVRFloatAnimation(0, 4);
+        }
+        if (rotKeys != null)
+        {
+            mRotInterpolator = new GVRQuatAnimation(rotKeys);
+        }
+        else
+        {
+            mRotInterpolator = new GVRQuatAnimation(0);
+        }
+        if (scaleKeys != null)
+        {
+            mSclInterpolator = new GVRFloatAnimation(scaleKeys, 4);
+        }
+        else
+        {
+            mSclInterpolator = new GVRFloatAnimation(0, 4);
+        }
+        mPreState = preBehavior;
+        mPostState = postBehavior;
+    }
 
     /**
      * Returns the name of the scene graph node affected by this animation.<p>
@@ -106,7 +139,10 @@ public final class GVRAnimationChannel implements PrettyPrint {
 
     public void setPosKeyVector(int keyIndex, float time, float x, float y, float z)
     {
-        mPosInterpolator.setKey(keyIndex, time, new float[] { x, y, z });
+        mTempVec[0] = x;
+        mTempVec[1] = y;
+        mTempVec[2] = z;
+        mPosInterpolator.setKey(keyIndex, time, mTempVec);
     }
 
     /**
@@ -209,6 +245,14 @@ public final class GVRAnimationChannel implements PrettyPrint {
     public void setScaleKeyVector(int keyIndex, float time, final float[] scale)
     {
         mSclInterpolator.setKey(keyIndex, time, scale);
+    }
+
+    public void setScaleKeyVector(int keyIndex, float time, float x, float y, float z)
+    {
+        mTempVec[0] = x;
+        mTempVec[1] = y;
+        mTempVec[2] = z;
+        mSclInterpolator.setKey(keyIndex, time, mTempVec);
     }
 
     /**

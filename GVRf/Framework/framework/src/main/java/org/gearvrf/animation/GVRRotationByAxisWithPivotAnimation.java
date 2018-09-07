@@ -97,8 +97,9 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
      */
     public GVRRotationByAxisWithPivotAnimation(GVRSceneObject target,
             float duration, float angle, float axisX, float axisY, float axisZ,
-            float pivotX, float pivotY, float pivotZ) {
-        this(getTransform(target), duration, angle, axisX, axisY, axisZ,
+            float pivotX, float pivotY, float pivotZ)
+    {
+        this(target.getTransform(), duration, angle, axisX, axisY, axisZ,
                 pivotX, pivotY, pivotZ);
     }
 

@@ -91,7 +91,6 @@ public:
         render_data_flags.use_lightmap_ = rdata.render_data_flags.use_lightmap_;
         render_data_flags.batching_ = rdata.render_data_flags.batching_;
         render_mask_ = rdata.render_mask_;
-        bones_ubo_ = rdata.bones_ubo_;
         render_data_flags.cast_shadows_ = rdata.render_data_flags.cast_shadows_;
         batch_ = rdata.batch_;
         for(int i=0;i<rdata.render_pass_list_.size();i++) {

@@ -27,6 +27,7 @@
 #include "glm/gtc/matrix_inverse.hpp"
 
 #include "objects/scene.h"
+#include "objects/components/skin.h"
 #include "vulkan/vulkan_shader.h"
 #include "vulkan_renderer.h"
 #include "vulkan/vulkan_material.h"
@@ -148,7 +149,7 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     ShaderData* curr_material = rstate.material_override;
     bool shadowFlag = false;
     if (rstate.is_shadow && curr_material) {
-        const char *depthShaderName = rdata->mesh()->hasBones()
+        const char *depthShaderName = (rdata->owner_object()->getComponent(Skin::getComponentType()) != nullptr)
                                       ? "GVRDepthShader$a_bone_weights$a_bone_indices"
                                       : "GVRDepthShader";
         shader = rstate.shader_manager->findShader(depthShaderName);

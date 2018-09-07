@@ -36,22 +36,22 @@ layout(set = 0, binding = 18) uniform sampler2D ambientTexture1;
 #endif
 
 #ifdef HAS_diffuseTexture1
-layout(location = 17) in vec2 diffuse_coord1;
-layout(set = 0, binding = 17) uniform sampler2D diffuseTexture1;
+layout(location = 19) in vec2 diffuse_coord1;
+layout(set = 0, binding = 19) uniform sampler2D diffuseTexture1;
 #endif
 
 #ifdef HAS_specularTexture1
-layout(location = 19) in vec2 specular_coord1;
-layout(set = 0, binding = 19) uniform sampler2D specularTexture1;
+layout(location = 20) in vec2 specular_coord1;
+layout(set = 0, binding = 20) uniform sampler2D specularTexture1;
 #endif
 
 #ifdef HAS_emissiveTexture1
-layout(location = 20) in vec2 emissive_coord1;
-layout(set = 0, binding = 20) uniform sampler2D emissiveTexture1;
+layout(location = 21) in vec2 emissive_coord1;
+layout(set = 0, binding = 21) uniform sampler2D emissiveTexture1;
 #endif
 
 #ifdef HAS_lightMapTexture1
-layout(location = 20) in vec2 lightmap_coord1;
+layout(location = 22) in vec2 lightmap_coord1;
 #endif
 
 layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;

@@ -21,6 +21,8 @@ public final class GVRQuatAnimation extends GVRFloatAnimation
             super(keyData, keySize);
         }
 
+        public float[] getKeyData() { return mKeyData; }
+
         public boolean interpolateValues(int keyIndex, float[] values, float factor)
         {
             int firstOfs = getKeyOffset(keyIndex);

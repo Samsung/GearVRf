@@ -106,7 +106,7 @@ public class GVRResourceVolume {
      */
     public GVRResourceVolume(GVRContext context, GVRAndroidResource resource)
     {
-        String filename = resource.getResourceFilename();
+        String filename = resource.getResourcePath();
         String fname = filename.toLowerCase();
         gvrContext = context;
         volumeType = GVRResourceVolume.VolumeType.ANDROID_ASSETS;
@@ -253,7 +253,7 @@ public class GVRResourceVolume {
      */
     public GVRAndroidResource addResource(GVRAndroidResource resource)
     {
-        String fileName = resource.getResourceFilename();
+        String fileName = resource.getResourcePath();
         GVRAndroidResource resourceValue = resourceMap.get(fileName);
         if (resourceValue != null)
         {
@@ -369,6 +369,8 @@ public class GVRResourceVolume {
     public void changeDefaultPath(String defaultPath) {
         defaultPath = new String(defaultPath);
     }
+
+    public String getFullPath() { return getFullPath(defaultPath, getFileName()); }
 
     protected String getFullPath(String... path) {
         StringBuilder fullPath = new StringBuilder();

@@ -18,7 +18,7 @@ package org.gearvrf.x3d;
 import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
-import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+import org.gearvrf.animation.keyframe.GVRNodeAnimation;
 import org.gearvrf.x3d.data_types.SFFloat;
 import org.gearvrf.x3d.data_types.SFRotation;
 import org.gearvrf.x3d.data_types.SFVec2f;
@@ -47,7 +47,7 @@ public class Sensor extends GVRSensor
   private String name = null;
   private boolean mEnabled = true;
   private Type sensorType;
-  private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
+  private GVRNodeAnimation gvrKeyFrameAnimation = null;
   private String anchorURL = null;
   private Vector3f hitPoint = new Vector3f();
   // PlaneSensor values
@@ -83,11 +83,11 @@ public class Sensor extends GVRSensor
     return this.mEnabled;
   }
 
-  public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation)
+  public void setGVRKeyFrameAnimation(GVRNodeAnimation gvrKeyFrameAnimation)
   {
     this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
   }
-  public GVRKeyFrameAnimation getGVRKeyFrameAnimation()
+  public GVRNodeAnimation getGVRKeyFrameAnimation()
   {
     return this.gvrKeyFrameAnimation;
   }

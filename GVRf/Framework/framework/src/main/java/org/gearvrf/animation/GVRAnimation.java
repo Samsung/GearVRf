@@ -98,7 +98,7 @@ public abstract class GVRAnimation {
     public static boolean sDebug = true;
 
     // Immutable values, passed to constructor
-    protected final GVRHybridObject mTarget;
+    protected GVRHybridObject mTarget;
     protected final float mDuration;
 
     // Defaulted values, which should be set before start()

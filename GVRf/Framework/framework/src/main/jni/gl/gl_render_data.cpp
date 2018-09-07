@@ -16,6 +16,9 @@
 #include "engine/renderer/gl_renderer.h"
 #include "gl/gl_render_data.h"
 #include "objects/scene_object.h"
+#include "objects/components/skeleton.h"
+#include "objects/components/skin.h"
+
 namespace gvr
 {
     void GLRenderData::render(Shader* shader, Renderer* renderer)
@@ -26,15 +29,19 @@ namespace gvr
         int         vertexCount = mesh_->getVertexCount();
         int         mode = draw_mode();
 
-        if (mesh_->hasBones() && bones_ubo_ && shader->hasBones())
-        {
-            GLUniformBlock* glbones = static_cast<GLUniformBlock*>(bones_ubo_);
-            glbones->bindBuffer(shader, renderer);
-        }
 #ifdef DEBUG_SHADER
         LOGV("SHADER: RenderData::render binding vertex arrays to program %d %p %d vertices, %d indices",
                                      programId, this, vertexCount, indexCount);
 #endif
+        if (shader->hasBones())
+        {
+            Skin* skin = (Skin*) owner_object()->getComponent(Skin::getComponentType());
+
+            if (skin)
+            {
+                skin->bindBuffer(renderer, shader);
+            }
+        }
         mesh_->getVertexBuffer()->bindToShader(shader, mesh_->getIndexBuffer());
         checkGLError("renderMesh::mesh_->getVertexBuffer()->bindToShader(");
         switch (mesh_->getIndexSize())

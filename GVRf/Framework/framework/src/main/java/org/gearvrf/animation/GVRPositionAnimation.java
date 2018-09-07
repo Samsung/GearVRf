@@ -20,8 +20,8 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
 
 /** Size animation. */
-public class GVRPositionAnimation extends GVRTransformAnimation {
-
+public class GVRPositionAnimation extends GVRTransformAnimation
+{
     private final float mStartX, mStartY, mStartZ;
     private final float mDeltaX, mDeltaY, mDeltaZ;
 
@@ -43,9 +43,9 @@ public class GVRPositionAnimation extends GVRTransformAnimation {
             float positionY, float positionZ) {
         super(target, duration);
 
-        mStartX = mTransform.getPositionX();
-        mStartY = mTransform.getPositionY();
-        mStartZ = mTransform.getPositionZ();
+        mStartX = mPosition.x;
+        mStartY = mPosition.y;
+        mStartZ = mPosition.z;
 
         mDeltaX = positionX - mStartX;
         mDeltaY = positionY - mStartY;
@@ -67,13 +67,15 @@ public class GVRPositionAnimation extends GVRTransformAnimation {
      *            Target z position
      */
     public GVRPositionAnimation(GVRSceneObject target, float duration,
-            float positionX, float positionY, float positionZ) {
-        this(getTransform(target), duration, positionX, positionY, positionZ);
+            float positionX, float positionY, float positionZ)
+    {
+        this(target.getTransform(), duration, positionX, positionY, positionZ);
     }
 
     @Override
-    protected void animate(GVRHybridObject target, float ratio) {
-        mTransform.setPosition(mStartX + ratio * mDeltaX, mStartY + ratio
+    protected void animate(GVRHybridObject target, float ratio)
+    {
+        ((GVRTransform) target).setPosition(mStartX + ratio * mDeltaX, mStartY + ratio
                 * mDeltaY, mStartZ + ratio * mDeltaZ);
     }
 }

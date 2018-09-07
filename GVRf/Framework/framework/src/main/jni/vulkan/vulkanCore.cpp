@@ -17,6 +17,8 @@
 #include <iostream>
 #include <shaderc/shaderc.hpp>
 #include "objects/scene.h"
+#include "objects/scene_object.h"
+#include "objects/components/skin.h"
 #include "gvr_time.h"
 #include "vulkan_render_data.h"
 #include "vulkan_material.h"
@@ -1192,7 +1194,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             for(int curr_pass = postEffectFlag ? (rdata->pass_count() - 1) : 0 ;curr_pass < rdata->pass_count(); curr_pass++) {
                 VulkanShader *shader;
                 if(shadowmapFlag){
-                    const char *depthShaderName = rdata->mesh()->hasBones()
+                    const char *depthShaderName = rdata->owner_object()->getComponent(Skin::getComponentType())
                                                   ? "GVRDepthShader$a_bone_weights$a_bone_indices"
                                                   : "GVRDepthShader";
                     shader = static_cast<VulkanShader *>(shader_manager->findShader(depthShaderName));
@@ -1368,8 +1370,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             writes.push_back(static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).getDescriptorSet());
         }
 
-        if(vkData->mesh()->hasBones() && bones_present){
-            static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(rp->m_descriptorSet[0]);
+        if(vkData->owner_object()->getComponent(Skin::getComponentType()) && bones_present){
+            static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(descriptorSet);
             writes.push_back(static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->getDescriptorSet());
         }
 

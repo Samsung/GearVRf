@@ -17,7 +17,7 @@
 #ifndef IMAGE_H_
 #define IMAGE_H_
 
-#include <string.h>
+#include <string>
 #include <mutex>
 #include <vector>
 #include "objects/hybrid_object.h"
@@ -63,7 +63,6 @@ public:
             mXOffset(0), mYOffset(0), mWidth(0), mHeight(0), mDepth(1), mImageSize(0), mUpdateLock(),
             mLevels(0)
     {
-        mFileName[0] = 0;
     }
 
     explicit Image(ImageType type, int format) :
@@ -71,7 +70,6 @@ public:
             mXOffset(0), mYOffset(0), mWidth(0), mHeight(0), mDepth(1), mImageSize(0), mUpdateLock(),
             mLevels(0)
     {
-        mFileName[0] = 0;
     }
 
     explicit Image(ImageType type, short width, short height, int imagesize, int format, short levels) :
@@ -79,7 +77,6 @@ public:
             mXOffset(0), mYOffset(0), mWidth(width), mHeight(height), mDepth(1), mImageSize(imagesize),
             mFormat(format), mLevels(levels)
     {
-        mFileName[0] = 0;
     }
 
     virtual int getId() = 0;
@@ -94,16 +91,11 @@ public:
     short getLevels() const { return mLevels; }
     short getType() const { return mType; }
     int getFormat() const { return mFormat; }
-    const char* getFileName() const  { return mFileName; }
+    const char* getFileName() const  { return mFileName.c_str(); }
 
     void setFileName(const char* fname)
     {
-        int len = strlen(fname);
-        if (len < sizeof(mFileName))
-        {
-            len = sizeof(mFileName) - 1;
-        }
-        strncpy(mFileName, fname, len);
+        mFileName = fname;
     }
 
     int getDataOffset(int level)
@@ -154,16 +146,16 @@ protected:
     std::mutex mUpdateLock;
     short   mType;
     short   mLevels;
-    int   mXOffset;
-    int   mYOffset;
-    int   mWidth;
-    int   mHeight;
+    int     mXOffset;
+    int     mYOffset;
+    int     mWidth;
+    int     mHeight;
     short   mDepth;
     short   mState;
     int     mImageSize;
     bool    mIsCompressed;
     int     mFormat;
-    char    mFileName[64];
+    std::string mFileName;
     std::vector<int>    mDataOffsets;
 
 private:

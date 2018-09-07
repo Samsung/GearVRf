@@ -219,7 +219,7 @@ public class GVRFloatAnimation implements PrettyPrint
             {
                 return mLastKeyIndex = low + 1;
             }
-            Log.v(TAG, "Warning: interpolation failed at time " + time);
+//            Log.v(TAG, "Warning: interpolation failed at time " + time);
             return mLastKeyIndex = -1;
         }
     };
@@ -375,6 +375,7 @@ public class GVRFloatAnimation implements PrettyPrint
         prettyPrint(sb, 0);
         return sb.toString();
     }
+
 
 }
 

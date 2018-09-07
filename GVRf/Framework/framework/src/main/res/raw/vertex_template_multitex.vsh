@@ -54,11 +54,11 @@ layout(location = 14) out vec2 lightmap_coord;
 layout(location = 15) out vec2 opacity_coord;
 layout(location = 16) out vec2 normal_coord;
 
-layout(location = 17) out vec2 diffuse_coord1;
 layout(location = 18) out vec2 ambient_coord1;
-layout(location = 19) out vec2 specular_coord1;
-layout(location = 20) out vec2 emissive_coord1;
-layout(location = 21) out vec2 lightmap_coord1;
+layout(location = 19) out vec2 diffuse_coord1;
+layout(location = 20) out vec2 specular_coord1;
+layout(location = 21) out vec2 emissive_coord1;
+layout(location = 22) out vec2 lightmap_coord1;
 
 #ifdef HAS_blendshapeTexture
 layout (set = 0, binding = 17) uniform sampler2D blendshapeTexture;
@@ -116,8 +116,6 @@ void main() {
 @VertexMorphShader
 #endif
 
-@VertexShader
-
 #ifdef HAS_VertexSkinShader
 @VertexSkinShader
 #endif
@@ -125,6 +123,8 @@ void main() {
 #ifdef HAS_VertexNormalShader
 @VertexNormalShader
 #endif
+
+@VertexShader
 
 #ifdef HAS_LIGHTSOURCES
 //
@@ -147,11 +147,11 @@ void main() {
 	viewspace_normal = vertex.viewspace_normal;
 	view_direction = vertex.view_direction;
 #ifdef HAS_MULTIVIEW
-    bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
-    mat4 mvp = u_mvp_[gl_ViewID_OVR];
-    if(!render_mask)
-        mvp = mat4(0.0);  //  if render_mask is not set for particular eye, dont render that object
-    gl_Position = mvp  * vertex.local_position;
+	 bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
+     mat4 mvp = u_mvp_[gl_ViewID_OVR];
+     if(!render_mask)
+         mvp = mat4(0.0);  //  if render_mask is not set for particular eye, dont render that object
+     gl_Position = mvp  * vertex.local_position;
 #else
 	gl_Position = u_mvp * vertex.local_position;	
 #endif

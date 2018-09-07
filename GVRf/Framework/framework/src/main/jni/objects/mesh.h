@@ -29,16 +29,15 @@
 #include "glm/glm.hpp"
 
 #include "util/gvr_gl.h"
-#include "objects/components/bone.h"
 #include "objects/hybrid_object.h"
 #include "objects/shader_data.h"
 #include "objects/bounding_volume.h"
-#include "objects/vertex_bone_data.h"
 #include "objects/vertex_buffer.h"
 #include "objects/index_buffer.h"
 #include "bounding_volume.h"
 
 namespace gvr {
+class Skeleton;
 
 class Mesh: public HybridObject {
 public:
@@ -87,21 +86,6 @@ public:
 
     const BoundingVolume& getBoundingVolume();
 
-    bool hasBones() const
-    {
-        return vertexBoneData_.getNumBones();
-    }
-
-    void setBones(std::vector<Bone*>&& bones)
-    {
-        vertexBoneData_.setBones(std::move(bones));
-    }
-
-    VertexBoneData &getVertexBoneData()
-    {
-        return vertexBoneData_;
-    }
-
     bool isDirty() const { return mVertices->isDirty(); }
 
 private:
@@ -115,10 +99,6 @@ protected:
     VertexBuffer* mVertices;
     bool have_bounding_volume_;
     BoundingVolume bounding_volume;
-
-    // Bone data for the shader
-    VertexBoneData vertexBoneData_;
-    std::unordered_set<std::shared_ptr<u_short>> dirty_flags_;
 };
 }
 #endif

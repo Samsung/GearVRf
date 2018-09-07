@@ -36,28 +36,44 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
         return NativeBone.getComponentType();
     }
 
-    /**
-     * Sets the name of the bone.
-     * 
-     * @param name the name of the bone.
-     */
-    public void setName(String name) {
-        mName = name == null ? null : new String(name);
-        NativeBone.setName(getNative(), mName);
+
+    public void onAttach(GVRSceneObject owner)
+    {
+        String name = getName();
+
+        if (!"".equals(name))
+        {
+            NativeBone.setName(getNative(), name);
+        }
     }
+    public void setBoneId(int id)
+    {
+        mBoneId = id;
+    }
+
+    public int getBoneId() { return mBoneId; }
 
     /**
      * Returns the name of the bone.
      *
      * @return the name
      */
-    public String getName() {
-        // Name is currently read-only for native code. So it is
-        // not updated from native object.
-        return mName;
+    public String getName()
+    {
+        GVRSceneObject owner = getOwnerObject();
+        String name = "";
+
+        if (owner != null)
+        {
+            name = owner.getName();
+            if (name == null)
+                return "";
+        }
+        return name;
     }
 
-    public void setOffsetMatrix(float[] offsetMatrix) {
+    public void setOffsetMatrix(float[] offsetMatrix)
+    {
         NativeBone.setOffsetMatrix(getNative(), offsetMatrix);
     }
 
@@ -67,7 +83,8 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * @param finalTransform The transform matrix representing
      * the bone's pose after computing the skeleton.
      */
-    public void setFinalTransformMatrix(float[] finalTransform) {
+    public void setFinalTransformMatrix(float[] finalTransform)
+    {
         NativeBone.setFinalTransformMatrix(getNative(), finalTransform);
     }
 
@@ -77,7 +94,8 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * @param finalTransform The transform matrix representing
      * the bone's pose after computing the skeleton.
      */
-    public void setFinalTransformMatrix(Matrix4f finalTransform) {
+    public void setFinalTransformMatrix(Matrix4f finalTransform)
+    {
         float[] mat = new float[16];
         finalTransform.get(mat);
         NativeBone.setFinalTransformMatrix(getNative(), mat);
@@ -90,7 +108,8 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      * bone during animation, which comprises bind pose and skeletal
      * transform at the current time of the animation.
      */
-    public Matrix4f getFinalTransformMatrix() {
+    public Matrix4f getFinalTransformMatrix()
+    {
         final FloatBuffer fb = ByteBuffer.allocateDirect(4*4*4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         NativeBone.getFinalTransformMatrix(getNative(), fb);
         return new Matrix4f(fb);
@@ -107,40 +126,32 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
      *
      * @return the offset matrix
      */
-    public Matrix4f getOffsetMatrix() {
+    public Matrix4f getOffsetMatrix()
+    {
         Matrix4f offsetMatrix = new Matrix4f();
         offsetMatrix.set(NativeBone.getOffsetMatrix(getNative()));
         return offsetMatrix;
     }
 
     /**
-     * Gets the scene object of this bone.
+     * Return the offset matrix as a float array.
      *
-     * @return the scene object that represents this bone in a
-     *         hierarchy of bones.
+     * @return the offset matrix as a float array.
      */
-    public GVRSceneObject getSceneObject() {
-        return mSceneObject;
+    public float[] getOffsetMatrixFloatArray() {
+        return NativeBone.getOffsetMatrix(getNative());
     }
 
-    /**
-     * Sets the scene object of this bone.
-     *
-     * @param sceneObject The scene object that represents this
-     * bone in a hierarchy of bones.
-     */
-    public void setSceneObject(GVRSceneObject sceneObject) {
-        mSceneObject = sceneObject;
-    }
 
     /**
      * Pretty-print the object.
      */
     @Override
-    public void prettyPrint(StringBuffer sb, int indent) {
+    public void prettyPrint(StringBuffer sb, int indent)
+    {
         sb.append(Log.getSpaces(indent));
         sb.append(GVRBone.class.getSimpleName());
-        sb.append(" [name=" + getName()
+        sb.append(" [name=" + getName() + ", boneId=" + getBoneId()
                 + ", offsetMatrix=" + getOffsetMatrix()
                 + ", finalTransformMatrix=" + getFinalTransformMatrix() // crashes debugger
                 + "]");
@@ -157,16 +168,8 @@ public final class GVRBone extends GVRComponent implements PrettyPrint {
         return sb.toString();
     }
 
-    /**
-     * Name of the bone.
-     */
-    private String mName;
+    private int mBoneId;    // ID of bone in skeleton
 
-    /**
-     * The scene object that represents the transforms of the
-     * bone.
-     */
-    private GVRSceneObject mSceneObject;
 }
 
 class NativeBone {

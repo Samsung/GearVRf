@@ -29,6 +29,7 @@
 #include "gl/gl_light.h"
 #include "gl_renderer.h"
 #include "objects/scene.h"
+#include "objects/components/skin.h"
 
 namespace gvr
 {
@@ -567,7 +568,8 @@ namespace gvr
          */
         if (rstate.is_shadow && curr_material)
         {
-            const char* depthShaderName = mesh->hasBones() ? "GVRDepthShader$a_bone_weights$a_bone_indices" : "GVRDepthShader";
+            const char* depthShaderName = render_data->owner_object()->getComponent(Skin::getComponentType()) ?
+                                          "GVRDepthShader$a_bone_weights$a_bone_indices" : "GVRDepthShader";
             shader = rstate.shader_manager->findShader(depthShaderName);
 
             if (shader == nullptr)
