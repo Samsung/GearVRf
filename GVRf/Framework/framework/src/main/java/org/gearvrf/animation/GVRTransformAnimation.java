@@ -34,6 +34,7 @@ public class GVRTransformAnimation extends GVRAnimation implements PrettyPrint
     protected final Vector3f mPosition = new Vector3f();
     protected final Vector3f mScale = new Vector3f();
     protected final Quaternionf mRotation = new Quaternionf();
+    protected final GVRTransform mTransform;
 
     /**
      * Constructor.
@@ -48,6 +49,7 @@ public class GVRTransformAnimation extends GVRAnimation implements PrettyPrint
         mScale.set(target.getScaleX(), target.getScaleY(), target.getScaleZ());
         mPosition.set(target.getPositionX(), target.getPositionY(), target.getPositionZ());
         mRotation.set(target.getRotationX(), target.getRotationY(), target.getRotationZ(), target.getRotationW());
+        mTransform = target;
     }
 
     @Override
@@ -89,9 +91,8 @@ public class GVRTransformAnimation extends GVRAnimation implements PrettyPrint
 
     protected void animate(float timeInSec)
     {
-        GVRTransform target = (GVRTransform) mTarget;
         mTempMtx.translationRotateScale(mPosition, mRotation, mScale);
-        target.setModelMatrix(mTempMtx);
+        mTransform.setModelMatrix(mTempMtx);
     }
 
     @Override

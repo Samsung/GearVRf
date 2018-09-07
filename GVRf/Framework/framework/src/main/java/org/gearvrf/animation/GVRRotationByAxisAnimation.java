@@ -18,12 +18,13 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 
 /** Rotation animation. */
 public class GVRRotationByAxisAnimation extends GVRTransformAnimation
 {
-    private final float mAngle, mX, mY, mZ;
+    private final float mAngle, mAxisX, mAxisY, mAxisZ;
     private final Quaternionf mStartRotation = new Quaternionf();
 
     /**
@@ -48,9 +49,9 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     {
         super(target, duration);
         mAngle = angle;
-        mX = x;
-        mY = y;
-        mZ = z;
+        mAxisX = x;
+        mAxisY = y;
+        mAxisZ = z;
         mStartRotation.set(mRotation);
     }
 
@@ -81,8 +82,13 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     protected void animate(GVRHybridObject target, float ratio)
     {
         float angle = ratio * mAngle;
-        mRotation.fromAxisAngleDeg(mX, mY, mZ, angle);
+
+        mRotation.fromAxisAngleDeg(mAxisX, mAxisY, mAxisZ, angle);
         mRotation.mul(mStartRotation);
-        super.animate(ratio);
+        mTransform.setRotation(mRotation.w, mRotation.x, mRotation.y, mRotation.z);
+        if (sDebug)
+        {
+            Log.d("ANIMATION", "%s angle = %f", getClass().getSimpleName(), angle);
+        }
     }
 }

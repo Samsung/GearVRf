@@ -22,6 +22,7 @@ import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.utility.Log;
 
 import android.graphics.Color;
 
@@ -94,6 +95,7 @@ public abstract class GVRAnimation {
      * {@linkplain GVRAnimation#setRepeatCount(int) setRepeatCount(2).}
      */
     public static final int DEFAULT_REPEAT_COUNT = 2;
+    public static boolean sDebug = true;
 
     // Immutable values, passed to constructor
     protected GVRHybridObject mTarget;
@@ -313,6 +315,10 @@ public abstract class GVRAnimation {
      */
     public GVRAnimation start(GVRAnimationEngine engine) {
         engine.start(this);
+        if (sDebug)
+        {
+            Log.d("ANIMATION", "%s started", getClass().getSimpleName());
+        }
         return this;
     }
 
@@ -352,6 +358,10 @@ public abstract class GVRAnimation {
                     stillRunning = true; // repeat indefinitely
                 }
             }
+            if (sDebug)
+            {
+                Log.d("ANIMATION", "%s cycle %d", getClass().getSimpleName(), mIterations);
+            }
         }
 
         if (stillRunning) {
@@ -369,6 +379,10 @@ public abstract class GVRAnimation {
 
             animate(mTarget, endRatio);
 
+            if (sDebug)
+            {
+                Log.d("ANIMATION", "%s finished", getClass().getSimpleName());
+            }
             if (mOnFinish != null) {
                 mOnFinish.finished(this);
             }

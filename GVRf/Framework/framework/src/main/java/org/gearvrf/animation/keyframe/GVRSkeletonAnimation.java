@@ -158,13 +158,13 @@ public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
         int numBones = skel.getNumBones();
 
         mSkeleton = skel;
-        if (boneNames != null)
+        for (int boneId = 0; boneId < numBones; ++boneId)
         {
-            for (int boneId = 0; boneId < numBones; ++boneId)
+            if (boneNames != null)
             {
                 mSkeleton.setBoneName(boneId, boneNames.get(boneId));
-                mSkeleton.setBoneOptions(boneId, GVRSkeleton.BONE_ANIMATE);
             }
+            mSkeleton.setBoneOptions(boneId, GVRSkeleton.BONE_ANIMATE);
         }
         if (mBoneChannels == null)
         {
