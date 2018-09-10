@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "typeface.json",
+
+  "type": "object",
+  "oneOf": [{
+    "properties": {
+      "resource_type": { "type": "string", "enum": [ "asset", "file" ] },
+      "path": { "type": "string" }
+    },
+    "required": [ "resource_type", "path" ],
+    "additionalProperties": false
+  }, {
+    "properties": {
+      "family": { "type": "string" },
+      "style": { "type": "string" }
+    },
+    "required": [ "style" ],
+    "additionalProperties": false
+  }]
+}

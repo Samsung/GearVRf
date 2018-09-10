@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lens name="S5">
+    <distortion
+        k0="DEFAULT"
+        k1="DEFAULT"
+        k2="DEFAULT"
+        k3="DEFAULT"
+        scale="DEFAULT"
+        renderingDiameter="DEFAULT"
+        distortionGridSize="DEFAULT"/>
+
+    <scene fov-y="95.0" camera-separation-distance="0.062" fbo-width="960" fbo-height="1080"/>
+</lens>
