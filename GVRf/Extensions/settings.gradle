@@ -28,6 +28,9 @@ project(':sceneserializer').projectDir = new File('SceneSerializer/sceneserializ
 include ':widgetplugin'
 project(':widgetplugin').projectDir = new File('WidgetPlugin/widgetplugin')
 
+include ':widgetLib'
+project(':widgetLib').projectDir = new File('widgetLib')
+
 include ':GearWearIoDevice'
 project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
 

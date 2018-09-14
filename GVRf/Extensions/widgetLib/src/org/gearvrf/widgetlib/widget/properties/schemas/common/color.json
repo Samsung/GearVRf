@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "color.json",
+
+  "oneOf": [
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    {
+      "description": "CSS style color specification: one or two hexadecimal digits per color component, with the alpha component optional.",
+      "type": "string",
+      "pattern": "#([0-9a-fA-F]{3,4})|([0-9a-fA-F]{6}([0-9a-fA-F]{2})?)"
+    },
+    {
+      "description": "Color specified as an object with required 'r', 'g', 'b' fields, and optional 'a' field",
+      "type": "object",
+      "properties": {
+        "r": { "$ref": "scalar.json" },
+        "g": { "$ref": "scalar.json" },
+        "b": { "$ref": "scalar.json" },
+        "a": { "$ref": "scalar.json" }
+      },
+      "required": [ "r", "g", "b" ],
+      "additionalProperties": false
+    },
+    {
+      "description": "Color specified as an array of floating point values; minimum of 3 for 'r', 'g', 'b', optional 4th for 'a'",
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 4,
+      "items": { "$ref": "scalar.json" }
+    },
+    {
+      "description": "Color specified using Android Color constant names",
+      "type": "string",
+      "pattern": "BLACK|BLUE|CYAN|DKGRAY|GRAY|GREEN|LTGRAY|MAGENTA|RED|TRANSPARENT|WHITE|YELLOW"
+    }
+  ]
+}

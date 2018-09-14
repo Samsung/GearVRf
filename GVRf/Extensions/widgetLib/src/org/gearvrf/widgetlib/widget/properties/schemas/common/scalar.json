@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "scalar.json",
+
+  "type": "number",
+  "minimum": 0,
+  "maximum": 1
+}
