@@ -21,11 +21,18 @@ LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libassimp.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE    := shaderc
+LOCAL_SRC_FILES := ../prebuilt/$(TARGET_ARCH_ABI)/libshaderc.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := gvrf
 
 FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
+LOCAL_C_INCLUDES += $(NDK_ROOT)/sources/third_party/shaderc/third_party/glslang
+LOCAL_C_INCLUDES += $(NDK_ROOT)/sources/third_party/shaderc/include/
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include/Compiler
@@ -82,6 +89,9 @@ FILE_LIST := $(wildcard $(LOCAL_PATH)/vulkan/*.cpp)
 LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_SHARED_LIBRARIES += assimp
+#to build shaderc:
+#cd ndk-bundle/sources/third_party/shaderc
+# ../../../ndk-build -j20 NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_STL:=c++_shared APP_ABI=all libshaderc_combined
 LOCAL_STATIC_LIBRARIES += shaderc
 
 ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
@@ -98,4 +108,3 @@ LOCAL_CFLAGS := -Wattributes
 LOCAL_LDLIBS += -ljnigraphics -llog -lGLESv3 -lEGL -lz -landroid
 
 include $(BUILD_SHARED_LIBRARY)
-$(call import-module, third_party/shaderc)
