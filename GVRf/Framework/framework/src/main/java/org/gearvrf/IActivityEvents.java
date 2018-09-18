@@ -51,7 +51,7 @@ public interface IActivityEvents extends IEvents {
      * Invoked every frame with the latest controller position and orientation; the parameters
      * should be copied if they need to be used after the callback returns.
      *
-     * @param key                   one of CONTROLLER_KEYS
+     * @param keys                  one or more CONTROLLER_KEYS
      * @param position              X, Y, Z position of the controller
      * @param orientation           orientation of the controller as a quaternion
      * @param touchpadPoint         X, Y position on the touchpad
@@ -59,7 +59,7 @@ public interface IActivityEvents extends IEvents {
      * @param angularAcceleration   angularAcceleration of the controller
      * @param angularVelocity       angularVelocity of the controller
      */
-    void onControllerEvent(GVRGearCursorController.CONTROLLER_KEYS key, Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
+    void onControllerEvent(GVRGearCursorController.CONTROLLER_KEYS[] keys, Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
                            Vector3f angularVelocity);
 
     void dispatchTouchEvent(MotionEvent event);
