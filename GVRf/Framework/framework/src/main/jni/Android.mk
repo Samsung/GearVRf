@@ -33,6 +33,7 @@ LOCAL_SRC_FILES += $(FILE_LIST:$(LOCAL_PATH)/%=%)
 
 LOCAL_C_INCLUDES += $(NDK_ROOT)/sources/third_party/shaderc/third_party/glslang
 LOCAL_C_INCLUDES += $(NDK_ROOT)/sources/third_party/shaderc/include/
+LOCAL_C_INCLUDES += $(NDK_ROOT)/sources/third_party/shaderc/libshaderc/include/
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/contrib/assimp
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include
 LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/contrib/assimp/include/Compiler
