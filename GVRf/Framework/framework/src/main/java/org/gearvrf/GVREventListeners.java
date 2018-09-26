@@ -94,7 +94,7 @@ public class GVREventListeners {
         }
 
         @Override
-        public void onControllerEvent(GVRGearCursorController.CONTROLLER_KEYS key, Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
+        public void onControllerEvent(GVRGearCursorController.CONTROLLER_KEYS[] keys, Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
                                       Vector3f angularVelocity) {
         }
 

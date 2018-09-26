@@ -465,9 +465,6 @@ abstract class GVRViewManager extends GVRContext {
                 }
             });
 
-            if (null != mControllerReader) {
-                mControllerReader.updatePosData();
-            }
             getInputManager().updateGearControllers();
         }
 

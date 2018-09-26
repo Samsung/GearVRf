@@ -127,5 +127,6 @@ public class GVRScaleAnimation extends GVRTransformAnimation
     {
         setScale(mStartX + ratio * mDeltaX, mStartY + ratio
                 * mDeltaY, mStartZ + ratio * mDeltaZ);
+        super.animate(target, ratio);
     }
 }

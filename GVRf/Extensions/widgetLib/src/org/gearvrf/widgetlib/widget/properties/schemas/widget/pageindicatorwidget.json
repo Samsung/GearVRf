@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "pageindicatorwidget.json",
+
+  "allOf": [{
+    "$ref": "widget.json"
+  },{
+    "buttons": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "description": "How many indicators to create at construction time",
+          "type": "number"
+        },
+        "selected_index": {
+          "description": "The index of the button to select initially",
+          "type": "integer"
+        },
+        "padding": {
+          "description": "Space between page indicator buttons",
+          "type": "number"
+        },
+        "size": {
+          "description": "How large to make the buttons",
+          "$ref": "../common/pointf.json"
+        },
+        "touch_enabled": {
+          "description": "Whether or not the buttons respond to touch and send out onPageSelected events",
+          "type": "boolean"
+        }
+      }
+    }
+  }]
+}

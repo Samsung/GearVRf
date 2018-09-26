@@ -1,0 +1,20 @@
+# set the following values for automated versioning of builds
+
+# add_release_suffix value can be be true or false
+# If false "no version changes"
+# If true, then set all the values below. 
+set_release_suffix=""
+
+# Version format should be <product_version>.<release-version>.<build_number> like 0.9.*** or 1.0.0
+# Leave the below values blank if no change is needed
+# to switch to 1.0.0, update product_version="1" and release_version="0"
+product_version="0"
+release_version="9"
+
+# Release suffix to be added at the end like MR1_RC
+# Before the release we will change it to MR1
+release_suffix=""
+
+# At the end of release suffix, if we want to add incrementing numbers like MR1_RC$NUM. 
+# If yes, set add_release_number to "true" or else "false"
+add_release_number=""

@@ -1,16 +1,13 @@
 package org.gearvrf;
 
-import android.graphics.PointF;
-
 import org.gearvrf.io.GVRGearCursorController;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 
-class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs {
+final class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs {
 
     private FloatBuffer readbackBuffer;
     private final long mPtr;
@@ -24,43 +21,28 @@ class OvrControllerReader extends GVRGearCursorController.ControllerReaderStubs 
     }
 
     @Override
-    public boolean isConnected(int id) {
-        return readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
-    }
+    public void getEvents(int controllerID, ArrayList<GVRGearCursorController.ControllerEvent> controllerEvents) {
+        final GVRGearCursorController.ControllerEvent event = GVRGearCursorController.ControllerEvent.obtain();
 
-    @Override
-    public boolean isTouched(int id) {
-        return readbackBuffer.get(INDEX_TOUCHED) == 1.0f;
-    }
+        event.handedness = readbackBuffer.get(INDEX_HANDEDNESS);
+        event.pointF.set(readbackBuffer.get(INDEX_TOUCHPAD), readbackBuffer.get(INDEX_TOUCHPAD + 1));
 
-    @Override
-    public void updateRotation(Quaternionf quat, int id) {
-        quat.set(readbackBuffer.get(INDEX_ROTATION + 1),
+        event.touched = readbackBuffer.get(INDEX_TOUCHED) == 1.0f;
+        event.rotation.set(readbackBuffer.get(INDEX_ROTATION + 1),
                 readbackBuffer.get(INDEX_ROTATION + 2),
                 readbackBuffer.get(INDEX_ROTATION + 3),
                 readbackBuffer.get(INDEX_ROTATION));
-    }
-
-    @Override
-    public void updatePosition(Vector3f vec, int id) {
-        vec.set(readbackBuffer.get(INDEX_POSITION),
+        event.position.set(readbackBuffer.get(INDEX_POSITION),
                 readbackBuffer.get(INDEX_POSITION + 1),
                 readbackBuffer.get(INDEX_POSITION + 2));
+        event.key = (int) readbackBuffer.get(INDEX_BUTTON);
+
+        controllerEvents.add(event);
     }
 
     @Override
-    public int getKey(int id) {
-        return (int) readbackBuffer.get(INDEX_BUTTON);
-    }
-
-    @Override
-    public float getHandedness() {
-        return readbackBuffer.get(INDEX_HANDEDNESS);
-    }
-
-    @Override
-    public void updateTouchpad(PointF pt, int id) {
-        pt.set(readbackBuffer.get(INDEX_TOUCHPAD), readbackBuffer.get(INDEX_TOUCHPAD + 1));
+    public boolean isConnected(int id) {
+        return readbackBuffer.get(INDEX_CONNECTED) == 1.0f;
     }
 
     @Override
