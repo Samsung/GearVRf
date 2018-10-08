@@ -324,8 +324,8 @@ class  GVRJassimpAdapter
                         bitangentArray[i] = bitangent.x;
                         bitangentArray[i + 1] = bitangent.y;
                         bitangentArray[i + 2] = bitangent.z;
-                        animBuff.setFloatArray("a_bitangent", bitangentArray);
                     }
+                    animBuff.setFloatArray("a_bitangent", bitangentArray);
                 }
                 morph.setBlendShape(blendShapeNum, animBuff);
                 blendShapeNum++;
