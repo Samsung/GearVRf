@@ -71,7 +71,7 @@ public class Log {
     /**
      * Simple interface for subsystem definition
      */
-    public interface Subsystem {
+    public interface ISubsystem {
         /**
          * Standard {@code Enum} method.
          */
@@ -84,7 +84,7 @@ public class Log {
      * The set of enabled subsystems can be changed by either {@link #enableSubsystem} or
      * {@link #enableAllSubsystems}
      */
-    public enum SUBSYSTEM implements Subsystem {
+    public enum SUBSYSTEM implements ISubsystem {
         MAIN,
         WIDGET,
         LAYOUT,
@@ -132,7 +132,7 @@ public class Log {
      * @param subsystem The logging component
      * @param enable true - to enable it, false - to disable it
      */
-    public static void enableSubsystem(Subsystem subsystem, boolean enable) {
+    public static void enableSubsystem(ISubsystem subsystem, boolean enable) {
         if (enable_logging) {
             if (enable) {
                 mEnabledSubsystems.add(subsystem);
@@ -150,7 +150,7 @@ public class Log {
     public static void enableAllSubsystems(boolean enable) {
         if (enable_logging) {
             if (enable) {
-                for (Subsystem s : SUBSYSTEM.values()) {
+                for (ISubsystem s : SUBSYSTEM.values()) {
                     mEnabledSubsystems.add(s);
                 }
             } else {
@@ -193,7 +193,7 @@ public class Log {
      * @param subsystem the logging component
      * @return true if it is currently enabled; otherwise - false
      */
-    public static boolean isEnabled(Subsystem subsystem) {
+    public static boolean isEnabled(ISubsystem subsystem) {
         return mEnabledSubsystems.contains(subsystem);
     }
 
@@ -389,7 +389,7 @@ public class Log {
      * @param msg The message you would like logged.
      * @return
      */
-    public static int d(Subsystem subsystem, String tag, String msg) {
+    public static int d(ISubsystem subsystem, String tag, String msg) {
         return isEnabled(subsystem) ?
                 currentLog.d(tag, getMsg(subsystem,msg)) : 0;
     }
@@ -405,7 +405,7 @@ public class Log {
      *
      * @return
      */
-    public static int d(Subsystem subsystem, String tag, String msg, Throwable tr) {
+    public static int d(ISubsystem subsystem, String tag, String msg, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.d(tag, getMsg(subsystem,msg), tr) : 0;
     }
@@ -419,7 +419,7 @@ public class Log {
      * @param msg The message you would like logged.
      * @return
      */
-    public static int e(Subsystem subsystem, String tag, String msg) {
+    public static int e(ISubsystem subsystem, String tag, String msg) {
         return isEnabled(subsystem) ?
                 currentLog.e(tag, getMsg(subsystem,msg)) : 0;
     }
@@ -435,7 +435,7 @@ public class Log {
      *
      * @return
      */
-    public static int e(Subsystem subsystem, String tag, String msg, Throwable tr) {
+    public static int e(ISubsystem subsystem, String tag, String msg, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.e(tag, getMsg(subsystem,msg), tr) : 0;
     }
@@ -449,7 +449,7 @@ public class Log {
      * @param msg The message you would like logged.
      * @return
      */
-    public static int i(Subsystem subsystem, String tag, String msg) {
+    public static int i(ISubsystem subsystem, String tag, String msg) {
         return isEnabled(subsystem) ?
                 currentLog.i(tag, getMsg(subsystem,msg)) : 0;
     }
@@ -465,7 +465,7 @@ public class Log {
      *
      * @return
      */
-    public static int i(Subsystem subsystem, String tag, String msg, Throwable tr) {
+    public static int i(ISubsystem subsystem, String tag, String msg, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.i(tag, getMsg(subsystem,msg), tr) : 0;
     }
@@ -479,7 +479,7 @@ public class Log {
      * @param msg The message you would like logged.
      * @return
      */
-    public static int v(Subsystem subsystem, String tag, String msg) {
+    public static int v(ISubsystem subsystem, String tag, String msg) {
         return isEnabled(subsystem) ?
                 currentLog.v(tag, getMsg(subsystem,msg)) : 0;
     }
@@ -495,7 +495,7 @@ public class Log {
      *
      * @return
      */
-    public static int v(Subsystem subsystem, String tag, String msg, Throwable tr) {
+    public static int v(ISubsystem subsystem, String tag, String msg, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.v(tag, getMsg(subsystem,msg), tr) : 0;
     }
@@ -509,7 +509,7 @@ public class Log {
      * @param tr An exception to log.
      * @return
      */
-    public static int w(Subsystem subsystem, String tag, Throwable tr) {
+    public static int w(ISubsystem subsystem, String tag, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.w(tag, getMsg(subsystem, ""), tr) : 0;
     }
@@ -525,7 +525,7 @@ public class Log {
      *
      * @return
      */
-    public static int w(Subsystem subsystem, String tag, String msg, Throwable tr) {
+    public static int w(ISubsystem subsystem, String tag, String msg, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.w(tag, getMsg(subsystem,msg), tr) : 0;
     }
@@ -539,7 +539,7 @@ public class Log {
      * @param msg The message you would like logged.
      * @return
      */
-    public static int w(Subsystem subsystem, String tag, String msg) {
+    public static int w(ISubsystem subsystem, String tag, String msg) {
         return isEnabled(subsystem) ?
                 currentLog.w(tag, getMsg(subsystem,msg)) : 0;
     }
@@ -554,7 +554,7 @@ public class Log {
      * @param tr An exception to log.
      * @return
      */
-    public static int wtf(Subsystem subsystem, String tag, Throwable tr) {
+    public static int wtf(ISubsystem subsystem, String tag, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.wtf(tag, getMsg(subsystem, ""), tr) : 0;
     }
@@ -570,7 +570,7 @@ public class Log {
      * @param tr An exception to log.
      * @return
      */
-    public static int wtf(Subsystem subsystem, String tag, String msg, Throwable tr) {
+    public static int wtf(ISubsystem subsystem, String tag, String msg, Throwable tr) {
         return isEnabled(subsystem) ?
                 currentLog.wtf(tag, getMsg(subsystem,msg), tr) : 0;
     }
@@ -585,7 +585,7 @@ public class Log {
      * @param msg The message you would like logged.
      * @return
      */
-    public static int wtf(Subsystem subsystem, String tag, String msg) {
+    public static int wtf(ISubsystem subsystem, String tag, String msg) {
         return isEnabled(subsystem) ?
                 currentLog.wtf(tag, getMsg(subsystem,msg)) : 0;
     }
@@ -599,7 +599,7 @@ public class Log {
      * @param pattern The message pattern
      * @return
      */
-    public static void d(Subsystem subsystem, String tag, String pattern, Object... parameters) {
+    public static void d(ISubsystem subsystem, String tag, String pattern, Object... parameters) {
         if (!isEnabled(subsystem)) return;
         d(subsystem, tag, format(pattern, parameters));
     }
@@ -613,7 +613,7 @@ public class Log {
      * @param pattern The message pattern
      * @return
      */
-    public static void e(Subsystem subsystem, String tag, String pattern, Object... parameters) {
+    public static void e(ISubsystem subsystem, String tag, String pattern, Object... parameters) {
         if (!isEnabled(subsystem)) return;
         e(subsystem, tag, format(pattern, parameters));
     }
@@ -628,7 +628,7 @@ public class Log {
      * @param pattern The message pattern
      * @return
      */
-    public static void e(Subsystem subsystem, String tag, Throwable tr, String pattern,
+    public static void e(ISubsystem subsystem, String tag, Throwable tr, String pattern,
                          Object... parameters) {
         if (!isEnabled(subsystem)) return;
         e(subsystem, tag, format(pattern, parameters), tr);
@@ -642,7 +642,7 @@ public class Log {
      * @param pattern The message pattern
      * @return
      */
-    public static void i(Subsystem subsystem, String tag, String pattern, Object... parameters) {
+    public static void i(ISubsystem subsystem, String tag, String pattern, Object... parameters) {
         if (!isEnabled(subsystem)) return;
         i(subsystem, tag, format(pattern, parameters));
     }
@@ -656,7 +656,7 @@ public class Log {
      * @param pattern The message pattern
      * @return
      */
-    public static void v(Subsystem subsystem, String tag, String pattern, Object... parameters) {
+    public static void v(ISubsystem subsystem, String tag, String pattern, Object... parameters) {
         if (!isEnabled(subsystem)) return;
         v(subsystem, tag, format(pattern, parameters));
     }
@@ -670,7 +670,7 @@ public class Log {
      * @param pattern The message pattern
      * @return
      */
-    public static void w(Subsystem subsystem, String tag, String pattern, Object... parameters) {
+    public static void w(ISubsystem subsystem, String tag, String pattern, Object... parameters) {
         if (!isEnabled(subsystem)) return;
         w(subsystem, tag, format(pattern, parameters));
     }
@@ -786,14 +786,14 @@ public class Log {
         return log;
     }
 
-    private static String getMsg(Subsystem subsystem, String msg) {
+    private static String getMsg(ISubsystem subsystem, String msg) {
         return subsystem == SUBSYSTEM.MAIN ? msg :
                 String.format(LOG_MSG_FORMAT, subsystem, msg);
     }
 
     private static final String LOG_MSG_FORMAT = "<%s> %s";
 
-    private static Set<Subsystem> mEnabledSubsystems = new HashSet<>();
+    private static Set<ISubsystem> mEnabledSubsystems = new HashSet<>();
     private static MODE mode;
     private static final String TAG = "Log";
 
