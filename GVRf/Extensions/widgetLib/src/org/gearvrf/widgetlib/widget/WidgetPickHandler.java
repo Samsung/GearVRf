@@ -1,10 +1,10 @@
 package org.gearvrf.widgetlib.widget;
 
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 
-import org.gearvrf.GVRContext;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.IPickEvents;
@@ -14,11 +14,17 @@ import org.gearvrf.io.GVRInputManager;
 
 import org.gearvrf.widgetlib.log.Log;
 import org.gearvrf.widgetlib.main.WidgetLib;
+import org.joml.Vector3f;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
 
 class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListener,
         GVRInputManager.ICursorControllerListener {
@@ -47,11 +53,6 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
         newController.addPickEventListener(mTouchEventsListener);
         newController.addControllerEventListener(mControllerEvent);
         newController.setEnable(true);
-
-    }
-
-    public void onDestroy(GVRContext context) {
-        context.getInputManager().clear();
     }
 
     private void dispatchKeyEvent(KeyEvent keyEvent) {
@@ -59,6 +60,7 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
             case KeyEvent.KEYCODE_BACK:
                 WidgetLib.getTouchManager().handleClick(null, KeyEvent.KEYCODE_BACK);
                 break;
+
         }
     }
 
@@ -202,17 +204,135 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
         public void onExit(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         }
 
-        public void onMotionOutside(GVRPicker picker, MotionEvent event) {
-            Log.d(Log.SUBSYSTEM.INPUT, TAG, "onMotionOutside()");
+        public void onMotionOutside(final GVRPicker picker, final MotionEvent event) {
+            WidgetLib.getMainThread().runOnMainThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mFlingHandler != null) {
+                        GestureDetector gestureDetector = new GestureDetector(
+                                picker.getGVRContext().getContext(), mGestureListener);
+
+                        gestureDetector.onTouchEvent(event);
+                        Vector3f pos = new Vector3f();
+                        Log.d(Log.SUBSYSTEM.INPUT, TAG, "onMotionOutside() event = %s mFling = %s", event, mFling);
+
+                        switch (event.getAction()) {
+                            case ACTION_DOWN:
+                                mFlingHandler.onStartFling(event, picker.getController().getPosition(pos));
+                                break;
+                            case ACTION_MOVE:
+                                mFlingHandler.onFling(event, picker.getController().getPosition(pos));
+                                break;
+                            case ACTION_UP:
+                                mFlingHandler.onEndFling(mFling);
+                                break;
+                        }
+                    }
+                }
+            });
+
         }
 
         private final List<Widget> mTouched = new ArrayList<>();
-
+        private FlingHandler mFlingHandler;
         public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         }
 
         public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         }
+
+        private FlingHandler.FlingAction mFling;
+
+        private GestureDetector.OnGestureListener mGestureListener = new GestureDetector.OnGestureListener() {
+            class Fling implements FlingHandler.FlingAction {
+                MotionEvent startEvent;
+                MotionEvent endEvent;
+                float velocityX;
+                float velocityY;
+
+                Fling(MotionEvent e1, MotionEvent e2, float vX, float vY) {
+                    startEvent = MotionEvent.obtain(e1);
+                    endEvent = MotionEvent.obtain(e2);
+                    velocityX = vX;
+                    velocityY = vY;
+                }
+
+                @Override
+                public String toString() {
+                    return "startEvent: " + startEvent + " endEvemnt = " + endEvent
+                            + " velocityX = " + velocityX + " velosityY = " + velocityY;
+                }
+
+                @Override
+                public void clear() {
+                    startEvent.recycle();
+                    endEvent.recycle();
+                }
+
+                @Override
+                public MotionEvent getStartEvent() {
+                    return startEvent;
+                }
+
+                @Override
+                public MotionEvent getEndEvent() {
+                    return endEvent;
+                }
+
+                @Override
+                public float getVelocityX() {
+                    return velocityX;
+                }
+
+                @Override
+                public float getVelocityY() {
+                    return velocityY;
+                }
+
+            }
+
+            private void setFling(MotionEvent e1, MotionEvent e2, float vX, float vY) {
+                if (e1 != null && e2 != null) {
+                    if (mFling != null) {
+                        mFling.clear();
+                    }
+                    mFling = new Fling(e1, e2, vX, vY);
+                }
+            }
+
+            public boolean onDown(MotionEvent e) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onDown e = %s", e);
+                return true;
+            }
+
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+                                   float velocityY) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onFling event1: " + e1 + " event2: " + e2
+                        + " velocityX = " + velocityX + " velocityY = " + velocityY);
+                setFling(e1, e2, velocityX, velocityY);
+                return true;
+            }
+
+            public void onLongPress(MotionEvent e) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onLongPress e = %s", e);
+            }
+
+            public boolean onScroll(MotionEvent e1, MotionEvent e2,
+                                    float distanceX, float distanceY) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onScroll e1 = %s, e2 = %s distanceX = %f, distanceY = %f",
+                        e1, e2, distanceX, distanceY);
+                return true;
+            }
+
+            public void onShowPress(MotionEvent e) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onShowPress e = %s", e);
+            }
+
+            public boolean onSingleTapUp(MotionEvent e) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onSingleTapUp e = %s", e);
+                return true;
+            }
+        };
     }
 
     private class ControllerEvent implements GVRCursorController.IControllerEvent {
@@ -233,4 +353,12 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
     }
 
     private static final String TAG = WidgetPickHandler.class.getSimpleName();
+
+    void setFlingHandler(FlingHandler flingHandler ) {
+        mTouchEventsListener.mFlingHandler = flingHandler;
+    }
+
+    FlingHandler getFlingHandler() {
+        return mTouchEventsListener.mFlingHandler;
+    }
 }

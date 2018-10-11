@@ -4,10 +4,13 @@ import java.util.LinkedList;
 
 import org.gearvrf.GVRContext;
 
+import org.gearvrf.widgetlib.main.WidgetLib;
 import org.gearvrf.widgetlib.thread.MainThread;
 import org.gearvrf.widgetlib.thread.ExecutionChain;
 
 import org.gearvrf.widgetlib.log.Log;
+import org.gearvrf.widgetlib.widget.FlingHandler;
+import org.gearvrf.widgetlib.widget.TouchManager;
 
 import static org.gearvrf.utility.Log.tag;
 
@@ -82,6 +85,12 @@ public class ContentSceneController {
          * Get the content scene name
          */
         String getName();
+
+        /**
+         * Return {@link FlingHandler}. It might be null if fling is not supported by content scene
+         * @return
+         */
+        FlingHandler getFlingHandler();
     }
 
     /**
@@ -129,6 +138,18 @@ public class ContentSceneController {
         executeHideShowCycle(mContentSceneViewStack.peek());
     }
 
+    public void refreshFlingHandler() {
+        new ExecutionChain(mGvrContext).runOnMainThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!mContentSceneViewStack.isEmpty()) {
+                    WidgetLib.getTouchManager().setFlingHandler(
+                            mContentSceneViewStack.peek().getFlingHandler());
+                }
+            }
+        }).execute();
+    }
+
     // Internal API: only used by goTo() to go to an exiting contentScene in
     // stack
     private boolean goBackTo(final ContentScene contentScene) {
@@ -156,6 +177,7 @@ public class ContentSceneController {
             public void run() {
                 if (!mContentSceneViewStack.isEmpty()) {
                     mContentSceneViewStack.peek().hide();
+                    WidgetLib.getTouchManager().setFlingHandler(null);
                 }
             }
         }).execute();
@@ -170,7 +192,11 @@ public class ContentSceneController {
             @Override
             public void run() {
                 if (!mContentSceneViewStack.isEmpty()) {
-                    mContentSceneViewStack.peek().show();
+                    ContentScene contentScene = mContentSceneViewStack.peek();
+                    contentScene.show();
+                    WidgetLib.getTouchManager().setFlingHandler(
+                            contentScene.getFlingHandler());
+
                 }
             }
         }).execute();
@@ -257,6 +283,7 @@ public class ContentSceneController {
                                     "executeHideShowCycle(): hiding %s",
                                     curContentScene.getName());
                             curContentScene.hide();
+                            WidgetLib.getTouchManager().setFlingHandler(null);
                         }
 
                         // Show next contentScene
@@ -265,6 +292,9 @@ public class ContentSceneController {
                                     "executeHideShowCycle(): showing %s",
                                     localNextContentScene.getName());
                             localNextContentScene.show();
+                            WidgetLib.getTouchManager().setFlingHandler(
+                                    localNextContentScene.getFlingHandler());
+
                             curContentScene = localNextContentScene;
                         }
                     }
