@@ -17,7 +17,7 @@ package org.gearvrf.x3d.data_types;
 /**
  * Defines the X3D SFColor data type
  */
-public class SFColor {
+public class SFColor implements Cloneable {
 
     private float red = 0;
     private float green = 0;
@@ -29,6 +29,17 @@ public class SFColor {
     public SFColor(float red, float green, float blue) {
         float[] color = {red, green, blue};
         setValue(color);
+    }
+
+    public SFColor clone() throws CloneNotSupportedException
+    {
+        try {
+            SFColor cloneObj = (SFColor) super.clone();
+            return cloneObj;
+        }
+        catch (CloneNotSupportedException e) {
+        }
+        return null;
     }
 
     public void setValue(float[] color) {

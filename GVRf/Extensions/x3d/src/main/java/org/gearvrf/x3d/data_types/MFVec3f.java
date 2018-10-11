@@ -22,7 +22,7 @@ import java.util.ArrayList;
  * Defines the X3D MFVec3f data type
  * Spec: http://www.web3d.org/specifications/java/javadoc/org/web3d/x3d/sai/MFVec3f.html
  */
-public class MFVec3f implements MField {
+public class MFVec3f implements MField, Cloneable {
 
     private static final String TAG = MFVec3f.class.getSimpleName();
 
@@ -30,7 +30,6 @@ public class MFVec3f implements MField {
 
     public MFVec3f() {
     }
-
 
     public MFVec3f(float[] newVals) {
         if ( (newVals.length % 3) == 0) {
@@ -41,6 +40,17 @@ public class MFVec3f implements MField {
         else {
             Log.e(TAG, "X3D MFVec3f constructor set with array length not divisible by 3");
         }
+    }
+
+    public MFVec3f clone() throws CloneNotSupportedException
+    {
+        try {
+            MFVec3f cloneObj = (MFVec3f) super.clone();
+            return cloneObj;
+        }
+        catch (CloneNotSupportedException e) {
+        }
+        return null;
     }
 
 
@@ -90,7 +100,7 @@ public class MFVec3f implements MField {
     /**
      * Write out the current value of this field into the external valueDestination array.
      * @param valueDestination - where all the SFVec3f object values are returned
-     *                         in a 2-dimentional array
+     *                         in a 3-dimentional array
      */
     public void getValue(float[][] valueDestination) {
         valueDestination = new float[size()][3];
@@ -169,7 +179,7 @@ public class MFVec3f implements MField {
      *                 in a single dimensional array
      */
     public void setValue(int size, float[] newValue) {
-        if ( ((newValue.length%3) == 0) && ((newValue.length/3) == size)) {
+        if ( ((newValue.length%3) == 0) && ((newValue.length/3) == size) ) {
             try {
                 for (int i = 0; i < size; i++) {
                     value.set(i, new SFVec3f(newValue[i*3], newValue[i*3+1], newValue[i*3+2]));
