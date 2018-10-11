@@ -59,7 +59,7 @@ public class WidgetLib {
         if (mInstance != null) {
             getFocusManager().clear();
             getMainThread().quit();
-            Widget.destroy(mInstance.get().mGVRContext);
+            getTouchManager().clear();
         }
         mInstance = null;
     }

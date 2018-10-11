@@ -21,13 +21,25 @@ import java.util.ArrayList;
  * Defines the X3D MFString data type
  * Spec: http://www.web3d.org/specifications/java/javadoc/org/web3d/x3d/sai/MFString.html
  */
-public class MFString implements MField {
+public class MFString implements MField, Cloneable {
 
     private static final String TAG = MFString.class.getSimpleName();
 
     private ArrayList<String> value = new ArrayList<String>();
 
     public MFString() {
+    }
+
+    public MFString clone() throws CloneNotSupportedException
+    {
+        try {
+            MFString cloneObj = (MFString) super.clone();
+            cloneObj.value = (ArrayList<String>) this.value.clone();
+            return cloneObj;
+        }
+        catch (CloneNotSupportedException e) {
+        }
+        return null;
     }
 
     public void clear() { value.clear(); }

@@ -19,7 +19,7 @@ package org.gearvrf.x3d.data_types;
  * Defines the X3D SFString data type
  * Spec: http://www.web3d.org/specifications/java/javadoc/org/web3d/x3d/sai/SFString.html
  */
-public class SFString {
+public class SFString implements Cloneable {
 
     private String value = "";
 
@@ -28,6 +28,17 @@ public class SFString {
 
     public SFString(String value) {
         setValue(value);
+    }
+
+    public SFString clone() throws CloneNotSupportedException
+    {
+        try {
+            SFString cloneObj = (SFString) super.clone();
+            return cloneObj;
+        }
+        catch (CloneNotSupportedException e) {
+        }
+        return null;
     }
 
     /**

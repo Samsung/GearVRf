@@ -19,7 +19,7 @@ import org.joml.Vector2f;
 /**
  * Defines the X3D SFVec2f data type
  */
-public class SFVec2f extends Vector2f {
+public class SFVec2f extends Vector2f implements Cloneable{
 
     public SFVec2f() {
         set(0, 0);
@@ -33,6 +33,17 @@ public class SFVec2f extends Vector2f {
      */
     public SFVec2f(float x, float y) {
         set(x, y);
+    }
+
+    public SFVec2f clone() throws CloneNotSupportedException
+    {
+        try {
+            SFVec2f cloneObj = (SFVec2f) super.clone();
+            return cloneObj;
+        }
+        catch (CloneNotSupportedException e) {
+        }
+        return null;
     }
 
     /**

@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-@Deprecated
 public class TouchManager {
 
     /**
@@ -53,7 +52,15 @@ public class TouchManager {
      * @param gvrContext
      */
     public TouchManager(GVRContext gvrContext) {
+        mGVRContext = gvrContext;
+        mPickHandler = new WidgetPickHandler();
+        gvrContext.getInputManager().selectController(mPickHandler);
     }
+
+    public void clear() {
+        mGVRContext.getInputManager().clear();
+    }
+
 
     /**
      * Makes the scene object touchable and associates the {@link OnTouch handler} with it.
@@ -348,6 +355,14 @@ public class TouchManager {
         return mOnTouchInterceptors.remove(interceptor);
     }
 
+    public void setFlingHandler(FlingHandler flingHandler) {
+        mPickHandler.setFlingHandler(flingHandler);
+    }
+
+    public FlingHandler getFlingHandler() {
+        return mPickHandler.getFlingHandler();
+    }
+
     private final Map<GVRSceneObject, WeakReference<OnTouch>> touchHandlers = new WeakHashMap<GVRSceneObject, WeakReference<OnTouch>>();
     private Runnable defaultLeftClickAction = null;
     private Runnable defaultRightClickAction = null;
@@ -357,4 +372,7 @@ public class TouchManager {
     private Set<TouchManagerFilter> mBackKeyFilters = new LinkedHashSet<>();
 
     private final static String TAG = org.gearvrf.utility.Log.tag(TouchManager.class);
+    private GVRContext mGVRContext;
+
+    private final WidgetPickHandler mPickHandler;
 }

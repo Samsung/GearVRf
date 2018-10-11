@@ -23,7 +23,7 @@ import org.joml.Vector3f;
  * Defines the X3D SFRotation data type in AxisAngle format
  * Angles in radians
  */
-public class SFRotation extends AxisAngle4f {
+public class SFRotation extends AxisAngle4f implements Cloneable {
 
     public SFRotation() {
         set(0, 0, 1, 0); // angle, x, y, z
@@ -47,6 +47,17 @@ public class SFRotation extends AxisAngle4f {
         float angle = fromVector.dot(toVector);
         Vector3f axis = fromVector.cross(toVector);
         this.set(angle, axis.x, axis.y, axis.z);
+    }
+
+    public SFRotation clone() throws CloneNotSupportedException
+    {
+        try {
+            SFRotation cloneObj = (SFRotation) super.clone();
+            return cloneObj;
+        }
+        catch (CloneNotSupportedException e) {
+        }
+        return null;
     }
 
     /**

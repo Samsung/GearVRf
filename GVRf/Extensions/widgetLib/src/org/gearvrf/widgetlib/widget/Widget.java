@@ -88,12 +88,6 @@ public class Widget implements Layout.WidgetContainer {
         sDefaultTexture = assetLoader.loadTexture(new GVRAndroidResource(
                 gvrContext, R.raw.default_bkgd));
         Log.d(TAG, "onInit(): default texture: %s", sDefaultTexture);
-
-        gvrContext.getInputManager().selectController(sPickHandler);
-    }
-
-    static public void destroy(GVRContext context) {
-        sPickHandler.onDestroy(context);
     }
 
     /**
@@ -3930,8 +3924,6 @@ public class Widget implements Layout.WidgetContainer {
 
     private static WeakReference<Thread> sGLThread = new WeakReference<>(null);
     private static GVRTexture sDefaultTexture;
-    static final WidgetPickHandler sPickHandler = new WidgetPickHandler();
-
     private static final String TAG = org.gearvrf.utility.Log.tag(Widget.class);
 
     /**
