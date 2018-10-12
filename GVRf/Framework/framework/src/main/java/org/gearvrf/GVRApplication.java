@@ -31,7 +31,6 @@ import android.view.WindowManager;
 
 import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.DockEventReceiver;
 import org.gearvrf.utility.GrowBeforeQueueThreadPoolExecutor;
@@ -530,17 +529,17 @@ public final class GVRApplication implements IEventReceiver, IScriptable {
     }
 
     /**
-     * It is a convenient function to add a {@link GVRView} to Android hierarchy
+     * It is a convenient function to add a {@link View} to Android hierarchy
      * view. UI thread will refresh the view when necessary.
      *
-     * @param view Is a {@link GVRView} that draw itself into some
+     * @param view Is a {@link View} that draw itself into some
      *            {@link GVRViewSceneObject}.
      */
     public final void registerView(final View view) {
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (null != mRenderableViewGroup) {
+                if (null != mRenderableViewGroup && view.getParent() != mRenderableViewGroup) {
                     /* The full screen should be updated otherwise just the children's bounds may be refreshed. */
                     mRenderableViewGroup.setClipChildren(false);
                     mRenderableViewGroup.addView(view);
@@ -558,7 +557,7 @@ public final class GVRApplication implements IEventReceiver, IScriptable {
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (null != mRenderableViewGroup) {
+                if (null != mRenderableViewGroup && view.getParent() == mRenderableViewGroup) {
                     mRenderableViewGroup.removeView(view);
                 }
             }

@@ -17,23 +17,13 @@ package org.gearvrf.widgetplugin;
 
 import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
-import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSharedTexture;
-import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.ITouchEvents;
-import org.gearvrf.scene_objects.view.GVRView;
-
-import android.graphics.SurfaceTexture;
-import android.view.MotionEvent;
-import android.view.Surface;
 
 
 /**

@@ -82,28 +82,31 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         this.currentCursor = currentCursor;
         this.changeListener = changeListener;
         loadThemes();
+    }
 
-        TextView tvCursorName = (TextView) findViewById(R.id.tvCursorName);
+    @Override
+    protected void onInitView(View view) {
+        TextView tvCursorName = (TextView) view.findViewById(R.id.tvCursorName);
         tvCursorName.setText(cursor.getName());
-        TextView tvCursorType = (TextView) findViewById(R.id.tvCursorType);
+        TextView tvCursorType = (TextView) view.findViewById(R.id.tvCursorType);
         if (cursor.getCursorType() == CursorType.LASER) {
             tvCursorType.setText(R.string.cursor_type_laser);
         } else {
             tvCursorType.setText(R.string.cursor_type_object);
         }
-        TextView tvBackButton = (TextView) findViewById(R.id.tvBackButton);
+        TextView tvBackButton = (TextView) view.findViewById(R.id.tvBackButton);
         tvBackButton.setOnClickListener(this);
 
-        TextView done = (TextView) findViewById(R.id.done);
+        TextView done = (TextView) view.findViewById(R.id.done);
         done.setOnClickListener(this);
 
-        LinearLayout llThemes = (LinearLayout) findViewById(R.id.llThemes);
+        LinearLayout llThemes = (LinearLayout) view.findViewById(R.id.llThemes);
         themeViews = new ArrayList<View>();
         for (CursorTheme theme : themes) {
             addTheme(theme, llThemes, theme == cursor.getCursorTheme());
         }
 
-        LinearLayout llIoDevices = (LinearLayout) findViewById(R.id.llIoDevices);
+        LinearLayout llIoDevices = (LinearLayout) view.findViewById(R.id.llIoDevices);
         ioDevicesDisplayed = cursor.getAvailableIoDevices();
         availableIoDevices = new HashSet<IoDevice>(ioDevicesDisplayed);
         List<IoDevice> usedIoDevices = cursorManager.getUsedIoDevices();
@@ -118,13 +121,22 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
         for (IoDevice ioDevice : ioDevicesDisplayed) {
             addIoDevice(ioDevice, llIoDevices, cursorManager.isDeviceActive(ioDevice));
         }
+    }
+
+    @Override
+    protected void onStartRendering() {
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
     }
 
     @Override
     void show() {
         super.show();
-        setGestureDetector(new GestureDetector(swipeListener));
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setGestureDetector(new GestureDetector(swipeListener));
+            }
+        });
     }
 
     private void loadDrawables(Context context) {
@@ -274,18 +286,23 @@ class CursorConfigView extends BaseView implements View.OnClickListener {
     }
 
     private void createIoChangeDialog(final IoDevice ioDevice, final int newIoDevicePosition) {
-        new IoChangeDialogView(context, scene, settingsCursorId, new IoChangeDialogView
-                .DialogResultListener() {
+        context.runOnGlThread(new Runnable() {
             @Override
-            public void onConfirm() {
-                setSettingsCursorId(changeListener.onDeviceChanged(ioDevice));
-                markIoDeviceSelected(newIoDevicePosition);
-                navigateBack(true);
-            }
+            public void run() {
+                new IoChangeDialogView(context, scene, settingsCursorId, new IoChangeDialogView
+                        .DialogResultListener() {
+                    @Override
+                    public void onConfirm() {
+                        setSettingsCursorId(changeListener.onDeviceChanged(ioDevice));
+                        markIoDeviceSelected(newIoDevicePosition);
+                        navigateBack(true);
+                    }
 
-            @Override
-            public void onCancel() {
+                    @Override
+                    public void onCancel() {
 
+                    }
+                });
             }
         });
     }

@@ -25,8 +25,7 @@ import org.gearvrf.utility.Log;
 
 class IoChangeDialogView extends BaseView implements View.OnClickListener {
     private static final String TAG = IoChangeDialogView.class.getSimpleName();
-    private static final float DIALOG_HEIGHT = 3f;
-    private static final float DIALOG_WIDTH = 4.5f;
+    private static final float DIALOG_SCALE = 4.5f;
     private static final float DIALOG_DEPTH_OFFSET = 0.5f;
 
     public interface DialogResultListener {
@@ -39,15 +38,22 @@ class IoChangeDialogView extends BaseView implements View.OnClickListener {
 
     IoChangeDialogView(final GVRContext context, final GVRScene scene, int
             settingsCursorId, DialogResultListener dialogResultListener) {
-        super(context, scene, settingsCursorId, R.layout.iochange_dialog_layout, DIALOG_HEIGHT,
-                DIALOG_WIDTH);
+        super(context, scene, settingsCursorId, R.layout.iochange_dialog_layout, DIALOG_SCALE);
         this.dialogResultListener = dialogResultListener;
-        TextView tvConfirm = (TextView) findViewById(R.id.tvConfirm);
-        TextView tvCancel = (TextView) findViewById(R.id.tvCancel);
+        this.dialogResultListener = dialogResultListener;
+    }
+
+    @Override
+    protected void onInitView(View view) {
+        TextView tvConfirm = (TextView) view.findViewById(R.id.tvConfirm);
+        TextView tvCancel = (TextView) view.findViewById(R.id.tvCancel);
         tvConfirm.setOnClickListener(this);
         tvCancel.setOnClickListener(this);
+    }
+
+    @Override
+    protected void onStartRendering() {
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH + DIALOG_DEPTH_OFFSET);
-        this.dialogResultListener = dialogResultListener;
     }
 
     @Override

@@ -16,27 +16,30 @@
 
 package org.gearvrf.x3d;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.view.ViewGroup;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
-import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalScene;
 import org.gearvrf.GVRMeshCollider;
-import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRWebView;
-
-import org.gearvrf.GVRScene;
-
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.joml.Vector3f;
@@ -44,19 +47,12 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import android.graphics.Color;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
-
-import android.content.Context;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -132,7 +128,7 @@ public class AnchorImplementation {
     private GVRDrawFrameListener mOnDrawFrame = null;
     private boolean webViewTranslation = false;
     private boolean webViewScale = false;
-    private GVRWebView gvrWebView = null;
+    private WebView gvrWebView = null;
 
     private String webPageContent = "";
 
@@ -362,10 +358,9 @@ public class AnchorImplementation {
                 public void run() {
 
                     // Launch a new WebView window and place the web page there.
-                    gvrWebView = new GVRWebView(gvrContext.getApplication());
+                    gvrWebView = new WebView(gvrContext.getActivity());
                     gvrWebView.setInitialScale(100);
-                    gvrWebView.measure(1600, 1200);
-                    gvrWebView.layout(0, 0, 1600, 1200);
+                    gvrWebView.setLayoutParams(new ViewGroup.LayoutParams(1600, 1200));
                     WebSettings webSettings = gvrWebView.getSettings();
                     webSettings.setJavaScriptEnabled(true);
 

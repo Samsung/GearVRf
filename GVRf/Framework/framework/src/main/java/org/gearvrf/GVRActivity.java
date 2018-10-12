@@ -24,7 +24,6 @@ import android.view.View;
 
 import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
-import org.gearvrf.scene_objects.view.GVRView;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.VrAppSettings;
 
@@ -192,10 +191,10 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
     }
 
     /**
-     * It is a convenient function to add a {@link GVRView} to Android hierarchy
+     * It is a convenient function to add a {@link View} to Android hierarchy
      * view. UI thread will refresh the view when necessary.
      *
-     * @param view Is a {@link GVRView} that draw itself into some
+     * @param view Is a {@link View} that draw itself into some
      *            {@link GVRViewSceneObject}.
      */
     public final void registerView(final View view) {

@@ -24,6 +24,22 @@ import org.gearvrf.scene_objects.GVRViewSceneObject;
  * that is inflated by a {@link GVRViewSceneObject}.
  */
 public interface IViewEvents extends IEvents {
+    /**
+     * Called when the {@link View} is attached to the Android view hierarchy.
+     * This is the recommended place to configure the view and set its listeners.
+     *
+     * @param sceneObject {@link GVRViewSceneObject} whom the view is attached to.
+     * @param view Android view attached to {@link GVRViewSceneObject}
+     */
     void onInitView(GVRViewSceneObject sceneObject, View view);
+
+    /**
+     * Called when the Android starts to draw the {@link View} attached to {@link GVRViewSceneObject}.
+     * This is the recommended place to attach the {@link GVRViewSceneObject} to the
+     * scene, avoiding rendering of scene object with empty texture.
+     *
+     * @param sceneObject {@link GVRViewSceneObject} whom the view is attached to.
+     * @param view Android view attached to {@link GVRViewSceneObject}
+     */
     void onStartRendering(GVRViewSceneObject sceneObject, View view);
 }

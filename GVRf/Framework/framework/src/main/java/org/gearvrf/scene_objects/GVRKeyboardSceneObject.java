@@ -210,6 +210,11 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         GVRKeyboard gvrKeyboard = mGVRKeyboardCache.get(cacheId);
 
         if (gvrKeyboard == null) {
+            // FIXME: GVRTexture:getId() may cause deadlock at UI thread!
+            if (Looper.getMainLooper() == Looper.myLooper()) {
+                // Going to deadlock!
+                throw new UnsupportedOperationException("Creation of Keyboard layout on UI Thread!");
+            }
             // Keyboard not cached yet
             gvrKeyboard = createGVRKeyboard(keyboard, cacheId, this);
 

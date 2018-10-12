@@ -78,11 +78,16 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
         final Activity activity = context.getActivity();
         this.changeListener = changeListener;
         this.cursorManager = cursorManager;
-        cursorList = (ListView) findViewById(R.id.lvCursors);
+        this.currentCursor = currentCursor;
+    }
+
+    @Override
+    protected void onInitView(View view) {
+        cursorList = (ListView) view.findViewById(R.id.lvCursors);
         cursors = cursorManager.getActiveCursors();
         cursors.addAll(cursorManager.getInactiveCursors());
-        this.currentCursor = currentCursor;
-        tbSoundEnabled = (ToggleButton) findViewById(R.id.tbSoundEnable);
+
+        tbSoundEnabled = (ToggleButton) view.findViewById(R.id.tbSoundEnable);
         tbSoundEnabled.setChecked(cursorManager.isSoundEnabled());
         tbSoundEnabled.setOnCheckedChangeListener(this);
         // sort the cursors
@@ -95,18 +100,27 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
             }
         });
 
-        TextView tvDoneButton = (TextView) findViewById(R.id.tvDoneButton);
+        TextView tvDoneButton = (TextView) view.findViewById(R.id.tvDoneButton);
         tvDoneButton.setOnClickListener(doneButtonListener);
 
         cursorAdapter = new CursorAdapter(activity, cursors);
         cursorList.setAdapter(cursorAdapter);
+    }
+
+    @Override
+    protected void onStartRendering() {
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
     }
 
     @Override
     void show() {
         super.show();
-        setGestureDetector(new GestureDetector(currentCursor.getGVRContext().getContext(), swipeListener));
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setGestureDetector(new GestureDetector(currentCursor.getGVRContext().getContext(), swipeListener));
+            }
+        });
     }
 
     SettingsChangeListener configChangeListener = new SettingsChangeListener()
@@ -135,13 +149,18 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
         }
     };
 
-    private void createConfigView(Cursor cursor)
+    private void createConfigView(final Cursor cursor)
     {
         if (cursor.isEnabled())
         {
             disable();
-            new CursorConfigView(context, cursorManager, cursor, currentCursor, scene,
-                                 settingsCursorId, configChangeListener);
+            context.runOnGlThread(new Runnable() {
+                @Override
+                public void run() {
+                    new CursorConfigView(context, cursorManager, cursor, currentCursor, scene,
+                            settingsCursorId, configChangeListener);
+                }
+            });
         }
     }
 

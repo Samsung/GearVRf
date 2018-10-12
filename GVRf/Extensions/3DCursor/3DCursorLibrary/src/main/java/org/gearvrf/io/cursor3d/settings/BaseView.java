@@ -23,55 +23,56 @@ import android.view.GestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
+import org.gearvrf.IViewEvents;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 
 abstract class BaseView {
     private static final String TAG = BaseView.class.getSimpleName();
-    private static final float QUAD_X = 10.0f;
-    private static final float QUAD_Y = 8f;
+    private static final float DEFAULT_SCALE = 10.0f;
     public static final float QUAD_DEPTH = -13f;
-    private FrameLayout frameLayout;
 
-    private float quadHeight;
-    private float quadWidth;
     GVRScene scene;
-    final Activity activity;
     GVRContext context;
+    Activity activity;
     private GVRViewSceneObject layoutSceneObject;
-    private Handler glThreadHandler;
     int settingsCursorId;
 
     BaseView(GVRContext context, GVRScene scene, int settingsCursorId, int layoutID) {
-        this(context, scene, settingsCursorId, layoutID, QUAD_Y, QUAD_X);
+        this(context, scene, settingsCursorId, layoutID, DEFAULT_SCALE);
     }
 
-    BaseView(GVRContext context, GVRScene scene, int settingsCursorId, int layoutID, float
-            quadHeight, float quadWidth) {
+    BaseView(final GVRContext context, final GVRScene scene,
+             final int settingsCursorId, final int layoutID, final float scale) {
         this.context = context;
         this.scene = scene;
+        this.activity = context.getActivity();
         this.settingsCursorId = settingsCursorId;
-        this.quadHeight = quadHeight;
-        this.quadWidth = quadWidth;
 
-        activity = context.getActivity();
-        frameLayout = new FrameLayout(activity);
-        frameLayout.setBackgroundColor(Color.TRANSPARENT);
-        View.inflate(activity, layoutID, frameLayout);
-        glThreadHandler = new Handler(Looper.getMainLooper());
-    }
-
-    void render(final float x, final float y, final float z) {
-        glThreadHandler.post(new Runnable() {
+        layoutSceneObject = new GVRViewSceneObject(context, layoutID, new IViewEvents() {
             @Override
-            public void run() {
-                layoutSceneObject = new GVRViewSceneObject(context, frameLayout,
-                        context.createQuad(quadWidth, quadHeight));
-                layoutSceneObject.getTransform().setPosition(x, y, z);
-                show();
+            public void onInitView(GVRViewSceneObject gvrViewSceneObject, View view) {
+                BaseView.this.onInitView(view);
+            }
+
+            @Override
+            public void onStartRendering(GVRViewSceneObject gvrViewSceneObject, View view) {
+                gvrViewSceneObject.getTransform().setScale(scale, scale, 1.0f);
+                BaseView.this.onStartRendering();
             }
         });
+
+        layoutSceneObject.setTextureBufferSize(1024);
+    }
+
+    abstract protected void onInitView(View view);
+    abstract protected void onStartRendering();
+
+    void render(final float x, final float y, final float z) {
+        layoutSceneObject.getTransform().setPosition(x, y, z);
+        show();
     }
 
     void show() {
@@ -88,10 +89,6 @@ abstract class BaseView {
 
     void enable() {
         scene.addSceneObject(layoutSceneObject);
-    }
-
-    View findViewById(int id) {
-        return frameLayout.findViewById(id);
     }
 
     void setSettingsCursorId(int settingsCursorId) {

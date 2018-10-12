@@ -435,27 +435,27 @@ public final class CursorManager implements IEventReceiver
     private void showSettingsMenu(final Cursor cursor) {
         Log.d(TAG, "showSettingsMenu");
         enableSettingsCursor(cursor);
-        context.getActivity().runOnUiThread(new Runnable() {
+        context.runOnGlThread(new Runnable() {
             @Override
             public void run() {
                 new SettingsView(context, scene, CursorManager.this,
-                                 settingsCursor.getIoDevice().getCursorControllerId(), cursor, new
-                                         SettingsChangeListener() {
-                                             @Override
-                                             public void onBack(boolean cascading) {
-                                                 disableSettingsCursor();
-                                             }
+                        settingsCursor.getIoDevice().getCursorControllerId(), cursor, new
+                        SettingsChangeListener() {
+                            @Override
+                            public void onBack(boolean cascading) {
+                                disableSettingsCursor();
+                            }
 
-                                             @Override
-                                             public int onDeviceChanged(IoDevice device) {
-                                                 // we are changing the io device on the settings cursor
-                                                 removeCursorFromScene(settingsCursor);
-                                                 IoDevice clickedDevice = getAvailableIoDevice(device);
-                                                 settingsCursor.setIoDevice(clickedDevice);
-                                                 addCursorToScene(settingsCursor);
-                                                 return device.getCursorControllerId();
-                                             }
-                                         });
+                            @Override
+                            public int onDeviceChanged(IoDevice device) {
+                                // we are changing the io device on the settings cursor
+                                removeCursorFromScene(settingsCursor);
+                                IoDevice clickedDevice = getAvailableIoDevice(device);
+                                settingsCursor.setIoDevice(clickedDevice);
+                                addCursorToScene(settingsCursor);
+                                return device.getCursorControllerId();
+                            }
+                        });
             }
         });
     }
