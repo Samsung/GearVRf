@@ -132,14 +132,12 @@ protected:
     void signalUpdate()
     {
         mState = UPDATE_PENDING;
-        LOGD("Texture: UPDATE_PENDING %s", getFileName());
     }
 
     bool updatePending() const { return mState == UPDATE_PENDING; }
     void updateComplete()
     {
         mState = HAS_DATA;
-        LOGD("Texture: UPDATE_COMPLETE %s", getFileName());
     }
     virtual void update(int texid) { }
 

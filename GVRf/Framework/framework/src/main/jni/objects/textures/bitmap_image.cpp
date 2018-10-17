@@ -47,7 +47,6 @@ void BitmapImage::update(JNIEnv* env, int width, int height, jbyteArray data)
     {
         mData = static_cast<jbyteArray>(env->NewGlobalRef(data));
         signalUpdate();
-        LOGV("Texture: BitmapImage::update(byteArray)");
     }
 }
 
@@ -61,12 +60,11 @@ void BitmapImage::update(JNIEnv* env, jobject bitmap, bool hasAlpha, int format)
         mBitmap = static_cast<jbyteArray>(env->NewGlobalRef(bitmap));
         mFormat = format;
         mIsBuffer = false;
-        LOGV("Texture: BitmapImage::update(bitmap)");
         if( hasAlpha ) {
             if(bitmap_has_transparency(env, bitmap)) {
                 set_transparency(true);
             } else {
-                // TODO: warning: bitmap has an alpha channel with no translucent/transparent pixels.
+                LOGW("BitmapImage: bitmap has an alpha channel with no translucent/transparent pixels.");
             }
         }
         signalUpdate();
@@ -88,7 +86,6 @@ void BitmapImage::update(JNIEnv* env, int xoffset, int yoffset, int width, int h
         mType = type;
         mBitmap = env->NewGlobalRef(buffer);
         mIsBuffer = true;
-        LOGV("Texture: BitmapImage::update(buffer)");
         signalUpdate();
     }
 }
@@ -109,7 +106,6 @@ void BitmapImage::update(JNIEnv *env, int width, int height, int imageSize,
     {
         mData = static_cast<jbyteArray>(env->NewGlobalRef(data));
         mPixels = env->GetByteArrayElements(mData, 0);
-        LOGV("Texture: BitmapImage::update(byteArray, offsets)");
         set_transparency(hasAlpha(mFormat));
         env->ReleaseByteArrayElements(mData, mPixels, 0);
         mPixels = NULL;

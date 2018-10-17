@@ -35,7 +35,6 @@ namespace gvr {
         clearData(env);
         mBitmaps = env->NewGlobalRef(bitmapArray);
         signalUpdate();
-        LOGV("Texture: CubemapImage::update(bitmapArray)");
     }
 
     void CubemapImage::update(JNIEnv* env, int width, int height, int imageSize,
@@ -51,7 +50,6 @@ namespace gvr {
         clearData(env);
         mTextures = env->NewGlobalRef(textureArray);
         signalUpdate();
-        LOGV("Texture: CubemapImage::update(textureArray)");
     }
 
     CubemapImage::~CubemapImage()

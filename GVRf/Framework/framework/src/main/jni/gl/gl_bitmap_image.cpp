@@ -92,13 +92,11 @@ void GLBitmapImage::update(int texid)
     {
         updateFromBitmap(texid);
         clearData(getCurrentEnv(mJava));
-        LOGV("Texture: GLBitmapImage::update(%d, bitmap)", texid);
     }
     else if (mData != NULL)
     {
         updateFromMemory(texid);
         clearData(getCurrentEnv(mJava));
-        LOGV("Texture: GLBitmapImage::update(%d, byteArray)", texid);
     }
 }
 
