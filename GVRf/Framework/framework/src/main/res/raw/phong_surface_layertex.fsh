@@ -1,51 +1,59 @@
 
 @MATERIAL_UNIFORMS
 
+layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
+
 #ifdef HAS_ambientTexture
 layout(location = 11) in vec2 ambient_coord;
+layout(set = 0, binding = 11) uniform sampler2D ambientTexture;
 #endif
 
 #ifdef HAS_specularTexture
 layout(location = 12) in vec2 specular_coord;
-#endif
-
-#ifdef HAS_opacityTexture
-layout(location = 13) in vec2 opacity_coord;
-#endif
-
-#ifdef HAS_lightMapTexture
-layout(location = 14) in vec2 lightmap_coord;
-#endif
-
-#ifdef HAS_normalTexture
-layout(location = 15) in vec2 normal_coord;
+layout(set = 0, binding = 12) uniform sampler2D specularTexture;
 #endif
 
 #ifdef HAS_emissiveTexture
-layout(location = 16) in vec2 emissive_coord;
+layout(location = 13) in vec2 emissive_coord;
+layout(set = 0, binding = 13) uniform sampler2D emissiveTexture;
 #endif
 
-layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
-layout(set = 0, binding = 11) uniform sampler2D ambientTexture;
-layout(set = 0, binding = 12) uniform sampler2D specularTexture;
-layout(set = 0, binding = 13) uniform sampler2D opacityTexture;
+#ifdef HAS_lightmapTexture
+layout(location = 14) in vec2 lightmap_coord;
 layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
-layout(set = 0, binding = 15) uniform sampler2D emissiveTexture;
+#endif
+
+#ifdef HAS_opacityTexture
+layout(location = 15) in vec2 opacity_coord;
+layout(set = 0, binding = 15) uniform sampler2D opacityTexture;
+#endif
+
+#ifdef HAS_normalTexture
+#ifdef HAS_a_tangent
+layout(location = 4) in mat3 tangent_matrix;
+#endif
+layout(location = 16) in vec2 normal_coord;
 layout(set = 0, binding = 16) uniform sampler2D normalTexture;
+#endif
+
+#ifdef HAS_diffuseTexture1
+layout(location = 17) in vec2 diffuse_coord1;
+layout(set = 0, binding = 17) uniform sampler2D diffuseTexture1;
+#endif
 
 #ifdef HAS_ambientTexture1
 layout(location = 18) in vec2 ambient_coord1;
 layout(set = 0, binding = 18) uniform sampler2D ambientTexture1;
 #endif
 
-#ifdef HAS_diffuseTexture1
-layout(location = 19) in vec2 diffuse_coord1;
-layout(set = 0, binding = 19) uniform sampler2D diffuseTexture1;
+#ifdef HAS_specularTexture1
+layout(location = 19) in vec2 specular_coord1;
+layout(set = 0, binding = 19) uniform sampler2D specularTexture1;
 #endif
 
-#ifdef HAS_specularTexture1
-layout(location = 20) in vec2 specular_coord1;
-layout(set = 0, binding = 20) uniform sampler2D specularTexture1;
+#ifdef HAS_lightmapTexture1
+layout(location = 20) in vec2 lightmap_coord1;
+layout(set = 0, binding = 20) uniform sampler2D lightmapTexture1;
 #endif
 
 #ifdef HAS_emissiveTexture1
@@ -53,10 +61,6 @@ layout(location = 21) in vec2 emissive_coord1;
 layout(set = 0, binding = 21) uniform sampler2D emissiveTexture1;
 #endif
 
-#ifdef HAS_lightmapTexture1
-layout(location = 22) in vec2 lightmap_coord1;
-layout(set = 0, binding = 22) uniform sampler2D lightmapTexture1;
-#endif
 
 struct Surface
 {
@@ -161,7 +165,7 @@ Surface @ShaderName()
 #ifdef HAS_opacityTexture
 	diffuse.a *= texture(opacityTexture, opacity_coord.xy).a;
 #endif
-diffuse.xyz *= diffuse.a;
+    diffuse.xyz *= diffuse.a;
 
 #ifdef HAS_specularTexture
 	specular *= texture(specularTexture, specular_coord.xy);
@@ -188,12 +192,12 @@ diffuse.xyz *= diffuse.a;
 #endif
 
 #ifdef HAS_lightmapTexture
-	vec2 lcoord = (lightmap_coord * u_lightmap_scale) + u_lightmap_offset;
+	vec2 lcoord = (lightmap_coord * lightmap_scale) + lightmap_offset;
 	diffuse *= texture(lightMapTexture, vec2(lcoord.x, 1 - lcoord.y));
-#ifdef HAS_lightMapTexture1_blendop
-    lcoord = (lightmap_coord1 * u_lightmap_scale) + u_lightmap_offset;
-    diffuse = BlendColors(diffuse, texture(lightmapTexture1, vec2(lcoord.x, 1 - lcoord.y), lightmapTexture1_blendop);
-#endif
+	#ifdef HAS_lightMapTexture1
+		lcoord = (lightmap_coord1 * lightmap_scale) + lightmap_offset;
+    	diffuse = BlendColors(diffuse, texture(lightmpTexture1, vec2(lcoord.x, 1 - lcoord.y), lightmapTexture1_blendop);
+    #endif
 	return Surface(viewspaceNormal, ambient, vec4(0.0, 0.0, 0.0, 0.0), specular, emission);
 #else
 	return Surface(viewspaceNormal, ambient, diffuse, specular, emission);

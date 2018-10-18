@@ -30,11 +30,9 @@ Scene* Scene::main_scene_ = NULL;
 
 Scene::Scene() :
         HybridObject(),
-        javaVM_(NULL),
-        makeDepthShadersMethod_(0),
         main_camera_rig_(),
+        makeDepthShadersMethod_(0),
         frustum_flag_(false),
-        dirtyFlag_(0),
         occlusion_flag_(false),
         pick_visible_(true)
 
@@ -43,74 +41,17 @@ Scene::Scene() :
 Scene::~Scene() {
 }
 
-void Scene::set_java(JavaVM* javaVM, jobject javaScene)
-{
-    JNIEnv *env = getCurrentEnv(javaVM);
-    javaVM_ = javaVM;
-    if (env)
-    {
-        jclass sceneClass = env->GetObjectClass(javaScene);
-        makeDepthShadersMethod_ = env->GetMethodID(sceneClass, "makeDepthShaders", "()V");
-        if (makeDepthShadersMethod_ == 0)
-        {
-            LOGE("Scene::set_java ERROR cannot find 'GVRScene.makeDepthShaders()' Java method");
-        }
-    }
-}
-
-int Scene::get_java_env(JNIEnv** envptr)
-{
-    JavaVM *javaVM = getJavaVM();
-    int rc = javaVM->GetEnv((void **) envptr, JNI_VERSION_1_6);
-    if (rc == JNI_EDETACHED)
-    {
-        if (javaVM->AttachCurrentThread(envptr, NULL) && *envptr)
-        {
-            return 1;
-        }
-        FAIL("Scene::get_java_env Could not attach to Java VM");
-    }
-    else if (rc == JNI_EVERSION)
-    {
-        FAIL("Scene::get_java_env JNI version not supported");
-        return -1;
-    }
-    return 0;
-}
-
-
-/**
- * Called when the depth shaders for shadow mapping are required.
- * Typically it will only be called once per scene.
- */
-void Scene::makeDepthShaders(jobject jscene)
-{
-    if (makeDepthShadersMethod_ == NULL)
-    {
-        LOGE("SHADER: Could not call GVRScene::makeDepthShadersMethod_");
-    }
-    JNIEnv* env = NULL;
-    int rc = get_java_env(&env);
-    if (env && (rc >= 0))
-    {
-        env->CallVoidMethod(jscene, makeDepthShadersMethod_);
-        if (rc > 0)
-        {
-            getJavaVM()->DetachCurrentThread();
-        }
-    }
-}
 
 void Scene::addSceneObject(SceneObject* scene_object) {
-    scene_root_->addChildObject(scene_root_, scene_object);
+    scene_root_.addChildObject(&scene_root_, scene_object);
 }
 
 void Scene::removeSceneObject(SceneObject* scene_object) {
-    scene_root_->removeChildObject(scene_object);
+    scene_root_.removeChildObject(scene_object);
 }
 
 void Scene::removeAllSceneObjects() {
-    scene_root_->clear();
+    scene_root_.clear();
     clearAllColliders();
 }
 
@@ -160,7 +101,7 @@ void Scene::set_main_scene(Scene* scene) {
 
 std::vector<SceneObject*> Scene::getWholeSceneObjects() {
     std::vector<SceneObject*> scene_objects;
-    scene_root_->getDescendants(scene_objects);
+    scene_root_.getDescendants(scene_objects);
     return scene_objects;
 }
 
@@ -183,9 +124,34 @@ void Scene::clearLights()
     lights_.clear();
 }
 
-void Scene::setSceneRoot(SceneObject* sceneRoot) {
-    scene_root_ = sceneRoot;
+/**
+ * Called when the depth shaders for shadow mapping are required.
+ * Typically it will only be called once per scene.
+ */
+bool Scene::makeDepthShaders(Renderer* renderer, jobject jscene)
+{
+    JNIEnv* env;
+    int rc = renderer->getJavaEnv(&env);
+    if (makeDepthShadersMethod_ == NULL)
+    {
+        jclass sceneClass = env->GetObjectClass(jscene);
+        makeDepthShadersMethod_ = env->GetMethodID(sceneClass, "makeDepthShaders", "()V");
+        if (makeDepthShadersMethod_ == NULL)
+        {
+            LOGE("Scene::set_java ERROR cannot find 'GVRScene.makeDepthShaders()' Java method");
+            return false;
+        }
+    }
+    if (env && (rc >= 0))
+    {
+        env->CallVoidMethod(jscene, makeDepthShadersMethod_);
+        if (rc > 0)
+        {
+            renderer->detachJavaEnv();
+        }
+        return true;
+    }
+    return false;
 }
-
 }
 

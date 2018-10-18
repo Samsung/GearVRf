@@ -15,29 +15,33 @@
 
 package org.gearvrf.scene_objects;
 
+import java.io.IOException;
+
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVREventListeners;
+import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRMaterial.GVRShaderType;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMaterial.GVRShaderType;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
-import org.gearvrf.utility.Log;
 
-import java.io.IOException;
+import org.gearvrf.utility.Log;
 
 /**
  * A {@linkplain GVRSceneObject scene object} that shows live video from one of
  * the device's cameras
  */
-public class GVRCameraSceneObject extends GVRSceneObject {
+public class GVRCameraSceneObject extends GVRSceneObject implements
+        GVRDrawFrameListener {
     private static String TAG = GVRCameraSceneObject.class.getSimpleName();
     private final SurfaceTexture mSurfaceTexture;
     private boolean mPaused = false;
@@ -76,20 +80,7 @@ public class GVRCameraSceneObject extends GVRSceneObject {
         this.camera = camera;
         isCameraOpen = true;
         mSurfaceTexture = new SurfaceTexture(texture.getId());
-        mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-            Runnable onFrameAvailableGLCallback = new Runnable() {
-                @Override
-                public void run() {
-                    mSurfaceTexture.updateTexImage();
-                }
-            };
-
-            @Override
-            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                GVRCameraSceneObject.this.gvrContext.runOnGlThread(onFrameAvailableGLCallback);
-            }
-        });
-
+        gvrContext.registerDrawFrameListener(this);
         try {
             this.camera.setPreviewTexture(mSurfaceTexture);
         } catch (IOException e) {
@@ -116,30 +107,17 @@ public class GVRCameraSceneObject extends GVRSceneObject {
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);
-        this.gvrContext = gvrContext;
-
         mSurfaceTexture = new SurfaceTexture(texture.getId());
-        mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-            Runnable onFrameAvailableGLCallback = new Runnable() {
-                @Override
-                public void run() {
-                    mSurfaceTexture.updateTexImage();
-                }
-            };
-
-            @Override
-            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                GVRCameraSceneObject.this.gvrContext.runOnGlThread(onFrameAvailableGLCallback);
-            }
-        });
+        this.gvrContext = gvrContext;
 
         if (!openCamera()) {
             Log.e(TAG, "Cannot open the camera");
             throw new GVRCameraAccessException("Cannot open the camera");
         }
 
+        gvrContext.registerDrawFrameListener(this);
         cameraActivityEvents = new CameraActivityEvents();
-        gvrContext.getApplication().getEventReceiver().addListener(cameraActivityEvents);
+        gvrContext.getActivity().getEventReceiver().addListener(cameraActivityEvents);
     }
 
     /**
@@ -265,8 +243,16 @@ public class GVRCameraSceneObject extends GVRSceneObject {
      */
     public void close() {
         closeCamera();
+        gvrContext.unregisterDrawFrameListener(this);
         if(cameraActivityEvents != null){
-            gvrContext.getApplication().getEventReceiver().removeListener(cameraActivityEvents);
+            gvrContext.getActivity().getEventReceiver().removeListener(cameraActivityEvents);
+        }
+    }
+
+    @Override
+    public void onDrawFrame(float drawTime) {
+        if (!mPaused) {
+            mSurfaceTexture.updateTexImage();
         }
     }
 

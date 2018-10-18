@@ -19,7 +19,7 @@
 
 namespace gvr {
 /**
- * Constructs a bnse material.
+ * Constructs a base material.
  * The material contains a UniformBlock describing the possible uniforms
  * that can be used by this material. It also maintains the list of
  * possible textures in the order specified by the descriptor.
@@ -30,6 +30,7 @@ namespace gvr {
  */
 ShaderData::ShaderData(const char* texture_desc) :
         mNativeShader(0),
+        mIsTransparent(false),
         mTextureDesc(texture_desc),
         mLock(),
         mDirty(NONE)
@@ -37,9 +38,14 @@ ShaderData::ShaderData(const char* texture_desc) :
     DataDescriptor texdesc(texture_desc);
     texdesc.forEach([this](const char* name, const char* type, int size) mutable
     {
-        mTextureNames.push_back(name);
+        mTextureNames.push_back(std::string(name));
         mTextures.push_back(nullptr);
     });
+}
+
+bool ShaderData::isTransparent() const
+{
+    return mIsTransparent;
 }
 
 std::string ShaderData::getShaderType(const char* descriptorType)
@@ -276,16 +282,8 @@ bool ShaderData::copyUniforms(const ShaderData* src)
     return rc;
 }
 
-/**
- * Updates the values of the uniforms and textures
- * by copying the relevant data from the CPU to the GPU.
- * This function operates independently of the shader,
- * so it cannot tell if a texture the shader requires
- * is missing.
- * @param renderer
- * @return 1 = success, -1 texture not ready, 0 uniforms failed to load
- */
-int ShaderData::updateGPU(Renderer* renderer, RenderData* rdata)
+
+int ShaderData::updateGPU(Renderer* renderer)
 {
     std::lock_guard<std::mutex> lock(mLock);
     for (int texIndex = 0; texIndex < mTextures.size(); ++texIndex)
@@ -299,9 +297,9 @@ int ShaderData::updateGPU(Renderer* renderer, RenderData* rdata)
             {
                 return -1;
             }
-            if (rdata && (texIndex == 0))
+            if (texIndex == 0)
             {
-                rdata->adjustRenderingOrderForTransparency(tex->transparency());
+                mIsTransparent = tex->transparency();
             }
         }
     }

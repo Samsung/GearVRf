@@ -21,6 +21,9 @@
 #include "gl/gl_material.h"
 #include "objects/light.h"
 #include "engine/renderer/renderer.h"
+#include <string>
+#include <sstream>
+#include <istream>
 #include "gl_light.h"
 
 namespace gvr {
@@ -31,9 +34,11 @@ namespace gvr {
                const char* textureDescriptor,
                const char* vertexDescriptor,
                const char* vertexShader,
-               const char* fragmentShader)
-    : Shader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertexShader, fragmentShader),
+               const char* fragmentShader,
+               const char* matrixCalc)
+    : Shader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertexShader, fragmentShader, matrixCalc),
       mProgram(NULL),
+      mNumTextures(0),
       mIsReady(false)
 { }
 
@@ -54,8 +59,8 @@ void getTokens(std::unordered_map<std::string, int>& tokens, std::string& line)
     {
         delim.insert(delimiters[i]);
     }
-    int start  =0;
-    for (int i=0; i<line.length(); i++)
+    int start = 0;
+    for (int i = 0; i  <line.length(); i++)
     {
         if (delim.find(line[i]) != delim.end())
         {
@@ -155,8 +160,10 @@ bool GLShader::useShader(bool is_multiview)
 #endif
     glUseProgram(programID);
 
-    if(!mTextureLocs.size())
+    if (!mTextureLocs.size())
+    {
         findTextures();
+    }
     if (!useMaterialGPUBuffer())
     {
         findUniforms(mUniformDesc, MATERIAL_UBO_INDEX);
@@ -342,6 +349,7 @@ void GLShader::findUniforms(const Light& light, int locationOffset)
 void GLShader::findTextures()
 {
     mTextureLocs.resize(mTextureDesc.getNumEntries(), -1);
+    mNumTextures = 0;
     mTextureDesc.forEachEntry([this](const DataDescriptor::DataEntry& entry) mutable
     {
         if (entry.NotUsed)
@@ -352,6 +360,7 @@ void GLShader::findTextures()
         if (loc >= 0)
         {
             mTextureLocs[entry.Index] = loc;
+            mNumTextures++;
 #ifdef DEBUG_SHADER
             LOGV("SHADER: program %d texture %s loc %d", getProgramId(), entry.Name, loc);
 #endif

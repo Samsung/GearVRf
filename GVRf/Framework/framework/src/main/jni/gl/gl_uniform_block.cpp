@@ -31,7 +31,7 @@ namespace gvr {
         glDeleteBuffers(1,&GLBuffer);
     }
 
-    bool GLUniformBlock::updateGPU(Renderer* unused, int start, int len)
+    bool GLUniformBlock::updateGPU(Renderer* renderer, int start, int len)
     {
         if (mUseBuffer)             // use a uniform buffer?
         {
@@ -41,9 +41,11 @@ namespace gvr {
             }
             if (GLBuffer == 0)
             {
+                int maxbytes = mElemSize * mMaxElems;
+
                 glGenBuffers(1, &GLBuffer);
                 glBindBuffer(GL_UNIFORM_BUFFER, GLBuffer);
-                glBufferData(GL_UNIFORM_BUFFER, mElemSize * mMaxElems, NULL, GL_DYNAMIC_DRAW);
+                glBufferData(GL_UNIFORM_BUFFER, maxbytes, NULL, GL_DYNAMIC_DRAW);
                 mIsDirty = true;
             }
             if (mIsDirty)
@@ -248,7 +250,6 @@ namespace gvr {
             {
                 // index of uniform variable
                 GLuint tUniformIndex = uniformsIndices[uniformMember];
-
                 GLint uniformNameLength, uniformOffset, uniformSize;
                 GLint uniformType, arrayStride, matrixStride;
 
@@ -279,30 +280,5 @@ namespace gvr {
         }
     }
 
-    bool GLUniformBlock::setFloatVec(const char* name, const float *val, int n)
-    {
-        int bytesize = n * sizeof(float);
-        char *data = getData(name, bytesize);
-        if (data != NULL)
-        {
-            memcpy(data, val, bytesize);
-            markDirty();
-            return true;
-        }
-        return false;
-    }
-
-    bool GLUniformBlock::setIntVec(const char* name, const int *val, int n)
-    {
-        int bytesize = n * sizeof(int);
-        char *data = getData(name, bytesize);
-        if (data != NULL)
-        {
-            memcpy(data, val, bytesize);
-            markDirty();
-            return true;
-        }
-        return false;
-    }
 
 }

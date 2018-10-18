@@ -1,11 +1,12 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 precision highp float;
-layout ( set = 1, binding = 10 ) uniform sampler2D u_texture;
+layout ( set = 0, binding = 5 ) uniform sampler2D u_texture;
 
 @MATERIAL_UNIFORMS
 
 @MATRIX_UNIFORMS
+
 layout ( location = 0 ) in vec2 diffuse_coord;
 layout ( location = 0 ) out vec4 outColor;
 

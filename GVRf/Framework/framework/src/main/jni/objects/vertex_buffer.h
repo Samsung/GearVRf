@@ -18,15 +18,16 @@ namespace gvr {
  * A vertex is a user-defined set of 32-bit float or integer components
  * used by the vertex shader during rendering to compute the position
  * and lighting of meshes. The layout of a vertex buffer is defined with
- * a string and is the same for all vertices in the pool.
+ * a string and is the same for all vertices in the block.
  * Typical vertex components include location (Vec3), normal (Vec3),
- * color (Color) and texture coordinates (Vec2).
+ * and texture coordinates (Vec2).
  *
  * The format of the vertex data in the array maps directly to
  * what is required by the underlying renderer so that vertices
  * may be quickly copied without reformatting.
  *
  * @see Mesh
+ * @see IndexBuffer
  */
     class VertexBuffer : public HybridObject, public DataDescriptor
     {
@@ -128,12 +129,38 @@ namespace gvr {
          */
         bool            getIntVec(const char* attributeName, int* data, int dataByteSize, int dataStride) const;
 
+        /**
+         * Call the designated function for the specified attribute for each vertex in the buffer.
+         * @param attrName  name of vertex attribute
+         * @param func      function to call
+         * @return true if success, false on error
+         */
         bool            forAllVertices(const char* attrName, std::function<void (int iter, const float* vertex)> func) const;
         bool            forAllVertices(std::function<void (int iter, const float* vertex)> func) const;
-        bool            getInfo(const char* attributeName, int& index, int& offset, int& size) const;
+
+        /**
+         * Get information about a specific vertex attribute
+         * @param attrName  name of attribute to get info for
+         * @param index     this parameter gets the entry index upon return
+         * @param offset    this parameter gets tne entry byte offset upon return
+         * @param size      this parameter gets the byte size of the entry upon return
+         * @return true if successful, false if attribute not found
+         */
+        bool            getInfo(const char* attrName, int& index, int& offset, int& size) const;
+
+        /**
+         * Get the bounding volume of the vertices in the buffer
+         * @param bv    this parameter gets the bounding volume upon return
+         */
         void            getBoundingVolume(BoundingVolume& bv) const;
+
+        /**
+         * Copy the vertices to the GPU if they have changed.
+         * @return true if successful, false on error
+         */
         virtual bool    updateGPU(Renderer*, IndexBuffer*, Shader*) = 0;
-        virtual void    bindToShader(Shader* shader, IndexBuffer* ibuf) = 0;
+
+
         void            dump() const;
         void            dump(const char* attrName) const;
 

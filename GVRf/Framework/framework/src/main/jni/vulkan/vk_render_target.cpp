@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "../engine/renderer/vulkan_renderer.h"
-#include "../vulkan/vk_render_target.h"
-#include "../vulkan/vk_render_to_texture.h"
+#include "engine/renderer/vulkan_renderer.h"
+#include "vk_render_target.h"
+#include "vk_render_to_texture.h"
+#include "engine/renderer/render_sorter.h"
 
 
 
@@ -23,16 +24,23 @@ namespace gvr{
 VkCommandBuffer& VkRenderTarget::getCommandBuffer(){
     return static_cast<VkRenderTexture*>(mRenderTexture)->getCommandBuffer();
 }
- void VkRenderTarget::beginRendering(Renderer* renderer){
-     RenderTarget::beginRendering(renderer);
- }
 
-VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview): RenderTarget(renderTexture, is_multiview){
+
+VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview, bool is_stereo)
+    : RenderTarget(renderTexture, is_multiview, is_stereo)
+{
+    static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
 }
 
-VkRenderTarget::VkRenderTarget(Scene* scene): RenderTarget(scene){
+VkRenderTarget::VkRenderTarget(Scene* scene, bool is_stereo)
+     : RenderTarget(scene, is_stereo)
+{
 }
-VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source): RenderTarget(renderTexture, source){
+
+VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source)
+    : RenderTarget(renderTexture, source)
+{
+
 }
 
 

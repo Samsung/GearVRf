@@ -30,6 +30,8 @@ class Scene;
 class RenderTexture;
 class GLTexture;
 class Renderer;
+class RenderSorter;
+
 /**
  * A render target is a component which allows the scene to be rendered
  * into a texture from the viewpoint of a particular scene object.
@@ -41,31 +43,31 @@ class Renderer;
 class RenderTarget : public Component
 {
 public:
-    explicit RenderTarget(RenderTexture*, bool is_multiview);
-    explicit RenderTarget(Scene*);
+    explicit RenderTarget(RenderTexture*, bool is_multiview, bool is_stereo);
+    explicit RenderTarget(Scene*, bool is_stereo);
     explicit RenderTarget(RenderTexture*, const RenderTarget* source);
-    RenderTarget();
-    virtual ~RenderTarget();
-    void attachNextRenderTarget(RenderTarget* renderTarget){
-        mNextRenderTarget = renderTarget;
-    }
-    RenderTarget*   getNextRenderTarget(){
-        return mNextRenderTarget;
-    }
-    void            setMainScene(Scene* scene){mRenderState.scene = scene;}
-    void            setCamera(Camera* cam) { mRenderState.camera= cam; }
-    Camera*         getCamera() const { return mRenderState.camera; }
-    bool            hasTexture() const { return (mRenderTexture != nullptr); }\
-    RenderTexture*  getTexture()  { return mRenderTexture; }
+    virtual ~RenderTarget() { };
+
+    static long long getComponentType()         { return COMPONENT_TYPE_RENDER_TARGET; }
+    RenderTarget*   getNextRenderTarget()       { return mNextRenderTarget; }
+    RenderSorter*   getRenderSorter() const     { return mRenderSorter; }
+    bool            isStereo() const            { return mRenderState.is_stereo; }
+    void            setStereo(bool flag)        { mRenderState.is_stereo = flag; }
+    void            setMainScene(Scene* scene)  { mRenderState.scene = scene;}
+    void            setCamera(Camera* cam)      { mRenderState.camera= cam; }
+    Camera*         getCamera() const           { return mRenderState.camera; }
+    bool            hasTexture() const          { return (mRenderTexture != nullptr); }
+    RenderTexture*  getTexture()                { return mRenderTexture; }
+    RenderState&    getRenderState()            { return mRenderState; }
+    void attachNextRenderTarget(RenderTarget* rt) { mNextRenderTarget = rt; }
+
     void            setTexture(RenderTexture* texture);
-    RenderState&    getRenderState() { return mRenderState; }
-    virtual void    beginRendering(Renderer* renderer);
-    virtual void    endRendering(Renderer* renderer);
-    static long long getComponentType() { return COMPONENT_TYPE_RENDER_TARGET; }
-    std::vector<RenderData*>* getRenderDataVector(){
-        return mRenderDataVector.get();
-    }
-    virtual void cullFromCamera(Scene*, jobject javaSceneObject, Camera* camera, Renderer* renderer, ShaderManager* shader_manager);
+    void            setRenderSorter(RenderSorter* sorter);
+    virtual void    beginRendering();
+    virtual void    endRendering();
+    virtual void    render();
+    virtual void    cullFromCamera(Scene*, jobject javaSceneObject, Camera* camera, ShaderManager* shader_manager);
+
 private:
     RenderTarget(const RenderTarget& render_texture) = delete;
     RenderTarget(RenderTarget&& render_texture) = delete;
@@ -76,7 +78,7 @@ protected:
     RenderTarget*   mNextRenderTarget;
     RenderState     mRenderState;
     RenderTexture*  mRenderTexture = nullptr;
-    std::shared_ptr<std::vector<RenderData*>> mRenderDataVector;
+    RenderSorter*   mRenderSorter;
 };
 
 }

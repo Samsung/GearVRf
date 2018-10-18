@@ -576,8 +576,8 @@ public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
         {
             return;
         }
-        float[] odir = getVec3("world_direction");
-        float[] opos = getVec3("world_position");
+        float[] odir = getVec4("world_direction");
+        float[] opos = getVec4("world_position");
         GVRSceneObject parent = owner;
         Matrix4f worldmtx = parent.getTransform().getModelMatrix4f();
 

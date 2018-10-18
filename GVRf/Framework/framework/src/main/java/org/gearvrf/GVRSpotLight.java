@@ -233,7 +233,10 @@ public class GVRSpotLight extends GVRPointLight
      */
     public void onDrawFrame(float frameTime)
     {
-        if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
+        if (!isEnabled() || (owner == null) || (getFloat("enabled") <= 0.0f))
+        {
+            return;
+        }
         Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
         boolean changed = mChanged.getAndSet(false);
 

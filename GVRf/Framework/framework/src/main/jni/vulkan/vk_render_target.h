@@ -25,12 +25,10 @@ class VkRenderTexture;
 class VkRenderTarget: public  RenderTarget
 {
 public:
-    explicit VkRenderTarget(RenderTexture* renderTexture, bool is_multiview);
-    explicit VkRenderTarget(Scene* scene);
+    explicit VkRenderTarget(RenderTexture* renderTexture, bool is_multiview, bool is_stereo);
+    explicit VkRenderTarget(Scene* scene, bool is_stereo);
     explicit VkRenderTarget(RenderTexture* renderTexture, const RenderTarget* source);
-    explicit  VkRenderTarget(){}
     virtual ~VkRenderTarget(){}
-    virtual void    beginRendering(Renderer* renderer);
 
     VkRenderTexture* getTexture();
     VkCommandBuffer& getCommandBuffer();

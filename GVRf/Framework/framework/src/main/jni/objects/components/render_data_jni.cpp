@@ -19,7 +19,6 @@
 
 #include "render_data.h"
 #include "engine/renderer/renderer.h"
-#include "objects/components/texture_capturer.h"
 
 namespace gvr {
 
@@ -153,10 +152,6 @@ extern "C" {
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderData_setDrawMode(
             JNIEnv * env, jobject obj, jlong jrender_data, jint draw_mode);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
-                                                         jlong jrender_data, jlong jtexture_capturer);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeRenderData_setStencilFunc(JNIEnv *env, jclass type, jlong renderData,
@@ -440,13 +435,6 @@ Java_org_gearvrf_NativeRenderData_getDrawMode(
     return render_data->draw_mode();
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeRenderData_setTextureCapturer(JNIEnv * env, jobject obj,
-                                                     jlong jrender_data, jlong jtexture_capturer) {
-    RenderData* render_data = reinterpret_cast<RenderData*>(jrender_data);
-    render_data->set_texture_capturer(
-            reinterpret_cast<TextureCapturer*>(jtexture_capturer));
-}
 
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeRenderData_setCastShadows(JNIEnv * env,

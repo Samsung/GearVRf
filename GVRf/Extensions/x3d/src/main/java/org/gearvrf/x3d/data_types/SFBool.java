@@ -17,7 +17,7 @@ package org.gearvrf.x3d.data_types;
 /**
  * Defines the X3D SFBool[ean] data type
  */
-public class SFBool implements Cloneable {
+public class SFBool {
 
     private boolean value = false;
 
@@ -32,17 +32,6 @@ public class SFBool implements Cloneable {
     }
     public SFBool(String stringValue) {
         setValue(stringValue);
-    }
-
-    public SFBool clone() throws CloneNotSupportedException
-    {
-        try {
-            SFBool cloneObj = (SFBool) super.clone();
-            return cloneObj;
-        }
-        catch (CloneNotSupportedException e) {
-        }
-        return null;
     }
 
     public void setValue(boolean value) {

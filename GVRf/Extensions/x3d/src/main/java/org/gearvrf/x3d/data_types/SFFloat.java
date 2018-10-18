@@ -14,12 +14,10 @@
  */
 package org.gearvrf.x3d.data_types;
 
-import org.gearvrf.utility.Log;
-
 /**
  * Defines the X3D SFFloat data type
  */
-public class SFFloat implements Cloneable {
+public class SFFloat {
 
     private float value = 0;
 
@@ -28,17 +26,6 @@ public class SFFloat implements Cloneable {
 
     public SFFloat(float value) {
         setValue(value);
-    }
-
-    public SFFloat clone() throws CloneNotSupportedException
-    {
-        try {
-            SFFloat cloneObj = (SFFloat) super.clone();
-            return cloneObj;
-        }
-        catch (CloneNotSupportedException e) {
-        }
-        return null;
     }
 
     public void setValue(float value) {

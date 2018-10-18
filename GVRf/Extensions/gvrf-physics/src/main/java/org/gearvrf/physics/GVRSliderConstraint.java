@@ -31,12 +31,10 @@ public class GVRSliderConstraint extends GVRConstraint {
      * Constructs a new instance of a slider constraint.
      *
      * @param gvrContext the context of the app
-     * @param rigidBodyB the second rigid body (not the owner) in this constraint.
+     * @param rigidBody the second rigid body (not the owner) in this constraint.
      */
-    public GVRSliderConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB) {
-        this(gvrContext, Native3DSliderConstraint.ctor(rigidBodyB.getNative()));
-
-        mBodyB = rigidBodyB;
+    public GVRSliderConstraint(GVRContext gvrContext, GVRRigidBody rigidBody) {
+        super(gvrContext, Native3DSliderConstraint.ctor(rigidBody.getNative()));
     }
 
     /** Used only by {@link GVRPhysicsLoader} */

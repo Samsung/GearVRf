@@ -40,6 +40,9 @@ namespace gvr
 
         /**
          * Copy the data from CPU into the OpenGL uniform buffer.
+         * @param Renderer  Renderer to use
+         * @param start     starting byte to copy to GPU
+         * @param len       number of bytes to copy to GPU
          */
         virtual bool updateGPU(Renderer *, int start = 0, int len = 0);
 
@@ -49,8 +52,6 @@ namespace gvr
         virtual bool bindBuffer(Shader *, Renderer *, int locationOffset = 0);
 
         virtual std::string makeShaderLayout();
-        virtual bool setFloatVec(const char *name, const float *val, int n);
-        virtual bool setIntVec(const char *name, const int *val, int n);
 
         /**
          * Dump the contents of the shader uniforms to the log.

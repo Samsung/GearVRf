@@ -170,7 +170,16 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
     }
 
     /**
-     * Apply a central force vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
+     * Set mass.
+     *
+     * @param mass The mass to the body.
+     */
+    public void setMass(float mass) {
+        Native3DRigidBody.setMass(getNative(), mass);
+    }
+
+    /**
+     * Apply a central impulse vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
      *
      * @param x factor on the 'X' axis.
      * @param y factor on the 'Y' axis.
@@ -182,66 +191,6 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
            public void run() {
                                 Native3DRigidBody.applyCentralForce(getNative(), x, y, z);
                            }
-        });
-    }
-
-    /**
-     * Apply a force vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
-     * on relative position
-     *
-     * @param forceX force on the x-axis.
-     * @param forceY force on the y-axis.
-     * @param forceZ force on the z-axis.
-     * @param relX relative position on x-axis to apply the force.
-     * @param relY relative position on y-axis to apply the force.
-     * @param relZ relative position on z-axis to apply the force.
-     */
-    public void applyForce(final float forceX, final float forceY, final float forceZ,
-                           final float relX, final float relY, final float relZ) {
-        mPhysicsContext.runOnPhysicsThread(new Runnable() {
-            @Override
-            public void run() {
-                Native3DRigidBody.applyForce(getNative(), forceX, forceY, forceZ,
-                        relX, relY, relZ);
-            }
-        });
-    }
-
-    /**
-     * Apply a central vector vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
-     *
-     * @param x impulse factor on the 'X' axis.
-     * @param y impulse factor on the 'Y' axis.
-     * @param z impulse factor on the 'Z' axis.
-     */
-    public void applyCentralImpulse(final float x, final float y, final float z) {
-        mPhysicsContext.runOnPhysicsThread(new Runnable() {
-            @Override
-            public void run() {
-                Native3DRigidBody.applyCentralImpulse(getNative(), x, y, z);
-            }
-        });
-    }
-
-    /**
-     * Apply a impulse vector [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
-     * on relative position
-     *
-     * @param impulseX impulse on the x-axis.
-     * @param impulseY impulse on the y-axis.
-     * @param impulseZ impulse on the z-axis.
-     * @param relX relative position on x-axis to apply the force.
-     * @param relY relative position on y-axis to apply the force.
-     * @param relZ relative position on z-axis to apply the force.
-     */
-    public void applyImpulse(final float impulseX, final float impulseY, final float impulseZ,
-                           final float relX, final float relY, final float relZ) {
-        mPhysicsContext.runOnPhysicsThread(new Runnable() {
-            @Override
-            public void run() {
-                Native3DRigidBody.applyImpulse(getNative(), impulseX, impulseY, impulseZ,
-                        relX, relY, relZ);
-            }
         });
     }
 
@@ -260,23 +209,6 @@ public class GVRRigidBody extends GVRPhysicsWorldObject {
                             }
         });
     }
-
-    /**
-     * Apply a torque impulse [X, Y, Z] to this {@linkplain GVRRigidBody rigid body}
-     *
-     * @param x impulse factor on the 'X' axis.
-     * @param y impulse factor on the 'Y' axis.
-     * @param z impulse factor on the 'Z' axis.
-     */
-    public void applyTorqueImpulse(final float x, final float y, final float z) {
-        mPhysicsContext.runOnPhysicsThread(new Runnable() {
-            @Override
-            public void run() {
-                Native3DRigidBody.applyTorqueImpulse(getNative(), x, y, z);
-            }
-        });
-    }
-
     /**
      * Sets a particular acceleration vector [X, Y, Z] on this {@linkplain GVRRigidBody rigid body}
      *
@@ -531,19 +463,11 @@ class Native3DRigidBody {
 
     static native float getMass(long jrigid_body);
 
+    static native void setMass(long jrigid_body, float jmass);
+
     static native void applyCentralForce(long jrigid_body, float x, float y, float z);
 
-    static native void applyForce(long jrigid_body, float force_x, float force_y, float force_z,
-                                  float rel_pos_x, float rel_pos_y, float rel_pos_z);
-
-    static native void applyCentralImpulse(long jrigid_body, float x, float y, float z);
-
-    static native void applyImpulse(long jrigid_body, float impulse_x, float impulse_y, float impulse_z,
-                                  float rel_pos_x, float rel_pos_y, float rel_pos_z);
-
     static native void applyTorque(long jrigid_body, float x, float y, float z);
-
-    static native void applyTorqueImpulse(long jrigid_body, float x, float y, float z);
 
     static native void setGravity(long jrigid_body, float x, float y, float z);
 

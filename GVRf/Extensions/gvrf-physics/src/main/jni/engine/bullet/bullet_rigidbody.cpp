@@ -45,16 +45,6 @@ BulletRigidBody::BulletRigidBody(btRigidBody *rigidBody)
           mSimType(SimulationType::DYNAMIC)
 {
     mRigidBody->setUserPointer(this);
-    mConstructionInfo.m_mass = rigidBody->isStaticObject() ? 0.f : 1.f / rigidBody->getInvMass();
-    mSimType = SimulationType ::DYNAMIC;
-    if (rigidBody->isStaticObject())
-    {
-        mSimType = SimulationType ::STATIC;
-    }
-    else if (rigidBody->isKinematicObject())
-    {
-        mSimType = SimulationType::KINEMATIC;
-    }
 }
 
 BulletRigidBody::~BulletRigidBody() {
@@ -74,15 +64,15 @@ void BulletRigidBody::setSimulationType(PhysicsRigidBody::SimulationType type)
         break;
 
         case SimulationType::STATIC:
-        mRigidBody->setCollisionFlags((mRigidBody->getCollisionFlags() |
-                                      btCollisionObject::CollisionFlags::CF_STATIC_OBJECT) &
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() |
+                                      btCollisionObject::CollisionFlags::CF_STATIC_OBJECT &
                                       ~btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT);
         mRigidBody->setActivationState(ISLAND_SLEEPING);
         break;
 
         case SimulationType::KINEMATIC:
-        mRigidBody->setCollisionFlags((mRigidBody->getCollisionFlags() |
-                                       btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT) &
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() |
+                                       btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT &
                                        ~btCollisionObject::CollisionFlags::CF_STATIC_OBJECT);
         mRigidBody->setActivationState(ISLAND_SLEEPING);
         break;
@@ -110,10 +100,6 @@ void BulletRigidBody::updateConstructionInfo() {
             {
                 mConstructionInfo.m_collisionShape->calculateLocalInertia(getMass(),
                         mConstructionInfo.m_localInertia);
-            }
-            else
-            {
-                mSimType = SimulationType ::STATIC;
             }
             mRigidBody->setCollisionShape(mConstructionInfo.m_collisionShape);
             mRigidBody->setMassProps(getMass(), mConstructionInfo.m_localInertia);
@@ -209,48 +195,10 @@ void BulletRigidBody::setWorldTransform(const btTransform &centerOfMassWorldTran
 
 void BulletRigidBody::applyCentralForce(float x, float y, float z) {
     mRigidBody->applyCentralForce(btVector3(x, y, z));
-    if (!mRigidBody->isActive()) {
-        mRigidBody->activate(true);
-    }
-}
-
-void BulletRigidBody::applyForce(float force_x, float force_y, float force_z,
-		float rel_pos_x, float rel_pos_y, float rel_pos_z) {
-	mRigidBody->applyForce(btVector3(force_x, force_y, force_z),
-			btVector3(rel_pos_x, rel_pos_y, rel_pos_z));
-    if (!mRigidBody->isActive()) {
-        mRigidBody->activate(true);
-    }
-}
-
-void BulletRigidBody::applyCentralImpulse(float x, float y, float z) {
-    mRigidBody->applyCentralImpulse(btVector3(x, y, z));
-    if (!mRigidBody->isActive()) {
-        mRigidBody->activate(true);
-    }
-}
-
-void BulletRigidBody::applyImpulse(float impulse_x, float impulse_y, float impulse_z,
-        float rel_pos_x, float rel_pos_y, float rel_pos_z) {
-    mRigidBody->applyImpulse(btVector3(impulse_x, impulse_y, impulse_z),
-                           btVector3(rel_pos_x, rel_pos_y, rel_pos_z));
-    if (!mRigidBody->isActive()) {
-        mRigidBody->activate(true);
-    }
 }
 
 void BulletRigidBody::applyTorque(float x, float y, float z) {
     mRigidBody->applyTorque(btVector3(x, y, z));
-    if (!mRigidBody->isActive()) {
-        mRigidBody->activate(true);
-    }
-}
-
-void BulletRigidBody::applyTorqueImpulse(float x, float y, float z) {
-    mRigidBody->applyTorqueImpulse(btVector3(x, y, z));
-    if (!mRigidBody->isActive()) {
-        mRigidBody->activate(true);
-    }
 }
 
 float BulletRigidBody::center_x() const {

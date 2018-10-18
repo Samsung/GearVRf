@@ -20,11 +20,10 @@
 #ifndef SCENE_OBJECT_H_
 #define SCENE_OBJECT_H_
 
+//#define DEBUG_CULL 1
 #include <algorithm>
 #include <mutex>
 
-#include "objects/hybrid_object.h"
-#include "objects/components/component.h"
 #include "objects/components/render_data.h"
 #include "objects/components/transform.h"
 #include "objects/components/camera.h"
@@ -34,8 +33,6 @@
 #include "util/gvr_gl.h"
 
 namespace gvr {
-class Camera;
-class CameraRig;
 
 class SceneObject: public HybridObject {
 public:
@@ -122,7 +119,7 @@ public:
     	return cull_status_;
     }
     std::vector<SceneObject*> children() {
-        std::lock_guard < std::mutex > lock(children_mutex_);
+        std::lock_guard < std::recursive_mutex > lock(children_mutex_);
         return std::vector<SceneObject*>(children_);
     }
 
@@ -131,10 +128,7 @@ public:
     void getDescendants(std::vector<SceneObject*>& descendants);
     void clear();
     int getChildrenCount() const;
-    SceneObject* getChildByIndex(int index);
-    GLuint *get_occlusion_array() {
-        return queries_;
-    }
+    SceneObject* getChildByIndex(int index) const;
     bool isColliding(SceneObject* scene_object);
     bool intersectsBoundingVolume(float rox, float roy, float roz, float rdx,
             float rdy, float rdz);
@@ -147,6 +141,7 @@ public:
     void onAddedToScene(Scene* scene);
     void onRemovedFromScene(Scene* scene);
     int frustumCull(glm::vec3 camera_position, const float frustum[6][4], int& planeMask);
+    std::recursive_mutex& getLock() { return children_mutex_; }
 
 private:
     std::string name_;
@@ -182,7 +177,7 @@ private:
     bool checkAABBVsFrustumBasic(const float frustum[6][4],
             BoundingVolume &bounding_volume);
 
-    std::mutex children_mutex_;
+    mutable std::recursive_mutex children_mutex_;
 };
 
 }

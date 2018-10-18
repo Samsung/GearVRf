@@ -27,6 +27,7 @@
 #include "mesh_collider.h"
 #include "render_data.h"
 #include "objects/scene_object.h"
+#include "objects/mesh.h"
 
 namespace gvr
 {

@@ -21,7 +21,7 @@
 #include "camera.h"
 
 #include "glm/gtc/matrix_inverse.hpp"
-
+#include "engine/renderer/renderer.h"
 #include "objects/scene_object.h"
 #include "util/gvr_log.h"
 

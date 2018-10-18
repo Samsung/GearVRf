@@ -22,17 +22,17 @@ import org.gearvrf.utility.VrAppSettings;
 /**
  * {@inheritDoc}
  */
-final class OvrActivityDelegate extends GVRApplication.ActivityDelegateStubs {
-    private GVRApplication mApplication;
+final class OvrActivityDelegate extends GVRActivity.ActivityDelegateStubs {
+    private GVRActivity mActivity;
     private OvrViewManager mActiveViewManager;
     private OvrActivityNative mActivityNative;
 
     @Override
-    public void onCreate(GVRApplication application) {
-        mApplication = application;
+    public void onCreate(GVRActivity activity) {
+        mActivity = activity;
 
-        mActivityNative = new OvrActivityNative(mApplication);
-        mActivityHandler = new OvrVrapiActivityHandler(application, mActivityNative);
+        mActivityNative = new OvrActivityNative(mActivity, mActivity.getAppSettings());
+        mActivityHandler = new OvrVrapiActivityHandler(activity, mActivityNative);
     }
 
     @Override
@@ -42,7 +42,7 @@ final class OvrActivityDelegate extends GVRApplication.ActivityDelegateStubs {
 
     @Override
     public GVRViewManager makeViewManager() {
-        return new OvrViewManager(mApplication, mApplication.getMain(), mXmlParser);
+        return new OvrViewManager(mActivity, mActivity.getMain(), mXmlParser);
     }
 
     @Override
@@ -51,13 +51,13 @@ final class OvrActivityDelegate extends GVRApplication.ActivityDelegateStubs {
     }
 
     @Override
-    public GVRConfigurationManager makeConfigurationManager() {
-        return new OvrConfigurationManager(mApplication);
+    public GVRConfigurationManager makeConfigurationManager(GVRActivity activity) {
+        return new OvrConfigurationManager(activity);
     }
 
     @Override
     public void parseXmlSettings(AssetManager assetManager, String dataFilename) {
-        mXmlParser = new OvrXMLParser(assetManager, dataFilename, mApplication.getAppSettings());
+        mXmlParser = new OvrXMLParser(assetManager, dataFilename, mActivity.getAppSettings());
     }
 
     @Override

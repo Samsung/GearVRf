@@ -16,7 +16,7 @@
 
 package org.gearvrf.x3d;
 
-import org.gearvrf.animation.keyframe.GVRNodeAnimation;
+import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
 
 
 /**
@@ -31,11 +31,11 @@ import org.gearvrf.animation.keyframe.GVRNodeAnimation;
 
 public class RouteObject extends Route {
 
-   // If a ROUTE is associated with GVRKeyFrameAnGVRNodeAnimationimation, then
+   // If a ROUTE is associated with GVRKeyFrameAnimation, then
    // this value will point to it.
    // Assists with Touch Sensors
   /*
-   private GVRNodeAnimation gvrKeyFrameAnimation = null;
+   private GVRKeyFrameAnimation gvrKeyFrameAnimation = null;
    */
   Sensor sensorFrom = null;
   TimeSensor timeSensorFrom = null;
@@ -51,11 +51,11 @@ public class RouteObject extends Route {
   }
 
 /*
-  public void setGVRKeyFrameAnimation(GVRNodeAnimation gvrKeyFrameAnimation) {
+  public void setGVRKeyFrameAnimation(GVRKeyFrameAnimation gvrKeyFrameAnimation) {
   	this.gvrKeyFrameAnimation = gvrKeyFrameAnimation;
   }
 
-  public GVRNodeAnimation getGVRKeyFrameAnimation() {
+  public GVRKeyFrameAnimation getGVRKeyFrameAnimation() {
   	return this.gvrKeyFrameAnimation;
   }
 */

@@ -115,14 +115,8 @@ vec4 AddLight(Surface s, Radiance r)
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
     vec3 color = NdotL * ((r.diffuse_intensity * kD) + (r.specular_intensity * kS)) + s.emission.xyz;
 
-    mat4 view_i;
-#ifdef HAS_MULTIVIEW
-    view_i = u_view_i_[gl_ViewID_OVR];
-#else
-    view_i = u_view_i;
-#endif
-    color += getIBLContribution(s.roughness, NdotV, (view_i * vec4(n, 1.0)).xyz,
-                                (view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
+    color += getIBLContribution(s.roughness, NdotV, (u_view_i * vec4(n, 1.0)).xyz,
+                                (u_view_i * vec4(reflection, 1.0)).xyz, s.specular, s.diffuse.xyz);
 
 #ifdef HAS_lightmapTexture
     float ao = texture(lightmapTexture, lightmap_coord).r;

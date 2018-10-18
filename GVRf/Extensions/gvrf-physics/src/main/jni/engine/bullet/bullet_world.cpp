@@ -52,8 +52,6 @@ void BulletWorld::initialize() {
                                                 mCollisionConfiguration);
 
     mPhysicsWorld->setGravity(btVector3(0, -10, 0));
-
-    mDraggingConstraint = nullptr;
 }
 
 void BulletWorld::finalize() {
@@ -63,11 +61,6 @@ void BulletWorld::finalize() {
             mPhysicsWorld->removeCollisionObject(obj);
             delete obj;
         }
-    }
-
-    if (nullptr != mDraggingConstraint)
-    {
-        delete mDraggingConstraint;
     }
 
     //delete dynamics world
@@ -95,30 +88,6 @@ void BulletWorld::removeConstraint(PhysicsConstraint *constraint) {
     mPhysicsWorld->removeConstraint(reinterpret_cast<btTypedConstraint*>(constraint->getUnderlying()));
 }
 
-void BulletWorld::startDrag(SceneObject *pivot_obj, PhysicsRigidBody *target,
-                            float relx, float rely, float relz) {
-    btRigidBody *rb = reinterpret_cast<BulletRigidBody*>(target)->getRigidBody();
-    mActivationState = rb->getActivationState();
-    rb->setActivationState(DISABLE_DEACTIVATION);
-
-    mDraggingConstraint = new btPoint2PointConstraint(*rb, btVector3(relx, rely, relz));
-
-    mPhysicsWorld->addConstraint(mDraggingConstraint, true);
-    mDraggingConstraint->m_setting.m_impulseClamp = 30.f;
-    mDraggingConstraint->m_setting.m_tau = 0.001f;
-    mPivotObject = pivot_obj;
-}
-
-void BulletWorld::stopDrag() {
-    btRigidBody *rb = &mDraggingConstraint->getRigidBodyA();
-    rb->forceActivationState(mActivationState);
-    rb->activate();
-
-    mPhysicsWorld->removeConstraint(mDraggingConstraint);
-    delete mDraggingConstraint;
-    mDraggingConstraint = nullptr;
-}
-
 void BulletWorld::addRigidBody(PhysicsRigidBody *body) {
     btRigidBody *b = (static_cast<BulletRigidBody *>(body))->getRigidBody();
     body->updateConstructionInfo();
@@ -136,12 +105,6 @@ void BulletWorld::removeRigidBody(PhysicsRigidBody *body) {
 }
 
 void BulletWorld::step(float timeStep, int maxSubSteps) {
-    if (mDraggingConstraint != nullptr)
-    {
-        auto matrixB = mPivotObject->transform()->getModelMatrix(true);
-        mDraggingConstraint->setPivotB(btVector3(matrixB[3][0], matrixB[3][1], matrixB[3][2]));
-    }
-
     mPhysicsWorld->stepSimulation(timeStep, maxSubSteps);
 }
 

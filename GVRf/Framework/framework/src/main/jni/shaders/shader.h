@@ -37,6 +37,7 @@
 
 namespace gvr {
 class Mesh;
+class MatrixCalc;
 
 /**
  * Contains information about the vertex attributes, textures and
@@ -48,7 +49,6 @@ class Mesh;
 class Shader
 {
 public:
-
 /*
  * Creates a native shader description.
  * The actual GL program is not made until the first call to render()
@@ -67,7 +67,8 @@ public:
                     const char* textureDescriptor,
                     const char* vertexDescriptor,
                     const char* vertexShader,
-                    const char* fragmentShader);
+                    const char* fragmentShader,
+                    const char* matrixCalc);
 
     virtual ~Shader() { };
 
@@ -114,6 +115,11 @@ public:
         return mUseMatrixUniforms;
     }
 
+    bool useShadowMaps() const
+    {
+        return mUseShadowMaps;
+    }
+
     bool useLights() const
     {
         return mUseLights;
@@ -121,6 +127,11 @@ public:
     bool hasBones()
     {
         return mUseHasBones;
+    }
+
+    int getOutputBufferSize() const
+    {
+        return mOutputBufferSize;
     }
 
     bool isShaderDirty()
@@ -138,11 +149,10 @@ public:
         return mUseMaterialGPUBuffer;
     }
 
+    int calcMatrix(const glm::mat4* inputMatrices, glm::mat4* outputMatrices);
     virtual bool useShader(bool) = 0;
     virtual void bindLights(LightList& lights, Renderer* r) = 0;
     static int calcSize(const char* type);
-    void setJava(jclass shaderClass, JavaVM *javaVM);
-    void calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;
 
 private:
     Shader(const Shader& shader) = delete;
@@ -151,6 +161,7 @@ private:
     Shader& operator=(Shader&& shader) = delete;
 
 protected:
+    MatrixCalc* mMatrixCalc;
     bool shaderDirty = true;
     DataDescriptor mUniformDesc;
     DataDescriptor mVertexDesc;
@@ -158,14 +169,13 @@ protected:
     std::string mSignature;
     std::string mVertexShader;
     std::string mFragmentShader;
+    int mOutputBufferSize;
     int mId;
     bool mUseMatrixUniforms;
     bool mUseLights;
+    bool mUseShadowMaps;
     bool mUseHasBones;
     bool mUseMaterialGPUBuffer;
-    jclass mJavaShaderClass;
-    JavaVM *mJavaVM;
-    jmethodID mCalcMatrixMethod;
 };
 
 }

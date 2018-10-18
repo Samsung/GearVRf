@@ -28,9 +28,6 @@ project(':sceneserializer').projectDir = new File('SceneSerializer/sceneserializ
 include ':widgetplugin'
 project(':widgetplugin').projectDir = new File('WidgetPlugin/widgetplugin')
 
-include ':widgetLib'
-project(':widgetLib').projectDir = new File('widgetLib')
-
 include ':GearWearIoDevice'
 project(':GearWearIoDevice').projectDir = new File('3DCursor/IODevices/gearwear/GearWearIoDevice')
 
@@ -46,13 +43,8 @@ project(':ResonanceAudio').projectDir = new File('ResonanceAudio/resonanceaudio'
 include ':x3d'
 project(':x3d').projectDir = new File('x3d')
 
-include ':script'
-project(':script').projectDir = new File('script')
-
 if (hasProperty('OVR_PLATFORM_SDK')){
     include ':platformsdk_support'
     project(':platformsdk_support').projectDir = new File('platformsdk_support')
 }
 
-include ':MixedReality'
-project(':MixedReality').projectDir = new File('MixedReality')

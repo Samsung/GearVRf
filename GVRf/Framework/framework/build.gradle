@@ -98,11 +98,6 @@ android {
         debug {
             debuggable = true
             jniDebuggable = true
-            sourceSets.debug {
-                jniLibs {
-                    srcDir "${android.ndkDirectory}/sources/third_party/vulkan/src/build-android/jniLibs"
-                }
-            }
         }
         release {
             minifyEnabled false
@@ -114,18 +109,14 @@ android {
         java.srcDirs = ['src/main/java']
         resources.srcDir 'src/main/libs'
     }
-
-    packagingOptions {
-        exclude 'lib/mips/*'
-        exclude 'lib/mips64/*'
-    }
 }
 
 project.ext.jomlVersion = "1.9.3-SNAPSHOT"
 project.ext.gsonVersion = '2.8.2'
 
 dependencies {
-    api fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'src/main/libs', include: ['*.jar'])
     api "org.joml:joml-android:${jomlVersion}"
     implementation "com.google.code.gson:gson:$gsonVersion"
 }

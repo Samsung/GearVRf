@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.gearvrf.animation.GVRSkeleton;
 import org.gearvrf.utility.Exceptions;
 import org.gearvrf.utility.Log;
 
@@ -61,15 +60,16 @@ import org.gearvrf.utility.Log;
  * @see GVRIndexBuffer
  * @see GVRBone
  * @see GVRAssetLoader
- * @see org.gearvrf.animation.GVRSkeleton
+ * @see org.gearvrf.animation.keyframe.GVRSkinningController
  */
 public class GVRMesh extends GVRHybridObject implements PrettyPrint {
-    static public final int MAX_BONES = 64;
+    static public final int MAX_BONES = 60;
     static public final int BONES_PER_VERTEX = 4;
     private static final String TAG = GVRMesh.class.getSimpleName();
 
     protected GVRVertexBuffer mVertices;
     protected GVRIndexBuffer mIndices;
+    protected List<GVRBone> mBones = new ArrayList<GVRBone>();
 
     /**
      * Construct a mesh with default vertex layout
@@ -97,6 +97,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     public GVRMesh(final GVRMesh srcMesh)
     {
         this(srcMesh.getVertexBuffer(), srcMesh.getIndexBuffer());
+        mBones = srcMesh.getBones();
     }
 
     /**
@@ -134,8 +135,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     /**
      * @see GVRMesh#getVertices()
      */
-    public FloatBuffer getVerticesAsFloatBuffer()
-    {
+    public FloatBuffer getVerticesAsFloatBuffer() {
         return mVertices.getFloatVec(KEY_POSITION).asReadOnlyBuffer();
     }
 
@@ -171,6 +171,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * index buffer a mesh uses at any time with {@link #setIndexBuffer(GVRIndexBuffer)}.
      * </p>
      * @returns GVRIndexBuffer used by this mesh
+     * @see #getIndices()
      */
     public GVRIndexBuffer getIndexBuffer() { return mIndices; }
 
@@ -527,7 +528,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
                 setIndexBuffer(new GVRIndexBuffer(getGVRContext(), 2, indices.capacity() / 2));
             }
             mIndices.setShortVec(indices);
-        }
+         }
         else
         {
             NativeMesh.setIndexBuffer(getNative(), 0L);
@@ -637,7 +638,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @return true if attribute exists, false if not
      */
     public boolean hasAttribute(String key) {
-        return mVertices.hasAttribute(key);
+    	return mVertices.hasAttribute(key);
     }
 
     /**
@@ -650,7 +651,7 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * {@linkplain GVRContext#createQuad(float, float) quad} is cheap enough,
      * but with complex meshes you will probably want to cut search time by
      * registering the object's bounding box, not the whole mesh.
-     *
+     * 
      * @return A {@link GVRMesh} of the bounding box.
      */
     public GVRMesh getBoundingBox()
@@ -736,14 +737,56 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
         return mesh;
     }
 
+    /**
+     * Returns the bones of this mesh.
+     *
+     * @return a list of bones
+     */
+    public List<GVRBone> getBones() {
+        return mBones;
+    }
+
+    /**
+     * Sets bones of this mesh.
+     *
+     * @param bones a list of bones
+     */
+    public void setBones(List<GVRBone> bones)
+    {
+        StringBuffer sb = new StringBuffer();
+        mBones.clear();
+        mBones.addAll(bones);
+        sb.append("BONES\n");
+        for (GVRBone b : bones)
+        {
+            b.prettyPrint(sb, 0);
+        }
+        NativeMesh.setBones(getNative(), GVRHybridObject.getNativePtrArray(bones));
+        Log.e("BONES", sb.toString());
+    }
+
 
     @Override
-    public void prettyPrint(StringBuffer sb, int indent)
-    {
+    public void prettyPrint(StringBuffer sb, int indent) {
         mVertices.prettyPrint(sb, indent);
         if (mIndices != null)
         {
             mIndices.prettyPrint(sb, indent);
+        }
+        sb.append(getBones() == null ? 0 : Integer.toString(getBones().size()));
+        sb.append(" bones");
+        sb.append(System.lineSeparator());
+
+        // Bones
+        List<GVRBone> bones = getBones();
+        if (!bones.isEmpty()) {
+            sb.append(Log.getSpaces(indent));
+            sb.append("Bones:");
+            sb.append(System.lineSeparator());
+
+            for (GVRBone bone : bones) {
+                bone.prettyPrint(sb, indent + 2);
+            }
         }
     }
 
@@ -853,11 +896,12 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     final static String KEY_TEXCOORD = "a_texcoord";
     final static String KEY_NORMAL = "a_normal";
     final static String KEY_POSITION = "a_position";
-
 }
 
 class NativeMesh {
     static native long ctorBuffers(long vertexBuffer, long indexBuffer);
+
+    static native void setBones(long mesh, long[] bonePtrs);
 
     static native void setIndexBuffer(long mesh, long ibuf);
 

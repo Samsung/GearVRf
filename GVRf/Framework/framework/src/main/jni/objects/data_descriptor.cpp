@@ -259,17 +259,6 @@ namespace gvr
         return stream.str();
     }
 
-    std::string DataDescriptor::layoutString() const
-    {
-        std::ostringstream stream;
-        for (auto it = mLayout.begin(); it != mLayout.end(); ++it)
-        {
-            const DataEntry& entry = *it;
-            stream << entry.Offset << ": " << entry.Name << " "  << entry.Size << " bytes" << std::endl;
-        }
-        return stream.str();
-    }
-
     short DataDescriptor::calcSize(const char* type)
     {
         int size = 1;

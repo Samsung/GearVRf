@@ -25,7 +25,6 @@
 
 #include <utility>
 #include <map>
-#include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 
 class btDynamicsWorld;
 class btCollisionConfiguration;
@@ -47,11 +46,6 @@ class BulletWorld : public PhysicsWorld {
     void addConstraint(PhysicsConstraint *constraint);
 
     void removeConstraint(PhysicsConstraint *constraint);
-
-    void startDrag(SceneObject *pivot_obj, PhysicsRigidBody *target,
-                   float relx, float rely, float relz);
-
-    void stopDrag();
 
     void addRigidBody(PhysicsRigidBody *body);
 
@@ -81,11 +75,6 @@ class BulletWorld : public PhysicsWorld {
     btCollisionDispatcher *mDispatcher;
     btSequentialImpulseConstraintSolver *mSolver;
     btBroadphaseInterface *mOverlappingPairCache;
-
-    btPoint2PointConstraint *mDraggingConstraint;
-    SceneObject *mPivotObject;
-    int mActivationState;
-
     //void (*gTmpFilter)(); // btNearCallback
     //int gNearCallbackCount = 0;
     //void *gUserData = 0;

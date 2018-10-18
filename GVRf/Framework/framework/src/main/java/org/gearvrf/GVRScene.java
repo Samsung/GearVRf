@@ -20,7 +20,7 @@ import android.os.Environment;
 import org.gearvrf.GVRCameraRig.GVRCameraRigType;
 import org.gearvrf.GVRRenderData.GVRRenderMaskBit;
 import org.gearvrf.debug.GVRConsole;
-import org.gearvrf.script.GVRScriptBehaviorBase;
+import org.gearvrf.script.GVRScriptBehavior;
 import org.gearvrf.script.IScriptable;
 import org.gearvrf.utility.Log;
 
@@ -70,16 +70,12 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      */
     public GVRScene(GVRContext gvrContext) {
         super(gvrContext, NativeScene.ctor());
-
-        mSceneRoot = new GVRSceneObject(gvrContext);
-        NativeScene.setSceneRoot(getNative(), mSceneRoot.getNative());
-
-        NativeScene.setJava(getNative(), this);
-
         if(MAX_LIGHTS == 0) {
-            MAX_LIGHTS = gvrContext.getApplication().getConfigurationManager().getMaxLights();
+            MAX_LIGHTS = gvrContext.getActivity().getConfigurationManager().getMaxLights();
         }
 
+        mSceneRoot = new GVRSceneObject(gvrContext);
+        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
         GVRCamera leftCamera = new GVRPerspectiveCamera(gvrContext);
         leftCamera.setRenderMask(GVRRenderMaskBit.Left);
 
@@ -105,6 +101,13 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         getEventReceiver().addListener(mSceneEventListener);
     }
 
+    private GVRScene(GVRContext gvrContext, long ptr) {
+        super(gvrContext, ptr);
+        mSceneRoot = new GVRSceneObject(gvrContext);
+        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
+        setFrustumCulling(true);
+    }
+    
     /**
      * Add a {@linkplain GVRSceneObject scene object} as
      * a child of the scene root.
@@ -156,19 +159,20 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
     /**
      * Remove all scene objects.
      */
-    public synchronized void removeAllSceneObjects() {
+    public void removeAllSceneObjects() {
         final GVRCameraRig rig = getMainCameraRig();
         final GVRSceneObject head = rig.getOwnerObject();
         rig.removeAllChildren();
+        final GVRSceneObject oldRoot = mSceneRoot;
 
         NativeScene.removeAllSceneObjects(getNative());
-        for (final GVRSceneObject child : mSceneRoot.getChildren()) {
-            child.getParent().removeChildObject(child);
-        }
 
+        mSceneRoot = new GVRSceneObject(getGVRContext());
         if (null != head) {
+            head.getParent().removeChildObject(head);
             mSceneRoot.addChildObject(head);
         }
+        NativeScene.addSceneObject(getNative(), mSceneRoot.getNative());
 
         final int numControllers = getGVRContext().getInputManager().clear();
         if (numControllers > 0)
@@ -179,6 +183,12 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         getGVRContext().runOnGlThread(new Runnable() {
             @Override
             public void run() {
+                //to prevent components from being deleted concurrently
+                for (final GVRSceneObject child : oldRoot.getChildren()) {
+                    child.detachAllComponents();
+                    child.getParent().removeChildObject(child);
+                }
+
                 NativeScene.deleteLightsAndDepthTextureOnRenderThread(getNative());
             }
         });
@@ -222,7 +232,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @return The {@link GVRCameraRig camera rig} used for rendering the scene
      *         on the screen.
      */
-    public synchronized GVRCameraRig getMainCameraRig() {
+    public GVRCameraRig getMainCameraRig() {
         return mMainCameraRig;
     }
 
@@ -233,13 +243,13 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * @param cameraRig
      *            The {@link GVRCameraRig camera rig} to render with.
      */
-    public synchronized void setMainCameraRig(GVRCameraRig cameraRig) {
+    public void setMainCameraRig(GVRCameraRig cameraRig) {
         mMainCameraRig = cameraRig;
         NativeScene.setMainCameraRig(getNative(), cameraRig.getNative());
 
         final GVRContext gvrContext = getGVRContext();
         if (this == gvrContext.getMainScene()) {
-            gvrContext.getApplication().setCameraRig(getMainCameraRig());
+            gvrContext.getActivity().setCameraRig(getMainCameraRig());
         }
     }
 
@@ -522,7 +532,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
      * know you don't want the corresponding glClear call then you can use these
      * special values to skip it.
      */
-    public synchronized final void setBackgroundColor(float r, float g, float b, float a) {
+    public final void setBackgroundColor(float r, float g, float b, float a) {
         mMainCameraRig.getLeftCamera().setBackgroundColor(r, g, b, a);
         mMainCameraRig.getRightCamera().setBackgroundColor(r, g, b, a);
         mMainCameraRig.getCenterCamera().setBackgroundColor(r, g, b, a);
@@ -549,7 +559,7 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         private void recursivelySendOnInit(GVRSceneObject sceneObject) {
             getGVRContext().getEventManager().sendEvent(
                     sceneObject, ISceneObjectEvents.class, "onInit", getGVRContext(), sceneObject);
-            GVRScriptBehaviorBase script = (GVRScriptBehaviorBase) sceneObject.getComponent(GVRScriptBehaviorBase.getComponentType());
+            GVRScriptBehavior script = (GVRScriptBehavior) sceneObject.getComponent(GVRScriptBehavior.getComponentType());
             if (script != null) {
                 getGVRContext().getEventManager().sendEvent(
                         script, ISceneEvents.class, "onInit", getGVRContext(), GVRScene.this);
@@ -627,8 +637,8 @@ class NativeScene {
 
     static native long ctor();
 
-    static native void setJava(long scene, GVRScene javaScene);
-
+    static native void addSceneObject(long scene, long sceneObject);
+   
     static native void removeAllSceneObjects(long scene);
 
     static native void deleteLightsAndDepthTextureOnRenderThread(long scene);
@@ -652,6 +662,4 @@ class NativeScene {
     static native void setMainScene(long scene);
     
     static native void setPickVisible(long scene, boolean flag);
-
-    static native void setSceneRoot(long scene, long sceneRoot);
 }

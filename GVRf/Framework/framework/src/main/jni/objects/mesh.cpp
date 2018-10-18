@@ -15,7 +15,6 @@
 
 #include "mesh.h"
 #include "engine/renderer/renderer.h"
-#include "objects/components/skeleton.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
 namespace gvr
@@ -24,43 +23,19 @@ namespace gvr
     Mesh::Mesh(const char* descriptor)
     : mVertices(nullptr),
       mIndices(nullptr),
-      have_bounding_volume_(false)
+      have_bounding_volume_(false),
+      vertexBoneData_()
     {
         mVertices = Renderer::getInstance()->createVertexBuffer(descriptor, 0);
     }
 
     Mesh::Mesh(VertexBuffer& vbuf)
-    : mVertices(&vbuf),
-      mIndices(nullptr),
-      have_bounding_volume_(false)
+    : mVertices(&vbuf), mIndices(nullptr),
+      have_bounding_volume_(false),
+      vertexBoneData_()
     {
     }
 
-
-    Mesh *Mesh::createBoundingBox()
-    {
-        Mesh *mesh = new Mesh("float3 a_position");
-        getBoundingVolume(); // Make sure bounding_volume is valid
-
-        glm::vec3 min_corner = bounding_volume.min_corner();
-        glm::vec3 max_corner = bounding_volume.max_corner();
-        float min_x = min_corner[0];
-        float min_y = min_corner[1];
-        float min_z = min_corner[2];
-        float max_x = max_corner[0];
-        float max_y = max_corner[1];
-        float max_z = max_corner[2];
-        float positions[24] =
-                {min_x, min_y, min_z, max_x, min_y, min_z, min_x, max_y, min_z, max_x, max_y, min_z,
-                 min_x, min_y, max_z, max_x, min_y, max_z, min_x, max_y, max_z, max_x, max_y,
-                 max_z};
-        unsigned short indices[] =
-                {0, 2, 1, 1, 2, 3, 1, 3, 7, 1, 7, 5, 4, 5, 6, 5, 7, 6, 0, 6, 2, 0, 4, 6, 0, 1, 5, 0,
-                 5, 4, 2, 7, 3, 2, 6, 7};
-        mesh->setVertices(positions, sizeof(positions) / (8 * sizeof(float)));
-        mesh->setTriangles(indices, sizeof(indices) / (sizeof(short)));
-        return mesh;
-    }
 
 // an array of size:6 with Xmin, Ymin, Zmin and Xmax, Ymax, Zmax values
     const BoundingVolume &Mesh::getBoundingVolume()
@@ -74,14 +49,13 @@ namespace gvr
         return bounding_volume;
     }
 
-    void Mesh::getTransformedBoundingBoxInfo(glm::mat4 *Mat, float* transformed_bounding_box)
+    void Mesh::getTransformedBoundingBoxInfo(const glm::mat4& M, float* transformed_bounding_box)
     {
         if (!have_bounding_volume_)
         {
             getBoundingVolume();
         }
 
-        glm::mat4 M = *Mat;
         float a, b;
 
         //Inspired by Graphics Gems - TransBox.c
@@ -142,14 +116,6 @@ namespace gvr
                 transformed_bounding_box[5] += a;
             }
         }
-    }
-
-    bool Mesh::getAttributeInfo(const char* attributeName,
-                                int &index,
-                                int &offset,
-                                int &size) const
-    {
-        return mVertices->getInfo(attributeName, index, offset, size);
     }
 
     bool Mesh::getVertices(float *vertices, int nelems)

@@ -36,14 +36,15 @@ extern "C" {
                                                     jstring textureDesc,
                                                     jstring vertexDesc,
                                                     jstring vertex_shader,
-                                                    jstring fragment_shader);
+                                                    jstring fragment_shader,
+                                                    jstring matrix_calc);
 
     JNIEXPORT jint JNICALL
     Java_org_gearvrf_NativeShaderManager_getShader(JNIEnv* env, jobject obj, jlong jshader_manager, jstring signature);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeShaderManager_bindCalcMatrix(JNIEnv* env, jobject obj, jlong jshader_manager,
-                                                        jint nativeShader, jclass javeShaderClass);
+                                                        jint nativeShader, jstring shaderClassName);
 
     JNIEXPORT jstring JNICALL
     Java_org_gearvrf_NativeShaderManager_makeLayout(JNIEnv* env, jobject obj,
@@ -65,22 +66,28 @@ Java_org_gearvrf_NativeShaderManager_addShader(JNIEnv* env, jobject obj,
                                                 jstring textureDesc,
                                                 jstring vertexDesc,
                                                 jstring vertex_shader,
-                                                jstring fragment_shader)
+                                                jstring fragment_shader,
+                                                jstring matrix_calc)
 {
     const char *sig_str = env->GetStringUTFChars(signature, 0);
     const char* uniform_str = env->GetStringUTFChars(uniformDesc, 0);
     const char* texture_str = env->GetStringUTFChars(textureDesc, 0);
     const char* vdesc_str = env->GetStringUTFChars(vertexDesc, 0);
     const char *vertex_str = env->GetStringUTFChars(vertex_shader, 0);
-    const char *fragment_str = env->GetStringUTFChars(fragment_shader, 0);
+    const char* fragment_str = env->GetStringUTFChars(fragment_shader, 0);
+    const char* matrix_str = matrix_calc ? env->GetStringUTFChars(matrix_calc, 0) : nullptr;
     ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    long id = shader_manager->addShader(sig_str, uniform_str, texture_str, vdesc_str, vertex_str, fragment_str);
+    long id = shader_manager->addShader(sig_str, uniform_str, texture_str, vdesc_str, vertex_str, fragment_str, matrix_str);
     env->ReleaseStringUTFChars(vertex_shader, vertex_str);
     env->ReleaseStringUTFChars(fragment_shader, fragment_str);
     env->ReleaseStringUTFChars(signature, sig_str);
     env->ReleaseStringUTFChars(uniformDesc, uniform_str);
     env->ReleaseStringUTFChars(textureDesc, texture_str);
     env->ReleaseStringUTFChars(vertexDesc, vdesc_str);
+    if (matrix_str)
+    {
+        env->ReleaseStringUTFChars(matrix_calc, matrix_str);
+    }
     return id;
 }
 
@@ -100,19 +107,6 @@ Java_org_gearvrf_NativeShaderManager_getShader(JNIEnv * env, jobject obj, jlong 
     return 0;
 }
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeShaderManager_bindCalcMatrix(JNIEnv* env, jobject obj, jlong jshader_manager,
-                                                    jint nativeShader, jclass javeShaderClass)
-{
-    ShaderManager* shader_manager = reinterpret_cast<ShaderManager*>(jshader_manager);
-    Shader* shader = shader_manager->getShader(nativeShader);
-    if (shader != nullptr)
-    {
-        JavaVM *jvm;
-        env->GetJavaVM(&jvm);
-        shader->setJava(javeShaderClass, jvm);
-    }
-}
 
 JNIEXPORT jstring JNICALL
 Java_org_gearvrf_NativeShaderManager_makeLayout(JNIEnv* env, jobject obj,

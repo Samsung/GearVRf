@@ -28,9 +28,9 @@ namespace gvr {
     class FloatImage : public Image
     {
     public:
-        FloatImage(int pixelFormat = GL_RG);
+        FloatImage();
         virtual ~FloatImage();
-        void update(JNIEnv* env, int width, int height, jfloatArray data, int pixelFormat = 0);
+        void update(JNIEnv* env, int width, int height, jfloatArray data);
 
     protected:
         void clearData(JNIEnv* env);

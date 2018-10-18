@@ -15,6 +15,8 @@
 
 package org.gearvrf.scene_objects;
 
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.view.Surface;
@@ -24,11 +26,16 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRMain;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRShaderId;
+import org.gearvrf.IActivityEvents;
+import org.gearvrf.utility.Log;
+
+import java.lang.ref.WeakReference;
 
 /**
  * A {@linkplain GVRSceneObject scene object} that shows video, using the
@@ -45,28 +52,29 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         public static final int VERTICAL_STEREO = 2;
     };
 
-    private static class ActivityEventsListener extends GVREventListeners.ActivityEvents {
-        private boolean wasPlaying;
-        private GVRVideoSceneObjectPlayer mPlayer;
-
-        private ActivityEventsListener(GVRVideoSceneObjectPlayer player) {
-            mPlayer = player;
-        }
-
+    private IActivityEvents mActivityEventsListener = new GVREventListeners.ActivityEvents() {
         @Override
         public void onPause() {
-            wasPlaying = mPlayer.isPlaying();
-            mPlayer.pause();
+            gvrVideoSceneObjectPlayer.pause();
         }
 
         @Override
         public void onResume() {
-            if (wasPlaying) {
-                mPlayer.start();
-            }
+            gvrVideoSceneObjectPlayer.start();
         }
+
+        @Override
+        public void onSetMain(GVRMain main) { }
+
+        @Override
+        public void onWindowFocusChanged(boolean hasFocus) { }
+
+        @Override
+        public void onConfigurationChanged(Configuration config) { }
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {}
     };
-    private ActivityEventsListener mActivityEventsListener;
 
     /**
      * Play a video on a {@linkplain GVRSceneObject scene object} with an
@@ -76,7 +84,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -101,7 +109,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
@@ -145,7 +153,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            a wrapper for a media player
@@ -163,8 +171,8 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         GVRShaderId materialType;
 
         gvrVideoSceneObjectPlayer = mediaPlayer;
-        mActivityEventsListener = new ActivityEventsListener(gvrVideoSceneObjectPlayer);
-        gvrContext.getApplication().getEventReceiver().addListener(mActivityEventsListener);
+        gvrContext.getActivity().getEventReceiver().addListener(mActivityEventsListener);
+
 
         switch (videoType) {
             case GVRVideoType.MONO:
@@ -291,7 +299,11 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @return current {@link MediaPlayer}
      */
     public GVRVideoSceneObjectPlayer getMediaPlayer() {
-        return gvrVideoSceneObjectPlayer;
+        if (mVideo == null) {
+            return null;
+        }
+
+        return mVideo.getMediaPlayer();
     }
 
     /**
@@ -317,7 +329,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * {@link MediaPlayer}, if any
      */
     public void release() {
-        getGVRContext().getApplication().getEventReceiver().removeListener(mActivityEventsListener);
         if (mVideo == null) {
             return;
         }
@@ -343,7 +354,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
     @Override
     protected void finalize() throws Throwable {
         try {
-            getGVRContext().getApplication().getEventReceiver().removeListener(mActivityEventsListener);
             if (null != mVideo) {
                 mVideo.release();
             }
@@ -352,7 +362,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
         }
     }
 
-    private static class GVRVideo {
+    private static class GVRVideo implements GVRDrawFrameListener {
 
         private final GVRContext mContext;
         private SurfaceTexture mSurfaceTexture = null;
@@ -376,20 +386,6 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             if (mediaPlayer != null) {
                 setMediaPlayer(mediaPlayer);
             }
-
-            mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                Runnable onFrameAvailableGLCallback = new Runnable() {
-                    @Override
-                    public void run() {
-                        mSurfaceTexture.updateTexImage();
-                    }
-                };
-
-                @Override
-                public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                    mContext.runOnGlThread(onFrameAvailableGLCallback);
-                }
-            });
         }
 
         /**
@@ -456,6 +452,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             mMediaPlayer = mediaPlayer;
             Surface surface = new Surface(mSurfaceTexture);
             mediaPlayer.setSurface(surface);
+            mContext.registerDrawFrameListener(this);
 
             if (mediaPlayer.canReleaseSurfaceImmediately()) {
                 surface.release();
@@ -481,6 +478,14 @@ public class GVRVideoSceneObject extends GVRSceneObject {
             if (mMediaPlayer != null) {
                 mMediaPlayer.release();
                 mMediaPlayer = null;
+                mContext.unregisterDrawFrameListener(this);
+            }
+        }
+
+        @Override
+        public void onDrawFrame(float drawTime) {
+            if (mMediaPlayer != null && mActive) {
+                mSurfaceTexture.updateTexImage();
             }
         }
     }
@@ -512,22 +517,12 @@ public class GVRVideoSceneObject extends GVRSceneObject {
 
             @Override
             public void pause() {
-                try {
-                    mediaPlayer.pause();
-                } catch (final IllegalStateException exc) {
-                    //intentionally ignored; might have been released already or never got to be
-                    //initialized
-                }
+                mediaPlayer.pause();
             }
 
             @Override
             public void start() {
                 mediaPlayer.start();
-            }
-
-            @Override
-            public boolean isPlaying() {
-                return mediaPlayer.isPlaying();
             }
         };
     }

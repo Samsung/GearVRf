@@ -16,7 +16,6 @@
 package org.gearvrf;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -34,68 +33,13 @@ import java.util.List;
  * One can use this class to specify multiple colliders for a
  * single {@link GVRSceneObject}.
  */
-public class GVRColliderGroup extends GVRCollider implements IComponentGroup<GVRCollider>
+public class GVRColliderGroup extends GVRCollider implements GVRComponent.IComponentGroup<GVRCollider>
 {
-    /**
-     * Default implementation for IComponentGroup that
-     * maintains an iterable list of components.
-     *
-     * @param <T> class of component in the group
-     */
-    private final static class Group<T extends GVRComponent> implements Iterable<T>
-    {
-        List<T> mComponents = new ArrayList<T>();
-
-        public Iterator<T> iterator()
-        {
-            Iterator<T> iter = new Iterator<T>()
-            {
-                int mIndex = 0;
-
-                public boolean hasNext()
-                {
-                    return mIndex < getSize();
-                }
-
-                public T next()
-                {
-                    if (mIndex < getSize())
-                    {
-                        return mComponents.get(mIndex++);
-                    }
-                    return null;
-                }
-            };
-            return iter;
-        }
-
-        public void addChild(T child)
-        {
-            mComponents.add(child);
-        }
-
-        public void removeChild(T child)
-        {
-            mComponents.remove(child);
-        }
-
-        public int getSize()
-        {
-            return mComponents.size();
-        }
-
-        public T getChildAt(int index)
-        {
-            return mComponents.get(index);
-        }
-    };
-
-    Group<GVRCollider> mGroup = new Group<>();
-
     /**
      * Constructor
      * 
-     * @param gvrContext Current {@link GVRContext}
+     * @param gvrContext
+     *            Current {@link GVRContext}
      */
     public GVRColliderGroup(GVRContext gvrContext)
     {
@@ -105,33 +49,17 @@ public class GVRColliderGroup extends GVRCollider implements IComponentGroup<GVR
     /**
      * Add a {@link GVRCollider} to this collider-group
      * 
-     * @param collider The {@link GVRCollider} to add
+     * @param collider
+     *            The {@link GVRCollider} to add
      */
     public void addCollider(GVRCollider collider)
     {
-        mGroup.addChild(collider);
         NativeComponent.addChildComponent(getNative(), collider.getNative());
     }
 
     public void addChildComponent(GVRCollider collider)
     {
-        mGroup.addChild(collider);
         NativeComponent.addChildComponent(getNative(), collider.getNative());
-    }
-
-    public int getSize()
-    {
-        return mGroup.getSize();
-    }
-
-    public GVRCollider getChildAt(int index)
-    {
-        return mGroup.getChildAt(index);
-    }
-
-    public Iterator<GVRCollider> iterator()
-    {
-        return mGroup.iterator();
     }
 
     /**
@@ -139,18 +67,17 @@ public class GVRColliderGroup extends GVRCollider implements IComponentGroup<GVR
      * 
      * No exception is thrown if the collider is not held by this collider-group.
      *
-     * @param collider The {@link GVRCollider} to remove
+     * @param collider
+     *            The {@link GVRCollider} to remove
      * 
      */
     public void removeCollider(GVRCollider collider)
     {
-        mGroup.removeChild(collider);
         NativeComponent.removeChildComponent(getNative(), collider.getNative());
     }
 
     public void removeChildComponent(GVRCollider collider)
     {
-        mGroup.removeChild(collider);
         NativeComponent.removeChildComponent(getNative(), collider.getNative());
     }
 }

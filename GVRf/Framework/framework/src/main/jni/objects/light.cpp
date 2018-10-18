@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <string>
 
 #include "light.h"
 #include "scene.h"
@@ -19,11 +20,49 @@
 #include "glm/gtc/matrix_access.hpp"
 #include "objects/components/shadow_map.h"
 #include "objects/textures/render_texture.h"
+#include "objects/components/custom_camera.h"
+#include "engine/renderer/render_sorter.h"
+
+#include <sstream>
+namespace std
+{
+    template<typename T> std::string to_string(const T& val)
+    {
+        std::ostringstream os;
+        os << val;
+        return os.str();
+    }
+}
 
 namespace gvr
 {
     Light::~Light()
     { }
+
+    const char* Light::getLightClass() const
+    {
+        return mLightClass.c_str();
+    }
+
+    const char* Light::getLightName() const { return mLightName.c_str(); }
+
+    void Light::setLightIndex(int index)
+    {
+        mLightIndex = index;
+        mLightName = mLightClass + "s[" + std::to_string(mLightIndex) + "]";
+    }
+
+    /**
+     * Set the light class that determines what
+     * type of light this is.
+     * {@link GVRScene.addLight }
+     */
+    void Light::setLightClass(const char* lightClass)
+    {
+        mLightClass = lightClass;
+        mLightName = mLightClass + "s[" + std::to_string(mLightIndex) + "]";
+    }
+
 
     void Light::onAddedToScene(Scene *scene)
     {
@@ -54,7 +93,7 @@ namespace gvr
         return nullptr;
     }
 
-    bool Light::makeShadowMap(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager, int layerIndex)
+    ShadowMap* Light::makeShadowMap(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager, int layerIndex)
     {
         ShadowMap* shadowMap = getShadowMap();
         float shadow_map_index = -1;
@@ -68,23 +107,20 @@ namespace gvr
                 LOGD("LIGHT: %s shadow_map_index = %f", getLightClass(), shadow_map_index);
 #endif
             }
-            return false;
+            return nullptr;
         }
         else if (shadow_map_index != layerIndex)
         {
-            #ifdef DEBUG_LIGHT
-                LOGD("LIGHT: %s shadow_map_index = %d", getLightClass(), layerIndex);
-            #endif
+#ifdef DEBUG_LIGHT
+            LOGD("LIGHT: %s shadow_map_index = %d", getLightClass(), layerIndex);
+#endif
             setFloat("shadow_map_index", (float) layerIndex);
         }
-        Renderer* renderer = gRenderer->getInstance();
         shadowMap->setLayerIndex(layerIndex);
         shadowMap->setMainScene(scene);
-        shadowMap->cullFromCamera(scene, javaSceneObject, shadowMap->getCamera(),renderer, shader_manager);
-
-        renderer->renderRenderTarget(scene, javaSceneObject, shadowMap,shader_manager, nullptr, nullptr);
-
-        return true;
+        shadowMap->cullFromCamera(scene, javaSceneObject, shadowMap->getCamera(), shader_manager);
+        shadowMap->getRenderSorter()->getRenderer().renderRenderTarget(scene, javaSceneObject, shadowMap, shader_manager, nullptr, nullptr);
+        return shadowMap;
     }
 
     int Light::makeShaderLayout(std::string& layout)
@@ -92,21 +128,14 @@ namespace gvr
         std::ostringstream stream;
 
         forEachUniform([&stream, this](const DataDescriptor::DataEntry& entry) mutable
-        {
-            int nelems = entry.Count;
-            if (nelems > 1)
-                stream << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
-            else
-                stream << entry.Type << " " << entry.Name << ";" << std::endl;
-        });
+                       {
+                           int nelems = entry.Count;
+                           if (nelems > 1)
+                               stream << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
+                           else
+                               stream << entry.Type << " " << entry.Name << ";" << std::endl;
+                       });
         layout = stream.str();
         return uniforms().uniforms().getTotalSize();
     }
-
-    void Light::updateLayout()
-    {
-
-    }
-
 }
-

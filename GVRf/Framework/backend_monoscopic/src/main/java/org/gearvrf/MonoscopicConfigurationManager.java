@@ -17,8 +17,8 @@ package org.gearvrf;
 
 final class MonoscopicConfigurationManager extends GVRConfigurationManager {
 
-    MonoscopicConfigurationManager(GVRApplication application) {
-        super(application);
+    MonoscopicConfigurationManager(GVRActivity gvrActivity) {
+        super(gvrActivity);
     }
 
     @Override

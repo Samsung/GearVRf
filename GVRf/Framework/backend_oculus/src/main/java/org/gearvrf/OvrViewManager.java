@@ -80,13 +80,13 @@ class OvrViewManager extends GVRViewManager {
      * Constructs OvrViewManager object with GVRMain which controls GL
      * activities
      *
-     * @param application
+     * @param gvrActivity
      *            Current activity object
      * @param gvrMain
      *            {@link GVRMain} which describes
      */
-    OvrViewManager(GVRApplication application, GVRMain gvrMain, OvrXMLParser xmlParser) {
-        super(application, gvrMain);
+    OvrViewManager(GVRActivity gvrActivity, GVRMain gvrMain, OvrXMLParser xmlParser) {
+        super(gvrActivity, gvrMain);
 
         // Apply view manager preferences
         GVRPreference prefs = GVRPreference.get();
@@ -103,14 +103,14 @@ class OvrViewManager extends GVRViewManager {
          * Sets things with the numbers in the xml.
          */
         DisplayMetrics metrics = new DisplayMetrics();
-        application.getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        gvrActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         final float INCH_TO_METERS = 0.0254f;
         int screenWidthPixels = metrics.widthPixels;
         int screenHeightPixels = metrics.heightPixels;
         float screenWidthMeters = (float) screenWidthPixels / metrics.xdpi * INCH_TO_METERS;
         float screenHeightMeters = (float) screenHeightPixels / metrics.ydpi * INCH_TO_METERS;
-        VrAppSettings vrAppSettings = application.getAppSettings();
+        VrAppSettings vrAppSettings = gvrActivity.getAppSettings();
         mLensInfo = new OvrLensInfo(screenWidthPixels, screenHeightPixels, screenWidthMeters, screenHeightMeters,
                 vrAppSettings);
 
@@ -135,7 +135,7 @@ class OvrViewManager extends GVRViewManager {
         mStatsLine.addColumn(mTracerDrawEyes2.getStatColumn());
         mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
 
-        mControllerReader = new OvrControllerReader(mApplication.getActivityNative().getNative());
+        mControllerReader = new OvrControllerReader(mActivity.getActivityNative().getNative());
     }
 
     /**
@@ -145,8 +145,8 @@ class OvrViewManager extends GVRViewManager {
     void onSurfaceChanged(int width, int height) {
         Log.v(TAG, "onSurfaceChanged");
 
-        final VrAppSettings.EyeBufferParams.DepthFormat depthFormat = mApplication.getAppSettings().getEyeBufferParams().getDepthFormat();
-        mApplication.getConfigurationManager().configureRendering(VrAppSettings.EyeBufferParams.DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
+        final VrAppSettings.EyeBufferParams.DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
+        getActivity().getConfigurationManager().configureRendering(VrAppSettings.EyeBufferParams.DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
     }
 
     @Override
@@ -185,10 +185,10 @@ class OvrViewManager extends GVRViewManager {
                  GVRRenderTarget renderTarget = mRenderBundle.getRenderTarget(EYE.MULTIVIEW, swapChainIndex);
                  GVRCamera camera = mMainScene.getMainCameraRig().getCenterCamera();
                  GVRCamera left_camera = mMainScene.getMainCameraRig().getLeftCamera();
-                 renderTarget.cullFromCamera(mMainScene, camera,mRenderBundle.getShaderManager());
 
                 captureCenterEye(renderTarget, true);
                 capture3DScreenShot(renderTarget, true);
+                renderTarget.cullFromCamera(mMainScene, camera, mRenderBundle.getShaderManager());
 
                 renderTarget.render(mMainScene, left_camera, mRenderBundle.getShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
                         mRenderBundle.getPostEffectRenderTextureB());
@@ -251,7 +251,7 @@ class OvrViewManager extends GVRViewManager {
 
     /** Called once per frame */
     protected void onDrawFrame() {
-        drawEyes(mApplication.getActivityNative().getNative());
+        drawEyes(mActivity.getActivityNative().getNative());
         afterDrawEyes();
     }
 
@@ -286,22 +286,22 @@ class OvrViewManager extends GVRViewManager {
 
     }
     void createSwapChain(){
-        boolean isMultiview = mApplication.getAppSettings().isMultiviewSet();
-        int width = mApplication.getAppSettings().getFramebufferPixelsWide();
-        int height= mApplication.getAppSettings().getFramebufferPixelsHigh();
+        boolean isMultiview = mActivity.getAppSettings().isMultiviewSet();
+        int width = mActivity.getAppSettings().getFramebufferPixelsWide();
+        int height= mActivity.getAppSettings().getFramebufferPixelsHigh();
         for(int i=0;i < 3; i++){
 
             if(isMultiview){
-                long renderTextureInfo = getRenderTextureInfo(mApplication.getActivityNative().getNative(), i, EYE.MULTIVIEW.ordinal());
-                mRenderBundle.createRenderTarget(i, EYE.MULTIVIEW, new GVRRenderTexture(mApplication.getGVRContext(),  width , height,
+                long renderTextureInfo = getRenderTextureInfo(mActivity.getActivityNative().getNative(), i, EYE.MULTIVIEW.ordinal());
+                mRenderBundle.createRenderTarget(i, EYE.MULTIVIEW, new GVRRenderTexture(mActivity.getGVRContext(),  width , height,
                         GVRRenderBundle.getRenderTextureNative(renderTextureInfo)));
             }
             else {
-                long renderTextureInfo = getRenderTextureInfo(mApplication.getActivityNative().getNative(), i, EYE.LEFT.ordinal());
-                mRenderBundle.createRenderTarget(i, EYE.LEFT, new GVRRenderTexture(mApplication.getGVRContext(),  width , height,
+                long renderTextureInfo = getRenderTextureInfo(mActivity.getActivityNative().getNative(), i, EYE.LEFT.ordinal());
+                mRenderBundle.createRenderTarget(i, EYE.LEFT, new GVRRenderTexture(mActivity.getGVRContext(),  width , height,
                         GVRRenderBundle.getRenderTextureNative(renderTextureInfo)));
-                renderTextureInfo = getRenderTextureInfo(mApplication.getActivityNative().getNative(), i, EYE.RIGHT.ordinal());
-                mRenderBundle.createRenderTarget(i, EYE.RIGHT, new GVRRenderTexture(mApplication.getGVRContext(),  width , height,
+                renderTextureInfo = getRenderTextureInfo(mActivity.getActivityNative().getNative(), i, EYE.RIGHT.ordinal());
+                mRenderBundle.createRenderTarget(i, EYE.RIGHT, new GVRRenderTexture(mActivity.getGVRContext(),  width , height,
                         GVRRenderBundle.getRenderTextureNative(renderTextureInfo)));
             }
         }

@@ -16,7 +16,7 @@
 /***************************************************************************
  * A shader which an user can add in run-time.
  ***************************************************************************/
-#define TEXTURE_BIND_START 10
+#define TEXTURE_BIND_START 5
 #include "vulkan/vulkan_shader.h"
 #include "vulkan/vulkan_material.h"
 #include "engine/renderer/vulkan_renderer.h"
@@ -25,9 +25,6 @@
 #include <glslang/Include/Common.h>
 #include "vulkan/vulkan_render_data.h"
 #include "vulkan/vk_render_to_texture.h"
-#include "objects/components/skin.h"
-#include "objects/scene_object.h"
-
 namespace gvr {
 
 VulkanShader::VulkanShader(int id,
@@ -36,14 +33,15 @@ VulkanShader::VulkanShader(int id,
                const char* textureDescriptor,
                const char* vertexDescriptor,
                const char* vertexShader,
-               const char* fragmentShader)
-    : Shader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertexShader, fragmentShader) { }
+               const char* fragmentShader,
+               const char* matrixCalc)
+    : Shader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertexShader, fragmentShader, matrixCalc) { }
 
 void VulkanShader::initialize()
 {
 }
 
-void VulkanShader::makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights)
+int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights)
 {
     VkDescriptorSetLayoutBinding dummy_binding ={} ;
     if (usesMatrixUniforms()) {
@@ -65,7 +63,7 @@ void VulkanShader::makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescri
         samplerBinding.push_back(dummy_binding);
     }
 
-    if (vkdata->owner_object()->getComponent(Skin::getComponentType()) && hasBones()){
+    if(vkdata->mesh()->hasBones() && hasBones()){
        VkDescriptorSetLayoutBinding &bones_uniformBinding = static_cast<VulkanUniformBlock*>(vkdata->getBonesUbo())->getVulkanDescriptor()->getLayoutBinding();
        samplerBinding.push_back(bones_uniformBinding);
    }
@@ -91,27 +89,26 @@ void VulkanShader::makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescri
     layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     layoutBinding.pImmutableSamplers = nullptr;
     (samplerBinding).push_back(layoutBinding);
-}
 
-void VulkanShader::makeSamplerLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding)
-{
+    index = TEXTURE_BIND_START;
     vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
-                         {
-                            const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
-                            if ((entry == NULL) || entry->NotUsed)
-                            {
-                                return;
-                            }
-                            VkDescriptorSetLayoutBinding layoutBinding;
-                            layoutBinding.binding = entry->Index + TEXTURE_BIND_START;
-                            layoutBinding.descriptorCount = 1;
-                            layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                            layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-                            layoutBinding.pImmutableSamplers = nullptr;
-                            (samplerBinding).push_back(layoutBinding);
-                         });
-}
+    {
+        const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
+        if ((entry == NULL) || entry->NotUsed)
+        {
+            return;
+        }
+        VkDescriptorSetLayoutBinding layoutBinding;
+        layoutBinding.binding = entry->Index + TEXTURE_BIND_START;
+        layoutBinding.descriptorCount = 1;
+        layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        layoutBinding.pImmutableSamplers = nullptr;
+        (samplerBinding).push_back(layoutBinding);
+    });
 
+    return index;
+}
 bool VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet)
 {
     bool success = true;

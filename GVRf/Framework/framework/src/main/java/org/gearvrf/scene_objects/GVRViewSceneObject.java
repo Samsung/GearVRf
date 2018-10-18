@@ -25,10 +25,8 @@ import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.SystemClock;
 import android.view.ActionMode;
 import android.view.GestureDetector;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -44,22 +42,22 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import org.gearvrf.GVRApplication;
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.ITouchEvents;
 import org.gearvrf.IViewEvents;
 import org.gearvrf.io.GVRControllerType;
-import org.gearvrf.shaders.GVROESConvolutionShader;
 import org.gearvrf.utility.Log;
 
 /**
@@ -71,6 +69,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
     private final RootViewGroup mRootViewGroup;
     private final IViewEvents mEventsListener;
     private GestureDetector mGestureDetector = null;
+    private final Object mLock;
 
     /**
      * Create a new {@link GVRViewSceneObject} instance with its corresponding {@link View}
@@ -82,10 +81,10 @@ public class GVRViewSceneObject extends GVRSceneObject {
      *
      * Android {@link View} must be inflated at UI thread so
      * see {@link #GVRViewSceneObject(GVRContext, int, IViewEvents)} whether you want
-     * to be notified when the instance be ready.
+     * to be notified or {@link GVRViewSceneObject#waitFor()} to wait for the instance be ready.
      *
-     * See {@link GVRMesh#createQuad(float, float)},
-     *     {@link IViewEvents}
+     * See {@link GVRMesh#createQuad(float, float)}, {@link IViewEvents}
+     *     and {@link GVRViewSceneObject#waitFor()}
      *
      * @param gvrContext current {@link GVRContext}.
      * @param viewId The resource ID to be inflated. See {@link LayoutInflater}.
@@ -103,10 +102,10 @@ public class GVRViewSceneObject extends GVRSceneObject {
      *
      * Android {@link View} must be handled at UI thread so
      * see {@link #GVRViewSceneObject(GVRContext, int, IViewEvents)} whether you want
-     * to be notified when the instance be ready.
+     * to be notified or {@link GVRViewSceneObject#waitFor()} to wait for the instance be ready.
      *
-     * See {@link GVRMesh#createQuad(float, float)}
-     *     {@link IViewEvents}
+     * See {@link GVRMesh#createQuad(float, float)}, {@link IViewEvents}
+     *     and {@link GVRViewSceneObject#waitFor()}
      *
      * @param gvrContext current {@link GVRContext}.
      * @param view The {@link View} to be shown.
@@ -190,82 +189,39 @@ public class GVRViewSceneObject extends GVRSceneObject {
     }
 
     private GVRViewSceneObject(GVRContext gvrContext, final View view, final int viewId,
-                               IViewEvents eventsListener, final GVRMesh mesh) {
+                               IViewEvents eventsListener, GVRMesh mesh) {
         super(gvrContext, mesh);
-        final GVRApplication application = gvrContext.getApplication();
-
-        // FIXME: GVRTexture:getId() may cause deadlock at UI thread!
-        if (Looper.getMainLooper() == Looper.myLooper()) {
-            // Going to deadlock!
-            throw new UnsupportedOperationException("Creation of GVRViewSceneObject on UI Thread!");
-        }
+        final GVRActivity activity = gvrContext.getActivity();
 
         mEventsListener = eventsListener;
+        mLock = new Object();
 
-        mRootViewGroup = new RootViewGroup(application);
+        mRootViewGroup = new RootViewGroup(activity, this);
 
-        createRenderData(gvrContext);
-
-        gvrContext.getActivity().runOnUiThread(new Runnable() {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if (viewId != View.NO_ID) {
-                    addView(application, viewId);
+                    addView(activity, viewId);
                 } else {
-                    addView(application, view);
-                }
-
-                if (mesh == null) {
-                    adjustQuadAspectRatio();
+                    addView(activity, view);
                 }
             }
         });
     }
 
-    private void createRenderData(GVRContext gvrContext) {
-        final GVRTexture texture = new GVRExternalTexture(gvrContext);
-        final GVRMaterial material = new GVRMaterial(gvrContext,
-                new GVRShaderId(GVROESConvolutionShader.class));
-        GVRRenderData renderData = getRenderData();
-
-        if (renderData == null) {
-            renderData = new GVRRenderData(gvrContext);
-            renderData.setMesh(
-                    GVRMesh.createQuad(gvrContext,
-                            "float3 a_position float2 a_texcoord",
-                            1.0f, 1.0f));
-            attachComponent(renderData);
-        }
-
-        mRootViewGroup.createSurfaceTexture(texture.getId());
-
-        material.setMainTexture(texture);
-        renderData.setMaterial(material);
-
-        attachComponent(new GVRMeshCollider(gvrContext, renderData.getMesh(),true));
+    // UI thread
+    private void addView(GVRActivity gvrActivity, int viewId) {
+        addView(gvrActivity, View.inflate(gvrActivity, viewId, null));
     }
 
-    private void adjustQuadAspectRatio() {
-        final float frameWidth = mRootViewGroup.getWidth();
-        final float frameHeight = mRootViewGroup.getHeight();
-        final float viewSize = Math.max(frameWidth, frameHeight);
-        final float quadWidth = frameWidth / viewSize;
-        final float quadHeight = frameHeight / viewSize;
-
-        float[] vertices = { quadWidth * -0.5f, quadHeight * 0.5f, 0.0f, quadWidth * -0.5f,
-                quadHeight * -0.5f, 0.0f, quadWidth * 0.5f, quadHeight * 0.5f, 0.0f,
-                quadWidth * 0.5f, quadHeight * -0.5f, 0.0f };
-
-        getRenderData().getMesh().setVertices(vertices);
-    }
-
-    private void addView(final GVRApplication application, int viewId) {
-        addView(application, View.inflate(application.getActivity(), viewId, null));
-    }
-
-    private void addView(final GVRApplication application, View view) {
+    // UI thread
+    private void addView(GVRActivity gvrActivity, View view) {
         if (view == null) {
             throw new IllegalArgumentException("Android view cannot be null.");
+        } else if (view.getParent() != null) {
+            // To keep compatibility with GVRView
+            ((ViewGroup)view.getParent()).removeView(view);
         }
 
         mView = view;
@@ -274,7 +230,8 @@ public class GVRViewSceneObject extends GVRSceneObject {
         mRootViewGroup.startRendering();
         getEventReceiver().addListener(mRootViewGroup);
 
-        application.getFullScreenView().invalidate();
+        // To fix invalidate issue at S6/Note5
+        gvrActivity.getFullScreenView().invalidate();
     }
 
     public RootViewGroup getRootView() { return mRootViewGroup; }
@@ -289,82 +246,106 @@ public class GVRViewSceneObject extends GVRSceneObject {
     @Override
     protected void onNewParentObject(GVRSceneObject parent) {
         super.onNewParentObject(parent);
+        final GVRActivity activity = getGVRContext().getActivity();
 
-        getGVRContext().getApplication().registerView(mRootViewGroup);
+        synchronized (mLock) {
+            if (getRenderData() != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Do call View#onDraw().
+                        mRootViewGroup.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        }
     }
 
     @Override
     protected void onRemoveParentObject(GVRSceneObject parent) {
         super.onRemoveParentObject(parent);
+        final GVRActivity activity = getGVRContext().getActivity();
 
-        getGVRContext().getApplication().unregisterView(mRootViewGroup);
+        synchronized (mLock) {
+            if (getRenderData() != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Don't call View#onDraw() anymore.
+                        mRootViewGroup.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        }
     }
 
-    /**
-     * @return The instance of inflated view
-     */
     public View getView() {
         return mView;
     }
 
-    /**
-     * @see {@link View#postInvalidate()}
-     */
     public void invalidate() {
-        mRootViewGroup.postInvalidate();
+        if (mRootViewGroup != null)
+            mRootViewGroup.postInvalidate();
     }
 
-    /**
-     * @see {@link View#findFocus()}
-     */
     public View findFocus() {
-        return mRootViewGroup.findFocus();
+        if (mRootViewGroup != null) {
+            return mRootViewGroup.findFocus();
+        }
+
+        return null;
     }
 
-    /**
-     * Set the focused child view by its id
-     * @param id id of child view
-     */
     public void setFocusedView(int id) {
-        mRootViewGroup.setCurrentFocusedView(mRootViewGroup.findViewById(id));
+        if (mRootViewGroup != null) {
+            mRootViewGroup.setCurrentFocusedView( mRootViewGroup.findViewById(id));
+        }
     }
 
-    /**
-     * @see {@link View#requestFocus()}
-     */
     public void setFocusedView(View view) {
-        mRootViewGroup.setCurrentFocusedView(view);
+        if (mRootViewGroup != null) {
+            mRootViewGroup.setCurrentFocusedView(view);
+        }
     }
 
-    /**
-     * @see {@link View#findViewById(int)}
-     */
     public View findViewById(int id) {
-        return mRootViewGroup.findViewById(id);
+        if (mRootViewGroup != null) {
+            return mRootViewGroup.findViewById(id);
+        }
+
+        return null;
     }
 
-    /**
-     * @see {@link View#findViewWithTag(Object)}
-     */
     public View findViewWithTag(Object tag) {
-        return mRootViewGroup.findViewWithTag(tag);
+        if (mRootViewGroup != null) {
+            return mRootViewGroup.findViewWithTag(tag);
+        }
+
+        return null;
     }
 
     /**
-     * Set the default size of the texture buffers. You can call this to reduce the buffer size
-     * of views with anti-aliasing issue.
-     *
-     * The max value to the buffer size should be the Math.max(width, height) of attached view.
-     *
-     * @param size buffer size. Value > 0 and <= Math.max(width, height).
+     * Will lock current thread until the {@link GVRRenderData} of this instance has been created.
+     * {@link GVRViewSceneObject} instance will be ready after the corresponding
+     * {@link View} has been inflated/configured at UI thread.
+     * Don't call this at UI thread.
      */
-    public void setTextureBufferSize(final int size) {
-        mRootViewGroup.post(new Runnable() {
-            @Override
-            public void run() {
-                mRootViewGroup.setTextureBufferSize(size);
+    public void waitFor() {
+        // Skip for UI thread because the Android View already will be handled by that.
+        if (Looper.getMainLooper() == Looper.myLooper()) {
+            // Going to deadlock!
+            throw new UnsupportedOperationException("GVRSVewSceneObject#waitFor() cannot lock UI thread.");
+        }
+
+        synchronized (mLock) {
+            if (getRenderData() == null) {
+                try {
+                    mLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        });
+        }
     }
 
     /**
@@ -387,12 +368,15 @@ public class GVRViewSceneObject extends GVRSceneObject {
         }
     }
 
-    private static class SoftInputController implements ActionMode.Callback,
+    private static class SoftInputController extends Handler implements ActionMode.Callback,
             TextView.OnEditorActionListener, View.OnTouchListener {
+        final static int max_timeout = 2000;
         Activity mActivity;
         GVRViewSceneObject mSceneObject;
+        long mLastUpTime = 0;
 
         public SoftInputController(Activity activity, GVRViewSceneObject sceneObject) {
+            super(activity.getMainLooper());
             mActivity = activity;
             mSceneObject = sceneObject;
         }
@@ -406,10 +390,46 @@ public class GVRViewSceneObject extends GVRSceneObject {
                 tv.setTextIsSelectable(false);
                 tv.setOnEditorActionListener(this);
                 tv.setCustomSelectionActionModeCallback(this);
-                tv.setShowSoftInputOnFocus(false);
             }
 
             // TODO: Fix WebView
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+
+            View view = (View) msg.obj;
+            InputMethodManager keyboard = (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            if (!keyboard.hideSoftInputFromWindow(view.getWindowToken(), 0)
+                 && msg.what * msg.arg1 <= max_timeout) {
+                Message msg2 = new Message();
+                msg2.obj = view;
+                msg2.what = msg.what++;
+                msg2.arg1 = 10;
+
+                sendMessageDelayed(msg2, msg2.arg1);
+            } else {
+                removeMessages(msg.what);
+                Log.d(mSceneObject.getClass().getSimpleName(), "hideSoftInputFromWindow done by "
+                        + view.toString());
+            }
+        }
+
+        public void hideSoftInput(View view, int delay) {
+            Message msg = new Message();
+            msg.obj = view;
+            msg.what = 0;
+            msg.arg1 = delay;
+
+            sendMessageDelayed(msg, delay);
+        }
+
+        public static void setCursorVisible(View view, boolean visible) {
+            if (view instanceof TextView) {
+                ((TextView)view).setCursorVisible(visible);
+            }
         }
 
         @Override
@@ -438,6 +458,25 @@ public class GVRViewSceneObject extends GVRSceneObject {
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+
+            if ((v instanceof TextView)  &&
+                ((event.getDownTime() - mLastUpTime  <= ViewConfiguration.getDoubleTapTimeout()) ||
+                 (event.getEventTime() - event.getDownTime()) >= ViewConfiguration.getLongPressTimeout())) {
+                Log.w(mSceneObject.getClass().getSimpleName(),
+                        "Double tap/long press disabled to avoid popups!!!");
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    mLastUpTime = event.getEventTime();
+                }
+                // FIXME: Improve it to avoid  blue balloon of the cursor.
+                Log.d("PICKER EVENT CANCELED", "onTouchEvent action=%d button=%d x=%f y=%f",
+                      event.getAction(), event.getButtonState(), event.getX(), event.getY());
+                return true;
+            }
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                mLastUpTime = event.getEventTime();
+
+                hideSoftInput(v, 10);
+            }
             if (mSceneObject.getGestureDetector() != null)
             {
                 mSceneObject.getGestureDetector().onTouchEvent(event);
@@ -453,7 +492,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
      * This is the root view to overwrite the default canvas of the view by the
      * canvas of the texture attached to the scene object.
      */
-    protected class RootViewGroup extends FrameLayout implements ITouchEvents {
+    protected static class RootViewGroup extends FrameLayout implements ITouchEvents {
         final GVRContext mGVRContext;
         final GVRViewSceneObject mSceneObject;
         Surface mSurface;
@@ -466,21 +505,19 @@ public class GVRViewSceneObject extends GVRSceneObject {
         GVRSceneObject mSelected = null;
         SoftInputController mSoftInputController;
 
-        public RootViewGroup(GVRApplication application) {
-            super(application.getActivity());
+        public RootViewGroup(GVRActivity gvrActivity, GVRViewSceneObject sceneObject) {
+            super(gvrActivity);
 
             setLayoutParams(new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
                     LayoutParams.WRAP_CONTENT));
 
-            mGVRContext = application.getGVRContext();
-            mSceneObject = GVRViewSceneObject.this;
+            mGVRContext = gvrActivity.getGVRContext();
+            mSceneObject = sceneObject;
 
             // To optimization
             setWillNotDraw(true);
 
-            mSoftInputController = new SoftInputController(application.getActivity(),
-                    GVRViewSceneObject.this);
-
+            mSoftInputController = new SoftInputController(gvrActivity, sceneObject);
 
             // To block Android's popups
             // setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
@@ -504,30 +541,11 @@ public class GVRViewSceneObject extends GVRSceneObject {
             postInvalidate();
         }
 
-        // The child can be as large as it wants up to the specified size.
-        // Magic number (2 * 2560) to limit the max size
-        final int mMaxMeasure = MeasureSpec.makeMeasureSpec(5120, MeasureSpec.AT_MOST);
-
-        void doMeasure() {
-            measure(mMaxMeasure, mMaxMeasure);
-            layout(0, 0, getMeasuredWidth(), getMeasuredHeight());
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            super.onMeasure(mMaxMeasure, mMaxMeasure);
-        }
-
-        @Override
-        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-            super.onLayout(changed, 0, 0, getMeasuredWidth(), getMeasuredHeight());
-        }
-
         public void dispatchPickerInputEvent(final MotionEvent e, final float x, final float y) {
             final MotionEvent enew = MotionEvent.obtain(e);
             enew.setLocation(x, y);
 
-            post(new Runnable()
+            mGVRContext.getActivity().runOnUiThread(new Runnable()
             {
                 public void run()
                 {
@@ -541,16 +559,6 @@ public class GVRViewSceneObject extends GVRSceneObject {
         public boolean dispatchTouchEvent(MotionEvent ev) {
             // Doesn't handle default touch from screen.
             return false;
-        }
-
-        private void dispatchPickerHoverEvent(final MotionEvent event) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    RootViewGroup.super.dispatchHoverEvent(event);
-                    event.recycle();
-                }
-            });
         }
 
         public void setCurrentFocusedView(View view) {
@@ -571,28 +579,6 @@ public class GVRViewSceneObject extends GVRSceneObject {
             }
         }
 
-        // Set the default size of the image buffers.
-        // Call this after render data is ready
-        public void setTextureBufferSize(int size) {
-            final float frameWidth = getWidth();
-            final float frameHeight = getHeight();
-            final float viewSize = Math.max(frameWidth, frameHeight);
-            final float quadWidth = frameWidth / viewSize;
-            final float quadHeight = frameHeight / viewSize;
-
-            // Set the proper buffer size according to view's aspect ratio.
-            setTextureBufferSize(quadWidth * size, quadHeight * size);
-        }
-
-        public void setTextureBufferSize(float width, float height) {
-            final GVRMaterial material = mSceneObject.getRenderData().getMaterial();
-
-            mSurfaceTexture.setDefaultBufferSize((int)width, (int)height);
-
-            material.setFloat("texelWidth", 1.0f / width);
-            material.setFloat("texelHeight", 1.0f / height);
-        }
-
         @Override
         // Android UI thread
         protected void dispatchDraw(Canvas canvas) {
@@ -600,101 +586,138 @@ public class GVRViewSceneObject extends GVRSceneObject {
             Canvas attachedCanvas = mSurface.lockCanvas(null);
             // Clear the canvas
             attachedCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-            attachedCanvas.scale(attachedCanvas.getWidth() / (float) canvas.getWidth(),
-                    attachedCanvas.getHeight() / (float) canvas.getHeight());
             // draw the view to provided canvas
             super.dispatchDraw(attachedCanvas);
 
             mSurface.unlockCanvasAndPost(attachedCanvas);
         }
 
+        // UI Thread
         public void startRendering() {
             setChildrenInputController(this);
 
-            doMeasure();
+            mSceneObject.onInitView();
 
-            onLayoutReady();
+            // To just set the layout's dimensions but don't call draw(...) after it
+            setVisibility(INVISIBLE);
+
+            /**
+             * To be notified when when the layout gets ready.
+             * So after that create render data and material
+             * to the scene object.
+             */
+            getViewTreeObserver().addOnGlobalLayoutListener (
+                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            RootViewGroup.this.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                            onLayoutReady();
+                        }
+                    });
+
+            mGVRContext.getActivity().registerView(this);
         }
 
         private void onLayoutReady() {
-            // Set the default buffer size
-            setTextureBufferSize(getWidth(), getHeight());
+            synchronized (mSceneObject.mLock) {
+                createRenderData();
 
-            notifyLayoutIsReady();
+                onRenderDataReady();
 
-            mGVRContext.getApplication().registerView(this);
+                mSceneObject.mLock.notify();
+            }
         }
 
-        private void notifyLayoutIsReady() {
-            post(new Runnable() {
+        private void onRenderDataReady() {
+            mGVRContext.runOnTheFrameworkThread(new Runnable() {
                 @Override
                 public void run() {
-                    // Ready to configure the views
-                    mSceneObject.onInitView();
-
-                    notifyObjectIsReady();
-                }
-            });
-        }
-
-        private void notifyObjectIsReady() {
-            mGVRContext.runOnGlThread(new Runnable() {
-                @Override
-                public void run() {
-                    // Ready to be rendered
                     mSceneObject.onStartRendering();
                 }
             });
+
+            // To call draw(...) after renderData has been created
+            if (mSceneObject.getParent() != null) {
+                setVisibility(VISIBLE);
+            }
+
+            onViewVisible();
         }
 
-        public void createSurfaceTexture(int textureId) {
-            mSurfaceTexture = new SurfaceTexture(textureId);
+        private void onViewVisible() {
+            /**
+             * To adjust the default buffer size of the surface texture according to
+             * changes of layout's size.
+             */
+            getViewTreeObserver().addOnGlobalLayoutListener (
+                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            onLayoutChanged();
+                        }
+                    });
+        }
+
+        private void onLayoutChanged() {
+            mSurfaceTexture.setDefaultBufferSize(getWidth(), getHeight());
+        }
+
+        private void createRenderData() {
+            final GVRTexture texture = new GVRExternalTexture(mGVRContext);
+            final GVRMaterial material = new GVRMaterial(mGVRContext, GVRShaderType.OES.ID);
+            final GVRCollider collider;
+
+            if (mSceneObject.getRenderData() == null) {
+                float viewSize = Math.max(getWidth(), getHeight());
+                float quadWidth = getWidth() / viewSize;
+                float quadHeight = getHeight() / viewSize;
+
+                final GVRRenderData renderData = new GVRRenderData(mGVRContext);
+                renderData.setMesh(
+                        GVRMesh.createQuad(mGVRContext,
+                                "float3 a_position float2 a_texcoord",
+                                quadWidth, quadHeight));
+                mSceneObject.attachComponent(renderData);
+            }
+
+            collider = new GVRMeshCollider(mGVRContext, mSceneObject.getRenderData().getMesh(),true);
+            material.setMainTexture(texture);
+            mSceneObject.getRenderData().setMaterial(material);
+            mSceneObject.attachComponent(collider);
+
+            mSurfaceTexture = new SurfaceTexture(texture.getId());
             mSurface = new Surface(mSurfaceTexture);
+
+            mSurfaceTexture.setDefaultBufferSize(getWidth(), getHeight());
+
             mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                Runnable onFrameAvailableGLCallback = new Runnable() {
+                GVRDrawFrameListener drawFrameListener = new GVRDrawFrameListener() {
                     @Override
-                    public void run() {
+                    public void onDrawFrame(float frameTime) {
                         mSurfaceTexture.updateTexImage();
+                        mGVRContext.unregisterDrawFrameListener(this);
                     }
                 };
 
                 @Override
                 public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                    mGVRContext.runOnGlThread(onFrameAvailableGLCallback);
+                    mGVRContext.registerDrawFrameListener(drawFrameListener);
                 }
             });
-        }
 
-        private MotionEvent createMotionEvent(GVRPicker.GVRPickedObject pickInfo, int action) {
-            float hitX = pickInfo.textureCoords[0] * getWidth();
-            float hitY = pickInfo.textureCoords[1] * getHeight();
-            long now = SystemClock.uptimeMillis();
-
-            final MotionEvent event = MotionEvent.obtain(now, now, action, hitX, hitY,0);
-            // Set source to touchscreen to make hover works fine
-            event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
-            return event;
         }
 
         @Override
-        public void onEnter(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
-            // If motionEvent is null, it is a hover action
-            if (pickInfo.motionEvent == null) {
-                MotionEvent event = createMotionEvent(pickInfo, MotionEvent.ACTION_HOVER_ENTER);
-                dispatchPickerHoverEvent(event);
-            }
-        }
+        public void onEnter(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) { }
 
         @Override
-        public void onExit(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
-            // If motionEvent is null, it is a hover action
-            if (pickInfo.motionEvent == null) {
-                MotionEvent event = createMotionEvent(pickInfo, MotionEvent.ACTION_HOVER_EXIT);
-                dispatchPickerHoverEvent(event);
-            } else if (sceneObject == mSelected) {
+        public void onExit(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo)
+        {
+            if (sceneObject == mSelected)
+            {
                 mSelected = null;
                 onDrag(pickInfo);
-            }
+           }
         }
 
         @Override
@@ -716,11 +739,8 @@ public class GVRViewSceneObject extends GVRSceneObject {
         public void onInside(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
             final MotionEvent event = pickInfo.motionEvent;
 
-            // If motionEvent is null, it is a hover action
-            if (event == null) {
-                MotionEvent e = createMotionEvent(pickInfo, MotionEvent.ACTION_HOVER_MOVE);
-                dispatchPickerHoverEvent(e);
-            } else if ((sceneObject == mSelected && event.getAction() == MotionEvent.ACTION_MOVE)) {
+            if (sceneObject == mSelected && event != null
+                    && event.getAction() == MotionEvent.ACTION_MOVE) {
                 onDrag(pickInfo);
             }
         }

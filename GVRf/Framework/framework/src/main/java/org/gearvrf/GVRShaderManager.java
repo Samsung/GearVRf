@@ -26,7 +26,7 @@ import org.gearvrf.utility.Log;
 /**
  * Manages GearVRF shaders for rendering scene objects.
  *
- * Get the singleton from {@link GVRContext#getMaterialShaderManager()}.
+ * Get the singleton from {@link GVRContext#getShaderManager()}.
  */
 public class GVRShaderManager extends GVRHybridObject
 {
@@ -42,11 +42,12 @@ public class GVRShaderManager extends GVRHybridObject
 
     public int addShader(String signature, String uniformDescriptor,
                          String textureDescriptor, String vertexDescriptor,
-                         String vertexShader, String fragmentShader)
+                         String vertexShader, String fragmentShader,
+                         String matrixCalc)
     {
         return NativeShaderManager.addShader(getNative(), signature,
                 uniformDescriptor, textureDescriptor, vertexDescriptor,
-                vertexShader, fragmentShader);
+                vertexShader, fragmentShader, (matrixCalc != null) ? matrixCalc.toLowerCase() : null);
     }
 
     /**
@@ -125,11 +126,9 @@ public class GVRShaderManager extends GVRHybridObject
 
 class NativeShaderManager {
     static native long ctor();
-
     static native int addShader(long shaderManager, String signature,
                                 String uniformDescriptor, String textureDescriptor, String vertexDescriptor,
-                                String vertexShader, String fragmentShader);
-    static native void bindCalcMatrix(long shaderManager, int nativeShader, Class<? extends GVRShader> javaShaderClass);
+                                String vertexShader, String fragmentShader, String matrixCalc);
     static native int getShader(long shaderManager, String signature);
     static native String makeLayout(String descriptor, String blockName, boolean useUBO);
 }

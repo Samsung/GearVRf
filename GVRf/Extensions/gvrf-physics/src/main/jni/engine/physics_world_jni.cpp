@@ -47,15 +47,6 @@ extern "C" {
                                                             jlong jworld, jlong jconstraint);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_physics_NativePhysics3DWorld_startDrag(JNIEnv * env, jobject obj,
-            jlong jworld, jlong jpivot_obj, jlong jtarget,
-            jfloat relx, jfloat rely, jfloat relz);
-
-    JNIEXPORT void JNICALL
-    Java_org_gearvrf_physics_NativePhysics3DWorld_stopDrag(JNIEnv * env, jobject obj,
-            jlong jworld);
-
-    JNIEXPORT void JNICALL
     Java_org_gearvrf_physics_NativePhysics3DWorld_addRigidBody(JNIEnv * env, jobject obj,
             jlong jworld, jlong jrigid_body);
 
@@ -110,25 +101,6 @@ Java_org_gearvrf_physics_NativePhysics3DWorld_removeConstraint(JNIEnv * env, job
     PhysicsConstraint* constraint = reinterpret_cast<PhysicsConstraint*>(jconstraint);
 
     world->removeConstraint(constraint);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_NativePhysics3DWorld_startDrag(JNIEnv * env, jobject obj,
-        jlong jworld, jlong jpivot_obj, jlong jtarget,
-        jfloat relx, jfloat rely, jfloat relz) {
-    PhysicsWorld *world = reinterpret_cast<PhysicsWorld*>(jworld);
-    SceneObject *pivot_obj = reinterpret_cast<SceneObject*>(jpivot_obj);
-    PhysicsRigidBody* target = reinterpret_cast<PhysicsRigidBody*>(jtarget);
-
-    world->startDrag(pivot_obj, target, relx, rely, relz);
-}
-
-JNIEXPORT void JNICALL
-Java_org_gearvrf_physics_NativePhysics3DWorld_stopDrag(JNIEnv * env, jobject obj,
-        jlong jworld) {
-    PhysicsWorld *world = reinterpret_cast<PhysicsWorld*>(jworld);
-
-    world->stopDrag();
 }
 
 JNIEXPORT void JNICALL

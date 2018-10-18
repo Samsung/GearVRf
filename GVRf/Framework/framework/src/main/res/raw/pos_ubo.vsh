@@ -6,6 +6,11 @@ layout(location = 0) in vec3 a_position;
 
 void main()
 {
-  vec4 pos = vec4(a_position, 1.0);
-  gl_Position = u_mvp * pos;
+    mat4 mvp = u_mvp;
+
+    //generate right eye mvp from left
+    mvp[3][0] = mvp[3][0] - (u_proj_offset * float(u_right));
+
+    vec4 pos = vec4(a_position, 1.0);
+    gl_Position = mvp * pos;
 }

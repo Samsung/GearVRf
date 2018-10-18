@@ -18,6 +18,7 @@ package org.gearvrf.io;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;

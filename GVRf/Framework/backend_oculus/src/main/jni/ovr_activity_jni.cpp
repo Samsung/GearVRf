@@ -20,10 +20,9 @@
 namespace gvr {
     extern "C" {
 
-    JNIEXPORT long JNICALL Java_org_gearvrf_OvrActivityNative_onCreate(JNIEnv *jni, jclass,
-                                                                       jobject activity,
-                                                                       jobject vrAppSettings) {
-        GVRActivity *gvrActivity = new GVRActivity(*jni, activity, vrAppSettings);
+    JNIEXPORT long JNICALL Java_org_gearvrf_OvrActivityNative_onCreate(JNIEnv* jni, jclass clazz,
+                                                                       jobject activity, jobject vrAppSettings, jobject callbacks) {
+        GVRActivity* gvrActivity = new GVRActivity(*jni, activity, vrAppSettings, callbacks);
         return reinterpret_cast<long>(gvrActivity);
     }
 

@@ -14,7 +14,7 @@
  */
 
 #include "bullet_gvr_utils.h"
-
+#include "objects/mesh.h"
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 namespace gvr {

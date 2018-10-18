@@ -55,6 +55,7 @@ public:
  * @param vertexDescriptor  String giving the names and types of vertex attributes
  * @param vertexShader      String with GLSL source for vertex shader
  * @param fragmentShader    String with GLSL source for fragment shader
+ * @param matrixCalc        String with matrix calculation expressions
  *
  * This function is called by the Java layer to request generation of a specific
  * vertex / fragment shader pair. If the shader has not already been generated,
@@ -65,8 +66,9 @@ public:
                   const char* uniformDescriptor,
                   const char* textureDescriptor,
                   const char* vertexDescriptor,
-                  const char* vertex_shader,
-                  const char* fragment_shader);
+                  const char* vertexShader,
+                  const char* fragmentShader,
+                  const char* matrixCalc);
 
     /*
      * Find a shader by its signature.

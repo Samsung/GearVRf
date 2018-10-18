@@ -16,30 +16,27 @@
 
 package org.gearvrf.x3d;
 
-import android.content.Context;
-import android.graphics.Color;
-import android.view.ViewGroup;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRExternalScene;
 import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.GVRRenderData;
-import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.ISensorEvents;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.io.GVRControllerType;
-import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRWebView;
+
+import org.gearvrf.GVRScene;
+
 import org.gearvrf.utility.Log;
 import org.gearvrf.utility.Threads;
 import org.joml.Vector3f;
@@ -47,12 +44,19 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import android.graphics.Color;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
+
+import android.content.Context;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -128,7 +132,7 @@ public class AnchorImplementation {
     private GVRDrawFrameListener mOnDrawFrame = null;
     private boolean webViewTranslation = false;
     private boolean webViewScale = false;
-    private WebView gvrWebView = null;
+    private GVRWebView gvrWebView = null;
 
     private String webPageContent = "";
 
@@ -172,34 +176,21 @@ public class AnchorImplementation {
 
             @Override
             public void onSensorEvent(SensorEvent event) {
-                // Anchor event could either call for new .x3d file, new camera location
-                // or to load a web page
+                // Getting event group stuff.
                 if (event.isActive()) {
                     if (!isActiveDone) {
                         isActiveDone = true;
                         String url = interactiveObjectFinal.getSensor().getAnchorURL();
-
-                        // Get rid of any single or double quotes surrounding the filename.
-                        // this happens when the url = '"filename.x3d"' for example
-                        if ( (url.indexOf("\"") == 0) || (url.indexOf("\'") == 0) ) {
-                            url = url.substring(1, url.length());
-                        }
-                        if ( (url.indexOf("\"") == (url.length()-1)) || (url.indexOf("\'") == (url.length()-1)) ) {
-                            url = url.substring(0, url.length()-1);
-                        }
                         if (url.toLowerCase().endsWith(".x3d")) {
                             if ( !newSceneLoaded ) {
                                 // Go to another X3D scene
-                                newSceneLoaded = true;
                                 GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, url, true);
                                 GVRSceneObject gvrSceneObjectAnchor = new GVRSceneObject(gvrContext);
                                 gvrSceneObjectAnchor.attachComponent( gvrExternalScene );
                                 boolean load = gvrExternalScene.load(gvrContext.getMainScene());
+                                newSceneLoaded = true;
                                 if (!load) Log.e(TAG, "Error loading new X3D scene " + url);
-                                else {
-                                    interactiveObjectFinal.getSensor().disable();
-                                    Log.e(TAG, "New X3D scene " + url + " loaded.");
-                                }
+                                else Log.e(TAG, "New X3D scene " + url + " loaded.");
 
                             }
                         }  // end if .x3d file
@@ -358,9 +349,10 @@ public class AnchorImplementation {
                 public void run() {
 
                     // Launch a new WebView window and place the web page there.
-                    gvrWebView = new WebView(gvrContext.getActivity());
+                    gvrWebView = new GVRWebView(gvrContext.getActivity());
                     gvrWebView.setInitialScale(100);
-                    gvrWebView.setLayoutParams(new ViewGroup.LayoutParams(1600, 1200));
+                    gvrWebView.measure(1600, 1200);
+                    gvrWebView.layout(0, 0, 1600, 1200);
                     WebSettings webSettings = gvrWebView.getSettings();
                     webSettings.setJavaScriptEnabled(true);
 

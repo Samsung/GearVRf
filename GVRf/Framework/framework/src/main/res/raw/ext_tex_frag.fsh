@@ -2,6 +2,11 @@
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_OES_EGL_image_external : enable
 #extension GL_OES_EGL_image_external_essl3 : enable
+
+#ifdef HAS_MULTIVIEW
+#extension GL_OVR_multiview2 : enable
+#endif
+
 precision highp float;
 uniform samplerExternalOES u_texture;
 

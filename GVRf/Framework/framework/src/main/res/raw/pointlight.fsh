@@ -1,11 +1,6 @@
 Radiance @LightType(Surface s, in U@LightType data, int index)
 {
-#ifdef HAS_MULTIVIEW
-	vec4 lightpos = u_view_[gl_ViewID_OVR] * data.world_position;
-#else
-    vec4 lightpos = u_view * data.world_position;
-#endif
-
+    vec4 lightpos = u_view * vec4(data.world_position.xyz, 1.0);
 	vec3 lightdir = lightpos.xyz - viewspace_position;
 	// Attenuation
     float distance    = length(lightdir);

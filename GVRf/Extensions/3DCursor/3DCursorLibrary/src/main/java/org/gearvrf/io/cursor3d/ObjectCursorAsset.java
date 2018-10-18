@@ -20,9 +20,10 @@ import android.util.SparseArray;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
+import org.gearvrf.animation.GVRAnimation;
 import org.gearvrf.animation.GVRAnimationEngine;
-import org.gearvrf.animation.GVRAnimator;
 import org.gearvrf.animation.GVRRepeatMode;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.utility.Log;
 
 import java.io.IOException;
@@ -33,21 +34,21 @@ import java.io.IOException;
 class ObjectCursorAsset extends CursorAsset {
     private static final String TAG = ObjectCursorAsset.class.getSimpleName();
     private final String assetName;
-    private SparseArray<GVRSceneObject> objects;
+    private SparseArray<GVRModelSceneObject> objects;
     private GVRAnimationEngine animationEngine;
     private int LOOP_REPEAT_COUNT = -1;
 
     ObjectCursorAsset(GVRContext context, CursorType type, Action action, String assetName) {
         super(context, type, action);
         this.assetName = assetName;
-        objects = new SparseArray<GVRSceneObject>();
+        objects = new SparseArray<GVRModelSceneObject>();
         animationEngine = context.getAnimationEngine();
     }
 
     @Override
     void set(Cursor cursor) {
         super.set(cursor);
-        GVRSceneObject modelSceneObject = objects.get(cursor.getId());
+        GVRModelSceneObject modelSceneObject = objects.get(cursor.getId());
 
         if (modelSceneObject == null) {
             Log.e(TAG, "Model not found, should not happen");
@@ -55,17 +56,15 @@ class ObjectCursorAsset extends CursorAsset {
         }
         modelSceneObject.setEnable(true);
 
-        GVRAnimator animator = (GVRAnimator) modelSceneObject.getComponent(GVRAnimator.getComponentType());
-        if (animator != null)
-        {
-            animator.setRepeatMode(GVRRepeatMode.REPEATED);
-            animator.setRepeatCount(LOOP_REPEAT_COUNT);
-            animator.start();
+        for (GVRAnimation animation : modelSceneObject.getAnimations()) {
+            animation.setRepeatMode(GVRRepeatMode.REPEATED);
+            animation.setRepeatCount(LOOP_REPEAT_COUNT);
+            animation.start(animationEngine);
         }
     }
 
-    private GVRSceneObject loadModelSceneObject() {
-        GVRSceneObject modelSceneObject = null;
+    private GVRModelSceneObject loadModelSceneObject() {
+        GVRModelSceneObject modelSceneObject = null;
         try {
             modelSceneObject = context.getAssetLoader().loadModel(assetName);
         } catch (IOException e) {
@@ -79,22 +78,22 @@ class ObjectCursorAsset extends CursorAsset {
     void reset(Cursor cursor) {
         super.reset(cursor);
 
-        GVRSceneObject modelSceneObject = objects.get(cursor.getId());
+        GVRModelSceneObject modelSceneObject = objects.get(cursor.getId());
 
         modelSceneObject.setEnable(false);
-        GVRAnimator animator = (GVRAnimator) modelSceneObject.getComponent(GVRAnimator.getComponentType());
-        if (animator != null)
-        {
-            animator.setRepeatMode(GVRRepeatMode.ONCE);
-            animator.setRepeatCount(0);
-            animator.start();
+        for (GVRAnimation animation : modelSceneObject.getAnimations()) {
+            if (animation.isFinished() == false) {
+                animation.setRepeatMode(GVRRepeatMode.ONCE);
+                animation.setRepeatCount(0);
+                animationEngine.stop(animation);
+            }
         }
     }
 
     @Override
     void load(Cursor cursor) {
         Integer key = cursor.getId();
-        GVRSceneObject modelSceneObject = objects.get(key);
+        GVRModelSceneObject modelSceneObject = objects.get(key);
 
         if (modelSceneObject == null) {
             modelSceneObject = loadModelSceneObject();

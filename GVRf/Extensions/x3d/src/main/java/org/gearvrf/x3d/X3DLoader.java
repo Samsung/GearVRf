@@ -59,15 +59,14 @@ final class X3DLoader {
                 throw new FileNotFoundException(fileName + " not found");
             }
 
-            try {
+            try
+            {
                 x3dObject.Parse(inputStream, shaderSettings);
-                assetRequest.onModelLoaded(context, root, fileName);
-                GVRAnimator animator = (GVRAnimator) root.getComponent(GVRAnimator.getComponentType());
-
-                if ((animator != null) && assetRequest.getImportSettings().contains(GVRImportSettings.NO_ANIMATION))
+                if (assetRequest.getImportSettings().contains(GVRImportSettings.NO_ANIMATION))
                 {
                     root.detachComponent(GVRAnimator.getComponentType());
                 }
+                assetRequest.onModelLoaded(context, root, fileName);
             } finally {
                 inputStream.close();
             }

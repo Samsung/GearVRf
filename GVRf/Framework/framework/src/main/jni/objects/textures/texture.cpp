@@ -89,7 +89,6 @@ void Texture::setImage(JNIEnv* env, jobject javaImage, Image* image)
     {
         image->texParamsChanged(getTexParams());
     }
-    LOGV("Texture::setImage");
 }
 
 void Texture::updateTextureParameters(const int* texture_parameters, int n)

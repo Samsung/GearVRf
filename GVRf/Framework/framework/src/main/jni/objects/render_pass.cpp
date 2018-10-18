@@ -17,13 +17,25 @@
 #include <glslang/Include/Common.h>
 #include "engine/renderer/renderer.h"
 #include "render_pass.h"
+#include <string>
+#include <sstream>
+
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os ;
+    os << value ;
+    return os.str() ;
+}
 
 namespace gvr {
 
 RenderPass::RenderPass() :
-        material_(0), cull_face_(DEFAULT_CULL_FACE), dirty_(true), hash_code_dirty_(true)
+        material_(0),  shader_dirty_(true)
 {
-    memset(shaderID_,0,sizeof(shaderID_));
+    shaderID_[0] = -1;
+    shaderID_[1] = -1;
+    render_modes_.init();
 }
 
 
@@ -36,14 +48,6 @@ void RenderPass::set_material(ShaderData* material)
     }
 }
 
-void RenderPass::set_cull_face(int cull_face)
-{
-    if (cull_face_ != cull_face)
-    {
-        cull_face_ = cull_face;
-        markDirty();
-    }
-}
 
 void RenderPass::set_shader(int shaderid, bool useMultiview)
 {
@@ -52,38 +56,6 @@ void RenderPass::set_shader(int shaderid, bool useMultiview)
         shaderID_[useMultiview] = shaderid;
         markDirty();
     }
-}
-
-int RenderPass::isValid(Renderer* renderer, const RenderState& rstate, RenderData* rdata)
-{
-    ShaderData* mtl = material();
-    int shaderID = get_shader(rstate.is_multiview);
-    bool dirty = dirty_;
-
-    if (mtl->isDirty(ShaderData::NEW_TEXTURE))
-    {
-        dirty = true;
-    }
-    if ((shaderID <= 0) || dirty)
-    {
-        clearDirty();
-    }
-    if (mtl->updateGPU(renderer, rdata) <= 0)
-    {
-        return -1;
-    }
-    return !dirty;
-}
-
-const std::string& RenderPass::getHashCode(bool is_multiview){
-    if (hash_code_dirty_) {
-        std::string render_data_string;
-        render_data_string.append(std::to_string(cull_face_));
-        render_data_string.append(std::to_string(shaderID_[is_multiview]));
-        hash_code = render_data_string;
-        hash_code_dirty_ = false;
-    }
-    return hash_code;
 }
 
 }

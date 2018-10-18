@@ -15,7 +15,6 @@
 
 package org.gearvrf.io.cursor3d.settings;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -30,15 +29,16 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
-import org.gearvrf.io.GVRTouchPadGestureListener;
 import org.gearvrf.io.cursor3d.Cursor;
 import org.gearvrf.io.cursor3d.CursorManager;
 import org.gearvrf.io.cursor3d.CursorType;
 import org.gearvrf.io.cursor3d.IoDevice;
 import org.gearvrf.io.cursor3d.R;
 import org.gearvrf.utility.Log;
+import org.gearvrf.io.GVRTouchPadGestureListener;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -75,19 +75,14 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
     {
         super(context, scene, settingsCursorId, R.layout.settings_layout);
         Log.d(TAG, "new SettingsView, hash=" + this.hashCode());
-        final Activity activity = context.getActivity();
+        final GVRActivity activity = context.getActivity();
         this.changeListener = changeListener;
         this.cursorManager = cursorManager;
-        this.currentCursor = currentCursor;
-    }
-
-    @Override
-    protected void onInitView(View view) {
-        cursorList = (ListView) view.findViewById(R.id.lvCursors);
+        cursorList = (ListView) findViewById(R.id.lvCursors);
         cursors = cursorManager.getActiveCursors();
         cursors.addAll(cursorManager.getInactiveCursors());
-
-        tbSoundEnabled = (ToggleButton) view.findViewById(R.id.tbSoundEnable);
+        this.currentCursor = currentCursor;
+        tbSoundEnabled = (ToggleButton) findViewById(R.id.tbSoundEnable);
         tbSoundEnabled.setChecked(cursorManager.isSoundEnabled());
         tbSoundEnabled.setOnCheckedChangeListener(this);
         // sort the cursors
@@ -100,27 +95,18 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
             }
         });
 
-        TextView tvDoneButton = (TextView) view.findViewById(R.id.tvDoneButton);
+        TextView tvDoneButton = (TextView) findViewById(R.id.tvDoneButton);
         tvDoneButton.setOnClickListener(doneButtonListener);
 
         cursorAdapter = new CursorAdapter(activity, cursors);
         cursorList.setAdapter(cursorAdapter);
-    }
-
-    @Override
-    protected void onStartRendering() {
         render(0.0f, 0.0f, BaseView.QUAD_DEPTH);
     }
 
     @Override
     void show() {
         super.show();
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setGestureDetector(new GestureDetector(currentCursor.getGVRContext().getContext(), swipeListener));
-            }
-        });
+        setGestureDetector(new GestureDetector(currentCursor.getGVRContext().getContext(), swipeListener));
     }
 
     SettingsChangeListener configChangeListener = new SettingsChangeListener()
@@ -149,18 +135,13 @@ public class SettingsView extends BaseView implements OnCheckedChangeListener
         }
     };
 
-    private void createConfigView(final Cursor cursor)
+    private void createConfigView(Cursor cursor)
     {
         if (cursor.isEnabled())
         {
             disable();
-            context.runOnGlThread(new Runnable() {
-                @Override
-                public void run() {
-                    new CursorConfigView(context, cursorManager, cursor, currentCursor, scene,
-                            settingsCursorId, configChangeListener);
-                }
-            });
+            new CursorConfigView(context, cursorManager, cursor, currentCursor, scene,
+                                 settingsCursorId, configChangeListener);
         }
     }
 

@@ -18,8 +18,6 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 /**
  * This animation uses
@@ -29,11 +27,11 @@ import org.joml.Vector3f;
  */
 public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
 
-     private final float mAngle, //
+    private final Orientation mOrientation;
+    private final Position mPosition;
+    private final float mAngle, //
             mAxisX, mAxisY, mAxisZ, //
             mPivotX, mPivotY, mPivotZ;
-     private final Quaternionf mStartRotation = new Quaternionf();
-     private final Vector3f mStartPosition = new Vector3f();
 
     /**
      * Use
@@ -63,6 +61,10 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
             float duration, float angle, float axisX, float axisY, float axisZ,
             float pivotX, float pivotY, float pivotZ) {
         super(target, duration);
+
+        mOrientation = new Orientation();
+        mPosition = new Position();
+
         mAngle = angle;
         mAxisX = axisX;
         mAxisY = axisY;
@@ -70,8 +72,6 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
         mPivotX = pivotX;
         mPivotY = pivotY;
         mPivotZ = pivotZ;
-        mStartRotation.set(mRotation);
-        mStartPosition.set(mPosition);
     }
 
     /**
@@ -101,7 +101,7 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
     public GVRRotationByAxisWithPivotAnimation(GVRSceneObject target,
             float duration, float angle, float axisX, float axisY, float axisZ,
             float pivotX, float pivotY, float pivotZ) {
-        this(target.getTransform(), duration, angle, axisX, axisY, axisZ,
+        this(getTransform(target), duration, angle, axisX, axisY, axisZ,
                 pivotX, pivotY, pivotZ);
     }
 
@@ -110,8 +110,8 @@ public class GVRRotationByAxisWithPivotAnimation extends GVRTransformAnimation {
         // Reset rotation and position (this is pretty cheap - GVRF uses a 'lazy
         // update' policy on the matrix, so three changes don't cost all that
         // much more than one)
-        mTransform.setRotation(mStartRotation.w, mStartRotation.x, mStartRotation.y, mStartRotation.z);
-        mTransform.setPosition(mStartPosition.x, mStartPosition.y, mStartPosition.z);
+        mOrientation.setOrientation();
+        mPosition.setPosition();
 
         // Rotate with pivot, from start orientation & position
         float angle = ratio * mAngle;

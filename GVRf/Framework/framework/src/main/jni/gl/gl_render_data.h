@@ -42,6 +42,7 @@ namespace gvr
 
         virtual ~GLRenderData() {}
 
+        virtual void bindToShader(Shader* shader, Renderer* renderer);
         virtual void render(Shader*, Renderer*);
 
     private:

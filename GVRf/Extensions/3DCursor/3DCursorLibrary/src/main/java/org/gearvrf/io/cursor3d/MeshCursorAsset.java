@@ -105,6 +105,7 @@ class MeshCursorAsset extends CursorAsset {
             if (cursorType == CursorType.LASER)
             {
                 renderData.setDepthTest(false);
+                renderData.setAlphaBlend(true);
                 renderData.setRenderingOrder(OVERLAY_RENDER_ORDER);
             }
             assetSceneObject.attachRenderData(renderData);

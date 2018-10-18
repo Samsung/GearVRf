@@ -129,6 +129,7 @@ void BitmapImage::clearData(JNIEnv* env)
         env->DeleteGlobalRef(mBitmap);
         mBitmap = NULL;
     }
+    mIsCompressed = false;
 }
 
 bool BitmapImage::hasAlpha(int format) {

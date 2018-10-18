@@ -37,10 +37,11 @@ import android.view.ViewConfiguration;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
-import org.gearvrf.GVRApplication;
+import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRExternalTexture;
 import org.gearvrf.GVRMaterial;
@@ -68,7 +69,7 @@ import java.util.Map;
  * See: {@link Keyboard}
  */
 public class GVRKeyboardSceneObject extends GVRSceneObject {
-    private final GVRApplication mApplication;
+    private final GVRActivity mActivity;
 
     private GVRMesh mKeyboardMesh;
     private GVRMesh mKeyMesh;
@@ -103,7 +104,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
                                   GVRMesh keyMesh, GVRTexture keyboardTexture,
                                    Drawable keyBackground, int textColor, boolean enableHoverAnim) {
         super(gvrContext);
-        mApplication = gvrContext.getApplication();
+        mActivity = gvrContext.getActivity();
         mKeyboardMesh = keyboardMesh;
         mKeyMesh = keyMesh;
         mKeyboardTexture = keyboardTexture;
@@ -119,7 +120,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         MeshUtils.resize(mKeyMesh, 1.0f);
 
         mKeyMeshDepthSize = MeshUtils.getBoundingSize(mKeyMesh)[2];
-        mKeyEventsHandler = new KeyEventsHandler(gvrContext.getActivity().getMainLooper(), this, mApplication);
+        mKeyEventsHandler = new KeyEventsHandler(mActivity.getMainLooper(), this, mActivity);
         mGVRKeyboardCache = new HashMap<Integer, GVRKeyboard>();
         mEditableSceneObject = null;
         mMiniKeyboard = null;
@@ -168,7 +169,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         if (gvrKeyboard != null) {
             setKeyboard(gvrKeyboard.mKeyboard, keyboardResId);
         } else {
-            setKeyboard(new Keyboard(mApplication.getActivity(), keyboardResId), keyboardResId);
+            setKeyboard(new Keyboard(mActivity, keyboardResId), keyboardResId);
         }
     }
 
@@ -210,11 +211,6 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         GVRKeyboard gvrKeyboard = mGVRKeyboardCache.get(cacheId);
 
         if (gvrKeyboard == null) {
-            // FIXME: GVRTexture:getId() may cause deadlock at UI thread!
-            if (Looper.getMainLooper() == Looper.myLooper()) {
-                // Going to deadlock!
-                throw new UnsupportedOperationException("Creation of Keyboard layout on UI Thread!");
-            }
             // Keyboard not cached yet
             gvrKeyboard = createGVRKeyboard(keyboard, cacheId, this);
 
@@ -641,18 +637,18 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             mHovered = false;
             mIsDirty = false;
             mPopupKeyboard = null;
-
             mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                Runnable onFrameAvailableGLCallback = new Runnable() {
+                GVRDrawFrameListener drawFrameListener = new GVRDrawFrameListener() {
                     @Override
-                    public void run() {
+                    public void onDrawFrame(float frameTime) {
                         mSurfaceTexture.updateTexImage();
+                        gvrContext.unregisterDrawFrameListener(this);
                     }
                 };
 
                 @Override
                 public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                    gvrContext.runOnGlThread(onFrameAvailableGLCallback);
+                    gvrContext.registerDrawFrameListener(drawFrameListener);
                 }
             });
         }
@@ -822,7 +818,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
 
         private boolean mIsProcessing = false;
         GVRKeyboardSceneObject mGvrKeyboard;
-        GVRApplication mApplication;
+        GVRActivity mActivity;
         GVRKey mSelectedKey;
         GVRKey mPressedKey;
 
@@ -874,10 +870,10 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
             }
         };
 
-        public KeyEventsHandler(Looper loop, GVRKeyboardSceneObject gvrKeyboard, GVRApplication activity) {
+        public KeyEventsHandler(Looper loop, GVRKeyboardSceneObject gvrKeyboard, GVRActivity activity) {
             super(loop);
             mGvrKeyboard = gvrKeyboard;
-            mApplication = activity;
+            mActivity = activity;
         }
 
         public void start() {
@@ -918,20 +914,20 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
 
         public void onEnter(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
             mOnEnterKey.HitKey = (GVRKey) pickInfo.hitObject;
-            mApplication.getActivity().runOnUiThread(mOnEnterKey);
+            mActivity.runOnUiThread(mOnEnterKey);
         }
 
         public void onExit(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
             mOnExitKey.HitKey = (GVRKey) pickInfo.hitObject;
-            mApplication.getActivity().runOnUiThread(mOnExitKey);
+            mActivity.runOnUiThread(mOnExitKey);
        }
 
         public void onTouchStart(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
-            mApplication.getActivity().runOnUiThread(mOnTouchStartKey);
+            mActivity.runOnUiThread(mOnTouchStartKey);
         }
 
         public void onTouchEnd(GVRSceneObject sceneObject, GVRPicker.GVRPickedObject pickInfo) {
-            mApplication.getActivity().runOnUiThread(mOnTouchEndKey);
+            mActivity.runOnUiThread(mOnTouchEndKey);
         }
 
         @Override
@@ -1145,7 +1141,7 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
 
     private static class InputMethodHandler implements IKeyboardEvents
     {
-        final GVRApplication mApplication;
+        final GVRActivity mActivity;
         final GVRViewSceneObject.RootViewGroup mRootGroup;
         GVRKeyboardSceneObject mGvrKeybaord;
         final String mWordSeparators;
@@ -1158,10 +1154,10 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
 
         public InputMethodHandler(GVRViewSceneObject view)
         {
-            mApplication = view.getGVRContext().getApplication();
+            mActivity = view.getGVRContext().getActivity();
             mRootGroup = view.getRootView();
             mGvrKeybaord = null;
-            mWordSeparators = mApplication.getActivity().getResources().getString(R.string.word_separators);
+            mWordSeparators = mActivity.getResources().getString(R.string.word_separators);
 
             mCapsLock = false;
             mLastShiftTime = 0;

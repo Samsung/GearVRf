@@ -16,7 +16,6 @@
 package org.gearvrf.physics;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRSceneObject;
 
 /**
  * Created by c.bozzetto on 19/05/2017.
@@ -38,10 +37,8 @@ public class GVRPoint2PointConstraint extends GVRConstraint {
      */
     public GVRPoint2PointConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB,
                                     float pivotInA[], float pivotInB[]) {
-        this(gvrContext,
+        super(gvrContext,
                 Native3DPoint2PointConstraint.ctor(rigidBodyB.getNative(), pivotInA, pivotInB));
-
-        mBodyB = rigidBodyB;
     }
 
     /** Used only by {@link GVRPhysicsLoader} */

@@ -32,7 +32,7 @@ void main()
 
 	vertex.local_position = vec4(a_position.xyz, 1.0);
 #ifdef HAS_VertexSkinShader
-    @VertexSkinShader
+@VertexSkinShader
 #endif
 
 #ifdef HAS_MULTIVIEW

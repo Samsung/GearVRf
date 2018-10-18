@@ -52,7 +52,6 @@ public:
 
     virtual void beginRendering(Renderer*);
     virtual void endRendering(Renderer*);
-    virtual bool isReady();
 
     // Start to read back texture in the background. It can be optionally called before
     // readRenderResult() to read pixels asynchronously. This function returns immediately.

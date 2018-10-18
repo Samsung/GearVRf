@@ -41,10 +41,8 @@ public class GVRConeTwistConstraint extends GVRConstraint {
      */
     public GVRConeTwistConstraint(GVRContext gvrContext, GVRRigidBody rigidBodyB, final float vortex[],
                            final float bodyRotation[], final float coneRotation[]) {
-        this(gvrContext, Native3DConeTwistConstraint.ctor(rigidBodyB.getNative(), vortex,
+        super(gvrContext, Native3DConeTwistConstraint.ctor(rigidBodyB.getNative(), vortex,
                 bodyRotation, coneRotation));
-
-        mBodyB = rigidBodyB;
     }
 
     /** Used only by {@link GVRPhysicsLoader} */

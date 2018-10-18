@@ -1,10 +1,6 @@
 Radiance @LightType(Surface s, in U@LightType data, int index)
 {
-#ifdef HAS_MULTIVIEW
-	vec4 L = u_view_[gl_ViewID_OVR] * data.world_direction;
-#else
-    vec4 L = u_view * data.world_direction;
-#endif
+    vec4 L = u_view * vec4(data.world_direction.xyz, 0.0);
 
 	return Radiance(data.ambient_intensity.xyz,
 					data.diffuse_intensity.xyz,

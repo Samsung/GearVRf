@@ -17,18 +17,18 @@ package org.gearvrf;
 
 final class OvrConfigurationManager extends GVRConfigurationManager {
 
-    OvrConfigurationManager(GVRApplication application) {
-        super(application);
+    OvrConfigurationManager(GVRActivity gvrActivity) {
+        super(gvrActivity);
     }
 
     @Override
     public boolean isHmtConnected() {
 
-        final GVRApplication application = (GVRApplication) mApplication.get();
-        if (null == application) {
+        final GVRActivity activity = (GVRActivity) mActivity.get();
+        if (null == activity) {
             return false;
         }
-        return nativeIsHmtConnected(application.getNative());
+        return nativeIsHmtConnected(activity.getNative());
     }
 
     private static native boolean nativeIsHmtConnected(long ptr);

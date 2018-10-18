@@ -157,6 +157,7 @@ public class CursorTheme {
     void load(Cursor cursor) {
         assetRoot = new GVRSceneObject(cursor.getGVRContext());
         assetRoot.attachComponent(new GVRSwitch(cursor.getGVRContext()));
+        assetRoot.setName(name);
         for (CursorAsset asset : assets.values()) {
             asset.load(cursor);
         }

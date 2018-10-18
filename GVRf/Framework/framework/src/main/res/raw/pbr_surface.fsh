@@ -1,69 +1,49 @@
 @MATERIAL_UNIFORMS
+
 const float M_PI = 3.141592653589793;
 const float c_MinRoughness = 0.04;
 
-layout (set = 1, binding = 10) uniform sampler2D diffuseTexture;
+layout(set = 0, binding = 10) uniform sampler2D diffuseTexture;
 
 #ifdef HAS_metallicRoughnessTexture
-layout(location = 11) in vec2 metallicRoughness_coord;
-layout(set = 1, binding = 11) uniform sampler2D metallicRoughnessTexture;
+layout(location = 11) in vec2 ambient_coord;
+layout(set = 0, binding = 11) uniform sampler2D metallicRoughnessTexture;
 #endif
 
 #ifdef HAS_specularTexture
 layout(location = 12) in vec2 specular_coord;
-layout(set = 1, binding = 12) uniform sampler2D specularTexture;
+layout(set = 0, binding = 12) uniform sampler2D specularTexture;
 #endif
 
 #ifdef HAS_emissiveTexture
 layout(location = 13) in vec2 emissive_coord;
-layout (set = 1, binding = 13) uniform sampler2D emissiveTexture;
+layout(set = 0, binding = 13) uniform sampler2D emissiveTexture;
 #endif
 
 #ifdef HAS_lightmapTexture
 layout(location = 14) in vec2 lightmap_coord;
-layout(set = 1, binding = 14) uniform sampler2D lightmapTexture;
+layout(set = 0, binding = 14) uniform sampler2D lightmapTexture;
 #endif
 
 #ifdef HAS_normalTexture
-layout(location = 15) in vec2 normal_coord;
-layout(set = 1, binding = 15) uniform sampler2D normalTexture;
-
+layout(location = 16) in vec2 normal_coord;
+layout(set = 0, binding = 16) uniform sampler2D normalTexture;
 #ifdef HAS_a_tangent
-layout(location = 7) in mat3 tangent_matrix;
+layout(location = 4) in mat3 tangent_matrix;
 #endif
-
-    mat3 calculateTangentMatrix()
-    {
-        #ifdef HAS_a_tangent
-            return tangent_matrix;
-        #else
-            vec3 pos_dx = dFdx(viewspace_position);
-            vec3 pos_dy = dFdy(viewspace_position);
-            vec3 tex_dx = dFdx(vec3(normal_coord, 0.0));
-            vec3 tex_dy = dFdy(vec3(normal_coord, 0.0));
-
-            vec3 dp2perp = cross(pos_dy, viewspace_normal);
-            vec3 dp1perp = cross(viewspace_normal, pos_dx);
-            vec3 t = dp2perp * tex_dx.x + dp1perp * tex_dy.x;
-            vec3 b = dp2perp * tex_dx.y + dp1perp * tex_dy.y;
-            float invmax = inversesqrt(max(dot(t, t), dot(b, b)));
-            return mat3(t * invmax, b * invmax, viewspace_normal);
-        #endif
-    }
 #endif
 
 #ifdef HAS_brdfLUTTexture
-layout(set = 1, binding = 16) uniform sampler2D brdfLUTTexture;
+layout(set = 0, binding = 15) uniform sampler2D brdfLUTTexture;
 #endif
 
 #ifdef HAS_diffuseEnvTex
-layout(set = 1, binding = 17) uniform samplerCube diffuseEnvTex;
+layout(set = 0, binding = 17) uniform samplerCube diffuseEnvTex;
 #endif
 
 #ifdef HAS_specularEnvTexture
-layout(set = 1, binding = 18) uniform samplerCube specularEnvTexture;
+layout(set = 0, binding = 18) uniform samplerCube specularEnvTexture;
 #endif
-
 
 struct Surface
 {
@@ -80,6 +60,27 @@ vec3 SRGBtoLINEAR(vec3 srgbIn)
     //fast srgb approximation
     return pow(srgbIn.xyz, vec3(2.2));
 }
+
+#ifdef HAS_normalTexture
+mat3 calculateTangentMatrix()
+{
+#ifdef HAS_a_tangent
+    return tangent_matrix;
+#else
+    vec3 pos_dx = dFdx(viewspace_position);
+    vec3 pos_dy = dFdy(viewspace_position);
+    vec3 tex_dx = dFdx(vec3(normal_coord, 0.0));
+    vec3 tex_dy = dFdy(vec3(normal_coord, 0.0));
+
+    vec3 dp2perp = cross(pos_dy, viewspace_normal);
+    vec3 dp1perp = cross(viewspace_normal, pos_dx);
+    vec3 t = dp2perp * tex_dx.x + dp1perp * tex_dy.x;
+    vec3 b = dp2perp * tex_dx.y + dp1perp * tex_dy.y;
+    float invmax = inversesqrt(max(dot(t, t), dot(b, b)));
+    return mat3(t * invmax, b * invmax, viewspace_normal);
+#endif
+}
+#endif
 
 Surface @ShaderName()
 {

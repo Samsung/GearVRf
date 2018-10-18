@@ -20,19 +20,10 @@
 #ifndef RENDERER_H_
 #define RENDERER_H_
 
-#include <vector>
-#include <memory>
 #include <unordered_map>
-
-#include "glm/glm.hpp"
-#include "batch.h"
-//#include "objects/eye_type.h"
-#include "objects/mesh.h"
-#include "objects/bounding_volume.h"
+#include "render_sorter.h"
 #include "shaders/shader_manager.h"
-#include "batch_manager.h"
-
-typedef unsigned long Long;
+#include "render_state.h"
 
 namespace gvr {
 extern bool use_multiview;
@@ -56,50 +47,22 @@ class Image;
 class RenderPass;
 class Texture;
 class RenderTarget;
+class ShadowRenderSorter;
 class ShadowMap;
+class Mesh;
+class TextureParameters;
 
-extern uint8_t *oculusTexData;
-/*
- * These uniforms are commonly used in shaders.
- * They are calculated by the GearVRF renderer.
- */
-struct ShaderUniformsPerObject {
-    glm::mat4   u_model;        // Model matrix
-    glm::mat4   u_proj;         // projection matrix
-    glm::mat4   u_view;         // View matrix
-    glm::mat4   u_view_[2];     // for multiview
-    glm::mat4   u_view_inv;     // inverse of View matrix
-    glm::mat4   u_view_inv_[2]; // inverse of View matrix
-    glm::mat4   u_mv;           // ModelView matrix
-    glm::mat4   u_mv_[2];       // ModelView matrix
-    glm::mat4   u_mvp;          // ModelViewProjection matrix
-    glm::mat4   u_mvp_[2];      // ModelViewProjection matrix
-    glm::mat4   u_mv_it;        // inverse transpose of ModelView
-    glm::mat4   u_mv_it_[2];    // inverse transpose of ModelView
-    float       u_right;        // 1 = right eye, 0 = left
-};
+extern uint8_t* oculusTexData;
 
-struct RenderState {
-    int                     render_mask;
-    int                     viewportX;
-    int                     viewportY;
-    int                     viewportWidth;
-    int                     viewportHeight;
-    bool                    lightsChanged;
-    Scene*                  scene;
-    jobject                 javaSceneObject = nullptr;
-    ShaderData*             material_override;
-    ShaderUniformsPerObject uniforms;
-    ShaderManager*          shader_manager;
-    ShadowMap*              shadow_map;
-    bool                    is_shadow;
-    bool                    is_multiview;
-    Camera*                 camera;
-    int                     sampleCount;
-};
-enum EYE{
+
+
+enum EYE
+{
     LEFT, RIGHT, MULTIVIEW
 };
+
+#include "render_state.h"
+
 class Renderer {
 public:
     void resetStats() {
@@ -108,9 +71,6 @@ public:
     }
     bool isVulkanInstance(){
         return isVulkan_;
-    }
-    void freeBatch(Batch* batch){
-        batch_manager->freeBatch(batch);
     }
     int getNumberDrawCalls() {
         return numberDrawCalls;
@@ -125,15 +85,22 @@ public:
     int incrementDrawCalls(){
         return ++numberDrawCalls;
     }
+    JavaVM* getJavaVM() const { return mJavaVM; }
+    void setJavaVM(JavaVM* java) { mJavaVM = java; }
+
+    int getJavaEnv(JNIEnv** envptr);
+    void detachJavaEnv();
     static Renderer* getInstance(std::string type =  " ");
-    static void resetInstance(){
+    static void resetInstance()
+    {
         //@todo fix for vulkan
         if (!isVulkan_) {
             delete instance;
             instance = NULL;
         }
     }
-    static int getVulkanPropValue();
+    static bool useVulkanInstance();
+    virtual UniformBlock* createTransformBlock(int numMatrices) = 0;
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
     virtual RenderData* createRenderData() = 0;
     virtual RenderData* createRenderData(RenderData*) = 0;
@@ -146,34 +113,23 @@ public:
                                                const TextureParameters* texture_parameters, int number_views) = 0;
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format) = 0;
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&)=0;
+    virtual ShadowMap* createShadowMap(ShaderData*) = 0;
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
-                                 const char* fragmentShader) = 0;
+                                 const char* fragmentShader, const char* matrixCalc) = 0;
     virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount) = 0;
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount) = 0;
-    void updateTransforms(RenderState& rstate, UniformBlock* block, RenderData*);
-    virtual void initializeStats();
-    virtual void cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* camera,
-                                ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector,bool);
-    virtual void set_face_culling(int cull_face) = 0;
-
-    virtual void renderRenderData(RenderState& rstate, RenderData* render_data);
-    virtual RenderTarget* createRenderTarget(Scene*) = 0;
-    virtual RenderTarget* createRenderTarget(RenderTexture*, bool) = 0;
+    virtual RenderTarget* createRenderTarget(Scene*, bool stereo) = 0;
+    virtual RenderTarget* createRenderTarget(RenderTexture*, bool multiview, bool stereo) = 0;
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*) = 0;
-
     virtual void renderRenderTarget(Scene*, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b)=0;
-    virtual void restoreRenderStates(RenderData* render_data) = 0;
-    virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
     virtual Texture* createSharedTexture(int id) = 0;
-    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int) = 0;
     virtual void makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager) = 0;
     virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor) = 0;
-    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) = 0;
     virtual void updatePostEffectMesh(Mesh*) = 0;
-    void addRenderData(RenderData *render_data, RenderState& rstate, std::vector<RenderData*>& renderList);
+    virtual int getMaxArraySize(int elemSize) const;
     void addRenderTarget(RenderTarget* renderTarget, EYE eye, int index){
         switch (eye) {
             case LEFT:
@@ -202,43 +158,34 @@ public:
         }
         return nullptr;
     }
+    virtual void validate(RenderSorter::Renderable& r) = 0;
+    virtual void render(const RenderState&, const RenderSorter::Renderable&) = 0;
 private:
     RenderTarget* mLeftRenderTarget[3];
     RenderTarget* mRightRenderTarget[3];
     RenderTarget* mMultiviewRenderTarget[3];
     static bool isVulkan_;
-    virtual void build_frustum(float frustum[6][4], const float *vp_matrix);
-    virtual void frustum_cull(glm::vec3 camera_position, SceneObject *object,
-            float frustum[6][4], std::vector<SceneObject*>& scene_objects,
-            bool continue_cull, int planeMask);
-
     Renderer(const Renderer& render_engine) = delete;
     Renderer(Renderer&& render_engine) = delete;
     Renderer& operator=(const Renderer& render_engine) = delete;
     Renderer& operator=(Renderer&& render_engine) = delete;
-    BatchManager* batch_manager;
     static Renderer* instance;
 
 protected:
     Renderer();
-    virtual ~Renderer(){
-        if(batch_manager)
-            delete batch_manager;
-        batch_manager = NULL;
-    }
-
-    virtual void renderMesh(RenderState& rstate, RenderData* render_data) = 0;
-    virtual void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader* shader) = 0;
-
-    virtual bool occlusion_cull_init(RenderState& , std::vector<SceneObject*>& scene_objects,  std::vector<RenderData*>* render_data_vector);
-
+    virtual ~Renderer() { }
     virtual bool renderPostEffectData(RenderState& rstate, RenderTexture* input_texture, RenderData* post_effect, int pass);
 
+    int mMaxUniformBlockSize;
+    int mMaxArrayFloats;
     int numberDrawCalls;
     int numberTriangles;
     bool useStencilBuffer_ = false;
+    RenderSorter* mPostEffectSorter;
+    ShadowRenderSorter* mShadowSorter;
+    JavaVM* mJavaVM;
+
 public:
-    virtual void state_sort(std::vector<RenderData*>* render_data_vector) ;
     int numLights;
     void setUseStencilBuffer(bool enable) { useStencilBuffer_ = enable; }
     bool useStencilBuffer(){

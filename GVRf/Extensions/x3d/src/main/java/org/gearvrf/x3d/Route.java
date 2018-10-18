@@ -15,6 +15,8 @@
 
 package org.gearvrf.x3d;
 
+import org.gearvrf.animation.keyframe.GVRKeyFrameAnimation;
+
 
 /**
  * 

@@ -28,7 +28,11 @@ namespace gvr {
  * Data descriptor which defines the layout for uniform blocks
  * and vertex arrays.
  *
+ * The descriptor has the name, type, size and characteristics
+ * of each entry.
+ *
  * @see UniformBlock
+ * @see VertexBuffer
  */
     class DataDescriptor
     {
@@ -147,25 +151,23 @@ namespace gvr {
         bool isDirty() const { return mIsDirty; }
         virtual void markDirty() { mIsDirty = true; }
 
-        virtual std::string makeShaderType(const char* type, int byteSize);
-
-        std::string layoutString() const;
-
         /**
          * Calculate the byte size of the given type.
          */
         static short calcSize(const char* type);
 
     protected:
-        void removePunctuations(const char*);
         /**
          * Parse the descriptor string to create the map
          * which contains the name, offset and size of all uniforms.
          */
         void parseDescriptor();
 
+        virtual std::string makeShaderType(const char* type, int byteSize);
+
         const char* addName(const char* name, int len, DataEntry& entry);
         int findName(const char* name) const;
+        void removePunctuations(const char*);
 
         mutable bool mIsDirty;          // true if data in block has changed since last render
         std::string mDescriptor;        // descriptor with name, type and size of uniforms

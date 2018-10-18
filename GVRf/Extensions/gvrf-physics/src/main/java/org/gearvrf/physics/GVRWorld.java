@@ -15,18 +15,15 @@
 
 package org.gearvrf.physics;
 
+import android.content.res.AssetManager;
 import android.os.SystemClock;
 import android.util.LongSparseArray;
 
 import org.gearvrf.GVRComponent;
-import org.gearvrf.GVRComponentGroup;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSceneObject.ComponentVisitor;
-import org.gearvrf.GVRTransform;
 import org.gearvrf.ISceneObjectEvents;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 /**
  * Represents a physics world where all {@link GVRSceneObject} with {@link GVRRigidBody} component
@@ -46,11 +43,8 @@ public class GVRWorld extends GVRComponent {
         System.loadLibrary("gvrf-physics");
     }
 
-    private final LongSparseArray<GVRPhysicsWorldObject> mPhysicsObject = new LongSparseArray<GVRPhysicsWorldObject>();
+    private final LongSparseArray<GVRRigidBody> mRigidBodies = new LongSparseArray<GVRRigidBody>();
     private final GVRCollisionMatrix mCollisionMatrix;
-
-    private final PhysicsDragger mPhysicsDragger;
-    private GVRRigidBody mRigidBodyDragMe = null;
 
     /**
      * Constructs new instance to simulate the Physics World of the Scene.
@@ -91,7 +85,6 @@ public class GVRWorld extends GVRComponent {
      */
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix, long interval) {
         super(gvrContext, NativePhysics3DWorld.ctor());
-        mPhysicsDragger = new PhysicsDragger(gvrContext);
         mInitialized = false;
         mCollisionMatrix = collisionMatrix;
         mWorldTask = new GVRWorldTask(interval);
@@ -111,17 +104,7 @@ public class GVRWorld extends GVRComponent {
         mPhysicsContext.runOnPhysicsThread(new Runnable() {
             @Override
             public void run() {
-                if (contains(gvrConstraint)) {
-                    return;
-                }
-
-                if (!contains(gvrConstraint.mBodyA)
-                        || (gvrConstraint.mBodyB != null && !contains(gvrConstraint.mBodyB))) {
-                    throw new UnsupportedOperationException("Rigid body not found in the physics world.");
-                }
-
                 NativePhysics3DWorld.addConstraint(getNative(), gvrConstraint.getNative());
-                mPhysicsObject.put(gvrConstraint.getNative(), gvrConstraint);
             }
         });
     }
@@ -135,65 +118,7 @@ public class GVRWorld extends GVRComponent {
         mPhysicsContext.runOnPhysicsThread(new Runnable() {
             @Override
             public void run() {
-                if (contains(gvrConstraint)) {
-                    NativePhysics3DWorld.removeConstraint(getNative(), gvrConstraint.getNative());
-                    mPhysicsObject.remove(gvrConstraint.getNative());
-                }
-            }
-        });
-    }
-
-    /**
-     * Start the drag operation of a scene object with a rigid body.
-     *
-     * @param sceneObject Scene object with a rigid body attached to it.
-     * @param hitX rel position in x-axis.
-     * @param hitY rel position in y-axis.
-     * @param hitZ rel position in z-axis.
-     * @return true if success, otherwise returns false.
-     */
-    public boolean startDrag(final GVRSceneObject sceneObject,
-                             final float hitX, final float hitY, final float hitZ) {
-        final GVRRigidBody dragMe = (GVRRigidBody)sceneObject.getComponent(GVRRigidBody.getComponentType());
-        if (dragMe == null || dragMe.getSimulationType() != GVRRigidBody.DYNAMIC || !contains(dragMe))
-            return false;
-
-        GVRTransform t = sceneObject.getTransform();
-
-        final Vector3f relPos = new Vector3f(hitX, hitY, hitZ);
-        relPos.mul(t.getScaleX(), t.getScaleY(), t.getScaleZ());
-        relPos.rotate(new Quaternionf(t.getRotationX(), t.getRotationY(), t.getRotationZ(), t.getRotationW()));
-
-        final GVRSceneObject pivotObject = mPhysicsDragger.startDrag(sceneObject,
-                relPos.x, relPos.y, relPos.z);
-        if (pivotObject == null)
-            return false;
-
-        mPhysicsContext.runOnPhysicsThread(new Runnable() {
-            @Override
-            public void run() {
-                mRigidBodyDragMe = dragMe;
-                NativePhysics3DWorld.startDrag(getNative(), pivotObject.getNative(), dragMe.getNative(),
-                        hitX, hitY, hitZ);
-            }
-        });
-
-        return true;
-    }
-
-    /**
-     * Stop the drag action.
-     */
-    public void stopDrag() {
-        mPhysicsDragger.stopDrag();
-
-        mPhysicsContext.runOnPhysicsThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mRigidBodyDragMe != null) {
-                    NativePhysics3DWorld.stopDrag(getNative());
-                    mRigidBodyDragMe = null;
-                }
+                NativePhysics3DWorld.removeConstraint(getNative(), gvrConstraint.getNative());
             }
         });
     }
@@ -201,11 +126,11 @@ public class GVRWorld extends GVRComponent {
     /**
      * Returns true if the physics world contains the the specified rigid body.
      *
-     * @param physicsObject Physics object to check if it is present in the world.
-     * @return true if the world contains the specified object.
+     * @param rigidBody Rigid body the to check if it is present in the world.
+     * @return true if the world contains the specified rigid body.
      */
-    private boolean contains(GVRPhysicsWorldObject physicsObject) {
-        return mPhysicsObject.get(physicsObject.getNative()) != null;
+    public boolean contains(GVRRigidBody rigidBody) {
+        return mRigidBodies.get(rigidBody.getNative()) != null;
     }
 
     /**
@@ -230,7 +155,7 @@ public class GVRWorld extends GVRComponent {
                             mCollisionMatrix.getCollisionFilterMask(gvrBody.getCollisionGroup()));
                 }
 
-                mPhysicsObject.put(gvrBody.getNative(), gvrBody);
+                mRigidBodies.put(gvrBody.getNative(), gvrBody);
             }
         });
     }
@@ -246,7 +171,7 @@ public class GVRWorld extends GVRComponent {
             public void run() {
                 if (contains(gvrBody)) {
                     NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
-                    mPhysicsObject.remove(gvrBody.getNative());
+                    mRigidBodies.remove(gvrBody.getNative());
                 }
             }
         });
@@ -269,8 +194,8 @@ public class GVRWorld extends GVRComponent {
         for (GVRCollisionInfo info : collisionInfos) {
             if (info.isHit) {
                 sendCollisionEvent(info, onEnter);
-            } else if (mPhysicsObject.get(info.bodyA) != null
-                    && mPhysicsObject.get(info.bodyB) != null) {
+            } else if (mRigidBodies.get(info.bodyA) != null
+                    && mRigidBodies.get(info.bodyB) != null) {
                 // If both bodies are in the scene.
                 sendCollisionEvent(info, onExit);
             }
@@ -279,8 +204,8 @@ public class GVRWorld extends GVRComponent {
     }
 
     private void sendCollisionEvent(GVRCollisionInfo info, String eventName) {
-        GVRSceneObject bodyA = mPhysicsObject.get(info.bodyA).getOwnerObject();
-        GVRSceneObject bodyB = mPhysicsObject.get(info.bodyB).getOwnerObject();
+        GVRSceneObject bodyA = mRigidBodies.get(info.bodyA).getOwnerObject();
+        GVRSceneObject bodyB = mRigidBodies.get(info.bodyB).getOwnerObject();
 
         getGVRContext().getEventManager().sendEvent(bodyA, ICollisionEvents.class, eventName,
                 bodyA, bodyB, info.normal, info.distance);
@@ -290,8 +215,7 @@ public class GVRWorld extends GVRComponent {
     }
 
     private void doPhysicsAttach(GVRSceneObject rootSceneObject) {
-        rootSceneObject.forAllComponents(mRigidBodiesVisitor, GVRRigidBody.getComponentType());
-        rootSceneObject.forAllComponents(mConstraintsVisitor, GVRConstraint.getComponentType());
+        rootSceneObject.forAllComponents(mComponentVisitor, GVRRigidBody.getComponentType());
 
         if (!mInitialized) {
             rootSceneObject.getEventReceiver().addListener(mSceneEventsHandler);
@@ -301,8 +225,7 @@ public class GVRWorld extends GVRComponent {
     }
 
     private void doPhysicsDetach(GVRSceneObject rootSceneObject) {
-        rootSceneObject.forAllComponents(mConstraintsVisitor, GVRConstraint.getComponentType());
-        rootSceneObject.forAllComponents(mRigidBodiesVisitor, GVRRigidBody.getComponentType());
+        rootSceneObject.forAllComponents(mComponentVisitor, GVRRigidBody.getComponentType());
 
         if (!mInitialized) {
             rootSceneObject.getEventReceiver().removeListener(mSceneEventsHandler);
@@ -462,7 +385,7 @@ public class GVRWorld extends GVRComponent {
         public void onStep() {}
     };
 
-    private ComponentVisitor mRigidBodiesVisitor = new ComponentVisitor() {
+    private ComponentVisitor mComponentVisitor = new ComponentVisitor() {
 
         @Override
         public boolean visit(GVRComponent gvrComponent) {
@@ -478,34 +401,6 @@ public class GVRWorld extends GVRComponent {
             return true;
         }
     };
-
-    private ComponentVisitor mConstraintsVisitor = new ComponentVisitor() {
-
-        @Override
-        public boolean visit(GVRComponent gvrComponent) {
-            if (!gvrComponent.isEnabled()) {
-                return false;
-            }
-
-            GVRComponentGroup<GVRConstraint> group = (GVRComponentGroup) gvrComponent;
-
-            if (group == null) {
-                if (GVRWorld.this.owner != null) {
-                    addConstraint((GVRConstraint) gvrComponent);
-                } else {
-                    removeConstraint((GVRConstraint) gvrComponent);
-                }
-            } else for (GVRConstraint constraint: group) {
-                if (GVRWorld.this.owner != null) {
-                    addConstraint(constraint);
-                } else {
-                    removeConstraint(constraint);
-                }
-            }
-
-            return true;
-        }
-    };
 }
 
 class NativePhysics3DWorld {
@@ -516,11 +411,6 @@ class NativePhysics3DWorld {
     static native boolean addConstraint(long jphysics_world, long jconstraint);
 
     static native boolean removeConstraint(long jphysics_world, long jconstraint);
-
-    static native void startDrag(long jphysics_world, long jdragger, long jtarget,
-                                 float relX, float relY, float relZ);
-
-    static native void stopDrag(long jphysics_world);
 
     static native boolean addRigidBody(long jphysics_world, long jrigid_body);
 

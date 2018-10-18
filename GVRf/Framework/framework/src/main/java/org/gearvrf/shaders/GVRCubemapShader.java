@@ -84,5 +84,12 @@ public class GVRCubemapShader extends GVRShaderTemplate
         material.setVec3("u_color", 1.0f, 1.0f, 1.0f);
         material.setFloat("u_opacity", 1.0f);
     }
+
+    @Override
+    public String getMatrixCalc(boolean usesLights)
+    {
+        return "left_mvp; right_mvp; model";
+    }
+
 }
 

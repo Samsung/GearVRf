@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import org.gearvrf.utility.Log;
+
 /**
  * A render target is a component which allows the scene to be rendered
  * into a texture from the viewpoint of a particular scene object.
@@ -28,61 +30,100 @@ package org.gearvrf;
  */
 public class GVRRenderTarget extends GVRBehavior
 {
-
-    protected GVRMaterial mMaterial;
     protected GVRRenderTexture mTexture;
     protected GVRScene  mScene;
     protected GVRCamera mCamera;
+    protected boolean   mIsStereo;
+
     static public long getComponentType()
     {
         return NativeRenderTarget.getComponentType();
     }
+
     /**
-     * Constructs a render target component which renders the given scene to a designated texture.
+     * Constructs a render target component which renders the main scene to a designated texture.
      * The objects in the scene are rendered from the viewpoint of the scene object
      * the GVRRenderTarget is attached to. Nothing is rendered if
      * the render target is not attached to a scene object.
-     * You must call @{link #setEnable(true)} to initiate rendering.
      *
      * @param texture   GVRRenderTexture to render to.
-     * @param scene     GVRScene to render.
-     * @see #setEnable(boolean)
      */
+    public GVRRenderTarget(GVRRenderTexture texture, boolean isStereo)
+    {
+        super(texture.getGVRContext(),
+              NativeRenderTarget.ctorMultiview(texture.getNative(), false, isStereo));
+        mScene = texture.getGVRContext().getMainScene();
+        mTexture = texture;
+        mIsStereo = isStereo;
+    }
+
+    /**
+     * Constructs a render target component which renders the main scene.
+     * The objects in the scene are rendered from the viewpoint of the scene's
+     * right and left cameras if stereo is enabled.
+     * @param ctx   GVRContext to attach render target to.
+     */
+    public GVRRenderTarget(GVRContext ctx, boolean isStereo)
+    {
+        super(ctx,
+              NativeRenderTarget.defaultCtr(ctx.getMainScene().getNative(), isStereo));
+        mScene = ctx.getMainScene();
+        mIsStereo = isStereo;
+    }
+
+    /**
+     * Constructs a render target component which renders to the same scene
+     * as the specified render target. The objects in the scene are rendered
+     * from the viewpoint of the scene's camera.
+     *
+     * @param texture       GVRRenderTexture to render to.
+     * @param renderTarget  GVRRenderTarget to share
+     */
+    public GVRRenderTarget(GVRRenderTexture texture, GVRRenderTarget renderTarget)
+    {
+        super(texture.getGVRContext(),
+              NativeRenderTarget.ctor(texture.getNative(), renderTarget.getNative()));
+        setEnable(false);
+        mTexture = texture;
+        mIsStereo = renderTarget.isStereo();
+        setMainScene(renderTarget.mScene);
+    }
+
     public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene)
     {
-        this(texture,scene,false);
+        this(texture, scene, false);
     }
-    public GVRRenderTarget(GVRContext gvrContext)
+
+    public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene, boolean isMultiview)
     {
-        super(gvrContext,NativeRenderTarget.defaultCtr(gvrContext.getMainScene().getNative()));
-        mScene = gvrContext.getMainScene();
+        super(texture.getGVRContext(),
+              NativeRenderTarget.ctorMultiview(texture.getNative(), isMultiview, true));
+        setEnable(false);
+        mTexture = texture;
+        mScene = scene;
+        mIsStereo = true;
+        setMainScene(scene);
+        setCamera(scene.getMainCameraRig().getCenterCamera());
+    }
+
+    public boolean isStereo() { return mIsStereo; }
+
+    public void setStereo(boolean flag)
+    {
+        mIsStereo = flag;
+        NativeRenderTarget.setStereo(getNative(), flag);
     }
 
     public GVRCamera getCamera(){
         return mCamera;
     }
-    public void setCamera(GVRCamera camera){
+
+    public void setCamera(GVRCamera camera)
+    {
         mCamera = camera;
         NativeRenderTarget.setCamera(getNative(), camera.getNative());
     }
-    public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene, GVRRenderTarget renderTarget)
-    {
-        super(texture.getGVRContext(), NativeRenderTarget.ctor(texture.getNative(), renderTarget.getNative()));
-        setEnable(false);
-        mTexture = texture;
-        mScene = scene;
-        setMainScene(scene);
-    }
-    public GVRRenderTarget(GVRRenderTexture texture, GVRScene scene, boolean isMultiview)
-    {
-        super(texture.getGVRContext(), NativeRenderTarget.ctorMultiview(texture.getNative(),isMultiview));
-        setEnable(false);
-        mTexture = texture;
-        mScene = scene;
-        setMainScene(scene);
-        setCamera(scene.getMainCameraRig().getCenterCamera());
 
-    }
     public void attachRenderTarget(GVRRenderTarget renderTarget){
         NativeRenderTarget.attachRenderTarget(getNative(),renderTarget.getNative());
     }
@@ -92,8 +133,9 @@ public class GVRRenderTarget extends GVRBehavior
     public void endRendering(){
         NativeRenderTarget.endRendering(getNative());
     }
-    public void cullFromCamera(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager){
-        NativeRenderTarget.cullFromCamera(scene.getNative(), scene, getNative(),camera.getNative(), shaderManager.getNative());
+    public void cullFromCamera(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager)
+    {
+        NativeRenderTarget.cullFromCamera(scene.getNative(), scene, getNative(), camera.getNative(), shaderManager.getNative());
     }
 
     public void render(GVRScene scene, GVRCamera camera, GVRShaderManager shaderManager, GVRRenderTexture posteffectRenderTextureA, GVRRenderTexture posteffectRenderTextureB) {
@@ -138,21 +180,22 @@ public class GVRRenderTarget extends GVRBehavior
 
     public void onDrawFrame(float frameTime)
     {
-        getGVRContext().getApplication().getViewManager().cullAndRender(this, mScene);
+        getGVRContext().getActivity().getViewManager().cullAndRender(this, mScene);
     }
 }
 
 class NativeRenderTarget
 {
-    static native long defaultCtr(long scene);
+    static native long ctor(long texture, long sourceRendertarget);
+    static native long ctorMultiview(long texture, boolean isMultiview, boolean isStereo);
+    static native long defaultCtr(long scene, boolean isStereo);
     static native long getComponentType();
     static native void setMainScene(long rendertarget, long scene);
     static native void beginRendering(long rendertarget, long camera);
     static native void endRendering(long rendertarget);
-    static native long ctorMultiview(long texture, boolean isMultiview);
     static native void setCamera(long rendertarget, long camera);
-    static native long ctor(long texture, long sourceRendertarget);
-    static native void cullFromCamera(long scene, GVRScene javaSceneObject, long renderTarget,long camera, long shader_manager );
+    static native void setStereo(long rendertarget, boolean isStereo);
+    static native void cullFromCamera(long scene, GVRScene javaSceneObject, long renderTarget, long camera, long shader_manager);
     static native void render(long renderTarget, long camera, long shader_manager, long posteffectrenderTextureA, long posteffectRenderTextureB, long scene, GVRScene javaSceneObject);
     static native void setTexture(long rendertarget, long texture);
     static native void attachRenderTarget(long renderTarget, long nextRenderTarget);

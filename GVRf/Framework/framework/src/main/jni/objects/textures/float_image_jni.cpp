@@ -20,23 +20,20 @@
 #include "float_image.h"
 
 namespace gvr {
-extern "C"
-{
+    extern "C" {
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeFloatImage_update(JNIEnv* env, jobject obj, jlong jimage,
-                                             jint width, jint height,
-                                             jint pixelFormat, jfloatArray jdata);
-};
+            Java_org_gearvrf_NativeFloatImage_update(JNIEnv * env,
+                                                     jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata);
+    }
+    ;
 
-JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeFloatImage_update(JNIEnv* env, jobject obj, jlong jimage,
-                                         jint width, jint height,
-                                         jint pixelFormat, jfloatArray jdata)
-{
-    FloatImage* image = reinterpret_cast<FloatImage*>(jimage);
-    jfloat* data = env->GetFloatArrayElements(jdata, 0);
-    image->update(env, width, height, jdata, pixelFormat);
-    env->ReleaseFloatArrayElements(jdata, data, 0);
-}
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeFloatImage_update(JNIEnv * env,
+                                             jobject obj, jlong jtexture, jint width, jint height, jfloatArray jdata) {
+        FloatImage* texture = reinterpret_cast<FloatImage*>(jtexture);
+        jfloat* data = env->GetFloatArrayElements(jdata, 0);
+        texture->update(env, width, height, jdata);
+        env->ReleaseFloatArrayElements(jdata, data, 0);
+    }
 
 }

@@ -15,12 +15,13 @@
 
 package org.gearvrf;
 
+import org.gearvrf.GVRActivity.DockListener;
+import org.gearvrf.utility.Log;
+
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-
-import org.gearvrf.utility.Log;
 
 /**
  * Wrapper class for rotation-related sensors. Combines handling a device's
@@ -45,7 +46,7 @@ class MonoscopicRotationSensor {
      *            A {@link MonoscopicRotationSensorListener} implementation to receive
      *            rotation data.
      */
-    MonoscopicRotationSensor(Activity activity, MonoscopicRotationSensorListener listener) {
+    MonoscopicRotationSensor(GVRActivity activity, MonoscopicRotationSensorListener listener) {
         mListener = listener;
         mApplicationContext = activity.getApplicationContext();
 

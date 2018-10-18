@@ -41,13 +41,13 @@ class DaydreamViewManager extends GVRViewManager {
                 }
             };
 
-    DaydreamViewManager(final GVRApplication application, GVRMain gvrMain) {
-        super(application, gvrMain);
+    DaydreamViewManager(final GVRActivity gvrActivity, GVRMain gvrMain) {
+        super(gvrActivity, gvrMain);
 
         // Initialize GvrLayout and the native renderer.
-        gvrLayout = new GvrLayout(application.getActivity());
+        gvrLayout = new GvrLayout(gvrActivity);
 
-        surfaceView = new GLSurfaceView(application.getActivity());
+        surfaceView = new GLSurfaceView(gvrActivity);
         surfaceView.setEGLContextClientVersion(3);
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 24, 8);
         surfaceView.setPreserveEGLContextOnPause(true);
@@ -58,22 +58,22 @@ class DaydreamViewManager extends GVRViewManager {
         gvrLayout.setPresentationView(surfaceView);
 
         // Add the GvrLayout to the View hierarchy.
-        application.getActivity().setContentView(gvrLayout);
+        gvrActivity.setContentView(gvrLayout);
 
         // Enable scan line racing.
         if (gvrLayout.setAsyncReprojectionEnabled(true)) {
             // Scanline racing decouples the app framerate from the display framerate,
             // allowing immersive interaction even at the throttled clockrates set by
             // sustained performance mode.
-            AndroidCompat.setSustainedPerformanceMode(application.getActivity(), true);
+            AndroidCompat.setSustainedPerformanceMode(gvrActivity, true);
         }
 
         // Enable VR Mode.
-        AndroidCompat.setVrModeEnabled(application.getActivity(), true);
+        AndroidCompat.setVrModeEnabled(gvrActivity, true);
 
         // Prevent screen from dimming/locking.
-        application.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mControllerReader = new DayDreamControllerReader(this);
+        gvrActivity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        mControllerReader = new DayDreamControllerReader(gvrActivity);
 
     }
 
@@ -82,7 +82,7 @@ class DaydreamViewManager extends GVRViewManager {
     }
     public GVRRenderTarget getRenderTarget(){
         if(null == mDaydreamRenderTarget){
-            mDaydreamRenderTarget = new GVRRenderTarget(mApplication.getGVRContext());
+            mDaydreamRenderTarget = new GVRRenderTarget(getActivity().getGVRContext(), true);
         }
         return mDaydreamRenderTarget;
     }

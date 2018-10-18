@@ -53,7 +53,8 @@ public:
             const char* textureDescriptor,
             const char* vertexDescriptor,
             const char* vertexShader,
-            const char* fragmentShader);
+            const char* fragmentShader,
+            const char* matrixCalc);
 
     virtual ~VulkanShader();
 
@@ -83,9 +84,9 @@ public:
         return m_pipelineLayout;
     }
 
-    VkDescriptorSetLayout* getDescriptorLayouts()
+    VkDescriptorSetLayout &getDescriptorLayout()
     {
-        return &m_descriptorLayout[0];
+        return m_descriptorLayout;
     }
     bool isDepthShader(){
         return isDepthShaderFlag;
@@ -98,13 +99,12 @@ public:
     void  convertToVkShaders();
     virtual void bindLights(LightList&, Renderer* r) { }
 
-    void makeUniformLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights);
-    void makeSamplerLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding);
+    int makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights);
     bool bindTextures(VulkanMaterial* material, std::vector<VkWriteDescriptorSet>& writes, VkDescriptorSet& descriptorSet);
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
 private:
     VkPipelineLayout m_pipelineLayout;
-    VkDescriptorSetLayout m_descriptorLayout[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE};
+    VkDescriptorSetLayout m_descriptorLayout;
 
     VulkanShader(const VulkanShader& shader) = delete;
     VulkanShader(VulkanShader&& shader) = delete;

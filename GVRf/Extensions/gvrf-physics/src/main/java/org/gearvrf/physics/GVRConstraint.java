@@ -16,7 +16,6 @@
 package org.gearvrf.physics;
 
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRSceneObject;
 
 import java.util.List;
 
@@ -37,25 +36,12 @@ abstract class GVRConstraint extends GVRPhysicsWorldObject {
     static final int coneTwistConstraintId = 5;
     static final int genericConstraintId = 6;
 
-    protected GVRPhysicsWorldObject mBodyA = null;
-    protected GVRPhysicsWorldObject mBodyB = null;
-
     protected GVRConstraint(GVRContext gvrContext, long nativePointer) {
         super(gvrContext, nativePointer);
     }
 
     protected GVRConstraint(GVRContext gvrContext, long nativePointer, List<NativeCleanupHandler> cleanupHandlers) {
         super(gvrContext, nativePointer, cleanupHandlers);
-    }
-
-    @Override
-    public void onAttach(GVRSceneObject newOwner) {
-        mBodyA = (GVRRigidBody)newOwner.getComponent(GVRRigidBody.getComponentType());
-        if (mBodyA == null) {
-            throw new UnsupportedOperationException("There is no rigid body attached to owner object.");
-        }
-
-        super.onAttach(newOwner);
     }
 
     @Override

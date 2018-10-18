@@ -23,7 +23,8 @@ namespace gvr {
                                  const char* textureDescriptor,
                                  const char* vertexDescriptor,
                                  const char* vertex_shader,
-                                 const char* fragment_shader)
+                                 const char* fragment_shader,
+                                 const char* matrixCalc)
     {
         Shader* shader = findShader(signature);
         if (shader != NULL)
@@ -32,7 +33,7 @@ namespace gvr {
         }
         std::lock_guard<std::mutex> lock(lock_);
         int id = ++latest_shader_id_;
-        shader = Renderer::getInstance()->createShader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertex_shader, fragment_shader);
+        shader = Renderer::getInstance()->createShader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertex_shader, fragment_shader, matrixCalc);
         shadersBySignature[signature] = shader;
         shadersByID[id] = shader;
 #ifdef DEBUG_SHADER

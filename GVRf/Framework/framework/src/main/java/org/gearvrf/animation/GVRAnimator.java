@@ -29,8 +29,6 @@ public class GVRAnimator extends GVRBehavior
     static private long TYPE_ANIMATOR = newComponentType(GVRAnimator.class);
     protected List<GVRAnimation> mAnimations;
     protected boolean mAutoStart;
-    protected boolean mIsRunning;
-    protected String mName;
 
     /**
      * Make an instance of the GVRAnimator component.
@@ -44,7 +42,6 @@ public class GVRAnimator extends GVRBehavior
         super(ctx);
         mType = getComponentType();
         mAutoStart = false;
-        mIsRunning = false;
         mAnimations = new ArrayList<GVRAnimation>();
     }
 
@@ -62,32 +59,10 @@ public class GVRAnimator extends GVRBehavior
         super(ctx);
         mType = getComponentType();
         mAutoStart = autoStart;
-        mIsRunning = false;
         mAnimations = new ArrayList<GVRAnimation>();
     }
 
     static public long getComponentType() { return TYPE_ANIMATOR; }
-
-    /**
-     * Get the name of this animator.
-     * <p>
-     * The name is optional and may be set with {@link #setName(String) }
-     * @returns string with name of animator, may be null
-     * @see #setName(String)
-     */
-    public String getName() { return mName; }
-
-    /**
-     * Set the name of this animator.
-     * @param name string with name of animator, may be null
-     * @see #getName()
-     */
-    public void setName(String name) { mName = name; }
-
-    /**
-     * Determine if this animator is running (has been started).
-     */
-    public boolean isRunning() { return mIsRunning; }
 
     /**
      * Determine if this animator should start all the animations
@@ -98,12 +73,6 @@ public class GVRAnimator extends GVRBehavior
     {
         return mAutoStart;
     }
-
-    /**
-     * Query the number of animations owned by this animator.
-     * @return number of animations added to this animator
-     */
-    public int getAnimationCount() { return mAnimations.size(); }
 
     /**
      * Adds an animation to this animator.
@@ -123,51 +92,19 @@ public class GVRAnimator extends GVRBehavior
     }
 
     /**
-     * Gets an animation from this animator.
-     *
-     * @param index index of animation to get
-     * @see GVRAnimator#addAnimation(GVRAnimation)
-     */
-    public GVRAnimation getAnimation(int index)
-    {
-        return mAnimations.get(index);
-    }
-
-    /**
      * Removes an animation from this animator.
      * <p>
      * This animation will not participate in any subsequent operations
      * but it's state will not be changed when removed. For example,
      * if the animation is already running it will not be stopped.
      *
-     * @param anim animation to remove
+     * @param anim animation to add
      * @see GVRAnimator#addAnimation(GVRAnimation)
      * @see GVRAnimator#clear()
      */
     public void removeAnimation(GVRAnimation anim)
     {
         mAnimations.remove(anim);
-    }
-
-    /**
-     * Find the index of this animation if it is in this animator.
-     *
-     * @param findme    {@link GVRAnimation} to find.
-     * @returns 0 based index of animation or -1 if not found
-     * @see GVRAnimator#addAnimation(GVRAnimation)
-     */
-    public int findAnimation(GVRAnimation findme)
-    {
-        int index = 0;
-        for (GVRAnimation anim : mAnimations)
-        {
-            if (anim == findme)
-            {
-                return index;
-            }
-            ++index;
-        }
-        return -1;
     }
 
     /**
@@ -223,43 +160,18 @@ public class GVRAnimator extends GVRBehavior
     }
 
     /**
-     * Starts all of the animations in this animator.
+     * Starts all of the animations.
      * @see GVRAnimator#reset()
      * @see GVRAnimationEngine#start(GVRAnimation)
      */
     public void start()
     {
-        if (mAnimations.size() == 0)
-        {
-            return;
-        }
-        mIsRunning = true;
         for (GVRAnimation anim : mAnimations)
         {
             getGVRContext().getAnimationEngine().start(anim);
         }
     }
 
-    /**
-     * Starts all of the animations in this animator.
-     * @see GVRAnimator#reset()
-     * @see GVRAnimationEngine#start(GVRAnimation)
-     */
-    public void start(GVROnFinish finishCallback)
-    {
-        if (mAnimations.size() == 0)
-        {
-            return;
-        }
-        mIsRunning = true;
-        GVRAnimation anim = mAnimations.get(0);
-        anim.setOnFinish(finishCallback);
-        for (int i = 0; i < mAnimations.size(); ++i)
-        {
-            anim = mAnimations.get(i);
-            getGVRContext().getAnimationEngine().start(anim);
-        }
-    }
 
     /**
      * Stops all of the animations associated with this animator.
@@ -268,16 +180,8 @@ public class GVRAnimator extends GVRBehavior
      */
     public void stop()
     {
-        if (!mIsRunning || (mAnimations.size() == 0))
+        for (GVRAnimation anim : mAnimations)
         {
-            return;
-        }
-        GVRAnimation anim = mAnimations.get(0);
-        mIsRunning = false;
-        anim.setOnFinish(null);
-        for (int i = 0; i < mAnimations.size(); ++i)
-        {
-            anim = mAnimations.get(i);
             getGVRContext().getAnimationEngine().stop(anim);
         }
     }

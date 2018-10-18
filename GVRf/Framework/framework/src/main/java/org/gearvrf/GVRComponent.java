@@ -31,10 +31,16 @@ import java.util.List;
  * @see GVRSceneObject#attachComponent(GVRComponent)
  * @see GVRSceneObject#getComponent(long)
  */
-public class GVRComponent extends GVRHybridObject
-{
+public class GVRComponent extends GVRHybridObject {
+    public interface IComponentGroup<T extends GVRComponent>
+    {
+        void addChildComponent(T child);
+        void removeChildComponent(T child);
+    };
+
     protected boolean mIsEnabled;
     protected long mType = 0;
+    protected GVRComponent mParent = null;
 
     /**
      * Constructor for a component that is not attached to a scene object.

@@ -38,32 +38,27 @@ struct ContactPoint {
 
 class PhysicsWorld : public Component {
 public:
-    PhysicsWorld() : Component(PhysicsWorld::getComponentType()){}
+	PhysicsWorld() : Component(PhysicsWorld::getComponentType()){}
 
-    virtual ~PhysicsWorld() {}
+	virtual ~PhysicsWorld() {}
 
-    static long long getComponentType() {
-        return COMPONENT_TYPE_PHYSICS_WORLD;
-    }
+	static long long getComponentType() {
+	        return COMPONENT_TYPE_PHYSICS_WORLD;
+	}
 
-    virtual void addConstraint(PhysicsConstraint *constraint) = 0;
+	virtual void addConstraint(PhysicsConstraint *constraint) = 0;
 
-    virtual void removeConstraint(PhysicsConstraint *constraint) = 0;
+	virtual void removeConstraint(PhysicsConstraint *constraint) = 0;
 
-    virtual void startDrag(SceneObject *dragger, PhysicsRigidBody *target,
-		float relX, float relY, float relZ) = 0;
+	virtual void addRigidBody(PhysicsRigidBody *body) = 0;
 
-    virtual void stopDrag() = 0;
+	virtual void addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) = 0;
 
-    virtual void addRigidBody(PhysicsRigidBody *body) = 0;
+	virtual void removeRigidBody(PhysicsRigidBody *body) = 0;
 
-    virtual void addRigidBody(PhysicsRigidBody *body, int collisiontype, int collidesWith) = 0;
+	virtual void step(float timeStep, int maxSubSteps) = 0;
 
-    virtual void removeRigidBody(PhysicsRigidBody *body) = 0;
-
-    virtual void step(float timeStep, int maxSubSteps) = 0;
-
-    virtual void listCollisions(std::list<ContactPoint>& contactPoints) = 0;
+	virtual void listCollisions(std::list<ContactPoint>& contactPoints) = 0;
 
     virtual void setGravity(float gx, float gy, float gz) = 0;
 

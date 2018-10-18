@@ -55,7 +55,6 @@ namespace gvr {
         m_indices.count = static_cast<uint32_t>(getIndexCount());
         VkMemoryRequirements mem_reqs;
         VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         bool        pass;
         void*       data;
         uint32_t    indexBufferSize = getDataSize();//sizeof(uint32_t);//*

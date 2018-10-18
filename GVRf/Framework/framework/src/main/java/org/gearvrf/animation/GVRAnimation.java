@@ -22,7 +22,6 @@ import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
 
 import android.graphics.Color;
 
@@ -95,30 +94,29 @@ public abstract class GVRAnimation {
      * {@linkplain GVRAnimation#setRepeatCount(int) setRepeatCount(2).}
      */
     public static final int DEFAULT_REPEAT_COUNT = 2;
-    public static boolean sDebug = true;
 
     // Immutable values, passed to constructor
-    protected GVRHybridObject mTarget;
-    protected final float mDuration;
+    private final GVRHybridObject mTarget;
+    private final float mDuration;
 
     // Defaulted values, which should be set before start()
-    protected GVRInterpolator mInterpolator = null;
-    protected int mRepeatMode = GVRRepeatMode.ONCE;
-    protected int mRepeatCount = DEFAULT_REPEAT_COUNT;
-    protected GVROnFinish mOnFinish = null;
+    private GVRInterpolator mInterpolator = null;
+    private int mRepeatMode = GVRRepeatMode.ONCE;
+    private int mRepeatCount = DEFAULT_REPEAT_COUNT;
+    private GVROnFinish mOnFinish = null;
 
     /**
      * This is derived from {@link #mOnFinish}. Doing the {@code instanceof}
      * test in {@link #setOnFinish(GVROnFinish)} means we <em>don't</em> have to
      * do it on every call, in {@link #onDrawFrame(float)}
      */
-    protected GVROnRepeat mOnRepeat = null;
+    private GVROnRepeat mOnRepeat = null;
 
     // Running state
-    protected float mElapsedTime = 0f;
-    protected int mIterations = 0;
-
-    protected boolean isFinished = false;
+    private float mElapsedTime = 0f;
+    private int mIterations = 0;
+    
+    private boolean isFinished = false;
 
     /**
      * Base constructor.
@@ -315,10 +313,6 @@ public abstract class GVRAnimation {
      */
     public GVRAnimation start(GVRAnimationEngine engine) {
         engine.start(this);
-        if (sDebug)
-        {
-            Log.d("ANIMATION", "%s started", getClass().getSimpleName());
-        }
         return this;
     }
 
@@ -346,6 +340,9 @@ public abstract class GVRAnimation {
         if (cycled && mRepeatMode != GVRRepeatMode.ONCE) {
             // End of a cycle - see if we should continue
             mIterations += 1;
+            if (mOnFinish != null && mOnRepeat == null) {
+                mOnFinish.finished(this);
+            }
             if (mRepeatCount == 0) {
                 stillRunning = false; // last pass
             } else if (mRepeatCount > 0) {
@@ -357,10 +354,6 @@ public abstract class GVRAnimation {
                 } else {
                     stillRunning = true; // repeat indefinitely
                 }
-            }
-            if (sDebug)
-            {
-                Log.d("ANIMATION", "%s cycle %d", getClass().getSimpleName(), mIterations);
             }
         }
 
@@ -379,10 +372,6 @@ public abstract class GVRAnimation {
 
             animate(mTarget, endRatio);
 
-            if (sDebug)
-            {
-                Log.d("ANIMATION", "%s finished", getClass().getSimpleName());
-            }
             if (mOnFinish != null) {
                 mOnFinish.finished(this);
             }

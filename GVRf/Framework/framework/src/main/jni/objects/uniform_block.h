@@ -28,8 +28,9 @@
 #define MATERIAL_UBO_INDEX  1
 #define BONES_UBO_INDEX     2
 #define LIGHT_UBO_INDEX     3
-#define LAST_UBO_INDEX      3
-#define SHADOW_UBO_INDEX    4
+#define MATRIX_UBO_INDEX    4
+#define SHADOW_UBO_INDEX    5
+#define LAST_UBO_INDEX      5
 
 namespace gvr
 {
@@ -133,7 +134,7 @@ namespace gvr
          * @returns true if successfully set, false on error.
          * @see getIntVec
          */
-        virtual bool setIntVec(const char *name, const int *val, int n)=0;
+        virtual bool setIntVec(const char *name, const int *val, int n);
 
         /**
          * Set the value of a floating point vector uniform.
@@ -145,7 +146,7 @@ namespace gvr
          * @returns true if successfully set, false on error.
          * @see getVec
          */
-        virtual bool setFloatVec(const char *name, const float *val, int n)=0;
+        virtual bool setFloatVec(const char *name, const float *val, int n);
 
         /**
          * Set the value of a 2D vector uniform.
@@ -339,16 +340,96 @@ namespace gvr
             return mUniformData;
         }
 
-        int getNumElems() const;
-        int getMaxElems() const;
-        int getElemSize() const;
+        /*
+         * Gets the number of elements in this uniform block.
+         * This number is enlarged as elements are added to the block
+         * with {@link #setAt} and {@link #setRange}
+         */
+        int getNumElems() const { return mNumElems; }
+
+        /*
+         * Gets the maximum number of elements in this uniform block.
+         * This is established when the block is constructed
+         * and cannot be changed.
+         * @see #getNumElems
+         */
+        int getMaxElems() const { return mMaxElems; }
+
+        /*
+         * Returns the number of bytes in an element of the block.
+         * This is determined by the descriptor passed to the
+         * constructor and cannot be changed,.
+         */
+        int getElemSize() const { return mElemSize; }
+
+        /*
+         * Resets the current number of elements in the block.
+         * No data is moved or changed by this function.
+         * @see #getNumElems
+         * @see #getMaxElems
+         */
         bool setNumElems(int numElems);
 
-        virtual std::string makeShaderLayout();
+        /*
+         * Get a pointer to the specified element.
+         * @param elemIndex 0 based index of element.
+         *                  Must be less than the maximum
+         *                  number of elements passed to
+         *                  the constructor.
+         * @returns pointer to element data or NULL if not found
+         */
         const char* getDataAt(int elemIndex);
+
+        /*
+         * Copies data from the source uniform block into
+         * the specified element of this block.
+         * The GPU is not updated.
+         * <p>
+         * This uniform block may be specified as N instances
+         * of the source block but that is not required.
+         * It is the responsiblity of the caller to manage
+         * data overlay issues.
+         * @param elemIndex 0 based index of element to update.
+         * @param srcBlock  uniform block to copy data from.
+         * @returns true if copy succeeds, false if out of range
+         */
         bool setAt(int elemIndex, const UniformBlock& srcBlock);
+
+        /*
+         * Copies data from the source area into the
+         * specified elements of this block and
+         * also into the GPU.
+         * <p>
+         * It is the responsiblity of the caller to manage
+         * data overlay issues.
+         * @returns true if copy succeeds, false if out of range
+         */
         bool setRange(int elemIndex, const void* srcData, int numElems);
+
+        /*
+         * Copies data from another uniform block into the
+         * specified element of this uniform block and then into the GPU.
+         * @param Renderer  Renderer to use to access the GPU
+         * @param elemIndex 0 based index of starting element(s) to update.
+         * @param srcdBlock soiurce uniform block to copy data from.
+         */
         bool updateGPU(Renderer*, int elemIndex, const UniformBlock& srcBlock);
+
+        /**
+         * Get a pointer to the value for the named uniform.
+         * @param name name of uniform to get.
+         * @param bytesize gets the number of bytes uniform occupies upon return
+         * @return pointer to start of uniform value or NULL if not found.
+         */
+        char* getData(const char *name, int &bytesize);
+
+        const char* getData(const char *name, int &bytesize) const;
+
+        /**
+         * Makes the shader layout for the uniforms in this block.
+         * @returns string with uniform declarations for GPU shader.
+         */
+        virtual std::string makeShaderLayout();
 
     protected:
         UniformBlock(const char *descriptor);
@@ -365,16 +446,6 @@ namespace gvr
                 mOwnData = true;
             }
         }
-
-        /**
-         * Get a pointer to the value for the named uniform.
-         * @param name name of uniform to get.
-         * @param bytesize number of bytes uniform occupies
-         * @return pointer to start of uniform value or NULL if not found.
-         */
-        char* getData(const char *name, int &bytesize);
-
-        const char* getData(const char *name, int &bytesize) const;
 
         int mBindingPoint;           // shader binding point
         unsigned int mOwnData : 1;   // true if this uniform block owns its data

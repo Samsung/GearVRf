@@ -37,16 +37,16 @@ namespace gvr
         int texUnit = 0;
         bool fail = false;
 
-       assert(uniforms().usesGPUBuffer() == shader->useMaterialGPUBuffer());
+        assert(uniforms().usesGPUBuffer() == shader->useMaterialGPUBuffer());
 
         forEachTexture([fail, &texUnit, glshader, this, &index](const char* texname, Texture* tex) mutable
         {
             int loc = glshader->getTextureLoc(++index);
-            if (loc == -1)
+            if ((loc == -1) || (tex == nullptr))
             {
                 return;
             }
-            if (tex && tex->getImage())
+            if (tex->getImage())
             {
                 GLImageTex* image = static_cast<GLImageTex*>(tex->getImage());
                 int texid = image->getId();
@@ -54,7 +54,7 @@ namespace gvr
                 glActiveTexture(GL_TEXTURE0 + texUnit);
                 glBindTexture(image->getTarget(), texid);
                 glUniform1i(loc, texUnit++);
-                checkGLError("GLMaterial::bindTexture");
+                checkGLError("ShaderData::bindTexture");
             }
             else
             {

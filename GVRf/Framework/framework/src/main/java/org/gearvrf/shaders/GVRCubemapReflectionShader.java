@@ -56,6 +56,7 @@ import org.gearvrf.GVRShaderData;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
+import org.joml.Matrix4f;
 
 /**
  * Shader which renders a cubemap texture as a reflection map.
@@ -81,9 +82,17 @@ public class GVRCubemapReflectionShader extends GVRShaderTemplate
         setSegment("FragmentTemplate", TextFile.readTextFile(context, R.raw.cubemap_reflection_frag));
         setSegment("VertexTemplate", TextFile.readTextFile(context, R.raw.cubemap_reflection_vert));
     }
+
+    @Override
     protected void setMaterialDefaults(GVRShaderData material)
     {
         material.setFloat("u_opacity", 1.0f);
         material.setVec3("u_color", 1.0f, 1.0f, 1.0f);
+    }
+
+    @Override
+    public String getMatrixCalc(boolean usesLights)
+    {
+        return "left_mvp; right_mvp; model; (model~ * inverse_left_view)^; (model~ * inverse_right_view)^";
     }
 }

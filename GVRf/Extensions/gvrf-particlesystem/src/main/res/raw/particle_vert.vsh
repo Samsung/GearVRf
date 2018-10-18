@@ -35,14 +35,7 @@ void main() {
             snoise(posn.xyz + vec3(43.0, 17.0, deltaTime)),
         	snoise(posn.xyz + vec3(-17.0, -43.0, deltaTime))), 0);
 
-    #ifdef HAS_MULTIVIEW
-           bool render_mask = (u_render_mask & (gl_ViewID_OVR + uint(1))) > uint(0) ? true : false;
-           mat4 mvp = u_mvp_[gl_ViewID_OVR];
-           gl_Position = mvp  * posn;
-    #else
-       	    gl_Position =  u_mvp * posn;
-    #endif
-
+    gl_Position =  u_mvp * posn;
     gl_PointSize = clamp((u_particle_size + u_size_change_rate * deltaTime), 0.1, 100.0);
 
     if ( deltaTime < 0.0 || deltaTime > u_particle_age)

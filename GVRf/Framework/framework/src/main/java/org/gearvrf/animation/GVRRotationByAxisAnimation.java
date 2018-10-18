@@ -18,14 +18,15 @@ package org.gearvrf.animation;
 import org.gearvrf.GVRHybridObject;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTransform;
-import org.gearvrf.utility.Log;
 import org.joml.Quaternionf;
 
 /** Rotation animation. */
 public class GVRRotationByAxisAnimation extends GVRTransformAnimation
 {
-    private final float mAngle, mAxisX, mAxisY, mAxisZ;
+    private final float mAngle, mX, mY, mZ;
+    private final Quaternionf mRotation = new Quaternionf();
     private final Quaternionf mStartRotation = new Quaternionf();
+
 
     /**
      * Use {@link GVRTransform#rotateByAxis(float, float, float, float)} to do
@@ -49,10 +50,10 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     {
         super(target, duration);
         mAngle = angle;
-        mAxisX = x;
-        mAxisY = y;
-        mAxisZ = z;
-        mStartRotation.set(mRotation);
+        mX = x;
+        mY = y;
+        mZ = z;
+        mStartRotation.set(target.getRotationX(), target.getRotationY(), target.getRotationZ(), target.getRotationW());
     }
 
     /**
@@ -75,20 +76,15 @@ public class GVRRotationByAxisAnimation extends GVRTransformAnimation
     public GVRRotationByAxisAnimation(GVRSceneObject target, float duration,
             float angle, float x, float y, float z)
     {
-        this(target.getTransform(), duration, angle, x, y, z);
+        this(getTransform(target), duration, angle, x, y, z);
     }
 
     @Override
     protected void animate(GVRHybridObject target, float ratio)
     {
         float angle = ratio * mAngle;
-
-        mRotation.fromAxisAngleDeg(mAxisX, mAxisY, mAxisZ, angle);
+        mRotation.fromAxisAngleDeg(mX, mY, mZ, angle);
         mRotation.mul(mStartRotation);
         mTransform.setRotation(mRotation.w, mRotation.x, mRotation.y, mRotation.z);
-        if (sDebug)
-        {
-            Log.d("ANIMATION", "%s angle = %f", getClass().getSimpleName(), angle);
-        }
     }
 }

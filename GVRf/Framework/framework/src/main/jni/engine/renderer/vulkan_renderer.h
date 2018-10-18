@@ -26,12 +26,10 @@
 
 
 #include "glm/glm.hpp"
-#include "batch.h"
 #include "objects/eye_type.h"
 #include "objects/mesh.h"
 #include "objects/bounding_volume.h"
 #include <unordered_map>
-#include "batch_manager.h"
 #include "renderer.h"
 #include "vulkan/vulkan_headers.h"
 #include "vulkan/vulkan_flags.h"
@@ -76,9 +74,10 @@ public:
 
     Texture* createSharedTexture( int id) { return nullptr; };
 
-    VulkanRenderer(int vulkanPropValue = 0) : vulkanCore_(nullptr) {
+
+    VulkanRenderer() : Renderer(), vulkanCore_(nullptr) {
         vkflags::initVkRenderFlags();
-        vulkanCore_ = VulkanCore::getInstance(nullptr, vulkanPropValue);
+        vulkanCore_ = VulkanCore::getInstance();
     }
 
     VulkanCore* getCore() { return vulkanCore_; }
@@ -98,23 +97,16 @@ public:
     VkPhysicalDevice& getPhysicalDevice(){
         return vulkanCore_->getPhysicalDevice();
     }
-    void renderRenderDataVector(RenderState&, std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>&);
-    void restoreRenderStates(RenderData* render_data){}
-    void setRenderStates(RenderData* render_data, RenderState& rstate){}
-    virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
-                        ShaderManager* shader_manager, PostEffectShaderManager* post_effect_shader_manager,
-                        RenderTexture* post_effect_render_texture_a,
-                        RenderTexture* post_effect_render_texture_b) {};
     void makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager);
-    void set_face_culling(int cull_face){}
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc);
     virtual RenderData* createRenderData();
     virtual RenderData* createRenderData(RenderData*);
     virtual RenderPass* createRenderPass();
+    virtual ShadowMap* createShadowMap(ShaderData*) { return nullptr; }
     virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
     Image* createImage(int type, int format);
-    virtual RenderTarget* createRenderTarget(Scene*);
-    virtual RenderTarget* createRenderTarget(RenderTexture*, bool);
+    virtual RenderTarget* createRenderTarget(Scene*, bool stereo);
+    virtual RenderTarget* createRenderTarget(RenderTexture*, bool multiview, bool stereo);
     virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*);
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
@@ -127,24 +119,17 @@ public:
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
-                                 const char* fragmentShader);
+                                 const char* fragmentShader, const char* matrixCalc);
     virtual void renderRenderTarget(Scene*, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
-
     virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor);
-
-    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual void updatePostEffectMesh(Mesh*);
+    virtual void validate(RenderSorter::Renderable& r);
+    virtual void render(const RenderState&, const RenderSorter::Renderable&);
+    virtual UniformBlock* createTransformBlock(int numMatrices);
 
 private:
     VulkanCore* vulkanCore_;
-    void renderMesh(RenderState& rstate, RenderData* render_data){}
-    void renderMaterialShader(RenderState& rstate, RenderData* render_data, ShaderData *material, Shader*){}
-    virtual void occlusion_cull(RenderState& rstate, std::vector<SceneObject*>& scene_objects, std::vector<RenderData*>* render_data_vector) {
-        occlusion_cull_init(rstate, scene_objects, render_data_vector);
-
-    }
-
 };
 }
 #endif //FRAMEWORK_VULKANRENDERER_H

@@ -53,7 +53,8 @@ public:
             const char* textureDescriptor,
             const char* vertexDescriptor,
             const char* vertexShader,
-            const char* fragmentShader);
+            const char* fragmentShader,
+            const char* matrixCalc);
     virtual ~GLShader();
 
     virtual bool useShader(bool);
@@ -79,6 +80,7 @@ public:
     void findUniforms(const Light& light, int locationOffset);
     int getUniformLoc(int index, int bindingPoint) const;
     int getTextureLoc(int index) const;
+    int getNumTextures() const { return mNumTextures; }
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
 
 protected:
@@ -92,6 +94,7 @@ private:
 
     GLProgram* mProgram;
     bool mIsReady;
+    int mNumTextures;
     std::vector<int> mShaderLocs[LAST_UBO_INDEX + 1];
     std::vector<int> mTextureLocs;
 };

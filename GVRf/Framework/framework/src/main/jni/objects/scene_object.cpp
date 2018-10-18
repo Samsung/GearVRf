@@ -43,6 +43,7 @@ SceneObject::~SceneObject() {
 }
 
 bool SceneObject::attachComponent(Component* component) {
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
     for (auto it = components_.begin(); it != components_.end(); ++it) {
         if ((*it)->getType() == component->getType())
             return false;
@@ -53,9 +54,9 @@ bool SceneObject::attachComponent(Component* component) {
     if (par)
     {
         Scene* scene = Scene::main_scene();
+        SceneObject* root = scene->getRoot();
         if (scene != NULL)
         {
-            SceneObject* root = scene->getRoot();
             while (par)
             {
                 if (par == root)
@@ -73,6 +74,8 @@ bool SceneObject::attachComponent(Component* component) {
 
 Component* SceneObject::detachComponent(long long type)
 {
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
+
     for (auto it = components_.begin(); it != components_.end(); ++it)
     {
         if ((*it)->getType() == type)
@@ -105,6 +108,8 @@ Component* SceneObject::detachComponent(long long type)
 }
 
 Component* SceneObject::getComponent(long long type) const {
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
+
     for (auto it = components_.begin(); it != components_.end(); ++it) {
         if ((*it)->getType() == type)
             return *it;
@@ -113,6 +118,8 @@ Component* SceneObject::getComponent(long long type) const {
 }
 
 void SceneObject::getAllComponents(std::vector<Component*>& components, long long componentType) {
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
+
     if (componentType) {
         Component* c = getComponent(componentType);
         if (c) {
@@ -131,6 +138,7 @@ void SceneObject::getAllComponents(std::vector<Component*>& components, long lon
 }
 
 void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
     Scene* scene = Scene::main_scene();
     if (scene != NULL)
     {
@@ -144,7 +152,6 @@ void SceneObject::addChildObject(SceneObject* self, SceneObject* child) {
         onAddChild(child, NULL);
     }
     {
-        std::lock_guard < std::mutex > lock(children_mutex_);
         children_.push_back(child);
     }
     child->parent_ = self;
@@ -227,6 +234,7 @@ void SceneObject::removeChildObject(SceneObject* child)
 {
     Scene* scene = Scene::main_scene();
 
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
     if (child->parent_ == this)
     {
         if (scene != NULL)
@@ -241,7 +249,6 @@ void SceneObject::removeChildObject(SceneObject* child)
             onRemoveChild(child, NULL);
         }
         {
-            std::lock_guard < std::mutex > lock(children_mutex_);
             children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
         }
         child->parent_ = NULL;
@@ -260,7 +267,7 @@ void SceneObject::onTransformChanged()
     dirtyHierarchicalBoundingVolume();
     if (getChildrenCount() > 0)
     {
-        std::lock_guard<std::mutex> lock(children_mutex_);
+        std::lock_guard<std::recursive_mutex> lock(children_mutex_);
         for (auto it = children_.begin(); it != children_.end(); ++it)
         {
             SceneObject* child = *it;
@@ -272,7 +279,7 @@ void SceneObject::onTransformChanged()
 void SceneObject::clear()
 {
     Scene* scene = Scene::main_scene();
-    std::lock_guard < std::mutex > lock(children_mutex_);
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
     for (auto it = children_.begin(); it != children_.end(); ++it)
     {
         SceneObject* child = *it;
@@ -297,17 +304,18 @@ int SceneObject::getChildrenCount() const {
     return children_.size();
 }
 
-SceneObject* SceneObject::getChildByIndex(int index) {
+SceneObject* SceneObject::getChildByIndex(int index) const {
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
+
     if (index < children_.size()) {
         return children_[index];
     } else {
-        std::string error = "SceneObject::getChildByIndex() : Out of index.";
-        throw error;
+        return nullptr;
     }
 }
 
 void SceneObject::getDescendants(std::vector<SceneObject*>& descendants) {
-    std::lock_guard < std::mutex > lock(children_mutex_);
+    std::lock_guard < std::recursive_mutex > lock(children_mutex_);
     for (auto it = children_.begin(); it != children_.end(); ++it) {
         SceneObject* obj = *it;
         descendants.push_back(obj);
@@ -367,9 +375,8 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
         LOGE("isColliding: no transform for this scene object");
         return false;
     }
-    glm::mat4 this_object_model_matrix = t->getModelMatrix();
     this->render_data()->mesh()->getTransformedBoundingBoxInfo(
-            &this_object_model_matrix, this_object_bounding_box);
+            t->getModelMatrix(), this_object_bounding_box);
 
     if (nullptr == scene_object->render_data()->mesh()) {
         LOGE("isColliding: no mesh for target scene object");
@@ -380,9 +387,8 @@ bool SceneObject::isColliding(SceneObject *scene_object) {
         LOGE("isColliding: no transform for target scene object");
         return false;
     }
-    glm::mat4 check_object_model_matrix = t->getModelMatrix();
     scene_object->render_data()->mesh()->getTransformedBoundingBoxInfo(
-            &check_object_model_matrix, check_object_bounding_box);
+            t->getModelMatrix(), check_object_bounding_box);
 
     bool result = (this_object_bounding_box[3] > check_object_bounding_box[0]
             && this_object_bounding_box[0] < check_object_bounding_box[3]
@@ -541,58 +547,51 @@ enum AABB_STATE {
 // 1 when the HBV of the object is intersecting the frustum but the object itself is not: cull it out and continue culling test with its children
 // 2 when the HBV of the object is intersecting the frustum and the mesh BV of the object are intersecting (inside) the frustum: render itself and continue culling test with its children
 // 3 when the HBV of the object is completely inside the frustum: render itself and all its children without further culling test
-int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4],
-        int& planeMask) {
-    if (!enabled_ || !visible_) {
-        if (DEBUG_RENDERER) {
-            LOGD("FRUSTUM: not visible, cull out %s and all its children\n",
+int SceneObject::frustumCull(glm::vec3 camera_position,
+                             const float frustum[6][4],
+                             int& planeMask) {
+        if (!enabled_ || !visible_) {
+#ifdef DEBUG_CULL
+        LOGD("FRUSTUM: not visible, cull out %s and all its children\n",
                     name_.c_str());
-        }
-
-        return 0;
+#endif
+       return 0;
     }
 
     // 1. Check if the bounding volume intersects with or inside the view frustum
     BoundingVolume bounding_volume_ = getBoundingVolume();
     char outPlaneMask;
-    int checkResult = checkAABBVsFrustumOpt(frustum, bounding_volume_,
-            planeMask);
+    int checkResult = checkAABBVsFrustumOpt(frustum, bounding_volume_, planeMask);
     // int checkResult = checkSphereVsFrustum(frustum, bounding_volume_);
 
     // Cull out the object and all its children if its bounding volume is completely outside the frustum
     if (checkResult == OUTSIDE) {
-        if (DEBUG_RENDERER) {
-            LOGD(
-                    "FRUSTUM: HBV completely outside frustum, cull out %s and all its children\n",
-                    name_.c_str());
-        }
-
+#ifdef DEBUG_CULL
+         LOGD("FRUSTUM: HBV completely outside frustum, cull out %s and all its children\n", name_.c_str());
+#endif
         return 0;
     }
 
     if (checkResult == INSIDE) {
-        if (DEBUG_RENDERER) {
-            LOGD(
-                    "FRUSTUM: HBV completely inside frustum, render %s and all its children\n",
-                    name_.c_str());
-        }
+#ifdef DEBUG_CULL
+        LOGD("FRUSTUM: HBV completely inside frustum, render %s and all its children\n",  name_.c_str());
+#endif
         return 3;
     }
 
     // 2. Skip the empty objects with no render data
     RenderData* rdata = render_data();
     if (rdata == NULL || rdata->pass(0)->material() == NULL) {
-        if (DEBUG_RENDERER) {
-            LOGD("FRUSTUM: no render data skip %s\n", name_.c_str());
-        }
-
+#ifdef DEBUG_CULL
+        LOGD("FRUSTUM: no render data skip %s\n", name_.c_str());
+#endif
         return 1;
     }
 
     // 3. Check if the object itself is intersecting with or inside the frustum
     size_t size;
     {
-        std::lock_guard < std::mutex > lock(children_mutex_);
+        std::lock_guard < std::recursive_mutex > lock(children_mutex_);
         size = children_.size();
     }
     if (0 < size) {
@@ -603,14 +602,13 @@ int SceneObject::frustumCull(glm::vec3 camera_position, const float frustum[6][4
     }
 
     // if the object is not in the frustum, cull out itself but continue testing its children
-    if (DEBUG_RENDERER) {
+#ifdef DEBUG_CULL
         if (checkResult == OUTSIDE) {
             LOGD("FRUSTUM: mesh not in frustum, cull out %s\n", name_.c_str());
         } else {
             LOGD("FRUSTUM: mesh in frustum, render %s\n", name_.c_str());
         }
-    }
-
+#endif
     return checkResult == 0 ? 1 : 2;
 }
 

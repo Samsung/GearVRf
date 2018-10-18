@@ -1,15 +1,14 @@
 package org.gearvrf;
 
+import org.gearvrf.script.IScriptable;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PointF;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import org.gearvrf.io.GVRGearCursorController;
-import org.gearvrf.script.IScriptable;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 /**
  * This class contains null implementations for the event interfaces
@@ -94,8 +93,7 @@ public class GVREventListeners {
         }
 
         @Override
-        public void onControllerEvent(GVRGearCursorController.CONTROLLER_KEYS[] keys, Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched, Vector3f angularAcceleration,
-                                      Vector3f angularVelocity) {
+        public void onControllerEvent(Vector3f position, Quaternionf orientation, PointF touchpadPoint, boolean touched) {
         }
 
         @Override

@@ -17,8 +17,6 @@
 #include <iostream>
 #include <shaderc/shaderc.hpp>
 #include "objects/scene.h"
-#include "objects/scene_object.h"
-#include "objects/components/skin.h"
 #include "gvr_time.h"
 #include "vulkan_render_data.h"
 #include "vulkan_material.h"
@@ -82,7 +80,7 @@ namespace gvr {
         imageMemoryBarrier.subresourceRange = subresourceRange;
 
         switch (oldImageLayout) {
-            case VK_IMAGE_LAYOUT_UNDEFINED:
+            default:
                 imageMemoryBarrier.srcAccessMask = 0;
                 break;
             case VK_IMAGE_LAYOUT_PREINITIALIZED:
@@ -94,12 +92,12 @@ namespace gvr {
             case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
                 imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
                 break;
-            default:
-                //other source layouts not yet handled
-                break;
         }
 
         switch (newImageLayout) {
+            default:
+                imageMemoryBarrier.dstAccessMask = 0;
+                break;
             case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
                 imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
                 break;
@@ -108,9 +106,6 @@ namespace gvr {
                 break;
             case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
                 imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-                break;
-            default:
-                //other source layouts not yet handled
                 break;
         }
 
@@ -124,154 +119,54 @@ namespace gvr {
                 1, &imageMemoryBarrier);
     }
 
-    std::vector<const char*> VulkanCore::getInstanceLayers()
-    {
-        std::vector<const char*> presentLayers;
-        std::vector<const char*>  instanceLayers
-        {
-            "VK_LAYER_GOOGLE_threading",
-            "VK_LAYER_LUNARG_parameter_validation",
-            "VK_LAYER_LUNARG_object_tracker",
-            // Enable this extension if required
-            //   "VK_LAYER_LUNARG_core_validation",
-            "VK_LAYER_LUNARG_image",
-            "VK_LAYER_LUNARG_swapchain",
-            "VK_LAYER_GOOGLE_unique_objects"
-        };
-
-        // Determine the number of instance layers that Vulkan reports
-        uint32_t numInstanceLayers = 0;
-        vkEnumerateInstanceLayerProperties(&numInstanceLayers, nullptr);
-
-        std::unique_ptr<VkLayerProperties[]> layerProperties{new VkLayerProperties[numInstanceLayers]};
-        vkEnumerateInstanceLayerProperties(&numInstanceLayers, layerProperties.get());
-
-        for (uint32_t i = 0; i < instanceLayers.size(); i++)
-        {
-            bool found = false;
-            for (uint32_t j = 0; j < numInstanceLayers; j++)
-            {
-                if (strcmp(instanceLayers[i], layerProperties.get()[j].layerName) == 0)
-                {
-                    found = true;
-                    presentLayers.push_back(instanceLayers[i]);
-                    break;
-                }
-            }
-            if (!found)
-            {
-                LOGE("Instance Layer not found: %s", instanceLayers[i]);
-            }
-        }
-
-        return presentLayers;
-    }
-
-    bool VulkanCore::checkInstanceExtensions(std::vector<const char*> &instanceExtensions)
-    {
-        bool result = true;
-        uint32_t instanceExtensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
-
-        std::unique_ptr<VkExtensionProperties[]> extensionProperties{new VkExtensionProperties[instanceExtensionCount]};
-        vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, extensionProperties.get());
-
-        for (uint32_t i = 0; i < instanceExtensions.size(); i++)
-        {
-            bool found = false;
-            for (uint32_t j = 0; j < instanceExtensionCount; j++)
-            {
-                if (strcmp(instanceExtensions[i], extensionProperties.get()[j].extensionName) == 0)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                LOGE("Instance Layer not found: %s", instanceExtensions[i]);
-                result = false;
-            }
-        }
-
-        return result;
-    }
-
-    static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
-            VkDebugReportFlagsEXT msgFlags,
-            VkDebugReportObjectTypeEXT objType,
-            uint64_t srcObject, size_t location,
-            int32_t msgCode, const char * pLayerPrefix,
-            const char * pMsg, void * pUserData )
-    {
-        if (msgFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
-        {
-            LOGI("GVR INFORMATION: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
-        }
-        else if (msgFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
-        {
-            LOGW("GVR WARNING: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
-        }
-        else if (msgFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
-        {
-            LOGW("GVR PERFORMANCE WARNING: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
-        }
-        else if (msgFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
-        {
-            LOGE("GVR ERROR: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
-        }
-        else if (msgFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
-        {
-            LOGD("GVR DEBUG: [%s] Code %d : %s\n", pLayerPrefix, msgCode, pMsg);
-        }
-
-        return false;
-    }
-
-    void VulkanCore::CreateValidationCallbacks()
-    {
-        mCreateDebugReportCallbackEXT   = (PFN_vkCreateDebugReportCallbackEXT)  vkGetInstanceProcAddr( m_instance, "vkCreateDebugReportCallbackEXT");
-        mDestroyDebugReportCallbackEXT  = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr( m_instance, "vkDestroyDebugReportCallbackEXT");
-
-        GVR_VK_CHECK(mCreateDebugReportCallbackEXT);
-        GVR_VK_CHECK(mDestroyDebugReportCallbackEXT);
-
-        // Create the debug report callback..
-        VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;
-        dbgCreateInfo.sType         = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
-        dbgCreateInfo.pNext         = NULL;
-        dbgCreateInfo.pfnCallback   = DebugReportCallback;
-        dbgCreateInfo.pUserData     = NULL;
-        dbgCreateInfo.flags         =   VK_DEBUG_REPORT_ERROR_BIT_EXT               |
-                                        VK_DEBUG_REPORT_WARNING_BIT_EXT             |
-                                        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-                                        // Uncomment this flag for verbose information logging
-                                        //VK_DEBUG_REPORT_INFORMATION_BIT_EXT         |
-                                        VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-
-        VkResult ret = mCreateDebugReportCallbackEXT(m_instance, &dbgCreateInfo, NULL, &mDebugReportCallback);
-        GVR_VK_CHECK(!ret);
-    }
-
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
-        std::vector<const char*>  instanceLayers;
+        // Discover the number of extensions listed in the instance properties in order to allocate
+        // a buffer large enough to hold them.
+        uint32_t instanceExtensionCount = 0;
+        ret = vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
+        GVR_VK_CHECK(!ret);
 
-        if(validationLayers){
-            instanceLayers = getInstanceLayers();
+        VkBool32 surfaceExtFound = 0;
+        VkBool32 platformSurfaceExtFound = 0;
+        VkExtensionProperties *instanceExtensions = nullptr;
+        instanceExtensions = new VkExtensionProperties[instanceExtensionCount];
+
+        // Now request instanceExtensionCount VkExtensionProperties elements be read into out buffer
+        ret = vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount,
+                                                     instanceExtensions);
+        GVR_VK_CHECK(!ret);
+
+        // We require two extensions, VK_KHR_surface and VK_KHR_android_surface. If they are found,
+        // add them to the extensionNames list that we'll use to initialize our instance with later.
+        uint32_t enabledExtensionCount = 0;
+        const char *extensionNames[16];
+        for (uint32_t i = 0; i < instanceExtensionCount; i++) {
+            if (!strcmp(VK_KHR_SURFACE_EXTENSION_NAME, instanceExtensions[i].extensionName)) {
+                surfaceExtFound = 1;
+                extensionNames[enabledExtensionCount++] = VK_KHR_SURFACE_EXTENSION_NAME;
+            }
+
+            if (!strcmp(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
+                        instanceExtensions[i].extensionName)) {
+                platformSurfaceExtFound = 1;
+                extensionNames[enabledExtensionCount++] = VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
+            }
+            GVR_VK_CHECK(enabledExtensionCount < 16);
         }
-
-
-        std::vector<const char*>  instanceExtensions
-        {
-            "VK_KHR_surface",
-            "VK_KHR_android_surface"
-        };
-
-        if(validationLayers)
-            instanceExtensions.push_back("VK_EXT_debug_report");
-        GVR_VK_CHECK(checkInstanceExtensions(instanceExtensions));
+        if (!surfaceExtFound) {
+            LOGE("vkEnumerateInstanceExtensionProperties failed to find the "
+                         VK_KHR_SURFACE_EXTENSION_NAME
+                         " extension.");
+            return false;
+        }
+        if (!platformSurfaceExtFound) {
+            LOGE("vkEnumerateInstanceExtensionProperties failed to find the "
+                         VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
+                         " extension.");
+            return false;
+        }
 
         // We specify the Vulkan version our application was built with,
         // as well as names and versions for our application and engine,
@@ -292,14 +187,18 @@ namespace gvr {
         instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instanceCreateInfo.pNext = nullptr;
         instanceCreateInfo.pApplicationInfo = &applicationInfo;
-        instanceCreateInfo.enabledLayerCount = validationLayers ? instanceLayers.size() : 0;
-        instanceCreateInfo.ppEnabledLayerNames = validationLayers ? instanceLayers.data() : nullptr;
-        instanceCreateInfo.enabledExtensionCount = instanceExtensions.size();
-        instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
+        instanceCreateInfo.enabledLayerCount = 0;
+        instanceCreateInfo.ppEnabledLayerNames = nullptr;
+        instanceCreateInfo.enabledExtensionCount = enabledExtensionCount;
+        instanceCreateInfo.ppEnabledExtensionNames = extensionNames;
+
 
         // The main Vulkan instance is created with the creation infos above.
         // We do not specify a custom memory allocator for instance creation.
         ret = vkCreateInstance(&instanceCreateInfo, nullptr, &(m_instance));
+
+        // we can delete the list of extensions after calling vkCreateInstance
+        delete[] instanceExtensions;
 
         // Vulkan API return values can expose further information on a failure.
         // For instance, INCOMPATIBLE_DRIVER may be returned if the API level
@@ -314,9 +213,6 @@ namespace gvr {
         } else {
             GVR_VK_CHECK(!ret);
         }
-
-        if(validationLayers)
-            CreateValidationCallbacks();
 
         return true;
 }
@@ -690,32 +586,22 @@ void VulkanCore::InitCommandPools(){
 
         VkResult ret = VK_SUCCESS;
         uint32_t index = 0;
-        std::vector<VkDescriptorSetLayoutBinding> uniformBinding;
-        std::vector<VkDescriptorSetLayoutBinding> samplerBinding;
+        std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
 
-        vk_shader->makeUniformLayout(*vkMtl, uniformBinding,  index, vkdata, lights);
-        vk_shader->makeSamplerLayout(*vkMtl, samplerBinding);
+        vk_shader->makeLayout(*vkMtl, uniformAndSamplerBinding,  index, vkdata, lights);
 
-        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayouts();
+        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
+
         ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
-                                                                                       uniformBinding.size(),
-                                                                                       uniformBinding.data()),
+                                                                                       uniformAndSamplerBinding.size(),
+                                                                                       uniformAndSamplerBinding.data()),
                                           nullptr,
-                                          &descriptorLayout[0]);
+                                          &descriptorLayout);
         GVR_VK_CHECK(!ret);
-
-        if(samplerBinding.size()){
-            ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
-                                                                                           samplerBinding.size(),
-                                                                                           samplerBinding.data()),
-                                              nullptr,
-                                              &descriptorLayout[1]);
-            GVR_VK_CHECK(!ret);
-        }
 
         VkPipelineLayout &pipelineLayout = static_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
-                                     gvr::PipelineLayoutCreateInfo(0, (samplerBinding.size() ? 2 : 1), &descriptorLayout[0], 0, 0),
+                                     gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0, 0),
                                      nullptr, &pipelineLayout);
         GVR_VK_CHECK(!ret);
         shader->setShaderDirty(false);
@@ -1181,7 +1067,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         beginCmdBuffer(cmdBuffer);
 
         if(renderTarget!= NULL)
-            renderTarget->beginRendering(Renderer::getInstance());
+            renderTarget->beginRendering();
         else {
             postEffectRenderTexture->setBackgroundColor(camera->background_color_r(), camera->background_color_g(),camera->background_color_b(), camera->background_color_a());
             postEffectRenderTexture->beginRendering(Renderer::getInstance());
@@ -1194,7 +1080,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             for(int curr_pass = postEffectFlag ? (rdata->pass_count() - 1) : 0 ;curr_pass < rdata->pass_count(); curr_pass++) {
                 VulkanShader *shader;
                 if(shadowmapFlag){
-                    const char *depthShaderName = rdata->owner_object()->getComponent(Skin::getComponentType())
+                    const char *depthShaderName = rdata->mesh()->hasBones()
                                                   ? "GVRDepthShader$a_bone_weights$a_bone_indices"
                                                   : "GVRDepthShader";
                     shader = static_cast<VulkanShader *>(shader_manager->findShader(depthShaderName));
@@ -1215,9 +1101,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(renderTarget!= NULL)
-            renderTarget->endRendering(Renderer::getInstance());
+            renderTarget->endRendering();
         else
-            postEffectRenderTexture->endRendering(Renderer::getInstance());
+            postEffectRenderTexture->endRendering(&(renderTarget->getRenderSorter()->getRenderer()));
 
         // By ending the command buffer, it is put out of record mode.
         err = vkEndCommandBuffer(cmdBuffer);
@@ -1306,7 +1192,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptorPoolCreateInfo.pNext = nullptr;
-        descriptorPoolCreateInfo.maxSets = 2;
+        descriptorPoolCreateInfo.maxSets = 1;
         descriptorPoolCreateInfo.poolSizeCount = 3;
         descriptorPoolCreateInfo.pPoolSizes = poolSize;
 
@@ -1327,6 +1213,21 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VulkanShader* vkShader = static_cast<VulkanShader*>(shader);
         bool bones_present = shader->hasBones();
 
+        std::vector<VkWriteDescriptorSet> writes;
+        VkDescriptorPool descriptorPool;
+        GetDescriptorPool(descriptorPool);
+        VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.pNext = nullptr;
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout;
+
+        VkDescriptorSet descriptorSet;
+        VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
+        GVR_VK_CHECK(!err);
+
         VulkanRenderPass * rp;
         if(vkShader->isDepthShader()){
             rp = vkData->getShadowRenderPass();
@@ -1334,55 +1235,31 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         else {
             rp = vkData->getRenderPass(pass);
         }
-
-        std::vector<VkWriteDescriptorSet> writes;
-        VkDescriptorPool descriptorPool;
-        GetDescriptorPool(descriptorPool);
-        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayouts();
-        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
-        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptorSetAllocateInfo.pNext = nullptr;
-        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = 1;
-        descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout[0];
-
-        VkDescriptorSet descriptorSet;
-
-        VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
-        GVR_VK_CHECK(!err);
-        rp->m_descriptorSet[0] = descriptorSet;
-
-        if(descriptorLayout[1]) {
-            descriptorSetAllocateInfo.descriptorSetCount = 1;
-            descriptorSetAllocateInfo.pSetLayouts = &descriptorLayout[1];
-            err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
-            GVR_VK_CHECK(!err);
-            rp->m_descriptorSet[1] = descriptorSet;
-        }
+        rp->m_descriptorSet = descriptorSet;
 
         if (transformUboPresent) {
-            vkData->getTransformUbo().setDescriptorSet(rp->m_descriptorSet[0]);
+            vkData->getTransformUbo().setDescriptorSet(descriptorSet);
             writes.push_back(vkData->getTransformUbo().getDescriptorSet());
         }
 
         if (uniformDescriptor.getNumEntries()) {
-            static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).setDescriptorSet(rp->m_descriptorSet[0]);
+            static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).setDescriptorSet(descriptorSet);
             writes.push_back(static_cast<VulkanUniformBlock&>(vkmtl->uniforms()).getDescriptorSet());
         }
 
-        if(vkData->owner_object()->getComponent(Skin::getComponentType()) && bones_present){
+        if(vkData->mesh()->hasBones() && bones_present){
             static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->setDescriptorSet(descriptorSet);
             writes.push_back(static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->getDescriptorSet());
         }
 
         if(lights != NULL && lights->getUBO() != nullptr){
-            static_cast<VulkanUniformBlock*>(lights->getUBO())->setDescriptorSet(rp->m_descriptorSet[0]);
+            static_cast<VulkanUniformBlock*>(lights->getUBO())->setDescriptorSet(descriptorSet);
             writes.push_back(static_cast<VulkanUniformBlock*>(lights->getUBO())->getDescriptorSet());
         }
 
         ShadowMap* shadowMap = NULL;
         if(lights != NULL)
-        shadowMap= lights->scanLights();
+        shadowMap= lights->getShadowMap();
 
         if(shadowMap && !vkShader->isDepthShader()){
 
@@ -1395,7 +1272,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
                 write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 write.dstBinding = 4;
-                write.dstSet = rp->m_descriptorSet[0];
+                write.dstSet = descriptorSet;
                 write.descriptorCount = 1;
                 write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write.pImageInfo = &(static_cast<VkRenderTexture *>(rt->getTexture())->getDescriptorImage(
@@ -1404,17 +1281,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             }
         }
 
+        if(vkShader->bindTextures(vkmtl, writes,  descriptorSet) == false)
+            return false;
 
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         rp->descriptorSetNull = false;
-        writes.clear();
-
-        if(vkShader->bindTextures(vkmtl, writes,  rp->m_descriptorSet[1]) == false) {
-                return false;
-        }
-
-        vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
-
         LOGI("Vulkan after update descriptor");
         return true;
     }
@@ -1481,9 +1352,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
-
-        if(validationLayers)
-            mDestroyDebugReportCallbackEXT(m_instance, mDebugReportCallback, nullptr);
     }
 
     void VulkanCore::initVulkanCore() {

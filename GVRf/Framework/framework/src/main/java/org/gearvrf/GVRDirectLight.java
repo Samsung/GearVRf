@@ -19,6 +19,8 @@ import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.utility.TextFile;
 import org.joml.Matrix4f;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Illuminates object in the scene with a directional light source.
  * 
@@ -55,6 +57,8 @@ public class GVRDirectLight extends GVRLight
     private static String fragmentShader = null;
     private static String vertexShader = null;
     private boolean useShadowShader = true;
+    private AtomicBoolean mChanged = new AtomicBoolean();
+
     protected final static String DIRECT_UNIFORM_DESC = UNIFORM_DESC +
         " float4 diffuse_intensity"
         + " float4 ambient_intensity"
@@ -83,6 +87,7 @@ public class GVRDirectLight extends GVRLight
     {
         super(ctx, uniformDesc, vertexDesc);
         setLightClass(getClass().getSimpleName());
+        mChanged.set(true);
         setFloat("shadow_map_index", -1.0f);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
@@ -218,6 +223,7 @@ public class GVRDirectLight extends GVRLight
                     shadowMap = new GVRShadowMap(getGVRContext(), shadowCam);
                     owner.attachComponent(shadowMap);
                 }
+                mChanged.set(true);
             }
             else if (shadowMap != null)
             {
@@ -276,9 +282,12 @@ public class GVRDirectLight extends GVRLight
      */
     public void onDrawFrame(float frameTime)
     {
-        if (!isEnabled() || (getFloat("enabled") <= 0.0f) || (owner == null)) { return; }
+        if (!isEnabled() || (owner == null) || (getFloat("enabled") <= 0.0f))
+        {
+            return;
+        }
         float[] odir = getVec3("world_direction");
-        boolean changed = false;
+        boolean changed = mChanged.getAndSet(false);
         Matrix4f worldmtx = owner.getTransform().getModelMatrix4f();
 
         mOldDir.x = odir[0];
