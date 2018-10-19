@@ -29,10 +29,6 @@ import android.content.Context;
 
 import org.gearvrf.R;
 
-/**
- * Manages a set of variants on vertex and fragment shaders from the same source
- * code.
- */
 public class GVRTextureShader extends GVRShaderTemplate
 {
     private static String fragTemplate = null;

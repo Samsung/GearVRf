@@ -1151,7 +1151,7 @@ class  GVRJassimpAdapter
             AiMesh aiMesh)
     {
         EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
-        GVRMaterial gvrMaterial = createMaterial(aiMaterial, settings);
+        GVRMaterial gvrMaterial = createMaterial(aiMaterial, settings, aiMesh.hasVertexColors());
         AiColor diffuseColor = aiMaterial.getDiffuseColor(sWrapperProvider);
         float opacity = diffuseColor.getAlpha();
 
@@ -1211,7 +1211,7 @@ class  GVRJassimpAdapter
         return gvrMaterial;
     }
 
-    private GVRMaterial createMaterial(AiMaterial material, EnumSet<GVRImportSettings> settings)
+    private GVRMaterial createMaterial(AiMaterial material, EnumSet<GVRImportSettings> settings, boolean hasVertexColors)
     {
         boolean layered = false;
         GVRShaderId shaderType;
@@ -1268,10 +1268,18 @@ class  GVRJassimpAdapter
             {
                 shaderType = GVRMaterial.GVRShaderType.Phong.ID;
             }
-            if (layered)
+            if (hasVertexColors)
+            {
+                shaderType = GVRMaterial.GVRShaderType.Color.ID;
+            }
+            else if (layered)
             {
                 shaderType = GVRMaterial.GVRShaderType.PhongLayered.ID;
             }
+        }
+        else if (hasVertexColors)
+        {
+            shaderType = GVRMaterial.GVRShaderType.Color.ID;
         }
         else
         {
