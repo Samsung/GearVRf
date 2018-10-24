@@ -72,7 +72,7 @@ public class GVRShaderData extends GVRHybridObject
     public GVRShaderData(GVRContext gvrContext, GVRShaderId shaderId)
     {
         super(gvrContext, NativeShaderData.ctor(shaderId.getUniformDescriptor(gvrContext),
-                                                shaderId.getTextureDescriptor(gvrContext)));
+                shaderId.getTextureDescriptor(gvrContext)));
         GVRShader shader = shaderId.getTemplate(gvrContext);
         GVRShaderManager shaderManager = gvrContext.getShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
@@ -94,7 +94,7 @@ public class GVRShaderData extends GVRHybridObject
     public GVRShaderData(GVRShaderData src, GVRShaderId shaderId)
     {
         super(src.getGVRContext(), NativeShaderData.ctor(shaderId.getUniformDescriptor(src.getGVRContext()),
-                                                shaderId.getTextureDescriptor(src.getGVRContext())));
+                                                         shaderId.getTextureDescriptor(src.getGVRContext())));
         GVRShader shader = shaderId.getTemplate(src.getGVRContext());
         GVRShaderManager shaderManager = src.getGVRContext().getShaderManager();
         mShaderId = shaderManager.getShaderType(shaderId.ID);
@@ -403,7 +403,7 @@ public class GVRShaderData extends GVRHybridObject
     {
         checkKeyIsUniform(key);
         NativeShaderData.setMat4(getNative(), key, x1, y1, z1, w1, x2, y2,
-                                 z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
+                z2, w2, x3, y3, z3, w3, x4, y4, z4, w4);
     }
 
     /**
@@ -554,17 +554,17 @@ class NativeShaderData {
     static native void setVec2(long shaderData, String key, float x, float y);
 
     static native void setVec3(long shaderData, String key, float x,
-            float y, float z);
+                               float y, float z);
 
     static native void setVec4(long shaderData, String key, float x,
-            float y, float z, float w);
+                               float y, float z, float w);
 
     static native float[] getMat4(long shaderData, String key);
 
     static native void setMat4(long shaderData, String key, float x1,
-            float y1, float z1, float w1, float x2, float y2, float z2,
-            float w2, float x3, float y3, float z3, float w3, float x4,
-            float y4, float z4, float w4);
+                               float y1, float z1, float w1, float x2, float y2, float z2,
+                               float w2, float x3, float y3, float z3, float w3, float x4,
+                               float y4, float z4, float w4);
 
     static native String getShaderType(long shaderData, String key);
 

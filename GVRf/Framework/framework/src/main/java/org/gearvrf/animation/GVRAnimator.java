@@ -1,3 +1,19 @@
+
+/* Copyright 2018 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.gearvrf.animation;
 
 import org.gearvrf.GVRBehavior;
@@ -202,6 +218,50 @@ public class GVRAnimator extends GVRBehavior
             anim.setRepeatMode(repeatMode);
         }
     }
+    /**
+     * Sets the offset for the all animations in this animator.
+     *
+     * @param startOffset animation will start at the specified offset value
+     *
+     * @see GVRAnimation#setOffset(float)
+     */
+    public void setOffset(float startOffset)
+    {
+        for (GVRAnimation anim : mAnimations)
+        {
+            anim.setOffset(startOffset);
+        }
+    }
+    /**
+     * Sets the speed for the all animations in this animator.
+     *
+     * @param speed values from between 0 to 1 displays animation in slow mode
+     *              values from 1 displays in fast mode
+     *
+     * @see GVRAnimation#setSpeed(float)
+     */
+    public void setSpeed(float speed)
+    {
+        for (GVRAnimation anim : mAnimations)
+        {
+            anim.setSpeed(speed);
+        }
+    }
+    /**
+     * Sets the duration for the animations in this animator.
+     *
+     * @param start the animation will start playing from the specified time
+     * @param end the animation will stop playing at the specified time
+     *
+     * @see GVRAnimation#setDuration(float, float)
+     */
+    public void setDuration(float start, float end)
+    {
+        for (GVRAnimation anim : mAnimations)
+        {
+            anim.setDuration(start,end);
+        }
+    }
 
     /**
      * Sets the repeat count for all the animations in this animator.
@@ -236,7 +296,7 @@ public class GVRAnimator extends GVRBehavior
         mIsRunning = true;
         for (GVRAnimation anim : mAnimations)
         {
-            getGVRContext().getAnimationEngine().start(anim);
+            anim.start(getGVRContext().getAnimationEngine());
         }
     }
 
@@ -252,12 +312,31 @@ public class GVRAnimator extends GVRBehavior
             return;
         }
         mIsRunning = true;
-        GVRAnimation anim = mAnimations.get(0);
-        anim.setOnFinish(finishCallback);
         for (int i = 0; i < mAnimations.size(); ++i)
         {
-            anim = mAnimations.get(i);
-            getGVRContext().getAnimationEngine().start(anim);
+            GVRAnimation anim = mAnimations.get(i);
+            anim.reset();
+            if (i == 0)
+            {
+                anim.setOnFinish(finishCallback);
+            }
+            else
+            {
+                anim.setOnFinish(null);
+            }
+            anim.start(getGVRContext().getAnimationEngine());
+        }
+    }
+
+    public void animate(float timeInSec)
+    {
+        if (mAnimations.size() > 0)
+        {
+            for (int i = 0; i < mAnimations.size(); ++i)
+            {
+                GVRAnimation anim = mAnimations.get(i);
+                anim.animate(timeInSec);
+            }
         }
     }
 

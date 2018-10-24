@@ -21,9 +21,12 @@ import android.util.LongSparseArray;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRComponentGroup;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSceneObject.ComponentVisitor;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.IEventReceiver;
+import org.gearvrf.IEvents;
 import org.gearvrf.ISceneObjectEvents;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -34,11 +37,13 @@ import org.joml.Vector3f;
  * <p>
  * {@link GVRWorld} is a component that must be attached to the scene's root object.
  */
-public class GVRWorld extends GVRComponent {
+public class GVRWorld extends GVRComponent implements IEventReceiver
+{
     private boolean mInitialized;
     private final GVRPhysicsContext mPhysicsContext;
     private GVRWorldTask mWorldTask;
     private static final long DEFAULT_INTERVAL = 15;
+    private GVREventReceiver mListeners;
 
     private long mNativeLoader;
 
@@ -51,6 +56,33 @@ public class GVRWorld extends GVRComponent {
 
     private final PhysicsDragger mPhysicsDragger;
     private GVRRigidBody mRigidBodyDragMe = null;
+
+    /**
+     * Events generated during physics simulation.
+     * These are called from the physics thread.
+     */
+    public interface IPhysicsEvents extends IEvents
+    {
+        /**
+         * Called when a rigid body is added to a physics world.
+         * @param world physics world the body is added to.
+         * @param body  rigid body added.
+         */
+        public void onAddRigidBody(GVRWorld world, GVRRigidBody body);
+
+        /**
+         * Called when a rigid body is removed from a physics world.
+         * @param world physics world the body is removed from.
+         * @param body  rigid body removed.
+         */
+        public void onRemoveRigidBody(GVRWorld world, GVRRigidBody body);
+
+        /**
+         * Called after each iteration of the physics simulation.
+         * @param world physics world being simulated
+         */
+        public void onStepPhysics(GVRWorld world);
+    }
 
     /**
      * Constructs new instance to simulate the Physics World of the Scene.
@@ -91,6 +123,7 @@ public class GVRWorld extends GVRComponent {
      */
     public GVRWorld(GVRContext gvrContext, GVRCollisionMatrix collisionMatrix, long interval) {
         super(gvrContext, NativePhysics3DWorld.ctor());
+        mListeners = new GVREventReceiver(this);
         mPhysicsDragger = new PhysicsDragger(gvrContext);
         mInitialized = false;
         mCollisionMatrix = collisionMatrix;
@@ -101,6 +134,8 @@ public class GVRWorld extends GVRComponent {
     static public long getComponentType() {
         return NativePhysics3DWorld.getComponentType();
     }
+
+    public GVREventReceiver getEventReceiver() { return mListeners; }
 
     /**
      * Add a {@link GVRConstraint} to this physics world.
@@ -231,6 +266,7 @@ public class GVRWorld extends GVRComponent {
                 }
 
                 mPhysicsObject.put(gvrBody.getNative(), gvrBody);
+                getGVRContext().getEventManager().sendEvent(GVRWorld.this, IPhysicsEvents.class, "onAddRigidBody", GVRWorld.this, gvrBody);
             }
         });
     }
@@ -247,6 +283,7 @@ public class GVRWorld extends GVRComponent {
                 if (contains(gvrBody)) {
                     NativePhysics3DWorld.removeRigidBody(getNative(), gvrBody.getNative());
                     mPhysicsObject.remove(gvrBody.getNative());
+                    getGVRContext().getEventManager().sendEvent(GVRWorld.this, IPhysicsEvents.class, "onRemoveRigidBody", GVRWorld.this, gvrBody);
                 }
             }
         });
@@ -393,6 +430,7 @@ public class GVRWorld extends GVRComponent {
             NativePhysics3DWorld.step(getNative(), timeStep, maxSubSteps);
 
             generateCollisionEvents();
+            getGVRContext().getEventManager().sendEvent(GVRWorld.this, IPhysicsEvents.class, "onStepPhysics", GVRWorld.this);
 
             lastSimulTime = simulationTime;
 

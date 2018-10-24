@@ -54,7 +54,7 @@ namespace gvr
         for (int i = 0; i < numBones; ++i)
         {
             int boneId = mBoneMap.at(i);
-            glm::mat4* boneMatrix = mSkeleton.getBoneMatrix(boneId);
+            glm::mat4* boneMatrix = mSkeleton.getSkinMatrix(boneId);
             mBonesBuffer->setRange(i, boneMatrix, 1);
         }
         mBonesBuffer->updateGPU(renderer);

@@ -95,16 +95,18 @@ public abstract class GVRAnimation {
      * {@linkplain GVRAnimation#setRepeatCount(int) setRepeatCount(2).}
      */
     public static final int DEFAULT_REPEAT_COUNT = 2;
-    public static boolean sDebug = true;
+    public static final boolean sDebug = true;
 
     // Immutable values, passed to constructor
     protected GVRHybridObject mTarget;
-    protected final float mDuration;
+    protected float mDuration;
 
     // Defaulted values, which should be set before start()
     protected GVRInterpolator mInterpolator = null;
     protected int mRepeatMode = GVRRepeatMode.ONCE;
     protected int mRepeatCount = DEFAULT_REPEAT_COUNT;
+    protected float animationOffset = 0;
+    protected float animationSpeed = 1;
     protected GVROnFinish mOnFinish = null;
 
     /**
@@ -136,6 +138,7 @@ public abstract class GVRAnimation {
     protected GVRAnimation(GVRHybridObject target, float duration) {
         mTarget = target;
         mDuration = duration;
+
     }
 
     /**
@@ -247,7 +250,63 @@ public abstract class GVRAnimation {
         mRepeatCount = repeatCount;
         return this;
     }
-
+    /**
+     * Sets the offset for the animation.
+     *
+     * @param startOffset animation will start at the specified offset value
+     *
+     * @return {@code this}, so you can chain setProperty() calls.
+     * @throws IllegalArgumentException
+     *             If {@code startOffset} is either negative or greater than
+     *             the animation duration
+     */
+    public GVRAnimation setOffset(float startOffset)
+    {
+        if(startOffset<0 || startOffset>mDuration){
+            throw new IllegalArgumentException("offset should not be either negative or greater than duration");
+        }
+        animationOffset = startOffset;
+        mDuration =  mDuration-animationOffset;
+        return this;
+    }
+    /**
+     * Sets the speed for the animation.
+     *
+     * @param speed values from between 0 to 1 displays animation in slow mode
+     *              values from 1 displays the animation in fast mode
+     *
+     * @return {@code this}, so you can chain setProperty() calls.
+     * @throws IllegalArgumentException
+     *             If {@code speed} is either zero or negative value
+     */
+    public GVRAnimation setSpeed(float speed)
+    {
+        if(speed<=0){
+            throw new IllegalArgumentException("speed should be greater than zero");
+        }
+        animationSpeed =  speed;
+        return this;
+    }
+    /**
+     * Sets the duration for the animation to be played.
+     *
+     * @param start the animation will start playing from the specified time
+     * @param end the animation will stop playing at the specified time
+     *
+     * @return {@code this}, so you can chain setProperty() calls.
+     * @throws IllegalArgumentException
+     *             If {@code start} is either negative value, greater than
+     *             {@code end} value or {@code end} is greater than duration
+     */
+    public GVRAnimation setDuration(float start, float end)
+    {
+        if(start>end || start<0 || end>mDuration){
+            throw new IllegalArgumentException("start and end values are wrong");
+        }
+        animationOffset =  start;
+        mDuration = end-start;
+        return this;
+    }
     /**
      * Set the on-finish callback.
      * 
@@ -280,7 +339,6 @@ public abstract class GVRAnimation {
         if (mOnRepeat != null) {
             mRepeatCount = -1; // loop until iterate() returns false
         }
-
         return this;
     }
 
@@ -315,11 +373,32 @@ public abstract class GVRAnimation {
      */
     public GVRAnimation start(GVRAnimationEngine engine) {
         engine.start(this);
+        return this;
+    }
+
+    public void onStart()
+    {
+       // mCurrentTime = 0;
         if (sDebug)
         {
             Log.d("ANIMATION", "%s started", getClass().getSimpleName());
         }
-        return this;
+    }
+
+    protected void onFinish()
+    {
+        if (sDebug)
+        {
+            Log.d("ANIMATION", "%s finished", getClass().getSimpleName());
+        }
+    }
+
+    protected void onRepeat(float frameTime, int count)
+    {
+        if (sDebug)
+        {
+            Log.d("ANIMATION", "%s repeated %d", getClass().getSimpleName(), count);
+        }
     }
 
     /**
@@ -332,13 +411,20 @@ public abstract class GVRAnimation {
      * @return {@code true} to keep running the animation; {@code false} to shut
      *         it down
      */
+
     final boolean onDrawFrame(float frameTime) {
+        /*
+        if (mCurrentTime < mStartTime)
+        {
+            mCurrentTime += frameTime;
+            return true;
+        }*/
         final int previousCycleCount = (int) (mElapsedTime / mDuration);
 
-        mElapsedTime += frameTime;
+        mElapsedTime += (frameTime*animationSpeed);
 
         final int currentCycleCount = (int) (mElapsedTime / mDuration);
-        final float cycleTime = mElapsedTime % mDuration;
+        final float cycleTime = (mElapsedTime % mDuration)+animationOffset;
 
         final boolean cycled = previousCycleCount != currentCycleCount;
         boolean stillRunning = cycled != true;
@@ -351,6 +437,7 @@ public abstract class GVRAnimation {
             } else if (mRepeatCount > 0) {
                 stillRunning = --mRepeatCount > 0;
             } else {
+                onRepeat(frameTime, currentCycleCount);
                 // Negative repeat count - call mOnRepeat, if we can
                 if (mOnRepeat != null) {
                     stillRunning = mOnRepeat.iteration(this, mIterations);
@@ -358,18 +445,16 @@ public abstract class GVRAnimation {
                     stillRunning = true; // repeat indefinitely
                 }
             }
-            if (sDebug)
-            {
-                Log.d("ANIMATION", "%s cycle %d", getClass().getSimpleName(), mIterations);
-            }
         }
 
         if (stillRunning) {
             final boolean countDown = mRepeatMode == GVRRepeatMode.PINGPONG
                     && (mIterations & 1) == 1;
+
             float elapsedRatio = //
             countDown != true ? interpolate(cycleTime, mDuration)
                     : interpolate(mDuration - cycleTime, mDuration);
+
 
             animate(mTarget, elapsedRatio);
         } else {
@@ -379,10 +464,7 @@ public abstract class GVRAnimation {
 
             animate(mTarget, endRatio);
 
-            if (sDebug)
-            {
-                Log.d("ANIMATION", "%s finished", getClass().getSimpleName());
-            }
+            onFinish();
             if (mOnFinish != null) {
                 mOnFinish.finished(this);
             }
@@ -446,6 +528,16 @@ public abstract class GVRAnimation {
         return mRepeatCount;
     }
 
+    public float getAnimationOffset() {
+        return animationOffset;
+    }
+
+    public float getAnimationSpeed()
+    {
+        return animationSpeed;
+    }
+
+
     /**
      * The duration passed to {@linkplain #GVRAnimation(GVRHybridObject, float)
      * the constructor.}
@@ -469,6 +561,22 @@ public abstract class GVRAnimation {
      */
     public float getElapsedTime() {
         return mElapsedTime;
+    }
+
+
+    /*
+     * Evaluates the animation at the specific time.
+     * This allows the user to step the animation under program control
+     * as opposed to having it run at the current frame rate.
+     * Subclasses can override this function when creating new
+     * types of animation. The default behavior is to call
+     * {@link #animate(GVRHybridObject, float)}.
+     * @param timeInSec elapsed time from animation start (seconds)
+     */
+    public void animate(float timeInSec)
+    {
+        float ratio = timeInSec / mDuration;
+        animate(mTarget, ratio);
     }
 
     /**

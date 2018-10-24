@@ -127,6 +127,7 @@ Java_org_gearvrf_NativeIndexBuffer_setShortArray(JNIEnv * env, jobject obj, jlon
     IndexBuffer* ibuf = reinterpret_cast<IndexBuffer*>(jibuf);
     jchar* data = env->GetCharArrayElements(jdata, 0);
     bool rc = ibuf->setShortVec(data, static_cast<int>(env->GetArrayLength(jdata)));
+    env->ReleaseCharArrayElements(jdata, data, 0);
     return rc;
 }
 
@@ -164,6 +165,7 @@ Java_org_gearvrf_NativeIndexBuffer_setIntArray(JNIEnv * env, jobject obj, jlong 
     IndexBuffer* ibuf = reinterpret_cast<IndexBuffer*>(jibuf);
     unsigned int* data = reinterpret_cast<unsigned int*>(env->GetIntArrayElements(jdata, 0));
     bool rc = ibuf->setIntVec(data, static_cast<int>(env->GetArrayLength(jdata)));
+    env->ReleaseIntArrayElements(jdata, reinterpret_cast<jint*>(data), 0);
     return rc;
 }
 

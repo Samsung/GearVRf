@@ -179,13 +179,17 @@ public class GVRResourceVolume {
         String fname = filename.toLowerCase();
         gvrContext = context;
         volumeType = GVRResourceVolume.VolumeType.ANDROID_ASSETS;
-        defaultPath = FileNameUtils.getParentDirectory(filename);
+        defaultPath = filename;
         if (fname.startsWith("sd:"))
         {
-            if (defaultPath != null)
-            {
-                defaultPath = defaultPath.substring(3);
-            }
+            defaultPath = defaultPath.substring(3);
+            defaultPath = FileNameUtils.getParentDirectory(defaultPath);
+            volumeType = GVRResourceVolume.VolumeType.ANDROID_SDCARD;
+        }
+        else if (fname.startsWith("/sdcard/"))
+        {
+            defaultPath = defaultPath.substring(8);
+            defaultPath = FileNameUtils.getParentDirectory(defaultPath);
             volumeType = GVRResourceVolume.VolumeType.ANDROID_SDCARD;
         }
         else if (fname.startsWith("http:") || fname.startsWith("https:"))

@@ -536,8 +536,8 @@ public class AnimationInteractivityManager {
                     for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
                         gvrAnimationChannel.setPosKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().getCycleInterval()
-                                        * FRAMES_PER_SECOND, new float[] { interactiveObject.getInterpolator().keyValue[j * 3],
+                                        * interactiveObject.getTimeSensor().getCycleInterval(),
+                                        new float[] { interactiveObject.getInterpolator().keyValue[j * 3],
                                         interactiveObject.getInterpolator().keyValue[j * 3 + 1],
                                         interactiveObject.getInterpolator().keyValue[j * 3 + 2] });
                     }
@@ -562,8 +562,8 @@ public class AnimationInteractivityManager {
                         float[] tmp = new float[]{ q.x, q.y, q.z, q.w};
                         gvrAnimationChannel.setRotKeyQuaternion(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().getCycleInterval()
-                                        * FRAMES_PER_SECOND, tmp);
+                                        * interactiveObject.getTimeSensor().getCycleInterval(),
+                                        tmp);
                     }
                 }   //  end rotation
 
@@ -577,8 +577,8 @@ public class AnimationInteractivityManager {
                     for (int j = 0; j < interactiveObject.getInterpolator().key.length; j++) {
                         gvrAnimationChannel.setScaleKeyVector(j,
                                 interactiveObject.getInterpolator().key[j]
-                                        * interactiveObject.getTimeSensor().getCycleInterval()
-                                        * FRAMES_PER_SECOND, new float[] { interactiveObject.getInterpolator().keyValue[j * 3],
+                                        * interactiveObject.getTimeSensor().getCycleInterval(),
+                                        new float[] { interactiveObject.getInterpolator().keyValue[j * 3],
                                         interactiveObject.getInterpolator().keyValue[j * 3 + 1],
                                         interactiveObject.getInterpolator().keyValue[j * 3 + 2] });
                     }

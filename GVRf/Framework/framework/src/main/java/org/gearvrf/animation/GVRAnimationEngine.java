@@ -114,6 +114,7 @@ public class GVRAnimationEngine {
             animation.reset();
             mAnimations.add(animation);
         }
+        animation.onStart();
         return animation;
     }
 

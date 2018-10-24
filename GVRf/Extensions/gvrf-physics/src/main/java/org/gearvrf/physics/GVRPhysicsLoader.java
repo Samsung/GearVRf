@@ -46,7 +46,8 @@ public class GVRPhysicsLoader {
      * @param fileName Physics settings file name.
      * @param scene The scene containing the objects to attach physics components.
      */
-    public static void loadPhysicsFile(GVRContext gvrContext, String fileName, GVRScene scene) {
+    public static void loadPhysicsFile(GVRContext gvrContext, String fileName, GVRScene scene) throws IOException
+    {
         loadPhysicsFile(gvrContext, fileName, false, scene);
     }
 
@@ -60,7 +61,8 @@ public class GVRPhysicsLoader {
      * @param ignoreUpAxis Set to true if up-axis information from file must be ignored.
      * @param scene The scene containing the objects to attach physics components.
      */
-    public static void loadPhysicsFile(GVRContext gvrContext, String fileName, boolean ignoreUpAxis, GVRScene scene) {
+    public static void loadPhysicsFile(GVRContext gvrContext, String fileName, boolean ignoreUpAxis, GVRScene scene) throws IOException
+    {
         byte[] inputData = null;
         try {
             inputData = toByteArray(toAndroidResource(gvrContext, fileName));
@@ -69,15 +71,13 @@ public class GVRPhysicsLoader {
         }
 
         if (inputData == null || inputData.length == 0) {
-            Log.e(TAG, "Fail to load bullet file " + fileName);
-            return;
+            throw new IOException("Fail to load bullet file " + fileName);
         }
 
         long loader = NativePhysics3DLoader.ctor(inputData, inputData.length, ignoreUpAxis);
 
         if (loader == 0) {
-            Log.e(TAG, "Fail to parse bullet file " + fileName);
-            return;
+            throw new IOException("Fail to parse bullet file " + fileName);
         }
 
         GVRSceneObject sceneRoot = scene.getRoot();

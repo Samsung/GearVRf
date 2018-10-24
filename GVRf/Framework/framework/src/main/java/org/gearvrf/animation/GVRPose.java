@@ -1,3 +1,17 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gearvrf.animation;
 
 import org.gearvrf.PrettyPrint;
@@ -111,7 +125,9 @@ public class GVRPose implements PrettyPrint
     * @return number of bones in the skeleton associated with this pose.
     * If there is no skeleton associated with the pose, 0 is returned.
     */
+
     public int          getNumBones() { return mSkeleton.getNumBones(); }
+
 
     /**
      * Get the skeleton for this pose.
@@ -122,7 +138,9 @@ public class GVRPose implements PrettyPrint
      */
     public GVRSkeleton	getSkeleton() { return mSkeleton; }
 
+
     public Bone		getBone(int boneindex) { return mBones[boneindex]; }
+
 
     /**
      * Get the world position of the given bone (relative to skeleton root).
@@ -136,6 +154,7 @@ public class GVRPose implements PrettyPrint
      *
      * @see #setWorldPositions
      */
+
     public void     getWorldPosition(int boneindex, Vector3f pos) 
     {
         Bone bone = mBones[boneindex];
@@ -287,7 +306,9 @@ public class GVRPose implements PrettyPrint
 
             bone.setWorldRotation(rotations[t], rotations[t + 1], rotations[t + 2], rotations[t + 3]);
             bone.Changed |= WORLD_ROT;
+
             calcLocal(bone, mSkeleton.getParentBoneIndex(i));
+
             if (sDebug)
             {
                 Log.d("BONE", "setWorldRotation: %s %s", mSkeleton.getBoneName(i), bone.toString());
@@ -437,7 +458,6 @@ public class GVRPose implements PrettyPrint
         }
 
         Bone	bone = mBones[boneindex];
-
         bone.setWorldRotation(x, y, z, w);
         bone.Changed |= WORLD_ROT;
         if (mSkeleton.getParentBoneIndex(boneindex) < 0)
@@ -791,6 +811,7 @@ public class GVRPose implements PrettyPrint
         if (sDebug)
         {
             Log.d("BONE", "invert: %s %s", mSkeleton.getBoneName(0), dstBone.toString());
+
         }
         for (int i = 1; i < numbones; ++i)
         {

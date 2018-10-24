@@ -164,6 +164,7 @@ Java_org_gearvrf_NativeVertexBuffer_setIntArray(JNIEnv * env, jobject obj,
     jint* attribData = env->GetIntArrayElements(jdata, 0) + ofs;
     int n = static_cast<int>(env->GetArrayLength(jdata));
     bool rc = vbuf->setIntVec(char_key, attribData, n - ofs, stride);
+    env->ReleaseIntArrayElements(jdata, attribData, 0);
     env->ReleaseStringUTFChars(attribName, char_key);
     return rc;
 }
@@ -197,6 +198,7 @@ Java_org_gearvrf_NativeVertexBuffer_setFloatArray(JNIEnv * env, jobject obj,
     jfloat* attribData = env->GetFloatArrayElements(jdata, 0) + ofs;
     bool rc = vbuf->setFloatVec(char_key, attribData, static_cast<int>(env->GetArrayLength(jdata)), stride);
     env->ReleaseStringUTFChars(attribName, char_key);
+    env->ReleaseFloatArrayElements(jdata, attribData, 0);
     return rc;
 }
 
@@ -230,6 +232,7 @@ Java_org_gearvrf_NativeVertexBuffer_setIntVec(JNIEnv* env, jobject obj,
     int n = static_cast<int>(env->GetArrayLength(jdata));
     bool rc = vbuf->setIntVec(char_key, attribData, n - ofs, stride);
     env->ReleaseStringUTFChars(attribName, char_key);
+    env->ReleaseIntArrayElements(jdata, attribData, 0);
     return rc;
 }
 

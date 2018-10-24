@@ -73,7 +73,7 @@ public class GVRRelativeMotionAnimation extends GVRTransformAnimation
 
     @Override
     protected void animate(GVRHybridObject target, float ratio) {
-        ((GVRTransform) target).setPosition(mStartX + mDeltaX * ratio, //
+        mTransform.setPosition(mStartX + mDeltaX * ratio, //
                 mStartY + mDeltaY * ratio, //
                 mStartZ + mDeltaZ * ratio);
     }

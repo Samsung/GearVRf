@@ -261,7 +261,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     /**
      * @see GVRMesh#getTexCoords(int)
      */
-    public FloatBuffer getTexCoordsAsFloatBuffer(int index) {
+    public FloatBuffer getTexCoordsAsFloatBuffer(int index)
+    {
         final String key = (index > 0) ? (KEY_TEXCOORD + index) : KEY_TEXCOORD;
         return mVertices.getFloatVec(key).asReadOnlyBuffer();
     }
@@ -760,22 +761,19 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
      * @param radius        the radius of the circle
      * @return
      */
-    public static GVRMesh createCurvedMesh(GVRContext gvrContext, int width, int height, float centralAngle, float radius){
+    public static GVRMesh createCurvedMesh(GVRContext gvrContext, int width, int height, float centralAngle, float radius)
+    {
         GVRMesh mesh = new GVRMesh(gvrContext);
         final float MAX_DEGREES_PER_SUBDIVISION = 10f;
-
         float ratio = (float)width/(float)height;
         int subdivisions = (int) Math.ceil(centralAngle / MAX_DEGREES_PER_SUBDIVISION);
         float degreesPerSubdivision = centralAngle/subdivisions;
         // Scale the number of subdivisions with the central angle size
         // Let each subdivision represent a constant number of degrees on the arc
         double startDegree = -centralAngle/2.0;
-
         float h = (float) (radius * Math.toRadians(centralAngle))/ratio;
-
         float yTop = h/2;
         float yBottom = -yTop;
-
         float[] vertices = new float[(subdivisions+1)*6];
         float[] normals = new float[(subdivisions+1)*6];
         float[] texCoords= new float[(subdivisions+1)*4];
@@ -791,7 +789,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
          * {1}  {3}  {5} ... {2s}      |___x+
          *                          z+/
          */
-        for(int i = 0; i <= subdivisions; i++){
+        for(int i = 0; i <= subdivisions; i++)
+        {
             double angle = Math.toRadians(-90+startDegree + degreesPerSubdivision*i);
             double cos = Math.cos(angle);
             double sin = Math.sin(angle);
@@ -827,7 +826,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
          * {1}--{3}--{5}-...-{2s}      |___x+
          *                          z+/
          */
-        for(int i = 0; i < subdivisions; i++){
+        for (int i = 0; i < subdivisions; i++)
+        {
             triangles[6*i] = (char)(2*(i+1)+1);
             triangles[6*i+1] = (char) (2*(i));
             triangles[6*i+2] = (char) (2*(i)+1);
@@ -835,7 +835,6 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
             triangles[6*i+4] = (char) (2*(i+1));
             triangles[6*i+5] = (char) (2*(i));
         }
-
         mesh.setVertices(vertices);
         mesh.setNormals(normals);
         mesh.setTexCoords(texCoords);
@@ -844,7 +843,8 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuffer sb = new StringBuffer();
         prettyPrint(sb, 0);
         return sb.toString();
@@ -853,10 +853,10 @@ public class GVRMesh extends GVRHybridObject implements PrettyPrint {
     final static String KEY_TEXCOORD = "a_texcoord";
     final static String KEY_NORMAL = "a_normal";
     final static String KEY_POSITION = "a_position";
-
 }
 
-class NativeMesh {
+class NativeMesh
+{
     static native long ctorBuffers(long vertexBuffer, long indexBuffer);
 
     static native void setIndexBuffer(long mesh, long ibuf);

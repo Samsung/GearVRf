@@ -383,7 +383,7 @@ public final class GVRAssetLoader {
                 mUserHandler.onAssetLoaded(context, model, modelFile, errors);
             }
             mContext.getEventManager().sendEvent(mContext, IAssetEvents.class,
-                                                 "onAssetLoaded", new Object[] { mContext, mModel, mFileName, errors });
+                                                 "onAssetLoaded", new Object[] { mContext, model, mFileName, errors });
         }
 
         /**
@@ -430,6 +430,13 @@ public final class GVRAssetLoader {
                 {
                     animator.start();
                 }
+            }
+            synchronized (mNumTextures)
+            {
+                 /*
+                 * This prevents it from trying to load textures after the asset has been loaded.
+                 */
+                mNumTextures = -1;
             }
             onAssetLoaded(mContext, mModel, mFileName, errors);
         }

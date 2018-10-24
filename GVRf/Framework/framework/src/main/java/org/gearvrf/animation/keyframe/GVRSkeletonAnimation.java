@@ -1,3 +1,18 @@
+/* Copyright 2015 Samsung Electronics Co., LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.gearvrf.animation.keyframe;
 
 import org.gearvrf.GVRHybridObject;
@@ -8,6 +23,7 @@ import org.gearvrf.animation.GVRPose;
 import org.gearvrf.animation.GVRSkeleton;
 import org.gearvrf.utility.Log;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.Arrays;
@@ -35,8 +51,6 @@ import java.util.List;
  */
 public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
     protected String mName;
-    private int mNumRoots = 0;
-    private GVRSceneObject mSkeletonRoot = null;
     private GVRSkeleton mSkeleton = null;
 
     /**
@@ -94,8 +108,8 @@ public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
         if (boneId >= 0)
         {
             mBoneChannels[boneId] = channel;
+            mSkeleton.setBoneOptions(boneId, GVRSkeleton.BONE_ANIMATE);
             Log.d("BONE", "Adding animation channel %d %s ", boneId, boneName);
-
         }
     }
 
@@ -158,17 +172,26 @@ public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
         int numBones = skel.getNumBones();
 
         mSkeleton = skel;
-        for (int boneId = 0; boneId < numBones; ++boneId)
+        if (boneNames != null)
         {
-            if (boneNames != null)
+            for (int boneId = 0; boneId < numBones; ++boneId)
             {
                 mSkeleton.setBoneName(boneId, boneNames.get(boneId));
             }
-            mSkeleton.setBoneOptions(boneId, GVRSkeleton.BONE_ANIMATE);
         }
         if (mBoneChannels == null)
         {
             mBoneChannels = new GVRAnimationChannel[numBones];
+        }
+        else
+        {
+            for (int i = 0; i < mBoneChannels.length; ++i)
+            {
+                if (mBoneChannels[i] != null)
+                {
+                    skel.setBoneOptions(i, GVRSkeleton.BONE_ANIMATE);
+                }
+            }
         }
     }
 
@@ -194,16 +217,24 @@ public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
      */
     public void animate(float timeInSec)
     {
-        Matrix4f temp = new Matrix4f();
         GVRSkeleton skel = getSkeleton();
         GVRPose pose = skel.getPose();
+        computePose(timeInSec,pose);
+        skel.poseToBones();
+        skel.updateBonePose();
+        skel.updateSkinPose();
+    }
+    public GVRPose computePose(float timeInSec, GVRPose pose)
+    {
+        Matrix4f temp = new Matrix4f();
+        GVRSkeleton skel = getSkeleton();
         Vector3f rootOffset = skel.getRootOffset();
 
         for (int i = 0; i < skel.getNumBones(); ++i)
         {
             GVRAnimationChannel channel = mBoneChannels[i];
             if ((channel != null) &&
-                (skel.getBoneOptions(i) == GVRSkeleton.BONE_ANIMATE))
+                    (skel.getBoneOptions(i) == GVRSkeleton.BONE_ANIMATE))
             {
                 channel.animate(timeInSec, temp);
                 if (rootOffset != null)
@@ -216,10 +247,9 @@ public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
                 pose.setLocalMatrix(i, temp);
             }
         }
-        skel.poseToBones();
-        skel.updateSkinPose();
-    }
 
+     return pose;
+    }
     @Override
     public void prettyPrint(StringBuffer sb, int indent) {
         sb.append(Log.getSpaces(indent));

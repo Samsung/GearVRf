@@ -5,6 +5,7 @@
 #ifndef SKELETON_H_
 #define SKELETON_H_
 
+#include <mutex>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "objects/components/component.h"
@@ -16,7 +17,7 @@ class Shader;
 class Skeleton : public Component
 {
 public:
-    Skeleton(int numbones);
+    Skeleton(int* boneparents, int numbones);
 
     virtual ~Skeleton();
 
@@ -28,7 +29,18 @@ public:
     int getNumBones() const { return mNumBones; }
 
     void setPose(const float* input);
-    glm::mat4* getBoneMatrix(int boneId);
+    void setSkinPose(const float* input);
+    glm::mat4* getSkinMatrix(int boneId);
+    void getBoneMatrices(glm::mat4* matrixData);
+
+    int getParentBoneID(int boneId) const
+    {
+        if ((boneId < 0) || (boneId >= mNumBones))
+        {
+            return -1;
+        }
+        return mBoneParents[boneId];
+    }
 
 private:
     Skeleton(const Skeleton& skel) = delete;
@@ -37,8 +49,11 @@ private:
     Skeleton& operator=(Skeleton&& skel) = delete;
 
 private:
-    int mNumBones;
-    glm::mat4*  mMatrixData;
+    std::mutex  mLock;
+    int         mNumBones;
+    int*        mBoneParents;
+    glm::mat4*  mSkinMatrices;
+    glm::mat4*  mBoneMatrices;
 };
 
 }
