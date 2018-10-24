@@ -5,8 +5,8 @@ if(file("../../../extra_properties.gradle").exists()) {
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
-        jcenter()
         google()
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
@@ -15,11 +15,11 @@ buildscript {
 
 allprojects {
     repositories {
+        google()
         maven {
             url "https://oss.sonatype.org/content/repositories/snapshots/"
         }
         jcenter()
-        google()
     }
 }
 subprojects {
