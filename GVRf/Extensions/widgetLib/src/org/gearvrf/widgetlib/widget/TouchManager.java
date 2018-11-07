@@ -57,7 +57,8 @@ public class TouchManager {
         gvrContext.getInputManager().selectController(mPickHandler);
     }
 
-    public void clear() {
+    public void onPause() {
+        Log.d(Log.SUBSYSTEM.INPUT, TAG, "onPause(): clearing controllers");
         mGVRContext.getInputManager().clear();
     }
 
