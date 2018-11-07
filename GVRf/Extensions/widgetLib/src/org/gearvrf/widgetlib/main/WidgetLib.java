@@ -55,11 +55,17 @@ public class WidgetLib {
         return mInstance.get();
     }
 
+
+    public static void pause() {
+        if (mInstance != null) {
+            getTouchManager().onPause();
+        }
+    }
+
     public static void destroy() {
         if (mInstance != null) {
             getFocusManager().clear();
             getMainThread().quit();
-            getTouchManager().clear();
         }
         mInstance = null;
     }
