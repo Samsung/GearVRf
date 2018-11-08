@@ -144,96 +144,105 @@ void GVRActivity::onSurfaceChanged(JNIEnv &env, jobject jsurface) {
     initializeOculusJava(env, oculusJavaGlThread_);
     jsurface_ = env.NewGlobalRef(jsurface);
 
+    if (nullptr != oculusMobile_) {
+        return;
+    }
+
+    ovrModeParms parms = vrapi_DefaultModeParms(&oculusJavaGlThread_);
+    {
+        bool allowPowerSave, resetWindowFullscreen;
+        configurationHelper_.getModeConfiguration(env, allowPowerSave, resetWindowFullscreen);
+        if (allowPowerSave) {
+            parms.Flags |= VRAPI_MODE_FLAG_ALLOW_POWER_SAVE;
+        }
+        if (resetWindowFullscreen) {
+            parms.Flags |= VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
+        }
+        parms.Flags |= VRAPI_MODE_FLAG_NATIVE_WINDOW;
+        //@todo consider VRAPI_MODE_FLAG_CREATE_CONTEXT_NO_ERROR as a release-build optimization
+
+        ANativeWindow *nativeWindow = ANativeWindow_fromSurface(&env, jsurface_);
+        if (nullptr == nativeWindow) {
+            FAIL("No native window!");
+        }
+        parms.WindowSurface = reinterpret_cast<unsigned long long>(nativeWindow);
+        EGLDisplay display = eglGetCurrentDisplay();
+        if (EGL_NO_DISPLAY == display) {
+            FAIL("No egl display!");
+        }
+        parms.Display = reinterpret_cast<unsigned long long>(display);
+        EGLContext context = eglGetCurrentContext();
+        if (EGL_NO_CONTEXT == context) {
+            FAIL("No egl context!");
+        }
+        parms.ShareContext = reinterpret_cast<unsigned long long>(context);
+    }
+
+    //@todo backend specific fix, generalize; ensures there is a renderer instance after pause/resume
+    gRenderer = Renderer::getInstance();
+
+    oculusMobile_ = vrapi_EnterVrMode(&parms);
     if (nullptr == oculusMobile_) {
-        ovrModeParms parms = vrapi_DefaultModeParms(&oculusJavaGlThread_);
-        {
-            bool allowPowerSave, resetWindowFullscreen;
-            configurationHelper_.getModeConfiguration(env, allowPowerSave, resetWindowFullscreen);
-            if (allowPowerSave) {
-                parms.Flags |= VRAPI_MODE_FLAG_ALLOW_POWER_SAVE;
-            }
-            if (resetWindowFullscreen) {
-                parms.Flags |= VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
-            }
-            parms.Flags |= VRAPI_MODE_FLAG_NATIVE_WINDOW;
-            //@todo consider VRAPI_MODE_FLAG_CREATE_CONTEXT_NO_ERROR as a release-build optimization
+        FAIL("vrapi_EnterVrMode failed!");
+    }
 
-            ANativeWindow *nativeWindow = ANativeWindow_fromSurface(&env, jsurface_);
-            if (nullptr == nativeWindow) {
-                FAIL("No native window!");
-            }
-            parms.WindowSurface = reinterpret_cast<unsigned long long>(nativeWindow);
-            EGLDisplay display = eglGetCurrentDisplay();
-            if (EGL_NO_DISPLAY == display) {
-                FAIL("No egl display!");
-            }
-            parms.Display = reinterpret_cast<unsigned long long>(display);
-            EGLContext context = eglGetCurrentContext();
-            if (EGL_NO_CONTEXT == context) {
-                FAIL("No egl context!");
-            }
-            parms.ShareContext = reinterpret_cast<unsigned long long>(context);
-        }
+    if (gearController != nullptr) {
+        gearController->setOvrMobile(oculusMobile_);
+    }
 
-        //@todo backend specific fix, generalize; ensures there is a renderer instance after pause/resume
-        gRenderer = Renderer::getInstance();
+    oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
+    env.ExceptionClear(); //clear a weird GearVrRemoteForBatteryWorkAround raised by Oculus
+    configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
+    oculusPerformanceParms_.MainThreadTid = mainThreadId_;
+    oculusPerformanceParms_.RenderThreadTid = gettid();
 
-        oculusMobile_ = vrapi_EnterVrMode(&parms);
-        if (nullptr == oculusMobile_) {
-            FAIL("vrapi_EnterVrMode failed!");
-        }
+    if (mMultisamplesConfiguration > maxSamples) {
+        mMultisamplesConfiguration = maxSamples;
+    }
 
-        if (gearController != nullptr) {
-            gearController->setOvrMobile(oculusMobile_);
-        }
+    bool multiview;
+    configurationHelper_.getMultiviewConfiguration(env, multiview);
 
-        oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
-        env.ExceptionClear(); //clear a weird GearVrRemoteForBatteryWorkAround raised by Oculus
-        configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
-        oculusPerformanceParms_.MainThreadTid = mainThreadId_;
-        oculusPerformanceParms_.RenderThreadTid = gettid();
+    const char *extensions = (const char *) glGetString(GL_EXTENSIONS);
+    if (multiview && std::strstr(extensions, "GL_OVR_multiview2") != NULL) {
+        use_multiview = true;
+    }
+    if (multiview && !use_multiview) {
+        std::string error = "Multiview is not supported by your device";
+        LOGE(" Multiview is not supported by your device");
+        throw error;
+    }
 
-        if (mMultisamplesConfiguration > maxSamples) {
-            mMultisamplesConfiguration = maxSamples;
-        }
+    clampToBorderSupported_ = nullptr != std::strstr(extensions, "GL_EXT_texture_border_clamp");
 
-        bool multiview;
-        configurationHelper_.getMultiviewConfiguration(env, multiview);
+    for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
+        frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
+                                 mHeightConfiguration, mMultisamplesConfiguration,
+                                 mResolveDepthConfiguration,
+                                 mDepthTextureFormatConfiguration);
+    }
 
-        const char *extensions = (const char *) glGetString(GL_EXTENSIONS);
-        if (multiview && std::strstr(extensions, "GL_OVR_multiview2") != NULL) {
-            use_multiview = true;
-        }
-        if (multiview && !use_multiview) {
-            std::string error = "Multiview is not supported by your device";
-            LOGE(" Multiview is not supported by your device");
-            throw error;
-        }
+    // default viewport same as window size
+    x = 0;
+    y = 0;
+    width = mWidthConfiguration;
+    height = mHeightConfiguration;
+    configurationHelper_.getSceneViewport(env, x, y, width, height);
 
-        clampToBorderSupported_ = nullptr != std::strstr(extensions, "GL_EXT_texture_border_clamp");
+    projectionMatrix_ = ovrMatrix4f_CreateProjectionFov(
+            vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_,
+                                         VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_X),
+            vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_,
+                                         VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_Y), 0.0f,
+            0.0f, 1.0f,
+            0.0f);
+    texCoordsTanAnglesMatrix_ = ovrMatrix4f_TanAngleMatrixFromProjection(&projectionMatrix_);
 
-        for (int eye = 0; eye < (use_multiview ? 1 : VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
-            frameBuffer_[eye].create(mColorTextureFormatConfiguration, mWidthConfiguration,
-                                     mHeightConfiguration, mMultisamplesConfiguration,
-                                     mResolveDepthConfiguration,
-                                     mDepthTextureFormatConfiguration);
-        }
-
-        // default viewport same as window size
-        x = 0;
-        y = 0;
-        width = mWidthConfiguration;
-        height = mHeightConfiguration;
-        configurationHelper_.getSceneViewport(env, x, y, width, height);
-
-        projectionMatrix_ = ovrMatrix4f_CreateProjectionFov(
-                vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_,
-                                             VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_X),
-                vrapi_GetSystemPropertyFloat(&oculusJavaGlThread_,
-                                             VRAPI_SYS_PROP_SUGGESTED_EYE_FOV_DEGREES_Y), 0.0f,
-                0.0f, 1.0f,
-                0.0f);
-        texCoordsTanAnglesMatrix_ = ovrMatrix4f_TanAngleMatrixFromProjection(&projectionMatrix_);
+    //so that android events get generated for the back key; bear in mind that with controller
+    //connected this emulation will be turned off in ovr_gear_controller.cpp
+    ovrResult r = vrapi_SetRemoteEmulation(oculusMobile_, true);
+    if (ovrSuccess != r) {
+        FAIL("vrapi_SetRemoteEmulation failed");
     }
 }
 
