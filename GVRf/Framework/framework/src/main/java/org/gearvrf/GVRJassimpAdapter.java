@@ -575,7 +575,7 @@ class  GVRJassimpAdapter
                     bindPoseMtx.invert();
                     bindPose.setWorldMatrix(boneId, bindPoseMtx);
                 }
-                else
+                else if (bone != null)
                 {
                     GVRTransform t = bone.getTransform();
                     Matrix4f mtx = t.getModelMatrix4f();

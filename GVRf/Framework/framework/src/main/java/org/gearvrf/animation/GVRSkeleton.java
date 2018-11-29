@@ -137,7 +137,7 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
     }
 
     /**
-     * Construct a skeleton given a bone hierarchy
+     * Construct a skeleton given a bone hierarchy.
      * @param ctx           {@link GVRContext} to associate the skeleton with
      * @param parentBones   Array of integers describing the bone hierarchy.
      *                      Each bone has an index, with bone 0 being the root bone.
@@ -163,6 +163,19 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
         mPoseMatrices =  new float[parentBones.length * 16];
     }
 
+    /**
+     * Construct a skeleton given a scene object hierarchy.
+     * <p>
+     * The scene object hierarchy is used to determine how the
+     * bones are connected. Only nodes that are in the bone name list will be
+     * in the skeleton.
+     * @param root          {@link GVRSceneObject} at the root of the hierarchy.
+     * @param boneNames     Array of string with the names of skeleton bones.
+     *                      parent, -1 indicates the root bone (no parent).
+     * @see #setBoneName(int, String)
+     * @see #getBoneIndex(String)
+     * @see #getParentBoneIndex(int)
+     */
     public GVRSkeleton(GVRSceneObject root, List<String> boneNames)
     {
         super(root.getGVRContext(), 0);
@@ -187,6 +200,46 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
         {
             sTempRoot.attachComponent(this);
         }
+    }
+
+    /**
+     * Construct a {@link GVRSkeleton} from a native C++ skeleton.
+     * <p>
+     * The C++ skeleton is assume to already have been constructed
+     * and able to provide bone parentage, name and pose information.
+     * @param ctx           {@link GVRContext} the skeleton belongs to.
+     * @param nativePtr     -> C++ Skeleton component - cannot be null.
+     * @see #setBoneName(int, String)
+     * @see #getBoneIndex(String)
+     * @see #getParentBoneIndex(int)
+     */
+    public GVRSkeleton(GVRContext ctx, long nativePtr)
+    {
+        super(ctx, nativePtr);
+        int numBones = NativeSkeleton.getNumBones(nativePtr);
+        mType = getComponentType();
+        mParentBones = new int[numBones];
+        mBoneAxis = new Vector3f(0, 0, 1);
+        mRootOffset = new Vector3f(0, 0, 0);
+        mBoneOptions = new int[numBones];
+        mBoneNames = new String[numBones];
+        mBones = new GVRSceneObject[numBones];
+        mPoseMatrices =  new float[numBones * 16];
+        NativeSkeleton.getBoneParents(nativePtr, mParentBones);
+        NativeSkeleton.getPose(nativePtr, mPoseMatrices);
+        mPose = new GVRPose(this);
+        mBindPose = new GVRPose(this);
+        Matrix4f mtx = new Matrix4f();
+        for (int boneId = 0; boneId < numBones; ++boneId)
+        {
+            mtx.get(mPoseMatrices, boneId * 16);
+            mBindPose.setWorldMatrix(boneId, mtx);
+            mPose.setWorldMatrix(boneId, mtx);
+            mBoneNames[boneId] = NativeSkeleton.getBoneName(nativePtr, boneId);
+        }
+        mBindPose.sync();
+        mPose.sync();
+        setBindPose(mBindPose);
     }
 
     protected int[] makeParentBoneIds(GVRSceneObject root, List<String> boneNames)
@@ -421,6 +474,46 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
     public GVRPose getPose()
     {
         return mPose;
+    }
+
+    /**
+     * Get the pose from the native skeleton.
+     * <p>
+     * Usually the animation of a skeleton is controlled from Java.
+     * In this case, the current pose of the skeleton is maintained
+     * in a Java data structure. If the skeleton animation is controlled
+     * by C++ code, the current pose of the skeleton is not known to
+     * Java and must be obtained by calling this function.
+     * After calling the function, the current pose of the skeleton
+     * is updated from the values calculated by the native C++ code.
+     * Modifications made to this pose will affect the skeleton.
+     *
+     * @see GVRPose
+     * @see #setPose
+     * @see GVRPose#setWorldRotations
+     * @see GVRPose#setWorldPositions
+     */
+    public void getNativePose()
+    {
+        getNativePose(mPoseMatrices);
+    }
+
+    public void getNativePose(float[] poseMatrices)
+    {
+        if (poseMatrices.length < getNumBones())
+        {
+            throw new IllegalArgumentException("Not enough room in array to capture the pose");
+        }
+        GVRPose pose = getPose();
+        int ofs = 0;
+        NativeSkeleton.getPose(getNative(), poseMatrices);
+        for (int i = 0; i < mParentBones.length; ++i)
+        {
+            mTempMtx.set(poseMatrices, ofs);
+            pose.setLocalMatrix(i, mTempMtx);
+            ofs += 16;
+        }
+        pose.sync();
     }
 
     /**
@@ -683,6 +776,7 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
     public void setBoneName(int boneindex, String bonename)
     {
         mBoneNames[boneindex] = bonename;
+        NativeSkeleton.setBoneName(getNative(), boneindex, bonename);
     }
 
     /**
@@ -1220,7 +1314,20 @@ public class GVRSkeleton extends GVRComponent implements PrettyPrint
 class NativeSkeleton
 {
     static native long ctor(int[] boneParents);
+
+    static native int getNumBones(long object);
+
+    static native boolean getBoneParents(long object, int[] parentIds);
+
     static native long getComponentType();
+
     static native boolean setPose(long object, float[] matrices);
+
+    static native boolean getPose(long object, float[] matrices);
+
     static native boolean setSkinPose(long object, float[] matrices);
-}
+
+    static native void setBoneName(long object, int index, String name);
+
+    static native String getBoneName(long object, int index);
+};

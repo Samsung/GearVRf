@@ -31,6 +31,7 @@ namespace gvr {
     static const long long COMPONENT_TYPE_PHYSICS_CONSTRAINT = 10013;
     static const long long COMPONENT_TYPE_SKELETON           = 10020;
     static const long long COMPONENT_TYPE_SKIN               = 10021;
+    static const long long COMPONENT_TYPE_BODYTRACKER        = 10022;
 }
 
 #endif

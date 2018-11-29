@@ -224,6 +224,7 @@ public class GVRSkeletonAnimation extends GVRAnimation implements PrettyPrint {
         skel.updateBonePose();
         skel.updateSkinPose();
     }
+
     public GVRPose computePose(float timeInSec, GVRPose pose)
     {
         Matrix4f temp = new Matrix4f();
