@@ -619,8 +619,8 @@ public abstract class GVRCursorController implements IEventReceiver
             if (processedMotionEvent.isEmpty()) {
                 return null;
             } else {
-                return processedMotionEvent
-                        .get(processedMotionEvent.size() - 1);
+                return MotionEvent.obtain(processedMotionEvent
+                        .get(processedMotionEvent.size() - 1));
             }
         }
     }

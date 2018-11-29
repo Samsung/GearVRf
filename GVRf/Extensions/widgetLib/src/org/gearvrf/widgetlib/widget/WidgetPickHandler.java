@@ -238,7 +238,24 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
         public void onEnter(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
         }
 
-        public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject collision) {
+        public void onInside(final GVRSceneObject sceneObj, final GVRPicker.GVRPickedObject collision) {
+            final MotionEvent event = collision.motionEvent;
+            if (event != null) {
+                Log.d(Log.SUBSYSTEM.INPUT, TAG, "onMotionInside() event = %s", event);
+
+                final Widget widget = WidgetBehavior.getTarget(sceneObj);
+                if (widget != null && widget.isTouchable() && mTouched.contains(widget)) {
+                    Log.d(TAG, "onMotionInside() widget %s ", widget.getName());
+                    WidgetLib.getMainThread().runOnMainThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            GestureDetector gestureDetector = new GestureDetector(
+                                    sceneObj.getGVRContext().getContext(), mGestureListener);
+                            gestureDetector.onTouchEvent(event);
+                        }
+                    });
+                }
+            }
         }
 
         private FlingHandler.FlingAction mFling;
@@ -300,11 +317,13 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
                 }
             }
 
+            @Override
             public boolean onDown(MotionEvent e) {
                 Log.d(Log.SUBSYSTEM.INPUT, TAG, "onDown e = %s", e);
                 return true;
             }
 
+            @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
                                    float velocityY) {
                 Log.d(Log.SUBSYSTEM.INPUT, TAG, "onFling event1: " + e1 + " event2: " + e2
@@ -313,10 +332,12 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
                 return true;
             }
 
+            @Override
             public void onLongPress(MotionEvent e) {
                 Log.d(Log.SUBSYSTEM.INPUT, TAG, "onLongPress e = %s", e);
             }
 
+            @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2,
                                     float distanceX, float distanceY) {
                 Log.d(Log.SUBSYSTEM.INPUT, TAG, "onScroll e1 = %s, e2 = %s distanceX = %f, distanceY = %f",
@@ -324,10 +345,12 @@ class WidgetPickHandler implements GVRInputManager.ICursorControllerSelectListen
                 return true;
             }
 
+            @Override
             public void onShowPress(MotionEvent e) {
                 Log.d(Log.SUBSYSTEM.INPUT, TAG, "onShowPress e = %s", e);
             }
 
+            @Override
             public boolean onSingleTapUp(MotionEvent e) {
                 Log.d(Log.SUBSYSTEM.INPUT, TAG, "onSingleTapUp e = %s", e);
                 return true;
