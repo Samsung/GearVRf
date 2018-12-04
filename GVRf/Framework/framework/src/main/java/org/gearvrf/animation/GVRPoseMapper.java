@@ -224,6 +224,7 @@ public class GVRPoseMapper extends GVRAnimation
         }
         mapLocalToTarget();
         mDestSkeleton.poseToBones();
+        mDestSkeleton.updateBonePose();
         mDestSkeleton.updateSkinPose();
     }
 

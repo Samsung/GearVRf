@@ -156,14 +156,24 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
             {
                 case 2:
                 mAvatarRoot.getGVRContext().getEventManager().sendEvent(GVRAvatar.this,
-                        IAvatarEvents.class, "onAnimationFinished", animator, animation);
+                                                                        IAvatarEvents.class,
+                                                                        "onAnimationFinished",
+                                                                        GVRAvatar.this,
+                                                                        animator,
+                                                                        animation);
                 mAvatarRoot.getGVRContext().getEventManager().sendEvent(GVRAvatar.this,
-                        IAvatarEvents.class, "onAnimationStarted", animator);
+                                                                        IAvatarEvents.class,
+                                                                        "onAnimationStarted",
+                                                                        GVRAvatar.this,
+                                                                        animator);
                 break;
 
                 case 1:
                 mAvatarRoot.getGVRContext().getEventManager().sendEvent(GVRAvatar.this,
-                        IAvatarEvents.class, "onAnimationStarted", animator);
+                                                                        IAvatarEvents.class,
+                                                                        "onAnimationStarted",
+                                                                        GVRAvatar.this,
+                                                                        animator);
                 if (mRepeatMode == GVRRepeatMode.REPEATED)
                 {
                     startAll(mRepeatMode);
@@ -266,14 +276,13 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
                 else
                 {
                     skelAnim = importer.importAnimation(animResource, mSkeleton);
-                    GVRSkeleton skl = skelAnim.getSkeleton();
-
                     animator.addAnimation(skelAnim);
                 }
                 addAnimation(animator);
                 ctx.getEventManager().sendEvent(this,
                                                 IAvatarEvents.class,
                                                 "onAnimationLoaded",
+                                                GVRAvatar.this,
                                                 animator,
                                                 filePath,
                                                 null);
@@ -283,6 +292,7 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
                 ctx.getEventManager().sendEvent(this,
                                                 IAvatarEvents.class,
                                                 "onAnimationLoaded",
+                                                GVRAvatar.this,
                                                 null,
                                                 filePath,
                                                 ex.getMessage());
@@ -422,8 +432,11 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
         }
         mIsRunning = true;
         animator.start(mOnFinish);
-        mAvatarRoot.getGVRContext().getEventManager().sendEvent(GVRAvatar.this, IAvatarEvents.class,
-                "onAnimationStarted", animator);
+        mAvatarRoot.getGVRContext().getEventManager().sendEvent(GVRAvatar.this,
+                                                                IAvatarEvents.class,
+                                                                "onAnimationStarted",
+                                                                GVRAvatar.this,
+                                                                animator);
     }
 
     /**
@@ -515,7 +528,13 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
             {
                 Log.e(TAG, "Avatar skeleton not found in asset file " + filePath);
             }
-            context.getEventManager().sendEvent(GVRAvatar.this, IAvatarEvents.class, eventName, modelRoot, filePath, errors);
+            context.getEventManager().sendEvent(GVRAvatar.this,
+                                                IAvatarEvents.class,
+                                                eventName,
+                                                GVRAvatar.this,
+                                                modelRoot,
+                                                filePath,
+                                                errors);
         }
 
         public void onModelLoaded(GVRContext context, GVRSceneObject model, String filePath) { }
@@ -526,11 +545,11 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
 
     public interface IAvatarEvents extends IEvents
     {
-        public void onAvatarLoaded(GVRSceneObject avatarRoot, String filePath, String errors);
-        public void onModelLoaded(GVRSceneObject avatarRoot, String filePath, String errors);
-        public void onAnimationLoaded(GVRAnimator animator, String filePath, String errors);
-        public void onAnimationStarted(GVRAnimator animator);
-        public void onAnimationFinished(GVRAnimator animator, GVRAnimation animation);
+        public void onAvatarLoaded(GVRAvatar avatar, GVRSceneObject avatarRoot, String filePath, String errors);
+        public void onModelLoaded(GVRAvatar avatar, GVRSceneObject avatarRoot, String filePath, String errors);
+        public void onAnimationLoaded(GVRAvatar avatar, GVRAnimator animator, String filePath, String errors);
+        public void onAnimationStarted(GVRAvatar avatar, GVRAnimator animator);
+        public void onAnimationFinished(GVRAvatar avatar, GVRAnimator animator, GVRAnimation animation);
     }
 
     protected IAssetEvents mLoadAnimHandler = new IAssetEvents()
@@ -544,7 +563,13 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
                 {
                     errors = "No animations found in " + filePath;
                 }
-                context.getEventManager().sendEvent(GVRAvatar.this, IAvatarEvents.class, "onAnimationLoaded", null, filePath, errors);
+                context.getEventManager().sendEvent(GVRAvatar.this,
+                                                    IAvatarEvents.class,
+                                                    "onAnimationLoaded",
+                                                    GVRAvatar.this,
+                                                    null,
+                                                    filePath,
+                                                    errors);
                 return;
             }
 
@@ -557,7 +582,13 @@ public class GVRAvatar extends GVRBehavior implements IEventReceiver
                 animator.addAnimation(poseMapper);
             }
             addAnimation(animator);
-            context.getEventManager().sendEvent(GVRAvatar.this, IAvatarEvents.class, "onAnimationLoaded", animator, filePath, errors);
+            context.getEventManager().sendEvent(GVRAvatar.this,
+                                                IAvatarEvents.class,
+                                                "onAnimationLoaded",
+                                                GVRAvatar.this,
+                                                animator,
+                                                filePath,
+                                                errors);
         }
 
         public void onModelLoaded(GVRContext context, GVRSceneObject model, String filePath)
