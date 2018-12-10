@@ -15,27 +15,26 @@
 
 package org.gearvrf.mixedreality;
 
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRSceneObject;
 
 /**
  * Represents a fixed location and orientation in the real world.
  */
-public abstract class GVRAnchor extends GVRSceneObject {
+public abstract class GVRAnchor extends GVRBehavior
+{
+    static private long TYPE_ANCHOR = newComponentType(GVRAnchor.class);
+
     protected GVRTrackingState mTrackingState;
 
-    protected GVRAnchor(GVRContext gvrContext) {
-        super(gvrContext);
+    protected GVRAnchor(GVRContext GVRContext)
+    {
+        super(GVRContext);
+        mType = getComponentType();
     }
 
-    /**
-     * Attach a scene object to be displayed on this anchor position
-     *
-     * @param obj
-     */
-    public void attachSceneObject(GVRSceneObject obj) {
-        addChildObject(obj);
-    }
+    static public long getComponentType() { return TYPE_ANCHOR; }
 
     /**
      *
@@ -49,4 +48,6 @@ public abstract class GVRAnchor extends GVRSceneObject {
      */
     public abstract String getCloudAnchorId();
 
+    public abstract float[] getPose();
+//    public abstract float[] makeTranslate(float x, float y, float z);
 }

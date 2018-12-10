@@ -15,41 +15,30 @@
 
 package org.gearvrf.mixedreality;
 
+import android.support.annotation.NonNull;
+
+import org.gearvrf.GVRBehavior;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRSceneObject;
 
 import java.nio.FloatBuffer;
 
 /**
  * Represents the  current best knowledge of a real-world planar surface.
  */
-public abstract class GVRPlane extends GVRSceneObject {
-    protected Type mType;
+public abstract class GVRPlane extends GVRBehavior
+{
+    static private long TYPE_PLANE = newComponentType(GVRPlane.class);
     protected GVRTrackingState mTrackingState;
     protected GVRPlane mParentPlane;
-    protected GVRSceneObject mSceneObject;
+    protected Type mPlaneType;
 
-    protected GVRPlane(GVRContext gvrContext) {
-        super(gvrContext);
+    protected GVRPlane(GVRContext GVRContext)
+    {
+        super(GVRContext);
+        mType = getComponentType();
     }
 
-    /**
-     * Set a scene object to represent the plane
-     *
-     * @param obj
-     */
-    public void setSceneObject(GVRSceneObject obj) {
-        mSceneObject = obj;
-        addChildObject(mSceneObject);
-    }
-
-    /**
-     *
-     * @return The scene object that represents the plane
-     */
-    public GVRSceneObject getSceneObject() {
-        return this.mSceneObject;
-    }
+    static public long getComponentType() { return TYPE_PLANE; }
 
     /**
      *
@@ -58,45 +47,53 @@ public abstract class GVRPlane extends GVRSceneObject {
     public abstract GVRTrackingState getTrackingState();
 
     /**
+     * Gets the center pose.
      *
-     * @return The plane center pose
+     * @param poseOut Array to export the pose to.
      */
-    public abstract float[] getCenterPose();
+    public abstract void getCenterPose(@NonNull float[] poseOut);
+
+    public Type getPlaneType()
+    {
+        return mPlaneType;
+    }
 
     /**
-     *
-     * @return The plane type
-     */
-    public abstract Type getPlaneType();
-
-    /**
-     *
      * @return The plane width
      */
     public abstract float getWidth();
 
     /**
-     *
      * @return The plane height
      */
     public abstract float getHeight();
 
     /**
-     *
      * @return The polygon that best represents the plane
      */
     public abstract FloatBuffer getPolygon();
 
     /**
-     *
      * @return The parent plane
      */
-    public abstract GVRPlane getParentPlane();
+    public GVRPlane getParentPlane()
+    {
+        return mParentPlane;
+    }
+
+    /**
+     * Check if the given pose is in the plane's polygon.
+     *
+     * @param pose the pose matrix to check
+     * @return whether the pose is in the plane's polygon or not.
+     */
+    public abstract boolean isPoseInPolygon(float[] pose);
 
     /**
      * Describes the possible types of planes
      */
-    public enum Type {
+    public enum Type
+    {
         HORIZONTAL_DOWNWARD_FACING,
         HORIZONTAL_UPWARD_FACING,
         VERTICAL

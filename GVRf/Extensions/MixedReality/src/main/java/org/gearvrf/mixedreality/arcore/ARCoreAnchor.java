@@ -16,9 +16,10 @@
 package org.gearvrf.mixedreality.arcore;
 
 import com.google.ar.core.Anchor;
-import com.google.ar.core.TrackingState;
+import com.google.ar.core.Pose;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRAnchor;
 import org.gearvrf.mixedreality.GVRTrackingState;
 
@@ -67,32 +68,42 @@ public class ARCoreAnchor extends GVRAnchor {
     public String getCloudAnchorId() {
         return mAnchor.getCloudAnchorId();
     }
-
+/*
+    @Override
+    public float[] makeTranslate(float x, float y, float z) {
+        float[] newPose = new float[16];
+        Pose pose = mAnchor.getPose().compose(Pose.makeTranslation(x, y, z));
+        pose.toMatrix(newPose, 0);
+        return newPose;
+    }
+*/
     /**
      * Update the anchor based on arcore best knowledge of the world
      *
-     * @param viewmtx
-     * @param gvrmatrix
      * @param scale
      */
-    protected void update(float[] viewmtx, float[] gvrmatrix, float scale) {
+    protected void update(float scale) {
         // Updates only when the plane is in the scene
-        if (getParent() == null || !isEnabled()) {
-            return;
-        }
+        GVRSceneObject owner = getOwnerObject();
 
-        convertFromARtoVRSpace(viewmtx, gvrmatrix, scale);
+        if ((owner != null) && isEnabled() && owner.isEnabled())
+        {
+            convertFromARtoVRSpace(scale);
+        }
     }
 
     /**
      * Converts from ARCore world space to GVRf's world space.
      *
-     * @param arViewMatrix Phone's camera view matrix.
-     * @param vrCamMatrix GVRf Camera matrix.
      * @param scale Scale from AR to GVRf world.
      */
-    protected void convertFromARtoVRSpace(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
-        mPose.update(mAnchor.getPose(), arViewMatrix, vrCamMatrix, scale);
+    protected void convertFromARtoVRSpace(float scale) {
+        mPose.update(mAnchor.getPose(), scale);
         getTransform().setModelMatrix(mPose.getPoseMatrix());
+    }
+
+    public float[] getPose()
+    {
+        return mPose.getPoseMatrix();
     }
 }

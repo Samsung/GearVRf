@@ -15,9 +15,14 @@
 
 package org.gearvrf.mixedreality.arcore;
 
+import org.joml.Matrix4f;
+import android.support.annotation.NonNull;
+
 import com.google.ar.core.Plane;
+import com.google.ar.core.Pose;
 
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.GVRTrackingState;
 
@@ -34,13 +39,13 @@ class ARCorePlane extends GVRPlane {
         mARPlane = plane;
 
         if (mARPlane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
-            mType = Type.HORIZONTAL_DOWNWARD_FACING;
+            mPlaneType = Type.HORIZONTAL_DOWNWARD_FACING;
         }
         else if (mARPlane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
-            mType = Type.HORIZONTAL_UPWARD_FACING;
+            mPlaneType = Type.HORIZONTAL_UPWARD_FACING;
         }
         else {
-            mType = Type.VERTICAL;
+            mPlaneType = Type.VERTICAL;
         }
     }
 
@@ -68,15 +73,11 @@ class ARCorePlane extends GVRPlane {
     }
 
     @Override
-    public float[] getCenterPose() {
-        float[] centerPose = new float[16];
-        mARPlane.getCenterPose().toMatrix(centerPose, 0);
-        return centerPose;
-    }
-
-    @Override
-    public Type getPlaneType() {
-        return mType;
+    public void getCenterPose(@NonNull float[] poseOut) {
+        if(poseOut.length != 16 ){
+            throw new IllegalArgumentException("Array must be 16");
+        }
+        mARPlane.getCenterPose().toMatrix(poseOut, 0);
     }
 
     @Override
@@ -99,36 +100,47 @@ class ARCorePlane extends GVRPlane {
         return mParentPlane;
     }
 
+    @Override
+    public boolean isPoseInPolygon(float[] pose) {
+
+        float[] translation = new float[3];
+        float[] rotation = new float[4];
+        float[] arPose;
+
+        arPose = pose.clone();
+
+        ARCoreSession.gvr2ar(arPose);
+        ARCoreSession.convertMatrixPoseToVector(arPose, translation, rotation);
+
+        return mARPlane.isPoseInPolygon(new Pose(translation, rotation));
+    }
+
     /**
      * Update the plane based on arcore best knowledge of the world
      *
-     * @param viewmtx
-     * @param gvrmatrix
      * @param scale
      */
-    protected void update(float[] viewmtx, float[] gvrmatrix, float scale) {
-        // Updates only when the plane is in the scene
-        if (getParent() == null || !isEnabled()) {
-            return;
-        }
-
-        convertFromARtoVRSpace(viewmtx, gvrmatrix, scale);
-
-        if (mSceneObject != null) {
-            mSceneObject.getTransform().setScale(mARPlane.getExtentX() * 0.95f,
-                    mARPlane.getExtentZ() * 0.95f, 1.0f);
+    protected void update(float scale) {
+        GVRSceneObject owner = getOwnerObject();
+        if (isEnabled() && (owner != null) && owner.isEnabled())
+        {
+            float w = getWidth();
+            float h = getHeight();
+            mPose.update(mARPlane.getCenterPose(), scale);
+            Matrix4f m = new Matrix4f();
+            m.set(mPose.getPoseMatrix());
+            m.scaleLocal(w * 0.95f, h * 0.95f, 1.0f);
+            owner.getTransform().setModelMatrix(m);
         }
     }
     
     /**
      * Converts from ARCore world space to GVRf's world space.
      *
-     * @param arViewMatrix Phone's camera view matrix
-     * @param vrCamMatrix GVRf Camera matrix
      * @param scale Scale from AR to GVRf world
      */
-    private void convertFromARtoVRSpace(float[] arViewMatrix, float[] vrCamMatrix, float scale) {
-        mPose.update(mARPlane.getCenterPose(), arViewMatrix, vrCamMatrix, scale);
+    private void convertFromARtoVRSpace(float scale) {
+        mPose.update(mARPlane.getCenterPose(), scale);
         getTransform().setModelMatrix(mPose.getPoseMatrix());
     }
 }

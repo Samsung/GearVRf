@@ -18,7 +18,7 @@ package org.gearvrf.mixedreality;
 /**
  * Represents a common Augmented Image in MixedReality
  */
-public abstract class GVRAugmentedImage {
+public abstract class GVRMarker {
     protected GVRTrackingState mTrackingState;
 
     /**

@@ -17,16 +17,16 @@ package org.gearvrf.mixedreality.arcore;
 
 import com.google.ar.core.AugmentedImage;
 
-import org.gearvrf.mixedreality.GVRAugmentedImage;
+import org.gearvrf.mixedreality.GVRMarker;
 import org.gearvrf.mixedreality.GVRTrackingState;
 
 /**
  * Represents an ARCore Augmented Image
  */
-public class ARCoreAugmentedImage extends GVRAugmentedImage {
+public class ARCoreMarker extends GVRMarker {
     private AugmentedImage mAugmentedImage;
 
-    protected ARCoreAugmentedImage(AugmentedImage augmentedImage) {
+    protected ARCoreMarker(AugmentedImage augmentedImage) {
         mAugmentedImage = augmentedImage;
         mTrackingState = GVRTrackingState.PAUSED;
     }
