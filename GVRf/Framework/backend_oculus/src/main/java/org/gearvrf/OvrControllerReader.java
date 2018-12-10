@@ -1,5 +1,7 @@
 package org.gearvrf;
 
+import android.view.KeyEvent;
+
 import org.gearvrf.io.GVRGearCursorController;
 
 import java.nio.ByteBuffer;
@@ -11,13 +13,19 @@ final class OvrControllerReader extends GVRGearCursorController.ControllerReader
 
     private FloatBuffer readbackBuffer;
     private final long mPtr;
+    private final GVRApplication mApplication;
+    private final GVREventListeners.ActivityEvents mApplicationEvents;
 
-    OvrControllerReader(long ptrActivityNative) {
+    OvrControllerReader(GVRApplication application, long ptrActivityNative) {
         ByteBuffer readbackBufferB = ByteBuffer.allocateDirect(DATA_SIZE * BYTE_TO_FLOAT);
         readbackBufferB.order(ByteOrder.nativeOrder());
         readbackBuffer = readbackBufferB.asFloatBuffer();
         mPtr = OvrNativeGearController.ctor(readbackBufferB);
         OvrNativeGearController.nativeInitializeGearController(ptrActivityNative, mPtr);
+
+        mApplication = application;
+        mApplicationEvents = new ApplicationEvents(application);
+        mApplication.getEventReceiver().addListener(mApplicationEvents);
     }
 
     @Override
@@ -47,12 +55,28 @@ final class OvrControllerReader extends GVRGearCursorController.ControllerReader
 
     @Override
     protected void finalize() throws Throwable {
+        mApplication.getEventReceiver().removeListener(mApplicationEvents);
         try {
             OvrNativeGearController.delete(mPtr);
         } finally {
             super.finalize();
         }
     }
+
+    private static final class ApplicationEvents extends GVREventListeners.ActivityEvents {
+        private final GVRApplication mApplication;
+
+        public ApplicationEvents(final GVRApplication application) {
+            mApplication = application;
+        }
+
+        @Override
+        public void dispatchKeyEvent(final KeyEvent event) {
+            if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
+                mApplication.getActivity().dispatchKeyEvent(event);
+            }
+        }
+    };
 
     private static final int INDEX_CONNECTED = 0;
     private static final int INDEX_HANDEDNESS = 1;

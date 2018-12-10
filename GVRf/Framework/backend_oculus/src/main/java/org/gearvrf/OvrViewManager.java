@@ -135,7 +135,7 @@ class OvrViewManager extends GVRViewManager {
         mStatsLine.addColumn(mTracerDrawEyes2.getStatColumn());
         mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
 
-        mControllerReader = new OvrControllerReader(mApplication.getActivityNative().getNative());
+        mControllerReader = new OvrControllerReader(mApplication, mApplication.getActivityNative().getNative());
     }
 
     /**

@@ -23,6 +23,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.gearvrf.GVRApplication;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventManager;
 import org.gearvrf.GVREventReceiver;
@@ -816,12 +817,12 @@ public final class GVRGearCursorController extends GVRCursorController
         }
 
         public void run() {
-            final Activity activity = mContext.getActivity();
+            final GVRApplication application = mContext.getApplication();
             for (final Iterator<KeyEvent> it = mKeyEvents.iterator(); it.hasNext(); ) {
                 final KeyEvent e = it.next();
                 mContext.getEventManager().sendEventWithMask(
                         GVREventManager.SEND_MASK_ALL & ~GVREventManager.SEND_MASK_OBJECT,
-                        activity,
+                        application,
                         IActivityEvents.class,
                         "dispatchKeyEvent", e);
                 it.remove();
@@ -835,7 +836,7 @@ public final class GVRGearCursorController extends GVRCursorController
                 //@todo move the io package back to gearvrf
                 mContext.getEventManager().sendEventWithMask(
                         GVREventManager.SEND_MASK_ALL & ~GVREventManager.SEND_MASK_OBJECT,
-                        activity,
+                        application,
                         IActivityEvents.class,
                         "dispatchTouchEvent", dupe);
 
