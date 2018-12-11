@@ -6,6 +6,9 @@ allprojects {
         flatDir {
             dirs '../../gearvrf-libs'
         }
+        maven {
+            url 'https://google.bintray.com/exoplayer/'
+        }        
     }
 }
 
@@ -30,7 +33,6 @@ project.ext.jomlVersion = "1.9.3-SNAPSHOT"
 project.ext.gsonVersion = '2.8.2'
 
 repositories {
-    jcenter()
     maven {
         url 'https://maven.google.com/'
         name 'Google'
