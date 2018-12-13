@@ -18,41 +18,37 @@
 #define FRAMEWORK_OVR_GEAR_CONTROLLER_H
 
 #include "VrApi_Input.h"
-#include "glm/glm.hpp"
-#include "glm/gtx/quaternion.hpp"
-#include "util/gvr_log.h"
 
 namespace gvr {
     class GearController {
 
     private:
-        ovrDeviceID RemoteDeviceID;
-        ovrMobile *ovrMobile_;
-        float *orientationTrackingReadbackBuffer;
+        ovrDeviceID mRemoteDeviceId = ovrDeviceIdType_Invalid;
+        ovrMobile *mOvrMobile;
+        float *mOrientationTrackingReadbackBuffer;
         static const int CONNECTED = 1;
         static const int DISCONNECTED = 0;
 
     public :
 
         GearController(float *orientationTrackingReadbackBuffer) {
-            this->orientationTrackingReadbackBuffer = orientationTrackingReadbackBuffer;
+            this->mOrientationTrackingReadbackBuffer = orientationTrackingReadbackBuffer;
         }
 
 
         void setOvrMobile(ovrMobile *ovrMobile) {
-            this->ovrMobile_ = ovrMobile;
+            this->mOvrMobile = ovrMobile;
         }
 
         bool findConnectedGearController();
 
         void onControllerConnected(ovrDeviceID const deviceID);
 
-        void onControllerDisconnected(ovrDeviceID const disconnectedDeviceID);
-
         void onFrame(double predictedDisplayTime);
 
         int handedness;
 
+        void reset();
     };
 }
 #endif //FRAMEWORK_OVR_GEAR_CONTROLLER_H
