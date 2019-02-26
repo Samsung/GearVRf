@@ -106,7 +106,9 @@ namespace gvr
             }
             if (data.IsHit)
             {
-                data.Distance = glm::distance(O, data.HitPosition);
+                glm::vec4 p = glm::vec4(data.HitPosition, 1);
+                p = model_matrix * p;
+                data.Distance = glm::length(rayStart - glm::vec3(p));
                 data.ColliderHit = this;
                 data.ObjectHit = owner;
             }
