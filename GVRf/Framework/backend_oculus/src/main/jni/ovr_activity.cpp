@@ -401,4 +401,9 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         LOGD("Activity: usingMultview = %d", use_multiview);
         return use_multiview;
     }
+
+    void GVRActivity::recenterPose() const {
+        vrapi_RecenterPose(oculusMobile_);
+    }
+
 }

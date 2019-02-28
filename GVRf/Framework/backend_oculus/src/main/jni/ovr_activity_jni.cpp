@@ -27,7 +27,7 @@ namespace gvr {
         return reinterpret_cast<long>(gvrActivity);
     }
 
-    JNIEXPORT long JNICALL Java_org_gearvrf_OvrViewManager_getRenderTextureInfo(JNIEnv* jni, jclass clazz, jlong jactivity ,  jint index, jint eye){
+    JNIEXPORT long JNICALL Java_org_gearvrf_OvrViewManager_getRenderTextureInfo(JNIEnv*, jobject, jlong jactivity, jint index, jint eye) {
         GVRActivity* gvrActivity = reinterpret_cast<GVRActivity*>(jactivity);
         return reinterpret_cast<long>(gvrActivity->getRenderTextureInfo(eye, index));
     }
@@ -94,7 +94,14 @@ namespace gvr {
         const GVRActivity *activity = reinterpret_cast<GVRActivity*>(appPtr);
         return activity->usingMultiview();
     }
-    
+
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_OvrViewManager_recenterPose__J(JNIEnv*, jobject, jlong ptr) {
+        const GVRActivity *activity = reinterpret_cast<GVRActivity*>(ptr);
+        activity->recenterPose();
+    }
+
     } //extern "C" {
     
 } //namespace gvr

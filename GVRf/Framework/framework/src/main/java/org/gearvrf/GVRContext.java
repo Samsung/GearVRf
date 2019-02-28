@@ -876,4 +876,11 @@ public abstract class GVRContext implements IEventReceiver {
         return null;
     }
 
+    /**
+     * Recenter the head and the controller pose orientation on the yaw axis
+     */
+    public void recenterPose() {
+        getMainScene().getMainCameraRig().resetYaw();
+    }
+
 }

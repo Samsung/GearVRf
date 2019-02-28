@@ -308,10 +308,13 @@ class OvrViewManager extends GVRViewManager {
 
         mRenderBundle.createRenderTargetChain(isMultiview);
     }
-    /*
-     * GVRF APIs
-     */
 
-    private native long getRenderTextureInfo(long ptr, int index, int eye );
+    private native long getRenderTextureInfo(long ptr, int index, int eye);
     private native void drawEyes(long ptr);
+    private native void recenterPose(long ptr);
+
+    @Override
+    public void recenterPose() {
+        recenterPose(mApplication.getActivityNative().getNative());
+    }
 }
