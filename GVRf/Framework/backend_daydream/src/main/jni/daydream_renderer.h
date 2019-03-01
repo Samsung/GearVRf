@@ -73,7 +73,7 @@ private:
     jmethodID onDrawEyeMethodId_ = nullptr;
     jobject rendererObject_ = nullptr;
 
-    gvr::CameraRig *cameraRig_;
+    gvr::CameraRig* cameraRig_ = nullptr;
 };
 
 #endif  // DAYDREAM_RENDERER_H_
