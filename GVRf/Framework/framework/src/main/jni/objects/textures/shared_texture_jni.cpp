@@ -22,15 +22,13 @@
 namespace gvr {
 extern "C" {
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeSharedTexture_ctor(JNIEnv * env,
-        jobject obj, jint id);
+Java_org_gearvrf_NativeSharedTexture_ctor(JNIEnv * env, jobject obj, jint id, jint textureType);
 }
 ;
 
 JNIEXPORT jlong JNICALL
-Java_org_gearvrf_NativeSharedTexture_ctor(JNIEnv * env,
-    jobject obj, jint id) {
-return reinterpret_cast<jlong>(Renderer::getInstance()->createSharedTexture(id));
+Java_org_gearvrf_NativeSharedTexture_ctor(JNIEnv * env, jobject obj, jint id, jint textureType) {
+    return reinterpret_cast<jlong>(Renderer::getInstance()->createSharedTexture(id, textureType));
 }
 
 }

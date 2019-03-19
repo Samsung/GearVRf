@@ -74,7 +74,7 @@ public:
         vulkanCore_->unmapRenderToOculus(renderTarget);
     }
 
-    Texture* createSharedTexture( int id) { return nullptr; };
+    Texture* createSharedTexture(int id, int textureId) { return nullptr; };
 
     VulkanRenderer(int vulkanPropValue = 0) : vulkanCore_(nullptr) {
         vkflags::initVkRenderFlags();

@@ -152,10 +152,10 @@ namespace gvr
         return tex;
     }
 
-    Texture *GLRenderer::createSharedTexture(int id)
+    Texture *GLRenderer::createSharedTexture(int id, int textureType)
     {
-        Texture *tex = new Texture(GL_TEXTURE_2D);
-        tex->setImage(new GLImageTex(GL_TEXTURE_2D, id));
+        Texture *tex = new Texture(textureType);
+        tex->setImage(new GLImageTex(textureType, id));
         return tex;
     }
 

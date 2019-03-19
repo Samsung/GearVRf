@@ -71,7 +71,7 @@ public:
 
     void restoreRenderStates(RenderData* render_data);
     void setRenderStates(RenderData* render_data, RenderState& rstate);
-    Texture* createSharedTexture(int id);
+    Texture* createSharedTexture(int id, int textureType);
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount);
 

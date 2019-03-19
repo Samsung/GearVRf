@@ -15,6 +15,8 @@
 
 package org.gearvrf;
 
+import android.opengl.GLES30;
+
 /**
  * This is used in GVRWidget plugin to create GVRTexture handle from texture
  * generated in shared context.
@@ -26,7 +28,17 @@ public class GVRSharedTexture extends GVRTexture {
      *            Current gvrContext
      */
     public GVRSharedTexture(GVRContext gvrContext, int id) {
-        super(gvrContext, NativeSharedTexture.ctor(id));
+        this(gvrContext, NativeSharedTexture.ctor(id, GLES30.GL_TEXTURE_2D));
+    }
+
+    /**
+     *
+     * @param gvrContext
+     * @param id
+     * @param textureType GL_TEXTURE_2D, GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_EXTERNAL_OES
+     */
+    public GVRSharedTexture(GVRContext gvrContext, int id, int textureType) {
+        super(gvrContext, NativeSharedTexture.ctor(id, textureType));
     }
 
     GVRSharedTexture(GVRContext gvrContext, long ptr) {
@@ -35,5 +47,5 @@ public class GVRSharedTexture extends GVRTexture {
 }
 
 class NativeSharedTexture {
-    static native long ctor(int id);
+    static native long ctor(int id, int textureId);
 }

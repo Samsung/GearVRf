@@ -167,7 +167,7 @@ public:
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b)=0;
     virtual void restoreRenderStates(RenderData* render_data) = 0;
     virtual void setRenderStates(RenderData* render_data, RenderState& rstate) = 0;
-    virtual Texture* createSharedTexture(int id) = 0;
+    virtual Texture* createSharedTexture(int id, int textureType) = 0;
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int) = 0;
     virtual void makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager) = 0;
     virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor) = 0;
