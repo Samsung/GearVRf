@@ -15,20 +15,21 @@
 
 package org.gearvrf.scene_objects;
 
-import org.gearvrf.GVRContext;
-import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRExternalTexture;
-import org.gearvrf.GVRMaterial;
-import org.gearvrf.GVRMesh;
-import org.gearvrf.GVRSceneObject;
-import org.gearvrf.GVRTexture;
-import org.gearvrf.GVRMaterial.GVRShaderType;
-
 import android.graphics.Canvas;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
 import android.view.Surface;
 import android.webkit.WebView;
+
+import org.gearvrf.GVRContext;
+import org.gearvrf.GVRDrawFrameListener;
+import org.gearvrf.GVRExternalImage;
+import org.gearvrf.GVRImage;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
+import org.gearvrf.GVRMesh;
+import org.gearvrf.GVRSceneObject;
+import org.gearvrf.GVRTexture;
 
 /**
  * {@linkplain GVRSceneObject Scene object} that shows a web page, using the
@@ -53,7 +54,7 @@ public class GVRWebViewSceneObject extends GVRSceneObject implements
      *            current {@link GVRContext}
      * @param mesh
      *            a {@link GVRMesh} - see
-     *            {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *            {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *            and {@link GVRContext#createQuad(float, float)}
      * @param webView
      *            an Android {@link WebView}
@@ -63,7 +64,8 @@ public class GVRWebViewSceneObject extends GVRSceneObject implements
         super(gvrContext, mesh);
         mWebView = webView;
         gvrContext.registerDrawFrameListener(this);
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture texture = new GVRTexture(image);
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);

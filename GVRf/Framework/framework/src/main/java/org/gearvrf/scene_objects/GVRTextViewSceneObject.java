@@ -33,7 +33,7 @@ import android.widget.TextView;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRExternalImage;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
@@ -162,7 +162,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mFrameListener = new GVRDrawFrameListenerImpl(this);
         gvrContext.registerDrawFrameListener(mFrameListener);
 
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRExternalImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture texture = new GVRTexture(image);
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);
@@ -239,7 +240,8 @@ public class GVRTextViewSceneObject extends GVRSceneObject {
         mTextViewContainer = new LinearLayout(activity);
         mFrameListener = new GVRDrawFrameListenerImpl(this);
 
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRExternalImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture texture = new GVRTexture(image);
 
         GVRMaterial gvrMaterial = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         gvrMaterial.setMainTexture(texture);

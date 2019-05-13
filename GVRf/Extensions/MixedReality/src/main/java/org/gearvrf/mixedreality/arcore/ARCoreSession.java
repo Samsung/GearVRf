@@ -42,7 +42,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
-import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRExternalImage;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
@@ -54,9 +54,9 @@ import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.mixedreality.CameraPermissionHelper;
 import org.gearvrf.mixedreality.GVRAnchor;
-import org.gearvrf.mixedreality.GVRMarker;
 import org.gearvrf.mixedreality.GVRHitResult;
 import org.gearvrf.mixedreality.GVRLightEstimate;
+import org.gearvrf.mixedreality.GVRMarker;
 import org.gearvrf.mixedreality.GVRPlane;
 import org.gearvrf.mixedreality.IAnchorEvents;
 import org.gearvrf.mixedreality.IPlaneEvents;
@@ -233,7 +233,8 @@ public class ARCoreSession extends MRCommon {
     }
 
     private void onInitARCoreSession(GVRContext gvrContext) throws CameraNotAvailableException {
-        GVRTexture passThroughTexture = new GVRExternalTexture(gvrContext);
+        final GVRExternalImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture passThroughTexture = new GVRTexture(image);
 
         mSession.setCameraTextureName(passThroughTexture.getId());
 

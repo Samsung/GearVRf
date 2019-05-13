@@ -23,7 +23,8 @@ import android.hardware.Camera.Parameters;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRExternalImage;
+import org.gearvrf.GVRImage;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
@@ -67,7 +68,8 @@ public class GVRCameraSceneObject extends GVRSceneObject {
     public GVRCameraSceneObject(GVRContext gvrContext, GVRMesh mesh,
                                 Camera camera) {
         super(gvrContext, mesh);
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture texture = new GVRTexture(image);
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);
@@ -103,7 +105,7 @@ public class GVRCameraSceneObject extends GVRSceneObject {
      *
      * @param gvrContext current {@link GVRContext}
      * @param mesh       an arbitrarily complex {@link GVRMesh} object - see
-     *                   {@link GVRContext#loadMesh(org.gearvrf.GVRAndroidResource)}
+     *                   {@link org.gearvrf.GVRAssetLoader#loadMesh(org.gearvrf.GVRAndroidResource)}
      *                   and {@link GVRContext#createQuad(float, float)}
      * @throws GVRCameraAccessException returns this exception when the camera cannot be
      *                                  initialized correctly.
@@ -112,7 +114,8 @@ public class GVRCameraSceneObject extends GVRSceneObject {
             GVRCameraAccessException {
         super(gvrContext, mesh);
 
-        GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture texture = new GVRTexture(image);
         GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.OES.ID);
         material.setMainTexture(texture);
         getRenderData().setMaterial(material);

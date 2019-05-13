@@ -16,15 +16,12 @@
 package org.gearvrf.scene_objects;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.os.SystemClock;
 import android.view.ActionMode;
 import android.view.GestureDetector;
@@ -36,18 +33,15 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.ViewTreeObserver;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import org.gearvrf.GVRApplication;
-import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
-import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRExternalImage;
+import org.gearvrf.GVRImage;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
@@ -61,6 +55,8 @@ import org.gearvrf.IViewEvents;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.shaders.GVROESConvolutionShader;
 import org.gearvrf.utility.Log;
+
+import java.lang.ref.WeakReference;
 
 /**
  * This class represents a {@linkplain GVRSceneObject Scene object} that shows a {@link View}
@@ -223,7 +219,8 @@ public class GVRViewSceneObject extends GVRSceneObject {
     }
 
     private void createRenderData(GVRContext gvrContext) {
-        final GVRTexture texture = new GVRExternalTexture(gvrContext);
+        final GVRImage image = new GVRExternalImage(gvrContext);
+        final GVRTexture texture = new GVRTexture(image);
         final GVRMaterial material = new GVRMaterial(gvrContext,
                 new GVRShaderId(GVROESConvolutionShader.class));
         GVRRenderData renderData = getRenderData();
@@ -650,19 +647,7 @@ public class GVRViewSceneObject extends GVRSceneObject {
         public void createSurfaceTexture(int textureId) {
             mSurfaceTexture = new SurfaceTexture(textureId);
             mSurface = new Surface(mSurfaceTexture);
-            mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                Runnable onFrameAvailableGLCallback = new Runnable() {
-                    @Override
-                    public void run() {
-                        mSurfaceTexture.updateTexImage();
-                    }
-                };
-
-                @Override
-                public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                    mGVRContext.runOnGlThread(onFrameAvailableGLCallback);
-                }
-            });
+            mSurfaceTexture.setOnFrameAvailableListener(new OnFrameAvailableListenerImpl(mGVRContext, mSurfaceTexture));
         }
 
         private MotionEvent createMotionEvent(GVRPicker.GVRPickedObject pickInfo, int action) {
@@ -783,4 +768,28 @@ public class GVRViewSceneObject extends GVRSceneObject {
             dispatchPickerInputEvent(event, event.getX(), event.getY());
         }
     }
+
+    private final static class OnFrameAvailableListenerImpl implements SurfaceTexture.OnFrameAvailableListener, Runnable {
+        private final GVRContext mContext;
+        private final WeakReference<SurfaceTexture> mSurfaceTexture;
+
+        OnFrameAvailableListenerImpl(GVRContext context, SurfaceTexture surfaceTexture) {
+            mContext = context;
+            mSurfaceTexture = new WeakReference<>(surfaceTexture);
+        }
+
+        @Override
+        public void onFrameAvailable(SurfaceTexture ignored) {
+            mContext.runOnGlThread(this);
+        }
+
+        @Override
+        public void run() {
+            final SurfaceTexture surfaceTexture = mSurfaceTexture.get();
+            if (null != surfaceTexture) {
+                surfaceTexture.updateTexImage();
+            }
+        }
+    };
+
 }

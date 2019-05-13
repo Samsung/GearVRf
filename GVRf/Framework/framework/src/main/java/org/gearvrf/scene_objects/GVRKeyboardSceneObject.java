@@ -42,7 +42,7 @@ import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRComponent;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRExternalImage;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
@@ -618,7 +618,8 @@ public class GVRKeyboardSceneObject extends GVRSceneObject {
         public GVRKey(final GVRContext gvrContext, Keyboard.Key key, GVRMesh mesh,
                       Drawable background, int textColor) {
             super(gvrContext, mesh);
-            final GVRTexture texture = new GVRExternalTexture(gvrContext);
+            final GVRExternalImage image = new GVRExternalImage(gvrContext);
+            final GVRTexture texture = new GVRTexture(image);
             final GVRMaterial material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.OES.ID);
 
             mKey = key;

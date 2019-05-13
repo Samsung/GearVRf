@@ -17,16 +17,6 @@ public:
     { }
     virtual ~ExternalImage() {}
 
-    virtual void setData(long data)
-    {
-        mData = data;
-    }
-
-    virtual long getData() const
-    {
-        return mData;
-    }
-
 private:
     ExternalImage(const ExternalImage& render_texture) = delete;
     ExternalImage(ExternalImage&& render_texture) = delete;

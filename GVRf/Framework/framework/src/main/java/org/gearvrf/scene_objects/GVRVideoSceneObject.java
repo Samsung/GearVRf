@@ -23,12 +23,13 @@ import org.gearvrf.GVRAssetLoader;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVREventListeners;
-import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRExternalImage;
 import org.gearvrf.GVRMaterial;
 import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRShaderId;
+import org.gearvrf.GVRTexture;
 
 /**
  * A {@linkplain GVRSceneObject scene object} that shows video, using the
@@ -80,17 +81,17 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      *            and {@link GVRContext#createQuad(float, float)}
      * @param mediaPlayer
      *            an Android {@link MediaPlayer}
-     * @param texture
-     *            a {@link GVRExternalTexture} to link with {@link MediaPlayer}
+     * @param image
+     *            a {@link GVRExternalImage} to link with {@link MediaPlayer}
      * @param videoType
      *            One of the {@linkplain GVRVideoType video type constants}
      * @throws IllegalArgumentException
      *             on an invalid {@code videoType} parameter
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
-                               final MediaPlayer mediaPlayer, final GVRExternalTexture texture,
+                               final MediaPlayer mediaPlayer, final GVRExternalImage image,
                                int videoType) {
-        this(gvrContext, mesh, makePlayerInstance(mediaPlayer), texture, videoType);
+        this(gvrContext, mesh, makePlayerInstance(mediaPlayer), new GVRTexture(image), videoType);
     }
 
     /**
@@ -150,14 +151,14 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      * @param mediaPlayer
      *            a wrapper for a media player
      * @param texture
-     *            a {@link GVRExternalTexture} to link with {@link MediaPlayer}
+     *            a {@link GVRTexture} to link with {@link MediaPlayer}
      * @param videoType
      *            One of the {@linkplain GVRVideoType video type constants}
      * @throws IllegalArgumentException
      *             on an invalid {@code videoType} parameter
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
-                               final GVRVideoSceneObjectPlayer mediaPlayer, final GVRExternalTexture texture,
+                               final GVRVideoSceneObjectPlayer mediaPlayer, final GVRTexture texture,
                                int videoType) {
         super(gvrContext, mesh);
         GVRShaderId materialType;
@@ -211,7 +212,7 @@ public class GVRVideoSceneObject extends GVRSceneObject {
      */
     public GVRVideoSceneObject(final GVRContext gvrContext, GVRMesh mesh,
             final GVRVideoSceneObjectPlayer mediaPlayer, int videoType) {
-        this(gvrContext, mesh, mediaPlayer, new GVRExternalTexture(gvrContext), videoType);
+        this(gvrContext, mesh, mediaPlayer, new GVRTexture(new GVRExternalImage(gvrContext)), videoType);
     }
 
     /**
@@ -361,16 +362,16 @@ public class GVRVideoSceneObject extends GVRSceneObject {
 
         /**
          * Constructs a GVRVideo with a {@link MediaPlayer} and a
-         * {@link GVRExternalTexture} to be used
+         * {@link GVRTexture} to be used
          * 
          * @param mediaPlayer
          *            the {@link MediaPlayer} type object to be used in the
          *            class
          * @param texture
-         *            the {@link GVRExternalTexture} type object to be used in
+         *            the {@link GVRTexture} type object to be used in
          *            the class
          */
-        public GVRVideo(GVRContext gvrContext, GVRVideoSceneObjectPlayer mediaPlayer, GVRExternalTexture texture) {
+        public GVRVideo(GVRContext gvrContext, GVRVideoSceneObjectPlayer mediaPlayer, GVRTexture texture) {
             mContext = gvrContext;
             mSurfaceTexture = new SurfaceTexture(texture.getId());
             if (mediaPlayer != null) {

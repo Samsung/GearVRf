@@ -19,21 +19,16 @@ package org.gearvrf;
  * Wrapper for a {@code GL_TEXTURE_EXTERNAL_OES} texture. This is typically used
  * to work with textures that are backed by cameras or video buffers.
  */
-public class GVRExternalTexture extends GVRTexture {
-    /**
-     * 
-     * @param gvrContext
-     *            Current gvrContext
-     */
-    public GVRExternalTexture(GVRContext gvrContext) {
-        super(gvrContext, NativeExternalTexture.ctor());
+public class GVRExternalImage extends GVRImage {
+    public GVRExternalImage(GVRContext gvrContext) {
+        super(gvrContext, NativeExternalImage.ctor());
     }
 
-    GVRExternalTexture(GVRContext gvrContext, long ptr) {
+    GVRExternalImage(GVRContext gvrContext, long ptr) {
         super(gvrContext, ptr);
     }
 }
 
-class NativeExternalTexture {
+class NativeExternalImage {
     static native long ctor();
 }
