@@ -149,7 +149,7 @@ final class OvrVrapiActivityHandler implements OvrActivityHandler {
         mSurfaceView.setZOrderOnTop(true);
 
         final DisplayMetrics metrics = new DisplayMetrics();
-        mApplication.getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mApplication.getActivity().getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
         final VrAppSettings appSettings = mApplication.getAppSettings();
         int defaultWidthPixels = Math.max(metrics.widthPixels, metrics.heightPixels);
         int defaultHeightPixels = Math.min(metrics.widthPixels, metrics.heightPixels);
